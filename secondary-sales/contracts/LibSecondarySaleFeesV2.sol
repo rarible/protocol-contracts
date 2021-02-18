@@ -3,11 +3,6 @@
 pragma solidity >=0.6.2 <0.8.0;
 
 library LibSecondarySaleFeesV2 {
-    struct Fee {
-        address account;
-        uint value;
-    }
-
     /*
      * bytes4(keccak256('getFeeBps(uint256)')) == 0x0ebd4c7f
      * bytes4(keccak256('getFeeRecipients(uint256)')) == 0xb9c4d9fb

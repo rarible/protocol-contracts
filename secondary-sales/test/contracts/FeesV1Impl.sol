@@ -1,15 +1,16 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity >=0.6.2 <0.8.0;
+pragma abicoder v2;
 
-import "../../contracts/SecondarySaleFeesV1.sol";
+import "../../contracts/impl/SecondarySaleFeesV1Impl.sol";
 
-contract FeesV1Impl is SecondarySaleFeesV1 {
-    function getFeeRecipients(uint256) override external view returns (address payable[] memory result) {
-        result = new address payable[](1);
-        result[0] = address(uint160(address(this)));
+contract FeesV1Impl is SecondarySaleFeesV1Impl {
+    function saveFees(uint256 _id, LibFee.Fee[] memory _fees) external {
+        _saveFees(_id, _fees);
     }
 
-    function getFeeBps(uint256) override external view returns (uint[] memory result) {
-        result = new uint[](1);
-        result[0] = 100;
+    function updateAccount(uint256 _id, address _from, address _to) external {
+        _updateAccount(_id, _from, _to);
     }
 }
