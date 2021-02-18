@@ -1,5 +1,5 @@
-const Impl = artifacts.require("FeesV1Impl.sol");
-const Test = artifacts.require("FeesV1Test.sol");
+const Impl = artifacts.require("RoyaltiesV1TestImpl.sol");
+const Test = artifacts.require("RoyaltiesV1Test.sol");
 
 contract("v1", accounts => {
 	let impl;

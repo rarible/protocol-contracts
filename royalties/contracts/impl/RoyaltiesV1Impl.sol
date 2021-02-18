@@ -2,10 +2,10 @@
 
 pragma solidity >=0.6.2 <0.8.0;
 
-import "./AbstractSecondareSaleFees.sol";
-import "../SecondarySaleFeesV1.sol";
+import "./AbstractRoyalties.sol";
+import "../RoyaltiesV1.sol";
 
-contract SecondarySaleFeesV1Impl is AbstractSecondareSaleFees, SecondarySaleFeesV1 {
+contract RoyaltiesV1Impl is AbstractRoyalties, RoyaltiesV1 {
 
     function getFeeRecipients(uint256 id) public override view returns (address payable[] memory) {
         LibFee.Fee[] memory _fees = fees[id];
@@ -25,7 +25,7 @@ contract SecondarySaleFeesV1Impl is AbstractSecondareSaleFees, SecondarySaleFees
         return result;
     }
 
-    function _onSecondarySaleFees(uint256 _id, LibFee.Fee[] memory _fees) override internal {
+    function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {
         address[] memory recipients = new address[](_fees.length);
         uint[] memory bps = new uint[](_fees.length);
         for (uint i = 0; i < _fees.length; i++) {

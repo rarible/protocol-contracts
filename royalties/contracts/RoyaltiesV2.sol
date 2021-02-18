@@ -5,8 +5,8 @@ pragma abicoder v2;
 
 import "./LibFee.sol";
 
-interface SecondarySaleFeesV2 {
-    event SecondarySaleFees(uint256 tokenId, LibFee.Fee[] fees);
+interface RoyaltiesV2 {
+    event RoyaltiesSet(uint256 tokenId, LibFee.Fee[] fees);
 
     function getFees(uint256 id) external view returns (LibFee.Fee[] memory);
 }

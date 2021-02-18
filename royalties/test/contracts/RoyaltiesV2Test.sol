@@ -3,12 +3,12 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "../../contracts/SecondarySaleFeesV2.sol";
+import "../../contracts/RoyaltiesV2.sol";
 
-contract FeesV2Test {
-    SecondarySaleFeesV2 immutable fees;
+contract RoyaltiesV2Test {
+    RoyaltiesV2 immutable fees;
 
-    constructor(SecondarySaleFeesV2 _fees) {
+    constructor(RoyaltiesV2 _fees) {
         fees = _fees;
     }
 

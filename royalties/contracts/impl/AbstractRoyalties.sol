@@ -4,7 +4,7 @@ pragma solidity >=0.6.2 <0.8.0;
 
 import "../LibFee.sol";
 
-abstract contract AbstractSecondareSaleFees {
+abstract contract AbstractRoyalties {
     mapping (uint256 => LibFee.Fee[]) public fees;
 
     function _saveFees(uint256 _id, LibFee.Fee[] memory _fees) internal {
@@ -24,5 +24,5 @@ abstract contract AbstractSecondareSaleFees {
         }
     }
 
-    function _onSecondarySaleFees(uint256 _id, LibFee.Fee[] memory _fees) virtual internal;
+    function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) virtual internal;
 }

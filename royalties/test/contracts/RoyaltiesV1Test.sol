@@ -2,12 +2,12 @@
 
 pragma solidity >=0.6.2 <0.8.0;
 
-import "../../contracts/SecondarySaleFeesV1.sol";
+import "../../contracts/RoyaltiesV1.sol";
 
-contract FeesV1Test {
-    SecondarySaleFeesV1 immutable fees;
+contract RoyaltiesV1Test {
+    RoyaltiesV1 immutable fees;
 
-    constructor(SecondarySaleFeesV1 _fees) {
+    constructor(RoyaltiesV1 _fees) {
         fees = _fees;
     }
 

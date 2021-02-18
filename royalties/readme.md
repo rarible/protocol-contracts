@@ -1,4 +1,4 @@
-### Interfaces for NFT smart contracts to specify secondary sale fees.
+### Interfaces for NFT smart contracts to specify royalties.
 
 #### There are two versions:
 - v1: old version, doesn't require abi decoder v2

@@ -2,7 +2,7 @@
 
 pragma solidity >=0.6.2 <0.8.0;
 
-interface SecondarySaleFeesV1 {
+interface RoyaltiesV1 {
     event SecondarySaleFees(uint256 tokenId, address[] recipients, uint[] bps);
 
     function getFeeRecipients(uint256 id) external view returns (address payable[] memory);

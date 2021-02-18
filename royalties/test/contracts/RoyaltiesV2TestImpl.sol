@@ -3,9 +3,10 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "../../contracts/impl/SecondarySaleFeesV1Impl.sol";
+import "../../contracts/impl/RoyaltiesV2Impl.sol";
 
-contract FeesV1Impl is SecondarySaleFeesV1Impl {
+contract RoyaltiesV2TestImpl is RoyaltiesV2Impl {
+
     function saveFees(uint256 _id, LibFee.Fee[] memory _fees) external {
         _saveFees(_id, _fees);
     }
