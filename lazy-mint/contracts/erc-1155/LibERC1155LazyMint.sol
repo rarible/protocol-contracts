@@ -9,8 +9,8 @@ library LibERC1155LazyMint {
 
     struct Mint1155Data {
         uint tokenId;
-        string uri;
         uint supply;
+        string uri;
         address[] creators;
         LibFee.Fee[] fees;
         bytes[] signatures;
