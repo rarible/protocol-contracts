@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.6.9 <0.8.0;
+
+library LibAsset {
+    bytes4 constant public ETH_ASSET_TYPE = bytes4(keccak256("ETH"));
+    bytes4 constant public ERC20_ASSET_TYPE = bytes4(keccak256("ERC20"));
+    bytes4 constant public ERC721_ASSET_TYPE = bytes4(keccak256("ERC721"));
+    bytes4 constant public ERC1155_ASSET_TYPE = bytes4(keccak256("ERC1155"));
+
+    bytes32 constant ASSET_TYPE_TYPEHASH = keccak256(
+        "AssetType(bytes4 tp,bytes data)"
+    );
+
+    bytes32 constant ASSET_TYPEHASH = keccak256(
+        "Asset(AssetType assetType,uint256 amount)AssetType(bytes4 tp,bytes data)"
+    );
+
+    struct AssetType {
+        bytes4 tp;
+        bytes data;
+    }
+
+    struct Asset {
+        AssetType assetType;
+        uint amount;
+    }
+
+    function hash(AssetType memory assetType) internal pure returns (bytes32) {
+        return keccak256(abi.encode(
+                ASSET_TYPE_TYPEHASH,
+                assetType.tp,
+                keccak256(assetType.data)
+            ));
+    }
+
+    function hash(Asset memory asset) internal pure returns (bytes32) {
+        return keccak256(abi.encode(
+                ASSET_TYPEHASH,
+                hash(asset.assetType),
+                asset.amount
+            ));
+    }
+
+}
