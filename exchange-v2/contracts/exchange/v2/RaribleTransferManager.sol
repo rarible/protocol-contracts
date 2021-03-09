@@ -135,4 +135,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             realFee = value;
         }
     }
+
+    uint256[46] private __gap;
 }

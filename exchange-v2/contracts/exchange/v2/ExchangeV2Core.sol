@@ -18,9 +18,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
+    uint256 private constant UINT256_MAX = 2 ** 256 - 1;
+
     //state of the orders
     mapping(bytes32 => uint) public fills;
-    uint256 private constant UINT256_MAX = 2 ** 256 - 1;
 
     //events
     event Cancel(bytes32 hash);
@@ -101,4 +102,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
+    uint256[49] private __gap;
 }

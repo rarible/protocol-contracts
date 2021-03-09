@@ -24,4 +24,5 @@ abstract contract SimpleTransferManager is ITransferManager {
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
     }
+    uint256[50] private __gap;
 }

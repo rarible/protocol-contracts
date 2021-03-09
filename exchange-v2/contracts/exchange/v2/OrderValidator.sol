@@ -35,4 +35,6 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
             }
         }
     }
+
+    uint256[50] private __gap;
 }
