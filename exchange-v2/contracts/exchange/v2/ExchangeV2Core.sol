@@ -14,7 +14,6 @@ import "./ITransferManager.sol";
 import "../../lib/LibTransfer.sol";
 
 //todo нужно ли делать проверку на reentrancy?
-//todo resolve warnings
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
