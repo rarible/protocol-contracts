@@ -77,22 +77,35 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint amount,
         address from,
         LibAsset.AssetType memory matchCalculate,
-        LibAsset.AssetType memory matchNft,//todo unused param
+        LibAsset.AssetType memory matchNft,
         address orderBeneficiary,
         bytes4 to
-    ) internal returns (uint totalAmount) {
+    ) internal returns (uint rest) {
         uint totalAmount = calculateTotalAmount(amount, buyerFee);
-        uint rest = totalAmount;
-        uint fee;
-        //todo combine code to function transferProtocolFee(...)
-        (rest, fee) = subFeeInBp(rest, amount, buyerFee.add(sellerFee));
+        rest = transferProtocolFee(totalAmount, amount, from, matchCalculate);
+        rest = transferRoyalties(matchNft, rest);
+        transfer(LibAsset.Asset(matchCalculate, rest), from, orderBeneficiary, to);
+    }
+
+    function  transferProtocolFee(uint totalAmount, uint amount, address from, LibAsset.AssetType memory matchCalculate) internal returns(uint ){
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, buyerFee.add(sellerFee));
         if (fee > 0) {
-            //todo это не будет работать, например с эфиром, нужно по-другому сделать (data будет пустое)
-            (address tokenAddress) = abi.decode(matchCalculate.data, (address));
+            address tokenAddress = address(0);
+            if (matchCalculate.tp == LibAsset.ERC20_ASSET_TYPE){
+                tokenAddress = abi.decode(matchCalculate.data, (address));
+            }
+            if (matchCalculate.tp == LibAsset.ERC1155_ASSET_TYPE){
+                uint tokenId;
+                (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
+            }
             transfer(LibAsset.Asset(matchCalculate, fee), from, getFeeReceiver(tokenAddress), TO_PROTOCOL);
         }
-        //todo create function transferRoyalties(need matchNft,...)
-        transfer(LibAsset.Asset(matchCalculate, rest), from, orderBeneficiary, to);
+        return rest;
+    }
+
+    function transferRoyalties(LibAsset.AssetType memory matchNft, uint rest) internal pure returns (uint){
+        //todo write me
+        return rest;
     }
 
     function calculateTotalAmount(uint amount, uint feeOnTopBp) internal pure returns (uint total){

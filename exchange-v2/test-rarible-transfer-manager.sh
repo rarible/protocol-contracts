@@ -1,2 +1,10 @@
 #!/usr/bin/env bash
-truffle test ./test/v2/RaribleManager.test.js ./test/v2/RaribleManagerDoTransfer.test.js ./test/contracts/v2/RaribleTransferManagerTest.sol ./test/contracts/tokens/TestERC721WithRoyaltiesV1.sol ./test/contracts/tokens/TestERC721WithRoyaltiesV2.sol ./test/contracts/tokens/TestERC721.sol ./test/contracts/tokens/TestERC721WithRoyaltiesV1Crashed.sol ./test/contracts/tokens/TestERC20.sol ./test/contracts/v2/LibOrderTest.sol
+#Test doTransfers in exchange-v2/contracts/exchange/v2/RaribleTransferManager.sol
+truffle test \
+            ./test/v2/RaribleManager.test.js \
+            ./test/contracts/tokens/TestERC20.sol \
+            ./test/contracts/tokens/TestERC721.sol \
+            ./test/contracts/tokens/TestERC1155.sol \
+            ./test/contracts/v2/RaribleTransferManagerTest.sol \
+            ./test/contracts/v2/LibOrderTest.sol
+
