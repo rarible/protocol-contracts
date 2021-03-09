@@ -27,9 +27,9 @@ library LibFill {
 
         //We have 3 cases here:
         if (leftTakeAmount > rightMakeAmount) { //1st: right order is fully filled
-            return fillRight(leftMakeAmount, leftTakeAmount, rightMakeAmount, rightTakeAmount);
+            return fillRight(leftOrder.makeAsset.amount, leftOrder.takeAsset.amount, rightMakeAmount, rightTakeAmount);
         } else if (rightTakeAmount > leftMakeAmount) { //2nd: left order is fully filled
-            return fillLeft(leftMakeAmount, leftTakeAmount, rightMakeAmount, rightTakeAmount);
+            return fillLeft(leftMakeAmount, leftTakeAmount, rightOrder.makeAsset.amount, rightOrder.takeAsset.amount);
         } else { //3rd. both filled
             return fillBoth(leftMakeAmount, leftTakeAmount, rightTakeAmount);
         }
@@ -40,14 +40,12 @@ library LibFill {
         return FillResult(leftMakeAmount, leftTakeAmount);
     }
 
-    //todo возможно тут лучше использовать полные значения для amounts, а не remaining? подумать
     function fillRight(uint leftMakeAmount, uint leftTakeAmount, uint rightMakeAmount, uint rightTakeAmount) internal pure returns (FillResult memory result) {
         uint makerAmount = LibMath.safeGetPartialAmountFloor(rightTakeAmount, leftMakeAmount, leftTakeAmount);
         require(makerAmount <= rightMakeAmount);
         return FillResult(rightTakeAmount, makerAmount);
     }
 
-    //todo подумать, что тут с округлением, написать тест
     function fillLeft(uint leftMakeAmount, uint leftTakeAmount, uint rightMakeAmount, uint rightTakeAmount) internal pure returns (FillResult memory result) {
         uint rightTake = LibMath.safeGetPartialAmountFloor(leftTakeAmount, rightMakeAmount, rightTakeAmount);
         require(rightTake <= leftMakeAmount);
