@@ -57,21 +57,21 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ETH to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepareETH_1155Orders(10)
 
-//			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right);
             await verifyBalanceChange(accounts[0], 103, () =>
-            			verifyBalanceChange(accounts[2], -97, () =>
-            			        verifyBalanceChange(protocol, -6, () =>
-                		            testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right,
-                		            {value: 103, from: accounts[0], gasPrice: 0})
-                		        )
-                	    )
-            		);
+                verifyBalanceChange(accounts[2], -97, () =>
+            	    verifyBalanceChange(protocol, -6, () =>
+                	    testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right,
+                		    {value: 103, from: accounts[0], gasPrice: 0}
+                		)
+                	)
+                )
+            );
 			assert.equal(await erc1155.balanceOf(accounts[0], erc1155TokenId1), 7);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 3);
 		})
 
 		async function prepareETH_1155Orders(t2Amount  = 10) {
-			await erc1155.mint(accounts[2], erc1155TokenId1, t2Amount);
+		    await erc1155.mint(accounts[2], erc1155TokenId1, t2Amount);
 			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
 
 			const left = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
@@ -79,7 +79,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-    it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community", async () => {
+        it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community", async () => {
 			const { left, right } = await prepare721_1155Orders(105)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
