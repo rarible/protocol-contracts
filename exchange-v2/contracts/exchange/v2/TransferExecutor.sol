@@ -35,7 +35,6 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         if (asset.assetType.tp == LibAsset.ETH_ASSET_TYPE) {
             //todo подумать, что будет, если с обеих сторон eth
             //todo нужно ли проверить from?
-            //todo написать код обработки ETH,при трансфере ETH получаем require: "transfer failed"
             (bool success, ) = to.call{ value: asset.amount }("");
             require(success, "transfer failed");
         } else if (asset.assetType.tp == LibAsset.ERC20_ASSET_TYPE) {
