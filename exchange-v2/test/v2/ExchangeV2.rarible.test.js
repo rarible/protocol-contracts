@@ -27,7 +27,6 @@ contract("ExchangeV2", accounts => {
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__Exchange_init" });
-		//todo test testing.setProtocolAddress(protocol);
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		t1 = await TestERC20.new();
