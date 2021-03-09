@@ -13,7 +13,7 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder)external {
+        LibOrder.Order memory rightOrder) payable external {
         doTransfers(makeMatch, takeMatch, fill, leftOrder, rightOrder);
     }
 
