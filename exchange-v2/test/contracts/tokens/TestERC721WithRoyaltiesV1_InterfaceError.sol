@@ -20,12 +20,14 @@ contract TestERC721WithRoyaltiesV1_InterfaceError is Initializable, AbstractRoya
 
     function getFeeRecipients(uint256 id) public override pure returns (address payable[] memory) {
         require(false, "getFeeRecipients failed");
+        id +=1;// to silence warning
         address payable[] memory mem1;
         return mem1;
     }
 
     function getFeeBps(uint256 id) public override pure returns (uint[] memory) {
         require(false, "getFeeBps failed");
+        id +=1;// to silence warning
         uint[] memory result;
         return result;
     }

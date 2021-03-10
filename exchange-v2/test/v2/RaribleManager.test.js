@@ -10,6 +10,7 @@ const ERC721_V2 = artifacts.require("TestERC721WithRoyaltiesV2.sol");
 const ERC1155_V1 = artifacts.require("TestERC1155WithRoyaltiesV1.sol");
 const ERC1155_V2 = artifacts.require("TestERC1155WithRoyaltiesV2.sol");
 const ERC721_V1_Error = artifacts.require("TestERC721WithRoyaltiesV1_InterfaceError.sol");
+const ERC1155_V2_Error = artifacts.require("TestERC1155WithRoyaltiesV2_InterfaceError.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -33,6 +34,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let erc1155V1;
 	let erc1155V2;
 	let erc721V1_Error;
+	let erc1155V2_Error;
 	let erc721TokenId0 = 52;
 	let erc721TokenId1 = 53;
 	let erc1155TokenId1 = 54;
@@ -71,13 +73,12 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     erc1155V2 = await ERC1155_V2.new("https://ipfs.rarible.com");
     await erc1155V2.initialize();
 		/*NFT 721 RoyalitiesV1 with interface error*/
-		erc721V1_Error = ERC721_V1_Error.new("Rarible", "RARI", "https://ipfs.rarible.com");
+		erc721V1_Error = await ERC721_V1_Error.new("Rarible", "RARI", "https://ipfs.rarible.com");
+		/*NFT 1155 RoyalitiesV2 with interface error*/
+		erc1155V2_Error = await ERC1155_V2_Error.new("https://ipfs.rarible.com");
 	});
 
 	describe("Check doTransfers()", () => {
-		it("Init state check", async () => {
-			//todo подумать как проверить
-		})
 
 		it("Transfer from ETH to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepareETH_1155Orders(10)
@@ -265,10 +266,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     }
 	})
 
-    describe("Check doTransfers() with Royalties fees", () => {
-		it("Init state check", async () => {
-			//todo подумать как проверить
-		})
+  describe("Check doTransfers() with Royalties fees", () => {
 
 		it("Transfer from ERC721(RoyaltiesV1) to ERC20 , protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepare721V1_20Orders(105)
@@ -374,7 +372,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ETH to ERC1155V2, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepareETH_1155V2Orders(10)
 
-//			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right);
       	await verifyBalanceChange(accounts[0], 103, () =>
         	verifyBalanceChange(accounts[1], -82, () =>
         		verifyBalanceChange(accounts[2], -10, () =>
@@ -401,8 +398,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-		it("Transfer from ERC20 to ERC721(RoyaltiesV2 Wiht Error), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right } = await prepare20_721V2ErOrders(105)
+		it("Transfer from ERC20 to ERC721(RoyaltiesV1 With Error), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
+			const { left, right } = await prepare20_721V1ErOrders(105)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
 
@@ -410,12 +407,12 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			assert.equal(await t1.balanceOf(accounts[0]), 97);
 			assert.equal(await t1.balanceOf(accounts[2]), 0);
 			assert.equal(await t1.balanceOf(accounts[3]), 0);
-			assert.equal(await erc721V2.balanceOf(accounts[1]), 1);
-			assert.equal(await erc721V2.balanceOf(accounts[0]), 0);
+			assert.equal(await erc721V1_Error.balanceOf(accounts[1]), 1);
+			assert.equal(await erc721V1_Error.balanceOf(accounts[0]), 0);
 			assert.equal(await t1.balanceOf(protocol), 6);
 		})
 
-		async function prepare20_721V2ErOrders(t1Amount = 105) {
+		async function prepare20_721V1ErOrders(t1Amount = 105) {
 			await t1.mint(accounts[1], t1Amount);
 			await erc721V1_Error.mint(accounts[0], erc721TokenId1, [[accounts[2], 1000], [accounts[3], 500]]);
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
@@ -423,6 +420,31 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V1_Error.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[0], Asset(ERC721, enc(erc721V1_Error.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			return { left, right }
+		}
+
+		it("Transfer from ERC1155(RoyaltiesV2 With Error) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
+			const { left, right } = await prepare1155V2_20ErOrders(12, 105)
+
+			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], left, right);
+
+			assert.equal(await t1.balanceOf(accounts[1]), 2);
+			assert.equal(await t1.balanceOf(accounts[0]), 97);
+			assert.equal(await t1.balanceOf(accounts[2]), 0);
+			assert.equal(await t1.balanceOf(accounts[3]), 0);
+			assert.equal(await erc1155V2_Error.balanceOf(accounts[1], erc1155TokenId1), 5);
+			assert.equal(await erc1155V2_Error.balanceOf(accounts[0], erc1155TokenId1), 7);
+			assert.equal(await t1.balanceOf(protocol), 6);
+		})
+
+		async function prepare1155V2_20ErOrders(t1Amount = 12, t2Amount = 105) {
+			await erc1155V2_Error.mint(accounts[0], erc1155TokenId1, [[accounts[2], 1000], [accounts[3], 500]], t1Amount);
+			await t1.mint(accounts[1], t2Amount);
+			await erc1155V2_Error.setApprovalForAll(transferProxy.address, true, {from: accounts[0]});
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+
+			const left = Order(accounts[0], Asset(ERC1155, enc(erc1155V2_Error.address, erc1155TokenId1), 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155V2_Error.address, erc1155TokenId1), 5), 1, 0, 0, "0xffffffff", "0x");
 			return { left, right }
 		}
 
