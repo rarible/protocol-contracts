@@ -112,7 +112,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFee.Fee[] memory fees = getRoyalties(matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
-            (uint newRestValue, uint feeValue) = subFeeInBp(rest, amount, fees[i].value);
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0){
                 transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, to);
