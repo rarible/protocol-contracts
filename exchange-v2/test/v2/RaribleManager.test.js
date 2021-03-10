@@ -72,7 +72,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     await erc1155V2.initialize();
 		/*NFT 721 RoyalitiesV1 with interface error*/
 		erc721V1_Error = ERC721_V1_Error.new("Rarible", "RARI", "https://ipfs.rarible.com");
-//		await erc721V1_Error.initialize();
 	});
 
 	describe("Check doTransfers()", () => {
