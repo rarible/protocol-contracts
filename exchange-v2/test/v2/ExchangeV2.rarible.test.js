@@ -26,8 +26,7 @@ contract("ExchangeV2", accounts => {
 		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
-		testing = await deployProxy(ExchangeV2, [1, transferProxy.address, erc20TransferProxy.address], { initializer: "__Exchange_init" });
-		//todo test testing.setProtocolAddress(protocol);
+		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__Exchange_init" });
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		t1 = await TestERC20.new();
@@ -40,7 +39,7 @@ contract("ExchangeV2", accounts => {
 			right.dataType = id("V1");
 			right.data = enc(accounts[3]);
 
-			await testing.matchOrders(left, await sign(left, accounts[1]), right, "0x", { from: accounts[2] });
+			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
 
 			assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
 

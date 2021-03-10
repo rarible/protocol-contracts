@@ -79,18 +79,19 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Init state check", async () => {
 			//todo подумать как проверить
 		})
+
 		it("Transfer from ETH to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepareETH_1155Orders(10)
 
-//			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right);
-            await verifyBalanceChange(accounts[0], 103, () =>
-            			verifyBalanceChange(accounts[2], -97, () =>
-            			        verifyBalanceChange(protocol, -6, () =>
-                		            testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right,
-                		            {value: 103, from: accounts[0], gasPrice: 0})
-                		        )
-                	    )
-            		);
+      await verifyBalanceChange(accounts[0], 103, () =>
+      	verifyBalanceChange(accounts[2], -97, () =>
+        	verifyBalanceChange(protocol, -6, () =>
+          	testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right,
+            	{value: 103, from: accounts[0], gasPrice: 0}
+            )
+          )
+        )
+      );
 			assert.equal(await erc1155.balanceOf(accounts[0], erc1155TokenId1), 7);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 3);
 		})
@@ -104,7 +105,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-        it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community", async () => {
+    it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community", async () => {
 			const { left, right } = await prepare721_1155Orders(105)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
@@ -127,7 +128,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-        it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
+    it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepare1155O_721rders(105)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
@@ -150,7 +151,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-        it("Transfer from   ERC20 to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
+    it("Transfer from   ERC20 to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepare20_1155Orders(105, 10)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right);
@@ -253,16 +254,16 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			assert.equal(await t2.balanceOf(accounts[2]), 20);
 			assert.equal(await t1.balanceOf(protocol), 6);
 		})
-        async function prepare2Orders(t1Amount = 105, t2Amount = 220) {
-            await t1.mint(accounts[1], t1Amount);
-            await t2.mint(accounts[2], t2Amount);
-            await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
-            await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+    async function prepare2Orders(t1Amount = 105, t2Amount = 220) {
+    	await t1.mint(accounts[1], t1Amount);
+      await t2.mint(accounts[2], t2Amount);
+      await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+      await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
 
-            const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, "0xffffffff", "0x");
-            const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-            return { left, right }
-        }
+      const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+      return { left, right }
+    }
 	})
 
     describe("Check doTransfers() with Royalties fees", () => {

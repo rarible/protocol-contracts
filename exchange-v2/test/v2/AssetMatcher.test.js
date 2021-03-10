@@ -1,10 +1,11 @@
 const AssetMatcherTest = artifacts.require("AssetMatcherTest.sol");
+const TestAssetMatcher = artifacts.require("TestAssetMatcher.sol");
 const order = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const tests = require("@daonomic/tests-common");
 const expectThrow = tests.expectThrow;
-const { enc, ETH, ERC20, ERC721, ERC1155 } = require("../assets");
+const { enc, ETH, ERC20, ERC721, ERC1155, id } = require("../assets");
 
 contract("AssetMatcher", accounts => {
 	let testing;
@@ -13,6 +14,18 @@ contract("AssetMatcher", accounts => {
 		testing = await AssetMatcherTest.new();
 		await testing.__AssetMatcherTest_init();
 	});
+
+	it("setAssetMatcher works", async () => {
+		const encoded = enc(accounts[5]);
+		await expectThrow(
+			testing.matchAssetsTest(order.AssetType(ERC20, encoded), order.AssetType(id("BLA"), encoded))
+		);
+		const testMatcher = await TestAssetMatcher.new();
+		await testing.setAssetMatcher(id("BLA"), testMatcher.address);
+		const result = await testing.matchAssetsTest(order.AssetType(ERC20, encoded), order.AssetType(id("BLA"), encoded));
+		assert.equal(result[0], ERC20);
+		assert.equal(result[1], encoded);
+	})
 
 	describe("ETH", () => {
 		it("should extract ETH type if both are ETHs", async () => {

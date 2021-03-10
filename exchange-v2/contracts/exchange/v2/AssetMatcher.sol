@@ -80,4 +80,6 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         }
         revert("not found IAssetMatcher");
     }
+
+    uint256[49] private __gap;
 }

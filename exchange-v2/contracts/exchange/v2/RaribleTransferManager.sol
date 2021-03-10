@@ -87,14 +87,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         transfer(LibAsset.Asset(matchCalculate, rest), from, orderBeneficiary, to);
     }
 
-    function  transferProtocolFee(uint totalAmount, uint amount, address from, LibAsset.AssetType memory matchCalculate) internal returns(uint ){
+    function transferProtocolFee(uint totalAmount, uint amount, address from, LibAsset.AssetType memory matchCalculate) internal returns (uint){
         (uint rest, uint fee) = subFeeInBp(totalAmount, amount, buyerFee.add(sellerFee));
         if (fee > 0) {
             address tokenAddress = address(0);
-            if (matchCalculate.tp == LibAsset.ERC20_ASSET_TYPE){
+            if (matchCalculate.tp == LibAsset.ERC20_ASSET_TYPE) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
             }
-            if (matchCalculate.tp == LibAsset.ERC1155_ASSET_TYPE){
+            if (matchCalculate.tp == LibAsset.ERC1155_ASSET_TYPE) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
@@ -185,4 +185,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         return feesRecipients;
     }
 
+
+    uint256[46] private __gap;
 }

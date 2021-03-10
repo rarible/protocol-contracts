@@ -51,12 +51,12 @@ contract("LibFill", accounts => {
 		});
 
 		it("should fill orders when right order has better price", async () => {
-			const left = order.Order(ZERO, order.Asset("0x00000000", "0x", 100), ZERO, order.Asset("0x00000000", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-			const right = order.Order(ZERO, order.Asset("0x00000000", "0x", 401), ZERO, order.Asset("0x00000000", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+			const left = order.Order(ZERO, order.Asset("0x00000000", "0x", 1000), ZERO, order.Asset("0x00000000", "0x", 2000), 1, 0, 0, "0xffffffff", "0x");
+			const right = order.Order(ZERO, order.Asset("0x00000000", "0x", 4001), ZERO, order.Asset("0x00000000", "0x", 2000), 1, 0, 0, "0xffffffff", "0x");
 
 			const fill = await lib.fillOrder(left, right, 0, 0);
-			assert.equal(fill[0], 100);
-			assert.equal(fill[1], 200);
+			assert.equal(fill[0], 1000);
+			assert.equal(fill[1], 2000);
 		});
 
 		it("should throw if price is not ok", async () => {

@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 import "../../../contracts/exchange/v2/AssetMatcher.sol";
 
-//todo тест на кастомный asset matcher
 contract AssetMatcherTest is Initializable, OwnableUpgradeable, AssetMatcher {
 
     function __AssetMatcherTest_init() external {
