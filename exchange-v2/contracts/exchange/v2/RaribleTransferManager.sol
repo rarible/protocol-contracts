@@ -127,9 +127,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     function parseOrder(LibOrder.Order memory order) pure internal returns (address beneficiary) {
         beneficiary = order.maker;
         if (order.dataType == LibOrderDataV1.V1) {
-            (address orderBeneficiary) = abi.decode(order.data, (address));
-            if (orderBeneficiary != address(0)) {
-                beneficiary = orderBeneficiary;
+            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
+            if (orderData.benificiary != address(0)) {
+                beneficiary = orderData.benificiary;
             }
         }
     }

@@ -17,7 +17,7 @@ const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const eth = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, enc, encDataV1, id } = require("../assets");
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let testing;
@@ -105,7 +105,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-    it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community", async () => {
+    it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community, orders dataType == V1", async () => {
 			const { left, right } = await prepare721_1155Orders(105)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
@@ -122,9 +122,11 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await erc1155.mint(accounts[2], erc1155TokenId1, t2Amount);
 			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
-
-			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, "0xffffffff", "0x");
-			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+			/*in this: accounts[3] - address originLeftOrder, 100 - originLeftOrderFee(bp%)*/
+			let encDataLeft = encDataV1(accounts[1], accounts[3], 100);
+			let encDataRight = encDataV1(accounts[2], accounts[4], 200);
+			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataRight);
 			return { left, right }
 		}
 
