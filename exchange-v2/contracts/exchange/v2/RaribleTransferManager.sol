@@ -80,9 +80,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchNft,
         address orderBeneficiary,
         bytes4 to
-    ) internal returns (uint rest) {
-        uint totalAmount = calculateTotalAmount(amount, buyerFee);
-        rest = transferProtocolFee(totalAmount, amount, from, matchCalculate);
+    ) internal returns (uint totalAmount) {
+        totalAmount = calculateTotalAmount(amount, buyerFee);
+        uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, to);
         transfer(LibAsset.Asset(matchCalculate, rest), from, orderBeneficiary, to);
     }
@@ -108,7 +108,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint rest,
         uint amount,
         address from,
-        bytes4 to)internal returns (uint restValue){
+        bytes4 to
+    )internal returns (uint restValue){
         LibFee.Fee[] memory fees = getRoyalties(matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
@@ -149,25 +150,30 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     }
 
     function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibFee.Fee[] memory feesRecipients){
-        if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE){
+        if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
             return feesRecipients;
         }
         (address addressAsset, uint tokenIdAsset) = abi.decode(asset.data, (address, uint));
-        if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
+        if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
+            RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
+            try withFees.getFees(tokenIdAsset) returns (LibFee.Fee[] memory feesRecipientsResult) {
+                feesRecipients = feesRecipientsResult;
+            }catch{}
+        } else if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
             RoyaltiesV1Impl withFees = RoyaltiesV1Impl(addressAsset);
             address payable[] memory recipients;
-            try withFees.getFeeRecipients(tokenIdAsset) returns (address payable[] memory recipientsResult){
+            try withFees.getFeeRecipients(tokenIdAsset) returns (address payable[] memory recipientsResult) {
                 recipients = recipientsResult;
             }catch{
                 return feesRecipients;
             }
             uint[] memory fees;
-            try withFees.getFeeBps(tokenIdAsset) returns (uint[] memory feesResult){
+            try withFees.getFeeBps(tokenIdAsset) returns (uint[] memory feesResult) {
                 fees = feesResult;
             }catch{
                 return feesRecipients;
             }
-            if (fees.length != recipients.length ){
+            if (fees.length != recipients.length ) {
                 return feesRecipients;
             }
             feesRecipients = new LibFee.Fee[](fees.length);
@@ -175,12 +181,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
                 feesRecipients[i].value = fees[i];
                 feesRecipients[i].account = recipients[i];
             }
-        } else if ((asset.tp == LibAsset.ERC1155_ASSET_TYPE || asset.tp == LibAsset.ERC721_ASSET_TYPE) &&
-            (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES))) {
-            RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
-            try withFees.getFees(tokenIdAsset) returns (LibFee.Fee[] memory feesRecipientsResult){
-                feesRecipients = feesRecipientsResult;
-            }catch{}
         }
         return feesRecipients;
     }

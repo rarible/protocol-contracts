@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
@@ -18,9 +18,8 @@ contract TestERC1155WithRoyaltiesV2_InterfaceError is Initializable, AbstractRoy
         _saveFees(tokenId, _fees);
     }
 
-    function getFees(uint256 id) override external view returns (LibFee.Fee[] memory) {
-        require(false, "getFees failed");
-        return fees[id];
+    function getFees(uint256) override external view returns (LibFee.Fee[] memory) {
+        revert("getFees failed");
     }
 
     function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {}

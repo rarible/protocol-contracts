@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
@@ -18,18 +18,12 @@ contract TestERC721WithRoyaltiesV1_InterfaceError is Initializable, AbstractRoya
         _saveFees(tokenId, _fees);
     }
 
-    function getFeeRecipients(uint256 id) public override pure returns (address payable[] memory) {
-        require(false, "getFeeRecipients failed");
-        id +=1;// to silence warning
-        address payable[] memory mem1;
-        return mem1;
+    function getFeeRecipients(uint256) public override pure returns (address payable[] memory) {
+        revert("getFeeRecipients failed");
     }
 
-    function getFeeBps(uint256 id) public override pure returns (uint[] memory) {
-        require(false, "getFeeBps failed");
-        id +=1;// to silence warning
-        uint[] memory result;
-        return result;
+    function getFeeBps(uint256) public override pure returns (uint[] memory) {
+        revert("getFeeBps failed");
     }
 
     function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {}
