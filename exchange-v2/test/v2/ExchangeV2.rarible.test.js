@@ -42,7 +42,7 @@ contract("ExchangeV2", accounts => {
 	});
 
 	describe("matchOrders", () => {
-		it("beneficiary can be defined for Order", async () => {
+		it("beneficiary can be defined for Order (sellerFee 3%, buyerFee 3%)", async () => {
 			const { left, right } = await prepare2Orders()
 			right.dataType = id("V1");
 			right.data = enc(accounts[3]);
@@ -52,7 +52,7 @@ contract("ExchangeV2", accounts => {
 			assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[3]), 100);
+			assert.equal(await t1.balanceOf(accounts[3]), 97);
 			assert.equal(await t2.balanceOf(accounts[1]), 200);
 			assert.equal(await t2.balanceOf(accounts[2]), 0);
 		})
@@ -89,7 +89,7 @@ contract("ExchangeV2", accounts => {
 
 	})
 
-	async function prepare2Orders(t1Amount = 100, t2Amount = 200) {
+	async function prepare2Orders(t1Amount = 103, t2Amount = 200) {
 		await t1.mint(accounts[1], t1Amount);
 		await t2.mint(accounts[2], t2Amount);
 		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
