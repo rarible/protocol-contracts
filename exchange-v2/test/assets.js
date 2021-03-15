@@ -13,6 +13,10 @@ function enc(token, tokenId) {
 }
 
 function encDataV1(benificiaryAddress, originAddress, originFee) {
+		return web3.eth.abi.encodeParameters(["address", "address[]", "uint256[]"], [benificiaryAddress, originAddress, originFee]);
+}
+
+function encDataV2(benificiaryAddress, originAddress, originFee) {
 		return web3.eth.abi.encodeParameters(["address", "address", "uint256"], [benificiaryAddress, originAddress, originFee]);
 }
 
@@ -21,5 +25,6 @@ const ERC20 = id("ERC20");
 const ERC721 = id("ERC721");
 const ERC1155 = id("ERC1155");
 const ORDER_DATA_V1 = id("V1");
+const ORDER_DATA_V2 = id("V2");
 
-module.exports = { id, ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, enc, encDataV1 }
+module.exports = { id, ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, enc, encDataV1, encDataV2 }
