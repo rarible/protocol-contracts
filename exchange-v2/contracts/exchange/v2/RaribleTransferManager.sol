@@ -103,19 +103,20 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         return rest;
     }
 
-    function transferRoyalties(LibAsset.AssetType memory matchCalculate,
+    function transferRoyalties(
+        LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         uint rest,
         uint amount,
         address from,
         bytes4 to
-    )internal returns (uint restValue){
+    ) internal returns (uint restValue){
         LibFee.Fee[] memory fees = getRoyalties(matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
             restValue = newRestValue;
-            if (feeValue > 0){
+            if (feeValue > 0) {
                 transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, to);
             }
         }
@@ -158,22 +159,22 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
             try withFees.getFees(tokenIdAsset) returns (LibFee.Fee[] memory feesRecipientsResult) {
                 feesRecipients = feesRecipientsResult;
-            }catch{}
+            } catch {}
         } else if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
             RoyaltiesV1Impl withFees = RoyaltiesV1Impl(addressAsset);
             address payable[] memory recipients;
             try withFees.getFeeRecipients(tokenIdAsset) returns (address payable[] memory recipientsResult) {
                 recipients = recipientsResult;
-            }catch{
+            } catch {
                 return feesRecipients;
             }
             uint[] memory fees;
             try withFees.getFeeBps(tokenIdAsset) returns (uint[] memory feesResult) {
                 fees = feesResult;
-            }catch{
+            } catch {
                 return feesRecipients;
             }
-            if (fees.length != recipients.length ) {
+            if (fees.length != recipients.length) {
                 return feesRecipients;
             }
             feesRecipients = new LibFee.Fee[](fees.length);
