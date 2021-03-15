@@ -79,3 +79,31 @@ TODO: possible improvements:
 
 - support bundles
 - support random boxes
+
+#### Fees
+
+RaribleTransferManager supports these types of fees:
+- protocol fees (are taken from both sides of the deal)
+- origin fees (origin and origin fee is set for every order. it can be different for two orders involved)
+- royalties (authors of the work will receive part of each sale)
+
+##### Fees calculation, fee side
+
+To take a fee we need to calculate, what side of the deal can be used as money.
+There is a simple algorithm to do it:
+- if ETH is from any side of the deal, it's used
+- if not, then if ERC-20 is in the deal, it's used
+- if not, then if ERC-1155 is in the deal, it's used
+- otherwise, fee is not taken (for example, two ERC-721 are involved in the deal)
+
+When we established, what part of the deal can be treated as money, then we can establish, that
+- buyer is side of the deal who owns money
+- seller is other side of the deal
+
+Then total amount of the asset (money side) should be calculated
+- protocol fee is added on top of the filled amount
+- origin fee of the buyer's order is added on top too
+
+If buyer is using ERC-20 token for payment, then he must approve at least this calculated amount of tokens.
+
+If buyer is using ETH, then he must send this calculated amount of ETH with the tx.
