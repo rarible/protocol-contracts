@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.9 <0.8.0;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 import "../../../contracts/exchange/v2/RaribleTransferManager.sol";
 import "../../../contracts/exchange/v2/ITransferExecutor.sol";
 import "../../../contracts/exchange/v2/OrderValidator.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
+
+    function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
 
     function checkDoTransfers( LibAsset.AssetType memory makeMatch,
         LibAsset.AssetType memory takeMatch,

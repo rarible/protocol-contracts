@@ -17,7 +17,7 @@ const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const eth = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, enc, encDataV1, encDataV2, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, enc, encDataV2, id } = require("../assets");
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let testing;
@@ -39,6 +39,10 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let erc721TokenId1 = 53;
 	let erc1155TokenId1 = 54;
 	let erc1155TokenId2 = 55;
+
+	function encDataV1(tuple) {
+		return testing.encode(tuple)
+	}
 
 	beforeEach(async () => {
 		transferProxy = await TransferProxy.new();
@@ -127,9 +131,9 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			let feeOriginLeft = [100, 300];
 			let addrOriginRight = [accounts[4], accounts[6]];
       let feeOriginRight = [200, 400];
-			let encDataLeft = encDataV1(accounts[1], addrOriginLeft, feeOriginLeft);
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft, feeOriginLeft]);
 			console.log("\n\nTesting encDataLeft: %s",  encDataLeft);
-			let encDataRight = encDataV1(accounts[2], addrOriginRight, feeOriginRight);
+			let encDataRight = await encDataV1([accounts[2], addrOriginRight, feeOriginRight]);
 			console.log("\n\nTesting encDataRight: %s",  encDataRight);
 //			let encDataLeft = encDataV2(accounts[1], accounts[3], 100);
 //			let encDataRight = encDataV2(accounts[2], accounts[4], 200);
@@ -137,6 +141,10 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataRight);
 			return { left, right }
 		}
+
+0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000f17f52151ebef6c7334fad080c5704d77216b732000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000002000000000000000000000000821aea9a577a9b44299b9c15c88cf3087f3b55440000000000000000000000002932b7a2355d6fecc4b5c0b6bd44cc31df247a2e00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000012c
+                                                                0x000000000000000000000000f17f52151ebef6c7334fad080c5704d77216b732000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000002000000000000000000000000821aea9a577a9b44299b9c15c88cf3087f3b55440000000000000000000000002932b7a2355d6fecc4b5c0b6bd44cc31df247a2e00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000012c
+
 
 //    it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
 //			const { left, right } = await prepare1155O_721rders(105)
