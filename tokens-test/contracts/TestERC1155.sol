@@ -6,4 +6,8 @@ contract TestERC1155 is ERC1155 {
     constructor(string memory uri) ERC1155(uri) {
 
     }
+
+    function mint(address account, uint256 tokenId, uint256 amount, bytes memory data) external {
+        _mint(account, tokenId, amount, data);
+    }
 }
