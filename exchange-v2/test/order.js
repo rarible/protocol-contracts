@@ -35,10 +35,11 @@ const Types = {
 };
 
 async function sign(order, account, verifyingContract) {
+	const chainId = await web3.eth.getChainId();
 	const data = EIP712.createTypeData({
 		name: "Exchange",
 		version: "2",
-		chainId: 1,
+		chainId,
 		verifyingContract
 	}, 'Order', order, Types);
 	return (await EIP712.signTypedData(web3, account, data)).sig;

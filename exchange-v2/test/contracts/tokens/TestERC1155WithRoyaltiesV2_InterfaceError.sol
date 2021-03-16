@@ -18,9 +18,8 @@ contract TestERC1155WithRoyaltiesV2_InterfaceError is Initializable, AbstractRoy
         _saveFees(tokenId, _fees);
     }
 
-    function getFees(uint256 id) override external view returns (LibFee.Fee[] memory) {
-        require(false, "getFees failed");
-        return fees[id];
+    function getFees(uint256) override external view returns (LibFee.Fee[] memory) {
+        revert("getFees failed");
     }
 
     function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {}

@@ -101,24 +101,24 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
             transfer(LibAsset.Asset(matchCalculate, fee), from, getFeeReceiver(tokenAddress), TO_PROTOCOL);
-
         }
         return rest;
     }
 
-    function transferRoyalties(LibAsset.AssetType memory matchCalculate,
+    function transferRoyalties(
+        LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         uint rest,
         uint amount,
         address from,
-        bytes4 to)
-    internal returns (uint restValue){
+        bytes4 to
+    ) internal returns (uint restValue){
         LibFee.Fee[] memory fees = getRoyalties(matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
             restValue = newRestValue;
-            if (feeValue > 0){
+            if (feeValue > 0) {
                 transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, to);
             }
         }
@@ -204,25 +204,30 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     }
 
     function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibFee.Fee[] memory feesRecipients){
-        if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE){
+        if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
             return feesRecipients;
         }
         (address addressAsset, uint tokenIdAsset) = abi.decode(asset.data, (address, uint));
-        if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
+        if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
+            RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
+            try withFees.getFees(tokenIdAsset) returns (LibFee.Fee[] memory feesRecipientsResult) {
+                feesRecipients = feesRecipientsResult;
+            } catch {}
+        } else if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
             RoyaltiesV1Impl withFees = RoyaltiesV1Impl(addressAsset);
             address payable[] memory recipients;
-            try withFees.getFeeRecipients(tokenIdAsset) returns (address payable[] memory recipientsResult){
+            try withFees.getFeeRecipients(tokenIdAsset) returns (address payable[] memory recipientsResult) {
                 recipients = recipientsResult;
-            }catch{
+            } catch {
                 return feesRecipients;
             }
             uint[] memory fees;
-            try withFees.getFeeBps(tokenIdAsset) returns (uint[] memory feesResult){
+            try withFees.getFeeBps(tokenIdAsset) returns (uint[] memory feesResult) {
                 fees = feesResult;
-            }catch{
+            } catch {
                 return feesRecipients;
             }
-            if (fees.length != recipients.length ){
+            if (fees.length != recipients.length) {
                 return feesRecipients;
             }
             feesRecipients = new LibFee.Fee[](fees.length);
@@ -230,15 +235,10 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
                 feesRecipients[i].value = fees[i];
                 feesRecipients[i].account = recipients[i];
             }
-        } else if ((asset.tp == LibAsset.ERC1155_ASSET_TYPE || asset.tp == LibAsset.ERC721_ASSET_TYPE) &&
-            (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES))) {
-            RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
-            try withFees.getFees(tokenIdAsset) returns (LibFee.Fee[] memory feesRecipientsResult){
-                feesRecipients = feesRecipientsResult;
-            }catch{}
         }
         return feesRecipients;
     }
+
 
     uint256[46] private __gap;
 }
