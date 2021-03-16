@@ -81,12 +81,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchNft,
         bytes4 to
     ) internal returns (uint rest) {
-        uint[] memory fees = getOriginFees(orderCalculate); //todo починить место падения
-        uint totalAmount = calculateTotalAmount(amount, buyerFee, fees);
+        uint totalAmount = calculateTotalAmount(amount, buyerFee, getOriginFees(orderCalculate));
         rest = transferProtocolFee(totalAmount, amount, orderCalculate.maker, matchCalculate);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, orderCalculate.maker, to);
-        rest = transferOrigins(matchCalculate,  rest, amount, orderCalculate, to);
-        rest = transferOrigins(matchNft, rest, amount, orderCalculate, to);
+        rest = transferOrigins(matchCalculate, rest, amount, orderCalculate, orderCalculate.maker, to);
+        rest = transferOrigins(matchCalculate, rest, amount, orderNft, orderCalculate.maker, to);
         transfer(LibAsset.Asset(matchCalculate, rest), orderCalculate.maker, parseOrder(orderNft), to);
     }
 
@@ -129,6 +128,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint rest,
         uint amount,
         LibOrder.Order memory orderCalculate,
+        address from,
         bytes4 to)
     internal returns (uint restValue) {
         restValue = rest;
@@ -139,7 +139,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
                 (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i]);
                 restValue = newRestValue;
                 if (feeValue > 0){
-                    transfer(LibAsset.Asset(matchCalculate, feeValue), orderCalculate.maker,  originAddress[i], to);
+                    transfer(LibAsset.Asset(matchCalculate, feeValue), from,  originAddress[i], to);
                 }
             }
         }
