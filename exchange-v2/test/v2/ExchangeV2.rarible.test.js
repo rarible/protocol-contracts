@@ -4,17 +4,19 @@ const TestERC20 = artifacts.require("TestERC20.sol");
 const TransferProxy = artifacts.require("TransferProxy.sol");
 const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
+const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, enc, id } = require("../assets");
 
 contract("ExchangeV2", accounts => {
 	let testing;
 	let transferProxy;
 	let erc20TransferProxy;
+	let transferManagerTest;
 	let t1;
 	let t2;
 	let libOrder;
@@ -31,6 +33,7 @@ contract("ExchangeV2", accounts => {
 		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__Exchange_init" });
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
+		transferManagerTest = await RaribleTransferManagerTest.new();
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
 		testing.setBuyerFee(300);
@@ -44,18 +47,38 @@ contract("ExchangeV2", accounts => {
 	describe("matchOrders", () => {
 		it("beneficiary can be defined for Order (sellerFee 3%, buyerFee 3%)", async () => {
 			const { left, right } = await prepare2Orders()
-			right.dataType = id("V1");
-			right.data = enc(accounts[3]);
 
 			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
 
 			assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[3]), 97);
+			assert.equal(await t1.balanceOf(accounts[2]), 95);
+			assert.equal(await t1.balanceOf(accounts[3]), 1);
+			assert.equal(await t1.balanceOf(accounts[4]), 2);
 			assert.equal(await t2.balanceOf(accounts[1]), 200);
 			assert.equal(await t2.balanceOf(accounts[2]), 0);
 		})
+
+		async function prepare2Orders(t1Amount = 104, t2Amount = 200) {
+			await t1.mint(accounts[1], t1Amount);
+			await t2.mint(accounts[2], t2Amount);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+			let addrOriginLeft = [accounts[3]];
+			let feeOriginLeft = [100];
+			let addrOriginRight = [accounts[4]];
+      let feeOriginRight = [200];
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft, feeOriginLeft]);
+			let encDataRight = await encDataV1([accounts[2], addrOriginRight, feeOriginRight]);
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+			return { left, right }
+		}
+
+		function encDataV1(tuple) {
+    		return transferManagerTest.encode(tuple)
+    }
 
 		it("eth orders work, expect throw, not enough eth ", async () => {
     	await t1.mint(accounts[1], 100);
@@ -72,8 +95,9 @@ contract("ExchangeV2", accounts => {
     	await t1.mint(accounts[1], 100);
     	await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
+			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
     	const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-    	const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
     	let signatureRight = await getSignature(right, accounts[1]);
     	await verifyBalanceChange(accounts[2], 206, async () =>
     		verifyBalanceChange(accounts[1], -194, async () =>
@@ -88,17 +112,6 @@ contract("ExchangeV2", accounts => {
 
 
 	})
-
-	async function prepare2Orders(t1Amount = 103, t2Amount = 200) {
-		await t1.mint(accounts[1], t1Amount);
-		await t2.mint(accounts[2], t2Amount);
-		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
-		await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
-
-		const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, "0xffffffff", "0x");
-		const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-		return { left, right }
-	}
 
 	function getSignature(order, signer) {
 		return sign(order, signer, testing.address);
