@@ -9,7 +9,7 @@ library LibOrderDataV1 {
     bytes4 constant public V1 = bytes4(keccak256("V1"));
 
     struct DataV1 {
-        address benificiary;
+        LibFee.Fee[] payouts;
         LibFee.Fee[] originFees;
     }
 

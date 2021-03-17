@@ -90,6 +90,29 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             transfer(LibAsset.Asset(matchCalculate, rest), orderCalculate.maker, parseOrder(orderNft), to);
         }
     }
+    //todo write function
+    function transferPayouts(
+        LibAsset.AssetType memory matchCalculate,
+        uint amount,
+        LibOrder.Order memory orderCalculate,
+        LibOrder.Order memory orderNft
+    ) internal pure returns (uint restValue){
+        restValue = rest;
+        LibFee.Fee[] payouts = parseOrder(orderNft);
+        //todo check sum value ==10000?
+
+        for (uint256 i = 0; i < payouts.length; i++) {
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, payouts[i].value);
+            restValue = newRestValue;
+            if (feeValue > 0) {
+//                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, to);
+                transfer(LibAsset.Asset(matchCalculate, rest), orderCalculate.maker, , to);
+            }
+        }
+        if (rest > 0) {
+
+        }
+    }
 
     function transferProtocolFee(
         uint totalAmount,
@@ -160,17 +183,28 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             total = total.add(amount.bp(orderOriginFees[i].value));
         }
     }
-
-    function parseOrder(LibOrder.Order memory order) pure internal returns (address beneficiary) {
-        beneficiary = order.maker;
+    //todo rename parseOrder()
+    function parseOrder(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory beneficiary) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
-            if (orderData.benificiary != address(0)) {
-                beneficiary = orderData.benificiary;
-            }
+            beneficiary = orderData.payouts;
+        } else{
+            beneficiary = new LibFee.Fee[](1);
+            beneficiary[0].account = payable(order.maker);
+            beneficiary[0].value = 10000;
         }
     }
 
+//    function parseOrder(LibOrder.Order memory order) pure internal returns (address beneficiary) {
+//        beneficiary = order.maker;
+//        if (order.dataType == LibOrderDataV1.V1) {
+//            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
+//            if (orderData.benificiary != address(0)) {
+//                beneficiary = orderData.benificiary;
+//            }
+//        }
+//    }
+//
     function getOriginFees(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory originOrderFees) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
