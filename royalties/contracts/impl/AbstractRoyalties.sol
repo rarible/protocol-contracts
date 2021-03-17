@@ -2,12 +2,12 @@
 
 pragma solidity >=0.6.2 <0.8.0;
 
-import "../LibFee.sol";
+import "../LibPart.sol";
 
 abstract contract AbstractRoyalties {
-    mapping (uint256 => LibFee.Fee[]) public fees;
+    mapping (uint256 => LibPart.Part[]) public fees;
 
-    function _saveFees(uint256 _id, LibFee.Fee[] memory _fees) internal {
+    function _saveFees(uint256 _id, LibPart.Part[] memory _fees) internal {
         for (uint i = 0; i < _fees.length; i++) {
             require(_fees[i].account != address(0x0), "Recipient should be present");
             require(_fees[i].value != 0, "Fee value should be positive");
@@ -24,5 +24,5 @@ abstract contract AbstractRoyalties {
         }
     }
 
-    function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) virtual internal;
+    function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _fees) virtual internal;
 }

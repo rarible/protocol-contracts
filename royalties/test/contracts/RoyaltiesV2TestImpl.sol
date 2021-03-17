@@ -7,7 +7,7 @@ import "../../contracts/impl/RoyaltiesV2Impl.sol";
 
 contract RoyaltiesV2TestImpl is RoyaltiesV2Impl {
 
-    function saveFees(uint256 _id, LibFee.Fee[] memory _fees) external {
+    function saveFees(uint256 _id, LibPart.Part[] memory _fees) external {
         _saveFees(_id, _fees);
     }
 

@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "../../contracts/impl/RoyaltiesV1Impl.sol";
 
 contract RoyaltiesV1TestImpl is RoyaltiesV1Impl {
-    function saveFees(uint256 _id, LibFee.Fee[] memory _fees) external {
+    function saveFees(uint256 _id, LibPart.Part[] memory _fees) external {
         _saveFees(_id, _fees);
     }
 

@@ -13,7 +13,7 @@ contract("v2", accounts => {
 	it("simple impl works", async () => {
 		await impl.saveFees(10, [{ account: accounts[1], value: 100 }]);
 
-		const result = await impl.getFees(10);
+		const result = await impl.getRoyalties(10);
 		assert.equal(result.length, 1);
 		assert.equal(result[0][0], accounts[1]);
 		assert.equal(result[0][1], 100);
@@ -26,7 +26,7 @@ contract("v2", accounts => {
 		await impl.saveFees(10, [{ account: accounts[1], value: 100 }]);
 		await impl.updateAccount(10, accounts[1], accounts[2]);
 
-		const result = await impl.getFees(10);
+		const result = await impl.getRoyalties(10);
 		assert.equal(result.length, 1);
 		assert.equal(result[0][0], accounts[2]);
 		assert.equal(result[0][1], 100);
