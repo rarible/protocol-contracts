@@ -127,18 +127,14 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
 			/*in this: accounts[3] - address originLeftOrder, 100 - originLeftOrderFee(bp%)*/
-			let addrOriginLeft = [accounts[3], accounts[5]];
-			let feeOriginLeft = [100, 300];
-			let addrOriginRight = [accounts[4], accounts[6]];
-      let feeOriginRight = [200, 400];
-			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[2], addrOriginRight, feeOriginRight]);
+			let addrOriginLeft = [[accounts[3], 100], [accounts[5], 300]];
+			let addrOriginRight = [[accounts[4], 200], [accounts[6], 400]];
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[2], addrOriginRight]);
 			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataRight);
 			return { left, right }
 		}
-//0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000f17f52151ebef6c7334fad080c5704d77216b732000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000002000000000000000000000000821aea9a577a9b44299b9c15c88cf3087f3b55440000000000000000000000002932b7a2355d6fecc4b5c0b6bd44cc31df247a2e00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000012c
-//                                                                0x000000000000000000000000f17f52151ebef6c7334fad080c5704d77216b732000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000002000000000000000000000000821aea9a577a9b44299b9c15c88cf3087f3b55440000000000000000000000002932b7a2355d6fecc4b5c0b6bd44cc31df247a2e00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000012c
 
     it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepare1155O_721rders(105)

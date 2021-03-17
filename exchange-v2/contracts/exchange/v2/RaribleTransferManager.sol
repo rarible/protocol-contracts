@@ -91,7 +91,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function transferProtocolFee(uint totalAmount, uint amount, address from, LibAsset.AssetType memory matchCalculate) internal returns (uint){
+    function transferProtocolFee(
+        uint totalAmount,
+        uint amount,
+        address from,
+        LibAsset.AssetType memory matchCalculate
+    ) internal returns (uint) {
         (uint rest, uint fee) = subFeeInBp(totalAmount, amount, buyerFee.add(sellerFee));
         if (fee > 0) {
             address tokenAddress = address(0);
@@ -126,31 +131,33 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function transferOrigins(LibAsset.AssetType memory matchCalculate,
+    function transferOrigins(
+        LibAsset.AssetType memory matchCalculate,
         uint rest,
         uint amount,
         LibOrder.Order memory orderCalculate,
         address from,
-        bytes4 to)
-    internal returns (uint restValue) {
+        bytes4 to
+    ) internal returns (uint restValue) {
         restValue = rest;
-        address[] memory  originAddress = getOrigin(orderCalculate);
-        uint[] memory  originFees = getOriginFees(orderCalculate);
-        if ( originAddress.length == originFees.length) {
-            for (uint256 i = 0; i < originAddress.length; i++) {
-                (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i]);
-                restValue = newRestValue;
-                if (feeValue > 0){
-                    transfer(LibAsset.Asset(matchCalculate, feeValue), from,  originAddress[i], to);
-                }
+        LibFee.Fee[] memory  originFees = getOriginFees(orderCalculate);
+        for (uint256 i = 0; i < originFees.length; i++) {
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i].value);
+            restValue = newRestValue;
+            if (feeValue > 0) {
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  originFees[i].account, to);
             }
         }
     }
 
-    function calculateTotalAmount(uint amount, uint feeOnTopBp, uint[] memory orderFees) internal pure returns (uint total){
+    function calculateTotalAmount(
+        uint amount,
+        uint feeOnTopBp,
+        LibFee.Fee[] memory orderOriginFees
+    ) internal pure returns (uint total){
         total = amount.add(amount.bp(feeOnTopBp));
-        for (uint256 i = 0; i < orderFees.length; i++) {
-            total = total.add(amount.bp(orderFees[i]));
+        for (uint256 i = 0; i < orderOriginFees.length; i++) {
+            total = total.add(amount.bp(orderOriginFees[i].value));
         }
     }
 
@@ -164,24 +171,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function getOriginFees(LibOrder.Order memory order) pure internal returns (uint[] memory fees) {
+    function getOriginFees(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory originOrderFees) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
-            if (orderData.benificiary != address(0)) {
-                fees = orderData.originFee;
-            }
+            originOrderFees = orderData.originFees;
         }
-        return fees;
-    }
-
-    function getOrigin(LibOrder.Order memory order) pure internal returns (address[] memory origins) {
-        if (order.dataType == LibOrderDataV1.V1) {
-            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
-            if (orderData.benificiary != address(0)) {
-                origins = orderData.origin;
-            }
-        }
-        return origins;
     }
 
     function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {
@@ -198,7 +192,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibFee.Fee[] memory feesRecipients){
+    function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibFee.Fee[] memory feesRecipients) {
         if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
             return feesRecipients;
         }

@@ -3,18 +3,18 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
+import "@rarible/royalties/contracts/LibFee.sol";
+
 library LibOrderDataV1 {
     bytes4 constant public V1 = bytes4(keccak256("V1"));
 
     struct DataV1 {
         address benificiary;
-        address[] origin;
-        uint[] originFee;
+        LibFee.Fee[] originFees;
     }
 
-    //todo think:  different metods return different poles of struct DataV1,
     function decodeOrderDataV1(bytes memory data) internal pure returns (DataV1 memory orderData) {
-        orderData = abi.decode(data, (DataV1)); //todo transaction revert here
+        orderData = abi.decode(data, (DataV1));
     }
 
 }

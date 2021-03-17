@@ -117,12 +117,10 @@ contract("ExchangeV2", accounts => {
 			await t2.mint(accounts[2], t2Amount);
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 			await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
-			let addrOriginLeft = [accounts[3]];
-			let feeOriginLeft = [100];
-			let addrOriginRight = [accounts[4]];
-      let feeOriginRight = [200];
-			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[2], addrOriginRight, feeOriginRight]);
+			let addrOriginLeft =[[accounts[3], 100]];
+			let addrOriginRight = [[accounts[4], 200]];
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[2], addrOriginRight]);
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
 			return { left, right }
@@ -149,9 +147,8 @@ contract("ExchangeV2", accounts => {
 			await t2.mint(accounts[2], t2Amount);
 			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 			await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
-			let addrOriginLeft = [accounts[3], accounts[4]];
-			let feeOriginLeft = [100, 200];
-			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft, feeOriginLeft]);
+			let addrOriginLeft = [[accounts[3], 100], [accounts[4], 200]];
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft]);
 			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t2.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0,  "0xffffffff", "0x");
 			return { left, right }
@@ -183,13 +180,11 @@ contract("ExchangeV2", accounts => {
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
 
-			let addrOriginLeft = [accounts[3], accounts[4]];
-			let feeOriginLeft = [300, 400];
-			let addrOriginRight = [accounts[5]];
-			let feeOriginRight = [500];
+			let addrOriginLeft = [[accounts[3], 300], [accounts[4], 400]];
+			let addrOriginRight = [[accounts[5], 500]];
 
-			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[2], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[2], addrOriginRight]);
 
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -222,13 +217,11 @@ contract("ExchangeV2", accounts => {
 			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
-			let addrOriginLeft = [accounts[3], accounts[4]];
-			let feeOriginLeft = [300, 400];
-			let addrOriginRight = [accounts[5]];
-			let feeOriginRight = [500];
+			let addrOriginLeft = [[accounts[3], 300], [accounts[4], 400]];
+			let addrOriginRight = [[accounts[5], 500]];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -239,13 +232,11 @@ contract("ExchangeV2", accounts => {
 			await erc721V1.mint(accounts[1], erc721TokenId1, [[accounts[3], 300], [accounts[4], 400]]);
     	await erc721V1.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 
-			let addrOriginLeft = [accounts[5], accounts[6]];
-			let feeOriginLeft = [500, 600];
-			let addrOriginRight = [accounts[7]];
-			let feeOriginRight = [700];
+			let addrOriginLeft = [[accounts[5], 500], [accounts[6], 600]];
+			let addrOriginRight = [[accounts[7], 700]];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
     	const right = Order(accounts[1], Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -275,13 +266,11 @@ contract("ExchangeV2", accounts => {
 			await erc721.mint(accounts[1], erc721TokenId1);
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 
-			let addrOriginLeft = [accounts[5], accounts[6]];
-			let feeOriginLeft = [500, 600];
-			let addrOriginRight = [accounts[7]];
-			let feeOriginRight = [700];
+			let addrOriginLeft = [[accounts[5], 500], [accounts[6], 600]];
+			let addrOriginRight = [[accounts[7], 700]];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
     	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -308,12 +297,10 @@ contract("ExchangeV2", accounts => {
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 
 			let addrOriginLeft = [];
-			let feeOriginLeft = [];
-			let addrOriginRight = [accounts[5], accounts[6], accounts[7]];
-			let feeOriginRight = [500, 600, 700];
+			let addrOriginRight = [[accounts[5], 500], [accounts[6], 600], [accounts[7], 700]];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
     	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -339,13 +326,11 @@ contract("ExchangeV2", accounts => {
 			await erc721.mint(accounts[1], erc721TokenId1);
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 
-			let addrOriginLeft = [accounts[5], accounts[6], accounts[7]];
-			let feeOriginLeft = [500, 600, 700];
+			let addrOriginLeft = [[accounts[5], 500], [accounts[6], 600], [accounts[7], 700]];
 			let addrOriginRight = [];
-			let feeOriginRight = [];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
     	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -371,13 +356,11 @@ contract("ExchangeV2", accounts => {
 			await erc721.mint(accounts[1], erc721TokenId1);
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 
-			let addrOriginLeft = [accounts[5], accounts[6], accounts[7], accounts[3]];
-			let feeOriginLeft = [500, 600, 700, 3000];
+			let addrOriginLeft = [[accounts[5], 500], [accounts[6], 600], [accounts[7], 700], [accounts[3], 3000]];
 			let addrOriginRight = [];
-			let feeOriginRight = [];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
     	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
@@ -386,7 +369,7 @@ contract("ExchangeV2", accounts => {
     	await expectThrow(
       	testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 300, gasPrice: 0 })
       );
-			/*comments for k.shcherbakov@rarible.com to show machanizm*/
+			/*comments for k.shcherbakov@rarible.com to show mechanism*/
 //    	await verifyBalanceChange(accounts[2], 302, async () =>			//200+6buyerFee+ (10 +12 +14 +60 origin left) (Need 302 ETH not enough!)
 //    		verifyBalanceChange(accounts[1], -194, async () =>				//200 -6seller -
 //    			verifyBalanceChange(accounts[5], -10, async () =>
@@ -409,12 +392,10 @@ contract("ExchangeV2", accounts => {
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 
 			let addrOriginLeft = [];
-			let feeOriginLeft = [];
-			let addrOriginRight = [accounts[3], accounts[5], accounts[6], accounts[7]];
-			let feeOriginRight = [9000, 500, 600, 700];
+			let addrOriginRight = [[accounts[3], 9000], [accounts[5], 500], [accounts[6], 600], [accounts[7], 700]];
 
-			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft, feeOriginLeft]);
-			let encDataRight = await encDataV1([accounts[1], addrOriginRight, feeOriginRight]);
+			let encDataLeft = await encDataV1([accounts[2], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[1], addrOriginRight]);
 
 			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
     	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
