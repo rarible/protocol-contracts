@@ -30,6 +30,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     address public communityWallet;
     mapping(address => address) public walletsForTokens;
 
+    function __RaribleTransferManager_init_unchained(uint newBuyerFee, uint newSellerFee, address newCommunityWallet) internal initializer {
+        buyerFee = newBuyerFee;
+        sellerFee = newSellerFee;
+        communityWallet = newCommunityWallet;
+    }
+
     function setBuyerFee(uint newBuyerFee) external onlyOwner {
         buyerFee = newBuyerFee;
     }
