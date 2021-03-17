@@ -11,7 +11,7 @@ library LibERC721LazyMint {
         uint tokenId;
         string uri;
         address[] creators;
-        LibFee.LibPart[] royalties;
+        LibPart.Part[] royalties;
         bytes[] signatures;
     }
 }
