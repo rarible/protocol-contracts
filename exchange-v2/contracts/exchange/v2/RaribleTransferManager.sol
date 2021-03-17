@@ -66,10 +66,10 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalTakeAmount = fill.takeAmount;
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
             totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder, rightOrder, makeMatch, takeMatch,  TO_TAKER);
-            transfer(LibAsset.Asset(takeMatch, fill.takeAmount), rightOrder.maker, parseOrder(leftOrder), TO_MAKER);
+            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, leftOrder, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
             totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder, leftOrder, takeMatch, makeMatch, TO_MAKER);
-            transfer(LibAsset.Asset(makeMatch, fill.makeAmount), leftOrder.maker, parseOrder(rightOrder), TO_TAKER);
+            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, rightOrder, TO_TAKER);
         }
     }
 
@@ -86,25 +86,24 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, orderCalculate.maker, to);
         rest = transferOrigins(matchCalculate, rest, amount, orderCalculate, orderCalculate.maker, to);
         rest = transferOrigins(matchCalculate, rest, amount, orderNft, orderCalculate.maker, to);
-        if (rest > 0) {
-            transfer(LibAsset.Asset(matchCalculate, rest), orderCalculate.maker, parseOrder(orderNft), to);
-        }
+        rest = transferPayouts(matchCalculate, rest, orderCalculate.maker, orderNft, to);
     }
     //todo write function
     function transferPayouts(
         LibAsset.AssetType memory matchCalculate,
         uint amount,
-        LibOrder.Order memory orderCalculate,
-        LibOrder.Order memory orderNft
-    ) internal pure returns (uint restValue){
-        restValue = rest;
-        LibFee.Fee[] payouts = parseOrder(orderNft);
+        address from,
+        LibOrder.Order memory orderNft,
+        bytes4 to
+    ) internal returns (uint restValue){
+        restValue = amount;
+        LibFee.Fee[] memory payouts = parseOrder(orderNft);
         //todo check sum value ==10000?
         for (uint256 i = 0; i < payouts.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, payouts[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), orderCalculate.maker, payouts[i].account, to);
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from, payouts[i].account, to);
             }
         }
     }
@@ -190,16 +189,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-//    function parseOrder(LibOrder.Order memory order) pure internal returns (address beneficiary) {
-//        beneficiary = order.maker;
-//        if (order.dataType == LibOrderDataV1.V1) {
-//            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
-//            if (orderData.benificiary != address(0)) {
-//                beneficiary = orderData.benificiary;
-//            }
-//        }
-//    }
-//
     function getOriginFees(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory originOrderFees) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
