@@ -34,4 +34,5 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     function uri(uint id) external view override(ERC1155BaseURI, ERC1155Upgradeable) virtual returns (string memory) {
         return _tokenURI(id);
     }
+    uint256[50] private __gap;
 }

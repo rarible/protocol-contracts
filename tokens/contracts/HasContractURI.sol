@@ -25,4 +25,6 @@ abstract contract HasContractURI is ERC165Upgradeable {
     function _setContractURI(string memory _contractURI) internal {
         contractURI = _contractURI;
     }
+
+    uint256[49] private __gap;
 }

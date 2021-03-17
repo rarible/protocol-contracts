@@ -19,4 +19,5 @@ contract ERC1155Rarible is ERC1155Base {
         __ERC1155Base_init_unchained(_name, _symbol);
         _setBaseURI(baseURI);
     }
+    uint256[50] private __gap;
 }

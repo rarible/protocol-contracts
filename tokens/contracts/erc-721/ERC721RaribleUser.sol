@@ -23,4 +23,5 @@ contract ERC721RaribleUser is ERC721Base {
         require(owner() == data.creators[0], "minter is not the owner");
         super.mintAndTransfer(data, to);
     }
+    uint256[50] private __gap;
 }

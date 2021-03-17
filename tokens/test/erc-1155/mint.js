@@ -1,7 +1,7 @@
 const EIP712 = require("../EIP712");
 
 const Types = {
-	Fee: [
+	Part: [
 		{name: 'account', type: 'address'},
 		{name: 'value', type: 'uint256'}
 	],
@@ -10,17 +10,17 @@ const Types = {
 		{name: 'supply', type: 'uint256'},
 		{name: 'tokenURI', type: 'string'},
 		{name: 'creators', type: 'address[]'},
-		{name: 'fees', type: 'Fee[]'}
+		{name: 'royalties', type: 'Part[]'}
 	]
 };
 
-async function sign(account, tokenId, tokenURI, supply, creators, fees, verifyingContract) {
+async function sign(account, tokenId, tokenURI, supply, creators, royalties, verifyingContract) {
 	const data = EIP712.createTypeData({
 		name: "Mint1155",
 		chainId: 1,
 		version: "1",
 		verifyingContract
-	}, 'Mint1155', { tokenId, supply, tokenURI, creators, fees }, Types);
+	}, 'Mint1155', { tokenId, supply, tokenURI, creators, royalties }, Types);
 	return (await EIP712.signTypedData(web3, account, data)).sig;
 }
 

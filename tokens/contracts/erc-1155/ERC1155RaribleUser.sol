@@ -24,4 +24,5 @@ contract ERC1155RaribleUser is ERC1155Base {
         require(owner() == data.creators[0], "minter is not the owner");
         super.mintAndTransfer(data, to, _amount);
     }
+    uint256[50] private __gap;
 }

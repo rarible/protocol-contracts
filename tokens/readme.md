@@ -28,7 +28,7 @@ For ERC-721 function has following signature: `mintAndTransfer(LibERC721LazyMint
         uint tokenId;
         string uri;
         address[] creators;
-        LibFee.Fee[] fees;
+        LibPart.Part[] royalties;
         bytes[] signatures;
     }
 ```  
@@ -47,7 +47,7 @@ For ERC-1155 function has some more arguments: `mintAndTransfer(LibERC1155LazyMi
         string uri;
         uint supply;
         address[] creators;
-        LibFee.Fee[] fees;
+        LibPart.Part[] royalties;
         bytes[] signatures;
     }
 ```

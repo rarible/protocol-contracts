@@ -18,4 +18,5 @@ contract ERC721Rarible is ERC721Base {
         __HasContractURI_init_unchained(contractURI);
         __ERC721_init_unchained(_name, _symbol);
     }
+    uint256[50] private __gap;
 }
