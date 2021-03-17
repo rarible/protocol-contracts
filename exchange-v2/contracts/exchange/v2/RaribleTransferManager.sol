@@ -140,7 +140,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         bytes4 to
     ) internal returns (uint restValue) {
         restValue = rest;
-        LibFee.Fee[] memory  originFees = getOriginFees(orderCalculate);
+        LibPart.Part[] memory  originFees = getOriginFees(orderCalculate);
         for (uint256 i = 0; i < originFees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i].value);
             restValue = newRestValue;
@@ -153,7 +153,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     function calculateTotalAmount(
         uint amount,
         uint feeOnTopBp,
-        LibFee.Fee[] memory orderOriginFees
+        LibPart.Part[] memory orderOriginFees
     ) internal pure returns (uint total){
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
@@ -171,7 +171,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function getOriginFees(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory originOrderFees) {
+    function getOriginFees(LibOrder.Order memory order) pure internal returns (LibPart.Part[] memory originOrderFees) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
             originOrderFees = orderData.originFees;
