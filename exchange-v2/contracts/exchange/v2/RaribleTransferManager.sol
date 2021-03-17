@@ -111,7 +111,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address from,
         bytes4 to
     ) internal returns (uint restValue){
-        LibFee.Fee[] memory fees = getRoyalties(matchNft);
+        LibPart.Part[] memory fees = getRoyalties(matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
@@ -150,14 +150,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibFee.Fee[] memory feesRecipients){
+    function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibPart.Part[] memory feesRecipients){
         if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
             return feesRecipients;
         }
         (address addressAsset, uint tokenIdAsset) = abi.decode(asset.data, (address, uint));
         if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
             RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
-            try withFees.getFees(tokenIdAsset) returns (LibFee.Fee[] memory feesRecipientsResult) {
+            try withFees.getRoyalties(tokenIdAsset) returns (LibPart.Part[] memory feesRecipientsResult) {
                 feesRecipients = feesRecipientsResult;
             } catch {}
         } else if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
@@ -177,7 +177,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             if (fees.length != recipients.length) {
                 return feesRecipients;
             }
-            feesRecipients = new LibFee.Fee[](fees.length);
+            feesRecipients = new LibPart.Part[](fees.length);
             for (uint256 i = 0; i < fees.length; i++) {
                 feesRecipients[i].value = fees[i];
                 feesRecipients[i].account = recipients[i];

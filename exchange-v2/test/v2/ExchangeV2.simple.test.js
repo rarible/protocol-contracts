@@ -196,8 +196,8 @@ contract("ExchangeSimpleV2", accounts => {
 		return { left, right }
 	}
 
-	function getSignature(order, signer) {
-		return sign(order, signer, testing.address);
+	async function getSignature(order, signer) {
+		return sign(order, signer, await testing.getChainId(), testing.address);
 	}
 
 });

@@ -6,13 +6,12 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
-import "@rarible/royalties/contracts/LibFee.sol";
 import "@rarible/royalties/contracts/RoyaltiesV1.sol";
 import "@rarible/royalties/contracts/impl/AbstractRoyalties.sol";
 
 contract TestERC721WithRoyaltiesV1_InterfaceError is Initializable, AbstractRoyalties,  RoyaltiesV1, ERC721Upgradeable {
 
-    function mint(address to, uint tokenId, LibFee.Fee[] memory _fees) external {
+    function mint(address to, uint tokenId, LibPart.Part[] memory _fees) external {
         _registerInterface(LibRoyaltiesV1._INTERFACE_ID_FEES);
         _mint(to, tokenId);
         _saveFees(tokenId, _fees);
@@ -26,5 +25,5 @@ contract TestERC721WithRoyaltiesV1_InterfaceError is Initializable, AbstractRoya
         revert("getFeeBps failed");
     }
 
-    function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {}
+    function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _fees) override internal {}
 }

@@ -80,8 +80,8 @@ contract("Exchange with LazyMint proxies", accounts => {
 		assert.equal(await t1.balanceOf(accounts[1]), 40);
 	})
 
-	function getSignature(order, signer) {
-		return sign(order, signer, testing.address);
+	async function getSignature(order, signer) {
+		return sign(order, signer, await testing.getChainId(), testing.address);
 	}
 
 });
