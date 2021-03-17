@@ -100,17 +100,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         restValue = rest;
         LibFee.Fee[] payouts = parseOrder(orderNft);
         //todo check sum value ==10000?
-
         for (uint256 i = 0; i < payouts.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, payouts[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
-//                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, to);
-                transfer(LibAsset.Asset(matchCalculate, rest), orderCalculate.maker, , to);
+                transfer(LibAsset.Asset(matchCalculate, feeValue), orderCalculate.maker, payouts[i].account, to);
             }
-        }
-        if (rest > 0) {
-
         }
     }
 
