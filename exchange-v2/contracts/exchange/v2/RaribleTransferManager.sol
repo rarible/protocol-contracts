@@ -65,29 +65,38 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder.maker, makeMatch, takeMatch, parseOrder(rightOrder), TO_TAKER);
+            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder, rightOrder, makeMatch, takeMatch,  TO_TAKER);
             transfer(LibAsset.Asset(takeMatch, fill.takeAmount), rightOrder.maker, parseOrder(leftOrder), TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder.maker, takeMatch, makeMatch, parseOrder(leftOrder), TO_MAKER);
+            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder, leftOrder, takeMatch, makeMatch, TO_MAKER);
             transfer(LibAsset.Asset(makeMatch, fill.makeAmount), leftOrder.maker, parseOrder(rightOrder), TO_TAKER);
         }
     }
 
     function doTransfersWithFees(
         uint amount,
-        address from,
+        LibOrder.Order memory orderCalculate,
+        LibOrder.Order memory orderNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
-        address orderBeneficiary,
         bytes4 to
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, buyerFee);
-        uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate);
-        rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, to);
-        transfer(LibAsset.Asset(matchCalculate, rest), from, orderBeneficiary, to);
+        totalAmount = calculateTotalAmount(amount, buyerFee, getOriginFees(orderCalculate));
+        uint rest = transferProtocolFee(totalAmount, amount, orderCalculate.maker, matchCalculate);
+        rest = transferRoyalties(matchCalculate, matchNft, rest, amount, orderCalculate.maker, to);
+        rest = transferOrigins(matchCalculate, rest, amount, orderCalculate, orderCalculate.maker, to);
+        rest = transferOrigins(matchCalculate, rest, amount, orderNft, orderCalculate.maker, to);
+        if (rest > 0) {
+            transfer(LibAsset.Asset(matchCalculate, rest), orderCalculate.maker, parseOrder(orderNft), to);
+        }
     }
 
-    function transferProtocolFee(uint totalAmount, uint amount, address from, LibAsset.AssetType memory matchCalculate) internal returns (uint){
+    function transferProtocolFee(
+        uint totalAmount,
+        uint amount,
+        address from,
+        LibAsset.AssetType memory matchCalculate
+    ) internal returns (uint) {
         (uint rest, uint fee) = subFeeInBp(totalAmount, amount, buyerFee.add(sellerFee));
         if (fee > 0) {
             address tokenAddress = address(0);
@@ -122,17 +131,50 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function calculateTotalAmount(uint amount, uint feeOnTopBp) internal pure returns (uint total){
+    function transferOrigins(
+        LibAsset.AssetType memory matchCalculate,
+        uint rest,
+        uint amount,
+        LibOrder.Order memory orderCalculate,
+        address from,
+        bytes4 to
+    ) internal returns (uint restValue) {
+        restValue = rest;
+        LibFee.Fee[] memory  originFees = getOriginFees(orderCalculate);
+        for (uint256 i = 0; i < originFees.length; i++) {
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i].value);
+            restValue = newRestValue;
+            if (feeValue > 0) {
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  originFees[i].account, to);
+            }
+        }
+    }
+
+    function calculateTotalAmount(
+        uint amount,
+        uint feeOnTopBp,
+        LibFee.Fee[] memory orderOriginFees
+    ) internal pure returns (uint total){
         total = amount.add(amount.bp(feeOnTopBp));
+        for (uint256 i = 0; i < orderOriginFees.length; i++) {
+            total = total.add(amount.bp(orderOriginFees[i].value));
+        }
     }
 
     function parseOrder(LibOrder.Order memory order) pure internal returns (address beneficiary) {
         beneficiary = order.maker;
         if (order.dataType == LibOrderDataV1.V1) {
-            (address orderBeneficiary) = abi.decode(order.data, (address));
-            if (orderBeneficiary != address(0)) {
-                beneficiary = orderBeneficiary;
+            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
+            if (orderData.benificiary != address(0)) {
+                beneficiary = orderData.benificiary;
             }
+        }
+    }
+
+    function getOriginFees(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory originOrderFees) {
+        if (order.dataType == LibOrderDataV1.V1) {
+            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
+            originOrderFees = orderData.originFees;
         }
     }
 
@@ -150,7 +192,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibPart.Part[] memory feesRecipients){
+    function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibPart.Part[] memory feesRecipients) {
         if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
             return feesRecipients;
         }

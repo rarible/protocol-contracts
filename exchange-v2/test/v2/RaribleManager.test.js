@@ -17,7 +17,7 @@ const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const eth = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, enc, encDataV2, id } = require("../assets");
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let testing;
@@ -39,6 +39,10 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let erc721TokenId1 = 53;
 	let erc1155TokenId1 = 54;
 	let erc1155TokenId2 = 55;
+
+	function encDataV1(tuple) {
+		return testing.encode(tuple)
+	}
 
 	beforeEach(async () => {
 		transferProxy = await TransferProxy.new();
@@ -105,26 +109,30 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-    it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community", async () => {
-			const { left, right } = await prepare721_1155Orders(105)
+    it("Transfer from  ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community, orders dataType == V1", async () => {
+			const { left, right } = await prepare721_1155Orders(110)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
 
 			assert.equal(await erc721.balanceOf(accounts[1]), 0);
 			assert.equal(await erc721.balanceOf(accounts[2]), 1);
-			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 97);
-			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 2);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 93);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 1);
 			assert.equal(await erc1155.balanceOf(community, erc1155TokenId1), 6);
 		})
 
-		async function prepare721_1155Orders(t2Amount  = 105) {
+		async function prepare721_1155Orders(t2Amount = 105) {
 			await erc721.mint(accounts[1], erc721TokenId1);
 			await erc1155.mint(accounts[2], erc1155TokenId1, t2Amount);
 			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
-
-			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, "0xffffffff", "0x");
-			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+			/*in this: accounts[3] - address originLeftOrder, 100 - originLeftOrderFee(bp%)*/
+			let addrOriginLeft = [[accounts[3], 100], [accounts[5], 300]];
+			let addrOriginRight = [[accounts[4], 200], [accounts[6], 400]];
+			let encDataLeft = await encDataV1([accounts[1], addrOriginLeft]);
+			let encDataRight = await encDataV1([accounts[2], addrOriginRight]);
+			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataRight);
 			return { left, right }
 		}
 
