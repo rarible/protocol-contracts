@@ -49,10 +49,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
-		testing = await deployProxy(RaribleTransferManagerTest, [transferProxy.address, erc20TransferProxy.address], { initializer: "__TransferManager_init" });
-		testing.setCommunityWallet(community);
-		testing.setBuyerFee(300);
-		testing.setSellerFee(300);
+		testing = await RaribleTransferManagerTest.new();
+		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community);
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		t1 = await TestERC20.new();
