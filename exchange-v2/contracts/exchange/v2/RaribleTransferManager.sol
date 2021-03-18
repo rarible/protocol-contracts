@@ -103,7 +103,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         bytes4 to
     ) internal returns (uint restValue){
         restValue = amount;
-        LibFee.Fee[] memory payouts = parseOrder(orderNft);
+        LibPart.Part[] memory payouts = parseOrder(orderNft);
         //todo check sum value ==10000?
         for (uint256 i = 0; i < payouts.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, payouts[i].value);
@@ -184,12 +184,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
     //todo rename parseOrder()
-    function parseOrder(LibOrder.Order memory order) pure internal returns (LibFee.Fee[] memory beneficiary) {
+    function parseOrder(LibOrder.Order memory order) pure internal returns (LibPart.Part[] memory beneficiary) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
             beneficiary = orderData.payouts;
         } else{
-            beneficiary = new LibFee.Fee[](1);
+            beneficiary = new LibPart.Part[](1);
             beneficiary[0].account = payable(order.maker);
             beneficiary[0].value = 10000;
         }

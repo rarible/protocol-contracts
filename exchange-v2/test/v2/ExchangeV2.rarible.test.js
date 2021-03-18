@@ -425,6 +425,12 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     }
 
 		it("From ERC20(100) to ERC20(200) Protocol, Origin fees, no Royalties ", async () => {
+			let chIdTesting = await testing.getChainId();
+			let chIdOld = await web3.eth.getChainId();
+
+		  console.log('\ntest chIdTesting: ' + chIdTesting);
+		  console.log('\ntest chIdOld: ' + chIdOld);
+
 			const { left, right } = await prepare2Orders()
 
 			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
@@ -455,34 +461,34 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			return { left, right }
 		}
 
-		it("From ERC721(DataV1) to ERC20(NO DataV1) Protocol, Origin fees, no Royalties ", async () => {
-			const { left, right } = await prepare721DV1_20rders()
-
-			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
-
-			assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
-
-			assert.equal(await t2.balanceOf(accounts[1]), 47);	//=100 - 3sellerFee - 2originRight -1originleft 50%
-			assert.equal(await t2.balanceOf(accounts[5]), 47);	//=100 - 3sellerFee - 2originRight -1originleft 50%
-			assert.equal(await t2.balanceOf(accounts[2]), 2);		//=105 - (100amount + 3byuerFee )
-			assert.equal(await t2.balanceOf(accounts[3]), 1);
-			assert.equal(await t2.balanceOf(accounts[4]), 2);
-			assert.equal(await erc721.balanceOf(accounts[1]), 0);
-			assert.equal(await erc721.balanceOf(accounts[2]), 1);
-			assert.equal(await t2.balanceOf(community), 6);
-		})
-
-		async function prepare721DV1_20rders(t2Amount = 105) {
-			await erc721.mint(accounts[1], erc721TokenId1);
-			await t2.mint(accounts[2], t2Amount);
-			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
-			await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
-			let addrOriginLeft = [[accounts[3], 100], [accounts[4], 200]];
-			let encDataLeft = await encDataV1([ [[accounts[1], 5000], [accounts[5], 5000]], addrOriginLeft ]);
-			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t2.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
-			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0,  "0xffffffff", "0x");
-			return { left, right }
-		}
+//		it("From ERC721(DataV1) to ERC20(NO DataV1) Protocol, Origin fees, no Royalties ", async () => {
+//			const { left, right } = await prepare721DV1_20rders()
+//
+//			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+//
+//			assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
+//
+//			assert.equal(await t2.balanceOf(accounts[1]), 47);	//=100 - 3sellerFee - 2originRight -1originleft 50%
+//			assert.equal(await t2.balanceOf(accounts[5]), 47);	//=100 - 3sellerFee - 2originRight -1originleft 50%
+//			assert.equal(await t2.balanceOf(accounts[2]), 2);		//=105 - (100amount + 3byuerFee )
+//			assert.equal(await t2.balanceOf(accounts[3]), 1);
+//			assert.equal(await t2.balanceOf(accounts[4]), 2);
+//			assert.equal(await erc721.balanceOf(accounts[1]), 0);
+//			assert.equal(await erc721.balanceOf(accounts[2]), 1);
+//			assert.equal(await t2.balanceOf(community), 6);
+//		})
+//
+//		async function prepare721DV1_20rders(t2Amount = 105) {
+//			await erc721.mint(accounts[1], erc721TokenId1);
+//			await t2.mint(accounts[2], t2Amount);
+//			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+//			await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+//			let addrOriginLeft = [[accounts[3], 100], [accounts[4], 200]];
+//			let encDataLeft = await encDataV1([ [[accounts[1], 5000], [accounts[5], 5000]], addrOriginLeft ]);
+//			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t2.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+//			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0,  "0xffffffff", "0x");
+//			return { left, right }
+//		}
 
 //		it("From ERC20(DataV1) to ERC1155(RoyalytiV2, DataV1) Protocol, Origin fees, Royalties ", async () => {
 //			const { left, right } = await prepare20DV1_1155V2Orders()
