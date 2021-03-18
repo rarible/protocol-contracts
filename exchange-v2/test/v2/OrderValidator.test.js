@@ -33,7 +33,7 @@ contract("OrderValidator", accounts => {
 	});
 
 	async function getSignature(order, signer) {
-		return sign(order, signer, await testing.getChainId(), testing.address);
+		return sign(order, signer, Number(await testing.getChainId()), testing.address);
 	}
 
 });

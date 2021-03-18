@@ -94,7 +94,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         rest = transferOrigins(matchCalculate, rest, amount, orderNft, orderCalculate.maker, to);
         rest = transferPayouts(matchCalculate, rest, orderCalculate.maker, orderNft, to);
     }
-    //todo write function
+
     function transferPayouts(
         LibAsset.AssetType memory matchCalculate,
         uint amount,
@@ -104,7 +104,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     ) internal returns (uint restValue){
         restValue = amount;
         LibPart.Part[] memory payouts = parseOrder(orderNft);
-        //todo check sum value ==10000?
+        uint sumPayoutCents;
+        for (uint256 i = 0; i < payouts.length; i++) {
+            sumPayoutCents += payouts[i].value;
+        }
+        require(sumPayoutCents == 10000, "Sum payouts cents not equal 100%");
         for (uint256 i = 0; i < payouts.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, payouts[i].value);
             restValue = newRestValue;
