@@ -7,11 +7,11 @@ import "./AbstractRoyalties.sol";
 import "../RoyaltiesV2.sol";
 
 contract RoyaltiesV2Impl is AbstractRoyalties, RoyaltiesV2 {
-    function getFees(uint256 id) override external view returns (LibFee.Fee[] memory) {
+    function getRoyalties(uint256 id) override external view returns (LibPart.Part[] memory) {
         return fees[id];
     }
 
-    function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {
+    function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _fees) override internal {
         emit RoyaltiesSet(_id, _fees);
     }
 }

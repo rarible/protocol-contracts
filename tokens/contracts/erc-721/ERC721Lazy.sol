@@ -35,7 +35,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
         _mint(to, data.tokenId);
         _setTokenURI(data.tokenId, data.uri);
-        _saveFees(data.tokenId, data.fees);
+        _saveFees(data.tokenId, data.royalties);
         creators[data.tokenId] = data.creators;
     }
 
@@ -47,4 +47,5 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
     function getCreators(uint256 _id) external view returns (address[] memory) {
         return creators[_id];
     }
+    uint256[50] private __gap;
 }

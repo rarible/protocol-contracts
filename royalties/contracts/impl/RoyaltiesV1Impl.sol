@@ -8,7 +8,7 @@ import "../RoyaltiesV1.sol";
 contract RoyaltiesV1Impl is AbstractRoyalties, RoyaltiesV1 {
 
     function getFeeRecipients(uint256 id) public override view returns (address payable[] memory) {
-        LibFee.Fee[] memory _fees = fees[id];
+        LibPart.Part[] memory _fees = fees[id];
         address payable[] memory result = new address payable[](_fees.length);
         for (uint i = 0; i < _fees.length; i++) {
             result[i] = address(uint160(_fees[i].account));
@@ -17,7 +17,7 @@ contract RoyaltiesV1Impl is AbstractRoyalties, RoyaltiesV1 {
     }
 
     function getFeeBps(uint256 id) public override view returns (uint[] memory) {
-        LibFee.Fee[] memory _fees = fees[id];
+        LibPart.Part[] memory _fees = fees[id];
         uint[] memory result = new uint[](_fees.length);
         for (uint i = 0; i < _fees.length; i++) {
             result[i] = _fees[i].value;
@@ -25,7 +25,7 @@ contract RoyaltiesV1Impl is AbstractRoyalties, RoyaltiesV1 {
         return result;
     }
 
-    function _onRoyaltiesSet(uint256 _id, LibFee.Fee[] memory _fees) override internal {
+    function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _fees) override internal {
         address[] memory recipients = new address[](_fees.length);
         uint[] memory bps = new uint[](_fees.length);
         for (uint i = 0; i < _fees.length; i++) {

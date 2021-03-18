@@ -32,8 +32,8 @@ contract("OrderValidator", accounts => {
 		await testing.validateOrderTest(testOrder, "0x", { from: accounts[5] });
 	});
 
-	function getSignature(order, signer) {
-		return sign(order, signer, testing.address);
+	async function getSignature(order, signer) {
+		return sign(order, signer, await testing.getChainId(), testing.address);
 	}
 
 });

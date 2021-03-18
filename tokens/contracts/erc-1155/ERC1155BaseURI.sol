@@ -69,4 +69,5 @@ contract ERC1155BaseURI is ERC1155Upgradeable {
             delete _tokenURIs[tokenId];
         }
     }
+    uint256[50] private __gap;
 }

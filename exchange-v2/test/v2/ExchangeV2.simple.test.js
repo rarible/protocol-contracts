@@ -26,7 +26,7 @@ contract("ExchangeSimpleV2", accounts => {
 		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
-		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__Exchange_init" });
+		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		t1 = await TestERC20.new();
@@ -196,8 +196,8 @@ contract("ExchangeSimpleV2", accounts => {
 		return { left, right }
 	}
 
-	function getSignature(order, signer) {
-		return sign(order, signer, testing.address);
+	async function getSignature(order, signer) {
+		return sign(order, signer, await testing.getChainId(), testing.address);
 	}
 
 });

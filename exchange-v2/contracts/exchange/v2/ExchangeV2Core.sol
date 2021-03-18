@@ -27,13 +27,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Cancel(bytes32 hash);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill);
 
-    function __Exchange_init(TransferProxy _transferProxy, ERC20TransferProxy _erc20TransferProxy) external initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-        __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        __OrderValidator_init_unchained();
-    }
-
     function cancel(LibOrder.Order memory order) public {
         require(_msgSender() == order.maker, "not a maker");
         bytes32 orderKeyHash = LibOrder.hashKey(order);

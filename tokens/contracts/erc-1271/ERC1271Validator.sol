@@ -27,5 +27,5 @@ abstract contract ERC1271Validator is EIP712Upgradeable {
             );
         }
     }
-
+    uint256[50] private __gap;
 }

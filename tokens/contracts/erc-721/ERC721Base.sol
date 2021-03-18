@@ -22,4 +22,5 @@ abstract contract ERC721Base is OwnableUpgradeable, ERC721DefaultApproval, ERC72
     function isApprovedForAll(address owner, address operator) public view virtual override(ERC721DefaultApproval, ERC721Upgradeable, IERC721Upgradeable) returns (bool) {
         return ERC721DefaultApproval.isApprovedForAll(owner, operator);
     }
+    uint256[50] private __gap;
 }

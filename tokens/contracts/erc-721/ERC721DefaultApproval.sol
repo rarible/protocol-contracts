@@ -21,4 +21,5 @@ abstract contract ERC721DefaultApproval is ERC721Upgradeable {
     function isApprovedForAll(address owner, address operator) public view virtual override returns (bool) {
         return defaultApprovals[operator] || super.isApprovedForAll(owner, operator);
     }
+    uint256[50] private __gap;
 }

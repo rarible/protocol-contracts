@@ -38,15 +38,12 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
-		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__Exchange_init" });
+		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, 300, community], { initializer: "__ExchangeV2_init" });
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		transferManagerTest = await RaribleTransferManagerTest.new();
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
-		testing.setBuyerFee(300);
-    testing.setSellerFee(300);
-    await testing.setCommunityWallet(community);
     /*ETH*/
     await testing.setWalletForToken(eth, protocol);//
     await testing.setWalletForToken(t1.address, protocol);//
@@ -755,8 +752,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	})	//Do matchOrders(), orders dataType == V1, MultipleBeneficiary
 
-	function getSignature(order, signer) {
-		return sign(order, signer, testing.address);
+	async function getSignature(order, signer) {
+		return sign(order, signer, await testing.getChainId(), testing.address);
 	}
 
 });

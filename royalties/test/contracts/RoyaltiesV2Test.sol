@@ -15,7 +15,7 @@ contract RoyaltiesV2Test {
     event Test(address account, uint value);
 
     function feesTest(uint id) public {
-        LibFee.Fee[] memory result = fees.getFees(id);
+        LibPart.Part[] memory result = fees.getRoyalties(id);
 
         for (uint i = 0; i < result.length; i++) {
             emit Test(result[i].account, result[i].value);

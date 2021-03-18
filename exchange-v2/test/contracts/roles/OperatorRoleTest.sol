@@ -1,4 +1,6 @@
-pragma solidity ^0.7.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.6.9 <0.8.0;
 
 import "../../../contracts/roles/OperatorRole.sol";
 

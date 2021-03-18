@@ -29,7 +29,7 @@ contract("ERC721Rarible", accounts => {
   });
 
   it("check for RoayltiesV2 interface", async () => {
-  	assert.equal(await token.supportsInterface("0xd5a06d4c"), true);
+  	assert.equal(await token.supportsInterface("0x44c74bcc"), true);
   });
 
   it("check for ERC721 interfaces", async () => {

@@ -48,7 +48,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             }
 
             _saveSupply(data.tokenId, data.supply);
-            _saveFees(data.tokenId, data.fees);
+            _saveFees(data.tokenId, data.royalties);
             _saveCreators(data.tokenId, data.creators);
             _setTokenURI(data.tokenId, data.uri);
         }
@@ -77,4 +77,5 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     function getCreators(uint256 _id) external view returns (address[] memory) {
         return creators[_id];
     }
+    uint256[50] private __gap;
 }
