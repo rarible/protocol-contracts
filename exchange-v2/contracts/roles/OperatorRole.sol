@@ -7,6 +7,11 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract OperatorRole is OwnableUpgradeable {
     mapping (address => bool) operators;
 
+    function __OperatorRole_init() external initializer {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+    }
+
     function addOperator(address operator) external onlyOwner {
         operators[operator] = true;
     }
