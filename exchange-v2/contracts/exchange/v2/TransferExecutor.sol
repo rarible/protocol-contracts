@@ -30,6 +30,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         LibAsset.Asset memory asset,
         address from,
         address to,
+        bytes4 transferDirection,
         bytes4 transferType
     ) internal override {
         if (asset.assetType.tp == LibAsset.ETH_ASSET_TYPE) {
@@ -50,7 +51,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         } else {
             ITransferProxy(proxies[asset.assetType.tp]).transfer(asset, from, to);
         }
-        emit Transfer(asset, from, to, transferType);
+        emit Transfer(asset, from, to, transferDirection, transferType);
     }
 
     uint256[49] private __gap;
