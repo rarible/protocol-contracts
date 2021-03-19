@@ -1,5 +1,16 @@
+const os = require('os');
+
+let apiKey;
+try {
+	console.log(`Loading etherscan key from ${os.homedir() + "/.ethereum/etherscan.json"}`);
+	apiKey = require(os.homedir() + "/.ethereum/etherscan.json").apiKey;
+	console.log("loaded etherscan api key");
+} catch {
+	console.log("unable to load etherscan key from config")
+	apiKey = "UNKNOWN"
+}
+
 function createNetwork(name) {
-  var os = require('os');
   try {
     var json = require(os.homedir() + "/.ethereum/" + name + ".json");
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
@@ -25,13 +36,21 @@ function createProvider(address, key, url) {
 }
 
 module.exports = {
+	api_keys: {
+      etherscan: apiKey
+  },
+
+	plugins: [
+    'truffle-plugin-verify'
+  ],
 
   networks: {
     e2e: createNetwork("e2e"),
     ops: createNetwork("ops"),
     ropsten: createNetwork("ropsten"),
     mainnet: createNetwork("mainnet"),
-    rinkeby: createNetwork("rinkeby")
+    rinkeby: createNetwork("rinkeby"),
+		rinkeby2: createNetwork("rinkeby2")
   },
 
   compilers: {
