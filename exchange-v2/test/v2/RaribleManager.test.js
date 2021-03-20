@@ -17,7 +17,7 @@ const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const eth = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, enc, encDataV2, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, enc, encDataV2, id } = require("../assets");
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let testing;

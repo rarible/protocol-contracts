@@ -22,8 +22,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-    bytes4 constant TO_PROTOCOL = bytes4(keccak256("TO_PROTOCOL"));
-
     uint public buyerFee;
     uint public sellerFee;
 
@@ -188,7 +186,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             total = total.add(amount.bp(orderOriginFees[i].value));
         }
     }
-    //todo rename parseOrder()
+
     function parseOrder(LibOrder.Order memory order) pure internal returns (LibPart.Part[] memory beneficiary) {
         if (order.dataType == LibOrderDataV1.V1) {
             (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
