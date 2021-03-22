@@ -36,6 +36,8 @@ contract("Exchange with LazyMint proxies", accounts => {
 
 	it("setTransferProxy can be invoked only by owner", async () => {
 		const proxy = await ERC721LazyMintTransferProxy.new();
+		await proxy.__OperatorRole_init();
+		await proxy.addOperator(testing.address);
 
 		await expectThrow(
 			testing.setTransferProxy(id("ERC721_LAZY"), proxy.address, { from: accounts[1] })
@@ -45,6 +47,8 @@ contract("Exchange with LazyMint proxies", accounts => {
 	it("lazy mint works for ERC-721", async () => {
 		const erc721Test = await ERC721LazyMintTest.new();
 		const proxy = await ERC721LazyMintTransferProxy.new();
+		await proxy.__OperatorRole_init();
+		await proxy.addOperator(testing.address);
 		await testing.setTransferProxy(id("ERC721_LAZY"), proxy.address)
 
 		await t1.mint(accounts[2], 100);
@@ -64,6 +68,8 @@ contract("Exchange with LazyMint proxies", accounts => {
 	it("lazy mint works for ERC-1155", async () => {
 		const erc1155Test = await ERC1155LazyMintTest.new();
 		const proxy = await ERC1155LazyMintTransferProxy.new();
+		await proxy.__OperatorRole_init();
+		await proxy.addOperator(testing.address);
 		await testing.setTransferProxy(id("ERC1155_LAZY"), proxy.address)
 
 		await t1.mint(accounts[2], 100);
