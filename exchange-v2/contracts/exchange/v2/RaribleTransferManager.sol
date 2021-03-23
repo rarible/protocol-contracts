@@ -69,29 +69,32 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.tp, takeMatch.tp);
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
+        LibOrderData.OrderData memory orderData;
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder, rightOrder, makeMatch, takeMatch,  TO_TAKER);
-            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, leftOrder, TO_MAKER);
+            orderData = LibOrderData.parseOrders(leftOrder, rightOrder);
+            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder.maker, orderData, makeMatch, takeMatch,  TO_TAKER);
+            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, orderData.payoutCalculate, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder, leftOrder, takeMatch, makeMatch, TO_MAKER);
-            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, rightOrder, TO_TAKER);
+            orderData = LibOrderData.parseOrders(rightOrder, leftOrder);
+            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder.maker, orderData, takeMatch, makeMatch, TO_MAKER);
+            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, orderData.payoutCalculate, TO_TAKER);
         }
     }
 
     function doTransfersWithFees(
         uint amount,
-        LibOrder.Order memory orderCalculate,
-        LibOrder.Order memory orderNft,
+        address from,
+        LibOrderData.OrderData memory orderData,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, buyerFee, LibOrderData.getOriginFees(orderCalculate));
-        uint rest = transferProtocolFee(totalAmount, amount, orderCalculate.maker, matchCalculate, transferDirection);
-        rest = transferRoyalties(matchCalculate, matchNft, rest, amount, orderCalculate.maker, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, orderCalculate, orderCalculate.maker, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, orderNft, orderCalculate.maker, transferDirection);
-        transferPayouts(matchCalculate, rest, orderCalculate.maker, orderNft, transferDirection);
+        totalAmount = calculateTotalAmount(amount, buyerFee, orderData.originCalculate);
+        uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
+        rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
+        rest = transferOrigins(matchCalculate, rest, amount, orderData.originCalculate, from, transferDirection);
+        rest = transferOrigins(matchCalculate, rest, amount, orderData.originNft, from, transferDirection);
+        transferPayouts(matchCalculate, rest, from, orderData.payoutNft, transferDirection);
     }
 
     function transferProtocolFee(
@@ -139,12 +142,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchCalculate,
         uint rest,
         uint amount,
-        LibOrder.Order memory orderCalculate,
+        LibPart.Part[] memory originFees,
         address from,
         bytes4 transferDirection
     ) internal returns (uint restValue) {
         restValue = rest;
-        LibPart.Part[] memory  originFees = LibOrderData.getOriginFees(orderCalculate);
         for (uint256 i = 0; i < originFees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i].value);
             restValue = newRestValue;
@@ -158,10 +160,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchCalculate,
         uint amount,
         address from,
-        LibOrder.Order memory orderNft,
+        LibPart.Part[] memory payouts,
         bytes4 transferDirection
     ) internal {
-        LibPart.Part[] memory payouts = LibOrderData.parseOrder(orderNft);
         uint sumBps = 0;
         for (uint256 i = 0; i < payouts.length; i++) {
             uint currentAmount = amount.bp(payouts[i].value);

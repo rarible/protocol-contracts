@@ -9,21 +9,31 @@ import "@rarible/royalties/contracts/LibPart.sol";
 
 library LibOrderData {
 
-    function parseOrder(LibOrder.Order memory order) pure internal returns (LibPart.Part[] memory beneficiary) {
-        if (order.dataType == LibOrderDataV1.V1) {
-            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
-            beneficiary = orderData.payouts;
-        } else{
-            beneficiary = new LibPart.Part[](1);
-            beneficiary[0].account = payable(order.maker);
-            beneficiary[0].value = 10000;
-        }
+    struct OrderData{
+        LibPart.Part[] payoutCalculate;
+        LibPart.Part[] payoutNft;
+        LibPart.Part[] originCalculate;
+        LibPart.Part[] originNft;
     }
 
-    function getOriginFees(LibOrder.Order memory order) pure internal returns (LibPart.Part[] memory originOrderFees) {
-        if (order.dataType == LibOrderDataV1.V1) {
-            (LibOrderDataV1.DataV1 memory orderData) = LibOrderDataV1.decodeOrderDataV1(order.data);
-            originOrderFees = orderData.originFees;
+    function parseOrders (LibOrder.Order memory orderCalculate, LibOrder.Order memory orderNft
+    ) pure internal returns (LibOrderData.OrderData memory ordersData) {
+        LibOrderDataV1.DataV1 memory dataCalculate = parseData(orderCalculate.maker, orderCalculate.dataType, orderCalculate.data);
+        LibOrderDataV1.DataV1 memory dataNft = parseData(orderNft.maker, orderNft.dataType, orderNft.data);
+        ordersData.originCalculate = dataCalculate.originFees;
+        ordersData.payoutCalculate = dataCalculate.payouts;
+        ordersData.originNft = dataNft.originFees;
+        ordersData.payoutNft = dataNft.payouts;
+    }
+
+    function parseData (address orderAddress, bytes4 dataType, bytes memory data) pure internal returns (LibOrderDataV1.DataV1 memory dataOrder) {
+        if (dataType == LibOrderDataV1.V1){
+            dataOrder = LibOrderDataV1.decodeOrderDataV1(data);
+        } else{
+            LibPart.Part[] memory payout = new LibPart.Part[](1);
+            payout[0].account = payable(orderAddress);
+            payout[0].value = 10000;
+            dataOrder.payouts = payout;
         }
     }
 
