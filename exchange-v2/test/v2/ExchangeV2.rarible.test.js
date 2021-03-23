@@ -70,6 +70,17 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     	);
     })
 
+		it("eth orders work, expect throw, unknown Data type of Order ", async () => {
+    	await t1.mint(accounts[1], 100);
+    	await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+
+    	const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xfffffffe", "0x");
+    	const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+    	await expectThrow(
+    		testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 300 })
+    	);
+    })
+
 		it("eth orders work, rest is returned to taker (other side) ", async () => {
     	await t1.mint(accounts[1], 100);
     	await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });

@@ -69,32 +69,32 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.tp, takeMatch.tp);
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
-        LibOrderData.OrderData memory orderData;
+        LibOrderDataV1.DataV1 memory orderDataMaker = LibOrderData.parse(leftOrder);
+        LibOrderDataV1.DataV1 memory orderDataTaker = LibOrderData.parse(rightOrder);
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            orderData = LibOrderData.parseOrders(leftOrder, rightOrder);
-            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder.maker, orderData, makeMatch, takeMatch,  TO_TAKER);
-            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, orderData.payoutCalculate, TO_MAKER);
+            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder.maker, orderDataMaker, orderDataTaker, makeMatch, takeMatch,  TO_TAKER);
+            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, orderDataMaker.payouts, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            orderData = LibOrderData.parseOrders(rightOrder, leftOrder);
-            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder.maker, orderData, takeMatch, makeMatch, TO_MAKER);
-            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, orderData.payoutCalculate, TO_TAKER);
+            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder.maker, orderDataTaker, orderDataMaker, takeMatch, makeMatch, TO_MAKER);
+            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, orderDataTaker.payouts, TO_TAKER);
         }
     }
 
     function doTransfersWithFees(
         uint amount,
         address from,
-        LibOrderData.OrderData memory orderData,
+        LibOrderDataV1.DataV1 memory dataCalculate,
+        LibOrderDataV1.DataV1 memory dataNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, buyerFee, orderData.originCalculate);
+        totalAmount = calculateTotalAmount(amount, buyerFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, orderData.originCalculate, from, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, orderData.originNft, from, transferDirection);
-        transferPayouts(matchCalculate, rest, from, orderData.payoutNft, transferDirection);
+        rest = transferOrigins(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection);
+        rest = transferOrigins(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection);
+        transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
     }
 
     function transferProtocolFee(
