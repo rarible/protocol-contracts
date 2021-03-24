@@ -14,7 +14,7 @@ import "./RoyaltiesRegistry.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../../utils/BpLibrary.sol";
 
-abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager, RoyaltiesRegistry{
+abstract contract RaribleTransferManager is ITransferManager, RoyaltiesRegistry{
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
@@ -122,7 +122,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         //todo detect token1, tokId1
         address token1;
         uint tokId1;
-        LibPart.Part[] memory fees = RoyaltiesRegistry.getRoyalties(token1, tokId1, matchNft);
+//        royaltiesRegistry = new RoyaltiesRegistry();
+        LibPart.Part[] memory fees = getRoyalties(token1, tokId1, matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);

@@ -13,23 +13,16 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../../utils/BpLibrary.sol";
 import "@rarible/royalties/contracts/LibPart.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract RoyaltiesRegistry {
+contract RoyaltiesRegistry is OwnableUpgradeable {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-//    struct elementTokenId{
-//        address token;
-//        uint id;
-//    }
-//    mapping(elementTokenId => LibPart.Part[]) - todo not possible elementTokenId
-//    mapping(elementTokenId => LibPart.Part[]) royaltiesByTokenNewGeneration;
+    mapping(address => LibPart.Part[] ) public royaltiesByToken;
 
-    mapping(address => LibPart.Part[]) royaltiesByToken;
-
-    //todo write me
-    function setRoyaltyByToken() internal {
-
+    function setTokenRoyalties(address token, LibPart.Part[] memory royalties) external onlyOwner {
+        royaltiesByToken[token] = royalties;
     }
 
     //todo uint tokenId - not used
