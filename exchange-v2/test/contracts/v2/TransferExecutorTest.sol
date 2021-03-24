@@ -13,6 +13,6 @@ contract TransferExecutorTest is Initializable, OwnableUpgradeable, TransferExec
     }
 
     function transferTest(LibAsset.Asset calldata asset, address from, address to) payable external {
-        TransferExecutor.transfer(asset, from, to, 0x00000000);
+        TransferExecutor.transfer(asset, from, to, 0x00000000, 0x00000000);
     }
 }

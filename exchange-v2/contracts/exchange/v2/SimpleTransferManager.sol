@@ -19,8 +19,8 @@ abstract contract SimpleTransferManager is ITransferManager {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
 
-        transfer(LibAsset.Asset(makeMatch, fill.makeAmount), leftOrder.maker, rightOrderBeneficiary, TO_TAKER);
-        transfer(LibAsset.Asset(takeMatch, fill.takeAmount), rightOrder.maker, leftOrderBeneficiary, TO_MAKER);
+        transfer(LibAsset.Asset(makeMatch, fill.makeAmount), leftOrder.maker, rightOrderBeneficiary, PAYOUT, TO_TAKER);
+        transfer(LibAsset.Asset(takeMatch, fill.takeAmount), rightOrder.maker, leftOrderBeneficiary, PAYOUT, TO_MAKER);
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
     }
