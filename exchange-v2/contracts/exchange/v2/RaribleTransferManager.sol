@@ -10,7 +10,7 @@ import "./LibOrderDataV1.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
 import "./LibAsset.sol";
-import "./RoyaltiesRegistry.sol";
+import "./RoyaltiesRegistryImpl.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../../utils/BpLibrary.sol";
 
@@ -20,7 +20,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
 
     uint public buyerFee;
     uint public sellerFee;
-    RoyaltiesRegistry public royaltiesRegistry;
+    RoyaltiesRegistryImpl public royaltiesRegistry;
 
     address public communityWallet;
     mapping(address => address) public walletsForTokens;
@@ -29,7 +29,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
-        RoyaltiesRegistry newRoyaltiesRegistry
+        RoyaltiesRegistryImpl newRoyaltiesRegistry
     ) internal initializer {
         buyerFee = newBuyerFee;
         sellerFee = newSellerFee;
@@ -130,6 +130,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address token1;
         uint tokId1;
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token1, tokId1, matchNft);
+//        LibPart.Part[] memory fees;
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);

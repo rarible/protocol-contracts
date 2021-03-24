@@ -3,6 +3,7 @@ const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
 const TransferProxy = artifacts.require('TransferProxy');
+const RoyaltiesRegistryImpl = artifacts.require("RoyaltiesRegistryImpl.sol");
 
 let settings = {
 	"default": {
@@ -24,10 +25,11 @@ module.exports = async function (deployer, network) {
 		.catch(() => deployProxy(ERC20TransferProxy, [], { deployer, initializer: '__ERC20TransferProxy_init' }));
 	const transferProxy = await TransferProxy.deployed()
 		.catch(() => deployProxy(TransferProxy, [], { deployer, initializer: '__TransferProxy_init' }));
+	const royaltiesRegistry = await RoyaltiesRegistryImpl.new();
 
   await deployProxy(
   	ExchangeV2,
-  	[transferProxy.address, erc20TransferProxy.address, 100, 100, communityWallet],
+  	[transferProxy.address, erc20TransferProxy.address, 100, 100, communityWallet, royaltiesRegistry.address],
   	{ deployer, initializer: '__ExchangeV2_init' }
   );
 };

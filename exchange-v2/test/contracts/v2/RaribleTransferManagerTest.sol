@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "../../../contracts/exchange/v2/RaribleTransferManager.sol";
 import "../../../contracts/exchange/v2/ITransferExecutor.sol";
 import "../../../contracts/exchange/v2/OrderValidator.sol";
+import "../../../contracts/exchange/v2/RoyaltiesRegistryImpl.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
 
@@ -23,11 +24,18 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         doTransfers(makeMatch, takeMatch, fill, leftOrder, rightOrder);
     }
 
-    function __TransferManager_init(TransferProxy _transferProxy, ERC20TransferProxy _erc20TransferProxy, uint newBuyerFee, uint newSellerFee, address newCommunityWallet) external initializer {
+    function __TransferManager_init(
+        TransferProxy _transferProxy,
+        ERC20TransferProxy _erc20TransferProxy,
+        uint newBuyerFee,
+        uint newSellerFee,
+        address newCommunityWallet,
+        RoyaltiesRegistryImpl newRoyaltiesRegistry
+    ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newBuyerFee, newSellerFee, newCommunityWallet);
+        __RaribleTransferManager_init_unchained(newBuyerFee, newSellerFee, newCommunityWallet, newRoyaltiesRegistry);
         __OrderValidator_init_unchained();
     }
 }

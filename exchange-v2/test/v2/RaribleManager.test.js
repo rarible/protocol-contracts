@@ -11,6 +11,7 @@ const ERC1155_V1 = artifacts.require("TestERC1155WithRoyaltiesV1.sol");
 const ERC1155_V2 = artifacts.require("TestERC1155WithRoyaltiesV2.sol");
 const ERC721_V1_Error = artifacts.require("TestERC721WithRoyaltiesV1_InterfaceError.sol");
 const ERC1155_V2_Error = artifacts.require("TestERC1155WithRoyaltiesV2_InterfaceError.sol");
+const RoyaltiesRegistryImpl = artifacts.require("RoyaltiesRegistryImpl.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -39,6 +40,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let erc721TokenId1 = 53;
 	let erc1155TokenId1 = 54;
 	let erc1155TokenId2 = 55;
+	let royaltiesRegistry;
 
 	function encDataV1(tuple) {
 		return testing.encode(tuple)
@@ -50,7 +52,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await RaribleTransferManagerTest.new();
-		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community);
+		royaltiesRegistry = await RoyaltiesRegistryImpl.new();
+		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address);
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		t1 = await TestERC20.new();
