@@ -66,7 +66,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder
     ) override internal returns (uint totalMakeAmount, uint totalTakeAmount) {
-        LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.tp, takeMatch.tp);
+        LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
         LibOrderDataV1.DataV1 memory leftOrderData = LibOrderData.parse(leftOrder);
@@ -107,10 +107,10 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         (uint rest, uint fee) = subFeeInBp(totalAmount, amount, buyerFee.add(sellerFee));
         if (fee > 0) {
             address tokenAddress = address(0);
-            if (matchCalculate.tp == LibAsset.ERC20_ASSET_TYPE) {
+            if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_TYPE) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
             }
-            if (matchCalculate.tp == LibAsset.ERC1155_ASSET_TYPE) {
+            if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_TYPE) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
@@ -200,7 +200,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     }
 
     function getRoyalties(LibAsset.AssetType memory asset) internal view returns (LibPart.Part[] memory feesRecipients) {
-        if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
+        if (asset.assetClass != LibAsset.ERC1155_ASSET_TYPE && asset.assetClass != LibAsset.ERC721_ASSET_TYPE) {
             return feesRecipients;
         }
         (address addressAsset, uint tokenIdAsset) = abi.decode(asset.data, (address, uint));

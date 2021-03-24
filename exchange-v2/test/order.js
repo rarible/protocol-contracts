@@ -1,11 +1,11 @@
 const EIP712 = require("./EIP712");
 
-function AssetType(tp, data) {
-	return { tp, data }
+function AssetType(assetClass, data) {
+	return { assetClass, data }
 }
 
-function Asset(assetType, assetData, amount) {
-	return { assetType: AssetType(assetType, assetData), amount };
+function Asset(assetClass, assetData, amount) {
+	return { assetType: AssetType(assetClass, assetData), amount };
 }
 
 function Order(maker, makeAsset, taker, takeAsset, salt, start, end, dataType, data) {
@@ -14,7 +14,7 @@ function Order(maker, makeAsset, taker, takeAsset, salt, start, end, dataType, d
 
 const Types = {
 	AssetType: [
-		{name: 'tp', type: 'bytes4'},
+		{name: 'assetClass', type: 'bytes4'},
 		{name: 'data', type: 'bytes'}
 	],
 	Asset: [

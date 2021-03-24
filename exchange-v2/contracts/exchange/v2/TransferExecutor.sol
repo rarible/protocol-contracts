@@ -33,23 +33,23 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         bytes4 transferDirection,
         bytes4 transferType
     ) internal override {
-        if (asset.assetType.tp == LibAsset.ETH_ASSET_TYPE) {
+        if (asset.assetType.assetClass == LibAsset.ETH_ASSET_TYPE) {
             //todo подумать, что будет, если с обеих сторон eth
             //todo нужно ли проверить from?
             (bool success, ) = to.call{ value: asset.amount }("");
             require(success, "transfer failed");
-        } else if (asset.assetType.tp == LibAsset.ERC20_ASSET_TYPE) {
+        } else if (asset.assetType.assetClass == LibAsset.ERC20_ASSET_TYPE) {
             (address token) = abi.decode(asset.assetType.data, (address));
             ERC20TransferProxy(proxies[LibAsset.ERC20_ASSET_TYPE]).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.amount);
-        } else if (asset.assetType.tp == LibAsset.ERC721_ASSET_TYPE) {
+        } else if (asset.assetType.assetClass == LibAsset.ERC721_ASSET_TYPE) {
             (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
             require(asset.amount == 1, "erc721 amount error");
             TransferProxy(proxies[LibAsset.ERC721_ASSET_TYPE]).erc721safeTransferFrom(IERC721Upgradeable(token), from, to, tokenId);
-        } else if (asset.assetType.tp == LibAsset.ERC1155_ASSET_TYPE) {
+        } else if (asset.assetType.assetClass == LibAsset.ERC1155_ASSET_TYPE) {
             (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
             TransferProxy(proxies[LibAsset.ERC1155_ASSET_TYPE]).erc1155safeTransferFrom(IERC1155Upgradeable(token), from, to, tokenId, asset.amount, "");
         } else {
-            ITransferProxy(proxies[asset.assetType.tp]).transfer(asset, from, to);
+            ITransferProxy(proxies[asset.assetType.assetClass]).transfer(asset, from, to);
         }
         emit Transfer(asset, from, to, transferDirection, transferType);
     }

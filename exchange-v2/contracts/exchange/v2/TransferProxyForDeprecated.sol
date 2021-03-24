@@ -15,7 +15,7 @@ contract TransferProxyForDeprecated is Initializable, OperatorRole, ITransferPro
     }
 
     function transfer(LibAsset.Asset memory asset, address from, address to) override external onlyOperator {
-        require(asset.assetType.tp == ERC721_DEP_ASSET_TYPE, "not supported asset type");
+        require(asset.assetType.assetClass == ERC721_DEP_ASSET_TYPE, "not supported asset type");
         require(asset.amount == 1, "amount validation error");
         (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint));
         IERC721Upgradeable(token).transferFrom(from, to, tokenId);

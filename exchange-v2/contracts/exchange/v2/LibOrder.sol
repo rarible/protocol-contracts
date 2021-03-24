@@ -9,7 +9,7 @@ library LibOrder {
     using SafeMathUpgradeable for uint;
 
     bytes32 constant ORDER_TYPEHASH = keccak256(
-        "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 amount)AssetType(bytes4 tp,bytes data)"
+        "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 amount)AssetType(bytes4 assetClass,bytes data)"
     );
 
     struct Order {

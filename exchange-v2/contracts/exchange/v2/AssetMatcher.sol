@@ -21,7 +21,7 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
 
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) internal view returns (LibAsset.AssetType memory) {
         LibAsset.AssetType memory result = matchAssetOneSide(leftAssetType, rightAssetType);
-        if (result.tp == 0) {
+        if (result.assetClass == 0) {
             return matchAssetOneSide(rightAssetType, leftAssetType);
         } else {
             return result;
@@ -29,8 +29,8 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
     }
 
     function matchAssetOneSide(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {
-        bytes4 typeLeft = leftAssetType.tp;
-        bytes4 typeRight = rightAssetType.tp;
+        bytes4 typeLeft = leftAssetType.assetClass;
+        bytes4 typeRight = rightAssetType.assetClass;
         if (typeLeft == LibAsset.ETH_ASSET_TYPE) {
             if (typeRight == LibAsset.ETH_ASSET_TYPE) {
                 return leftAssetType;
