@@ -13,7 +13,7 @@ library LibAsset {
     );
 
     bytes32 constant ASSET_TYPEHASH = keccak256(
-        "Asset(AssetType assetType,uint256 amount)AssetType(bytes4 assetClass,bytes data)"
+        "Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
     );
 
     struct AssetType {
@@ -23,7 +23,7 @@ library LibAsset {
 
     struct Asset {
         AssetType assetType;
-        uint amount;
+        uint value;
     }
 
     function hash(AssetType memory assetType) internal pure returns (bytes32) {
@@ -38,7 +38,7 @@ library LibAsset {
         return keccak256(abi.encode(
                 ASSET_TYPEHASH,
                 hash(asset.assetType),
-                asset.amount
+                asset.value
             ));
     }
 

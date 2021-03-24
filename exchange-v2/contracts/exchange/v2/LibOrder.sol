@@ -9,7 +9,7 @@ library LibOrder {
     using SafeMathUpgradeable for uint;
 
     bytes32 constant ORDER_TYPEHASH = keccak256(
-        "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 amount)AssetType(bytes4 assetClass,bytes data)"
+        "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
     );
 
     struct Order {
@@ -24,9 +24,9 @@ library LibOrder {
         bytes data;
     }
 
-    function calculateRemaining(Order memory order, uint fill) internal pure returns (uint makeAmount, uint takeAmount) {
-        takeAmount = order.takeAsset.amount.sub(fill);
-        makeAmount = LibMath.safeGetPartialAmountFloor(order.makeAsset.amount, order.takeAsset.amount, takeAmount);
+    function calculateRemaining(Order memory order, uint fill) internal pure returns (uint makeValue, uint takeValue) {
+        takeValue = order.takeAsset.value.sub(fill);
+        makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
     }
 
     function hashKey(Order memory order) internal pure returns (bytes32) {

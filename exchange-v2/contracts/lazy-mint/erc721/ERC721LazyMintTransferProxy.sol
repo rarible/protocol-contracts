@@ -10,7 +10,7 @@ import "../../roles/OperatorRole.sol";
 
 contract ERC721LazyMintTransferProxy is OperatorRole, ITransferProxy {
     function transfer(LibAsset.Asset memory asset, address, address to) override onlyOperator external {
-        require(asset.amount == 1, "erc721 amount error");
+        require(asset.value == 1, "erc721 value error");
         (address token, LibERC721LazyMint.Mint721Data memory data) = abi.decode(asset.assetType.data, (address, LibERC721LazyMint.Mint721Data));
         IERC721LazyMint(token).mintAndTransfer(data, to);
     }

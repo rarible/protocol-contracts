@@ -36,18 +36,18 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         if (asset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             //todo подумать, что будет, если с обеих сторон eth
             //todo нужно ли проверить from?
-            (bool success, ) = to.call{ value: asset.amount }("");
+            (bool success, ) = to.call{ value: asset.value }("");
             require(success, "transfer failed");
         } else if (asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(asset.assetType.data, (address));
-            ERC20TransferProxy(proxies[LibAsset.ERC20_ASSET_CLASS]).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.amount);
+            ERC20TransferProxy(proxies[LibAsset.ERC20_ASSET_CLASS]).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.value);
         } else if (asset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
             (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
-            require(asset.amount == 1, "erc721 amount error");
+            require(asset.value == 1, "erc721 value error");
             TransferProxy(proxies[LibAsset.ERC721_ASSET_CLASS]).erc721safeTransferFrom(IERC721Upgradeable(token), from, to, tokenId);
         } else if (asset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
             (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
-            TransferProxy(proxies[LibAsset.ERC1155_ASSET_CLASS]).erc1155safeTransferFrom(IERC1155Upgradeable(token), from, to, tokenId, asset.amount, "");
+            TransferProxy(proxies[LibAsset.ERC1155_ASSET_CLASS]).erc1155safeTransferFrom(IERC1155Upgradeable(token), from, to, tokenId, asset.value, "");
         } else {
             ITransferProxy(proxies[asset.assetType.assetClass]).transfer(asset, from, to);
         }

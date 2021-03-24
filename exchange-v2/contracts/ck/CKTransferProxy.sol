@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 
 contract CKTransferProxy is ITransferProxy {
     function transfer(LibAsset.Asset memory asset, address from, address to) external override {
-        require(asset.amount == 1, "erc721 amount error");
+        require(asset.value == 1, "erc721 value error");
         (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
         IERC721Upgradeable(token).transferFrom(from, to, tokenId);
     }

@@ -4,8 +4,8 @@ function AssetType(assetClass, data) {
 	return { assetClass, data }
 }
 
-function Asset(assetClass, assetData, amount) {
-	return { assetType: AssetType(assetClass, assetData), amount };
+function Asset(assetClass, assetData, value) {
+	return { assetType: AssetType(assetClass, assetData), value };
 }
 
 function Order(maker, makeAsset, taker, takeAsset, salt, start, end, dataType, data) {
@@ -19,7 +19,7 @@ const Types = {
 	],
 	Asset: [
 		{name: 'assetType', type: 'AssetType'},
-		{name: 'amount', type: 'uint256'}
+		{name: 'value', type: 'uint256'}
 	],
 	Order: [
 		{name: 'maker', type: 'address'},
