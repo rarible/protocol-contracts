@@ -14,20 +14,27 @@ import "./RoyaltiesRegistry.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../../utils/BpLibrary.sol";
 
-abstract contract RaribleTransferManager is ITransferManager, RoyaltiesRegistry{
+abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager{
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
     uint public buyerFee;
     uint public sellerFee;
+    RoyaltiesRegistry public royaltiesRegistry;
 
     address public communityWallet;
     mapping(address => address) public walletsForTokens;
 
-    function __RaribleTransferManager_init_unchained(uint newBuyerFee, uint newSellerFee, address newCommunityWallet) internal initializer {
+    function __RaribleTransferManager_init_unchained(
+        uint newBuyerFee,
+        uint newSellerFee,
+        address newCommunityWallet,
+        RoyaltiesRegistry newRoyaltiesRegistry
+    ) internal initializer {
         buyerFee = newBuyerFee;
         sellerFee = newSellerFee;
         communityWallet = newCommunityWallet;
+        royaltiesRegistry = newRoyaltiesRegistry;
     }
 
     function setBuyerFee(uint newBuyerFee) external onlyOwner {
@@ -122,8 +129,7 @@ abstract contract RaribleTransferManager is ITransferManager, RoyaltiesRegistry{
         //todo detect token1, tokId1
         address token1;
         uint tokId1;
-//        royaltiesRegistry = new RoyaltiesRegistry();
-        LibPart.Part[] memory fees = getRoyalties(token1, tokId1, matchNft);
+        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token1, tokId1, matchNft);
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);

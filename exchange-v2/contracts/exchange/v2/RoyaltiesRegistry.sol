@@ -19,15 +19,18 @@ contract RoyaltiesRegistry is OwnableUpgradeable {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-    mapping(address => LibPart.Part[] ) public royaltiesByToken;
+    mapping(address => LibPart.Part[]) public royaltiesByToken;
 
-    function setTokenRoyalties(address token, LibPart.Part[] memory royalties) external onlyOwner {
+    function setTokenRoyalties(address token, LibPart.Part[] calldata royalties) public onlyOwner {
         royaltiesByToken[token] = royalties;
     }
 
     //todo uint tokenId - not used
-    function getRoyalties(address token, uint tokenId, LibAsset.AssetType memory asset
-    ) internal view returns (LibPart.Part[] memory royalties){
+    function getRoyalties(
+        address token,
+        uint tokenId,
+        LibAsset.AssetType memory asset
+    ) public returns (LibPart.Part[] calldata royalties){
         royalties = royaltiesByToken[token];
         if (royalties.length == 0){
             royalties = getRoyaltiesFromAsset(asset);
