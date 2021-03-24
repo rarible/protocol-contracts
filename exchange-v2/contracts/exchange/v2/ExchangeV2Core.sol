@@ -61,12 +61,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibFill.FillResult memory fill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
         require(fill.takeAmount > 0, "nothing to fill");
         (uint totalMakeAmount, uint totalTakeAmount) = doTransfers(makeMatch, takeMatch, fill, orderLeft, orderRight);
-        if (makeMatch.assetClass == LibAsset.ETH_ASSET_TYPE) {
+        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalMakeAmount, "not enough eth");
             if (msg.value > totalMakeAmount) {
                 address(msg.sender).transferEth(msg.value - totalMakeAmount);
             }
-        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_TYPE) { //todo могут ли быть с обеих сторон ETH?
+        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) { //todo могут ли быть с обеих сторон ETH?
             require(msg.value >= totalTakeAmount, "not enough eth");
             if (msg.value > totalTakeAmount) {
                 address(msg.sender).transferEth(msg.value - totalTakeAmount);

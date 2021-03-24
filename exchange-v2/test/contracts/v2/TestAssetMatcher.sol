@@ -11,11 +11,11 @@ contract TestAssetMatcher is IAssetMatcher {
         LibAsset.AssetType memory leftAssetType,
         LibAsset.AssetType memory rightAssetType
     ) external view override returns (LibAsset.AssetType memory) {
-        if (leftAssetType.tp == bytes4(keccak256("BLA"))) {
+        if (leftAssetType.assetClass == bytes4(keccak256("BLA"))) {
             (address leftToken) = abi.decode(leftAssetType.data, (address));
             (address rightToken) = abi.decode(rightAssetType.data, (address));
             if (leftToken == rightToken) {
-                return LibAsset.AssetType(rightAssetType.tp, rightAssetType.data);
+                return LibAsset.AssetType(rightAssetType.assetClass, rightAssetType.data);
             }
         }
         return LibAsset.AssetType(0, "");

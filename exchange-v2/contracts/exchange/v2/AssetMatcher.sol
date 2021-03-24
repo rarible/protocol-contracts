@@ -31,14 +31,14 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
     function matchAssetOneSide(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {
         bytes4 typeLeft = leftAssetType.assetClass;
         bytes4 typeRight = rightAssetType.assetClass;
-        if (typeLeft == LibAsset.ETH_ASSET_TYPE) {
-            if (typeRight == LibAsset.ETH_ASSET_TYPE) {
+        if (typeLeft == LibAsset.ETH_ASSET_CLASS) {
+            if (typeRight == LibAsset.ETH_ASSET_CLASS) {
                 return leftAssetType;
             }
             return LibAsset.AssetType(0, EMPTY);
         }
-        if (typeLeft == LibAsset.ERC20_ASSET_TYPE) {
-            if (typeRight == LibAsset.ERC20_ASSET_TYPE) {
+        if (typeLeft == LibAsset.ERC20_ASSET_CLASS) {
+            if (typeRight == LibAsset.ERC20_ASSET_CLASS) {
                 (address addressLeft) = abi.decode(leftAssetType.data, (address));
                 (address addressRight) = abi.decode(rightAssetType.data, (address));
                 if (addressLeft == addressRight) {
@@ -47,8 +47,8 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
             }
             return LibAsset.AssetType(0, EMPTY);
         }
-        if (typeLeft == LibAsset.ERC721_ASSET_TYPE) {
-            if (typeRight == LibAsset.ERC721_ASSET_TYPE) {
+        if (typeLeft == LibAsset.ERC721_ASSET_CLASS) {
+            if (typeRight == LibAsset.ERC721_ASSET_CLASS) {
                 (address addressLeft, uint tokenIdLeft) = abi.decode(leftAssetType.data, (address, uint));
                 (address addressRight, uint tokenIdRight) = abi.decode(rightAssetType.data, (address, uint));
                 if (addressLeft == addressRight && tokenIdLeft == tokenIdRight) {
@@ -57,8 +57,8 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
             }
             return LibAsset.AssetType(0, EMPTY);
         }
-        if (typeLeft == LibAsset.ERC1155_ASSET_TYPE) {
-            if (typeRight == LibAsset.ERC1155_ASSET_TYPE) {
+        if (typeLeft == LibAsset.ERC1155_ASSET_CLASS) {
+            if (typeRight == LibAsset.ERC1155_ASSET_CLASS) {
                 (address addressLeft, uint tokenIdLeft) = abi.decode(leftAssetType.data, (address, uint));
                 (address addressRight, uint tokenIdRight) = abi.decode(rightAssetType.data, (address, uint));
                 if (addressLeft == addressRight && tokenIdLeft == tokenIdRight) {

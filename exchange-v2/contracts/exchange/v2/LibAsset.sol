@@ -3,10 +3,10 @@
 pragma solidity >=0.6.9 <0.8.0;
 
 library LibAsset {
-    bytes4 constant public ETH_ASSET_TYPE = bytes4(keccak256("ETH"));
-    bytes4 constant public ERC20_ASSET_TYPE = bytes4(keccak256("ERC20"));
-    bytes4 constant public ERC721_ASSET_TYPE = bytes4(keccak256("ERC721"));
-    bytes4 constant public ERC1155_ASSET_TYPE = bytes4(keccak256("ERC1155"));
+    bytes4 constant public ETH_ASSET_CLASS = bytes4(keccak256("ETH"));
+    bytes4 constant public ERC20_ASSET_CLASS = bytes4(keccak256("ERC20"));
+    bytes4 constant public ERC721_ASSET_CLASS = bytes4(keccak256("ERC721"));
+    bytes4 constant public ERC1155_ASSET_CLASS = bytes4(keccak256("ERC1155"));
 
     bytes32 constant ASSET_TYPE_TYPEHASH = keccak256(
         "AssetType(bytes4 assetClass,bytes data)"
