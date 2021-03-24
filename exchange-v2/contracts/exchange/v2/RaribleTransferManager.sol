@@ -69,14 +69,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.tp, takeMatch.tp);
         totalMakeAmount = fill.makeAmount;
         totalTakeAmount = fill.takeAmount;
-        LibOrderDataV1.DataV1 memory orderDataMaker = LibOrderData.parse(leftOrder);
-        LibOrderDataV1.DataV1 memory orderDataTaker = LibOrderData.parse(rightOrder);
+        LibOrderDataV1.DataV1 memory leftOrderData = LibOrderData.parse(leftOrder);
+        LibOrderDataV1.DataV1 memory rightOrderData = LibOrderData.parse(rightOrder);
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder.maker, orderDataMaker, orderDataTaker, makeMatch, takeMatch,  TO_TAKER);
-            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, orderDataMaker.payouts, TO_MAKER);
+            totalMakeAmount = doTransfersWithFees(fill.makeAmount, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch,  TO_TAKER);
+            transferPayouts(takeMatch, fill.takeAmount, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder.maker, orderDataTaker, orderDataMaker, takeMatch, makeMatch, TO_MAKER);
-            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, orderDataTaker.payouts, TO_TAKER);
+            totalTakeAmount = doTransfersWithFees(fill.takeAmount, rightOrder.maker, rightOrderData, leftOrderData, takeMatch, makeMatch, TO_MAKER);
+            transferPayouts(makeMatch, fill.makeAmount, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
         }
     }
 

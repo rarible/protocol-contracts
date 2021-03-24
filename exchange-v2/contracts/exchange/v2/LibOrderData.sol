@@ -22,7 +22,9 @@ library LibOrderData {
         }
     }
 
-    function payoutSet(address orderAddress, LibOrderDataV1.DataV1 memory dataOrderOnePayoutIn
+    function payoutSet(
+        address orderAddress,
+        LibOrderDataV1.DataV1 memory dataOrderOnePayoutIn
     ) pure internal returns (LibOrderDataV1.DataV1 memory ) {
         LibPart.Part[] memory payout = new LibPart.Part[](1);
         payout[0].account = payable(orderAddress);
