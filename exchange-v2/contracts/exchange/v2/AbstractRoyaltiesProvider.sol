@@ -5,6 +5,6 @@ pragma abicoder v2;
 
 import "@rarible/royalties/contracts/LibPart.sol";
 
-abstract contract AbstractRoyaltiesRegistry {
+abstract contract AbstractRoyaltiesProvider {
     mapping(address => LibPart.Part[]) public royaltiesByToken;
 }
