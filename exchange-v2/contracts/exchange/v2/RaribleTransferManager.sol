@@ -126,12 +126,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address from,
         bytes4 transferDirection
     ) internal returns (uint restValue){
-        //todo detect token1, tokId1
-        address token1;
-        uint tokId1;
-        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token1, tokId1, matchNft);
-//        LibPart.Part[] memory fees;
         restValue = rest;
+        if (matchNft.tp != LibAsset.ERC1155_ASSET_TYPE && matchNft.tp != LibAsset.ERC721_ASSET_TYPE) {
+            return restValue;
+        }
+        (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
+        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
         for (uint256 i = 0; i < fees.length; i++) {
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
             restValue = newRestValue;

@@ -3,7 +3,6 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "./LibAsset.sol";
 import "./AbstractRoyaltiesRegistry.sol";
 import "./RoyaltiesRegistryIFace.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
@@ -16,36 +15,31 @@ contract RoyaltiesRegistryImpl is AbstractRoyaltiesRegistry, RoyaltiesRegistryIF
 
   function getRoyalties(
     address token,
-    uint tokenId,
-    LibAsset.AssetType memory asset
+    uint tokenId
   ) override external view returns (LibPart.Part[] memory){
     LibPart.Part[] memory royalties = royaltiesByToken[token];
     if (royalties.length == 0){
-      royalties = getRoyaltiesFromAsset(asset);
+      royalties = getRoyaltiesFromAsset(token, tokenId);
     }
     return royalties;
   }
 
-  function getRoyaltiesFromAsset(LibAsset.AssetType memory asset) internal view returns (LibPart.Part[] memory feesRecipients) {
-    if (asset.tp != LibAsset.ERC1155_ASSET_TYPE && asset.tp != LibAsset.ERC721_ASSET_TYPE) {
-      return feesRecipients;
-    }
-    (address addressAsset, uint tokenIdAsset) = abi.decode(asset.data, (address, uint));
-    if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
-      RoyaltiesV2Impl withFees = RoyaltiesV2Impl(addressAsset);
-      try withFees.getRoyalties(tokenIdAsset) returns (LibPart.Part[] memory feesRecipientsResult) {
+  function getRoyaltiesFromAsset(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
+    if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
+      RoyaltiesV2Impl withFees = RoyaltiesV2Impl(token);
+      try withFees.getRoyalties(tokenId) returns (LibPart.Part[] memory feesRecipientsResult) {
         feesRecipients = feesRecipientsResult;
       } catch {}
-    } else if (IERC165Upgradeable(addressAsset).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
-      RoyaltiesV1Impl withFees = RoyaltiesV1Impl(addressAsset);
+    } else if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
+      RoyaltiesV1Impl withFees = RoyaltiesV1Impl(token);
       address payable[] memory recipients;
-      try withFees.getFeeRecipients(tokenIdAsset) returns (address payable[] memory recipientsResult) {
+      try withFees.getFeeRecipients(tokenId) returns (address payable[] memory recipientsResult) {
         recipients = recipientsResult;
       } catch {
         return feesRecipients;
       }
       uint[] memory fees;
-      try withFees.getFeeBps(tokenIdAsset) returns (uint[] memory feesResult) {
+      try withFees.getFeeBps(tokenId) returns (uint[] memory feesResult) {
         fees = feesResult;
       } catch {
         return feesRecipients;
