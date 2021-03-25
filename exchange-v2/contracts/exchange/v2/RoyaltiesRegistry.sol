@@ -12,20 +12,30 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 
 contract RoyaltiesRegistry is IRoyaltiesProvider {
 
+  mapping(bytes32 => LibPart.Part[]) public royaltiesByTokenAndTokenId;
   mapping(address => LibPart.Part[]) public royaltiesByToken;
+  mapping(address => address) public royaltiesExtractors;
 
   function getRoyalties(
     address token,
     uint tokenId
   ) override external view returns (LibPart.Part[] memory) {
-    LibPart.Part[] memory royalties = royaltiesByToken[token];
-    if (royalties.length == 0) {
-      royalties = getRoyaltiesFromAsset(token, tokenId);
+    LibPart.Part[] memory royalties = royaltiesByTokenAndTokenId[keccak256(abi.encode(token, tokenId))];
+    if  (royalties.length != 0) {
+      return royalties;
     }
-    return royalties;
+    royalties = royaltiesByToken[token];
+    if (royalties.length != 0) {
+      return royalties;
+    }
+    royalties = getRoyaltiesFromContract(token, tokenId);
+    if (royalties.length != 0) {
+      return royalties;
+    }
+    return getRoyaltiesFromExtractor(token, tokenId);
   }
 
-  function getRoyaltiesFromAsset(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
+  function getRoyaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
     if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
       RoyaltiesV2Impl withFees = RoyaltiesV2Impl(token);
       try withFees.getRoyalties(tokenId) returns (LibPart.Part[] memory feesRecipientsResult) {
@@ -55,6 +65,11 @@ contract RoyaltiesRegistry is IRoyaltiesProvider {
       }
     }
     return feesRecipients;
+  }
+
+//  todo write me
+  function getRoyaltiesFromExtractor(address , uint ) internal view returns (LibPart.Part[] memory ) {
+//    return feesRecipients;
   }
 
   uint256[46] private __gap;
