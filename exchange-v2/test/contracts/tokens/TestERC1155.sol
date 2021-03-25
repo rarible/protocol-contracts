@@ -8,4 +8,5 @@ contract TestERC1155 is ERC1155Upgradeable {
     function mint(address to, uint tokenId, uint amount) external {
         _mint(to, tokenId, amount, "");
     }
+
 }

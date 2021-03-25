@@ -11,6 +11,6 @@ import "../../roles/OperatorRole.sol";
 contract ERC1155LazyMintTransferProxy is OperatorRole, ITransferProxy {
     function transfer(LibAsset.Asset memory asset, address, address to) override onlyOperator external {
         (address token, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(asset.assetType.data, (address, LibERC1155LazyMint.Mint1155Data));
-        IERC1155LazyMint(token).mintAndTransfer(data, to, asset.amount);
+        IERC1155LazyMint(token).mintAndTransfer(data, to, asset.value);
     }
 }

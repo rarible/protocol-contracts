@@ -59,35 +59,35 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         uint leftOrderFill = fills[leftOrderKeyHash];
         uint rightOrderFill = fills[rightOrderKeyHash];
         LibFill.FillResult memory fill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
-        require(fill.takeAmount > 0, "nothing to fill");
-        (uint totalMakeAmount, uint totalTakeAmount) = doTransfers(makeMatch, takeMatch, fill, orderLeft, orderRight);
-        if (makeMatch.tp == LibAsset.ETH_ASSET_TYPE) {
-            require(msg.value >= totalMakeAmount, "not enough eth");
-            if (msg.value > totalMakeAmount) {
-                address(msg.sender).transferEth(msg.value - totalMakeAmount);
+        require(fill.takeValue > 0, "nothing to fill");
+        (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, fill, orderLeft, orderRight);
+        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(msg.value >= totalMakeValue, "not enough eth");
+            if (msg.value > totalMakeValue) {
+                address(msg.sender).transferEth(msg.value - totalMakeValue);
             }
-        } else if (takeMatch.tp == LibAsset.ETH_ASSET_TYPE) { //todo могут ли быть с обеих сторон ETH?
-            require(msg.value >= totalTakeAmount, "not enough eth");
-            if (msg.value > totalTakeAmount) {
-                address(msg.sender).transferEth(msg.value - totalTakeAmount);
+        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) { //todo могут ли быть с обеих сторон ETH?
+            require(msg.value >= totalTakeValue, "not enough eth");
+            if (msg.value > totalTakeValue) {
+                address(msg.sender).transferEth(msg.value - totalTakeValue);
             }
         }
 
         address msgSender = _msgSender();
         if (msgSender != orderLeft.maker) {
-            fills[leftOrderKeyHash] = leftOrderFill + fill.takeAmount;
+            fills[leftOrderKeyHash] = leftOrderFill + fill.takeValue;
         }
         if (msgSender != orderRight.maker) {
-            fills[rightOrderKeyHash] = rightOrderFill + fill.makeAmount;
+            fills[rightOrderKeyHash] = rightOrderFill + fill.makeValue;
         }
-        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, fill.takeAmount, fill.makeAmount);
+        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, fill.takeValue, fill.makeValue);
     }
 
     function matchAssets(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {
         makeMatch = matchAssets(orderLeft.makeAsset.assetType, orderRight.takeAsset.assetType);
-        require(makeMatch.tp != 0, "assets don't match");
+        require(makeMatch.assetClass != 0, "assets don't match");
         takeMatch = matchAssets(orderLeft.takeAsset.assetType, orderRight.makeAsset.assetType);
-        require(takeMatch.tp != 0, "assets don't match");
+        require(takeMatch.assetClass != 0, "assets don't match");
     }
 
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {

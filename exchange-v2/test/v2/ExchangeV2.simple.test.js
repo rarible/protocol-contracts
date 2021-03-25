@@ -117,8 +117,8 @@ contract("ExchangeSimpleV2", accounts => {
 
 		it("doesn't allow to fill more than 100% of the order", async () => {
 			const { left, right } = await prepare2Orders()
-			right.makeAsset.amount = 100;
-			right.takeAsset.amount = 50;
+			right.makeAsset.value = 100;
+			right.takeAsset.value = 50;
 
 			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
 			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
