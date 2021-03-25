@@ -131,7 +131,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         bytes4 transferDirection
     ) internal returns (uint restValue){
         restValue = rest;
-        if (matchNft.tp != LibAsset.ERC1155_ASSET_TYPE && matchNft.tp != LibAsset.ERC721_ASSET_TYPE) {
+        if (matchNft.assetClass != LibAsset.ERC1155_ASSET_CLASS && matchNft.assetClass != LibAsset.ERC721_ASSET_CLASS) {
             return restValue;
         }
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
