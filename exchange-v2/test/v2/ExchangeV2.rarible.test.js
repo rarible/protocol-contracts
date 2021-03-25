@@ -10,7 +10,7 @@ const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
 const truffleAssert = require('truffle-assertions');
-const RoyaltiesRegistryImpl = artifacts.require("RoyaltiesRegistryImpl.sol");
+const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -41,7 +41,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
-		royaltiesRegistry = await RoyaltiesRegistryImpl.new();
+		royaltiesRegistry = await RoyaltiesRegistry.new();
 		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);

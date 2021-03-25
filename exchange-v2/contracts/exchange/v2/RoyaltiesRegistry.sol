@@ -11,14 +11,14 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 
-contract RoyaltiesRegistryImpl is AbstractRoyaltiesProvider, IRoyaltiesProvider {
+contract RoyaltiesRegistry is AbstractRoyaltiesProvider, IRoyaltiesProvider {
 
   function getRoyalties(
     address token,
     uint tokenId
-  ) override external view returns (LibPart.Part[] memory){
+  ) override external view returns (LibPart.Part[] memory) {
     LibPart.Part[] memory royalties = royaltiesByToken[token];
-    if (royalties.length == 0){
+    if (royalties.length == 0) {
       royalties = getRoyaltiesFromAsset(token, tokenId);
     }
     return royalties;

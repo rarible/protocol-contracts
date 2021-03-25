@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "../../../contracts/exchange/v2/RaribleTransferManager.sol";
 import "../../../contracts/exchange/v2/ITransferExecutor.sol";
 import "../../../contracts/exchange/v2/OrderValidator.sol";
-import "../../../contracts/exchange/v2/RoyaltiesRegistryImpl.sol";
+import "../../../contracts/exchange/v2/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
 
@@ -30,7 +30,7 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
-        RoyaltiesRegistryImpl newRoyaltiesRegistry
+        IRoyaltiesProvider newRoyaltiesRegistry
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();

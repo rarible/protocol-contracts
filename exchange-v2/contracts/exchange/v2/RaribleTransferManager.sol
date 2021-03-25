@@ -10,7 +10,7 @@ import "./LibOrderDataV1.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
 import "./LibAsset.sol";
-import "./RoyaltiesRegistryImpl.sol";
+import "./IRoyaltiesProvider.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../../utils/BpLibrary.sol";
 
@@ -20,7 +20,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
 
     uint public buyerFee;
     uint public sellerFee;
-    RoyaltiesRegistryImpl public royaltiesRegistry;
+    IRoyaltiesProvider public royaltiesRegistry;
 
     address public communityWallet;
     mapping(address => address) public walletsForTokens;
@@ -29,7 +29,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
-        RoyaltiesRegistryImpl newRoyaltiesRegistry
+        IRoyaltiesProvider newRoyaltiesRegistry
     ) internal initializer {
         buyerFee = newBuyerFee;
         sellerFee = newSellerFee;

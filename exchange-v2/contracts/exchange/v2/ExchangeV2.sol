@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "./ExchangeV2Core.sol";
 import "./RaribleTransferManager.sol";
-import "./RoyaltiesRegistryImpl.sol";
+import "./IRoyaltiesProvider.sol";
 
 contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
     function __ExchangeV2_init(
@@ -14,7 +14,7 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
-        RoyaltiesRegistryImpl newRoyaltiesRegistry
+        IRoyaltiesProvider newRoyaltiesRegistry
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
