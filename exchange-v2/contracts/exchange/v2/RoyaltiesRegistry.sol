@@ -3,7 +3,6 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "./AbstractRoyaltiesProvider.sol";
 import "./IRoyaltiesProvider.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
@@ -11,7 +10,9 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 
-contract RoyaltiesRegistry is AbstractRoyaltiesProvider, IRoyaltiesProvider {
+contract RoyaltiesRegistry is IRoyaltiesProvider {
+
+  mapping(address => LibPart.Part[]) public royaltiesByToken;
 
   function getRoyalties(
     address token,
