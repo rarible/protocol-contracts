@@ -9,12 +9,34 @@ import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract RoyaltiesRegistry is IRoyaltiesProvider {
+contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
   mapping(bytes32 => LibPart.Part[]) public royaltiesByTokenAndTokenId;
   mapping(address => LibPart.Part[]) public royaltiesByToken;
   mapping(address => address) public royaltiesExtractors;
+
+  function initializeRoyaltiesRegistry() external {
+    __Ownable_init_unchained();
+  }
+
+  function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) override external onlyOwner {
+    for (uint i = 0; i < royalties.length; i++) {
+      require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByToken should be present");
+      require(royalties[i].value != 0, "Fee value for RoyaltiesByToken should be positive");
+      royaltiesByToken[token].push(royalties[i]);
+    }
+  }
+
+  function setRoyaltiesByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) override external onlyOwner {
+    bytes32 key = keccak256(abi.encode(token, tokenId));
+    for (uint i = 0; i < royalties.length; i++) {
+      require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId  should be present");
+      require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be positive");
+      royaltiesByTokenAndTokenId[key].push(royalties[i]);
+    }
+  }
 
   function getRoyalties(
     address token,
