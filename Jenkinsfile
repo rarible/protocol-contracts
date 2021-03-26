@@ -4,7 +4,7 @@ pipeline {
   stages {
     stage('test') {
       steps {
-        cd 'exchange-v2'
+        sh 'cd exchange-v2'
         sh 'npm i'
         sh 'truffle test --compile-all'
       }
