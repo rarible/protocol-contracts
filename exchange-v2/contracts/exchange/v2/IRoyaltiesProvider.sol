@@ -9,7 +9,7 @@ interface IRoyaltiesProvider {
     function getRoyalties(
         address token,
         uint tokenId
-    ) external view returns (LibPart.Part[] memory);
+    ) external returns (LibPart.Part[] memory);
 
     function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external;
 
