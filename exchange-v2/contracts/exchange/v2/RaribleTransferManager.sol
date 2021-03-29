@@ -30,12 +30,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
-        IRoyaltiesProvider newRoyaltiesRegistry
+        IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
         buyerFee = newBuyerFee;
         sellerFee = newSellerFee;
         communityWallet = newCommunityWallet;
-        royaltiesRegistry = newRoyaltiesRegistry;
+        royaltiesRegistry = newRoyaltiesProvider;
     }
 
     function setBuyerFee(uint newBuyerFee) external onlyOwner {

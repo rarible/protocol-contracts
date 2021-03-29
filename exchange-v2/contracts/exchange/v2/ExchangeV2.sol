@@ -14,12 +14,12 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
-        IRoyaltiesProvider newRoyaltiesRegistry
+        IRoyaltiesProvider newRoyaltiesProvider
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newBuyerFee, newSellerFee, newCommunityWallet, newRoyaltiesRegistry);
+        __RaribleTransferManager_init_unchained(newBuyerFee, newSellerFee, newCommunityWallet, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
     }
 }
