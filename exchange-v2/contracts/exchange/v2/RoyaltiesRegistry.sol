@@ -40,11 +40,11 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		saveRoyaltiesInCashByTokenTokeId(token, tokenId, royalties);
 	}
 
-	function ownerDetected(address token) internal returns (bool result){
+	function ownerDetected(address token) internal returns (bool result) {
 		if (owner() == _msgSender()) {
 			result = true;
 		} else {
-			try OwnableUpgradeable(token).owner() returns (address tokenOwner){
+			try OwnableUpgradeable(token).owner() returns (address tokenOwner) {
 				address ownerSender = msg.sender;
 				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
 					result = true;
@@ -53,7 +53,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 				}
 			} catch {}
 //			TODO: add Ownable
-//			try Ownable(token).owner() returns (address tokenOwner){
+//			try Ownable(token).owner() returns (address tokenOwner) {
 //				address ownerSender = msg.sender;
 //				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
 //					result = true;
@@ -78,7 +78,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		}
 		(bool resultRoyaltesFromContract, LibPart.Part[] memory royalties) = royaltiesFromContract(token, tokenId);
 		saveRoyaltiesInCashByTokenTokeId (token, tokenId, royalties);
-		if (!resultRoyaltesFromContract){
+		if (!resultRoyaltesFromContract) {
 			royalties = royaltiesExternalProvider(token, tokenId);
 			saveRoyaltiesInCashByTokenTokeId (token, tokenId, royalties);
 		}
