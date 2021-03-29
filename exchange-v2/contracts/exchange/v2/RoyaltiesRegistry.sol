@@ -40,12 +40,12 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		saveRoyaltiesInCashByTokenTokeId(token, tokenId, royalties);
 	}
 
-	function ownerDetected(address token) internal returns (bool result) {
+	function ownerDetected(address token) internal view returns (bool result) {
 		if (owner() == _msgSender()) {
 			result = true;
 		} else {
 			try OwnableUpgradeable(token).owner() returns (address tokenOwner) {
-				address ownerSender = msg.sender;
+				address ownerSender = _msgSender();
 				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
 					result = true;
 				} else {
@@ -54,7 +54,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 			} catch {}
 //			TODO: add Ownable
 //			try Ownable(token).owner() returns (address tokenOwner) {
-//				address ownerSender = msg.sender;
+//				address ownerSender = _msgSender();
 //				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
 //					result = true;
 //				} else {
