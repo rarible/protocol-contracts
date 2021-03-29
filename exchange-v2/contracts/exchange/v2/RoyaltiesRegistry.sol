@@ -21,28 +21,34 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		__Ownable_init_unchained();
 	}
 
-//	  todo think need rezult setRoyaltiesByToken true or false?
+//	TODO: think need result setRoyaltiesByToken true or false? Maybe result need to emit event success or not set royalties
 	function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) override external {
 		if (!ownerDetected(token)) {
 			return;
 		}
+		uint sumRoyalties = 0;
 		for (uint i = 0; i < royalties.length; i++) {
 			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByToken should be present");
 			require(royalties[i].value != 0, "Fee value for RoyaltiesByToken should be positive");
 			royaltiesByToken[token].push(royalties[i]);
+			sumRoyalties += royalties[i].value;
 		}
+		require(sumRoyalties < 10000, "Sum royalties by token more, than 100%");
 	}
-
+//	TODO: think need result setRoyaltiesByToken true or false? Maybe result need to emit event success or not set royalties
 	function setRoyaltiesByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) override external {
 		if (!ownerDetected(token)) {
 			return;
 		}
 		bytes32 key = keccak256(abi.encode(token, tokenId));
+		uint sumRoyalties = 0;
 		for (uint i = 0; i < royalties.length; i++) {
 			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId  should be present");
 			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be positive");
 			royaltiesByTokenAndTokenId[key].push(royalties[i]);
+			sumRoyalties += royalties[i].value;
 		}
+		require(sumRoyalties < 10000, "Sum royalties by token and tokenId more, than 100%");
 	}
 
 	function ownerDetected(address token) internal returns (bool result){
@@ -55,9 +61,18 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
 					result = true;
 				} else {
-					revert("Token owner not detected");
+					revert("Token owner not detected by OwnableUpgradeable");
 				}
 			} catch {}
+//			TODO: add Ownable
+//			try Ownable(token).owner() returns (address tokenOwner){
+//				address ownerSender = msg.sender;
+//				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
+//					result = true;
+//				} else {
+//					revert("Token owner not detected by Ownable");
+//				}
+//			} catch {}
 		}
 	}
 
@@ -73,7 +88,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		if (royalties.length != 0) {
 			return royalties;
 		}
-		royalties = getRoyaltiesFromContract(token, tokenId);
+		royalties = royaltiesFromContract(token, tokenId);
 		if (royalties.length != 0) {
 			return royalties;
 		}
@@ -88,7 +103,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		}
 	}
 
-	function getRoyaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
+	function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
 		if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
 			RoyaltiesV2Impl withFees = RoyaltiesV2Impl(token);
 			try withFees.getRoyalties(tokenId) returns (LibPart.Part[] memory feesRecipientsResult) {

@@ -167,7 +167,30 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 			assert.equal(await t1.balanceOf(protocol), 6);
 		})
 
-	it("Transfer from ERC20 to ERC721_V1OwnUpgrd, Royalties NOT initialize  throw detected ", async () => {
+		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setRoyaltiesByToken, royaltiesSum>100% throw detected", async () => {
+			await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+			let ownerErc721 = accounts[6];
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721 });
+      await ERC721_V1OwnUpgrd.initialize( {from: ownerErc721});
+			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+    	await expectThrow(
+    		 royaltiesRegistry.setRoyaltiesByToken(ERC721_V1OwnUpgrd.address, [[accounts[3], 500], [accounts[4], 9800]], {from: ownerErc721}) //set royalties by token and tokenId
+    	);
+		})
+
+		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setRoyaltiesByTokenandTokenId, royaltiesSum>100% throw detected ", async () => {
+			let ownerErc721 = accounts[6];
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
+      await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
+			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+    	await expectThrow(
+    		royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 9200], [accounts[4], 1100]], {from: ownerErc721}) //set royalties by token and tokenId
+    	);
+		})
+
+		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, Royalties NOT initialize  throw detected ", async () => {
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
 			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
     	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
