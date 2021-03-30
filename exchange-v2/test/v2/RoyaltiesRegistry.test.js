@@ -6,6 +6,7 @@ const TestERC721 = artifacts.require("TestERC721.sol");
 const TransferProxy = artifacts.require("TransferProxy.sol");
 const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
+const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -19,6 +20,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
   let erc1155;
   let transferProxy;
   let erc20TransferProxy;
+  let royaltiesProviderTest;
   let t1;
   let t2;
 	let protocol = accounts[9];
@@ -44,6 +46,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
     await testing.setWalletForToken(t1.address, protocol);//
 		/*ERC721 */
 		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
+		testRoyaltiesProvider = await TestRoyaltiesProvider.new();
 	});
 
 	describe("Metods works:", () => {
@@ -200,5 +203,126 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		})
 
 	})
+	describe ("ExternalProviders test:", () => {
+		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken, initialize by Owner", async () => {
 
+  		await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
+  		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+    	await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address); 							//set royalties by token and tokenId
+
+  		await t1.mint(accounts[1], 105);
+  		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+  		const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+  		const right = Order(accounts[2], Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
+  		await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
+
+  		assert.equal(await t1.balanceOf(accounts[1]), 2);
+  		assert.equal(await t1.balanceOf(accounts[2]), 82);
+  		assert.equal(await t1.balanceOf(accounts[3]), 5);
+  		assert.equal(await t1.balanceOf(accounts[4]), 10);
+  		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[1]), 1);
+  		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[2]), 0);
+  		assert.equal(await t1.balanceOf(protocol), 6);
+  	})
+
+		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken + ContractRoyalties, initialize by Owner", async () => {
+
+  		await royaltiesRegistry.initializeRoyaltiesRegistry();																																//initialize Owner
+
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      ERC721_V1OwnUpgrd.initialize(); 																																											//set V1 interface
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); 	//initialize royalties provider
+  		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, [[accounts[5], 1000], [accounts[7], 1200]]);								//set royalties by contract
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+    	await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address); 								//set royalties by provider
+
+  		await t1.mint(accounts[1], 105);
+  		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+  		const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+  		const right = Order(accounts[2], Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
+  		await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
+
+  		assert.equal(await t1.balanceOf(accounts[1]), 2);
+  		assert.equal(await t1.balanceOf(accounts[2]), 60);
+  		assert.equal(await t1.balanceOf(accounts[3]), 5);
+  		assert.equal(await t1.balanceOf(accounts[4]), 10);
+  		assert.equal(await t1.balanceOf(accounts[5]), 10);
+  		assert.equal(await t1.balanceOf(accounts[7]), 12);
+  		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[1]), 1);
+  		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[2]), 0);
+  		assert.equal(await t1.balanceOf(protocol), 6);
+  	})
+
+		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setProviderByToken, initialize  by ownableUpgradaeble(ERC721_V1OwnUpgrd).owner ", async () => {
+			let ownerErc721 = accounts[6];
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 600], [accounts[4], 1100]]); 				//initialize royalties provider
+      await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
+			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+			await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address, {from: ownerErc721}); //set royalties by provider
+
+			await t1.mint(accounts[1], 105);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+			const right = Order(accounts[2], Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
+			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
+
+			assert.equal(await t1.balanceOf(accounts[1]), 2);
+			assert.equal(await t1.balanceOf(accounts[2]), 80);
+			assert.equal(await t1.balanceOf(accounts[3]), 6);
+			assert.equal(await t1.balanceOf(accounts[4]), 11);
+			assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[1]), 1);
+			assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[2]), 0);
+			assert.equal(await t1.balanceOf(protocol), 6);
+		})
+
+		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken, initialize by Owner, but provider not IRoyaltiesRegistry", async () => {
+
+  		await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
+  		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+    	await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, erc721.address); 														//set provider without IRoyaltiesRegistry
+
+  		await t1.mint(accounts[1], 105);
+  		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+  		const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+  		const right = Order(accounts[2], Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
+  		await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
+
+  		assert.equal(await t1.balanceOf(accounts[1]), 2);
+  		assert.equal(await t1.balanceOf(accounts[2]), 97);
+  		assert.equal(await t1.balanceOf(accounts[3]), 0);
+  		assert.equal(await t1.balanceOf(accounts[4]), 0);
+  		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[1]), 1);
+  		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[2]), 0);
+  		assert.equal(await t1.balanceOf(protocol), 6);
+  	})
+
+		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setProviderByToken, initialize not initialized, expect throw ", async () => {
+			let ownerErc721 = accounts[6];
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 600], [accounts[4], 1100]]);//initialize royalties provider
+      await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
+			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+    	await expectThrow(
+    		royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address) 									//set royalties by provider without ownerErc721
+    	);
+
+		})
+
+
+	})
 });
