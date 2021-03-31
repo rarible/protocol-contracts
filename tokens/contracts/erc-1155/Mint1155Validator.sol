@@ -12,9 +12,9 @@ contract Mint1155Validator is ERC1271Validator {
     }
 
     function validate(address sender, LibERC1155LazyMint.Mint1155Data memory data, uint index) internal view {
-        address creator = data.creators[index];
+        address creator = data.creators[index].account;
         if (sender != creator) {
-            validate1271(data.creators[index], LibMint1155.hash(data), data.signatures[index]);
+            validate1271(data.creators[index].account, LibMint1155.hash(data), data.signatures[index]);
         }
     }
     uint256[50] private __gap;

@@ -21,7 +21,7 @@ contract ERC1155RaribleUser is ERC1155Base {
     }
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override {
-        require(owner() == data.creators[0], "minter is not the owner");
+        require(owner() == data.creators[0].account, "minter is not the owner");
         super.mintAndTransfer(data, to, _amount);
     }
     uint256[50] private __gap;
