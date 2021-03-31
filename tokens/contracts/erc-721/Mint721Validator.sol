@@ -12,7 +12,7 @@ contract Mint721Validator is ERC1271Validator {
     }
 
     function validate(LibERC721LazyMint.Mint721Data memory data, uint index) internal view {
-        validate1271(data.creators[index], LibMint721.hash(data), data.signatures[index]);
+        validate1271(data.creators[index].account, LibMint721.hash(data), data.signatures[index]);
     }
     uint256[50] private __gap;
 }
