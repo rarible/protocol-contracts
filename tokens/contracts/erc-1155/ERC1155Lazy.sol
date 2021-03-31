@@ -9,6 +9,7 @@ import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
 import "./Mint1155Validator.sol";
 import "./ERC1155BaseURI.sol";
+import "@rarible/royalties/contracts/LibPart.sol";
 
 abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
     using SafeMathUpgradeable for uint;
@@ -19,10 +20,10 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     );
     event Creators(
         uint256 tokenId,
-        address[] creators
+        LibPart[] creators
     );
 
-    mapping (uint256 => address[]) public creators;
+    mapping (uint256 => LibPart[]) public creators;
     mapping (uint => uint) private supply;
     mapping (uint => uint) private minted;
 
@@ -34,7 +35,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
-        require(minter == data.creators[0], "tokenId incorrect");
+        require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");
 
@@ -69,12 +70,12 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         emit Supply(tokenId, _supply);
     }
 
-    function _saveCreators(uint tokenId, address[] memory _creators) internal {
+    function _saveCreators(uint tokenId, LibPart[] memory _creators) internal {
         creators[tokenId] = _creators;
         emit Creators(tokenId, _creators);
     }
 
-    function getCreators(uint256 _id) external view returns (address[] memory) {
+    function getCreators(uint256 _id) external view returns (LibPart[] memory) {
         return creators[_id];
     }
     uint256[50] private __gap;
