@@ -27,7 +27,7 @@ For ERC-721 function has following signature: `mintAndTransfer(LibERC721LazyMint
     struct Mint721Data {
         uint tokenId;
         string uri;
-        address[] creators;
+        LibPart.Part[] creators;
         LibPart.Part[] royalties;
         bytes[] signatures;
     }
@@ -35,7 +35,7 @@ For ERC-721 function has following signature: `mintAndTransfer(LibERC721LazyMint
 
 - **tokenId** - regular ERC-721 tokenId
 - **uri** - suffix for the token uri. prefix is usually "ipfs:/"
-- **creators** - array of addresses who considered authors of the work. Will be saved, anyone can query this info.
+- **creators** - array of addresses who considered authors and their parts of the work. Will be saved, anyone can query this info.
 - **fees** - array of royalties, will be saved. . Will be saved, anyone can query this info.
 - **signatures** - array of signatures of this information. Signature should be present for every creator (only exception is when creator sends mint transaction)
 
@@ -46,7 +46,7 @@ For ERC-1155 function has some more arguments: `mintAndTransfer(LibERC1155LazyMi
         uint tokenId;
         string uri;
         uint supply;
-        address[] creators;
+        LibPart.Part[] creators;
         LibPart.Part[] royalties;
         bytes[] signatures;
     }
@@ -55,7 +55,7 @@ For ERC-1155 function has some more arguments: `mintAndTransfer(LibERC1155LazyMi
 - **tokenId** - ERC-1155 tokenId
 - **uri** - suffix for the token uri. prefix is usually "ipfs:/"
 - **supply** - total supply for tokenId. can not be changed after initial mint.
-- **creators** - array of addresses who considered authors of the work. Will be saved, anyone can query this info.
+- **creators** - array of addresses who considered authors and their parts of the work. Will be saved, anyone can query this info.
 - **fees** - array of royalties, will be saved. . Will be saved, anyone can query this info.
 - **signatures** - array of signatures of this information. Signature should be present for every creator (only exception is when creator sends mint transaction)
 
