@@ -230,7 +230,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
   		assert.equal(await t1.balanceOf(protocol), 6);
   	})
 
-		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken + ContractRoyalties, initialize by Owner", async () => {
+		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken + ContractRoyalties, which not work, because royalties detect by provider, initialize by Owner", async () => {
 
   		await royaltiesRegistry.initializeRoyaltiesRegistry();																																//initialize Owner
 
@@ -249,11 +249,11 @@ contract("RoyaltiesRegistry, test metods", accounts => {
   		await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
 
   		assert.equal(await t1.balanceOf(accounts[1]), 2);
-  		assert.equal(await t1.balanceOf(accounts[2]), 60);
+  		assert.equal(await t1.balanceOf(accounts[2]), 82);
   		assert.equal(await t1.balanceOf(accounts[3]), 5);
   		assert.equal(await t1.balanceOf(accounts[4]), 10);
-  		assert.equal(await t1.balanceOf(accounts[5]), 10);
-  		assert.equal(await t1.balanceOf(accounts[7]), 12);
+  		assert.equal(await t1.balanceOf(accounts[5]), 0);
+  		assert.equal(await t1.balanceOf(accounts[7]), 0);
   		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[1]), 1);
   		assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[2]), 0);
   		assert.equal(await t1.balanceOf(protocol), 6);

@@ -27,88 +27,12 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 	}
 
 	function setProviderByToken(address token, address provider) external {
-		if (!ownerDetected(token)) {
-			return;
-		}
+		checkOwner(token);
 		royaltiesProviders[token] = provider;
 	}
 
 	function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external {
-		if (!ownerDetected(token)) {
-			return;
-		}
-		saveRoyaltiesInCashByToken(token, royalties);
-	}
-
-	function setRoyaltiesByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) external {
-		if (!ownerDetected(token)) {
-			return;
-		}
-		saveRoyaltiesInCashByTokenTokeId(token, tokenId, royalties);
-	}
-
-	function ownerDetected(address token) internal view returns (bool result) {
-		if (owner() == _msgSender()) {
-			result = true;
-		} else {
-			try OwnableUpgradeable(token).owner() returns (address tokenOwner) {
-				address ownerSender = _msgSender();
-				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
-					result = true;
-				} else {
-					revert("Token owner not detected by OwnableUpgradeable");
-				}
-			} catch {}
-//			TODO: add Ownable
-//			try Ownable(token).owner() returns (address tokenOwner) {
-//				address ownerSender = _msgSender();
-//				if ((tokenOwner != address(0x0)) && (ownerSender != address(0x0)) && (tokenOwner == ownerSender)) {
-//					result = true;
-//				} else {
-//					revert("Token owner not detected by Ownable");
-//				}
-//			} catch {}
-		}
-	}
-
-	function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory ) {
-		RoyaltiesSet memory royaltiesSet = royaltiesByTokenAndTokenId[keccak256(abi.encode(token, tokenId))];
-		if (royaltiesSet.initialized) {
-			return royaltiesSet.royalties;
-		}
-		royaltiesSet = royaltiesByToken[token];
-		if (royaltiesSet.initialized) {
-			return royaltiesSet.royalties;
-		}
-		LibPart.Part[] memory royaltiesContract = royaltiesFromContract(token, tokenId);
-		saveRoyaltiesInCashByTokenTokeId (token, tokenId, royaltiesContract);
-		LibPart.Part[] memory royaltiesProvidersExtracted = providerExtractors(token);
-		saveRoyaltiesInCashByToken (token, royaltiesProvidersExtracted);
-		uint royaltiesContractCapacity = royaltiesContract.length;
-		LibPart.Part[] memory resultRoyalties = new LibPart.Part[](royaltiesContractCapacity + royaltiesProvidersExtracted.length);
-		for (uint i = 0; i < royaltiesContractCapacity; i++) {
-			resultRoyalties[i] = royaltiesContract[i];
-		}
-		for (uint i = 0; i < royaltiesProvidersExtracted.length; i++) {
-			resultRoyalties[i + royaltiesContractCapacity] = royaltiesProvidersExtracted[i];
-		}
-		return resultRoyalties;
-	}
-
-	function saveRoyaltiesInCashByTokenTokeId (address token, uint tokenId, LibPart.Part[] memory royalties) internal {
-		uint sumRoyalties = 0;
-		bytes32 key = keccak256(abi.encode(token, tokenId));
-		for (uint i = 0; i < royalties.length; i++) {
-			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId  should be present");
-			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be positive");
-			royaltiesByTokenAndTokenId[key].royalties.push(royalties[i]);
-			sumRoyalties += royalties[i].value;
-		}
-		require(sumRoyalties < 10000, "Sum royalties by token and tokenId more, than 100%");
-		royaltiesByTokenAndTokenId[key].initialized = true;
-	}
-
-	function saveRoyaltiesInCashByToken (address token, LibPart.Part[] memory royalties) internal {
+		checkOwner(token);
 		uint sumRoyalties = 0;
 		for (uint i = 0; i < royalties.length; i++) {
 			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId  should be present");
@@ -118,6 +42,59 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		}
 		require(sumRoyalties < 10000, "Sum royalties by token and tokenId more, than 100%");
 		royaltiesByToken[token].initialized = true;
+	}
+
+	function setRoyaltiesByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) external {
+		checkOwner(token);
+		saveRoyaltiesInCashByTokenTokeId(token, tokenId, royalties);
+	}
+
+	function checkOwner(address token) internal view {
+		if (owner() != _msgSender()) {
+			try OwnableUpgradeable(token).owner() returns (address tokenOwner) {
+				address ownerSender = _msgSender();
+				if ((tokenOwner == address(0x0)) || (ownerSender == address(0x0)) || (tokenOwner != ownerSender)) {
+					revert("Token owner not detected by OwnableUpgradeable");
+				}
+			} catch {}
+			//			TODO: add Ownable
+			//			try Ownable(token).owner() returns (address tokenOwner) {
+			//				address ownerSender = _msgSender();
+			//				if ((tokenOwner == address(0x0)) || (ownerSender == address(0x0)) || (tokenOwner != ownerSender)) {
+			//					revert("Token owner not detected by Ownable");
+			//				}
+			//			} catch {}
+		}
+	}
+
+	function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
+		RoyaltiesSet memory royaltiesSet = royaltiesByTokenAndTokenId[keccak256(abi.encode(token, tokenId))];
+		if (royaltiesSet.initialized) {
+			return royaltiesSet.royalties;
+		}
+		royaltiesSet = royaltiesByToken[token];
+		if (royaltiesSet.initialized) {
+			return royaltiesSet.royalties;
+		}
+		LibPart.Part[] memory resultRoyalties = providerExtractors(token);
+		if (resultRoyalties.length == 0) {
+			resultRoyalties = royaltiesFromContract(token, tokenId);
+		}
+		saveRoyaltiesInCashByTokenTokeId (token, tokenId, resultRoyalties);
+		return resultRoyalties;
+	}
+
+	function saveRoyaltiesInCashByTokenTokeId(address token, uint tokenId, LibPart.Part[] memory royalties) internal {
+		uint sumRoyalties = 0;
+		bytes32 key = keccak256(abi.encode(token, tokenId));
+		for (uint i = 0; i < royalties.length; i++) {
+			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId should be present");
+			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be positive");
+			royaltiesByTokenAndTokenId[key].royalties.push(royalties[i]);
+			sumRoyalties += royalties[i].value;
+		}
+		require(sumRoyalties < 10000, "Sum royalties by token and tokenId more, than 100%");
+		royaltiesByTokenAndTokenId[key].initialized = true;
 	}
 
 	function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
