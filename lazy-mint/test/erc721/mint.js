@@ -8,7 +8,7 @@ const Types = {
 	Mint721: [
 		{name: 'tokenId', type: 'uint256'},
 		{name: 'tokenURI', type: 'string'},
-		{name: 'creators', type: 'address[]'},
+		{name: 'creators', type: 'Part[]'},
 		{name: 'royalties', type: 'Part[]'}
 	]
 };
