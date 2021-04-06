@@ -17,35 +17,40 @@ contract("Mint721Validator", accounts => {
 	});
 
 	it("should validate if signer is correct", async () => {
-		const signature = await sign(accounts[1], 1, "testURI", [accounts[1]], fees, testing.address);
-		await testing.validateTest([1, "testURI", [accounts[1]], fees, [signature]], 0);
+		const creators = [{ account: accounts[1], value: 10000 }]
+		const signature = await sign(accounts[1], 1, "testURI", creators, fees, testing.address);
+		await testing.validateTest([1, "testURI", creators, fees, [signature]], 0);
 	});
 
 	it("should work for some creators", async () => {
-		const signature = await sign(accounts[1], 1, "testURI", [accounts[2], accounts[1]], fees, testing.address);
-		await testing.validateTest([1, "testURI", [accounts[2], accounts[1]], fees, ["0x", signature]], 1);
+		const creators = [{ account: accounts[2], value: 5000 }, { account: accounts[1], value: 10000 }];
+		const signature = await sign(accounts[1], 1, "testURI", creators, fees, testing.address);
+		await testing.validateTest([1, "testURI", creators, fees, ["0x", signature]], 1);
 	});
 
 	it("should work if fees list is empty", async () => {
-		const signature = await sign(accounts[1], 1, "testURI", [accounts[1]], [], testing.address);
-		await testing.validateTest([1, "testURI", [accounts[1]], [], [signature]], 0);
+		const creators = [{ account: accounts[1], value: 10000 }]
+		const signature = await sign(accounts[1], 1, "testURI", creators, [], testing.address);
+		await testing.validateTest([1, "testURI", creators, [], [signature]], 0);
 	});
 
 	it("should fail if signer is incorrect", async () => {
-		const signature = await sign(accounts[0], 1, "testURI", [accounts[1]], fees, testing.address);
+		const creators = [{ account: accounts[1], value: 10000 }]
+		const signature = await sign(accounts[0], 1, "testURI", creators, fees, testing.address);
 		await expectThrow(
-			testing.validateTest([1, "testURI", [accounts[1]], fees, [signature]], 0)
+			testing.validateTest([1, "testURI", creators, fees, [signature]], 0)
 		);
 	});
 
 	it("should validate if signer is contract and 1271 passes", async () => {
+		const creators = [{ account: erc1271.address, value: 10000 }]
 		await expectThrow(
-			testing.validateTest([1, "testURI", [erc1271.address], fees, ["0x"]], 0)
+			testing.validateTest([1, "testURI", creators, fees, ["0x"]], 0)
 		);
 
 		await erc1271.setReturnSuccessfulValidSignature(true);
 
-		await testing.validateTest([1, "testURI", [erc1271.address], fees, ["0x"]], 0)
+		await testing.validateTest([1, "testURI", creators, fees, ["0x"]], 0)
 	});
 
 });

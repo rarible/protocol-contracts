@@ -12,7 +12,7 @@ import "./Mint721Validator.sol";
 abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
 
     // tokenId => creators
-    mapping(uint256 => address[]) private creators;
+    mapping(uint256 => LibPart.Part[]) private creators;
 
     function __ERC721Lazy_init_unchained() internal initializer {
         _registerInterface(0x8486f69f);
@@ -22,12 +22,12 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
-        require(minter == data.creators[0], "tokenId incorrect");
+        require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC721: transfer caller is not owner nor approved");
 
         for (uint i = 0; i < data.creators.length; i++) {
-            address creator = data.creators[i];
+            address creator = data.creators[i].account;
             if (creator != sender) {
                 validate(data, i);
             }
@@ -36,7 +36,10 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         _mint(to, data.tokenId);
         _setTokenURI(data.tokenId, data.uri);
         _saveFees(data.tokenId, data.royalties);
-        creators[data.tokenId] = data.creators;
+        LibPart.Part[] storage creators = creators[data.tokenId];
+        for(uint i=0; i < data.creators.length; i++) {
+            creators.push(data.creators[i]);
+        }
     }
 
     function updateAccount(uint256 _id, address _from, address _to) external {
@@ -44,7 +47,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         super._updateAccount(_id, _from, _to);
     }
 
-    function getCreators(uint256 _id) external view returns (address[] memory) {
+    function getCreators(uint256 _id) external view returns (LibPart.Part[] memory) {
         return creators[_id];
     }
     uint256[50] private __gap;
