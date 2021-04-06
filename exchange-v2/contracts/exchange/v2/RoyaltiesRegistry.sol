@@ -35,35 +35,23 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		checkOwner(token);
 		uint sumRoyalties = 0;
 		for (uint i = 0; i < royalties.length; i++) {
-			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId  should be present");
-			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be positive");
+			require(royalties[i].account != address(0x0), "RoyaltiesByToken recipient should be present");
+			require(royalties[i].value != 0, "Fee value for RoyaltiesByToken should be > 0");
 			royaltiesByToken[token].royalties.push(royalties[i]);
 			sumRoyalties += royalties[i].value;
 		}
-		require(sumRoyalties < 10000, "Sum royalties by token and tokenId more, than 100%");
+		require(sumRoyalties < 10000, "Set by token royalties sum more, than 100%");
 		royaltiesByToken[token].initialized = true;
 	}
 
 	function setRoyaltiesByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) external {
 		checkOwner(token);
-		saveRoyaltiesInCashByTokenTokeId(token, tokenId, royalties);
+		setRoyaltiesCacheByTokenAndTokenId(token, tokenId, royalties);
 	}
 
 	function checkOwner(address token) internal view {
-		if (owner() != _msgSender()) {
-			try OwnableUpgradeable(token).owner() returns (address tokenOwner) {
-				address ownerSender = _msgSender();
-				if ((tokenOwner == address(0x0)) || (ownerSender == address(0x0)) || (tokenOwner != ownerSender)) {
-					revert("Token owner not detected by OwnableUpgradeable");
-				}
-			} catch {}
-			//			TODO: add Ownable
-			//			try Ownable(token).owner() returns (address tokenOwner) {
-			//				address ownerSender = _msgSender();
-			//				if ((tokenOwner == address(0x0)) || (ownerSender == address(0x0)) || (tokenOwner != ownerSender)) {
-			//					revert("Token owner not detected by Ownable");
-			//				}
-			//			} catch {}
+		if ((owner() != _msgSender()) && (OwnableUpgradeable(token).owner() != _msgSender())){
+			revert("Token owner not detected");
 		}
 	}
 
@@ -76,24 +64,24 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		if (royaltiesSet.initialized) {
 			return royaltiesSet.royalties;
 		}
-		LibPart.Part[] memory resultRoyalties = providerExtractors(token);
-		if (resultRoyalties.length == 0) {
+		(bool result, LibPart.Part[] memory resultRoyalties) = providerExtractor(token);
+		if (result == false) {
 			resultRoyalties = royaltiesFromContract(token, tokenId);
 		}
-		saveRoyaltiesInCashByTokenTokeId (token, tokenId, resultRoyalties);
+		setRoyaltiesCacheByTokenAndTokenId (token, tokenId, resultRoyalties);
 		return resultRoyalties;
 	}
 
-	function saveRoyaltiesInCashByTokenTokeId(address token, uint tokenId, LibPart.Part[] memory royalties) internal {
+	function setRoyaltiesCacheByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) internal {
 		uint sumRoyalties = 0;
 		bytes32 key = keccak256(abi.encode(token, tokenId));
 		for (uint i = 0; i < royalties.length; i++) {
-			require(royalties[i].account != address(0x0), "Recipient for RoyaltiesByTokenAndTokenId should be present");
-			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be positive");
+			require(royalties[i].account != address(0x0), "RoyaltiesByTokenAndTokenId recipient should be present");
+			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be > 0");
 			royaltiesByTokenAndTokenId[key].royalties.push(royalties[i]);
 			sumRoyalties += royalties[i].value;
 		}
-		require(sumRoyalties < 10000, "Sum royalties by token and tokenId more, than 100%");
+		require(sumRoyalties < 10000, "Set by token and tokenId royalties sum more, than 100%");
 		royaltiesByTokenAndTokenId[key].initialized = true;
 	}
 
@@ -129,12 +117,13 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		return feesRecipients;
 	}
 
-	function providerExtractors(address token) internal returns (LibPart.Part[] memory royalties) {
-		address metodAddress = royaltiesProviders[token];
-		if (metodAddress != address(0x0)) {
-			IRoyaltiesProvider withRoyalties = IRoyaltiesProvider(metodAddress);
+	function providerExtractor(address token) internal returns (bool result, LibPart.Part[] memory royalties) {
+		address provider = royaltiesProviders[token];
+		if (provider != address(0x0)) {
+			IRoyaltiesProvider withRoyalties = IRoyaltiesProvider(provider);
 			try withRoyalties.getRoyalties(token, 0x0) returns (LibPart.Part[] memory royaltiesByProvider) {
 				royalties = royaltiesByProvider;
+				result = true;
 			} catch { }
 		}
 	}
