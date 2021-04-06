@@ -10,6 +10,8 @@ const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
 const truffleAssert = require('truffle-assertions');
+const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
+const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -32,6 +34,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   let erc721TokenId1 = 53;
   let erc1155TokenId1 = 54;
   let erc1155TokenId2 = 55;
+  let royaltiesRegistry;
 
 	beforeEach(async () => {
 		libOrder = await LibOrderTest.new();
@@ -39,15 +42,16 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxy.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
-		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, 300, community], { initializer: "__ExchangeV2_init" });
+		royaltiesRegistry = await RoyaltiesRegistry.new();
+		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
 		transferManagerTest = await RaribleTransferManagerTest.new();
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
     /*ETH*/
-    await testing.setWalletForToken(eth, protocol);//
-    await testing.setWalletForToken(t1.address, protocol);//
+    await testing.setWalletForToken(eth, protocol);
+    await testing.setWalletForToken(t1.address, protocol);
  		/*ERC721 */
  		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 		/*ERC1155V2*/
@@ -56,8 +60,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		/*ERC721_V1 */
  		erc721V1 = await ERC721_V1.new("Rarible", "RARI", "https://ipfs.rarible.com");
     await erc721V1.initialize();
-	});
 
+	});
 	describe("matchOrders", () => {
 		it("eth orders work, expect throw, not enough eth ", async () => {
     	await t1.mint(accounts[1], 100);
@@ -747,6 +751,117 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     })
 
 	}) //Catch emit event Transfer
+
+	describe("Exchange with Royalties", () => {
+		it("Royalties by owner, token 721 to ETH", async () => {
+			await royaltiesRegistry.initializeRoyaltiesRegistry();  //detect by owner
+			await erc721.mint(accounts[1], erc721TokenId1);
+    	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+    	await royaltiesRegistry.setRoyaltiesByToken(erc721.address, [[accounts[3], 500], [accounts[4], 1000]]); //set royalties by token
+    	let addrOriginLeft = [[accounts[5], 500], [accounts[6], 600]];
+    	let addrOriginRight = [[accounts[7], 700]];
+
+    	let encDataLeft = await encDataV1([ [[accounts[2], 10000]], addrOriginLeft ]);
+    	let encDataRight = await encDataV1([ [[accounts[1], 10000]], addrOriginRight ]);
+
+    	const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+    	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+    	let signatureRight = await getSignature(right, accounts[1]);
+    	await verifyBalanceChange(accounts[2], 228, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+    		verifyBalanceChange(accounts[1], -150, async () =>				//200 -6seller - 14 originright
+    			verifyBalanceChange(accounts[3], -10, async () =>
+    				verifyBalanceChange(accounts[4], -20, async () =>
+    					verifyBalanceChange(accounts[5], -10, async () =>
+    						verifyBalanceChange(accounts[6], -12, async () =>
+    							verifyBalanceChange(accounts[7], -14, async () =>
+    								verifyBalanceChange(protocol, -12, () =>
+    									testing.matchOrders(left, "0x", right, signatureRight, { from: accounts[2], value: 300, gasPrice: 0 })
+    								)
+    							)
+    						)
+    					)
+    				)
+    			)
+    		)
+    	)
+    	assert.equal(await erc721.balanceOf(accounts[1]), 0);
+    	assert.equal(await erc721.balanceOf(accounts[2]), 1);
+
+		})
+		it("Royalties by owner, token and tokenId 721 to ETH", async () => {
+			await royaltiesRegistry.initializeRoyaltiesRegistry();  //detect by owner
+			await erc721.mint(accounts[1], erc721TokenId1);
+    	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+    	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(erc721.address, erc721TokenId1, [[accounts[3], 500], [accounts[4], 1000]]); //set royalties by token and tokenId
+    	let addrOriginLeft = [[accounts[5], 500], [accounts[6], 600]];
+    	let addrOriginRight = [[accounts[7], 700]];
+
+    	let encDataLeft = await encDataV1([ [[accounts[2], 10000]], addrOriginLeft ]);
+    	let encDataRight = await encDataV1([ [[accounts[1], 10000]], addrOriginRight ]);
+
+    	const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+    	const right = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+    	let signatureRight = await getSignature(right, accounts[1]);
+    	await verifyBalanceChange(accounts[2], 228, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+    		verifyBalanceChange(accounts[1], -150, async () =>				//200 -6seller - 14 originright
+    			verifyBalanceChange(accounts[3], -10, async () =>
+    				verifyBalanceChange(accounts[4], -20, async () =>
+    					verifyBalanceChange(accounts[5], -10, async () =>
+    						verifyBalanceChange(accounts[6], -12, async () =>
+    							verifyBalanceChange(accounts[7], -14, async () =>
+    								verifyBalanceChange(protocol, -12, () =>
+    									testing.matchOrders(left, "0x", right, signatureRight, { from: accounts[2], value: 300, gasPrice: 0 })
+    								)
+    							)
+    						)
+    					)
+    				)
+    			)
+    		)
+    	)
+    	assert.equal(await erc721.balanceOf(accounts[1]), 0);
+    	assert.equal(await erc721.balanceOf(accounts[2]), 1);
+
+		})
+
+		it("Royalties by token and tokenId 721v1_OwnableUpgradaeble to ETH", async () => {
+			let ownerErc721 = accounts[6];
+   		ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721 });
+      await ERC721_V1OwnUpgrd.initialize( {from: ownerErc721});
+
+			await ERC721_V1OwnUpgrd.mint(accounts[1], erc721TokenId1, []);
+    	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+    	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 500], [accounts[4], 1000]], {from: ownerErc721}); //set royalties by token and tokenId
+    	let addrOriginLeft = [[accounts[5], 500]];
+    	let addrOriginRight = [[accounts[7], 700]];
+
+    	let encDataLeft = await encDataV1([ [[accounts[2], 10000]], addrOriginLeft ]);
+    	let encDataRight = await encDataV1([ [[accounts[1], 10000]], addrOriginRight ]);
+
+    	const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+    	const right = Order(accounts[1], Asset(ERC721, enc(ERC721_V1OwnUpgrd.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+    	let signatureRight = await getSignature(right, accounts[1]);
+    	await verifyBalanceChange(accounts[2], 216, async () =>			//200+6buyerFee+ (10  origin left) (72back)
+    		verifyBalanceChange(accounts[1], -150, async () =>				//200 -6seller - 14 originright
+    			verifyBalanceChange(accounts[3], -10, async () =>
+    				verifyBalanceChange(accounts[4], -20, async () =>
+    					verifyBalanceChange(accounts[5], -10, async () =>
+    						verifyBalanceChange(accounts[7], -14, async () =>
+    							verifyBalanceChange(protocol, -12, () =>
+    								testing.matchOrders(left, "0x", right, signatureRight, { from: accounts[2], value: 300, gasPrice: 0 })
+    							)
+    						)
+    					)
+    				)
+    			)
+    		)
+    	)
+    	assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[1]), 0);
+    	assert.equal(await ERC721_V1OwnUpgrd.balanceOf(accounts[2]), 1);
+
+		})
+
+	})
 
 	function encDataV1(tuple) {
  		return transferManagerTest.encode(tuple);
