@@ -71,6 +71,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
 
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
         LibPart.Part[] storage creators = creators[tokenId];
+        //todo check sum is 10000
         for(uint i=0; i < _creators.length; i++) {
             creators.push(_creators[i]);
         }
