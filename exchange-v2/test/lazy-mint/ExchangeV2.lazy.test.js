@@ -54,7 +54,7 @@ contract("Exchange with LazyMint proxies", accounts => {
 		await t1.mint(accounts[2], 100);
 		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
 
-		const encodedMintData = await erc721Test.encode([1, "uri", [accounts[1], accounts[3]], [], []]);
+		const encodedMintData = await erc721Test.encode([1, "uri", [[accounts[1], 0], [accounts[3], 0]], [], []]);
 
 		const left = Order(accounts[1], Asset(id("ERC721_LAZY"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 		const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("ERC721_LAZY"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
@@ -75,7 +75,7 @@ contract("Exchange with LazyMint proxies", accounts => {
 		await t1.mint(accounts[2], 100);
 		await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
 
-		const encodedMintData = await erc1155Test.encode([1, "uri", 10, [accounts[1], accounts[3]], [], []]);
+		const encodedMintData = await erc1155Test.encode([1, "uri", 10, [[accounts[1], 0], [accounts[3], 0]], [], []]);
 
 		const left = Order(accounts[1], Asset(id("ERC1155_LAZY"), encodedMintData, 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 		const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 40), ZERO, Asset(id("ERC1155_LAZY"), encodedMintData, 2), 1, 0, 0, "0xffffffff", "0x");

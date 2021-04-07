@@ -12,7 +12,7 @@ import "@rarible/royalties/contracts/impl/AbstractRoyalties.sol";
 contract TestERC1155WithRoyaltiesV2_InterfaceError is Initializable, AbstractRoyalties,  RoyaltiesV2, ERC1155Upgradeable {
 
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees, uint amount) external {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_FEES);
+        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
         _mint(to, tokenId, amount, "");
         _saveFees(tokenId, _fees);
     }

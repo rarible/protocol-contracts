@@ -10,7 +10,7 @@ import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 
 contract TestERC721WithRoyaltiesV2 is Initializable, RoyaltiesV2Impl, ERC721Upgradeable {
     function initialize() public initializer {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_FEES);
+        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
     }
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees) external {
         _mint(to, tokenId);

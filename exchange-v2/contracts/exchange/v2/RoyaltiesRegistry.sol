@@ -86,7 +86,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 	}
 
 	function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
-		if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_FEES)) {
+		if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
 			RoyaltiesV2Impl withFees = RoyaltiesV2Impl(token);
 			try withFees.getRoyalties(tokenId) returns (LibPart.Part[] memory feesRecipientsResult) {
 				return feesRecipientsResult;
@@ -110,7 +110,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 			}
 			feesRecipients = new LibPart.Part[](fees.length);
 			for (uint256 i = 0; i < fees.length; i++) {
-				feesRecipients[i].value = fees[i];
+				feesRecipients[i].value = uint96(fees[i]);
 				feesRecipients[i].account = recipients[i];
 			}
 		}
