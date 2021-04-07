@@ -55,11 +55,11 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
   });
@@ -73,7 +73,7 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], transferTo, mint, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
 
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
@@ -89,9 +89,9 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature2 = await getSignature(tokenId, tokenURI, supply, [minter, creator2], [], creator2);
+    const signature2 = await getSignature(tokenId, tokenURI, supply, creators([minter, creator2]), [], creator2);
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter, creator2], [], [zeroWord, signature2]], transferTo, mint, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter, creator2]), [], [zeroWord, signature2]], transferTo, mint, {from: minter});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     await checkCreators(tokenId, [minter, creator2]);
@@ -106,7 +106,7 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], transferTo, mint, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     await checkCreators(tokenId, [minter]);
@@ -121,11 +121,11 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
     let proxy = accounts[5];
     await token.setApprovalForAll(proxy, true, {from: minter});
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: proxy});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: proxy});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
   });
@@ -141,14 +141,14 @@ contract("ERC1155Rarible", accounts => {
     let transferTo = accounts[2];
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy});
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
 
     //не нужна подпись, uri, fees не проверяется
     let transferTo2 = accounts[3];
     let mint2 = 3;
-    await token.mintAndTransfer([tokenId, "any, idle", supply, [minter], [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo2, tokenId), mint2);
   });
 
@@ -163,13 +163,13 @@ contract("ERC1155Rarible", accounts => {
     let transferTo = accounts[2];
     let mint = 1;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy});
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
 
     //не нужна подпись, uri не проверяется
     let mint2 = 2;
-    await token.mintAndTransfer([tokenId, "any, idle", supply, [minter], [], [zeroWord]], transferTo, mint2, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo, mint2, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo, tokenId), 3);
   });
 
@@ -184,16 +184,16 @@ contract("ERC1155Rarible", accounts => {
     let transferTo = accounts[2];
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy});
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
 
     //не нужна подпись, uri не проверяется
     let transferTo2 = accounts[3];
     await expectThrow(
-      token.mintAndTransfer([tokenId, "any, idle", 10, [minter], [], [zeroWord]], transferTo2, 4, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, "any, idle", 10, creators([minter]), [], [zeroWord]], transferTo2, 4, {from: whiteListProxy})
     );
-    await token.mintAndTransfer([tokenId, "any, idle", 10, [minter], [], [zeroWord]], transferTo2, 3, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, "any, idle", 10, creators([minter]), [], [zeroWord]], transferTo2, 3, {from: whiteListProxy});
   });
 
   it("second mint and transfer: more than supply", async () => {
@@ -207,15 +207,15 @@ contract("ERC1155Rarible", accounts => {
     let transferTo = accounts[2];
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy});
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
 
     //не нужна подпись, uri не проверяется
     let transferTo2 = accounts[3];
     let mint2 = 4;
     await expectThrow(
-      token.mintAndTransfer([tokenId, "any, idle", supply, [minter], [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy})
     );
   });
 
@@ -228,13 +228,13 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], transferTo);
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], transferTo);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
     );
   });
 
@@ -247,10 +247,10 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: accounts[3]})
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: accounts[3]})
     );
   });
 
@@ -258,7 +258,7 @@ contract("ERC1155Rarible", accounts => {
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     let supply = 5;
-    await token.mintAndTransfer([tokenId, "//uri", supply, [minter], [],  [zeroWord]], minter, supply, {from: minter});
+    await token.mintAndTransfer([tokenId, "//uri", supply, creators([minter]), [],  [zeroWord]], minter, supply, {from: minter});
 
     assert.equal(await token.balanceOf(minter, tokenId), supply);
 
@@ -273,7 +273,7 @@ contract("ERC1155Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
     let supply = 5;
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], minter, supply, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, supply, {from: minter});
 
     assert.equal(await token.balanceOf(minter, tokenId), supply);
 
@@ -290,7 +290,7 @@ contract("ERC1155Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
     let supply = 5;
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], minter, supply, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, supply, {from: minter});
 
     assert.equal(await token.balanceOf(minter, tokenId), supply);
 
@@ -312,11 +312,11 @@ contract("ERC1155Rarible", accounts => {
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, [minter.address], [], [zeroWord]], transferTo, supply, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, supply, {from: whiteListProxy})
     );
 
-    erc1271.setReturnSuccessfulValidSignature(true);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter.address], [], [zeroWord]], transferTo, mint, {from: whiteListProxy});
+    await erc1271.setReturnSuccessfulValidSignature(true);
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, mint, {from: whiteListProxy});
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
   });
 
@@ -327,8 +327,16 @@ contract("ERC1155Rarible", accounts => {
   async function checkCreators(tokenId, exp) {
     const creators = await token.getCreators(tokenId);
     assert.equal(creators.length, exp.length);
+    const value = 10000 / exp.length;
     for(let i = 0; i < creators.length; i++) {
-      assert.equal(creators[i], exp[i]);
+      assert.equal(creators[i][0], exp[i]);
+      assert.equal(creators[i][1], value);
     }
   }
+
+  function creators(list) {
+  	const value = 10000 / list.length
+  	return list.map(account => ({ account, value }))
+  }
+
 });

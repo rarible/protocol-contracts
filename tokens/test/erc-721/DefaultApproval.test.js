@@ -17,7 +17,7 @@ contract("ERC721DefaultApproval", accounts => {
 		)
 
 		await testing.setDefaultApproval(accounts[0], true);
-		testing.transferFrom(accounts[5], accounts[0], 1);
+		await testing.transferFrom(accounts[5], accounts[0], 1);
 		assert.equal(await testing.ownerOf(1), accounts[0]);
 	})
 })

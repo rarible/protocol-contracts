@@ -42,11 +42,11 @@ contract("ERC1155RaribleUser", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature = await getSignature(tokenId, tokenURI, supply, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [signature]], transferTo, mint, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
 
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
@@ -61,7 +61,7 @@ contract("ERC1155RaribleUser", accounts => {
     let supply = 5;
     let mint = 2;
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], transferTo, mint, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
   });
@@ -76,7 +76,7 @@ contract("ERC1155RaribleUser", accounts => {
     let mint = 2;
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], transferTo, mint, {from: minter})
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter})
     );
   });
 
@@ -90,9 +90,9 @@ contract("ERC1155RaribleUser", accounts => {
     let supply = 5;
     let mint = 2;
 
-    const signature2 = await getSignature(tokenId, tokenURI, supply, [minter, creator2], [], creator2);
+    const signature2 = await getSignature(tokenId, tokenURI, supply, creators([minter, creator2]), [], creator2);
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter, creator2], [], [zeroWord, signature2]], transferTo, mint, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter, creator2]), [], [zeroWord, signature2]], transferTo, mint, {from: minter});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     await checkCreators(tokenId, [minter, creator2]);
@@ -107,7 +107,7 @@ contract("ERC1155RaribleUser", accounts => {
     let supply = 5;
     let mint = 2;
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, [minter], [], [zeroWord]], transferTo, mint, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     await checkCreators(tokenId, [minter]);
@@ -120,8 +120,15 @@ contract("ERC1155RaribleUser", accounts => {
   async function checkCreators(tokenId, exp) {
     const creators = await token.getCreators(tokenId);
     assert.equal(creators.length, exp.length);
+    const value = 10000 / exp.length;
     for(let i = 0; i < creators.length; i++) {
-      assert.equal(creators[i], exp[i]);
+      assert.equal(creators[i][0], exp[i]);
+      assert.equal(creators[i][1], value);
     }
+  }
+
+  function creators(list) {
+  	const value = 10000 / list.length
+  	return list.map(account => ({ account, value }))
   }
 });

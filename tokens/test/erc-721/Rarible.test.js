@@ -13,6 +13,11 @@ contract("ERC721Rarible", accounts => {
   const chainId = 1;
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
+  function creators(list) {
+  	const value = 10000 / list.length
+  	return list.map(account => ({ account, value }))
+  }
+
   beforeEach(async () => {
     token = await Testing.new();
     await token.__ERC721Rarible_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com");
@@ -63,11 +68,11 @@ contract("ERC721Rarible", accounts => {
     const tokenURI = "//uri";
     let fees = [];
 
-    const signature = await getSignature(tokenId, tokenURI, [minter], fees, minter);
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), fees, minter);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], fees, [signature]], transferTo, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
     await checkCreators(tokenId, [minter]);
@@ -83,12 +88,12 @@ contract("ERC721Rarible", accounts => {
     const tokenURI = "//uri";
     let fees = [];
 
-    const signature1 = await getSignature(tokenId, tokenURI, [minter, creator2], fees, minter);
-    const signature2 = await getSignature(tokenId, tokenURI, [minter, creator2], fees, creator2);
+    const signature1 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, minter);
+    const signature2 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, creator2);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.mintAndTransfer([tokenId, tokenURI, [minter, creator2], fees, [signature1, signature2]], transferTo, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter, creator2]), fees, [signature1, signature2]], transferTo, {from: whiteListProxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
     await checkCreators(tokenId, [minter, creator2]);
@@ -103,13 +108,13 @@ contract("ERC721Rarible", accounts => {
     const tokenURI = "//uri";
     let fees = [];
 
-    const signature1 = await getSignature(tokenId, tokenURI, [creator2, minter], fees, minter);
-    const signature2 = await getSignature(tokenId, tokenURI, [creator2, minter], fees, creator2);
+    const signature1 = await getSignature(tokenId, tokenURI, creators([creator2, minter]), fees, minter);
+    const signature2 = await getSignature(tokenId, tokenURI, creators([creator2, minter]), fees, creator2);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, [creator2, minter], fees, [signature2, signature1]], transferTo, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, creators([creator2, minter]), fees, [signature2, signature1]], transferTo, {from: whiteListProxy})
     );
   });
 
@@ -122,13 +127,13 @@ contract("ERC721Rarible", accounts => {
     const tokenURI = "//uri";
     let fees = [];
 
-    const signature1 = await getSignature(tokenId, tokenURI, [minter, creator2], fees, minter);
-    const signature2 = await getSignature(tokenId, tokenURI, [minter, creator2], fees, creator2);
+    const signature1 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, minter);
+    const signature2 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, creator2);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, [minter, creator2], fees, [signature2, signature1]], transferTo, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter, creator2]), fees, [signature2, signature1]], transferTo, {from: whiteListProxy})
     );
   });
 
@@ -139,11 +144,11 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const signature = await getSignature(tokenId, tokenURI, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), [], minter);
 
     let proxy = accounts[5];
     await token.setApprovalForAll(proxy, true, {from: minter});
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [signature]], transferTo, {from: proxy});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: proxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
   });
@@ -155,7 +160,7 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const signature = await getSignature(tokenId, tokenURI, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), [], minter);
 
     let proxy = accounts[5];
 
@@ -175,7 +180,7 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [zeroWord]], transferTo, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
   });
@@ -187,7 +192,7 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [zeroWord]], transferTo, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
   });
@@ -199,13 +204,13 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const signature = await getSignature(tokenId, tokenURI, [minter], [], transferTo);
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), [], transferTo);
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, [minter], [], [signature]], transferTo, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: whiteListProxy})
     );
   });
 
@@ -216,10 +221,10 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const signature = await getSignature(tokenId, tokenURI, [minter], [], minter);
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), [], minter);
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, [minter], [], [signature]], transferTo, {from: accounts[3]})
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: accounts[3]})
     );
   });
 
@@ -227,7 +232,7 @@ contract("ERC721Rarible", accounts => {
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [zeroWord]], minter, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, {from: minter});
 
     assert.equal(await token.ownerOf(tokenId), minter);
 
@@ -241,7 +246,7 @@ contract("ERC721Rarible", accounts => {
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [zeroWord]], minter, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, {from: minter});
 
     assert.equal(await token.ownerOf(tokenId), minter);
 
@@ -257,7 +262,7 @@ contract("ERC721Rarible", accounts => {
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
-    await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [zeroWord]], minter, {from: minter});
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, {from: minter});
 
     assert.equal(await token.ownerOf(tokenId), minter);
 
@@ -275,13 +280,13 @@ contract("ERC721Rarible", accounts => {
     const tokenURI = "//uri";
 
     let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+    await token.setDefaultApproval(whiteListProxy, true, { from: tokenOwner });
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, [minter.address], [], [zeroWord]], transferTo, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter.address]), [], [zeroWord]], transferTo, {from: whiteListProxy})
     );
 
-    erc1271.setReturnSuccessfulValidSignature(true);
-    await token.mintAndTransfer([tokenId, tokenURI, [minter.address], [], [zeroWord]], transferTo, {from: whiteListProxy});
+    await erc1271.setReturnSuccessfulValidSignature(true);
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter.address]), [], [zeroWord]], transferTo, {from: whiteListProxy});
     assert.equal(await token.ownerOf(tokenId), transferTo);
   });
 
@@ -292,8 +297,10 @@ contract("ERC721Rarible", accounts => {
   async function checkCreators(tokenId, exp) {
     const creators = await token.getCreators(tokenId);
     assert.equal(creators.length, exp.length);
+    const value = 10000 / exp.length;
     for(let i = 0; i < creators.length; i++) {
-      assert.equal(creators[i], exp[i]);
+      assert.equal(creators[i][0], exp[i]);
+      assert.equal(creators[i][1], value);
     }
   }
 });

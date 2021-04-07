@@ -17,7 +17,7 @@ contract("ERC1155DefaultApproval", accounts => {
 		)
 
 		await testing.setDefaultApproval(accounts[0], true);
-		testing.safeTransferFrom(accounts[5], accounts[0], 1, 10, "0x");
+		await testing.safeTransferFrom(accounts[5], accounts[0], 1, 10, "0x");
 		assert.equal(await testing.balanceOf(accounts[0], 1), 10);
 	})
 })
