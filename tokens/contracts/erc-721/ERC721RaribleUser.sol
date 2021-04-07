@@ -20,7 +20,7 @@ contract ERC721RaribleUser is ERC721Base {
     }
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
-        require(owner() == data.creators[0], "minter is not the owner");
+        require(owner() == data.creators[0].account, "minter is not the owner");
         super.mintAndTransfer(data, to);
     }
     uint256[50] private __gap;
