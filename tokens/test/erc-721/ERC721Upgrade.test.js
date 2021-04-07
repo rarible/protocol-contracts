@@ -26,7 +26,7 @@ contract("ERC721RaribleUser - upgrade", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const tx = await token.mintAndTransfer([tokenId, tokenURI, [minter], [], [zeroWord]], transferTo, {from: minter});
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
 
 		console.log("mint through proxy", tx.receipt.gasUsed);
     assert.equal(await token.ownerOf(tokenId), transferTo);
@@ -34,4 +34,10 @@ contract("ERC721RaribleUser - upgrade", accounts => {
     const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
     console.log("transfer through proxy", txTransfer.receipt.gasUsed);
 	})
+
+  function creators(list) {
+  	const value = 10000 / list.length
+  	return list.map(account => ({ account, value }))
+  }
+
 });
