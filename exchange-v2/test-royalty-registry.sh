@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #Test metods in exchange-v2/contracts/exchange/v2/RoyaltiesRegistry.sol
 truffle test \
-            ./test/v2/RoyaltiesRegistry.test.js \
+            ./contracts/royalties-registry/RoyaltiesRegistry.test.js \
             ./test/contracts/v2/RaribleTransferManagerTest.sol \
             ./test/contracts/v2/RoyaltiesProviderTest.sol \
             ./test/contracts/tokens/TestERC20.sol \

@@ -8,11 +8,11 @@ const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 
-const { Order, Asset, sign } = require("../order");
-const EIP712 = require("../EIP712");
+const { Order, Asset, sign } = require("../../test/order");
+const EIP712 = require("../../test/EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc, id } = require("../../test/assets");
 
 contract("RoyaltiesRegistry, test metods", accounts => {
 	let testing;
@@ -35,7 +35,6 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await RoyaltiesRegistryTest.new();
-		//await royaltiesRegistry.initializeRoyaltiesRegistry();
 		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address);
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
