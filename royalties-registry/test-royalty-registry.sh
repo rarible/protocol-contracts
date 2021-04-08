@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#Test metods in exchange-v2/contracts/exchange/v2/RoyaltiesRegistry.sol
+#Test metods in royalties-registry/contracts/RoyaltiesRegistry.sol
 truffle test \
             ./test/v2/RoyaltiesRegistry.test.js \
             ./test/contracts/v2/RaribleTransferManagerTest.sol \
