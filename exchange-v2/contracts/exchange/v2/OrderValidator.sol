@@ -13,7 +13,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
     using ECDSAUpgradeable for bytes32;
     using AddressUpgradeable for address;
 
-    bytes4 constant internal MAGICVALUE = 0x20c13b0b;
+    bytes4 constant internal MAGICVALUE = 0x1626ba7e;
 
     function __OrderValidator_init_unchained() internal initializer {
         __EIP712_init_unchained("Exchange", "2");
