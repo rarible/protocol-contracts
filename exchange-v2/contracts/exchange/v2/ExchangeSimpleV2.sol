@@ -8,8 +8,8 @@ import "./SimpleTransferManager.sol";
 
 contract ExchangeSimpleV2 is ExchangeV2Core, SimpleTransferManager {
     function __ExchangeSimpleV2_init(
-        TransferProxy _transferProxy,
-        ERC20TransferProxy _erc20TransferProxy
+        INftTransferProxy _transferProxy,
+        IErc20TransferProxy _erc20TransferProxy
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();

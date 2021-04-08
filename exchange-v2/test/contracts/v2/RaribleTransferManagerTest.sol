@@ -25,8 +25,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
     }
 
     function __TransferManager_init(
-        TransferProxy _transferProxy,
-        ERC20TransferProxy _erc20TransferProxy,
+        INftTransferProxy _transferProxy,
+        IErc20TransferProxy _erc20TransferProxy,
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
