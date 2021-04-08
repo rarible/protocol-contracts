@@ -11,7 +11,7 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
+contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
 	struct RoyaltiesSet {
 		bool initialized;

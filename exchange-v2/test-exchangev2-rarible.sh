@@ -8,4 +8,5 @@ truffle test \
         ./test/contracts/tokens/TestERC721WithRoyaltiesV1.sol \
         ./test/contracts/v2/LibOrderTest.sol \
         ./test/contracts/v2/RaribleTransferManagerTest.sol \
+        ./test/contracts/v2/TestRoyaltiesRegistry.sol \
         ./test/contracts/tokens/TestERC721WithRoyaltyV1OwnableUpgradeable.sol
