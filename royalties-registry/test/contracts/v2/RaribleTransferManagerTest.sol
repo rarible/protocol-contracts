@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "../../../contracts/exchange/v2/RaribleTransferManager.sol";
 import "../../../contracts/exchange/v2/ITransferExecutor.sol";
 import "../../../contracts/exchange/v2/OrderValidator.sol";
-import "../../../contracts/exchange/v2/IRoyaltiesProvider.sol";
+import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
 
