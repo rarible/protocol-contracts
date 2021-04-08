@@ -3,7 +3,7 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "./IRoyaltiesProvider.sol";
+import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
