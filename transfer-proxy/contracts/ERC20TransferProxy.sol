@@ -3,9 +3,9 @@
 pragma solidity >=0.6.9 <0.8.0;
 
 import "./roles/OperatorRole.sol";
-import "./IErc20TransferProxy.sol";
+import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 
-contract ERC20TransferProxy is IErc20TransferProxy, Initializable, OperatorRole {
+contract ERC20TransferProxy is IERC20TransferProxy, Initializable, OperatorRole {
 
     function __ERC20TransferProxy_init() external initializer {
         __Ownable_init();
