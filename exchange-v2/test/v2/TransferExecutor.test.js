@@ -1,6 +1,6 @@
 const TransferExecutorTest = artifacts.require("TransferExecutorTest.sol");
-const TransferProxy = artifacts.require("TransferProxy.sol");
-const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
+const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
+const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TransferProxyForDeprecated = artifacts.require("TransferProxyForDeprecated.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
@@ -24,9 +24,9 @@ contract("TransferExecutor", accounts => {
 
 	beforeEach(async () => {
 
-		transferProxy = await TransferProxy.new();
+		transferProxy = await TransferProxyTest.new();
 		await transferProxy.__TransferProxy_init();
-		erc20TransferProxy = await ERC20TransferProxy.new();
+		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await TransferExecutorTest.new();
 		await testing.__TransferExecutorTest_init(transferProxy.address, erc20TransferProxy.address);

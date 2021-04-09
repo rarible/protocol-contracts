@@ -1,8 +1,8 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const ExchangeSimpleV2 = artifacts.require("ExchangeSimpleV2.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
-const TransferProxy = artifacts.require("TransferProxy.sol");
-const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
+const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
+const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
 const ERC1155LazyMintTest = artifacts.require("ERC1155LazyMintTest.sol");
@@ -24,9 +24,9 @@ contract("Exchange with LazyMint proxies", accounts => {
 
 	beforeEach(async () => {
 		libOrder = await LibOrderTest.new();
-		transferProxy = await TransferProxy.new();
+		transferProxy = await TransferProxyTest.new();
 		await transferProxy.__TransferProxy_init();
-		erc20TransferProxy = await ERC20TransferProxy.new();
+		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
 		await transferProxy.addOperator(testing.address);

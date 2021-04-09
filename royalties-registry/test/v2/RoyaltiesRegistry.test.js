@@ -3,8 +3,8 @@ const RoyaltiesRegistryTest = artifacts.require("RoyaltiesRegistry.sol");
 const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
-const TransferProxy = artifacts.require("TransferProxy.sol");
-const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
+const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
+const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 
@@ -29,9 +29,9 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 	let erc721TokenId1 = 51;
 
 	beforeEach(async () => {
-		transferProxy = await TransferProxy.new();
+		transferProxy = await TransferProxyTest.new();
 		await transferProxy.__TransferProxy_init();
-		erc20TransferProxy = await ERC20TransferProxy.new();
+		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await RoyaltiesRegistryTest.new();

@@ -8,6 +8,8 @@ import "./ITransferProxy.sol";
 import "./INftTransferProxy.sol";
 import "./IErc20TransferProxy.sol";
 import "./ITransferExecutor.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransferExecutor {
 

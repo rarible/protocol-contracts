@@ -1,8 +1,8 @@
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
 const ExchangeV2 = artifacts.require('ExchangeV2');
-const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
-const TransferProxy = artifacts.require('TransferProxy');
+const ERC20TransferProxyTest = artifacts.require('ERC20TransferProxyTest');
+const TransferProxyTest = artifacts.require('TransferProxyTest');
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 
 let settings = {
@@ -21,10 +21,10 @@ function getSettings(network) {
 
 module.exports = async function (deployer, network) {
 	const { communityWallet } = getSettings(network);
-	const erc20TransferProxy = await ERC20TransferProxy.deployed()
-		.catch(() => deployProxy(ERC20TransferProxy, [], { deployer, initializer: '__ERC20TransferProxy_init' }));
-	const transferProxy = await TransferProxy.deployed()
-		.catch(() => deployProxy(TransferProxy, [], { deployer, initializer: '__TransferProxy_init' }));
+	const erc20TransferProxy = await ERC20TransferProxyTest.deployed()
+		.catch(() => deployProxy(ERC20TransferProxyTest, [], { deployer, initializer: '__ERC20TransferProxy_init' }));
+	const transferProxy = await TransferProxyTest.deployed()
+		.catch(() => deployProxy(TransferProxyTest, [], { deployer, initializer: '__TransferProxy_init' }));
 	const royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
   await deployProxy(
