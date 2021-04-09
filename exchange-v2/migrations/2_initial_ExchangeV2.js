@@ -25,7 +25,8 @@ module.exports = async function (deployer, network) {
 		.catch(() => deployProxy(ERC20TransferProxy, [], { deployer, initializer: '__ERC20TransferProxy_init' }));
 	const transferProxy = await TransferProxy.deployed()
 		.catch(() => deployProxy(TransferProxy, [], { deployer, initializer: '__TransferProxy_init' }));
-	const royaltiesRegistry = await RoyaltiesRegistry.new();
+	const royaltiesRegistry = await RoyaltiesRegistry.deployed()
+		.catch(() => deployProxy(RoyaltiesRegistry, [], { deployer, initializer: 'initializeRoyaltiesRegistry' }));
 
   await deployProxy(
   	ExchangeV2,
