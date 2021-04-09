@@ -4,7 +4,6 @@ pragma solidity >=0.6.9 <0.8.0;
 
 import "./roles/OperatorRole.sol";
 import "./IErc20TransferProxy.sol";
-//import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract ERC20TransferProxy is IErc20TransferProxy, Initializable, OperatorRole {
 
