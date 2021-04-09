@@ -10,7 +10,7 @@ import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
     function __ExchangeV2_init(
         INftTransferProxy _transferProxy,
-        IErc20TransferProxy _erc20TransferProxy,
+        IERC20TransferProxy _erc20TransferProxy,
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,

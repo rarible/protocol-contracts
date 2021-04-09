@@ -5,7 +5,7 @@ pragma solidity >=0.6.9 <0.8.0;
 //import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 //import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 import "../../../contracts/roles/OperatorRole.sol";
-import "../../../contracts/exchange/v2/INftTransferProxy.sol";
+import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 
 
 contract TransferProxyTest is INftTransferProxy, Initializable, OperatorRole {

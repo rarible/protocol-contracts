@@ -5,8 +5,8 @@ pragma abicoder v2;
 
 import "./LibAsset.sol";
 import "./ITransferProxy.sol";
-import "./INftTransferProxy.sol";
-import "./IErc20TransferProxy.sol";
+import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
+import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 import "./ITransferExecutor.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -17,7 +17,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
 
     event ProxyChange(bytes4 indexed assetType, address proxy);
 
-    function __TransferExecutor_init_unchained(INftTransferProxy transferProxy, IErc20TransferProxy erc20TransferProxy) internal {
+    function __TransferExecutor_init_unchained(INftTransferProxy transferProxy, IERC20TransferProxy erc20TransferProxy) internal {
         proxies[LibAsset.ERC20_ASSET_CLASS] = address(erc20TransferProxy);
         proxies[LibAsset.ERC721_ASSET_CLASS] = address(transferProxy);
         proxies[LibAsset.ERC1155_ASSET_CLASS] = address(transferProxy);
@@ -42,7 +42,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
             require(success, "transfer failed");
         } else if (asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(asset.assetType.data, (address));
-            IErc20TransferProxy(proxies[LibAsset.ERC20_ASSET_CLASS]).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.value);
+            IERC20TransferProxy(proxies[LibAsset.ERC20_ASSET_CLASS]).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.value);
         } else if (asset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
             (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
             require(asset.value == 1, "erc721 value error");

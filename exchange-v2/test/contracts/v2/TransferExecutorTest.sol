@@ -7,7 +7,7 @@ import "../../../contracts/exchange/v2/TransferExecutor.sol";
 
 contract TransferExecutorTest is Initializable, OwnableUpgradeable, TransferExecutor {
 
-    function __TransferExecutorTest_init(INftTransferProxy _transferProxy, IErc20TransferProxy _erc20TransferProxy) external initializer {
+    function __TransferExecutorTest_init(INftTransferProxy _transferProxy, IERC20TransferProxy _erc20TransferProxy) external initializer {
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
     }

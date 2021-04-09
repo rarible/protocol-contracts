@@ -3,10 +3,9 @@
 pragma solidity >=0.6.9 <0.8.0;
 
 import "../../../contracts/roles/OperatorRole.sol";
-import "../../../contracts/exchange/v2/IErc20TransferProxy.sol";
-//import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 
-contract ERC20TransferProxyTest is IErc20TransferProxy, Initializable, OperatorRole {
+contract ERC20TransferProxyTest is IERC20TransferProxy, Initializable, OperatorRole {
 
     function __ERC20TransferProxy_init() external initializer {
         __Ownable_init();
