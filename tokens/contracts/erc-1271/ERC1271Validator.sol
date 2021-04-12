@@ -11,7 +11,7 @@ abstract contract ERC1271Validator is EIP712Upgradeable {
     using ECDSAUpgradeable for bytes32;
 
     string constant SIGNATURE_ERROR = "signature verification error";
-    bytes4 constant internal MAGICVALUE = 0x20c13b0b;
+    bytes4 constant internal MAGICVALUE = 0x1626ba7e;
 
     function validate1271(address signer, bytes32 structHash, bytes memory signature) internal view {
         bytes32 hash = _hashTypedDataV4(structHash);
