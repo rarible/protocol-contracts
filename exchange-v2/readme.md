@@ -38,11 +38,11 @@ Logically, whole process can be divided into stages:
 **Asset**:
 
 - **assetType**: AssetType (defines type of asset - ETH, specific ERC20 token, specific ERC721 NFT etc.)
-- **amount**: uint
+- **value**: uint - amount of the asset
 
 **AssetType**:
 
-- **tp**: bytes4 (type of asset type: ETH, ERC20, ERC721 etc.)
+- **assetClass**: bytes4 (class of the asset: ETH, ERC20, ERC721 etc.)
 - **data**: bytes (generic data, describes asset type, eg: token address for ERC20, token + tokenId for ERC721)
 
 #### Order validation
