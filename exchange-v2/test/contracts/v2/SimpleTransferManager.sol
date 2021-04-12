@@ -2,9 +2,7 @@
 
 pragma solidity >=0.6.9 <0.8.0;
 
-import "./LibFill.sol";
-import "./ITransferManager.sol";
-import "./TransferExecutor.sol";
+import "../../../contracts/ITransferManager.sol";
 
 abstract contract SimpleTransferManager is ITransferManager {
     using SafeMathUpgradeable for uint;
