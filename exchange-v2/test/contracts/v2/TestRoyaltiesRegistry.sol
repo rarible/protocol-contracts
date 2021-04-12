@@ -20,19 +20,12 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
 	mapping(bytes32 => RoyaltiesSet) public royaltiesByTokenAndTokenId;
 	mapping(address => RoyaltiesSet) public royaltiesByToken;
-	mapping(address => address) public royaltiesProviders;
 
 	function initializeRoyaltiesRegistry() external {
 		__Ownable_init_unchained();
 	}
 
-	function setProviderByToken(address token, address provider) external {
-		checkOwner(token);
-		royaltiesProviders[token] = provider;
-	}
-
 	function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external {
-		checkOwner(token);
 		uint sumRoyalties = 0;
 		for (uint i = 0; i < royalties.length; i++) {
 			require(royalties[i].account != address(0x0), "RoyaltiesByToken recipient should be present");
@@ -45,17 +38,10 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 	}
 
 	function setRoyaltiesByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) external {
-		checkOwner(token);
 		setRoyaltiesCacheByTokenAndTokenId(token, tokenId, royalties);
 	}
 
-	function checkOwner(address token) internal view {
-		if ((owner() != _msgSender()) && (OwnableUpgradeable(token).owner() != _msgSender())){
-			revert("Token owner not detected");
-		}
-	}
-
-	function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
+	function getRoyalties(address token, uint tokenId) view override external returns (LibPart.Part[] memory) {
 		RoyaltiesSet memory royaltiesSet = royaltiesByTokenAndTokenId[keccak256(abi.encode(token, tokenId))];
 		if (royaltiesSet.initialized) {
 			return royaltiesSet.royalties;
@@ -64,12 +50,7 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		if (royaltiesSet.initialized) {
 			return royaltiesSet.royalties;
 		}
-		(bool result, LibPart.Part[] memory resultRoyalties) = providerExtractor(token);
-		if (result == false) {
-			resultRoyalties = royaltiesFromContract(token, tokenId);
-		}
-		setRoyaltiesCacheByTokenAndTokenId (token, tokenId, resultRoyalties);
-		return resultRoyalties;
+		return royaltiesSet.royalties;
 	}
 
 	function setRoyaltiesCacheByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) internal {
@@ -83,49 +64,6 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		}
 		require(sumRoyalties < 10000, "Set by token and tokenId royalties sum more, than 100%");
 		royaltiesByTokenAndTokenId[key].initialized = true;
-	}
-
-	function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory feesRecipients) {
-		if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
-			RoyaltiesV2Impl withFees = RoyaltiesV2Impl(token);
-			try withFees.getRoyalties(tokenId) returns (LibPart.Part[] memory feesRecipientsResult) {
-				return feesRecipientsResult;
-			} catch {}
-		} else if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
-			RoyaltiesV1Impl withFees = RoyaltiesV1Impl(token);
-			address payable[] memory recipients;
-			try withFees.getFeeRecipients(tokenId) returns (address payable[] memory recipientsResult) {
-				recipients = recipientsResult;
-			} catch {
-				return feesRecipients;
-			}
-			uint[] memory fees;
-			try withFees.getFeeBps(tokenId) returns (uint[] memory feesResult) {
-				fees = feesResult;
-			} catch {
-				return feesRecipients;
-			}
-			if (fees.length != recipients.length) {
-				return feesRecipients;
-			}
-			feesRecipients = new LibPart.Part[](fees.length);
-			for (uint256 i = 0; i < fees.length; i++) {
-				feesRecipients[i].value = uint96(fees[i]);
-				feesRecipients[i].account = recipients[i];
-			}
-		}
-		return feesRecipients;
-	}
-
-	function providerExtractor(address token) internal returns (bool result, LibPart.Part[] memory royalties) {
-		address provider = royaltiesProviders[token];
-		if (provider != address(0x0)) {
-			IRoyaltiesProvider withRoyalties = IRoyaltiesProvider(provider);
-			try withRoyalties.getRoyalties(token, 0x0) returns (LibPart.Part[] memory royaltiesByProvider) {
-				royalties = royaltiesByProvider;
-				result = true;
-			} catch { }
-		}
 	}
 
 	uint256[46] private __gap;
