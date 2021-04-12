@@ -2,7 +2,7 @@
 
 pragma solidity >=0.6.9 <0.8.0;
 
-import "../../lib/ERC1271.sol";
+import "./interfaces/ERC1271.sol";
 import "./LibOrder.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/cryptography/ECDSAUpgradeable.sol";

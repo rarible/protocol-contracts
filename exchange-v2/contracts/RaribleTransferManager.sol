@@ -3,17 +3,17 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./LibFill.sol";
 import "./LibFeeSide.sol";
 import "./LibOrderDataV1.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "@rarible/lib-asset/contracts/LibAsset.sol";
-import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./LibOrderData.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "../../utils/BpLibrary.sol";
+import "./lib/BpLibrary.sol";
 
 abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;

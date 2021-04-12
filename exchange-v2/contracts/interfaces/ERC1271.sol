@@ -2,9 +2,7 @@
 
 pragma solidity >=0.6.9 <0.8.0;
 
-abstract contract ERC1271 {
-
-    bytes4 constant internal MAGICVALUE = 0x1626ba7e;
+interface ERC1271 {
 
     /**
      * @dev Should return whether the signature provided is valid for the provided data

@@ -11,9 +11,8 @@ import "./LibFill.sol";
 import "./LibFill.sol";
 import "./TransferExecutor.sol";
 import "./ITransferManager.sol";
-import "../../lib/LibTransfer.sol";
+import "./lib/LibTransfer.sol";
 
-//todo нужно ли делать проверку на reentrancy?
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
@@ -66,7 +65,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             if (msg.value > totalMakeValue) {
                 address(msg.sender).transferEth(msg.value - totalMakeValue);
             }
-        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) { //todo могут ли быть с обеих сторон ETH?
+        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
                 address(msg.sender).transferEth(msg.value - totalTakeValue);

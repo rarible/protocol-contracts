@@ -3,9 +3,9 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "../../../contracts/exchange/v2/RaribleTransferManager.sol";
-import "../../../contracts/exchange/v2/ITransferExecutor.sol";
-import "../../../contracts/exchange/v2/OrderValidator.sol";
+import "../../../contracts/RaribleTransferManager.sol";
+import "../../../contracts/ITransferExecutor.sol";
+import "../../../contracts/OrderValidator.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
