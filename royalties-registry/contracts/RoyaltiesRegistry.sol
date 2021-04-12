@@ -22,7 +22,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 	mapping(address => RoyaltiesSet) public royaltiesByToken;
 	mapping(address => address) public royaltiesProviders;
 
-	function initializeRoyaltiesRegistry() external {
+	function initialize() external {
 		__Ownable_init_unchained();
 	}
 

@@ -35,7 +35,6 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await RoyaltiesRegistryTest.new();
-		//await royaltiesRegistry.initializeRoyaltiesRegistry();
 		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address);
 		await transferProxy.addOperator(testing.address);
 		await erc20TransferProxy.addOperator(testing.address);
@@ -51,7 +50,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 
 	describe("Metods works:", () => {
 		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setRoyaltiesByToken, initialize by Owner", async () => {
-			await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+			await royaltiesRegistry.initialize();//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
 			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
     	await ERC721_V1OwnUpgrd.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
@@ -98,7 +97,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		})
 
 		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setRoyaltiesByToken, initialize by owner and ownableUpgradaeble(ERC721_V1OwnUpgrd).owner", async () => {
-			await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+			await royaltiesRegistry.initialize();//initialize Owner
 			let ownerErc721 = accounts[6];
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721 });
       await ERC721_V1OwnUpgrd.initialize( {from: ownerErc721});
@@ -123,7 +122,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		})
 
 		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setRoyaltiesByTokenandTokenId, initialize  by owner ", async () => {
-			await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+			await royaltiesRegistry.initialize();//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
       await ERC721_V1OwnUpgrd.initialize();
 			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
@@ -171,7 +170,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		})
 
 		it("Transfer from ERC20 to ERC721_V1OwnUpgrd, setRoyaltiesByToken, royaltiesSum>100% throw detected", async () => {
-			await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+			await royaltiesRegistry.initialize();//initialize Owner
 			let ownerErc721 = accounts[6];
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721 });
       await ERC721_V1OwnUpgrd.initialize( {from: ownerErc721});
@@ -206,7 +205,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 	describe ("ExternalProviders test:", () => {
 		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken, initialize by Owner", async () => {
 
-  		await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+  		await royaltiesRegistry.initialize();//initialize Owner
 
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
       await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
@@ -232,7 +231,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 
 		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken + ContractRoyalties, which not work, because royalties detect by provider, initialize by Owner", async () => {
 
-  		await royaltiesRegistry.initializeRoyaltiesRegistry();																																//initialize Owner
+  		await royaltiesRegistry.initialize();																																//initialize Owner
 
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
       ERC721_V1OwnUpgrd.initialize(); 																																											//set V1 interface
@@ -286,7 +285,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 
 		it("Transfer from ERC20 to ERC721v1_OwnableUpgradaeble, setProviderByToken, initialize by Owner, but provider not IRoyaltiesRegistry", async () => {
 
-  		await royaltiesRegistry.initializeRoyaltiesRegistry();//initialize Owner
+  		await royaltiesRegistry.initialize();//initialize Owner
 
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
       await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
