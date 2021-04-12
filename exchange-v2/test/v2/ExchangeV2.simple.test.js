@@ -23,9 +23,7 @@ contract("ExchangeSimpleV2", accounts => {
 	beforeEach(async () => {
 		libOrder = await LibOrderTest.new();
 		transferProxy = await TransferProxyTest.new();
-		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();

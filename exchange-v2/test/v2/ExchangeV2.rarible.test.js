@@ -39,9 +39,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 	beforeEach(async () => {
 		libOrder = await LibOrderTest.new();
 		transferProxy = await TransferProxyTest.new();
-		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		await erc20TransferProxy.__ERC20TransferProxy_init();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
 		transferManagerTest = await RaribleTransferManagerTest.new();
@@ -754,7 +752,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	describe("Exchange with Royalties", () => {
 		it("Royalties by owner, token 721 to ETH", async () => {
-			await royaltiesRegistry.initializeRoyaltiesRegistry();  //detect by owner
 			await erc721.mint(accounts[1], erc721TokenId1);
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
     	await royaltiesRegistry.setRoyaltiesByToken(erc721.address, [[accounts[3], 500], [accounts[4], 1000]]); //set royalties by token
@@ -789,7 +786,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 		})
 		it("Royalties by owner, token and tokenId 721 to ETH", async () => {
-			await royaltiesRegistry.initializeRoyaltiesRegistry();  //detect by owner
 			await erc721.mint(accounts[1], erc721TokenId1);
     	await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
     	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(erc721.address, erc721TokenId1, [[accounts[3], 500], [accounts[4], 1000]]); //set royalties by token and tokenId

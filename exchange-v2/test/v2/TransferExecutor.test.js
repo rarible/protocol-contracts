@@ -24,9 +24,7 @@ contract("TransferExecutor", accounts => {
 	beforeEach(async () => {
 
 		transferProxy = await TransferProxyTest.new();
-		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await TransferExecutorTest.new();
 		await testing.__TransferExecutorTest_init(transferProxy.address, erc20TransferProxy.address);
 		erc20Token = await TestERC20.new();

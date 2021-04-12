@@ -48,9 +48,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 	beforeEach(async () => {
 		transferProxy = await TransferProxyTest.new();
-		await transferProxy.__TransferProxy_init();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		await erc20TransferProxy.__ERC20TransferProxy_init();
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address);

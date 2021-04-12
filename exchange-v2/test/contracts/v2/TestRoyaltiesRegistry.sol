@@ -8,10 +8,8 @@ import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
+contract TestRoyaltiesRegistry is IRoyaltiesProvider {
 
 	struct RoyaltiesSet {
 		bool initialized;
@@ -20,10 +18,6 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
 	mapping(bytes32 => RoyaltiesSet) public royaltiesByTokenAndTokenId;
 	mapping(address => RoyaltiesSet) public royaltiesByToken;
-
-	function initializeRoyaltiesRegistry() external {
-		__Ownable_init_unchained();
-	}
 
 	function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external {
 		uint sumRoyalties = 0;
