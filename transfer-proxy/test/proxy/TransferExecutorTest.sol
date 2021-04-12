@@ -3,7 +3,7 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "../contracts/TransferExecutor.sol";
+import "../../contracts/proxy/TransferExecutor.sol";
 
 contract TransferExecutorTest is Initializable, OwnableUpgradeable, TransferExecutor {
 
