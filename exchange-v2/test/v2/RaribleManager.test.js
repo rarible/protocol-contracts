@@ -54,8 +54,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address);
-		await transferProxy.addOperator(testing.address);
-		await erc20TransferProxy.addOperator(testing.address);
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
 		/*ERC721 */

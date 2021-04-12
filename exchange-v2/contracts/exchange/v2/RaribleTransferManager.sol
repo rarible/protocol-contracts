@@ -9,7 +9,7 @@ import "./LibFeeSide.sol";
 import "./LibOrderDataV1.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "./LibAsset.sol";
+import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./LibOrderData.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";

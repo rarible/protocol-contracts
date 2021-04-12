@@ -3,7 +3,7 @@
 pragma solidity >=0.6.9 <0.8.0;
 
 import "../../lib/LibMath.sol";
-import "./LibAsset.sol";
+import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 library LibOrder {
     using SafeMathUpgradeable for uint;
