@@ -3,9 +3,9 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "../../../contracts/exchange/v2/RaribleTransferManager.sol";
-import "../../../contracts/exchange/v2/ITransferExecutor.sol";
-import "../../../contracts/exchange/v2/OrderValidator.sol";
+import "../../../contracts/transfer/RaribleTransferManager.sol";
+import "../../../contracts/transfer/ITransferExecutor.sol";
+import "../../../contracts/transfer/OrderValidator.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
@@ -25,8 +25,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
     }
 
     function __TransferManager_init(
-        TransferProxy _transferProxy,
-        ERC20TransferProxy _erc20TransferProxy,
+        INftTransferProxy _transferProxy,
+        IERC20TransferProxy _erc20TransferProxy,
         uint newBuyerFee,
         uint newSellerFee,
         address newCommunityWallet,
