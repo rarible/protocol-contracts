@@ -40,12 +40,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
-            require(orderRight.maker == orderLeft.taker, "taker verification failed");
+            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
         }
         if (orderRight.taker != address(0)) {
-            require(orderRight.taker == orderLeft.maker, "taker verification failed");
+            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
         }
-
         matchAndTransfer(orderLeft, orderRight);
     }
 

@@ -19,14 +19,6 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
         __EIP712_init_unchained("Exchange", "2");
     }
 
-    function getChainId() external view returns (uint256 chainId) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            chainId := chainid()
-        }
-    }
-
     function validate(LibOrder.Order memory order, bytes memory signature) internal view {
         if (_msgSender() != order.maker) {
             bytes32 hash = LibOrder.hash(order);

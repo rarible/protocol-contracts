@@ -7,15 +7,15 @@ This library contains struct `Order` with some functions for this struct:
 - calculateRemaining: calculates remaining part of the `Order` (if it's partially filled)
 
 `Order` fields:
-- address maker
+- `address` maker
 - `Asset` leftAsset (see [LibAsset](../../asset/contracts/LibAsset.md))
 - `address` taker (can be zero address)
 - `Asset` rightAsset (see [LibAsset](../../asset/contracts/LibAsset.md))
 - `uint` salt - random number to distinguish different maker's Orders
-- `uint` start
-- `uint` end
-- `bytes4` dataType
-- `bytes` data
+- `uint` start - Order can't be matched before this date (optional)
+- `uint` end - Order can't be matched after this date (optional)
+- `bytes4` dataType - type of data, usually hash of some string, e.g.: "v1", "v2" (see more [here](./LibOrderData.md))
+- `bytes` data - generic data, can be anything, extendable part of the order (see more [here](./LibOrderData.md))
 
 #### Types for EIP-712 signature:
 ```javascript
