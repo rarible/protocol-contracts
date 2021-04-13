@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 truffle test \
         ./test/ExchangeV2.lazy.test.js \
-        ./test/proxy/TestERC20.sol \
+        ./test/tokens/TestERC20.sol \
         ./test/proxy/LibOrderTest.sol \
         ./test/proxy/ERC20TransferProxyTest.sol \
         ./test/proxy/TransferProxyTest.sol \

@@ -3,7 +3,7 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "../../contracts/proxy/LibOrder.sol";
+import "../../contracts/transfer/LibOrder.sol";
 
 contract LibOrderTest {
     function calculateRemaining(LibOrder.Order calldata order, uint fill) external pure returns (uint makeAmount, uint takeAmount) {

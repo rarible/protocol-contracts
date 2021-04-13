@@ -2,6 +2,6 @@
 truffle test \
         ./test/TransferExecutor.test.js \
         ./test/proxy/TransferExecutorTest.sol \
-        ./test/proxy/TestERC20.sol \
-        ./test/proxy/TestERC721.sol \
-        ./test/proxy/TestERC1155.sol
+        ./test/tokens/TestERC20.sol \
+        ./test/tokens/TestERC721.sol \
+        ./test/tokens/TestERC1155.sol
