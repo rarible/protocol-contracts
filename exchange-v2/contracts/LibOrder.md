@@ -2,7 +2,7 @@
 
 This library contains struct `Order` with some functions for this struct:
 - hash: calculates hash according to EIP-712 rules. you can find type definitions
-- hashKey: calculates key for Order used to record fill of the order
+- hashKey: calculates key for Order used to record fill of the order (orders with the same key considered as an update)
 - validate: validates main order parameters, checks if `Order` can be processed
 - calculateRemaining: calculates remaining part of the `Order` (if it's partially filled)
 
