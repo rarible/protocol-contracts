@@ -8,9 +8,9 @@ This library contains struct `Order` with some functions for this struct:
 
 `Order` fields:
 - address maker
-- `Asset` leftAsset (see [Asset](../../asset/contracts/LibAsset.md))
+- `Asset` leftAsset (see [LibAsset](../../asset/contracts/LibAsset.md))
 - `address` taker (can be zero address)
-- `Asset` rightAsset (see [Asset](../../asset/contracts/LibAsset.md))
+- `Asset` rightAsset (see [LibAsset](../../asset/contracts/LibAsset.md))
 - `uint` salt - random number to distinguish different maker's Orders
 - `uint` start
 - `uint` end
