@@ -14,3 +14,5 @@ It consists of `asset class` and generic data (format of data is different for d
 `AssetType` fields:
 - `bytes4` assetClass
 - `bytes` data
+
+`Asset` is used in the [LibOrder](../../exchange-v2/contracts/LibOrder.md)
