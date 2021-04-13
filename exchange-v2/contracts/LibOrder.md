@@ -6,8 +6,18 @@ This library contains struct `Order` with some functions for this struct:
 - validate: validates main order parameters, checks if `Order` can be processed
 - calculateRemaining: calculates remaining part of the `Order` (if it's partially filled)
 
+`Order` fields:
+- address maker
+- `Asset` leftAsset (see [Asset](../../asset/contracts/LibAsset.md))
+- `address` taker (can be zero address)
+- `Asset` rightAsset (see [Asset](../../asset/contracts/LibAsset.md))
+- `uint` salt - random number to distinguish different maker's Orders
+- `uint` start
+- `uint` end
+- `bytes4` dataType
+- `bytes` data
 
-#### Types for EIP-712 signatures:
+#### Types for EIP-712 signature:
 ```javascript
 const Types = {
 	AssetType: [
