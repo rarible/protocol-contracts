@@ -864,7 +864,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   }
 
 	async function getSignature(order, signer) {
-		return sign(order, signer, Number(await testing.getChainId()), testing.address);
+		return sign(order, signer, testing.address);
 	}
 
 });
