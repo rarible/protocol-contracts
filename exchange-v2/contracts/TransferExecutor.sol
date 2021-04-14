@@ -10,8 +10,10 @@ import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 import "./ITransferExecutor.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./lib/LibTransfer.sol";
 
 abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransferExecutor {
+    using LibTransfer for address;
 
     mapping (bytes4 => address) proxies;
 
@@ -36,8 +38,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         bytes4 transferType
     ) internal override {
         if (asset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            (bool success, ) = to.call{ value: asset.value }("");
-            require(success, "transfer failed");
+            to.transferEth(asset.value);
         } else if (asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(asset.assetType.data, (address));
             IERC20TransferProxy(proxies[LibAsset.ERC20_ASSET_CLASS]).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.value);

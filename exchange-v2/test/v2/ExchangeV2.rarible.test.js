@@ -117,17 +117,30 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			assert.equal(await t2.balanceOf(accounts[2]), 0);
 		})
 
-		async function prepare2Orders(t1Amount = 104, t2Amount = 200) {
+		it("From ERC20(10) to ERC20(20) Protocol, no fees because of rounding", async () => {
+			const { left, right } = await prepare2Orders(10, 20, 10, 20)
+
+			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+
+			assert.equal(await testing.fills(await libOrder.hashKey(left)), 20);
+
+			assert.equal(await t1.balanceOf(accounts[1]), 0);
+			assert.equal(await t1.balanceOf(accounts[2]), 10);
+			assert.equal(await t2.balanceOf(accounts[1]), 20);
+			assert.equal(await t2.balanceOf(accounts[2]), 0);
+		})
+
+		async function prepare2Orders(t1Amount = 104, t2Amount = 200, makeAmount = 100, takeAmount = 200) {
 			await t1.mint(accounts[1], t1Amount);
 			await t2.mint(accounts[2], t2Amount);
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 			await t2.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
-			let addrOriginLeft =[[accounts[3], 100]];
-			let addrOriginRight = [[accounts[4], 200]];
+			let addrOriginLeft =[[accounts[3], makeAmount]];
+			let addrOriginRight = [[accounts[4], takeAmount]];
 			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
 			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
-			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
-			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), makeAmount), ZERO, Asset(ERC20, enc(t2.address), takeAmount), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC20, enc(t2.address), takeAmount), ZERO, Asset(ERC20, enc(t1.address), makeAmount), 1, 0, 0, ORDER_DATA_V1, encDataRight);
 			return { left, right }
 		}
 
