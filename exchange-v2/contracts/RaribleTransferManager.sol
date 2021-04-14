@@ -19,31 +19,24 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-    uint public buyerFee;
-    uint public sellerFee;
+    uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
     address public communityWallet;
     mapping(address => address) public walletsForTokens;
 
     function __RaribleTransferManager_init_unchained(
-        uint newBuyerFee,
-        uint newSellerFee,
+        uint newProtocolFee,
         address newCommunityWallet,
         IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
-        buyerFee = newBuyerFee;
-        sellerFee = newSellerFee;
+        protocolFee = newProtocolFee;
         communityWallet = newCommunityWallet;
         royaltiesRegistry = newRoyaltiesProvider;
     }
 
-    function setBuyerFee(uint newBuyerFee) external onlyOwner {
-        buyerFee = newBuyerFee;
-    }
-
-    function setSellerFee(uint newSellerFee) external onlyOwner {
-        sellerFee = newSellerFee;
+    function setProtocolFee(uint newProtocolFee) external onlyOwner {
+        protocolFee = newProtocolFee;
     }
 
     function setCommunityWallet(address payable newCommunityWallet) external onlyOwner {
@@ -92,7 +85,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, buyerFee, dataCalculate.originFees);
+        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
         rest = transferOrigins(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection);
@@ -107,7 +100,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchCalculate,
         bytes4 transferDirection
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, buyerFee.add(sellerFee));
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFee * 2);
         if (fee > 0) {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {

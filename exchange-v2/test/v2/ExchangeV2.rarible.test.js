@@ -41,7 +41,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		transferProxy = await TransferProxyTest.new();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
-		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
+		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
 		transferManagerTest = await RaribleTransferManagerTest.new();
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
