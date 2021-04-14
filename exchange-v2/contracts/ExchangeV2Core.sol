@@ -56,18 +56,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         uint rightOrderFill = fills[rightOrderKeyHash];
         LibFill.FillResult memory fill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
         require(fill.takeValue > 0, "nothing to fill");
-        (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, fill, orderLeft, orderRight);
-        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalMakeValue, "not enough eth");
-            if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value - totalMakeValue);
-            }
-        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalTakeValue, "not enough eth");
-            if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value - totalTakeValue);
-            }
-        }
 
         address msgSender = _msgSender();
         if (msgSender != orderLeft.maker) {
@@ -75,6 +63,21 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
         if (msgSender != orderRight.maker) {
             fills[rightOrderKeyHash] = rightOrderFill + fill.makeValue;
+        }
+
+        (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, fill, orderLeft, orderRight);
+        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
+            require(msg.value >= totalMakeValue, "not enough eth");
+            if (msg.value > totalMakeValue) {
+                address(msg.sender).transferEth(msg.value - totalMakeValue);
+            }
+        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(makeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
+            require(msg.value >= totalTakeValue, "not enough eth");
+            if (msg.value > totalTakeValue) {
+                address(msg.sender).transferEth(msg.value - totalTakeValue);
+            }
         }
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, fill.takeValue, fill.makeValue);
     }
