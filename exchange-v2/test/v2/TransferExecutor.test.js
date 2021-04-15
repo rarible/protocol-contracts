@@ -1,7 +1,6 @@
 const TransferExecutorTest = artifacts.require("TransferExecutorTest.sol");
-const TransferProxy = artifacts.require("TransferProxy.sol");
-const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
-const TransferProxyForDeprecated = artifacts.require("TransferProxyForDeprecated.sol");
+const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
+const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC721Dep = artifacts.require("TestERC721Dep.sol");
@@ -24,14 +23,10 @@ contract("TransferExecutor", accounts => {
 
 	beforeEach(async () => {
 
-		transferProxy = await TransferProxy.new();
-		await transferProxy.__TransferProxy_init();
-		erc20TransferProxy = await ERC20TransferProxy.new();
-		await erc20TransferProxy.__ERC20TransferProxy_init();
+		transferProxy = await TransferProxyTest.new();
+		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		testing = await TransferExecutorTest.new();
 		await testing.__TransferExecutorTest_init(transferProxy.address, erc20TransferProxy.address);
-		await transferProxy.addOperator(testing.address);
-		await erc20TransferProxy.addOperator(testing.address);
 		erc20Token = await TestERC20.new();
 		erc721Token = await TestERC721.new()
 		erc721DepToken = await TestERC721Dep.new();
@@ -75,17 +70,4 @@ contract("TransferExecutor", accounts => {
 		assert.equal(await erc1155Token.balanceOf(accounts[6], 1), 40);
 	})
 
-	it("should support other proxies", async () => {
-		const depProxy = await TransferProxyForDeprecated.new();
-		await depProxy.__TransferProxyForDeprecated_init();
-		await depProxy.addOperator(testing.address);
-		const assetType = await depProxy.ERC721_DEP_ASSET_TYPE();
-		await testing.setTransferProxy(assetType, depProxy.address);
-
-		await erc721DepToken.mint(accounts[5], 1);
-		await erc721DepToken.setApprovalForAll(depProxy.address, true, { from: accounts[5] });
-
-		await testing.transferTest(order.Asset(assetType, enc(erc721DepToken.address, 1), 1), accounts[5], accounts[6])
-		assert.equal(await erc721DepToken.ownerOf(1), accounts[6]);
-	})
 });

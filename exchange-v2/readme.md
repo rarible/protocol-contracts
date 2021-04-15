@@ -25,25 +25,15 @@ Logically, whole process can be divided into stages:
 
 **Order**:
 
-- **maker**: address 
-- **makeAsset**: Asset
-- **taker**: address (can be zero, then anyone can fill the order)
-- **takeAsset**: Asset
-- **salt**: uint (random number)
-- **start**: uint (before this date order can't be filled)
-- **end**: uint (after this date order can't be filled)
-- **dataType**: bytes4 (type of data type, usually hash of some string, e.g.: "v1", "v2")
-- **data**: bytes (generic data, can be anything, extendable part of the order)
-
-**Asset**:
-
-- **assetType**: AssetType (defines type of asset - ETH, specific ERC20 token, specific ERC721 NFT etc.)
-- **amount**: uint
-
-**AssetType**:
-
-- **tp**: bytes4 (type of asset type: ETH, ERC20, ERC721 etc.)
-- **data**: bytes (generic data, describes asset type, eg: token address for ERC20, token + tokenId for ERC721)
+- `address` maker
+- `Asset` leftAsset (see [LibAsset](../asset/contracts/LibAsset.md))
+- `address` taker (can be zero address)
+- `Asset` rightAsset (see [LibAsset](../asset/contracts/LibAsset.md))
+- `uint` salt - random number to distinguish different maker's Orders
+- `uint` start - Order can't be matched before this date (optional)
+- `uint` end - Order can't be matched after this date (optional)
+- `bytes4` dataType - type of data, usually hash of some string, e.g.: "v1", "v2" (see more [here](./contracts/LibOrderData.md))
+- `bytes` data - generic data, can be anything, extendable part of the order (see more [here](./contracts/LibOrderData.md))
 
 #### Order validation
 

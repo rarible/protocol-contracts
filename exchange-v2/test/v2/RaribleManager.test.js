@@ -3,15 +3,15 @@ const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest
 const TestERC20 = artifacts.require("TestERC20.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC1155 = artifacts.require("TestERC1155.sol");
-const TransferProxy = artifacts.require("TransferProxy.sol");
-const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
+const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
+const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const ERC721_V1 = artifacts.require("TestERC721WithRoyaltiesV1.sol");
 const ERC721_V2 = artifacts.require("TestERC721WithRoyaltiesV2.sol");
 const ERC1155_V1 = artifacts.require("TestERC1155WithRoyaltiesV1.sol");
 const ERC1155_V2 = artifacts.require("TestERC1155WithRoyaltiesV2.sol");
 const ERC721_V1_Error = artifacts.require("TestERC721WithRoyaltiesV1_InterfaceError.sol");
 const ERC1155_V2_Error = artifacts.require("TestERC1155WithRoyaltiesV2_InterfaceError.sol");
-const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
+const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -47,15 +47,11 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	}
 
 	beforeEach(async () => {
-		transferProxy = await TransferProxy.new();
-		await transferProxy.__TransferProxy_init();
-		erc20TransferProxy = await ERC20TransferProxy.new();
-		await erc20TransferProxy.__ERC20TransferProxy_init();
+		transferProxy = await TransferProxyTest.new();
+		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		testing = await RaribleTransferManagerTest.new();
-		royaltiesRegistry = await RoyaltiesRegistry.new();
-		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, 300, community, royaltiesRegistry.address);
-		await transferProxy.addOperator(testing.address);
-		await erc20TransferProxy.addOperator(testing.address);
+		royaltiesRegistry = await TestRoyaltiesRegistry.new();
+		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address);
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
 		/*ERC721 */
@@ -292,11 +288,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		})
 
 		async function prepare721V1_20Orders(t1Amount = 105) {
-			await erc721V1.mint(accounts[0], erc721TokenId1, [[accounts[2], 1000], [accounts[3], 500]]);
+//			await erc721V1.mint(accounts[0], erc721TokenId1, [[accounts[2], 1000], [accounts[3], 500]]);
+			await erc721V1.mint(accounts[0], erc721TokenId1, []);
 			await t1.mint(accounts[1], t1Amount);
 			await erc721V1.setApprovalForAll(transferProxy.address, true, {from: accounts[0]});
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
+			await royaltiesRegistry.setRoyaltiesByToken(erc721V1.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[0], Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			return { left, right }
@@ -318,10 +316,11 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 		async function prepare20_721V2Orders(t1Amount = 105) {
 			await t1.mint(accounts[1], t1Amount);
-			await erc721V2.mint(accounts[0], erc721TokenId1, [[accounts[2], 1000], [accounts[3], 500]]);
+			await erc721V2.mint(accounts[0], erc721TokenId1, []);
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 			await erc721V2.setApprovalForAll(transferProxy.address, true, {from: accounts[0]});
 
+			await royaltiesRegistry.setRoyaltiesByToken(erc721V2.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V2.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[0], Asset(ERC721, enc(erc721V2.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			return { left, right }
@@ -342,11 +341,12 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		})
 
 		async function prepare1155V1_20Orders(t1Amount = 10, t2Amount = 105) {
-			await erc1155V1.mint(accounts[0], erc1155TokenId1, [[accounts[2], 1000], [accounts[3], 500]], t1Amount);
+			await erc1155V1.mint(accounts[0], erc1155TokenId1, [], t1Amount);
 			await t1.mint(accounts[1], t2Amount);
 			await erc1155V1.setApprovalForAll(transferProxy.address, true, {from: accounts[0]});
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155V1.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[0], Asset(ERC1155, enc(erc1155V1.address, erc1155TokenId1), 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155V1.address, erc1155TokenId1), 5), 1, 0, 0, "0xffffffff", "0x");
 			return { left, right }
@@ -368,10 +368,11 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 		async function prepare20_1155V2Orders(t1Amount = 105, t2Amount = 10) {
 			await t1.mint(accounts[1], t1Amount);
-			await erc1155V2.mint(accounts[0], erc1155TokenId1, [[accounts[2], 1000], [accounts[3], 500]], t2Amount);
+			await erc1155V2.mint(accounts[0], erc1155TokenId1, [], t2Amount);
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 			await erc1155V2.setApprovalForAll(transferProxy.address, true, {from: accounts[0]});
 
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155V2.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 6), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[0], Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 6), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 
@@ -399,9 +400,9 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		})
 
 		async function prepareETH_1155V2Orders(t2Amount  = 10) {
-			await erc1155V2.mint(accounts[1], erc1155TokenId1, [[accounts[2], 1000], [accounts[3], 500]], t2Amount);
+			await erc1155V2.mint(accounts[1], erc1155TokenId1, [], t2Amount);
 			await erc1155V2.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
-
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155V2.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 7), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 			return { left, right }

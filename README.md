@@ -28,5 +28,5 @@ Users who want to purchase something on Rarible should do the following:
 
 - find asset they like with an open order
 - approve transfers the same way (if not buying using Ether)
-- form order in the other direction (statement like "I would like to by precious crypto kitty for 10 ETH")
+- form order in the other direction (statement like "I would like to buy precious crypto kitty for 10 ETH")
 - call Exchange.matchOrders with two orders and first order signature. 

@@ -3,7 +3,7 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "../../../contracts/exchange/v2/AssetMatcher.sol";
+import "../../../contracts/AssetMatcher.sol";
 
 contract AssetMatcherTest is Initializable, OwnableUpgradeable, AssetMatcher {
 
