@@ -1,7 +1,9 @@
-pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+pragma solidity >=0.6.2 <0.8.0;
+pragma abicoder v2;
+
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 /**
   * Line описывает линейную функцию, как убывает голос юзера. от точки (start, bias) со скоростью slope
@@ -25,7 +27,7 @@ contract BrokenLineDomain {
 }
 
 library BrokenLineLibrary {
-    using SafeMath for uint;
+    using SafeMathUpgradeable for uint;
 
     function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line) internal {
         update(brokenLine, line.start);
