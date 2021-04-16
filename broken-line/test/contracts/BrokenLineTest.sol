@@ -14,6 +14,11 @@ contract BrokenLineTest is BrokenLineDomain {
         brokenLine.add(line);
     }
 
+    function add(Line memory line, uint cliff) public {
+        brokenLine.add(line, cliff);
+    }
+
+
     function update(uint timeTo) public {
         brokenLine.update(timeTo);
     }
