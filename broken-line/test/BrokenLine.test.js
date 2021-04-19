@@ -1,5 +1,5 @@
 const BrokenLineTest = artifacts.require("BrokenLineTest.sol");
-
+const { expectThrow } = require("@daonomic/tests-common");
 contract("BrokenLine", accounts => {
 	let forTest;
 
@@ -15,7 +15,7 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check add()", () => {
-		it("should update if no line added", async () => {
+		it("Should update if no line added", async () => {
 			await forTest.update(0);
 			await assertCurrent([0, 0, 0])
 
@@ -24,7 +24,7 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([10, 0, 0])
 		});
 
-		it("one line can be added, tail works", async () => {
+		it("One line can be added, tail works", async () => {
 			await forTest.add([1, 101, 10]);
 			await assertCurrent([1, 101, 10]);
 
@@ -44,7 +44,7 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([13, 0, 0]);
 		});
 
-		it("one line with no mod should work", async () => {
+		it("One line with no mod should work", async () => {
 			await forTest.add([1, 100, 10]);
 			await assertCurrent([1, 100, 10]);
 
@@ -64,7 +64,7 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([13, 0, 0]);
 		})
 
-		it("some lines can be added at one time", async () => {
+		it("Some lines can be added at one time", async () => {
 			await forTest.add([1, 20, 10]);
 			await forTest.add([1, 40, 10]);
 			await assertCurrent([1, 60, 20]);
@@ -84,7 +84,7 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check with cliff", () => {
-		it("one line can be added with cliff", async () => {
+		it("One line can be added with cliff", async () => {
 			await forTest.add([1, 100, 10], 2);
 			await assertCurrent([1, 100, 0]);
 
@@ -104,28 +104,55 @@ contract("BrokenLine", accounts => {
     	await assertCurrent([13, 0, 0]);
 		});
 
-		it("two line can be added, only one with cliff, no cliff shorter than freeze", async () => {
-			await forTest.add([1, 30, 10], 3);
+		it("Two line can be added, only one with cliff+tail, no cliff shorter than freeze", async () => {
+			await forTest.add([1, 35, 10], 3);
 			await forTest.add([1, 20, 10]);
-			await assertCurrent([1, 50, 10]);
+			await assertCurrent([1, 55, 10]);
 
 			await forTest.update(2);
-			await assertCurrent([2, 40, 10]);
+			await assertCurrent([2, 45, 10]);
 
 			await forTest.update(3);
-			await assertCurrent([3, 30, 0]);
+			await assertCurrent([3, 35, 0]);
 
 			await forTest.update(4);
-			await assertCurrent([4, 30, 10]);
+			await assertCurrent([4, 35, 10]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 20, 10]);
+    	await assertCurrent([5, 25, 10]);
 
     	await forTest.update(7);
-    	await assertCurrent([7, 0, 0]);
+    	await assertCurrent([7, 5, 5]);
+
+    	await forTest.update(8);
+    	await assertCurrent([8, 0, 0]);
 		});
 
-		it("two line can be added, only one with cliff, no cliff longer than freeze", async () => {
+		it("Two line can be added: first+tail, cliff+tail, no cliff shorter than freeze", async () => {
+			await forTest.add([1, 35, 10], 3);
+			await forTest.add([1, 25, 10]);
+			await assertCurrent([1, 60, 10]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 50, 10]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 40, 5]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 35, 10]);
+
+			await forTest.update(5);
+    	await assertCurrent([5, 25, 10]);
+
+    	await forTest.update(7);
+    	await assertCurrent([7, 5, 5]);
+
+    	await forTest.update(8);
+    	await assertCurrent([8, 0, 0]);
+		});
+
+		it("Two line can be added, only one with cliff, no cliff longer than freeze", async () => {
 			await forTest.add([1, 30, 10], 3);
 			await forTest.add([1, 25, 5]);
 			await assertCurrent([1, 55, 5]);
@@ -146,7 +173,7 @@ contract("BrokenLine", accounts => {
     	await assertCurrent([7, 0, 0]);
 		});
 
-		it("two line can be added, only one with cliff, no cliff == freeze", async () => {
+		it("Two line can be added, only one with cliff, no cliff == freeze", async () => {
 			await forTest.add([1, 30, 10], 3);
 			await forTest.add([1, 60, 20]);
 			await assertCurrent([1, 90, 20]);
@@ -167,7 +194,29 @@ contract("BrokenLine", accounts => {
     	await assertCurrent([7, 0, 0]);
 		});
 
-		it("two line can be added with different cliff ", async () => {
+		it("Three line can be added, only one with cliff, no cliff == freeze", async () => {
+			await forTest.add([1, 30, 10], 3);
+			await forTest.add([1, 60, 20]);
+			await forTest.add([1, 120, 40]);
+			await assertCurrent([1, 210, 60]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 150, 60]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 30, 10]);
+
+			await forTest.update(5);
+    	await assertCurrent([5, 20, 10]);
+
+			await forTest.update(6);
+    	await assertCurrent([6, 10, 10]);
+
+    	await forTest.update(7);
+    	await assertCurrent([7, 0, 0]);
+		});
+
+		it("Two line can be added with different cliff ", async () => {
 			await forTest.add([1, 30, 10], 3);
 			await forTest.add([1, 60, 20], 4);
 			await assertCurrent([1, 90, 0]);
@@ -191,7 +240,7 @@ contract("BrokenLine", accounts => {
     	await assertCurrent([8, 0, 0]);
 		});
 
-		it("two line can be added with the same cliff ", async () => {
+		it("Two line can be added with the same cliff ", async () => {
 			await forTest.add([1, 30, 10], 3);
 			await forTest.add([1, 60, 20], 3);
 			await assertCurrent([1, 90, 0]);
@@ -210,6 +259,18 @@ contract("BrokenLine", accounts => {
 
     	await forTest.update(7);
     	await assertCurrent([7, 0, 0]);
+		});
+
+		it("Expect throw time incorrect ", async () => {
+			await forTest.add([1, 30, 10], 3);
+			await forTest.add([1, 60, 20], 3);
+			await assertCurrent([1, 90, 0]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 90, 0]);
+			await expectThrow(
+    		forTest.update(2)
+    	);
 		});
 	})
 })
