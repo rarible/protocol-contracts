@@ -3,6 +3,7 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts-upgradeable/math/SignedSafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 /**
@@ -21,13 +22,13 @@ contract BrokenLineDomain {
     }
 
     struct BrokenLine {
-        mapping (uint => uint) slopeChanges; //change of slope applies to the next time point
-        mapping (uint => uint) slopeFreeze; //freeze of slope
+        mapping (uint => int) slopeChanges; //change of slope applies to the next time point
         Line initial;
     }
 }
 
 library BrokenLineLibrary {
+    using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
 
     function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line) internal {
@@ -36,26 +37,27 @@ library BrokenLineLibrary {
         brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
 
         uint period = line.bias.div(line.slope);
-        uint mod = line.bias.mod(line.slope);
-
-        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(line.slope).sub(mod);
-        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(mod);
+        fixChanges(brokenLine, line, period);
     }
 
     function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
+        uint period = line.bias.div(line.slope);
         if (cliff == 0){
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
-            brokenLine.slopeFreeze[cliff] = brokenLine.slopeFreeze[cliff].add(line.slope);
+            brokenLine.slopeChanges[cliff] = brokenLine.slopeChanges[cliff].add(int(line.slope));
+            period = period.add(cliff);
         }
 
-        uint period = line.bias.div(line.slope).add(cliff);
-        uint mod = line.bias.mod(line.slope);
+        fixChanges(brokenLine, line, period);
+    }
 
-        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(line.slope).sub(mod);
-        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(mod);
+    function fixChanges(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint period ) internal{
+        uint mod = line.bias.mod(line.slope);
+        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(int(line.slope.sub(mod)).mul(-1));
+        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(int(mod).mul(-1));
     }
 
     /**
@@ -67,10 +69,9 @@ library BrokenLineLibrary {
         uint time = brokenLine.initial.start;
         require(toTime >= time, "can't update BrokenLine for past time");
         while (time < toTime) {
+            require (slope >= 0, "slope < 0, something wrong");
             bias = bias.sub(slope);
-            slope = slope.add(brokenLine.slopeFreeze[time]);
-            slope = slope.sub(brokenLine.slopeChanges[time]);
-            brokenLine.slopeFreeze[time] = 0;
+            slope = uint(int(slope).add(brokenLine.slopeChanges[time]));
             brokenLine.slopeChanges[time] = 0;
             time = time.add(1);
         }
@@ -78,4 +79,5 @@ library BrokenLineLibrary {
         brokenLine.initial.bias = bias;
         brokenLine.initial.slope = slope;
     }
+
 }
