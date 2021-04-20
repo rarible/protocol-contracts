@@ -44,7 +44,7 @@ library BrokenLineLibrary {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
         uint period = line.bias.div(line.slope);
-        if (cliff == 0){
+        if (cliff == 0) {
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
             brokenLine.slopeChanges[cliff] = brokenLine.slopeChanges[cliff].add(int(line.slope));
@@ -54,7 +54,7 @@ library BrokenLineLibrary {
         fixChanges(brokenLine, line, period);
     }
 
-    function fixChanges(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint period ) internal{
+    function fixChanges(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint period ) internal {
         uint mod = line.bias.mod(line.slope);
         brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(int(line.slope.sub(mod)).mul(-1));
         brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(int(mod).mul(-1));
