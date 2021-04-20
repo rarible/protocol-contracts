@@ -27,7 +27,7 @@ contract BrokenLineDomain {
     }
 }
 
-library BrokenLineLibrary {
+library LibBrokenLine {
     using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
 

@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "../../contracts/LibBrokenLine.sol";
 
 contract BrokenLineTest is BrokenLineDomain {
-    using BrokenLineLibrary for BrokenLine;
+    using LibBrokenLine for BrokenLine;
 
     BrokenLine public brokenLine;
 
