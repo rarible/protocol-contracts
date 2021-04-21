@@ -15,6 +15,7 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check add()", () => {
+
 		it("Should update if no line added", async () => {
 			await forTest.update(0);
 			await assertCurrent([0, 0, 0])
@@ -25,7 +26,7 @@ contract("BrokenLine", accounts => {
 		});
 
 		it("One line can be added, tail works", async () => {
-			await forTest.add([1, 101, 10]);
+			await forTest.add([1, 101, 10], 0);
 			await assertCurrent([1, 101, 10]);
 
 			await forTest.update(2);
@@ -45,7 +46,7 @@ contract("BrokenLine", accounts => {
 		});
 
 		it("One line with no mod should work", async () => {
-			await forTest.add([1, 100, 10]);
+			await forTest.add([1, 100, 10], 0);
 			await assertCurrent([1, 100, 10]);
 
 			await forTest.update(2);
@@ -65,8 +66,8 @@ contract("BrokenLine", accounts => {
 		})
 
 		it("Some lines can be added at one time", async () => {
-			await forTest.add([1, 20, 10]);
-			await forTest.add([1, 40, 10]);
+			await forTest.add([1, 20, 10], 0);
+			await forTest.add([1, 40, 10], 0);
 			await assertCurrent([1, 60, 20]);
 
 			await forTest.update(2);
@@ -84,6 +85,7 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check with cliff", () => {
+
 		it("One line can be added with cliff", async () => {
 			await forTest.add([1, 100, 10], 2);
 			await assertCurrent([1, 100, 0]);
@@ -104,9 +106,50 @@ contract("BrokenLine", accounts => {
     	await assertCurrent([13, 0, 0]);
 		});
 
+		it("One line can be added with cliff(20, 10), begin from 3", async () => {
+			await forTest.add([3, 20, 10], 2);
+			await assertCurrent([3, 20, 0]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 20, 0]);
+
+			await forTest.update(5);
+			await assertCurrent([5, 20, 10]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 10, 10]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
+		});
+
+		it("One line can be added with cliff(20, 10), begin from 0, maybe line.start==0 its impossible, but need to check also!", async () => {
+			await forTest.add([0, 20, 10], 2);
+			await assertCurrent([0, 20, 0]);
+
+			await forTest.update(1);
+			await assertCurrent([1, 20, 0]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 20, 10]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 10, 10]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 0, 0]);
+
+			await forTest.update(5);
+			await assertCurrent([5, 0, 0]);
+		});
+
+
 		it("Two line can be added, only one with cliff+tail, no cliff shorter than freeze", async () => {
 			await forTest.add([1, 35, 10], 3);
-			await forTest.add([1, 20, 10]);
+			await forTest.add([1, 20, 10], 0);
 			await assertCurrent([1, 55, 10]);
 
 			await forTest.update(2);
@@ -130,7 +173,7 @@ contract("BrokenLine", accounts => {
 
 		it("Two line can be added: first+tail, cliff+tail, no cliff shorter than freeze", async () => {
 			await forTest.add([1, 35, 10], 3);
-			await forTest.add([1, 25, 10]);
+			await forTest.add([1, 25, 10], 0);
 			await assertCurrent([1, 60, 10]);
 
 			await forTest.update(2);
@@ -154,7 +197,7 @@ contract("BrokenLine", accounts => {
 
 		it("Two line can be added, only one with cliff, no cliff longer than freeze", async () => {
 			await forTest.add([1, 30, 10], 3);
-			await forTest.add([1, 25, 5]);
+			await forTest.add([1, 25, 5], 0);
 			await assertCurrent([1, 55, 5]);
 
 			await forTest.update(2);
@@ -175,7 +218,7 @@ contract("BrokenLine", accounts => {
 
 		it("Two line can be added, only one with cliff, no cliff == freeze", async () => {
 			await forTest.add([1, 30, 10], 3);
-			await forTest.add([1, 60, 20]);
+			await forTest.add([1, 60, 20], 0);
 			await assertCurrent([1, 90, 20]);
 
 			await forTest.update(2);
@@ -196,8 +239,8 @@ contract("BrokenLine", accounts => {
 
 		it("Three line can be added, only one with cliff, no cliff == freeze", async () => {
 			await forTest.add([1, 30, 10], 3);
-			await forTest.add([1, 60, 20]);
-			await forTest.add([1, 120, 40]);
+			await forTest.add([1, 60, 20], 0);
+			await forTest.add([1, 120, 40], 0);
 			await assertCurrent([1, 210, 60]);
 
 			await forTest.update(2);

@@ -31,30 +31,18 @@ library LibBrokenLine {
     using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
 
-    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line) internal {
-        update(brokenLine, line.start);
-        brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
-        brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
-
-        uint period = line.bias.div(line.slope);
-        fixChanges(brokenLine, line, period);
-    }
-
     function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
         uint period = line.bias.div(line.slope);
+        uint cliffIndex = line.start.add(cliff).sub(1);
         if (cliff == 0) {
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
-            brokenLine.slopeChanges[cliff] = brokenLine.slopeChanges[cliff].add(int(line.slope));
+            brokenLine.slopeChanges[cliffIndex] = brokenLine.slopeChanges[cliffIndex].add(int(line.slope));
             period = period.add(cliff);
         }
 
-        fixChanges(brokenLine, line, period);
-    }
-
-    function fixChanges(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint period ) internal {
         uint mod = line.bias.mod(line.slope);
         brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(int(line.slope.sub(mod)).mul(-1));
         brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(int(mod).mul(-1));
@@ -69,8 +57,8 @@ library LibBrokenLine {
         uint time = brokenLine.initial.start;
         require(toTime >= time, "can't update BrokenLine for past time");
         while (time < toTime) {
-            require (slope >= 0, "slope < 0, something wrong");
             bias = bias.sub(slope);
+            require (int(slope) >= 0, "slope < 0, something wrong with slope");
             slope = uint(int(slope).add(brokenLine.slopeChanges[time]));
             brokenLine.slopeChanges[time] = 0;
             time = time.add(1);
