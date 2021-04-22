@@ -6,13 +6,14 @@ pragma abicoder v2;
 import "../../contracts/LibBrokenLine.sol";
 
 contract BrokenLineTest is BrokenLineDomain {
-    using BrokenLineLibrary for BrokenLine;
+    using LibBrokenLine for BrokenLine;
 
     BrokenLine public brokenLine;
 
-    function add(Line memory line) public {
-        brokenLine.add(line);
+    function add(Line memory line, uint cliff) public {
+        brokenLine.add(line, cliff);
     }
+
 
     function update(uint timeTo) public {
         brokenLine.update(timeTo);

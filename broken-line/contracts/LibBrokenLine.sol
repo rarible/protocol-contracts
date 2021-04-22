@@ -3,6 +3,7 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts-upgradeable/math/SignedSafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 /**
@@ -21,24 +22,32 @@ contract BrokenLineDomain {
     }
 
     struct BrokenLine {
-        mapping (uint => uint) slopeChanges; //change of slope applies to the next time point
+        mapping (uint => int) slopeChanges; //change of slope applies to the next time point
         Line initial;
     }
 }
 
-library BrokenLineLibrary {
+library LibBrokenLine {
+    using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
 
-    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line) internal {
+    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
-        brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
-
         uint period = line.bias.div(line.slope);
-        uint mod = line.bias.mod(line.slope);
+        if (cliff == 0) {
+            brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
+        } else {
+            uint cliffEnd = line.start.add(cliff).sub(1);
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(line.slope));
+            period = period.add(cliff);
+        }
 
-        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(line.slope).sub(mod);
-        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(mod);
+        int mod = safeInt(line.bias.mod(line.slope));
+        uint256 endPeriod = line.start.add(period);
+        uint256 endPeriodMinus1 = endPeriod.sub(1);
+        brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeInt(line.slope)).add(mod);
+        brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
     /**
@@ -51,12 +60,19 @@ library BrokenLineLibrary {
         require(toTime >= time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
-            slope = slope.sub(brokenLine.slopeChanges[time]);
+            int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
+            require (newSlope >= 0, "slope < 0, something wrong with slope");
+            slope = uint(newSlope);
             brokenLine.slopeChanges[time] = 0;
             time = time.add(1);
         }
         brokenLine.initial.start = toTime;
         brokenLine.initial.bias = bias;
         brokenLine.initial.slope = slope;
+    }
+
+    function safeInt(uint value) internal returns (int result) {
+        result = int(value);
+        require(value == uint(result), "int cast error");
     }
 }
