@@ -11,6 +11,8 @@ import "../HasContractURI.sol";
 
 contract ERC721Rarible is OwnableUpgradeable, ERC721DefaultApproval, ERC721BurnableUpgradeable, ERC721Lazy, HasContractURI {
 
+    event CreateERC721Rarible(address owner, string name, string symbol);
+
     function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
         _setDefaultApproval(operator, hasApproval);
     }
@@ -34,6 +36,7 @@ contract ERC721Rarible is OwnableUpgradeable, ERC721DefaultApproval, ERC721Burna
         __Mint721Validator_init_unchained();
         __HasContractURI_init_unchained(contractURI);
         __ERC721_init_unchained(_name, _symbol);
+        emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
     uint256[50] private __gap;
 }

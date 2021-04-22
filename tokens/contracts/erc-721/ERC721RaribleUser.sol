@@ -10,6 +10,8 @@ import "../HasContractURI.sol";
 
 contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC721Lazy, HasContractURI {
 
+    event CreateERC721RaribleUser(address owner, string name, string symbol);
+
     function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address operator) external initializer {
         _setBaseURI(baseURI);
         __ERC721Lazy_init_unchained();
@@ -24,6 +26,7 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
         if (operator != address(0)) {
             setApprovalForAll(operator, true);
         }
+        emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
     }
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {

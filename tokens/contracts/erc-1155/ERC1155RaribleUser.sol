@@ -9,6 +9,9 @@ import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
 
 contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
+
+    event CreateERC1155RaribleUser(address owner, string name, string symbol);
+
     string public name;
     string public symbol;
 
@@ -27,6 +30,7 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
         if (operator != address(0)) {
             setApprovalForAll(operator, true);
         }
+        emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
     }
 
     function __ERC1155RaribleUser_init_unchained(string memory _name, string memory _symbol) internal initializer {

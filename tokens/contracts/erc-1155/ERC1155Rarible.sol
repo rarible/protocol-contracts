@@ -11,6 +11,8 @@ import "../HasContractURI.sol";
 
 contract ERC1155Rarible is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
 
+    event CreateERC1155Rarible(address owner, string name, string symbol);
+
     string public name;
     string public symbol;
 
@@ -26,6 +28,7 @@ contract ERC1155Rarible is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155Bu
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC1155Rarible_init_unchained(_name, _symbol);
         _setBaseURI(baseURI);
+        emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
     }
 
     function __ERC1155Rarible_init_unchained(string memory _name, string memory _symbol) internal initializer {
