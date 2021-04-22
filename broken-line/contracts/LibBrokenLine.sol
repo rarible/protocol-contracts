@@ -39,13 +39,15 @@ library LibBrokenLine {
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
             uint cliffEnd = line.start.add(cliff).sub(1);
-            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(int(line.slope));
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeCast(line.slope));
             period = period.add(cliff);
         }
 
-        uint mod = line.bias.mod(line.slope);
-        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(negate(line.slope.sub(mod)));
-        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(negate(mod));
+        int mod = safeCast(line.bias.mod(line.slope));
+        uint256 endPeriod = line.start.add(period);
+        uint256 endPeriodMinus1 = endPeriod.sub(1);
+        brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeCast(line.slope)).add(mod);
+        brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
     /**
@@ -69,7 +71,8 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
-    function negate(uint value) pure internal returns (int) {
-        return int(value) * -1;
+    function safeCast(uint value) internal returns (int result) {
+        result = int(value);
+        require(value == uint(result), "int cast error");
     }
 }
