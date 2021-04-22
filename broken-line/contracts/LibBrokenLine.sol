@@ -58,8 +58,9 @@ library LibBrokenLine {
         require(toTime >= time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
-            require (int(slope) >= 0, "slope < 0, something wrong with slope");
-            slope = uint(int(slope).add(brokenLine.slopeChanges[time]));
+            int slopeChange = int(slope).add(brokenLine.slopeChanges[time]);
+            require (slopeChange >= 0, "slope < 0, something wrong with slope");
+            slope = uint(slopeChange);
             brokenLine.slopeChanges[time] = 0;
             time = time.add(1);
         }
