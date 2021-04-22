@@ -12,7 +12,9 @@ import "../lib/LibBrokenLine.sol";
   **/
 
 contract Staking {
-    uint256 constant WEEK = 86400 * 7;
+    using SafeMathUpgradeable for uint;
+    using LibBrokenLine for BrokenLineDomain.BrokenLine;
+    uint256 constant WEEK = 604800;                 //seconds one week
 
     struct Lock {
         uint dt;    //deposit time
@@ -23,15 +25,15 @@ contract Staking {
 
     mapping(address => Lock) public locks;
     mapping(uint => BrokenLineDomain.BrokenLine) public userBalances; //uint - idLock
-    BrokenLineDomain.BrokenLine public protocolBalances;
+    BrokenLineDomain.BrokenLine public totalBalances;
     uint public idLock;
 
     constructor() public { //todo сделать, чтобы вызывался единожды!!!
         idLock = 1;
-        //todo initialize protocolBalances
+        //todo initialize totalBalances
     }
 
-    function createLock(address account, uint amount, uint period, uint cliff) internal returns (uint) {
+    function createLock(address account, uint amount, uint period, uint cliff) public returns (uint) {
         //todo проверки
         Lock memory lock = locks[account];
         uint blockTime = roundTimestamp(block.timestamp);
@@ -43,8 +45,8 @@ contract Staking {
             locks[account] = Lock(blockTime, amount, period, cliff);
         }
         idLock++;
-        LibBrokenLine.add(userBalances[idLock], line);
-        LibBrokenLine.add(protocolBalances, line);
+        userBalances[idLock].add(line);
+//        totalBalances.add(line); //todo убрать комментарий, но иначе не хватает газа
         return idLock;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
@@ -80,11 +82,11 @@ contract Staking {
 
     function lockToLine(Lock memory lock) internal pure returns (BrokenLineDomain.Line memory) {
         require(lock.dt != 0, "lock is not defined");
-        return BrokenLineDomain.Line(lock.dt, lock.amount, lock.amount / (lock.et - lock.dt));
+        return BrokenLineDomain.Line(lock.dt, lock.amount, lock.amount.div(lock.et - lock.dt));
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
-        return ts / WEEK;
+        return ts.div(WEEK);
     }
 
 }
