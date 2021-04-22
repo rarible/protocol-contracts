@@ -39,14 +39,14 @@ library LibBrokenLine {
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
             uint cliffEnd = line.start.add(cliff).sub(1);
-            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeCast(line.slope));
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(line.slope));
             period = period.add(cliff);
         }
 
-        int mod = safeCast(line.bias.mod(line.slope));
+        int mod = safeInt(line.bias.mod(line.slope));
         uint256 endPeriod = line.start.add(period);
         uint256 endPeriodMinus1 = endPeriod.sub(1);
-        brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeCast(line.slope)).add(mod);
+        brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeInt(line.slope)).add(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
@@ -60,7 +60,7 @@ library LibBrokenLine {
         require(toTime >= time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
-            int newSlope = int(slope).add(brokenLine.slopeChanges[time]);
+            int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
             require (newSlope >= 0, "slope < 0, something wrong with slope");
             slope = uint(newSlope);
             brokenLine.slopeChanges[time] = 0;
@@ -71,7 +71,7 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
-    function safeCast(uint value) internal returns (int result) {
+    function safeInt(uint value) internal returns (int result) {
         result = int(value);
         require(value == uint(result), "int cast error");
     }
