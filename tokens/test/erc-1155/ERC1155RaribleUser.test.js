@@ -10,10 +10,11 @@ contract("ERC1155RaribleUser", accounts => {
   let tokenOwner = accounts[9];
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const name = 'FreeMintable';
+  const whiteListProxy = accounts[5];
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
+    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, {from: tokenOwner});
   });
 
   it("check for ERC165 interface", async () => {
@@ -44,8 +45,6 @@ contract("ERC1155RaribleUser", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
 
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);

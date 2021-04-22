@@ -3,10 +3,14 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "./ERC721Base.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721BurnableUpgradeable.sol";
+import "./ERC721Lazy.sol";
+import "../HasContractURI.sol";
 
-contract ERC721RaribleUser is ERC721Base {
-    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) external initializer {
+contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC721Lazy, HasContractURI {
+
+    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address operator) external initializer {
         _setBaseURI(baseURI);
         __ERC721Lazy_init_unchained();
         __Context_init_unchained();
@@ -17,6 +21,9 @@ contract ERC721RaribleUser is ERC721Base {
         __HasContractURI_init_unchained(contractURI);
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC721_init_unchained(_name, _symbol);
+        if (operator != address(0)) {
+            setApprovalForAll(operator, true);
+        }
     }
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {

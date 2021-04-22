@@ -9,11 +9,12 @@ contract("ERC721RaribleUser", accounts => {
   let tokenOwner = accounts[9];
   const name = 'FreeMintableRarible';
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const whiteListProxy = accounts[5];
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com");
-    await token.transferOwnership(tokenOwner);
+    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", whiteListProxy, { from: tokenOwner });
   });
 
   it("check for ERC165 interface", async () => {
@@ -45,8 +46,6 @@ contract("ERC721RaribleUser", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, creators([minter]), fees, minter);
 
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
@@ -64,8 +63,6 @@ contract("ERC721RaribleUser", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, creators([minter]), fees, minter);
 
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy})
     );
@@ -83,8 +80,6 @@ contract("ERC721RaribleUser", accounts => {
     const signature1 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, minter);
     const signature2 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, creator2);
 
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await token.mintAndTransfer([tokenId, tokenURI, creators([minter, creator2]), fees, [signature1, signature2]], transferTo, {from: whiteListProxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);

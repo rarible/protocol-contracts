@@ -3,6 +3,7 @@ const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const Impl = artifacts.require("ERC721RaribleUser");
 
 const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
+const zeroAddress = "0x0000000000000000000000000000000000000000";
 
 contract("ERC721RaribleUser - upgrade", accounts => {
 	let beacon;
@@ -16,7 +17,7 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 		beacon = await UpgradeableBeacon.new(impl.address);
 		proxy = await BeaconProxy.new(beacon.address, "0x");
 		token = await Impl.at(proxy.address);
-		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", { from: tokenOwner });
+		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", zeroAddress, { from: tokenOwner });
 	})
 
 	it("should work through beacon proxy", async () => {
