@@ -35,17 +35,17 @@ library LibBrokenLine {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
         uint period = line.bias.div(line.slope);
-        uint cliffIndex = line.start.add(cliff).sub(1);
         if (cliff == 0) {
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
-            brokenLine.slopeChanges[cliffIndex] = brokenLine.slopeChanges[cliffIndex].add(int(line.slope));
+            uint cliffEnd = line.start.add(cliff).sub(1);
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(int(line.slope));
             period = period.add(cliff);
         }
 
         uint mod = line.bias.mod(line.slope);
-        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(int(line.slope.sub(mod)).mul(-1));
-        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(int(mod).mul(-1));
+        brokenLine.slopeChanges[line.start.add(period).sub(1)] = brokenLine.slopeChanges[line.start.add(period).sub(1)].add(negate(line.slope.sub(mod)));
+        brokenLine.slopeChanges[line.start.add(period)] = brokenLine.slopeChanges[line.start.add(period)].add(negate(mod));
     }
 
     /**
@@ -58,9 +58,9 @@ library LibBrokenLine {
         require(toTime >= time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
-            int slopeChange = int(slope).add(brokenLine.slopeChanges[time]);
-            require (slopeChange >= 0, "slope < 0, something wrong with slope");
-            slope = uint(slopeChange);
+            int newSlope = int(slope).add(brokenLine.slopeChanges[time]);
+            require (newSlope >= 0, "slope < 0, something wrong with slope");
+            slope = uint(newSlope);
             brokenLine.slopeChanges[time] = 0;
             time = time.add(1);
         }
@@ -69,4 +69,7 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
+    function negate(uint value) pure internal returns (int) {
+        return int(value) * -1;
+    }
 }

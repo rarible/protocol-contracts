@@ -146,6 +146,33 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([5, 0, 0]);
 		});
 
+		it("One line can be added with cliff(2, 1), begin from 0, check change balance for 3 steps!", async () => {
+			await forTest.add([0, 2, 1], 1);
+			await assertCurrent([0, 2, 0]);
+
+			await forTest.update(1);
+			await assertCurrent([1, 2, 1]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 1, 1]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 0, 0]);
+		});
+
+		it("One line can be added with no cliff(2, 1), begin from 0, check change balance for 2 steps!", async () => {
+			await forTest.add([0, 2, 1], 0);
+			await assertCurrent([0, 2, 1]);
+
+			await forTest.update(1);
+			await assertCurrent([1, 1, 1]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 0, 0]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 0, 0]);
+		});
 
 		it("Two line can be added, only one with cliff+tail, no cliff shorter than freeze", async () => {
 			await forTest.add([1, 35, 10], 3);
