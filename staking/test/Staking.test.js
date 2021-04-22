@@ -1,24 +1,29 @@
-//const StakingTest = artifacts.require("StakingTest.sol");
+const StakingTest = artifacts.require("StakingTest.sol");
 const Staking = artifacts.require("Staking.sol");
+const truffleAssert = require('truffle-assertions');
 
 contract("Staking", accounts => {
-//	let forTest;
+	let forTest;
 	let staking;
 
 	beforeEach(async () => {
-//		forTest = await StakingTest.new();
+		forTest = await StakingTest.new();
 		staking = await Staking.new();
 	})
 
 	describe("Check metods Staking()", () => {
 
 		it("Try to createLock()", async () => {
-			let tmp;
-			console.log("before idLock");
-//			tmp  = await staking.createLock(accounts[2], 20, 2678, 0, {from: accounts[2], value: 100, gasPrice: 0});
-			tmp  = await staking.createLock(accounts[2], 20, 2678, 0);
-			console.log("After idLock:"+ JSON.stringify(tmp));
-			//срочно делаем обертку ибо сложно вернуть результат функции
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 20, 2678, 0);
+
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+      let balanseOfValue  = await staking.balanceOf(accounts[2]);
+      assert.equal(idLock, 2);
+      assert.equal(balanseOfValue, 20);
 		});
 
 		it("Should balanceOf()", async () => {

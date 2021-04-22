@@ -46,7 +46,7 @@ contract Staking {
         }
         idLock++;
         userBalances[idLock].add(line);
-//        totalBalances.add(line); //todo убрать комментарий, но иначе не хватает газа
+//        totalBalances.add(line); //todo убрать комментарий, но иначе Error: Returned error: VM Exception while processing transaction: revert
         return idLock;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
