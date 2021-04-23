@@ -16,6 +16,7 @@ contract Staking {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for BrokenLineDomain.BrokenLine;
     uint256 constant WEEK = 604800;                 //seconds one week
+    address public stakingContractAddress = address(this); //адрес для мапы userBalances, куда буду сохранять общий баланс всех users
 
     mapping(address => BrokenLineDomain.BrokenLine) public userBalances; //address - line
     BrokenLineDomain.BrokenLine public totalBalances;
@@ -32,7 +33,8 @@ contract Staking {
         BrokenLineDomain.Line memory line = createLine(blockTime, amount, period);
         idLock++;
         userBalances[account].add(line, cliff);
-//        totalBalances.add(line, cliff); //todo убрать комментарий, но иначе Error: Returned error: VM Exception while processing transaction: revert
+        totalBalances.add(line, cliff); //первый способ сохранить в totalBalance Error: Returned error: VM Exception while processing transaction: revert
+//        userBalances[stakingContractAddress].add(line, cliff); //второй способ сохранить в totalBalance Error: Returned error: VM Exception while processing transaction: revert
         return idLock;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
