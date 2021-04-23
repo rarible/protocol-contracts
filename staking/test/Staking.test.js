@@ -13,25 +13,24 @@ contract("Staking", accounts => {
 
 	describe("Check metods Staking()", () => {
 
-		it("Try to createLock()", async () => {
-			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 20, 2678, 0);
-
+		it("Try to createLock() and check balance", async () => {
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 20, 2, 0);
 			let idLock;
       truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
        	idLock = ev.result;
         return true;
       });
-      let balanseOfValue  = await staking.balanceOf(accounts[2]);
+
+      resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[2]);
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+
       assert.equal(idLock, 2);
-      assert.equal(balanseOfValue, 20);
+      assert.equal(balanceOf, 20);
 		});
-
-		it("Should balanceOf()", async () => {
-			console.log("before balanceOf");
-			let tmp  = await staking.balanceOf(accounts[2]);
-			console.log("After balanceOf:"+ tmp);
-		});
-
 	})
 
 })
