@@ -9,17 +9,17 @@ import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 /**
   * balanceOf(address account) - текущий баланс (сумма всех локов) юзера
   * totalSupply() - общий баланс всех юзеров
-  * createLock(uint value, uint period, uint cliff) - сколько залочим, на какой срок, сколько cliff длиной
+  * createLock(uint value, uint slope, uint cliff) - сколько залочим, со скоростью разлока, сколько cliff длиной
   **/
 
 contract Staking {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for BrokenLineDomain.BrokenLine;
     uint256 constant WEEK = 604800;                 //seconds one week
-    address public stakingContractAddress = address(this); //адрес для мапы userBalances, куда буду сохранять общий баланс всех users
+    uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
 
-    mapping(address => BrokenLineDomain.BrokenLine) public userBalances; //address - line
-    BrokenLineDomain.BrokenLine public totalBalances;
+    mapping(address => BrokenLineDomain.BrokenLine) public userBalances;    //address - line
+    BrokenLineDomain.BrokenLine public totalBalances;                       //total User Balance
     uint public idLock;
 
     constructor() public { //todo сделать, чтобы вызывался единожды!!!
@@ -27,14 +27,13 @@ contract Staking {
         //todo initialize totalBalances
     }
 
-    function createLock(address account, uint amount, uint period, uint cliff) public returns (uint) {
+    function createLock(address account, uint amount, uint slope, uint cliff) public returns (uint) {
         //todo проверки
         uint blockTime = roundTimestamp(block.timestamp);
-        BrokenLineDomain.Line memory line = createLine(blockTime, amount, period);
+        BrokenLineDomain.Line memory line = createLine(blockTime, amount, slope);
         idLock++;
         userBalances[account].add(line, cliff);
-        totalBalances.add(line, cliff); //первый способ сохранить в totalBalance Error: Returned error: VM Exception while processing transaction: revert
-//        userBalances[stakingContractAddress].add(line, cliff); //второй способ сохранить в totalBalance Error: Returned error: VM Exception while processing transaction: revert
+        totalBalances.add(line, cliff);
         return idLock;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
@@ -66,14 +65,13 @@ contract Staking {
 
     }
 
-    function createLine(uint blockTime, uint amount, uint period) internal pure returns (BrokenLineDomain.Line memory) {
-        require(blockTime != 0, "require start deposit time not equal 0");
-        require(period != 0, "require period deposit time not equal 0");
-        return BrokenLineDomain.Line(blockTime, amount, amount.div(period));
+    function createLine(uint blockTime, uint amount, uint slope) internal pure returns (BrokenLineDomain.Line memory) {
+        require(slope != 0, "require slope deposit time not equal 0");
+        return BrokenLineDomain.Line(blockTime, amount, amount.div(slope));
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
-        return ts.div(WEEK);
+        return ts.div(WEEK).sub(STARTING_POINT_WEEK);
     }
 
 }
