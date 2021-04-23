@@ -6,30 +6,18 @@ pragma abicoder v2;
 import "../../contracts/Staking.sol";
 
 contract StakingTest {
-//    Staking public staking;
     event createLockResult(uint result);
+    event balanceOfResult(uint result);
 
-    function _createLock(address staking, address account, uint amount, uint period, uint cliff) external returns (uint) {
+    function _createLock(address staking, address account, uint amount, uint period, uint cliff) external {
         Staking stakingTest = Staking(staking);
         uint result =  stakingTest.createLock(account, amount, period, cliff);
-//        return Staking.createLock(account, amount, period, cliff);
         emit createLockResult(result);
     }
 
-    function _balanceOf(address account) external view returns (uint) {
-//        return staking.balanceOf(account);
-//        return Staking.balanceOf(account);
+    function _balanceOf(address staking, address account) external {
+        Staking stakingTest = Staking(staking);
+        uint result =  stakingTest.balanceOf(account);
+        emit balanceOfResult(result);
     }
-
-//    function sum(uint a, uint b) external view returns (uint) {
-//        return staking.testLibSum(a, b);
-//    }
-
-//    event getRoyaltiesTest(LibPart.Part[] royalties);
-//
-//    function _getRoyalties(address royaltiesTest, address token, uint tokenId) external {
-//        IRoyaltiesProvider withRoyalties = IRoyaltiesProvider(royaltiesTest);
-//        LibPart.Part[] memory royalties =  withRoyalties.getRoyalties(token, tokenId);
-//        emit getRoyaltiesTest(royalties);
-//    }
 }
