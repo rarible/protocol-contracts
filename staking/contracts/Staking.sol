@@ -41,8 +41,12 @@ contract Staking {
         // 2. если добавляем, то
     }
 
-    function totalSupply() public returns (uint){
-
+    function totalSupply() public returns (uint) {
+        if (totalBalances.initial.start == 0) { //no lock
+            return 0;
+        }
+        totalBalances.update(roundTimestamp(block.timestamp));
+        return totalBalances.initial.bias;
     }
 
     function balanceOf(address account) public returns (uint) {
@@ -67,7 +71,7 @@ contract Staking {
 
     function createLine(uint blockTime, uint amount, uint slope) internal pure returns (BrokenLineDomain.Line memory) {
         require(slope != 0, "require slope deposit time not equal 0");
-        return BrokenLineDomain.Line(blockTime, amount, amount.div(slope));
+        return BrokenLineDomain.Line(blockTime, amount, slope);
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
