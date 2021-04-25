@@ -14,7 +14,7 @@ contract("Staking", accounts => {
 	describe("Check metods Staking()", () => {
 
 		it("Try to createLock() and check balance", async () => {
-			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 20, 2, 0);
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 20, 10, 0);
 			let idLock;
       truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
        	idLock = ev.result;
@@ -30,6 +30,18 @@ contract("Staking", accounts => {
 
       assert.equal(idLock, 2);
       assert.equal(balanceOf, 20);
+		});
+
+		it("Try to createLock() and check totalBalance", async () => {
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 30, 10, 0);
+
+			let resultTotalBalance = await forTest._totalSupply(staking.address);
+			let totalBalance;
+      truffleAssert.eventEmitted(resultTotalBalance, 'totalBalanceResult', (ev) => {
+       	totalBalance = ev.result;
+        return true;
+      });
+			assert.equal(totalBalance, 30);
 		});
 	})
 

@@ -8,6 +8,7 @@ import "../../contracts/Staking.sol";
 contract StakingTest {
     event createLockResult(uint result);
     event balanceOfResult(uint result);
+    event totalBalanceResult(uint result);
 
     function _createLock(address staking, address account, uint amount, uint period, uint cliff) external {
         Staking stakingTest = Staking(staking);
@@ -19,5 +20,11 @@ contract StakingTest {
         Staking stakingTest = Staking(staking);
         uint result =  stakingTest.balanceOf(account);
         emit balanceOfResult(result);
+    }
+
+    function _totalSupply(address staking) external {
+        Staking stakingTest = Staking(staking);
+        uint result =  stakingTest.totalSupply();
+        emit totalBalanceResult(result);
     }
 }
