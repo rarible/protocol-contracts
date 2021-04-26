@@ -17,7 +17,7 @@ Main function in the Exchange is matchOrders. It takes two orders (left and righ
 Logically, whole process can be divided into stages:
 
 - order validation (check order parameters are valid and caller is authorized to execute the order)
-- asset mathing (check if assets from left and right order match, extract matching assets)
+- asset matching (check if assets from left and right order match, extract matching assets)
 - calculating fill (finding out what exact values should be filled. orders can be matched partly if one of the sides doesn't want to fill other order fully)
 - order execution (execute transfers, save fill of the orders if needed)
 

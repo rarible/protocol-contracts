@@ -20,7 +20,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     using SafeMathUpgradeable for uint;
 
     uint public protocolFee;
-    IRoyaltiesProvider public royaltiesRegistry;
+    IRoyaltiesProvider public royaltiesRegistry;//todo для него нав-е тоже надо setter, а то для всех полей есть, а для него нет
 
     address public communityWallet;
     mapping(address => address) public walletsForTokens;
@@ -105,8 +105,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
-            }
-            if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            } else if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
@@ -164,6 +163,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         bytes4 transferDirection
     ) internal {
         uint sumBps = 0;
+        //todo что делается с остаточками из-за округлений? например, всего 99. 20% = 19, 80% = 79. в сумме 98 вместо 99. 1 за бортом.
+        //для 1 с 50% и 50% будет 0 и 0. вся сумма за бортом. и т д
         for (uint256 i = 0; i < payouts.length; i++) {
             uint currentAmount = amount.bp(payouts[i].value);
             sumBps += payouts[i].value;

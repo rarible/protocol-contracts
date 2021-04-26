@@ -59,6 +59,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         address msgSender = _msgSender();
         if (msgSender != orderLeft.maker) {
+            //todo если действие выполняет владелец ордера, то не учитываем частичное или полное выполнение ордера которое сейчас выполним?
+            //  он может по этому ордеру скупить все что найдет с удовлетворяющей ценой без ограничения по количеству и ордер еще останется для дальнейших таких манипуляций
+            //  а если он не хочет этим пользоваться, то нужно отдельной операцией отменять ордер? он отменится полностью. а может нужно было частично примениться как по правильному
             fills[leftOrderKeyHash] = leftOrderFill + fill.takeValue;
         }
         if (msgSender != orderRight.maker) {
@@ -73,7 +76,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(msg.sender).transferEth(msg.value - totalMakeValue);
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(makeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
+//            require(makeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);//todo это не нужно проверять. с этим условием вошли в первую ветку if
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
                 address(msg.sender).transferEth(msg.value - totalTakeValue);

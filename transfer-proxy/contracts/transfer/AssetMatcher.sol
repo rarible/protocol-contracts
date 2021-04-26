@@ -20,9 +20,15 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
     }
 
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) internal view returns (LibAsset.AssetType memory) {
+        //todo matchAssetOneSide симметричная в большей своей части. большого смысла полностью прогонять справа налево, если слева направо не прошло, нет. проверки проходят те же самые лишний раз. этого можно избежать
+        //  предлагаю вынести несимметричное отдельно и только его прогонять в обратную сторону. сократится много действий
         LibAsset.AssetType memory result = matchAssetOneSide(leftAssetType, rightAssetType);
-        if (result.assetClass == 0) {
-            return matchAssetOneSide(rightAssetType, leftAssetType);
+        if (result.assetClass != 0) {
+            return result;
+        }
+        LibAsset.AssetType memory resultByMatcher = matchAssetOneSideByMatcher(leftAssetType, rightAssetType);
+        if (resultByMatcher.assetClass == 0) {
+            return resultByMatcher(rightAssetType, leftAssetType);
         } else {
             return result;
         }
@@ -67,16 +73,20 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
             }
             return LibAsset.AssetType(0, EMPTY);
         }
-        address matcher = matchers[classLeft];
-        if (matcher != address(0)) {
-            return IAssetMatcher(matcher).matchAssets(leftAssetType, rightAssetType);
-        }
         if (classLeft == classRight) {
             bytes32 leftHash = keccak256(leftAssetType.data);
             bytes32 rightHash = keccak256(rightAssetType.data);
             if (leftHash == rightHash) {
                 return leftAssetType;
             }
+        }
+        return LibAsset.AssetType(0, EMPTY);
+    }
+
+    function matchAssetOneSideByMatcher(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {
+        address matcher = matchers[classLeft];
+        if (matcher != address(0)) {
+            return IAssetMatcher(matcher).matchAssets(leftAssetType, rightAssetType);
         }
         revert("not found IAssetMatcher");
     }
