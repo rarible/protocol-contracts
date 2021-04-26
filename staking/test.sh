@@ -2,4 +2,6 @@
 truffle test \
         ./test/Staking.test.js \
         ./contracts/Staking.sol \
-        ./test/contracts/StakingTest.sol
+        ./test/contracts/StakingTest.sol \
+        ./test/contracts/TestERC20.sol \
+        ./test/contracts/ERC20TransferProxyTest.sol
