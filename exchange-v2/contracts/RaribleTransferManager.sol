@@ -47,6 +47,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         walletsForTokens[token] = wallet;
     }
 
+    //todo лучше назвать getProtocolFeeReceiver
     function getFeeReceiver(address token) internal view returns (address) {
         address wallet = walletsForTokens[token];
         if (wallet != address(0)) {
@@ -85,11 +86,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
+        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);//todo protocolFee можно не передавать параметром (сделать как в transferProtocolFee)
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection);
+        rest = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
+        rest = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
         transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
     }
 
@@ -122,28 +123,23 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address from,
         bytes4 transferDirection
     ) internal returns (uint restValue){
-        restValue = rest;
         if (matchNft.assetClass != LibAsset.ERC1155_ASSET_CLASS && matchNft.assetClass != LibAsset.ERC721_ASSET_CLASS) {
-            return restValue;
+            return rest;
         }
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
-        for (uint256 i = 0; i < fees.length; i++) {
-            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
-            restValue = newRestValue;
-            if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, transferDirection, ROYALTY);
-            }
-        }
+        //todo так уходит дубль функционала по перечислению активов на массив адресов с %
+        return transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
     }
 
-    function transferOrigins(
+    function transferFees(
         LibAsset.AssetType memory matchCalculate,
         uint rest,
         uint amount,
         LibPart.Part[] memory originFees,
         address from,
-        bytes4 transferDirection
+        bytes4 transferDirection,
+        bytes4 transferType
     ) internal returns (uint restValue) {
         restValue = rest;
         for (uint256 i = 0; i < originFees.length; i++) {

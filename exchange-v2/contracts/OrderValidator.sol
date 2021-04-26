@@ -13,7 +13,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
     using ECDSAUpgradeable for bytes32;
     using AddressUpgradeable for address;
 
-    bytes4 constant internal MAGICVALUE = 0x1626ba7e;
+    bytes4 constant internal MAGICVALUE = 0x1626ba7e;//todo может везде назвать MAGIC_VALUE ?
 
     function __OrderValidator_init_unchained() internal initializer {
         __EIP712_init_unchained("Exchange", "2");
@@ -25,7 +25,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
             if (order.maker.isContract()) {
                 require(
                     ERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
-                    "signature verification error"
+                    "contract signature verification error"
                 );
             } else {
                 require(
