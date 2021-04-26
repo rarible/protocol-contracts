@@ -14,7 +14,7 @@ contract TestERC1155WithRoyaltiesV2_InterfaceError is Initializable, AbstractRoy
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees, uint amount) external {
         _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
         _mint(to, tokenId, amount, "");
-        _saveFees(tokenId, _fees);
+        _saveRoyalties(tokenId, _fees);
     }
 
     function getRoyalties(uint256) override external pure returns (LibPart.Part[] memory) {

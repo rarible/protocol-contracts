@@ -14,6 +14,6 @@ contract TestERC721WithRoyaltiesV1 is Initializable, RoyaltiesV1Impl, ERC721Upgr
     }
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees) external {
         _mint(to, tokenId);
-        _saveFees(tokenId, _fees);
+        _saveRoyalties(tokenId, _fees);
     }
 }
