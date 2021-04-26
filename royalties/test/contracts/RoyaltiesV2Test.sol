@@ -6,16 +6,16 @@ pragma abicoder v2;
 import "../../contracts/RoyaltiesV2.sol";
 
 contract RoyaltiesV2Test {
-    RoyaltiesV2 immutable fees;
+    RoyaltiesV2 immutable royalties;
 
-    constructor(RoyaltiesV2 _fees) {
-        fees = _fees;
+    constructor(RoyaltiesV2 _royalties) {
+        royalties = _royalties;
     }
 
     event Test(address account, uint value);
 
-    function feesTest(uint id) public {
-        LibPart.Part[] memory result = fees.getRoyalties(id);
+    function royaltiesTest(uint id) public {
+        LibPart.Part[] memory result = royalties.getRoyalties(id);
 
         for (uint i = 0; i < result.length; i++) {
             emit Test(result[i].account, result[i].value);
