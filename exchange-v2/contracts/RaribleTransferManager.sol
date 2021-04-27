@@ -22,37 +22,41 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
-    address public communityWallet;
-    mapping(address => address) public walletsForTokens;
+    address public defaultFeeReceiver;
+    mapping(address => address) public feeReceivers;
 
     function __RaribleTransferManager_init_unchained(
         uint newProtocolFee,
-        address newCommunityWallet,
+        address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
         protocolFee = newProtocolFee;
-        communityWallet = newCommunityWallet;
+        defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
+    }
+
+    function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
+        royaltiesRegistry = newRoyaltiesRegistry;
     }
 
     function setProtocolFee(uint newProtocolFee) external onlyOwner {
         protocolFee = newProtocolFee;
     }
 
-    function setCommunityWallet(address payable newCommunityWallet) external onlyOwner {
-        communityWallet = newCommunityWallet;
+    function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {
+        defaultFeeReceiver = newDefaultFeeReceiver;
     }
 
-    function setWalletForToken(address token, address wallet) external onlyOwner {
-        walletsForTokens[token] = wallet;
+    function setFeeReceiver(address token, address wallet) external onlyOwner {
+        feeReceivers[token] = wallet;
     }
 
     function getFeeReceiver(address token) internal view returns (address) {
-        address wallet = walletsForTokens[token];
+        address wallet = feeReceivers[token];
         if (wallet != address(0)) {
             return wallet;
         }
-        return communityWallet;
+        return defaultFeeReceiver;
     }
 
     function doTransfers(
