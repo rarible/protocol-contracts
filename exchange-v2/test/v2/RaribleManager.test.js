@@ -58,9 +58,9 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 		/*ERC1155*/
 		erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
-		await testing.setWalletForToken(t1.address, protocol);//
+		await testing.setFeeReceiver(t1.address, protocol);//
     /*ETH*/
-    await testing.setWalletForToken(eth, protocol);//
+    await testing.setFeeReceiver(eth, protocol);//
     /*NFT 721 RoyalitiesV1*/
     erc721V1 = await ERC721_V1.new("Rarible", "RARI", "https://ipfs.rarible.com");
     await erc721V1.initialize();
@@ -133,6 +133,51 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
+		it("Transfer from ERC1155 to ERC1155: 2 to 10, 50% 50% for payouts", async () => {
+			const { left, right } = await prepare1155_1155Orders();
+
+			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [2, 10], left, right);
+
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 98);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId2), 0);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId2), 90);
+
+			assert.equal(await erc1155.balanceOf(accounts[3], erc1155TokenId2), 5);
+			assert.equal(await erc1155.balanceOf(accounts[5], erc1155TokenId2), 5);
+			assert.equal(await erc1155.balanceOf(accounts[4], erc1155TokenId1), 1);
+			assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 1);
+		});
+
+		async function prepare1155_1155Orders() {
+			await erc1155.mint(accounts[1], erc1155TokenId1, 100);
+			await erc1155.mint(accounts[2], erc1155TokenId2, 100);
+			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+			let encDataLeft = await encDataV1([ [[accounts[3], 5000], [accounts[5], 5000]], []]);
+			let encDataRight = await encDataV1([ [[accounts[4], 5000], [accounts[6], 5000]], []]);
+			const left = Order(accounts[1], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 2), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 10), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 10), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 2), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+			return { left, right }
+		}
+
+		it("rounding error Transfer from ERC1155 to ERC1155: 1 to 5, 50% 50% for payouts", async () => {
+			const { left, right } = await prepare1155_1155Orders();
+
+			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 5], left, right);
+
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 99);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId2), 0);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId2), 95);
+
+			assert.equal(await erc1155.balanceOf(accounts[3], erc1155TokenId2), 2);
+			assert.equal(await erc1155.balanceOf(accounts[5], erc1155TokenId2), 3);
+			assert.equal(await erc1155.balanceOf(accounts[4], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 1);
+			assert.equal(await erc1155.balanceOf(community, erc1155TokenId1), 0);
+		});
+
     it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepare1155O_721rders(105)
 
@@ -150,7 +195,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await erc721.mint(accounts[2], erc721TokenId1);
 			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
 			await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
-			await testing.setWalletForToken(erc1155.address, protocol);
+			await testing.setFeeReceiver(erc1155.address, protocol);
 			const left = Order(accounts[1], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right =Order(accounts[2], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, "0xffffffff", "0x");
 			return { left, right }

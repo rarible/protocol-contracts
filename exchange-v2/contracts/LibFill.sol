@@ -32,10 +32,10 @@ library LibFill {
         if (rightTakeValue > leftMakeValue) { //2nd: left order should be fully filled
             return fillLeft(leftMakeValue, leftTakeValue, rightOrder.makeAsset.value, rightOrder.takeAsset.value);
         }
-        return fillBoth(leftMakeValue, leftTakeValue, rightTakeValue);
+        return fillBoth(leftMakeValue, leftTakeValue);
     }
 
-    function fillBoth(uint leftMakeValue, uint leftTakeValue, uint rightTakeValue) internal pure returns (FillResult memory result) {
+    function fillBoth(uint leftMakeValue, uint leftTakeValue) internal pure returns (FillResult memory result) {
         return FillResult(leftMakeValue, leftTakeValue);
     }
 

@@ -57,7 +57,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibFill.FillResult memory fill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
         require(fill.takeValue > 0, "nothing to fill");
 
-        address msgSender = _msgSender();
         if (orderLeft.salt != 0) {
             fills[leftOrderKeyHash] = leftOrderFill + fill.takeValue;
         }

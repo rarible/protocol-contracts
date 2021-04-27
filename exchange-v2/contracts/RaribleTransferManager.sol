@@ -92,8 +92,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        rest = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection);
-        rest = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection);
+        rest = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
+        rest = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
         transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
     }
 
@@ -125,36 +125,30 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint amount,
         address from,
         bytes4 transferDirection
-    ) internal returns (uint restValue){
-        restValue = rest;
+    ) internal returns (uint) {
         if (matchNft.assetClass != LibAsset.ERC1155_ASSET_CLASS && matchNft.assetClass != LibAsset.ERC721_ASSET_CLASS) {
-            return restValue;
+            return rest;
         }
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
-        for (uint256 i = 0; i < fees.length; i++) {
-            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
-            restValue = newRestValue;
-            if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, transferDirection, ROYALTY);
-            }
-        }
+        return transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
     }
 
     function transferFees(
         LibAsset.AssetType memory matchCalculate,
         uint rest,
         uint amount,
-        LibPart.Part[] memory originFees,
+        LibPart.Part[] memory fees,
         address from,
-        bytes4 transferDirection
+        bytes4 transferDirection,
+        bytes4 transferType
     ) internal returns (uint restValue) {
         restValue = rest;
-        for (uint256 i = 0; i < originFees.length; i++) {
-            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i].value);
+        for (uint256 i = 0; i < fees.length; i++) {
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  originFees[i].account, transferDirection, ORIGIN);
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  fees[i].account, transferDirection, transferType);
             }
         }
     }
@@ -167,14 +161,19 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         bytes4 transferDirection
     ) internal {
         uint sumBps = 0;
-        for (uint256 i = 0; i < payouts.length; i++) {
+        uint restValue = amount;
+        for (uint256 i = 0; i < payouts.length - 1; i++) {
             uint currentAmount = amount.bp(payouts[i].value);
             sumBps += payouts[i].value;
             if (currentAmount > 0) {
+                restValue = restValue.sub(currentAmount);
                 transfer(LibAsset.Asset(matchCalculate, currentAmount), from, payouts[i].account, transferDirection, PAYOUT);
             }
         }
+        LibPart.Part memory lastPayout = payouts[payouts.length - 1];
+        sumBps += lastPayout.value;
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
+        transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
     }
 
     function calculateTotalAmount(
