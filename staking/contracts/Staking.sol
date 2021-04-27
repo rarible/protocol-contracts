@@ -19,6 +19,7 @@ contract Staking {
     uint256 constant WEEK = 604800;                 //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
     ERC20Upgradeable public token;
+    address deposite;
 
     struct Lock {
         uint dt; //deposit time
@@ -32,8 +33,9 @@ contract Staking {
     address[] usersAccounts;
     uint public idLock;
 
-    constructor(ERC20Upgradeable _token) public {
+    constructor(ERC20Upgradeable _token, address _deposite) public {
         token = _token;
+        deposite = _deposite;
         idLock = 1;
         //todo initialize totalBalances
     }
@@ -49,7 +51,7 @@ contract Staking {
         userBalances[account].add(line, cliff);
         totalBalances.add(line, cliff);
         usersLock[account] = Lock(blockTime, amount, blockTime + period);
-        require(token.transferFrom(account, address(this), amount), "Transfer unsuccessfull");
+        require(token.transferFrom(account, deposite, amount), "Transfer unsuccessfull");
         return idLock;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет

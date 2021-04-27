@@ -1,31 +1,27 @@
 const StakingTest = artifacts.require("StakingTest.sol");
 const Staking = artifacts.require("Staking.sol");
 const ERC20 = artifacts.require("TestERC20.sol");
-const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const truffleAssert = require('truffle-assertions');
 
 contract("Staking", accounts => {
 	let forTest;
 	let staking;
 	let token;
-	let erc20TransferProxy;
+	let deposite;
 
 	beforeEach(async () => {
+		deposite = accounts[1];
 		forTest = await StakingTest.new();
-		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		token = await ERC20.new();
 		await token.mint(accounts[2], 100);
-		await token.approve(erc20TransferProxy.address, 1000, { from: accounts[2] });
-		staking = await Staking.new(token.address);
+		resultApprove = await token.approve(accounts[2], 1000000, { from: accounts[2] });
+		staking = await Staking.new(token.address, deposite);
 	})
 
 	describe("Check metods Staking()", () => {
 
 		it("Try to createLock() and check balance", async () => {
-//			await token.mint(accounts[2], 100);
-//			await token.approve(staking.address, 100);
-//			await token.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
-			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 20, 2, 0);
+			rezultLock  = await forTest._createLock(staking.address, accounts[2], 20, 2, 0);
 			let idLock;
       truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
        	idLock = ev.result;
