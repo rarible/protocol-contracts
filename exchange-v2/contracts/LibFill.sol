@@ -19,7 +19,7 @@ library LibFill {
      * @param leftOrder left order
      * @param rightOrder right order
      * @param leftOrderFill current fill of the left order (0 if order is unfilled)
-     * @param rightOrderFill current fille of the right order (0 if order is unfilled)
+     * @param rightOrderFill current fill of the right order (0 if order is unfilled)
      */
     function fillOrder(LibOrder.Order memory leftOrder, LibOrder.Order memory rightOrder, uint leftOrderFill, uint rightOrderFill) internal pure returns (FillResult memory) {
         (uint leftMakeValue, uint leftTakeValue) = LibOrder.calculateRemaining(leftOrder, leftOrderFill);
