@@ -4,7 +4,8 @@ pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 
 /**
@@ -18,7 +19,8 @@ contract Staking {
     using LibBrokenLine for BrokenLineDomain.BrokenLine;
     uint256 constant WEEK = 604800;                 //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
-    ERC20Upgradeable public token;
+    IERC20Upgradeable public token;
+    IERC20TransferProxy public proxy;
     address deposite;
 
     struct Lock {
@@ -29,15 +31,15 @@ contract Staking {
 
     mapping(address => BrokenLineDomain.BrokenLine) public userBalances;    //address - line
     BrokenLineDomain.BrokenLine public totalBalances;                       //total User Balance
-    mapping (address => Lock) usersLock;                                     //idLock - Lock
-    address[] usersAccounts;
+    mapping (address => Lock) usersLock;                                    //address - Lock
+    address[] usersAccounts;                                                //all user accounts
     uint public idLock;
 
-    constructor(ERC20Upgradeable _token, address _deposite) public {
+    constructor(IERC20Upgradeable _token, IERC20TransferProxy _proxy, address _deposite) public {
         token = _token;
+        proxy = _proxy;
         deposite = _deposite;
         idLock = 1;
-        //todo initialize totalBalances
     }
 
     function createLock(address account, uint amount, uint period, uint cliff) public returns (uint) {
@@ -51,7 +53,7 @@ contract Staking {
         userBalances[account].add(line, cliff);
         totalBalances.add(line, cliff);
         usersLock[account] = Lock(blockTime, amount, blockTime + period);
-        require(token.transferFrom(account, deposite, amount), "Transfer unsuccessfull");
+        proxy.erc20safeTransferFrom(token, account, deposite, amount);
         return idLock;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
@@ -88,7 +90,7 @@ contract Staking {
             userBalances[usersAccounts[i]].update(roundTimestamp(block.timestamp));
             uint balanceDiff = usersLock[usersAccounts[i]].amount - userBalances[usersAccounts[i]].initial.bias;
             if (balanceDiff > 0) {
-                require(token.transferFrom(address(this), usersAccounts[i], balanceDiff), "Transfer unsuccessfull");
+                proxy.erc20safeTransferFrom(token, deposite, usersAccounts[i], balanceDiff);
             }
         }
     }
