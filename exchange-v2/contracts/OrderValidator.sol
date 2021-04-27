@@ -25,12 +25,12 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
             if (order.maker.isContract()) {
                 require(
                     ERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
-                    "contract signature verification error"
+                    "contract order signature verification error"
                 );
             } else {
                 require(
                     _hashTypedDataV4(hash).recover(signature) == order.maker,
-                    "signature verification error"
+                    "order signature verification error"
                 );
             }
         }
