@@ -48,7 +48,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             }
 
             _saveSupply(data.tokenId, data.supply);
-            _saveFees(data.tokenId, data.royalties);
+            _saveRoyalties(data.tokenId, data.royalties);
             _saveCreators(data.tokenId, data.creators);
             _setTokenURI(data.tokenId, data.uri);
         }

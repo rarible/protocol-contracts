@@ -35,7 +35,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
         _mint(to, data.tokenId);
         _setTokenURI(data.tokenId, data.uri);
-        _saveFees(data.tokenId, data.royalties);
+        _saveRoyalties(data.tokenId, data.royalties);
         LibPart.Part[] storage creators = creators[data.tokenId];
         //todo check sum is 10000
         for(uint i=0; i < data.creators.length; i++) {

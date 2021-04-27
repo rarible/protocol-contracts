@@ -14,7 +14,7 @@ contract TestERC721WithRoyaltiesV1_InterfaceError is Initializable, AbstractRoya
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees) external {
         _registerInterface(LibRoyaltiesV1._INTERFACE_ID_FEES);
         _mint(to, tokenId);
-        _saveFees(tokenId, _fees);
+        _saveRoyalties(tokenId, _fees);
     }
 
     function getFeeRecipients(uint256) public override pure returns (address payable[] memory) {
