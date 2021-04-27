@@ -92,8 +92,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection);
-        rest = transferOrigins(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection);
+        rest = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection);
+        rest = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection);
         transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
     }
 
@@ -109,8 +109,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
-            }
-            if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            } else  if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
@@ -142,7 +141,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    function transferOrigins(
+    function transferFees(
         LibAsset.AssetType memory matchCalculate,
         uint rest,
         uint amount,
