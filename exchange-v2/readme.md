@@ -29,7 +29,7 @@ Logically, whole process can be divided into stages:
 - `Asset` leftAsset (see [LibAsset](../asset/contracts/LibAsset.md))
 - `address` taker (can be zero address)
 - `Asset` rightAsset (see [LibAsset](../asset/contracts/LibAsset.md))
-- `uint` salt - random number to distinguish different maker's Orders
+- `uint` salt - random number to distinguish different maker's Orders (if salt = 0, then transaction should be executed by order.maker. then fill of the order is not saved)
 - `uint` start - Order can't be matched before this date (optional)
 - `uint` end - Order can't be matched after this date (optional)
 - `bytes4` dataType - type of data, usually hash of some string, e.g.: "v1", "v2" (see more [here](./contracts/LibOrderData.md))

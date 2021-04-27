@@ -58,10 +58,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         require(fill.takeValue > 0, "nothing to fill");
 
         address msgSender = _msgSender();
-        if (msgSender != orderLeft.maker) {
+        if (orderLeft.salt != 0) {
             fills[leftOrderKeyHash] = leftOrderFill + fill.takeValue;
         }
-        if (msgSender != orderRight.maker) {
+        if (orderRight.salt != 0) {
             fills[rightOrderKeyHash] = rightOrderFill + fill.makeValue;
         }
 

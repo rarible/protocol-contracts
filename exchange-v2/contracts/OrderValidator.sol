@@ -20,18 +20,22 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
     }
 
     function validate(LibOrder.Order memory order, bytes memory signature) internal view {
-        if (_msgSender() != order.maker) {
-            bytes32 hash = LibOrder.hash(order);
-            if (order.maker.isContract()) {
-                require(
-                    ERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
-                    "contract order signature verification error"
-                );
-            } else {
-                require(
-                    _hashTypedDataV4(hash).recover(signature) == order.maker,
-                    "order signature verification error"
-                );
+        if (order.salt == 0) {
+            require(_msgSender() == order.maker);
+        } else {
+            if (_msgSender() != order.maker) {
+                bytes32 hash = LibOrder.hash(order);
+                if (order.maker.isContract()) {
+                    require(
+                        ERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
+                        "contract order signature verification error"
+                    );
+                } else {
+                    require(
+                        _hashTypedDataV4(hash).recover(signature) == order.maker,
+                        "order signature verification error"
+                    );
+                }
             }
         }
     }
