@@ -117,7 +117,6 @@ contract("ExchangeSimpleV2", accounts => {
 			right.takeAsset.value = 50;
 
 			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
-			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
 
 			await expectThrow(
 				testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] })
