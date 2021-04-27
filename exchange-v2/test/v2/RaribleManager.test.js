@@ -133,7 +133,58 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right }
 		}
 
-    it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
+		it("Transfer from ERC1155 to ERC1155: 2 to 10, 50% 50% for payouts", async () => {
+			const { left, right } = await prepare1155_1155Orders();
+
+			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [2, 10], left, right);
+
+			//todo тут все ок. хотя если payouts будут 20% к 80% то тоже потеряется 1 из 2х экземпляров
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 98);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId2), 0);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId2), 90);
+
+			assert.equal(await erc1155.balanceOf(accounts[3], erc1155TokenId2), 5);
+			assert.equal(await erc1155.balanceOf(accounts[5], erc1155TokenId2), 5);
+			assert.equal(await erc1155.balanceOf(accounts[4], erc1155TokenId1), 1);
+			assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 1);
+		});
+
+		async function prepare1155_1155Orders() {
+			await erc1155.mint(accounts[1], erc1155TokenId1, 100);
+			await erc1155.mint(accounts[2], erc1155TokenId2, 100);
+			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+			await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+			let encDataLeft = await encDataV1([ [[accounts[3], 5000], [accounts[5], 5000]], []]);
+			let encDataRight = await encDataV1([ [[accounts[4], 5000], [accounts[6], 5000]], []]);
+			const left = Order(accounts[1], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 2), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 10), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 10), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 2), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+			return { left, right }
+		}
+
+		it("rounding error Transfer from ERC1155 to ERC1155: 1 to 5, 50% 50% for payouts", async () => {
+			const { left, right } = await prepare1155_1155Orders();
+
+			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 5], left, right);
+
+			//todo меняем 1 к 5. (один ордер 2:10, второй 5:1 - fill 1:5)
+			//по payouts всё хотели делить 50% на 50%
+			//т к 5 не делится пополам, то по payouts переводится по 2, 1 остается на балансе
+			//т к 1 не делится пополам, то вообще ничего не переводится, т к по 0 достается в payouts
+			//в итоге обмен произошел 0 на 4, т е просто так отдали 4 единицы, не отдавая что-то взамен
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 100);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId2), 0);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId2), 96);
+
+			assert.equal(await erc1155.balanceOf(accounts[3], erc1155TokenId2), 2);
+			assert.equal(await erc1155.balanceOf(accounts[5], erc1155TokenId2), 2);
+			assert.equal(await erc1155.balanceOf(accounts[4], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 0);
+			assert.equal(await erc1155.balanceOf(community, erc1155TokenId1), 0);
+		});
+
+    it("Transfer from ERC1155 to ERC721, (buyerFee3%, sellerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sellerFee3%)", async () => {
 			const { left, right } = await prepare1155O_721rders(105)
 
 			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);

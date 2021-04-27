@@ -54,6 +54,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
         uint leftOrderFill = fills[leftOrderKeyHash];
         uint rightOrderFill = fills[rightOrderKeyHash];
+        //todo тут путаница в терминологии. до этого fill - это то чем уже заполнены. далее fill - это сколько будем дозаполнять
+        //вроде там и там логично что это fill названо, но получается, что одним словом два разных понятия названы.
+        //когда читаешь задаешься вопросом: зачем вычислять fill если уже есть fill? а нет, это разные fill, а в каком месте заканчивается по первому понятию и где начинается по второму?
         LibFill.FillResult memory fill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
         require(fill.takeValue > 0, "nothing to fill");
 
