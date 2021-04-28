@@ -41,6 +41,8 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         for(uint i=0; i < data.creators.length; i++) {
             creators.push(data.creators[i]);
         }
+
+        emit Mint(data.tokenId, data.uri, creators);
     }
 
     function updateAccount(uint256 _id, address _from, address _to) external {

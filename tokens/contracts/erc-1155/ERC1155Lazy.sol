@@ -54,6 +54,8 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         }
 
         _mint(to, data.tokenId, _amount, "");
+
+        emit Mint(data.tokenId, data.uri, data.creators, data.supply);
     }
 
     function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override {
