@@ -14,7 +14,7 @@ contract Migrations {
         _;
     }
 
-    function setCompleted(uint completed) public restricted {
+    function setCompleted(uint completed) external restricted {
         last_completed_migration = completed;
     }
 }

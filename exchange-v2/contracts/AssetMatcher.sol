@@ -14,7 +14,7 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
 
     event MatcherChange(bytes4 indexed assetType, address matcher);
 
-    function setAssetMatcher(bytes4 assetType, address matcher) public onlyOwner {
+    function setAssetMatcher(bytes4 assetType, address matcher) external onlyOwner {
         matchers[assetType] = matcher;
         emit MatcherChange(assetType, matcher);
     }

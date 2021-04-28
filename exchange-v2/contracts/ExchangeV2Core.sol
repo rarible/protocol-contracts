@@ -17,6 +17,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     uint256 private constant UINT256_MAX = 2 ** 256 - 1;
 
+    //заполнение ордеров с правой стороны - со стороны take. ключ - хэш ордера
     //state of the orders
     mapping(bytes32 => uint) public fills;
 
@@ -24,7 +25,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Cancel(bytes32 hash);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill);
 
-    function cancel(LibOrder.Order memory order) public {
+    function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         bytes32 orderKeyHash = LibOrder.hashKey(order);
         fills[orderKeyHash] = UINT256_MAX;
@@ -36,7 +37,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes memory signatureLeft,
         LibOrder.Order memory orderRight,
         bytes memory signatureRight
-    ) public payable {
+    ) external payable {
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
