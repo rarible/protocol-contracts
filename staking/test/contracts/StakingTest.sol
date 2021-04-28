@@ -16,9 +16,9 @@ contract StakingTest {
         emit createLockResult(result);
     }
 
-    function _balanceOf(address staking, address account) external {
+    function _userSypply(address staking, address account) external {
         Staking stakingTest = Staking(staking);
-        uint result =  stakingTest.balanceOf(account);
+        uint result =  stakingTest.userSypply(account);
         emit balanceOfResult(result);
     }
 
