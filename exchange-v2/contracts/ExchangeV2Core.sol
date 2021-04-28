@@ -60,14 +60,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibFill.FillResult memory fill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
         require(fill.takeValue > 0, "nothing to fill");
 
-        address msgSender = _msgSender();
-        if (msgSender != orderLeft.maker) {
-            //todo если действие выполняет владелец ордера, то не учитываем частичное или полное выполнение ордера которое сейчас выполним?
-            //  он может по этому ордеру скупить все что найдет с удовлетворяющей ценой без ограничения по количеству и ордер еще останется для дальнейших таких манипуляций
-            //  а если он не хочет этим пользоваться, то нужно отдельной операцией отменять ордер? он отменится полностью. а может нужно было частично примениться как по правильному
+        if (orderLeft.salt != 0) {
             fills[leftOrderKeyHash] = leftOrderFill + fill.takeValue;
         }
-        if (msgSender != orderRight.maker) {
+        if (orderRight.salt != 0) {
             fills[rightOrderKeyHash] = rightOrderFill + fill.makeValue;
         }
 

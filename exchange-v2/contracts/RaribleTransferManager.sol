@@ -22,38 +22,42 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;//todo для него нав-е тоже надо setter, а то для всех полей есть, а для него нет
 
-    address public communityWallet;
-    mapping(address => address) public walletsForTokens;
+    address public defaultFeeReceiver;
+    mapping(address => address) public feeReceivers;
 
     function __RaribleTransferManager_init_unchained(
         uint newProtocolFee,
-        address newCommunityWallet,
+        address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
         protocolFee = newProtocolFee;
-        communityWallet = newCommunityWallet;
+        defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
+    }
+
+    function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
+        royaltiesRegistry = newRoyaltiesRegistry;
     }
 
     function setProtocolFee(uint newProtocolFee) external onlyOwner {
         protocolFee = newProtocolFee;
     }
 
-    function setCommunityWallet(address payable newCommunityWallet) external onlyOwner {
-        communityWallet = newCommunityWallet;
+    function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {
+        defaultFeeReceiver = newDefaultFeeReceiver;
     }
 
-    function setWalletForToken(address token, address wallet) external onlyOwner {
-        walletsForTokens[token] = wallet;
+    function setFeeReceiver(address token, address wallet) external onlyOwner {
+        feeReceivers[token] = wallet;
     }
 
     //todo лучше назвать getProtocolFeeReceiver
     function getFeeReceiver(address token) internal view returns (address) {
-        address wallet = walletsForTokens[token];
+        address wallet = feeReceivers[token];
         if (wallet != address(0)) {
             return wallet;
         }
-        return communityWallet;
+        return defaultFeeReceiver;
     }
 
     function doTransfers(
@@ -106,7 +110,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
-            } else if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            } else  if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
@@ -122,13 +126,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint amount,
         address from,
         bytes4 transferDirection
-    ) internal returns (uint restValue){
+    ) internal returns (uint) {
         if (matchNft.assetClass != LibAsset.ERC1155_ASSET_CLASS && matchNft.assetClass != LibAsset.ERC721_ASSET_CLASS) {
             return rest;
         }
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
-        //todo так уходит дубль функционала по перечислению активов на массив адресов с %
         return transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
     }
 
@@ -136,17 +139,17 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchCalculate,
         uint rest,
         uint amount,
-        LibPart.Part[] memory originFees,
+        LibPart.Part[] memory fees,
         address from,
         bytes4 transferDirection,
         bytes4 transferType
     ) internal returns (uint restValue) {
         restValue = rest;
-        for (uint256 i = 0; i < originFees.length; i++) {
-            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  originFees[i].value);
+        for (uint256 i = 0; i < fees.length; i++) {
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  originFees[i].account, transferDirection, ORIGIN);
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  fees[i].account, transferDirection, transferType);
             }
         }
     }
@@ -159,16 +162,19 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         bytes4 transferDirection
     ) internal {
         uint sumBps = 0;
-        //todo что делается с остаточками из-за округлений? например, всего 99. 20% = 19, 80% = 79. в сумме 98 вместо 99. 1 за бортом.
-        //для 1 с 50% и 50% будет 0 и 0. вся сумма за бортом. и т д
-        for (uint256 i = 0; i < payouts.length; i++) {
+        uint restValue = amount;
+        for (uint256 i = 0; i < payouts.length - 1; i++) {
             uint currentAmount = amount.bp(payouts[i].value);
             sumBps += payouts[i].value;
             if (currentAmount > 0) {
+                restValue = restValue.sub(currentAmount);
                 transfer(LibAsset.Asset(matchCalculate, currentAmount), from, payouts[i].account, transferDirection, PAYOUT);
             }
         }
+        LibPart.Part memory lastPayout = payouts[payouts.length - 1];
+        sumBps += lastPayout.value;
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
+        transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
     }
 
     function calculateTotalAmount(

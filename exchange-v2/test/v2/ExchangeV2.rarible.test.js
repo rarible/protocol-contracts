@@ -46,8 +46,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
     /*ETH*/
-    await testing.setWalletForToken(eth, protocol);
-    await testing.setWalletForToken(t1.address, protocol);
+    await testing.setFeeReceiver(eth, protocol);
+    await testing.setFeeReceiver(t1.address, protocol);
  		/*ERC721 */
  		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 		/*ERC1155V2*/
