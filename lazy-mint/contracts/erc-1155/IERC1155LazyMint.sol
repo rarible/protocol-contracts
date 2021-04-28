@@ -12,7 +12,7 @@ interface IERC1155LazyMint is IERC1155Upgradeable {
         uint tokenId,
         string uri,
         LibPart.Part[] creators,
-        uint value
+        uint256 value
     );
 
     function mintAndTransfer(
