@@ -26,17 +26,10 @@ library LibFill {
         (uint rightMakeValue, uint rightTakeValue) = LibOrder.calculateRemaining(rightOrder, rightOrderFill);
 
         //We have 3 cases here:
-        if (leftTakeValue > rightMakeValue) { //1st: right order should be fully filled
-            return fillRight(leftOrder.makeAsset.value, leftOrder.takeAsset.value, rightMakeValue, rightTakeValue);
-        }
-        if (rightTakeValue > leftMakeValue) { //2nd: left order should be fully filled
+        if (rightTakeValue > leftMakeValue) { //1nd: left order should be fully filled
             return fillLeft(leftMakeValue, leftTakeValue, rightOrder.makeAsset.value, rightOrder.takeAsset.value);
-        }
-        return fillBoth(leftMakeValue, leftTakeValue);
-    }
-
-    function fillBoth(uint leftMakeValue, uint leftTakeValue) internal pure returns (FillResult memory result) {
-        return FillResult(leftMakeValue, leftTakeValue);
+        }//2st: right order should be fully filled or 3d: both should be fully filled if required values are the same
+        return fillRight(leftOrder.makeAsset.value, leftOrder.takeAsset.value, rightMakeValue, rightTakeValue);
     }
 
     function fillRight(uint leftMakeValue, uint leftTakeValue, uint rightMakeValue, uint rightTakeValue) internal pure returns (FillResult memory result) {
