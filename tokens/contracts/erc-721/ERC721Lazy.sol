@@ -18,6 +18,18 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         _registerInterface(0x8486f69f);
     }
 
+    function transferFromOrMint(
+        LibERC721LazyMint.Mint721Data memory data,
+        address from,
+        address to
+    ) override external {
+        if (_exists(data.tokenId)) {
+            safeTransferFrom(from, to, data.tokenId);
+        } else {
+            mintAndTransfer(data, to);
+        }
+    }
+
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();

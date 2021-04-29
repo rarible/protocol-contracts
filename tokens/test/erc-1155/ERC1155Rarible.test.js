@@ -77,6 +77,7 @@ contract("ERC1155Rarible", accounts => {
 
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    assert.equal(await token.balanceOf(minter, tokenId), 0);
   });
 
   it("mint and transfer by minter several creators", async () => {
@@ -110,6 +111,35 @@ contract("ERC1155Rarible", accounts => {
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     await checkCreators(tokenId, [minter]);
+  });
+
+  it("transferFromOrMint by minter", async () => {
+    let minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+    let supply = 5;
+    let mint = 2;
+
+		assert.equal(await token.balanceOf(minter, tokenId), 0);
+    await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter});
+    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    assert.equal(await token.balanceOf(minter, tokenId), 0);
+    await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter});
+    await expectThrow(
+    	token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter})
+    )
+
+    assert.equal(await token.balanceOf(transferTo, tokenId), mint * 2);
+    await checkCreators(tokenId, [minter]);
+
+    await expectThrow(
+    	token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, minter, 1, { from: minter })
+    )
+
+    await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, minter, 1, { from: transferTo })
+    assert.equal(await token.balanceOf(minter, tokenId), 1);
   });
 
   it("mint and transfer by approved proxy for all by minter", async () => {

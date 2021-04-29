@@ -185,6 +185,50 @@ contract("ERC721Rarible", accounts => {
     assert.equal(await token.ownerOf(tokenId), transferTo);
   });
 
+  it("transferFromOrMint from minter. not yet minted", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    await token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter});
+
+    assert.equal(await token.ownerOf(tokenId), transferTo);
+  });
+
+  it("transferFromOrMint from minter. already minted", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+		await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, {from: minter});
+    await token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter});
+    await expectThrow(
+    	token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter})
+    )
+
+    assert.equal(await token.ownerOf(tokenId), transferTo);
+  });
+
+  it("transferFromOrMint when not minter. not yet minted", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+		await expectThrow(
+			token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: transferTo})
+		);
+    await token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter});
+    await token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, accounts[5], {from: transferTo});
+
+    assert.equal(await token.ownerOf(tokenId), accounts[5]);
+  });
+
   it("mint and transfer to self by minter", async () => {
     const minter = accounts[1];
     let transferTo = minter;
