@@ -18,4 +18,10 @@ interface IERC721LazyMint is IERC721Upgradeable {
         LibERC721LazyMint.Mint721Data memory data,
         address to
     ) external;
+
+    function transferFromOrMint(
+        LibERC721LazyMint.Mint721Data memory data,
+        address from,
+        address to
+    ) external;
 }
