@@ -28,7 +28,7 @@ contract("Staking", accounts => {
         return true;
       });
 
-      resultBalanseOfValue  = await forTest._userSypply(staking.address, accounts[2]);
+      resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[2]);
       let balanceOf;
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
