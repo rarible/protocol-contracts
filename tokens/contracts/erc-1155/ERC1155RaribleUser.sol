@@ -38,12 +38,12 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
         symbol = _symbol;
     }
 
-    function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
-        ERC1155Lazy._mint(account, id, amount, data);
+    function _mint(address account, uint256 tokenId, uint256 amount, bytes memory data) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
+        ERC1155Lazy._mint(account, tokenId, amount, data);
     }
 
-    function uri(uint id) external view override(ERC1155BaseURI, ERC1155Upgradeable) virtual returns (string memory) {
-        return _tokenURI(id);
+    function uri(uint tokenId) external view override(ERC1155BaseURI, ERC1155Upgradeable) virtual returns (string memory) {
+        return _tokenURI(tokenId);
     }
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override {
