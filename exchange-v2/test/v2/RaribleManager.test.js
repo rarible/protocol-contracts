@@ -115,6 +115,10 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			assert.equal(await erc721.balanceOf(accounts[2]), 1);
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 93);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 1);
+			assert.equal(await erc1155.balanceOf(accounts[4], erc1155TokenId1), 2);
+			assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 4);
+			assert.equal(await erc1155.balanceOf(accounts[3], erc1155TokenId1), 1);
+			assert.equal(await erc1155.balanceOf(accounts[5], erc1155TokenId1), 3);
 			assert.equal(await erc1155.balanceOf(community, erc1155TokenId1), 6);
 		})
 

@@ -43,6 +43,30 @@ contract("LibOrder", accounts => {
 		);
 	});
 
+	it("should throw if can't calculate with good precision. almost full", async () => {
+		const make = order.Asset("0x00000000", "0x", 100);
+		const take = order.Asset("0x00000000", "0x", 199);
+		await expectThrow(
+			lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 198)
+		);
+	});
+
+  it("should throw if can't calculate with good precision. almost empty", async () => {
+    const make = order.Asset("0x00000000", "0x", 100);
+    const take = order.Asset("0x00000000", "0x", 200);
+    await expectThrow(
+      lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 1)
+    );
+  });
+
+	it("filling without error", async () => {
+		const make = order.Asset("0x00000000", "0x", 100);
+		const take = order.Asset("0x00000000", "0x", 200);
+		const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 2);
+		assert.equal(result[0], 99);
+		assert.equal(result[1], 198);
+	});
+
 	describe("validate", () => {
 		const testAsset = order.Asset("0x00000000", "0x", 100);
 
