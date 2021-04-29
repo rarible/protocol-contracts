@@ -2,12 +2,20 @@ const StakingTest = artifacts.require("StakingTest.sol");
 const Staking = artifacts.require("Staking.sol");
 const ERC20 = artifacts.require("TestERC20.sol");
 const truffleAssert = require('truffle-assertions');
+const tests = require("@daonomic/tests-common");
+const increaseTime = tests.increaseTime;
 
 contract("Staking", accounts => {
 	let forTest;
 	let staking;
 	let token;
 	let deposite;
+
+	const DAY = 86400;
+ 	const WEEK = DAY * 7;
+ 	const MONTH = WEEK * 4;
+ 	const YEAR = DAY * 365;
+
 
 	beforeEach(async () => {
 		deposite = accounts[1];
@@ -57,15 +65,51 @@ contract("Staking", accounts => {
 			assert.equal(totalBalance, 30);
 		});
 
-//		it("Try to createLock() and check withdraw()", async () => {
-//			await token.mint(accounts[2], 100);
-//   		await token.approve(staking.address, 1000000, { from: accounts[2] });
-//
-//			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 30, 3, 0);
-//			staking.withdraw();
-// 			assert.equal(await token.balanceOf(staking.address), 30);				//balance Lock on deposite
-//   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
-//		});
+		it("Try to createLock() and check withdraw()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 30, 10, 0);
+			/*3 week later*/
+			await increaseTime(WEEK * 3);
+			staking.withdraw({ from: accounts[2] });
+ 			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+   		/*one week later*/
+			await increaseTime(WEEK);
+			staking.withdraw({ from: accounts[2] });
+ 			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock ondeposite
+   		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+		});
+
+		it("Try to createLock() and check withdraw(), with cliff", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 30, 10, 3);
+			/*3 week later nothing change, because cliff */
+			await increaseTime(WEEK * 3);
+			staking.withdraw({ from: accounts[2] });
+ 			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
+   		/*one week later*/
+			await increaseTime(WEEK);
+			staking.withdraw({ from: accounts[2] });
+ 			assert.equal(await token.balanceOf(staking.address), 20);	//balance Lock ondeposite
+   		assert.equal(await token.balanceOf(accounts[2]), 80);			//tail user balance
+		});
+
+		it("Try to createLock() and check withdraw(), from another account, no changes", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+
+			rezultLock  = await forTest._createLock(staking.address ,accounts[2], 30, 10, 0);
+			/*one week later*/
+			await increaseTime(WEEK);
+			staking.withdraw({ from: accounts[3] });
+ 			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
+		});
 	})
 
 })

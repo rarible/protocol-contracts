@@ -24,10 +24,10 @@ contract Staking {
     struct Locks {
         BrokenLineDomain.BrokenLine balance;   //line of stRari balance
         BrokenLineDomain.BrokenLine locked;    //locked amount (RARI)
-        uint amount;                           //user Balanse in erc20
+        uint amount;                           //user RARI (lockedAmount+ amountready for transferBack)
     }
 
-    mapping (address => Locks) locks;        //address User - Lock
+    mapping (address => Locks) locks;                   //address User - Lock
     BrokenLineDomain.BrokenLine public totalSupplyLine; //total stRARI balance
 
     constructor(ERC20Upgradeable _token) public {
@@ -37,7 +37,6 @@ contract Staking {
     function createLock(address account, uint amount, uint slope, uint cliff) public {
         //todo проверки
         uint blockTime = roundTimestamp(block.timestamp);
-        uint period = amount/slope;
         BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
         BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
 
@@ -69,12 +68,11 @@ contract Staking {
     }
 
     function withdraw() public  {
-        address account = msg.sender;
-        locks[account].balance.update(roundTimestamp(block.timestamp));
-        uint value = locks[account].amount - locks[account].balance.initial.bias;
+        locks[msg.sender].balance.update(roundTimestamp(block.timestamp));
+        uint value = locks[msg.sender].amount - locks[msg.sender].balance.initial.bias;
         if (value > 0) {
-            locks[account].amount -= value;
-            require(token.transferFrom(address(this), account, value), "failure while transferring");
+            locks[msg.sender].amount -= value;
+            require(token.transfer(msg.sender, value), "failure while transferring");
         }
         //todo Lock delete
     }
