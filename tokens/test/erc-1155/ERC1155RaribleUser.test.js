@@ -14,7 +14,7 @@ contract("ERC1155RaribleUser", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, {from: tokenOwner});
+    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], {from: tokenOwner});
   });
 
   it("check for ERC165 interface", async () => {

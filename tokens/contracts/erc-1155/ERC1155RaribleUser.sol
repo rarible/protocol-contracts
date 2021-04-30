@@ -15,7 +15,7 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
     string public name;
     string public symbol;
 
-    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address operator) external initializer {
+    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external initializer {
         __Ownable_init_unchained();
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();
@@ -27,8 +27,8 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC1155RaribleUser_init_unchained(_name, _symbol);
         _setBaseURI(baseURI);
-        if (operator != address(0)) {
-            setApprovalForAll(operator, true);
+        for(uint i = 0; i < operators.length; i++) {
+            setApprovalForAll(operators[i], true);
         }
         emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
     }
