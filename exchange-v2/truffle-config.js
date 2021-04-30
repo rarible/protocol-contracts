@@ -37,7 +37,7 @@ function createProvider(address, key, url) {
 
 module.exports = {
 	api_keys: {
-      etherscan: apiKey
+    etherscan: apiKey
   },
 
 	plugins: [
