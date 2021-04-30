@@ -7,12 +7,6 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 
-/**
-  * balanceOf(address account) - текущий баланс (сумма всех локов) юзера
-  * totalSupply() - общий баланс всех юзеров
-  * createLock(uint value, uint slope, uint cliff) - сколько залочим, со скоростью разлока, сколько cliff длиной
-  **/
-
 contract Staking {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for BrokenLineDomain.BrokenLine;
@@ -43,7 +37,7 @@ contract Staking {
         totalSupplyLine.add(line, cliff);
         locks[account].balance.add(line, cliff);
         locks[account].locked.add(lineLocked, cliff);
-        locks[account].amount += amount;
+        locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
@@ -69,9 +63,9 @@ contract Staking {
 
     function withdraw() public  {
         locks[msg.sender].balance.update(roundTimestamp(block.timestamp));
-        uint value = locks[msg.sender].amount - locks[msg.sender].balance.initial.bias;
+        uint value = locks[msg.sender].amount.sub(locks[msg.sender].balance.initial.bias);
         if (value > 0) {
-            locks[msg.sender].amount -= value;
+            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "failure while transferring");
         }
         //todo Lock delete
