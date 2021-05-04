@@ -8,6 +8,11 @@ const rinkeby = {
 	erc1155LazyMintTransferProxy: "0x7c4B13B5893cD82f371c5e28f12FB2F37542BbC5",
 	transferProxy: "0x7d47126a2600E22eab9eD6CF0e515678727779A6"
 }
+const e2e = {
+	erc721LazyMintTransferProxy: "0xe853B9994304264ff418b818A8D23FD39e8DABe6",
+	erc1155LazyMintTransferProxy: "0x6E605A7d1FD15e9087f0756ab57E0ED99735a7a7",
+	transferProxy: "0x66611f8d97688a0af08d4337d7846efec6995d58"
+}
 const def = {
 	erc721LazyMintTransferProxy: "0x0000000000000000000000000000000000000000",
 	erc1155LazyMintTransferProxy: "0x0000000000000000000000000000000000000000",
@@ -16,7 +21,9 @@ const def = {
 let settings = {
 	"default": def,
 	"rinkeby": rinkeby,
-	"rinkeby-fork": rinkeby
+	"rinkeby-fork": rinkeby,
+	"e2e": e2e,
+	"e2e-fork": e2e
 };
 
 function getSettings(network) {
