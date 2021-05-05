@@ -1,4 +1,5 @@
 const BrokenLineTest = artifacts.require("BrokenLineTest.sol");
+const truffleAssert = require('truffle-assertions');
 const { expectThrow } = require("@daonomic/tests-common");
 contract("BrokenLine", accounts => {
 	let forTest;
@@ -342,5 +343,86 @@ contract("BrokenLine", accounts => {
     		forTest.update(2)
     	);
 		});
+	})
+
+	describe("Check changes", () => {
+		it("One line. cliff = 0  change period from 10 to 20 ", async () => {
+			await forTest.add([1, 100, 10], 0);
+			await assertCurrent([1, 100, 10]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 90, 10]);
+
+			rezultChangePeriod = await forTest.changePeriodTest([1, 100, 10], 0, 20, 6);
+			let newSlope;
+      truffleAssert.eventEmitted(rezultChangePeriod, 'changePeriodResult', (ev) => {
+       	newSlope = ev.result;
+        return true;
+      });
+      assert.equal(newSlope, 5);
+
+//			await forTest.update(6); comment for understand, what happens on changePeriodTest()
+//			await assertCurrent([6, 50, 10]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 45, 5]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 40, 5]);
+
+			await forTest.update(10);
+			await assertCurrent([10, 30, 5]);
+
+			await forTest.update(15);
+			await assertCurrent([15, 5, 5]);
+
+			await forTest.update(16);
+			await assertCurrent([16, 0, 0]);
+
+			await forTest.update(17);
+			await assertCurrent([17, 0, 0]);
+
+		})
+
+		it("One line. cliff = 3  change period from 2 to 5, step = 2 ", async () => {
+			await forTest.add([1, 40, 20], 3);
+			await assertCurrent([1, 40, 0]);
+
+//			await forTest.update(2);
+//			await assertCurrent([2, 30, 0]);
+
+			rezultChangePeriod = await forTest.changePeriodTest([1, 40, 20], 3, 5, 2);
+			let newSlope;
+      truffleAssert.eventEmitted(rezultChangePeriod, 'changePeriodResult', (ev) => {
+       	newSlope = ev.result;
+        return true;
+      });
+      assert.equal(newSlope, 8);
+
+			await forTest.update(3);
+			await assertCurrent([3, 40, 0]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 40, 8]);
+
+			await forTest.update(5);
+			await assertCurrent([5, 32, 8]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 24, 8]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 16, 8]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 8, 8]);
+
+			await forTest.update(9);
+			await assertCurrent([9, 0, 0]);
+//
+//			await forTest.update(10);
+//			await assertCurrent([10, 0, 0]);
+		})
+
 	})
 })
