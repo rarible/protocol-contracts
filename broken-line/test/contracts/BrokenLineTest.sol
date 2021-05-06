@@ -7,7 +7,6 @@ import "../../contracts/LibBrokenLine.sol";
 
 contract BrokenLineTest is BrokenLineDomain {
     using LibBrokenLine for BrokenLine;
-    event changePeriodResult(uint result);
     event changeAmountResult(uint result);
     BrokenLine public brokenLine;
 
@@ -23,9 +22,8 @@ contract BrokenLineTest is BrokenLineDomain {
         return brokenLine.initial;
     }
 
-    function changePeriodTest(BrokenLineDomain.Line memory oldLine, uint cliff, uint newPeriod, uint toTime) public {
-        uint result = brokenLine.changePeriod(oldLine, cliff, newPeriod, toTime);
-        emit changePeriodResult(result);
+    function changePeriodTest(BrokenLineDomain.Line memory oldLine, uint cliff, uint newSlope, uint toTime) public {
+        return brokenLine.changeSlope(oldLine, cliff, newSlope, toTime);
     }
 
     function changeAmountTest(BrokenLineDomain.Line memory oldLine, uint cliff, uint newAmount, uint toTime) public {

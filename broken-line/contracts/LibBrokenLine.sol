@@ -50,15 +50,18 @@ library LibBrokenLine {
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
-    /*newPeriod  - период новый*/
-    function changePeriod(
+    /*newSlope  - новый Slope установить*/
+    function changeSlope(
         BrokenLineDomain.BrokenLine storage brokenLine,
         BrokenLineDomain.Line memory oldLine,
         uint cliff,
-        uint newPeriod,
+        uint newSlope,
         uint toTime)
-    internal returns (uint){
+    internal {
         update(brokenLine, toTime);
+        if (brokenLine.initial.bias == 0) {
+            return;
+        }
         /*удалить, а на самом деле компенсировать старое*/
         uint oldPeriod = oldLine.bias.div(oldLine.slope);
         int mod = safeInt(oldLine.bias.mod(oldLine.slope));
@@ -66,22 +69,21 @@ library LibBrokenLine {
         brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].add(safeInt(oldLine.slope)).sub(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].add(mod);
         /*вычислить новый slope and tail*/
-        uint newSlope = oldLine.bias.div(newPeriod);
         mod = safeInt(brokenLine.initial.bias.mod(newSlope)); //при новомSlope, tail вычисляю из текущего bias
         /*вычислим точку завершения клифа*/
         uint cliffEnd = oldLine.start.add(cliff).sub(1);
-        if (cliffEnd >= toTime){ //если клиф не завершен
+        if (cliffEnd >= toTime) { //если клиф не завершен
+            uint newPeriod = brokenLine.initial.bias.div(newSlope);
             endPeriod = oldLine.start.add(newPeriod).add(cliff);//определим конечную точку
-            /*в точке завершения клифа компенсировать изменение клифа на дельту = старыйКлиф-новыйКлиф*/
+            /*в точке завершения клифа компенсировать изменение slope на дельту = старыйSlope-новыйSlope*/
             brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].sub(safeInt(oldLine.slope.sub(newSlope)));
-        } else{ //клиф кончился
+        } else { //клиф кончился
             endPeriod = (brokenLine.initial.bias.div(newSlope)).add(toTime);//определим конечную точку
             /*изменим сам slope на дельту = старыйSlope-новыйSlope*/
             brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(safeInt(oldLine.slope.sub(newSlope))));
         }
         brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].sub(safeInt(newSlope)).add(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
-        return newSlope;
     }
 
     /*newAmount  - amount изменился на величину*/
