@@ -7,7 +7,6 @@ import "../../contracts/LibBrokenLine.sol";
 
 contract BrokenLineTest is BrokenLineDomain {
     using LibBrokenLine for BrokenLine;
-    event changeAmountResult(uint result);
     BrokenLine public brokenLine;
 
     function add(Line memory line, uint cliff) public {
@@ -27,7 +26,6 @@ contract BrokenLineTest is BrokenLineDomain {
     }
 
     function changeAmountTest(BrokenLineDomain.Line memory oldLine, uint cliff, uint newAmount, uint toTime) public {
-        uint result = brokenLine.changeAmount(oldLine, cliff, newAmount, toTime);
-        emit changeAmountResult(result);
+        return brokenLine.changeAmount(oldLine, cliff, newAmount, toTime);
     }
 }
