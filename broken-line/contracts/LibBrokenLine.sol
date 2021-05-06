@@ -67,7 +67,7 @@ library LibBrokenLine {
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].add(mod);
         /*вычислить новый slope and tail*/
         uint newSlope = oldLine.bias.div(newPeriod);
-        mod = safeInt(oldLine.bias.mod(newSlope));
+        mod = safeInt(brokenLine.initial.bias.mod(newSlope)); //при новомSlope, tail вычисляю из текущего bias
         /*вычислим точку завершения клифа*/
         uint cliffEnd = oldLine.start.add(cliff).sub(1);
         if (cliffEnd >= toTime){ //если клиф не завершен
@@ -81,7 +81,6 @@ library LibBrokenLine {
         }
         brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].sub(safeInt(newSlope)).add(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
-
         return newSlope;
     }
 
