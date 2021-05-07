@@ -466,7 +466,7 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check changes Amount", () => {
-		it("One line. cliff = 0  change amount from 10 to 5 ", async () => {
+		it("One line. cliff = 0  change amount, from 50 to 75  slope works,", async () => {
 			await forTest.add([1, 100, 10], 0);
 			await assertCurrent([1, 100, 10]);
 
@@ -492,8 +492,34 @@ contract("BrokenLine", accounts => {
 
 			await forTest.update(11);
 			await assertCurrent([11, 0, 0]);
+		})
+
+		it("One line. cliff = 3  change amount from 40 to 60, week = 2 (in cliff) ", async () => {
+			await forTest.add([1, 40, 20], 3);
+			await assertCurrent([1, 40, 0]);
+
+//			await forTest.update(2);
+//			await assertCurrent([2, 30, 0]);
+
+			await forTest.changeAmountTest([1, 40, 20], 3, 20, 2);
+
+			await forTest.update(3);
+			await assertCurrent([3, 60, 0]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 60, 30]);
+
+			await forTest.update(5);
+			await assertCurrent([5, 30, 30]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 0, 0]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
 
 		})
+
 
 	})
 })
