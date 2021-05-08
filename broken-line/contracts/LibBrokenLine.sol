@@ -59,7 +59,8 @@ library LibBrokenLine {
         uint toTime)
     internal {
         update(brokenLine, toTime);
-        if (brokenLine.initial.bias == 0) {
+        if ((brokenLine.initial.bias == 0) || (brokenLine.initial.slope < newSlope) || (oldLine.slope < newSlope) ||
+            (brokenLine.initial.slope < oldLine.slope.sub(newSlope))) {
             return;
         }
         /*удалить, а на самом деле компенсировать старое*/
@@ -86,6 +87,24 @@ library LibBrokenLine {
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
+    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint j = _i;
+        uint len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint k = len - 1;
+        while (_i != 0) {
+            bstr[k--] = byte(uint8(48 + _i % 10));
+            _i /= 10;
+        }
+        return string(bstr);
+    }
     /*newAmount  - новый amount установить*/
     function changeAmount(
         BrokenLineDomain.BrokenLine storage brokenLine,
@@ -99,7 +118,7 @@ library LibBrokenLine {
         uint period = oldLine.bias.div(oldLine.slope);
         int mod = safeInt(oldLine.bias.mod(oldLine.slope));
         uint256 endPeriod = oldLine.start.add(period).add(cliff);
-        if (endPeriod < toTime) {
+        if (toTime >= endPeriod) {
             return;
         }
         brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].add(safeInt(oldLine.slope)).sub(mod);
