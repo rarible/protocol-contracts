@@ -1,0 +1,935 @@
+{
+  "contractName": "TestERC1271",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "ERC1271_INTERFACE_ID",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "ERC1271_RETURN_INVALID_SIGNATURE",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "ERC1271_RETURN_VALID_SIGNATURE",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "name": "setReturnSuccessfulValidSignature",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_hash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_signature",
+          "type": "bytes"
+        }
+      ],
+      "name": "isValidSignature",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"ERC1271_INTERFACE_ID\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERC1271_RETURN_INVALID_SIGNATURE\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ERC1271_RETURN_VALID_SIGNATURE\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_hash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"_signature\",\"type\":\"bytes\"}],\"name\":\"isValidSignature\",\"outputs\":[{\"internalType\":\"bytes4\",\"name\":\"\",\"type\":\"bytes4\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"value\",\"type\":\"bool\"}],\"name\":\"setReturnSuccessfulValidSignature\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"isValidSignature(bytes32,bytes)\":{\"details\":\"Function must be implemented by deriving contract\",\"params\":{\"_hash\":\"Arbitrary length data signed on the behalf of address(this)\",\"_signature\":\"Signature byte array associated with _data\"},\"returns\":{\"_0\":\"A bytes4 magic value 0x1626ba7e if the signature check passes, 0x00000000 if not MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5) MUST allow external calls\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/TestERC1271.sol\":\"TestERC1271\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/ERC1271.sol\":{\"keccak256\":\"0x20b428f91fe470d6cb890b1734b4769281da2e31076063b985eeb21b94067692\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://eb16e4b1427f78d3c19316bb34861cddb0a32e18c1fbc84ee57b46bb3a28845e\",\"dweb:/ipfs/QmexpPMPDcxYuAHzaXrFnYbPV9bb6zfFFarhWLKoa1YvS6\"]},\"/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/TestERC1271.sol\":{\"keccak256\":\"0xac3881db13a7bb15d40234ab0a2538a1978b81d3ce3cdfd9eda357a3aa94b13e\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d854b7b17b57c5cf2255ed3fb9fdfbcf2c55a77ce237f3f4d0ea2fbce28b69f0\",\"dweb:/ipfs/QmYmbMfKBP4rFTeYsM2BFEuMAaRU9tKNjdKF5fLbZ8s8Kd\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506102db806100206000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c806311a5e4091461005c5780631626ba7e146100995780631ce30181146101915780639890cdca146101ce578063a85a89f81461020b575b600080fd5b61006461023b565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b61015c600480360360408110156100af57600080fd5b8101908080359060200190929190803590602001906401000000008111156100d657600080fd5b8201836020820111156100e857600080fd5b8035906020019184600183028401116401000000008311171561010a57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f820116905080830192505050505050509192919290505050610246565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b610199610276565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b6101d661027e565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b6102396004803603602081101561022157600080fd5b81019080803515159060200190929190505050610289565b005b63fb855dc960e01b81565b60008060009054906101000a900460ff1661026557600060e01b61026e565b631626ba7e60e01b5b905092915050565b600060e01b81565b631626ba7e60e01b81565b806000806101000a81548160ff0219169083151502179055505056fea264697066735822122042b07029b7a1f3062d62f3340aea67ba4152306106e84f9322f8258d9fba0cde64736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100575760003560e01c806311a5e4091461005c5780631626ba7e146100995780631ce30181146101915780639890cdca146101ce578063a85a89f81461020b575b600080fd5b61006461023b565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b61015c600480360360408110156100af57600080fd5b8101908080359060200190929190803590602001906401000000008111156100d657600080fd5b8201836020820111156100e857600080fd5b8035906020019184600183028401116401000000008311171561010a57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f820116905080830192505050505050509192919290505050610246565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b610199610276565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b6101d661027e565b60405180827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916815260200191505060405180910390f35b6102396004803603602081101561022157600080fd5b81019080803515159060200190929190505050610289565b005b63fb855dc960e01b81565b60008060009054906101000a900460ff1661026557600060e01b61026e565b631626ba7e60e01b5b905092915050565b600060e01b81565b631626ba7e60e01b81565b806000806101000a81548160ff0219169083151502179055505056fea264697066735822122042b07029b7a1f3062d62f3340aea67ba4152306106e84f9322f8258d9fba0cde64736f6c63430007060033",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "91:440:2:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "91:440:2:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;98:56:0;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;303:226:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;269:68:0;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;195;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;180:117:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;98:56:0;144:10;98:56;;;:::o;303:226:2:-;399:6;424:30;;;;;;;;;;;:98;;327:10:0;490:32:2;;424:98;;;253:10:0;457:30:2;;424:98;417:105;;303:226;;;;:::o;269:68:0:-;327:10;269:68;;;:::o;195:::-;253:10;195:68;;;:::o;180:117:2:-;285:5;252:30;;:38;;;;;;;;;;;;;;;;;;180:117;:::o",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity >=0.6.2 <0.8.0;\n\nimport \"./ERC1271.sol\";\n\ncontract TestERC1271 is ERC1271 {\n\n    bool private returnSuccessfulValidSignature;\n\n    function setReturnSuccessfulValidSignature(bool value) public {\n        returnSuccessfulValidSignature = value;\n    }\n\n    function isValidSignature(bytes32 _hash, bytes memory _signature) public override view returns (bytes4) {\n        return returnSuccessfulValidSignature ? ERC1271_RETURN_VALID_SIGNATURE : ERC1271_RETURN_INVALID_SIGNATURE;\n    }\n}",
+  "sourcePath": "/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/TestERC1271.sol",
+  "ast": {
+    "absolutePath": "/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/TestERC1271.sol",
+    "exportedSymbols": {
+      "ERC1271": [
+        34
+      ],
+      "TestERC1271": [
+        102
+      ]
+    },
+    "id": 103,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 70,
+        "literals": [
+          "solidity",
+          ">=",
+          "0.6",
+          ".2",
+          "<",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:31:2"
+      },
+      {
+        "absolutePath": "/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/ERC1271.sol",
+        "file": "./ERC1271.sol",
+        "id": 71,
+        "nodeType": "ImportDirective",
+        "scope": 103,
+        "sourceUnit": 35,
+        "src": "66:23:2",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 72,
+              "name": "ERC1271",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 34,
+              "src": "115:7:2",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_ERC1271_$34",
+                "typeString": "contract ERC1271"
+              }
+            },
+            "id": 73,
+            "nodeType": "InheritanceSpecifier",
+            "src": "115:7:2"
+          }
+        ],
+        "contractDependencies": [
+          34
+        ],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 102,
+        "linearizedBaseContracts": [
+          102,
+          34
+        ],
+        "name": "TestERC1271",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 75,
+            "mutability": "mutable",
+            "name": "returnSuccessfulValidSignature",
+            "nodeType": "VariableDeclaration",
+            "scope": 102,
+            "src": "130:43:2",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bool",
+              "typeString": "bool"
+            },
+            "typeName": {
+              "id": 74,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "130:4:2",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            },
+            "visibility": "private"
+          },
+          {
+            "body": {
+              "id": 84,
+              "nodeType": "Block",
+              "src": "242:55:2",
+              "statements": [
+                {
+                  "expression": {
+                    "id": 82,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 80,
+                      "name": "returnSuccessfulValidSignature",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 75,
+                      "src": "252:30:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 81,
+                      "name": "value",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 77,
+                      "src": "285:5:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "src": "252:38:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 83,
+                  "nodeType": "ExpressionStatement",
+                  "src": "252:38:2"
+                }
+              ]
+            },
+            "functionSelector": "a85a89f8",
+            "id": 85,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "setReturnSuccessfulValidSignature",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 78,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 77,
+                  "mutability": "mutable",
+                  "name": "value",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 85,
+                  "src": "223:10:2",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 76,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "223:4:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "222:12:2"
+            },
+            "returnParameters": {
+              "id": 79,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "242:0:2"
+            },
+            "scope": 102,
+            "src": "180:117:2",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "baseFunctions": [
+              20
+            ],
+            "body": {
+              "id": 100,
+              "nodeType": "Block",
+              "src": "407:122:2",
+              "statements": [
+                {
+                  "expression": {
+                    "condition": {
+                      "id": 95,
+                      "name": "returnSuccessfulValidSignature",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 75,
+                      "src": "424:30:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "falseExpression": {
+                      "id": 97,
+                      "name": "ERC1271_RETURN_INVALID_SIGNATURE",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 10,
+                      "src": "490:32:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes4",
+                        "typeString": "bytes4"
+                      }
+                    },
+                    "id": 98,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "Conditional",
+                    "src": "424:98:2",
+                    "trueExpression": {
+                      "id": 96,
+                      "name": "ERC1271_RETURN_VALID_SIGNATURE",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 7,
+                      "src": "457:30:2",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes4",
+                        "typeString": "bytes4"
+                      }
+                    },
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes4",
+                      "typeString": "bytes4"
+                    }
+                  },
+                  "functionReturnParameters": 94,
+                  "id": 99,
+                  "nodeType": "Return",
+                  "src": "417:105:2"
+                }
+              ]
+            },
+            "functionSelector": "1626ba7e",
+            "id": 101,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "isValidSignature",
+            "nodeType": "FunctionDefinition",
+            "overrides": {
+              "id": 91,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "376:8:2"
+            },
+            "parameters": {
+              "id": 90,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 87,
+                  "mutability": "mutable",
+                  "name": "_hash",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 101,
+                  "src": "329:13:2",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 86,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "329:7:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 89,
+                  "mutability": "mutable",
+                  "name": "_signature",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 101,
+                  "src": "344:23:2",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes_memory_ptr",
+                    "typeString": "bytes"
+                  },
+                  "typeName": {
+                    "id": 88,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "344:5:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "328:40:2"
+            },
+            "returnParameters": {
+              "id": 94,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 93,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 101,
+                  "src": "399:6:2",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes4",
+                    "typeString": "bytes4"
+                  },
+                  "typeName": {
+                    "id": 92,
+                    "name": "bytes4",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "399:6:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes4",
+                      "typeString": "bytes4"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "398:8:2"
+            },
+            "scope": 102,
+            "src": "303:226:2",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 103,
+        "src": "91:440:2"
+      }
+    ],
+    "src": "33:498:2"
+  },
+  "legacyAST": {
+    "attributes": {
+      "absolutePath": "/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/TestERC1271.sol",
+      "exportedSymbols": {
+        "ERC1271": [
+          34
+        ],
+        "TestERC1271": [
+          102
+        ]
+      },
+      "license": "MIT"
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            ">=",
+            "0.6",
+            ".2",
+            "<",
+            "0.8",
+            ".0"
+          ]
+        },
+        "id": 70,
+        "name": "PragmaDirective",
+        "src": "33:31:2"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 35,
+          "absolutePath": "/home/quadro/Projects/rarible/protocol-contracts/tokens-test/contracts/ERC1271.sol",
+          "file": "./ERC1271.sol",
+          "scope": 103,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 71,
+        "name": "ImportDirective",
+        "src": "66:23:2"
+      },
+      {
+        "attributes": {
+          "abstract": false,
+          "contractDependencies": [
+            34
+          ],
+          "contractKind": "contract",
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            102,
+            34
+          ],
+          "name": "TestERC1271",
+          "scope": 103
+        },
+        "children": [
+          {
+            "attributes": {},
+            "children": [
+              {
+                "attributes": {
+                  "name": "ERC1271",
+                  "referencedDeclaration": 34,
+                  "type": "contract ERC1271"
+                },
+                "id": 72,
+                "name": "UserDefinedTypeName",
+                "src": "115:7:2"
+              }
+            ],
+            "id": 73,
+            "name": "InheritanceSpecifier",
+            "src": "115:7:2"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "mutability": "mutable",
+              "name": "returnSuccessfulValidSignature",
+              "scope": 102,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "bool",
+              "visibility": "private"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "bool",
+                  "type": "bool"
+                },
+                "id": 74,
+                "name": "ElementaryTypeName",
+                "src": "130:4:2"
+              }
+            ],
+            "id": 75,
+            "name": "VariableDeclaration",
+            "src": "130:43:2"
+          },
+          {
+            "attributes": {
+              "functionSelector": "a85a89f8",
+              "implemented": true,
+              "isConstructor": false,
+              "kind": "function",
+              "modifiers": [
+                null
+              ],
+              "name": "setReturnSuccessfulValidSignature",
+              "scope": 102,
+              "stateMutability": "nonpayable",
+              "virtual": false,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "value",
+                      "scope": 85,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "bool",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "bool",
+                          "type": "bool"
+                        },
+                        "id": 76,
+                        "name": "ElementaryTypeName",
+                        "src": "223:4:2"
+                      }
+                    ],
+                    "id": 77,
+                    "name": "VariableDeclaration",
+                    "src": "223:10:2"
+                  }
+                ],
+                "id": 78,
+                "name": "ParameterList",
+                "src": "222:12:2"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 79,
+                "name": "ParameterList",
+                "src": "242:0:2"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "bool"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 75,
+                              "type": "bool",
+                              "value": "returnSuccessfulValidSignature"
+                            },
+                            "id": 80,
+                            "name": "Identifier",
+                            "src": "252:30:2"
+                          },
+                          {
+                            "attributes": {
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 77,
+                              "type": "bool",
+                              "value": "value"
+                            },
+                            "id": 81,
+                            "name": "Identifier",
+                            "src": "285:5:2"
+                          }
+                        ],
+                        "id": 82,
+                        "name": "Assignment",
+                        "src": "252:38:2"
+                      }
+                    ],
+                    "id": 83,
+                    "name": "ExpressionStatement",
+                    "src": "252:38:2"
+                  }
+                ],
+                "id": 84,
+                "name": "Block",
+                "src": "242:55:2"
+              }
+            ],
+            "id": 85,
+            "name": "FunctionDefinition",
+            "src": "180:117:2"
+          },
+          {
+            "attributes": {
+              "baseFunctions": [
+                20
+              ],
+              "functionSelector": "1626ba7e",
+              "implemented": true,
+              "isConstructor": false,
+              "kind": "function",
+              "modifiers": [
+                null
+              ],
+              "name": "isValidSignature",
+              "scope": 102,
+              "stateMutability": "view",
+              "virtual": false,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "overrides": [
+                    null
+                  ]
+                },
+                "id": 91,
+                "name": "OverrideSpecifier",
+                "src": "376:8:2"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "_hash",
+                      "scope": 101,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "bytes32",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "bytes32",
+                          "type": "bytes32"
+                        },
+                        "id": 86,
+                        "name": "ElementaryTypeName",
+                        "src": "329:7:2"
+                      }
+                    ],
+                    "id": 87,
+                    "name": "VariableDeclaration",
+                    "src": "329:13:2"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "_signature",
+                      "scope": 101,
+                      "stateVariable": false,
+                      "storageLocation": "memory",
+                      "type": "bytes",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "bytes",
+                          "type": "bytes"
+                        },
+                        "id": 88,
+                        "name": "ElementaryTypeName",
+                        "src": "344:5:2"
+                      }
+                    ],
+                    "id": 89,
+                    "name": "VariableDeclaration",
+                    "src": "344:23:2"
+                  }
+                ],
+                "id": 90,
+                "name": "ParameterList",
+                "src": "328:40:2"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "",
+                      "scope": 101,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "bytes4",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "bytes4",
+                          "type": "bytes4"
+                        },
+                        "id": 92,
+                        "name": "ElementaryTypeName",
+                        "src": "399:6:2"
+                      }
+                    ],
+                    "id": 93,
+                    "name": "VariableDeclaration",
+                    "src": "399:6:2"
+                  }
+                ],
+                "id": 94,
+                "name": "ParameterList",
+                "src": "398:8:2"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "functionReturnParameters": 94
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "type": "bytes4"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 75,
+                              "type": "bool",
+                              "value": "returnSuccessfulValidSignature"
+                            },
+                            "id": 95,
+                            "name": "Identifier",
+                            "src": "424:30:2"
+                          },
+                          {
+                            "attributes": {
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 7,
+                              "type": "bytes4",
+                              "value": "ERC1271_RETURN_VALID_SIGNATURE"
+                            },
+                            "id": 96,
+                            "name": "Identifier",
+                            "src": "457:30:2"
+                          },
+                          {
+                            "attributes": {
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 10,
+                              "type": "bytes4",
+                              "value": "ERC1271_RETURN_INVALID_SIGNATURE"
+                            },
+                            "id": 97,
+                            "name": "Identifier",
+                            "src": "490:32:2"
+                          }
+                        ],
+                        "id": 98,
+                        "name": "Conditional",
+                        "src": "424:98:2"
+                      }
+                    ],
+                    "id": 99,
+                    "name": "Return",
+                    "src": "417:105:2"
+                  }
+                ],
+                "id": 100,
+                "name": "Block",
+                "src": "407:122:2"
+              }
+            ],
+            "id": 101,
+            "name": "FunctionDefinition",
+            "src": "303:226:2"
+          }
+        ],
+        "id": 102,
+        "name": "ContractDefinition",
+        "src": "91:440:2"
+      }
+    ],
+    "id": 103,
+    "name": "SourceUnit",
+    "src": "33:498:2"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.7.6+commit.7338295f.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.0",
+  "updatedAt": "2021-05-09T05:20:40.152Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "isValidSignature(bytes32,bytes)": {
+        "details": "Function must be implemented by deriving contract",
+        "params": {
+          "_hash": "Arbitrary length data signed on the behalf of address(this)",
+          "_signature": "Signature byte array associated with _data"
+        },
+        "returns": {
+          "_0": "A bytes4 magic value 0x1626ba7e if the signature check passes, 0x00000000 if not MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5) MUST allow external calls"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}
