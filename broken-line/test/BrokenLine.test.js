@@ -374,31 +374,30 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([17, 0, 0]);
 		})
 
-//todo: test should work
-//		it("Test2. One line. cliff = 3  change slope (in cliff) from 20 to 8, week = 2", async () => {
-//			await forTest.add([1, 40, 20], 3);
-//			await assertCurrent([1, 40, 0]);
-//
-//			await forTest.changePeriodTest([1, 40, 20], 3, 8, 2);
-//
-//			await forTest.update(3);
-//			await assertCurrent([3, 40, 0]);
-//
-//			await forTest.update(4);
-//			await assertCurrent([4, 40, 8]);
-//
-//			await forTest.update(7);
-//			await assertCurrent([7, 16, 8]);
-//
-//			await forTest.update(8);
-//			await assertCurrent([8, 8, 8]);
+		it("Test2. One line. cliff = 3  change slope (in cliff) from 20 to 8, week = 2", async () => {
+			await forTest.add([1, 40, 20], 3);
+			await assertCurrent([1, 40, 0]);
 
-//			await forTest.update(9);
-//			await assertCurrent([9, 0, 0]);
-//
-//			await forTest.update(10);
-//			await assertCurrent([10, 0, 0]);
-//		})
+			await forTest.changePeriodTest([1, 40, 20], 3, 8, 2);
+
+			await forTest.update(3);
+			await assertCurrent([3, 40, 0]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 40, 8]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 16, 8]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 8, 8]);
+
+			await forTest.update(9);
+			await assertCurrent([9, 0, 0]);
+
+			await forTest.update(10);
+			await assertCurrent([10, 0, 0]);
+		})
 
 		it("Test3. One line. cliff = 3  change slope (out cliff) from 20 to 8, week = 5, yes tail", async () => {
 			await forTest.add([1, 40, 20], 3);
@@ -476,7 +475,7 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([7, 0, 0]);
 		})
 
-		it("Test7. One line. cliff = 3  change slope from 20 to 5, on week = 6 (out cliff), tail<newSlope, nothing to change ", async () => {
+		it("Test7. One line. cliff = 3  change slope from 20 to 5, on week = 6 (out cliff), tail=newSlope, nothing to change ", async () => {
 			await forTest.add([1, 45, 20], 3);
 			await assertCurrent([1, 45, 0]);
 
@@ -491,24 +490,25 @@ contract("BrokenLine", accounts => {
 			await forTest.update(7);
 			await assertCurrent([7, 0, 0]);
 		})
-//todo: test should work!!!
-//		it("Test8. One line. cliff = 3  change slope from 20 to 5, on week = 6 (out cliff), tail<newSlope, nothing to change ", async () => {
-//			await forTest.add([1, 59, 20], 3);
-//			await assertCurrent([1, 59, 0]);
-//
-//			await forTest.update(4);
-//			await assertCurrent([4, 59, 20]);
-//
-//			await forTest.changePeriodTest([1, 59, 20], 3, 5, 6);
-//
-//			await forTest.update(6);
-//			await assertCurrent([6, 19, 4]);
-//
-//			await forTest.update(7);
-//			await assertCurrent([7, 0, 0]);
-//		})
 
+		it("Test8. One line. cliff = 3  change slope from 20 to 5, on week = 6 (out cliff), tail>newSlope, nothing to change ", async () => {
+			await forTest.add([1, 59, 20], 3);
+			await assertCurrent([1, 59, 0]);
 
+			await forTest.update(4);
+			await assertCurrent([4, 59, 20]);
+
+			await forTest.changePeriodTest([1, 59, 20], 3, 5, 6);
+
+			await forTest.update(6);
+			await assertCurrent([6, 19, 5]);
+
+			await forTest.update(9);
+			await assertCurrent([9, 4, 4]);
+
+			await forTest.update(10);
+			await assertCurrent([10, 0, 0]);
+		})
 	})
 
 	describe("Check changes Amount", () => {

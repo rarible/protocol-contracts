@@ -59,8 +59,7 @@ library LibBrokenLine {
         uint toTime)
     internal {
         update(brokenLine, toTime);
-        if ((brokenLine.initial.bias == 0) || (brokenLine.initial.slope < newSlope) || (oldLine.slope < newSlope) ||
-            (brokenLine.initial.slope < oldLine.slope.sub(newSlope))) {
+        if ((brokenLine.initial.bias == 0) || (oldLine.slope < newSlope)) {
             return;
         }
         /*удалить, а на самом деле компенсировать старое*/
@@ -81,31 +80,24 @@ library LibBrokenLine {
         } else { //клиф кончился
             endPeriod = (brokenLine.initial.bias.div(newSlope)).add(toTime);//определим конечную точку
             /*изменим сам slope на дельту = старыйSlope-новыйSlope*/
-            brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(safeInt(oldLine.slope.sub(newSlope))));
+            brokenLine.initial.slope = newSlopeAfterCliffFinish(brokenLine, oldLine.slope, newSlope);
         }
         brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].sub(safeInt(newSlope)).add(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
-    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
-        if (_i == 0) {
-            return "0";
+    function newSlopeAfterCliffFinish(BrokenLineDomain.BrokenLine storage brokenLine, uint oldLineSlope, uint newSlope) internal returns(uint) {
+        /*работает slope*/
+        if (brokenLine.initial.slope >= oldLineSlope) {
+            return brokenLine.initial.slope.sub(uint(safeInt(oldLineSlope.sub(newSlope))));
         }
-        uint j = _i;
-        uint len;
-        while (j != 0) {
-            len++;
-            j /= 10;
+        /*работает tail*/
+        if (brokenLine.initial.slope <= newSlope) { //tail меньше newSlope, не меняем
+            return brokenLine.initial.slope;
         }
-        bytes memory bstr = new bytes(len);
-        uint k = len - 1;
-        while (_i != 0) {
-            bstr[k--] = byte(uint8(48 + _i % 10));
-            _i /= 10;
-        }
-        return string(bstr);
+        return newSlope;
     }
-    /*newAmount  - новый amount установить*/
+
     function changeAmount(
         BrokenLineDomain.BrokenLine storage brokenLine,
         BrokenLineDomain.Line memory oldLine,
