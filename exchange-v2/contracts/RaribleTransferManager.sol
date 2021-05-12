@@ -173,7 +173,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibPart.Part memory lastPayout = payouts[payouts.length - 1];
         sumBps += lastPayout.value;
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
-        transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
+        if (restValue > 0) {
+            transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
+        }
     }
 
     function calculateTotalAmount(

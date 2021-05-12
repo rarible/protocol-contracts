@@ -25,7 +25,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         proxies[LibAsset.ERC1155_ASSET_CLASS] = address(transferProxy);
     }
 
-    function setTransferProxy(bytes4 assetType, address proxy) onlyOwner public {
+    function setTransferProxy(bytes4 assetType, address proxy) external onlyOwner {
         proxies[assetType] = proxy;
         emit ProxyChange(assetType, proxy);
     }
