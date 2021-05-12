@@ -28,4 +28,8 @@ contract BrokenLineTest is BrokenLineDomain {
     function changeAmountTest(BrokenLineDomain.Line memory oldLine, uint cliff, uint newAmount, uint toTime) public {
         return brokenLine.changeAmount(oldLine, cliff, newAmount, toTime);
     }
+
+    function changeCliffTest(BrokenLineDomain.Line memory oldLine, uint cliff, uint newCliff, uint toTime) public {
+        return brokenLine.changeCliff(oldLine, cliff, newCliff, toTime);
+    }
 }

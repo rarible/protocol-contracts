@@ -136,6 +136,53 @@ library LibBrokenLine {
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
     }
 
+    function changeCliff(
+        BrokenLineDomain.BrokenLine storage brokenLine,
+        BrokenLineDomain.Line memory oldLine,
+        uint oldCliff,
+        uint newCliff,
+        uint toTime)
+    internal {
+        update(brokenLine, toTime);
+        /*удалить, а на самом деле компенсировать старое*/
+        uint period = oldLine.bias.div(oldLine.slope);
+        int mod = safeInt(oldLine.bias.mod(oldLine.slope));
+        uint256 endPeriod = oldLine.start.add(period).add(oldCliff);
+        if (toTime >= endPeriod.add(newCliff) || (newCliff == 0)) {
+            return;
+        }
+        brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].add(safeInt(oldLine.slope)).sub(mod);
+        brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].add(mod);
+
+        uint cliffEnd = oldLine.start.add(oldCliff).sub(1); //point завершения oldCliff
+        if (cliffEnd >= toTime) { //если клиф не завершен
+            /*в точке завершения клифа компенсировать изменение slope на oldLine.slope*/
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].sub(safeInt(oldLine.slope));
+            cliffEnd = cliffEnd.add(newCliff); //point завершения newCliff
+            /*в  новой точке завершения клифа записать oldLine.slope*/
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(oldLine.slope));
+            endPeriod = endPeriod.add(newCliff);
+            /*в  новой точке завершения записать oldLine.slope*/
+            brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].sub(safeInt(oldLine.slope)).add(mod);
+        } else { //клиф кончился
+            cliffEnd = toTime.add(newCliff).sub(1);
+            if (oldLine.slope > brokenLine.initial.slope) { //в точке tail brokenLine.initial.slope может быть меньше oldLine.slope
+                /*в  новой точке завершения клиф записать brokenLine.initial.slope*/
+                brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(brokenLine.initial.slope));
+                brokenLine.initial.slope = 0;
+                endPeriod = endPeriod.add(newCliff);
+            } else { //slope работает
+                /*в  новой точке завершения клиф записать oldLine.slope*/
+                brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(oldLine.slope));
+                brokenLine.initial.slope = brokenLine.initial.slope.sub(oldLine.slope); //меняем slope
+                endPeriod = endPeriod.add(newCliff);
+                /*в  новой точке завершения записать oldLine.slope*/
+                brokenLine.slopeChanges[endPeriod.sub(1)] = brokenLine.slopeChanges[endPeriod.sub(1)].sub(safeInt(oldLine.slope)).add(mod);
+            }
+        }
+        brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
+    }
+
     /**
      * Обновляет initial линию для переданного time. Высчитывает и применяет все изменения из slopeChanges за этот период
     **/

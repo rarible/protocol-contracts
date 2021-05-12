@@ -644,4 +644,126 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([9, 0, 0]);
 		})
 	})
+
+	describe("Check changes Cliff", () => {
+  		it("Test1. One line. cliff = 3  change cliff  length 4, while old cliff works", async () => {
+  			await forTest.add([1, 40, 20], 3);
+  			await assertCurrent([1, 40, 0]);
+
+  			await forTest.changeCliffTest([1, 40, 20], 3, 4, 2);
+
+  			await forTest.update(4);
+  			await assertCurrent([4, 40, 0]);
+
+  			await forTest.update(8);
+  			await assertCurrent([8, 40, 20]);
+
+  			await forTest.update(9);
+  			await assertCurrent([9, 20, 20]);
+
+  			await forTest.update(10);
+  			await assertCurrent([10, 0, 0]);
+  		})
+
+  		it("Test2. One line. cliff = 3  change cliff (in cliff) length 2, week = 5", async () => {
+  			await forTest.add([1, 40, 10], 3);
+  			await assertCurrent([1, 40, 0]);
+
+  			await forTest.update(4);
+  			await assertCurrent([4, 40, 10]);
+
+				await forTest.changeCliffTest([1, 40, 10], 3, 2, 5);
+
+  			await forTest.update(5);
+  			await assertCurrent([5, 30, 0]);
+
+  			await forTest.update(6);
+  			await assertCurrent([6, 30, 0]);
+
+  			await forTest.update(7);
+  			await assertCurrent([7, 30, 10]);
+
+  			await forTest.update(8);
+  			await assertCurrent([8, 20, 10]);
+
+  			await forTest.update(9);
+  			await assertCurrent([9, 10, 10]);
+
+  			await forTest.update(10);
+  			await assertCurrent([10, 0, 0]);
+
+  			await forTest.update(11);
+  			await assertCurrent([11, 0, 0]);
+  		})
+
+  		it("Test3. One line. cliff = 3  change cliff (in cliff) length 3, week = 5", async () => {
+  			await forTest.add([0, 40, 10], 3);
+  			await assertCurrent([0, 40, 0]);
+
+  			await forTest.update(3);
+  			await assertCurrent([3, 40, 10]);
+
+				await forTest.changeCliffTest([0, 40, 10], 3, 3, 4);
+
+  			await forTest.update(5);
+  			await assertCurrent([5, 30, 0]);
+
+  			await forTest.update(6);
+  			await assertCurrent([6, 30, 0]);
+
+  			await forTest.update(7);
+  			await assertCurrent([7, 30, 10]);
+
+  			await forTest.update(8);
+  			await assertCurrent([8, 20, 10]);
+
+  			await forTest.update(9);
+  			await assertCurrent([9, 10, 10]);
+
+  			await forTest.update(10);
+  			await assertCurrent([10, 0, 0]);
+  		})
+
+  		it("Test4. One line. cliff = 3  change cliff  length 2, tail works", async () => {
+  			await forTest.add([1, 59, 20], 3);
+  			await assertCurrent([1, 59, 0]);
+
+  			await forTest.update(4);
+  			await assertCurrent([4, 59, 20]);
+
+				await forTest.changeCliffTest([1, 59, 20], 3, 2, 6);
+
+  			await forTest.update(6);
+  			await assertCurrent([6, 19, 0]);
+
+  			await forTest.update(7);
+  			await assertCurrent([7, 19, 0]);
+
+  			await forTest.update(8);
+  			await assertCurrent([8, 19, 19]);
+
+  			await forTest.update(9);
+  			await assertCurrent([9, 0, 0]);
+
+  			await forTest.update(10);
+  			await assertCurrent([10, 0, 0]);
+  		})
+
+  		it("Test5.One line. cliff = 3 change cliff length 2, after staking finish, nothing to change", async () => {
+  			await forTest.add([1, 59, 20], 3);
+  			await assertCurrent([1, 59, 0]);
+
+  			await forTest.update(4);
+  			await assertCurrent([4, 59, 20]);
+
+  			await forTest.update(6);
+  			await assertCurrent([6, 19, 19]);
+
+  			await forTest.changeCliffTest([1, 59, 20], 3, 2, 7);
+
+  			await forTest.update(8);
+  			await assertCurrent([8, 0, 0]);
+  		})
+
+  	})
 })
