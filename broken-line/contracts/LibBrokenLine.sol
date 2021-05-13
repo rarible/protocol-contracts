@@ -39,27 +39,8 @@ library LibBrokenLine {
     using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
 
-    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal {
-        update(brokenLine, line.start);
-        brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
-        uint period = line.bias.div(line.slope);
-        if (cliff == 0) {
-            brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
-        } else {
-            uint cliffEnd = line.start.add(cliff).sub(1);
-            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(line.slope));
-            period = period.add(cliff);
-        }
-
-        int mod = safeInt(line.bias.mod(line.slope));
-        uint256 endPeriod = line.start.add(period);
-        uint256 endPeriodMinus1 = endPeriod.sub(1);
-        brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeInt(line.slope)).add(mod);
-        brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
-    }
-
     /*add Line, save data in LineData*/
-    function addLine(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal returns (uint) {
+    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal returns (uint) {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
         uint period = line.bias.div(line.slope);
