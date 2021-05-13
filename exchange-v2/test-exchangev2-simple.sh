@@ -6,4 +6,5 @@ truffle test \
         ./test/contracts/v2/ExchangeSimpleV2_1.sol \
         ./test/contracts/v2/TransferProxyTest.sol \
         ./test/contracts/v2/TestRoyaltiesRegistry.sol \
-        ./test/contracts/v2/LibOrderTest.sol --compile-all
+        ./test/contracts/v2/LibOrderTest.sol \
+        --compile-all
