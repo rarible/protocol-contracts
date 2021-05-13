@@ -10,6 +10,7 @@ import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
 import "./Mint721Validator.sol";
 
 abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
+    using SafeMathUpgradeable for uint;
 
     // tokenId => creators
     mapping(uint256 => LibPart.Part[]) private creators;
@@ -48,13 +49,14 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         _mint(to, data.tokenId);
         _setTokenURI(data.tokenId, data.uri);
         _saveRoyalties(data.tokenId, data.royalties);
-        LibPart.Part[] storage creators = creators[data.tokenId];
-        //todo check sum is 10000
+        LibPart.Part[] storage creatorsOfToken = creators[data.tokenId];
+        uint total = 0;
         for(uint i=0; i < data.creators.length; i++) {
-            creators.push(data.creators[i]);
+            creatorsOfToken.push(data.creators[i]);
+            total = total.add(data.creators[i].value);
         }
-
-        emit Mint(data.tokenId, data.uri, creators);
+        require(total == 10000, "total amount of creators share should be 10000");
+        emit Creators(data.tokenId, data.creators);
     }
 
     function updateAccount(uint256 _id, address _from, address _to) external {

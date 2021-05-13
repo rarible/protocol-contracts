@@ -8,9 +8,9 @@ import "./LibERC721LazyMint.sol";
 import "@rarible/royalties/contracts/LibPart.sol";
 
 interface IERC721LazyMint is IERC721Upgradeable {
-    event Mint(
-        uint tokenId,
-        string uri,
+
+    event Creators(
+        uint256 tokenId,
         LibPart.Part[] creators
     );
 

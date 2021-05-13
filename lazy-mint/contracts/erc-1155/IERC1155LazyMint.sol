@@ -8,11 +8,14 @@ import "./LibERC1155LazyMint.sol";
 import "@rarible/royalties/contracts/LibPart.sol";
 
 interface IERC1155LazyMint is IERC1155Upgradeable {
-    event Mint(
-        uint tokenId,
-        string uri,
-        LibPart.Part[] creators,
+
+    event Supply(
+        uint256 tokenId,
         uint256 value
+    );
+    event Creators(
+        uint256 tokenId,
+        LibPart.Part[] creators
     );
 
     function mintAndTransfer(

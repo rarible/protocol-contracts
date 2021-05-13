@@ -13,15 +13,6 @@ import "./ERC1155BaseURI.sol";
 abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
     using SafeMathUpgradeable for uint;
 
-    event Supply(
-        uint256 tokenId,
-        uint256 value
-    );
-    event Creators(
-        uint256 tokenId,
-        LibPart.Part[] creators
-    );
-
     mapping (uint256 => LibPart.Part[]) public creators;
     mapping (uint => uint) private supply;
     mapping (uint => uint) private minted;
@@ -75,8 +66,6 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         }
 
         _mint(to, data.tokenId, _amount, "");
-
-        emit Mint(data.tokenId, data.uri, data.creators, _amount);
     }
 
     function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override {
@@ -93,11 +82,13 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     }
 
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
-        LibPart.Part[] storage creators = creators[tokenId];
-        //todo check sum is 10000
+        LibPart.Part[] storage creatorsOfToken = creators[tokenId];
+        uint total = 0;
         for(uint i=0; i < _creators.length; i++) {
-            creators.push(_creators[i]);
+            creatorsOfToken.push(_creators[i]);
+            total = total.add(_creators[i].value);
         }
+        require(total == 10000, "total amount of creators share should be 10000");
         emit Creators(tokenId, _creators);
     }
 
