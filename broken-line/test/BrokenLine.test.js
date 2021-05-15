@@ -95,7 +95,6 @@ contract("BrokenLine", accounts => {
         return true;
       });
       assert.equal(id1,1);
-			console.log("sks show result:"+id1);
 			await assertCurrent([1, 100, 0]);
 
 			await forTest.update(2);
@@ -114,42 +113,6 @@ contract("BrokenLine", accounts => {
     	await assertCurrent([13, 0, 0]);
 		});
 
-		it("One line can be added with cliff, step 4 - delete", async () => {
-			rezultAdd = await forTest.addTest([1, 100, 10], 2);
-			let id1;
-			truffleAssert.eventEmitted(rezultAdd, 'resultAddLine', (ev) => {
-      	id1 = ev.result;
-        return true;
-      });
-      assert.equal(id1,1);
-
-			await assertCurrent([1, 100, 0]);
-
-			await forTest.update(2);
-			await assertCurrent([2, 100, 0]);
-
-			await forTest.update(3);
-			await assertCurrent([3, 100, 10]);
-
-			await forTest.update(4);
-			await assertCurrent([4, 90, 10]);
-
-			resultRemove = await forTest.removeTest(id1, 4);
-			let amount1;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.result;
-        return true;
-      });
-      assert.equal(amount1,90);
-			console.log("sks show amount1:" + amount1);
-
-			await forTest.update(5);
-    	await assertCurrent([5, 0, 0]);
-
-			await forTest.update(12);
-    	await assertCurrent([12, 0, 0]);
-
-		});
 
 //		it("One line can be added with cliff(20, 10), begin from 3", async () => {
 //			await forTest.add([3, 20, 10], 2);
@@ -387,5 +350,135 @@ contract("BrokenLine", accounts => {
 //    		forTest.update(2)
 //    	);
 //		});
+
+	})
+
+	describe("Check remove", () => {
+		it("One line can be added with cliff, step 4 - remove while slope", async () => {
+			rezultAdd = await forTest.addTest([1, 100, 10], 2);
+			let id1;
+			truffleAssert.eventEmitted(rezultAdd, 'resultAddLine', (ev) => {
+      	id1 = ev.result;
+        return true;
+      });
+      assert.equal(id1,1);
+
+			await assertCurrent([1, 100, 0]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 100, 0]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 100, 10]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 90, 10]);
+
+			resultRemove = await forTest.removeTest(id1, 4);
+			let amount1;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount1 = ev.result;
+        return true;
+      });
+      assert.equal(amount1, 90);
+
+			await forTest.update(5);
+    	await assertCurrent([5, 0, 0]);
+
+			await forTest.update(12);
+    	await assertCurrent([12, 0, 0]);
+
+		});
+
+		it("One line can be added with cliff, and tail step 3 - remove while cliff", async () => {
+			rezultAdd = await forTest.addTest([1, 20, 8], 2);
+			await assertCurrent([1, 20, 0]);
+
+			let id1;
+			truffleAssert.eventEmitted(rezultAdd, 'resultAddLine', (ev) => {
+      	id1 = ev.result;
+        return true;
+      });
+
+			resultRemove = await forTest.removeTest(id1, 3);
+			let amount1;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount1 = ev.result;
+        return true;
+      });
+
+			await forTest.update(4);
+			await assertCurrent([4, 0, 0]);
+
+			await forTest.update(5);
+			await assertCurrent([5, 0, 0]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 0, 0]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
+		});
+
+		it("One line can be added with cliff, and tail step 5 - remove while tail", async () => {
+			rezultAdd = await forTest.addTest([1, 20, 8], 2);
+			await assertCurrent([1, 20, 0]);
+
+			let id1;
+			truffleAssert.eventEmitted(rezultAdd, 'resultAddLine', (ev) => {
+      	id1 = ev.result;
+        return true;
+      });
+
+			resultRemove = await forTest.removeTest(id1, 5);
+			let amount1;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount1 = ev.result;
+        return true;
+      });
+			assert.equal(amount1, 4);
+
+			await forTest.update(5);
+			await assertCurrent([5, 0, 0]);
+		});
+
+		it("Two line can be added with cliff, and tail step 5 - remove while cliff", async () => {
+			rezultAdd1 = await forTest.addTest([1, 32, 15], 3);
+			rezultAdd2 = await forTest.addTest([1, 39, 12], 3);
+			await assertCurrent([1, 71, 0]);
+
+			let id1;
+			truffleAssert.eventEmitted(rezultAdd1, 'resultAddLine', (ev) => {
+      	id1 = ev.result;
+        return true;
+      });
+
+			let id2;
+			truffleAssert.eventEmitted(rezultAdd2, 'resultAddLine', (ev) => {
+      	id2 = ev.result;
+        return true;
+      });
+
+			resultRemove = await forTest.removeTest(id1, 5);
+			let amount1;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount1 = ev.result;
+        return true;
+      });
+			assert.equal(amount1, 17);
+
+			await forTest.update(5);
+			await assertCurrent([5, 27, 12]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 15, 12]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 3, 3]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
+		});
+
 	})
 })

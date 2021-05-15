@@ -94,7 +94,7 @@ library LibBrokenLine {
                 brokenLine.initial.slope = brokenLine.initial.slope.sub(brokenLine.initiatedLines[id].line.slope); //меняем slope
                 /*в  новой точке завершения записать oldLine.slope*/
                 brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(brokenLine.initiatedLines[id].line.slope)).sub(mod);
-                nowBias = (finishTime.sub(toTime)).mul(brokenLine.initiatedLines[id].line.slope);
+                nowBias = (finishTime.sub(toTime)).mul(brokenLine.initiatedLines[id].line.slope).add(uint(mod));
             } else {  //в точке tail brokenLine.initial.slope может быть меньше oldLine.slope
                 brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
                 nowBias =uint(mod);
