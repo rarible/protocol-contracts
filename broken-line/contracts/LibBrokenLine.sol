@@ -15,14 +15,21 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
   **/
 //todo подумать про типы, нужна ли максимальная точность
 contract BrokenLineDomain {
-    struct Line {
+
+    struct Line {           //line
         uint start;
         uint bias;
         uint slope;
     }
 
+    struct LineData {       //all data about line
+        Line line;
+        uint cliff;
+    }
+
     struct BrokenLine {
-        mapping (uint => int) slopeChanges; //change of slope applies to the next time point
+        mapping (uint => int) slopeChanges;         //change of slope applies to the next time point
+        mapping (uint => LineData) initiatedLines;  //initiated (successfully added) Lines
         Line initial;
     }
 }
@@ -31,7 +38,8 @@ library LibBrokenLine {
     using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
 
-    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal {
+    /*add Line, save data in LineData*/
+    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint id, uint cliff) internal {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
         uint period = line.bias.div(line.slope);
@@ -48,8 +56,52 @@ library LibBrokenLine {
         uint256 endPeriodMinus1 = endPeriod.sub(1);
         brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeInt(line.slope)).add(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
+
+        BrokenLineDomain.LineData memory lineData;
+        lineData.line = line;
+        lineData.cliff = cliff;
+        brokenLine.initiatedLines[id] = lineData;
     }
 
+    /*remove Line from BrokenLine, return line.bias, which actual now moment */
+    function remove(BrokenLineDomain.BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint) {
+        if (brokenLine.initiatedLines[id].line.bias == 0) {
+            return 0;
+        }
+        update(brokenLine, toTime);
+        /*проверить может время закончилось*/
+        uint period = brokenLine.initiatedLines[id].line.bias.div(brokenLine.initiatedLines[id].line.slope);
+        uint finishTime = brokenLine.initiatedLines[id].line.start.add(period).add(brokenLine.initiatedLines[id].cliff);
+        if (toTime > finishTime) {
+            brokenLine.initiatedLines[id].line.bias = 0;
+            return 0;
+        }
+        uint finishTimeMinusOne = finishTime.sub(1);
+        int mod = safeInt(brokenLine.initiatedLines[id].line.bias.mod(brokenLine.initiatedLines[id].line.slope));
+        uint nowBias = brokenLine.initiatedLines[id].line.bias;
+        uint cliffEnd =  brokenLine.initiatedLines[id].line.start.add(brokenLine.initiatedLines[id].cliff).sub(1);
+        if (toTime <= cliffEnd) { //если клиф не завершен
+            /*в точке завершения клифа компенсировать изменение slope на oldLine.slope*/
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].sub(safeInt(brokenLine.initiatedLines[id].line.slope));
+            /*в  новой точке завершения записать oldLine.slope*/
+            brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(brokenLine.initiatedLines[id].line.slope)).sub(mod);
+        } else { //клиф кончился
+            if (toTime <= finishTimeMinusOne) { //tail работает
+                /*в  новой точке завершения клиф записать oldLine.slope*/
+                brokenLine.initial.slope = brokenLine.initial.slope.sub(brokenLine.initiatedLines[id].line.slope); //меняем slope
+                /*в  новой точке завершения записать oldLine.slope*/
+                brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(brokenLine.initiatedLines[id].line.slope)).sub(mod);
+                nowBias = (finishTime.sub(toTime)).mul(brokenLine.initiatedLines[id].line.slope).add(uint(mod));
+            } else {  //в точке tail brokenLine.initial.slope может быть меньше oldLine.slope
+                brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
+                nowBias =uint(mod);
+            }
+        }
+        brokenLine.slopeChanges[finishTime] = brokenLine.slopeChanges[finishTime].add(mod);
+        brokenLine.initial.bias = brokenLine.initial.bias.sub(nowBias);
+        brokenLine.initiatedLines[id].line.bias = 0;
+        return nowBias;
+    }
     /**
      * Обновляет initial линию для переданного time. Высчитывает и применяет все изменения из slopeChanges за этот период
     **/

@@ -9,11 +9,11 @@ contract BrokenLineTest is BrokenLineDomain {
     using LibBrokenLine for BrokenLine;
 
     BrokenLine public brokenLine;
+    event resultRemoveLine(uint result);
 
-    function add(Line memory line, uint cliff) public {
-        brokenLine.add(line, cliff);
+    function addTest(Line memory line, uint id, uint cliff) public {
+        brokenLine.add(line, id, cliff);
     }
-
 
     function update(uint timeTo) public {
         brokenLine.update(timeTo);
@@ -21,5 +21,10 @@ contract BrokenLineTest is BrokenLineDomain {
 
     function getCurrent() view public returns (Line memory) {
         return brokenLine.initial;
+    }
+
+    function removeTest(uint id, uint toTime) public {
+        uint result = brokenLine.remove(id, toTime);
+        emit resultRemoveLine(result);
     }
 }
