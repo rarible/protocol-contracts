@@ -47,16 +47,20 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         }
 
         _mint(to, data.tokenId);
-        _setTokenURI(data.tokenId, data.uri);
         _saveRoyalties(data.tokenId, data.royalties);
-        LibPart.Part[] storage creatorsOfToken = creators[data.tokenId];
+        _saveCreators(data.tokenId, data.creators);
+        _setTokenURI(data.tokenId, data.uri);
+    }
+
+    function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
+        LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
-        for(uint i=0; i < data.creators.length; i++) {
-            creatorsOfToken.push(data.creators[i]);
-            total = total.add(data.creators[i].value);
+        for(uint i=0; i < _creators.length; i++) {
+            creatorsOfToken.push(_creators[i]);
+            total = total.add(_creators[i].value);
         }
         require(total == 10000, "total amount of creators share should be 10000");
-        emit Creators(data.tokenId, data.creators);
+        emit Creators(tokenId, _creators);
     }
 
     function updateAccount(uint256 _id, address _from, address _to) external {
