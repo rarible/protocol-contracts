@@ -14,6 +14,7 @@ contract Staking {
     uint256 constant WEEK = 604800;                 //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
     ERC20Upgradeable public token;
+    uint public id;                                 //id Line, successfully added to BrokenLine
 
     struct Locks {
         BrokenLineDomain.BrokenLine balance;   //line of stRari balance
@@ -22,6 +23,7 @@ contract Staking {
     }
 
     mapping (address => Locks) locks;                   //address User - Lock
+    mapping (uint => address) deposits;                 //idLock address User
     BrokenLineDomain.BrokenLine public totalSupplyLine; //total stRARI balance
 
     constructor(ERC20Upgradeable _token) public {
@@ -29,14 +31,18 @@ contract Staking {
     }
 
     function createLock(address account, uint amount, uint slope, uint cliff) public {
-        //todo проверки
+        if (amount == 0) {
+            return;
+        }
         uint blockTime = roundTimestamp(block.timestamp);
         BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
         BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
 
-        totalSupplyLine.add(line, cliff);
-        locks[account].balance.add(line, cliff);
-        locks[account].locked.add(lineLocked, cliff);
+        id++;
+        totalSupplyLine.add(line, id, cliff);
+        locks[account].balance.add(line, id, cliff);
+        locks[account].locked.add(lineLocked, id, cliff);
+        deposits[id] = account;
         locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
 
@@ -69,6 +75,34 @@ contract Staking {
             require(token.transfer(msg.sender, value), "failure while transferring");
         }
         //todo Lock delete
+    }
+
+    function restake(uint idLock, uint newAmount, uint newSlope, uint newCliff) internal returns (uint newId) {
+        address account = deposits[idLock];
+        if (account == address(0)){
+            return 0;
+        }
+
+        uint blockTime = roundTimestamp(block.timestamp);
+        withdraw(); //
+        if (newAmount > 0){ //if amount, то переведем ERC20 себе
+            require(token.transferFrom(deposits[idLock], address(this), newAmount), "failure while transferring");
+        }
+        /*delete*/
+        uint amountEnd = locks[account].locked.remove(idLock, blockTime);   //RARI amount
+        locks[account].balance.remove(idLock, blockTime);                   //stRARI
+        totalSupplyLine.remove(idLock, blockTime);                          //total stRARI
+
+        amountEnd = amountEnd.add(newAmount);
+        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amountEnd, newSlope, newCliff), newSlope);
+        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amountEnd, newSlope);
+        /*add*/
+        id++;
+        totalSupplyLine.add(line, id, newCliff);
+        locks[account].balance.add(line, id, newCliff);
+        locks[account].locked.add(lineLocked, id, newCliff);
+        deposits[id] = account;
+        locks[account].amount = locks[account].amount.add(amountEnd);
     }
 
     function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
