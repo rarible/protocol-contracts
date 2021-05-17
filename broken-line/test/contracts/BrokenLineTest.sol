@@ -9,12 +9,10 @@ contract BrokenLineTest is BrokenLineDomain {
     using LibBrokenLine for BrokenLine;
 
     BrokenLine public brokenLine;
-    event resultAddLine(uint result);
     event resultRemoveLine(uint result);
 
-    function addTest(Line memory line, uint cliff) public {
-        uint result = brokenLine.add(line, cliff);
-        emit resultAddLine(result);
+    function addTest(Line memory line, uint id, uint cliff) public {
+        brokenLine.add(line, id, cliff);
     }
 
     function update(uint timeTo) public {

@@ -31,7 +31,6 @@ contract BrokenLineDomain {
         mapping (uint => int) slopeChanges;         //change of slope applies to the next time point
         mapping (uint => LineData) initiatedLines;  //initiated (successfully added) Lines
         Line initial;
-        uint id;                                    //id Line, successfully added to BrokenLine
     }
 }
 
@@ -40,7 +39,7 @@ library LibBrokenLine {
     using SafeMathUpgradeable for uint;
 
     /*add Line, save data in LineData*/
-    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint cliff) internal returns (uint) {
+    function add(BrokenLineDomain.BrokenLine storage brokenLine, BrokenLineDomain.Line memory line, uint id, uint cliff) internal {
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
         uint period = line.bias.div(line.slope);
@@ -61,9 +60,7 @@ library LibBrokenLine {
         BrokenLineDomain.LineData memory lineData;
         lineData.line = line;
         lineData.cliff = cliff;
-        brokenLine.id++;
-        brokenLine.initiatedLines[brokenLine.id] = lineData;
-        return brokenLine.id;
+        brokenLine.initiatedLines[id] = lineData;
     }
 
     /*remove Line from BrokenLine, return line.bias, which actual now moment */
