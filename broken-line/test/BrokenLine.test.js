@@ -83,6 +83,45 @@ contract("BrokenLine", accounts => {
 			await forTest.update(5);
 			await assertCurrent([5, 0, 0]);
 		})
+
+		it("Check line.bias == line.slope with cliff", async () => {
+			await forTest.addTest([1, 20, 20], 1, 2);
+			await assertCurrent([1, 20, 0]);
+
+			await forTest.update(2);
+			await assertCurrent([2, 20, 0]);
+
+			await forTest.update(3);
+			await assertCurrent([3, 20, 20]);
+
+			await forTest.update(4);
+			await assertCurrent([4, 0, 0]);
+		})
+
+
+		it("Add line with the same id, expect throw ", async () => {
+			let id = 1;
+			await forTest.addTest([1, 20, 10], id, 0);
+			await expectThrow(
+    		forTest.addTest([1, 40, 10], id, 0)
+    	);
+		})
+
+		it("Add line with slope == 0, expect throw ", async () => {
+			let id = 1;
+			await expectThrow(
+    		forTest.addTest([1, 40, 0], id, 0)
+    	);
+		})
+
+		it("Add line with slope>bias, expect throw ", async () => {
+			let id = 1;
+			await expectThrow(
+    		forTest.addTest([1, 40, 0], id, 0)
+    	);
+		})
+
+
 	})
 
 	describe("Check with cliff", () => {
@@ -348,7 +387,7 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check remove", () => {
-		it("One line can be added with cliff, step 4 - remove while slope", async () => {
+		it("Test1. One line can be added with cliff, step 4 - remove while slope", async () => {
 			let id1 = 256;
 			await forTest.addTest([1, 100, 10], id1, 2);
 			await assertCurrent([1, 100, 0]);
@@ -446,6 +485,24 @@ contract("BrokenLine", accounts => {
 
 			await forTest.update(8);
 			await assertCurrent([8, 0, 0]);
+		});
+
+		it("One line can be added with cliff, and tail step 5 - remove when finish expect throw", async () => {
+			let id1 = 3;
+			await forTest.addTest([1, 20, 10], id1, 2);
+			await assertCurrent([1, 20, 0]);
+
+			resultRemove = await forTest.removeTest(id1, 4);
+			let amount1;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount1 = ev.result;
+        return true;
+      });
+			assert.equal(amount1, 10);
+
+			await expectThrow(
+				forTest.removeTest(id1, 6)
+			);
 		});
 
 	})

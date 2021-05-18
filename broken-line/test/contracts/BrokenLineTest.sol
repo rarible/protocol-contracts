@@ -12,7 +12,7 @@ contract BrokenLineTest is BrokenLineDomain {
     event resultRemoveLine(uint result);
 
     function addTest(Line memory line, uint id, uint cliff) public {
-        brokenLine.add(line, id, cliff);
+        brokenLine.add(id, line, cliff);
     }
 
     function update(uint timeTo) public {
