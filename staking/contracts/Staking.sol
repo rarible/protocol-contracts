@@ -30,21 +30,22 @@ contract Staking {
         token = _token;
     }
 
-    function createLock(address account, uint amount, uint slope, uint cliff) public {
+    function createLock(address account, uint amount, uint slope, uint cliff) public returns(uint) {
         if (amount == 0) {
-            return;
+            return 0;
         }
         uint blockTime = roundTimestamp(block.timestamp);
         BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
         BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
 
         id++;
-        totalSupplyLine.add(line, id, cliff);
-        locks[account].balance.add(line, id, cliff);
-        locks[account].locked.add(lineLocked, id, cliff);
+        totalSupplyLine.add(id, line, cliff);
+        locks[account].balance.add(id, line, cliff);
+        locks[account].locked.add(id, lineLocked, cliff);
         deposits[id] = account;
         locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
+        return id;
 
         // как меняется lock общий, когда юзер приходит/уходит/меняет
         // 1. нужно применить пропущенные изменения (окончания локов)
@@ -68,8 +69,8 @@ contract Staking {
     }
 
     function withdraw() public  {
-        locks[msg.sender].balance.update(roundTimestamp(block.timestamp));
-        uint value = locks[msg.sender].amount.sub(locks[msg.sender].balance.initial.bias);
+        locks[msg.sender].locked.update(roundTimestamp(block.timestamp));
+        uint value = locks[msg.sender].amount.sub(locks[msg.sender].locked.initial.bias);
         if (value > 0) {
             locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "failure while transferring");
@@ -77,32 +78,34 @@ contract Staking {
         //todo Lock delete
     }
 
-    function restake(uint idLock, uint newAmount, uint newSlope, uint newCliff) internal returns (uint newId) {
+    function restake(uint idLock, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
         address account = deposits[idLock];
         if (account == address(0)){
             return 0;
         }
 
         uint blockTime = roundTimestamp(block.timestamp);
-        withdraw(); //
-        if (newAmount > 0){ //if amount, то переведем ERC20 себе
+//        withdraw(); //todo think about it, if need
+        if (newAmount > 0){ //if newAmount, transfer ERC20 to contract
             require(token.transferFrom(deposits[idLock], address(this), newAmount), "failure while transferring");
         }
         /*delete*/
         uint amountEnd = locks[account].locked.remove(idLock, blockTime);   //RARI amount
         locks[account].balance.remove(idLock, blockTime);                   //stRARI
         totalSupplyLine.remove(idLock, blockTime);                          //total stRARI
+        locks[account].amount = locks[account].amount.sub(amountEnd);
 
         amountEnd = amountEnd.add(newAmount);
         BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amountEnd, newSlope, newCliff), newSlope);
         BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amountEnd, newSlope);
         /*add*/
         id++;
-        totalSupplyLine.add(line, id, newCliff);
-        locks[account].balance.add(line, id, newCliff);
-        locks[account].locked.add(lineLocked, id, newCliff);
+        totalSupplyLine.add(id, line, newCliff);
+        locks[account].balance.add(id, line, newCliff);
+        locks[account].locked.add(id, lineLocked, newCliff);
         deposits[id] = account;
         locks[account].amount = locks[account].amount.add(amountEnd);
+        return id;
     }
 
     function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
