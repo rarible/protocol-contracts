@@ -85,14 +85,14 @@ contract Staking {
         }
 
         uint blockTime = roundTimestamp(block.timestamp);
-//        withdraw(); //todo think about it, if need
+//        withdraw({ from: account }); //todo think about it, if need
         if (newAmount > 0){ //if newAmount, transfer ERC20 to contract
             require(token.transferFrom(deposits[idLock], address(this), newAmount), "failure while transferring");
         }
         /*delete*/
-        uint amountEnd = locks[account].locked.remove(idLock, blockTime);   //RARI amount
-        locks[account].balance.remove(idLock, blockTime);                   //stRARI
-        totalSupplyLine.remove(idLock, blockTime);                          //total stRARI
+        uint amountEnd = locks[account].locked.remove(idLock, blockTime);
+        locks[account].balance.remove(idLock, blockTime);
+        totalSupplyLine.remove(idLock, blockTime);
         locks[account].amount = locks[account].amount.sub(amountEnd);
 
         amountEnd = amountEnd.add(newAmount);
@@ -110,14 +110,6 @@ contract Staking {
 
     function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
         return amount;
-    }
-
-    function increaseUnlockTime(uint lockId, uint period) public {
-
-    }
-
-    function increaseLockedValue(uint lockId, uint period) public {
-
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
