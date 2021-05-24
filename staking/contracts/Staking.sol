@@ -5,7 +5,8 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
+//import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol"; //todo delete comment use @rarible/lib-broken-line/
+import "../../broken-line/contracts/LibBrokenLine.sol"; //todo delete this line
 
 contract Staking {
     using SafeMathUpgradeable for uint;
@@ -40,6 +41,7 @@ contract Staking {
 
         id++;
         totalSupplyLine.add(id, line, cliff);
+
         locks[account].balance.add(id, line, cliff);
         locks[account].locked.add(id, lineLocked, cliff);
         deposits[id] = account;
@@ -80,32 +82,56 @@ contract Staking {
 
     function restake(uint idLock, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
         address account = deposits[idLock];
+        //check body
         if (account == address(0)){
             return 0;
         }
-
+        require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
+//        require(locks[account].locked.initiatedLines[id].line.slope >= newSlope, "Impossible to restake: oldSlope < newSlope");
+        //todo write function check body: finish timeNewLine >= finishTimeOldLine
         uint blockTime = roundTimestamp(block.timestamp);
-//        withdraw({ from: account }); //todo think about it, if need
-        if (newAmount > 0){ //if newAmount, transfer ERC20 to contract
-            require(token.transferFrom(deposits[idLock], address(this), newAmount), "failure while transferring");
+        locks[account].locked.update(blockTime);
+        uint amountToWithdraw = locks[account].amount.sub(locks[account].locked.initial.bias);
+        //delete brokenLine ERC20
+        uint tailRemoved = locks[account].locked.remove(idLock, blockTime);
+        require(tailRemoved <= newAmount, "Impossible to restake: less amount, then now is");
+
+        uint addAmount = newAmount.sub(tailRemoved);
+        if (addAmount > amountToWithdraw) { //need more, than ready to withdraw, so need transfer ERC20 to this
+            require(token.transferFrom(deposits[idLock], address(this), addAmount.sub(amountToWithdraw)), "failure while transferring");
+            locks[account].amount = locks[account].amount.sub(tailRemoved);
+            locks[account].amount = locks[account].amount.add(newAmount);
         }
-        /*delete*/
-        uint amountEnd = locks[account].locked.remove(idLock, blockTime);
         locks[account].balance.remove(idLock, blockTime);
         totalSupplyLine.remove(idLock, blockTime);
-        locks[account].amount = locks[account].amount.sub(amountEnd);
-
-        amountEnd = amountEnd.add(newAmount);
-        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amountEnd, newSlope, newCliff), newSlope);
-        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amountEnd, newSlope);
-        /*add*/
+        //add lines
+        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(newAmount, newSlope, newCliff), newSlope);
+        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, newAmount, newSlope);
         id++;
         totalSupplyLine.add(id, line, newCliff);
         locks[account].balance.add(id, line, newCliff);
         locks[account].locked.add(id, lineLocked, newCliff);
         deposits[id] = account;
-        locks[account].amount = locks[account].amount.add(amountEnd);
         return id;
+    }
+
+    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint j = _i;
+        uint len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint k = len - 1;
+        while (_i != 0) {
+            bstr[k--] = byte(uint8(48 + _i % 10));
+            _i /= 10;
+        }
+        return string(bstr);
     }
 
     function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
@@ -116,4 +142,3 @@ contract Staking {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
     }
 }
-
