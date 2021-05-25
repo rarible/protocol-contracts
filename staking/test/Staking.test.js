@@ -128,6 +128,14 @@ contract("Staking", accounts => {
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
 		});
+
+		it("Try to createLock() more than 2 year stake, throw", async () => {
+			await token.mint(accounts[2], 2000);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await expectThrow(
+			  forTest._createLock(staking.address ,accounts[2], 1050, 10, 0)
+			);
+		});
 	})
 
 	describe("Part1. Check restake() One line only, change slope ", () => {
@@ -282,7 +290,7 @@ contract("Staking", accounts => {
 			);
 		});
 
-		it("Test6. Change slope, amount, with cliff, in cliff time, amount < bias, throw", async () => {
+		it("Test6. Change slope, amount, with cliff, in cliff time, New line period stake too short, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			resultLock  = await forTest._createLock(staking.address ,accounts[2], 38, 10, 3);

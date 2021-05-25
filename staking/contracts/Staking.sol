@@ -14,6 +14,7 @@ contract Staking {
 
     uint256 constant WEEK = 604800;                 //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
+    uint256 constant TWO_YEAR_WEEKS = 104;          //two year weeks
     ERC20Upgradeable public token;
     uint public id;                                 //id Line, successfully added to BrokenLine
 
@@ -35,6 +36,8 @@ contract Staking {
         if (amount == 0) {
             return 0;
         }
+        uint newFinishTime = amount.div(slope).add(cliff);
+        require(newFinishTime <= TWO_YEAR_WEEKS, "New finish line time more, than two years");
         uint blockTime = roundTimestamp(block.timestamp);
         BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
         BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
@@ -82,14 +85,9 @@ contract Staking {
 
     function restake(uint idLock, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
         address account = deposits[idLock];
-        //check body
-        if (account == address(0)){
-            return 0;
-        }
-        require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
-//        require(locks[account].locked.initiatedLines[id].line.slope >= newSlope, "Impossible to restake: oldSlope < newSlope");
-        //todo write function check body: finish timeNewLine >= finishTimeOldLine
         uint blockTime = roundTimestamp(block.timestamp);
+        checkRestake(account, idLock, newAmount, newSlope, newCliff, blockTime);
+
         locks[account].locked.update(blockTime);
         uint amountToWithdraw = locks[account].amount.sub(locks[account].locked.initial.bias);
         //delete brokenLine ERC20
@@ -117,6 +115,17 @@ contract Staking {
 
     function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
         return amount;
+    }
+
+    function checkRestake(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal {
+        require(account != address(0), "Line already with id already deleted");
+        require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
+        uint newFinishTime = newAmount.div(newSlope).add(newCliff);
+        require(newFinishTime <= TWO_YEAR_WEEKS, "New finish line time more, than two years");
+        newFinishTime = newFinishTime.add(toTime);
+        uint oldFinishTime = locks[account].locked.initiatedLines[id].line.bias.div(locks[account].locked.initiatedLines[id].line.slope);
+        oldFinishTime = oldFinishTime.add(locks[account].locked.initiatedLines[id].cliff).add(locks[account].locked.initiatedLines[id].line.start);
+        require(oldFinishTime <= newFinishTime, "New line period stake too short");
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
