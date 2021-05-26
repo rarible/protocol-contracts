@@ -14,7 +14,23 @@ contract ERC721LazyMintTest is IERC721LazyMint, ERC721Upgradeable {
         _mint(to, data.tokenId);
     }
 
-    function encode(LibERC721LazyMint.Mint721Data memory data) external view returns (bytes memory) {
+    function transferFromOrMint(
+        LibERC721LazyMint.Mint721Data memory data,
+        address from,
+        address to
+    ) external override {
+        if (_exists(data.tokenId)) {
+            safeTransferFrom(from, to, data.tokenId);
+        } else {
+            this.mintAndTransfer(data, to);
+        }
+    }
+
+    function encode(LibERC721LazyMint.Mint721Data memory data)
+        external
+        view
+        returns (bytes memory)
+    {
         return abi.encode(address(this), data);
     }
 }

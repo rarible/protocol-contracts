@@ -16,7 +16,25 @@ contract ERC1155LazyMintTest is IERC1155LazyMint, ERC1155Upgradeable {
         _mint(to, data.tokenId, _amount, "");
     }
 
-    function encode(LibERC1155LazyMint.Mint1155Data memory data) external view returns (bytes memory) {
+    function transferFromOrMint(
+        LibERC1155LazyMint.Mint1155Data memory data,
+        address from,
+        address to,
+        uint256 amount
+    ) external override {
+        uint256 balance = balanceOf(from, data.tokenId);
+        if (balance != 0) {
+            safeTransferFrom(from, to, data.tokenId, amount, "");
+        } else {
+            this.mintAndTransfer(data, to, balance);
+        }
+    }
+
+    function encode(LibERC1155LazyMint.Mint1155Data memory data)
+        external
+        view
+        returns (bytes memory)
+    {
         return abi.encode(address(this), data);
     }
 }
