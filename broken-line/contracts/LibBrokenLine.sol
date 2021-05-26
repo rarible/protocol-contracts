@@ -13,7 +13,6 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
   * All slope changes are stored in slopeChanges. The slope can always be reduced only, it cannot increase,
   * because users can only run out of lockup periods.
   **/
-//todo think about types, need maximum precision?
 contract BrokenLineDomain {
 
     struct Line {
@@ -45,6 +44,7 @@ library LibBrokenLine {
         require(line.slope != 0, "Slope == 0, unacceptable value for slope");
         require(line.slope <= line.bias, "Slope > bias, unacceptable value for slope");
         require(brokenLine.initiatedLines[id].line.start == 0, "Line with given id is already exist");
+        brokenLine.initiatedLines[id] = BrokenLineDomain.LineData(line, cliff);
 
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
@@ -62,11 +62,6 @@ library LibBrokenLine {
         uint256 endPeriodMinus1 = endPeriod.sub(1);
         brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeInt(line.slope)).add(mod);
         brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
-
-        BrokenLineDomain.LineData memory lineData;
-        lineData.line = line;
-        lineData.cliff = cliff;
-        brokenLine.initiatedLines[id] = lineData;
     }
 
     /**
