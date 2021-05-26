@@ -15,6 +15,7 @@ contract Staking {
     uint256 constant WEEK = 604800;                 //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
     uint256 constant TWO_YEAR_WEEKS = 104;          //two year weeks
+    uint256 constant WEEK_ST_FORMULA_MUL = 1000;    //week multiplier
     ERC20Upgradeable public token;
     uint public id;                                 //id Line, successfully added to BrokenLine
 
@@ -38,9 +39,9 @@ contract Staking {
         }
         uint newFinishTime = amount.div(slope).add(cliff);
         require(newFinishTime <= TWO_YEAR_WEEKS, "New finish line time more, than two years");
-        uint blockTime = roundTimestamp(block.timestamp);
-        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
-        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
+        (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
+        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
+        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(roundTimestamp(block.timestamp), amount, slope);
 
         id++;
         totalSupplyLine.add(id, line, cliff);
@@ -103,7 +104,8 @@ contract Staking {
         locks[account].balance.remove(idLock, blockTime);
         totalSupplyLine.remove(idLock, blockTime);
         //add lines
-        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(newAmount, newSlope, newCliff), newSlope);
+        (uint stAmount, uint stSlope) = getStake(newAmount, newSlope, newCliff);
+        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, stAmount, stSlope);
         BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, newAmount, newSlope);
         id++;
         totalSupplyLine.add(id, line, newCliff);
@@ -113,8 +115,23 @@ contract Staking {
         return id;
     }
 
-    function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
-        return amount;
+    //new amount and slope
+    function getStake(uint amount, uint slope, uint cliff) internal returns (uint, uint){
+//        =(0,2+0,8*(cliffPeriod/24)^2+0,5*(0,2+0,8*(slopePeriod/24)^2))*1000 original formula
+//        =(1000+((cliffPeriod)^2)*8+((slopePeriod)^2)*4)/1000 formula, that works
+        uint cliffPart = cliff.mul(cliff).mul(8);
+
+        uint slopePeriod = amount.div(slope);
+        uint tail = amount.mod(slope);
+        if (tail > 0) {
+            slopePeriod++;
+        }
+        uint slopePart = slopePeriod.mul(slopePeriod).mul(4);
+        uint multipleValue = cliffPart.add(slopePart).add(WEEK_ST_FORMULA_MUL);
+        multipleValue = multipleValue.div(WEEK_ST_FORMULA_MUL);
+        uint newAmount = amount.mul(multipleValue);
+        uint newSlope = newAmount.div(slopePeriod);
+        return(newAmount, newSlope);
     }
 
     function checkRestake(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal {
