@@ -69,32 +69,33 @@ library LibBrokenLine {
      **/
     function remove(BrokenLineDomain.BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint) {
         BrokenLineDomain.LineData memory lineData = brokenLine.initiatedLines[id];
-        require(lineData.line.bias != 0, "Line with given id already finished");
+        BrokenLineDomain.Line memory line = lineData.line;
+        require(line.bias != 0, "Line with given id already finished");
 
         update(brokenLine, toTime);
         //check time Line is over
-        uint period = lineData.line.bias.div(lineData.line.slope);
-        uint finishTime = lineData.line.start.add(period).add(lineData.cliff);
+        uint period = line.bias.div(line.slope);
+        uint finishTime = line.start.add(period).add(lineData.cliff);
         if (toTime > finishTime) {
-            lineData.line.bias = 0;
+            line.bias = 0;
             return 0;
         }
         uint finishTimeMinusOne = finishTime.sub(1);
-        int mod = safeInt(lineData.line.bias.mod(lineData.line.slope));
-        uint nowBias = lineData.line.bias;
-        uint cliffEnd =  lineData.line.start.add(lineData.cliff).sub(1);
+        int mod = safeInt(line.bias.mod(line.slope));
+        uint nowBias = line.bias;
+        uint cliffEnd =  line.start.add(lineData.cliff).sub(1);
         if (toTime <= cliffEnd) { //cliff works
             //in cliff finish time compensate change slope by oldLine.slope
-            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].sub(safeInt(lineData.line.slope));
+            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].sub(safeInt(line.slope));
             //in new Line finish point use oldLine.slope
-            brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(lineData.line.slope)).sub(mod);
+            brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(line.slope)).sub(mod);
         } else { //cliff finish
             if (toTime <= finishTimeMinusOne) { //slope works
                 //now compensate change slope by oldLine.slope
-                brokenLine.initial.slope = brokenLine.initial.slope.sub(lineData.line.slope);
+                brokenLine.initial.slope = brokenLine.initial.slope.sub(line.slope);
                 //in new Line finish point use oldLine.slope
-                brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(lineData.line.slope)).sub(mod);
-                nowBias = (finishTime.sub(toTime)).mul(lineData.line.slope).add(uint(mod));
+                brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(line.slope)).sub(mod);
+                nowBias = (finishTime.sub(toTime)).mul(line.slope).add(uint(mod));
             } else {  //tail works
                 //now compensate change slope by tail
                 brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
