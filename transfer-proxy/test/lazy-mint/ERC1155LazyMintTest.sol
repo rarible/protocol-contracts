@@ -26,7 +26,7 @@ contract ERC1155LazyMintTest is IERC1155LazyMint, ERC1155Upgradeable {
         if (balance != 0) {
             safeTransferFrom(from, to, data.tokenId, amount, "");
         } else {
-            this.mintAndTransfer(data, to, balance);
+            this.mintAndTransfer(data, to, amount);
         }
     }
 
