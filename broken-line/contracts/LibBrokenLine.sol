@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/math/SignedSafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 
 /**
   * Line describes a linear function, how the user's voice decreases from point (start, bias) with speed slope
@@ -36,6 +37,7 @@ contract BrokenLineDomain {
 library LibBrokenLine {
     using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
+    using LibIntMapping for mapping (uint => int);
 
     /**
      *add Line, save data in LineData
@@ -53,15 +55,15 @@ library LibBrokenLine {
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
         } else {
             uint cliffEnd = line.start.add(cliff).sub(1);
-            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].add(safeInt(line.slope));
+            brokenLine.slopeChanges.addToItem(cliffEnd, safeInt(line.slope));
             period = period.add(cliff);
         }
 
         int mod = safeInt(line.bias.mod(line.slope));
         uint256 endPeriod = line.start.add(period);
         uint256 endPeriodMinus1 = endPeriod.sub(1);
-        brokenLine.slopeChanges[endPeriodMinus1] = brokenLine.slopeChanges[endPeriodMinus1].sub(safeInt(line.slope)).add(mod);
-        brokenLine.slopeChanges[endPeriod] = brokenLine.slopeChanges[endPeriod].sub(mod);
+        brokenLine.slopeChanges.subFromItem(endPeriodMinus1, safeInt(line.slope).sub(mod));
+        brokenLine.slopeChanges.subFromItem(endPeriod, mod);
     }
 
     /**
@@ -86,23 +88,21 @@ library LibBrokenLine {
         uint cliffEnd =  line.start.add(lineData.cliff).sub(1);
         if (toTime <= cliffEnd) { //cliff works
             //in cliff finish time compensate change slope by oldLine.slope
-            brokenLine.slopeChanges[cliffEnd] = brokenLine.slopeChanges[cliffEnd].sub(safeInt(line.slope));
+            brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(line.slope));
             //in new Line finish point use oldLine.slope
-            brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(line.slope)).sub(mod);
-        } else { //cliff finish
-            if (toTime <= finishTimeMinusOne) { //slope works
-                //now compensate change slope by oldLine.slope
-                brokenLine.initial.slope = brokenLine.initial.slope.sub(line.slope);
-                //in new Line finish point use oldLine.slope
-                brokenLine.slopeChanges[finishTimeMinusOne] = brokenLine.slopeChanges[finishTimeMinusOne].add(safeInt(line.slope)).sub(mod);
-                nowBias = (finishTime.sub(toTime)).mul(line.slope).add(uint(mod));
-            } else {  //tail works
-                //now compensate change slope by tail
-                brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
-                nowBias =uint(mod);
-            }
+            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(line.slope).sub(mod));
+        } else if (toTime <= finishTimeMinusOne) { //slope works
+            //now compensate change slope by oldLine.slope
+            brokenLine.initial.slope = brokenLine.initial.slope.sub(line.slope);
+            //in new Line finish point use oldLine.slope
+            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(line.slope).sub(mod));
+            nowBias = finishTime.sub(toTime).mul(line.slope).add(uint(mod));
+        } else {  //tail works
+            //now compensate change slope by tail
+            brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
+            nowBias =uint(mod);
         }
-        brokenLine.slopeChanges[finishTime] = brokenLine.slopeChanges[finishTime].add(mod);
+        brokenLine.slopeChanges.addToItem(finishTime, mod);
         brokenLine.initial.bias = brokenLine.initial.bias.sub(nowBias);
         brokenLine.initiatedLines[id].line.bias = 0;
         return nowBias;
