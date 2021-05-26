@@ -54,6 +54,8 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
+        require(creatorsOfToken.length == 0, "Creators already registered");
+        
         uint total = 0;
         for(uint i=0; i < _creators.length; i++) {
             creatorsOfToken.push(_creators[i]);
