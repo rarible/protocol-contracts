@@ -14,7 +14,11 @@ import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
   * All slope changes are stored in slopeChanges. The slope can always be reduced only, it cannot increase,
   * because users can only run out of lockup periods.
   **/
-contract BrokenLineDomain {
+
+library LibBrokenLine {
+    using SignedSafeMathUpgradeable for int;
+    using SafeMathUpgradeable for uint;
+    using LibIntMapping for mapping (uint => int);
 
     struct Line {
         uint start;
@@ -32,21 +36,15 @@ contract BrokenLineDomain {
         mapping (uint => LineData) initiatedLines;  //initiated (successfully added) Lines
         Line initial;
     }
-}
-
-library LibBrokenLine {
-    using SignedSafeMathUpgradeable for int;
-    using SafeMathUpgradeable for uint;
-    using LibIntMapping for mapping (uint => int);
 
     /**
      *add Line, save data in LineData
      **/
-    function add(BrokenLineDomain.BrokenLine storage brokenLine, uint id, BrokenLineDomain.Line memory line, uint cliff) internal {
+    function add(BrokenLine storage brokenLine, uint id, Line memory line, uint cliff) internal {
         require(line.slope != 0, "Slope == 0, unacceptable value for slope");
         require(line.slope <= line.bias, "Slope > bias, unacceptable value for slope");
         require(brokenLine.initiatedLines[id].line.bias == 0, "Line with given id is already exist");
-        brokenLine.initiatedLines[id] = BrokenLineDomain.LineData(line, cliff);
+        brokenLine.initiatedLines[id] = LineData(line, cliff);
 
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
@@ -69,9 +67,9 @@ library LibBrokenLine {
     /**
      *remove Line from BrokenLine, return line.bias, which actual now moment
      **/
-    function remove(BrokenLineDomain.BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint) {
-        BrokenLineDomain.LineData memory lineData = brokenLine.initiatedLines[id];
-        BrokenLineDomain.Line memory line = lineData.line;
+    function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint) {
+        LineData memory lineData = brokenLine.initiatedLines[id];
+        Line memory line = lineData.line;
 
         update(brokenLine, toTime);
         //check time Line is over
@@ -109,7 +107,7 @@ library LibBrokenLine {
     /**
      * Update initial Line by parameter toTime. CalculateВысчитывает и применяет все изменения из slopeChanges за этот период
      **/
-    function update(BrokenLineDomain.BrokenLine storage brokenLine, uint toTime) internal {
+    function update(BrokenLine storage brokenLine, uint toTime) internal {
         uint bias = brokenLine.initial.bias;
         uint slope = brokenLine.initial.slope;
         uint time = brokenLine.initial.start;

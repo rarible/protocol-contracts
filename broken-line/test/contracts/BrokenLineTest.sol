@@ -5,26 +5,24 @@ pragma abicoder v2;
 
 import "../../contracts/LibBrokenLine.sol";
 
-contract BrokenLineTest is BrokenLineDomain {
-    using LibBrokenLine for BrokenLine;
-
-    BrokenLine public brokenLine;
+contract BrokenLineTest {
+    LibBrokenLine.BrokenLine public brokenLineTestLocal;
     event resultRemoveLine(uint result);
 
-    function addTest(Line memory line, uint id, uint cliff) public {
-        brokenLine.add(id, line, cliff);
+    function addTest(LibBrokenLine.Line memory line, uint id, uint cliff) public {
+        LibBrokenLine.add(brokenLineTestLocal, id, line, cliff);
     }
 
     function update(uint timeTo) public {
-        brokenLine.update(timeTo);
+        LibBrokenLine.update(brokenLineTestLocal, timeTo);
     }
 
-    function getCurrent() view public returns (Line memory) {
-        return brokenLine.initial;
+    function getCurrent() view public returns (LibBrokenLine.Line memory) {
+        return brokenLineTestLocal.initial;
     }
 
     function removeTest(uint id, uint toTime) public {
-        uint result = brokenLine.remove(id, toTime);
+        uint result = LibBrokenLine.remove(brokenLineTestLocal, id, toTime);
         emit resultRemoveLine(result);
     }
 }
