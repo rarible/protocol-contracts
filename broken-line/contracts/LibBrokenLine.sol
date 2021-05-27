@@ -45,7 +45,7 @@ library LibBrokenLine {
     function add(BrokenLineDomain.BrokenLine storage brokenLine, uint id, BrokenLineDomain.Line memory line, uint cliff) internal {
         require(line.slope != 0, "Slope == 0, unacceptable value for slope");
         require(line.slope <= line.bias, "Slope > bias, unacceptable value for slope");
-        require(brokenLine.initiatedLines[id].line.start == 0, "Line with given id is already exist");
+        require(brokenLine.initiatedLines[id].line.bias == 0, "Line with given id is already exist");
         brokenLine.initiatedLines[id] = BrokenLineDomain.LineData(line, cliff);
 
         update(brokenLine, line.start);
@@ -72,20 +72,18 @@ library LibBrokenLine {
     function remove(BrokenLineDomain.BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint) {
         BrokenLineDomain.LineData memory lineData = brokenLine.initiatedLines[id];
         BrokenLineDomain.Line memory line = lineData.line;
-        require(line.bias != 0, "Line with given id already finished");
 
         update(brokenLine, toTime);
         //check time Line is over
-        uint period = line.bias.div(line.slope);
+        uint bias = line.bias;
+        uint period = bias.div(line.slope);
         uint finishTime = line.start.add(period).add(lineData.cliff);
         if (toTime > finishTime) {
-            line.bias = 0;
             return 0;
         }
         uint finishTimeMinusOne = finishTime.sub(1);
-        int mod = safeInt(line.bias.mod(line.slope));
-        uint nowBias = line.bias;
-        uint cliffEnd =  line.start.add(lineData.cliff).sub(1);
+        int mod = safeInt(bias.mod(line.slope));
+        uint cliffEnd = line.start.add(lineData.cliff).sub(1);
         if (toTime <= cliffEnd) { //cliff works
             //in cliff finish time compensate change slope by oldLine.slope
             brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(line.slope));
@@ -96,16 +94,16 @@ library LibBrokenLine {
             brokenLine.initial.slope = brokenLine.initial.slope.sub(line.slope);
             //in new Line finish point use oldLine.slope
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(line.slope).sub(mod));
-            nowBias = finishTime.sub(toTime).mul(line.slope).add(uint(mod));
+            bias = finishTime.sub(toTime).mul(line.slope).add(uint(mod));
         } else {  //tail works
             //now compensate change slope by tail
             brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
-            nowBias =uint(mod);
+            bias = uint(mod);
         }
         brokenLine.slopeChanges.addToItem(finishTime, mod);
-        brokenLine.initial.bias = brokenLine.initial.bias.sub(nowBias);
+        brokenLine.initial.bias = brokenLine.initial.bias.sub(bias);
         brokenLine.initiatedLines[id].line.bias = 0;
-        return nowBias;
+        return bias;
     }
 
     /**

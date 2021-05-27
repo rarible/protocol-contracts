@@ -487,22 +487,18 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([8, 0, 0]);
 		});
 
-		it("One line can be added with cliff, and tail step 5 - remove when finish expect throw", async () => {
+		it("One line can be added with cliff, and tail step 5 - remove when finish return 0", async () => {
 			let id1 = 3;
 			await forTest.addTest([1, 20, 10], id1, 2);
 			await assertCurrent([1, 20, 0]);
 
-			resultRemove = await forTest.removeTest(id1, 4);
+			resultRemove = await forTest.removeTest(id1, 6);
 			let amount1;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
       	amount1 = ev.result;
         return true;
       });
-			assert.equal(amount1, 10);
-
-			await expectThrow(
-				forTest.removeTest(id1, 6)
-			);
+			assert.equal(amount1, 0);
 		});
 
 	})
