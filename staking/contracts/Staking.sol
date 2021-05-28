@@ -21,6 +21,11 @@ contract Staking {
     ERC20Upgradeable public token;
     uint public id;                                         //id Line, successfully added to BrokenLine
 
+    struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
+        address locker;                     //locker address (lock creator)
+        address delegate;                   //delegate address (delegate creator)
+    }
+
     struct Locks {
         LibBrokenLine.BrokenLine balance;   //line of stRari balance
         LibBrokenLine.BrokenLine locked;    //locked amount (RARI)
@@ -28,7 +33,7 @@ contract Staking {
     }
 
     mapping (address => Locks) locks;                   //address User - Lock
-    mapping (uint => address) deposits;                 //idLock address User
+    mapping (uint => Lockers) deposits;                 //idLock address User
     LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
 
     constructor(ERC20Upgradeable _token) public {
@@ -49,7 +54,7 @@ contract Staking {
         totalSupplyLine.add(id, stLine, cliff);
         locks[account].balance.add(id, stLine, cliff);
         locks[account].locked.add(id, line, cliff);
-        deposits[id] = account;
+        deposits[id].locker = account;
         locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
         return id;
@@ -81,7 +86,7 @@ contract Staking {
     }
 
     function reStake(uint idLock, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
-        address account = deposits[idLock];
+        address account = deposits[idLock].locker;
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
         locks[account].locked.update(blockTime);
@@ -93,7 +98,7 @@ contract Staking {
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
             uint lack = addAmount.sub(balance);
-            require(token.transferFrom(deposits[idLock], address(this), lack), "failure while transferring");
+            require(token.transferFrom(deposits[idLock].locker, address(this), lack), "failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
@@ -107,7 +112,7 @@ contract Staking {
         totalSupplyLine.add(id, stLine, newCliff);
         locks[account].balance.add(id, stLine, newCliff);
         locks[account].locked.add(id, line, newCliff);
-        deposits[id] = account;
+        deposits[id].locker = account;
         return id;
     }
     
