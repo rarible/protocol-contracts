@@ -40,7 +40,7 @@ contract Staking {
         token = _token;
     }
 
-    function stake(address account, address delegate, uint amount, uint slope, uint cliff) public returns(uint) {
+    function stake(address account, uint amount, uint slope, uint cliff, address delegate) public returns(uint) {
         if (amount == 0) {
             return 0;
         }
@@ -89,34 +89,42 @@ contract Staking {
         }
     }
 
-    function reStake(uint idLock, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
+    function reStake(uint idLock, uint newAmount, uint newSlope, uint newCliff, address newDelegate) public returns (uint) {
         address account = deposits[idLock].locker;
+        address delegate = deposits[idLock].delegate;
+        if (delegate == address(0)) {
+            delegate = account;
+        }
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
         locks[account].locked.update(blockTime);
-        
+
         uint balance = locks[account].amount.sub(locks[account].locked.initial.bias);
         uint residue = locks[account].locked.remove(idLock, blockTime);
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
 
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
-            uint lack = addAmount.sub(balance);
-            require(token.transferFrom(deposits[idLock].locker, address(this), lack), "failure while transferring");
+//            uint lack = addAmount.sub(balance);
+            require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
-        locks[account].balance.remove(idLock, blockTime);
+        locks[delegate].balance.remove(idLock, blockTime);
         totalSupplyLine.remove(idLock, blockTime);
 
         (uint stAmount, uint stSlope) = getStake(newAmount, newSlope, newCliff);
-        LibBrokenLine.Line memory stLine = LibBrokenLine.Line(blockTime, stAmount, stSlope);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, newAmount, newSlope);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
         id++;
-        totalSupplyLine.add(id, stLine, newCliff);
-        locks[account].balance.add(id, stLine, newCliff);
+        totalSupplyLine.add(id, line, newCliff);
+        if (newDelegate != address(0)) {
+           delegate = newDelegate;
+        }
+        locks[delegate].balance.add(id, line, newCliff);
+        line = LibBrokenLine.Line(blockTime, newAmount, newSlope);
         locks[account].locked.add(id, line, newCliff);
         deposits[id].locker = account;
+        deposits[id].delegate = newDelegate;
         return id;
     }
     
