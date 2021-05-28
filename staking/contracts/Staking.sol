@@ -40,21 +40,25 @@ contract Staking {
         token = _token;
     }
 
-    function stake(address account, uint amount, uint slope, uint cliff) public returns(uint) {
+    function stake(address account, address delegate, uint amount, uint slope, uint cliff) public returns(uint) {
         if (amount == 0) {
             return 0;
         }
         uint period = amount.div(slope).add(cliff);
         require(period <= TWO_YEAR_WEEKS, "Finish line time more, than two years");
         (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
-        LibBrokenLine.Line memory stLine = LibBrokenLine.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(roundTimestamp(block.timestamp), amount, slope);
-
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
         id++;
-        totalSupplyLine.add(id, stLine, cliff);
-        locks[account].balance.add(id, stLine, cliff);
+        totalSupplyLine.add(id, line, cliff);
+        if (delegate == address(0)) {
+            locks[account].balance.add(id, line, cliff);
+        } else {
+            locks[delegate].balance.add(id, line, cliff);
+        }
+        line = LibBrokenLine.Line(roundTimestamp(block.timestamp), amount, slope);
         locks[account].locked.add(id, line, cliff);
         deposits[id].locker = account;
+        deposits[id].delegate = delegate;
         locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
         return id;

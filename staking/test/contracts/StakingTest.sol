@@ -13,7 +13,7 @@ contract StakingTest {
 
     function _createLock(address staking, address account, uint amount, uint slope, uint cliff) external {
         Staking stakingTest = Staking(staking);
-        uint result = stakingTest.stake(account, amount, slope, cliff);
+        uint result = stakingTest.stake(account, address(0), amount, slope, cliff);
         emit createLockResult(result);
     }
 
