@@ -6,47 +6,57 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
+import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 
 contract Staking {
     using SafeMathUpgradeable for uint;
-    using LibBrokenLine for BrokenLineDomain.BrokenLine;
+    using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant WEEK = 604800;                 //seconds one week
-    uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
+    uint256 constant WEEK = 604800;                         //seconds one week
+    uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch begining)
+    uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
+    uint256 constant ST_FORMULA_MULTIPLIER = 1000;          //stFormula multiplier
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4;       //stFormula slope multiplier
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8;       //stFormula cliff multiplier
     ERC20Upgradeable public token;
+    uint public id;                                         //id Line, successfully added to BrokenLine
 
     struct Locks {
-        BrokenLineDomain.BrokenLine balance;   //line of stRari balance
-        BrokenLineDomain.BrokenLine locked;    //locked amount (RARI)
-        uint amount;                           //user RARI (lockedAmount+ amountready for transferBack)
+        LibBrokenLine.BrokenLine balance;   //line of stRari balance
+        LibBrokenLine.BrokenLine locked;    //locked amount (RARI)
+        uint amount;                        //user RARI (lockedAmount + amountready for transferBack)
     }
 
     mapping (address => Locks) locks;                   //address User - Lock
-    BrokenLineDomain.BrokenLine public totalSupplyLine; //total stRARI balance
+    mapping (uint => address) deposits;                 //idLock address User
+    LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
 
     constructor(ERC20Upgradeable _token) public {
         token = _token;
     }
 
-    function createLock(address account, uint amount, uint slope, uint cliff) public {
-        //todo проверки
-        uint blockTime = roundTimestamp(block.timestamp);
-        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
-        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
+    function stake(address account, uint amount, uint slope, uint cliff) public returns(uint) {
+        if (amount == 0) {
+            return 0;
+        }
+        uint period = amount.div(slope).add(cliff);
+        require(period <= TWO_YEAR_WEEKS, "Finish line time more, than two years");
+        (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
+        LibBrokenLine.Line memory stLine = LibBrokenLine.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(roundTimestamp(block.timestamp), amount, slope);
 
-        totalSupplyLine.add(line, cliff);
-        locks[account].balance.add(line, cliff);
-        locks[account].locked.add(lineLocked, cliff);
+        id++;
+        totalSupplyLine.add(id, stLine, cliff);
+        locks[account].balance.add(id, stLine, cliff);
+        locks[account].locked.add(id, line, cliff);
+        deposits[id] = account;
         locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
-
-        // как меняется lock общий, когда юзер приходит/уходит/меняет
-        // 1. нужно применить пропущенные изменения (окончания локов)
-        // 2. если добавляем, то
+        return id;
     }
 
     function totalSupply() public returns (uint) {
-        if (totalSupplyLine.initial.start == 0) { //no lock
+        if (totalSupplyLine.initial.start == 0) { 
             return 0;
         }
         totalSupplyLine.update(roundTimestamp(block.timestamp));
@@ -54,7 +64,7 @@ contract Staking {
     }
 
     function balanceOf(address account) public returns (uint) {
-        if (locks[account].balance.initial.start == 0) { //no lock
+        if (locks[account].balance.initial.start == 0) { 
             return 0;
         }
         locks[account].balance.update(roundTimestamp(block.timestamp));
@@ -62,29 +72,75 @@ contract Staking {
     }
 
     function withdraw() public  {
-        locks[msg.sender].balance.update(roundTimestamp(block.timestamp));
-        uint value = locks[msg.sender].amount.sub(locks[msg.sender].balance.initial.bias);
+        locks[msg.sender].locked.update(roundTimestamp(block.timestamp));
+        uint value = locks[msg.sender].amount.sub(locks[msg.sender].locked.initial.bias);
         if (value > 0) {
             locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "failure while transferring");
         }
-        //todo Lock delete
     }
 
-    function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
-        return amount;
+    function reStake(uint idLock, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
+        address account = deposits[idLock];
+        uint blockTime = roundTimestamp(block.timestamp);
+        verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
+        locks[account].locked.update(blockTime);
+        
+        uint balance = locks[account].amount.sub(locks[account].locked.initial.bias);
+        uint residue = locks[account].locked.remove(idLock, blockTime);
+        require(residue <= newAmount, "Impossible to restake: less amount, then now is");
+
+        uint addAmount = newAmount.sub(residue);
+        if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
+            uint lack = addAmount.sub(balance);
+            require(token.transferFrom(deposits[idLock], address(this), lack), "failure while transferring");
+            locks[account].amount = locks[account].amount.sub(residue);
+            locks[account].amount = locks[account].amount.add(newAmount);
+        }
+        locks[account].balance.remove(idLock, blockTime);
+        totalSupplyLine.remove(idLock, blockTime);
+
+        (uint stAmount, uint stSlope) = getStake(newAmount, newSlope, newCliff);
+        LibBrokenLine.Line memory stLine = LibBrokenLine.Line(blockTime, stAmount, stSlope);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, newAmount, newSlope);
+        id++;
+        totalSupplyLine.add(id, stLine, newCliff);
+        locks[account].balance.add(id, stLine, newCliff);
+        locks[account].locked.add(id, line, newCliff);
+        deposits[id] = account;
+        return id;
+    }
+    
+    //calculate and return (newAmount, newSlope), using formula k=(1000+((cliffPeriod)^2)*8+((slopePeriod)^2)*4)/1000, newAmount=k*amount
+    function getStake(uint amount, uint slope, uint cliff) internal returns (uint, uint) {
+        uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
+
+        uint slopePeriod = amount.div(slope);
+        uint tail = amount.mod(slope);
+        if (tail > 0) {
+            slopePeriod++;
+        }
+        uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
+        uint amountMultiplier = cliffSide.add(slopeSide).add(ST_FORMULA_MULTIPLIER).div(ST_FORMULA_MULTIPLIER);
+        uint newAmount = amount.mul(amountMultiplier);
+        uint newSlope = newAmount.div(slopePeriod);
+        return(newAmount, newSlope);
     }
 
-    function increaseUnlockTime(uint lockId, uint period) public {
-
-    }
-
-    function increaseLockedValue(uint lockId, uint period) public {
-
+    function verification(address account, uint idLock, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal {
+        require(account != address(0), "Line with idLock already deleted");
+        require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
+        uint period = newAmount.div(newSlope).add(newCliff);
+        require(period <= TWO_YEAR_WEEKS, "New finish line time more, than two years");
+        uint end = toTime.add(period);
+        LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock];
+        LibBrokenLine.Line memory line = lineData.line;
+        uint oldPeriod = line.bias.div(line.slope);
+        uint oldEnd = line.start.add(lineData.cliff).add(oldPeriod);
+        require(oldEnd <= end, "New line period stake too short");
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
     }
 }
-
