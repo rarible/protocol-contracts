@@ -19,7 +19,7 @@ contract("Staking", accounts => {
 
 	function eventRestakeHandler(resultRestake){
 		let idNewLock;
-    truffleAssert.eventEmitted(resultRestake, 'restakeResult', (ev) => {
+    truffleAssert.eventEmitted(resultRestake, 'reStakeResult', (ev) => {
     	idNewLock = ev.result;
       return true;
     });
