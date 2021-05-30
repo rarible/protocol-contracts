@@ -40,7 +40,7 @@ contract Staking {
         token = _token;
     }
 
-    function stake(address account, uint amount, uint slope, uint cliff, address delegate) public returns(uint) {
+    function stake(address account, address delegate, uint amount, uint slope, uint cliff) public returns(uint) {
         if (amount == 0) {
             return 0;
         }
@@ -50,11 +50,7 @@ contract Staking {
         LibBrokenLine.Line memory line = LibBrokenLine.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
         id++;
         totalSupplyLine.add(id, line, cliff);
-        if (delegate == address(0)) {
-            locks[account].balance.add(id, line, cliff);
-        } else {
-            locks[delegate].balance.add(id, line, cliff);
-        }
+        locks[delegate].balance.add(id, line, cliff);
         line = LibBrokenLine.Line(roundTimestamp(block.timestamp), amount, slope);
         locks[account].locked.add(id, line, cliff);
         deposits[id].locker = account;
@@ -89,12 +85,9 @@ contract Staking {
         }
     }
 
-    function reStake(uint idLock, uint newAmount, uint newSlope, uint newCliff, address newDelegate) public returns (uint) {
+    function reStake(uint idLock, address newDelegate, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
         address account = deposits[idLock].locker;
         address delegate = deposits[idLock].delegate;
-        if (delegate == address(0)) {
-            delegate = account;
-        }
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
         locks[account].locked.update(blockTime);
@@ -105,22 +98,23 @@ contract Staking {
 
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
-//            uint lack = addAmount.sub(balance);
+//            uint miss = addAmount.sub(balance);
+//            require(token.transferFrom(deposits[idLock].locker, address(this), miss), "failure while transferring");
             require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
         locks[delegate].balance.remove(idLock, blockTime);
         totalSupplyLine.remove(idLock, blockTime);
+        return addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+    }
 
+    function addLines(address account, address newDelegate, uint newAmount, uint newSlope, uint newCliff, uint blockTime) internal returns (uint) {
         (uint stAmount, uint stSlope) = getStake(newAmount, newSlope, newCliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
         id++;
         totalSupplyLine.add(id, line, newCliff);
-        if (newDelegate != address(0)) {
-           delegate = newDelegate;
-        }
-        locks[delegate].balance.add(id, line, newCliff);
+        locks[newDelegate].balance.add(id, line, newCliff);
         line = LibBrokenLine.Line(blockTime, newAmount, newSlope);
         locks[account].locked.add(id, line, newCliff);
         deposits[id].locker = account;

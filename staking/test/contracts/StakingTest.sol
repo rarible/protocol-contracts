@@ -11,9 +11,10 @@ contract StakingTest {
     event totalBalanceResult(uint result);
     event reStakeResult(uint result);
 
-    function _createLock(address staking, address account, uint amount, uint slope, uint cliff) external {
+//    function _createLock(address staking, address account, uint amount, uint slope, uint cliff) external {
+    function _stake(address staking, address locker, address delegate, uint amount, uint slope, uint cliff) external {
         Staking stakingTest = Staking(staking);
-        uint result = stakingTest.stake(account, amount, slope, cliff, address(0));
+        uint result = stakingTest.stake(locker, delegate, amount, slope, cliff);
         emit createLockResult(result);
     }
 
@@ -29,9 +30,9 @@ contract StakingTest {
         emit totalBalanceResult(result);
     }
 
-    function _restake(address staking, uint idLock, uint newAmount, uint newSlope, uint newCliff) external {
+    function _restake(address staking, uint idLock, address delegate, uint newAmount, uint newSlope, uint newCliff) external {
         Staking stakingTest = Staking(staking);
-        uint result = stakingTest.reStake(idLock, newAmount, newSlope, newCliff, address(0));
+        uint result = stakingTest.reStake(idLock, delegate, newAmount, newSlope, newCliff);
         emit reStakeResult(result);
     }
 }
