@@ -69,6 +69,7 @@ library LibBrokenLine {
      **/
     function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint) {
         LineData memory lineData = brokenLine.initiatedLines[id];
+        require(lineData.line.bias != 0, "Removing Line, which not exists");
         Line memory line = lineData.line;
 
         update(brokenLine, toTime);

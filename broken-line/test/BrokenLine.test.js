@@ -459,6 +459,16 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([5, 0, 0]);
 		});
 
+		it("Check remove line whith unknown id, expect throw", async () => {
+			let id1 = 3;
+			await forTest.addTest([1, 20, 8], id1, 2);
+			await assertCurrent([1, 20, 0]);
+      let idUnknown = 213;
+			await expectThrow(
+    		forTest.removeTest(idUnknown, 5)
+    	);
+		});
+
 		it("Two line can be added with cliff, and tail step 5 - remove while cliff", async () => {
 			let id1 = 4;
 			let id2 = 5;
