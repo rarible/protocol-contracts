@@ -149,6 +149,23 @@ contract Staking {
         require(oldEnd <= end, "New line period stake too short");
     }
 
+    function delegate(uint idLock, address newDelegate) internal {
+        address account = deposits[idLock].delegate;
+        require(account != address(0));
+        require(locks[account].balance.initiatedLines[idLock].line.bias != 0);
+        uint blockTime = roundTimestamp(block.timestamp);
+        locks[account].locked.update(blockTime);
+
+        uint bias = locks[account].balance.remove(idLock, blockTime);
+        uint slope = locks[account].balance.initiatedLines[idLock].line.slope;
+        uint cliff = locks[account].balance.initiatedLines[idLock].cliff;
+        require(bias > 0, "Impossible to delegate empty Line");
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
+        locks[newDelegate].balance.add(idLock, line, cliff);
+        deposits[id].locker = account;
+        deposits[id].delegate = newDelegate;
+    }
+
     function roundTimestamp(uint ts) pure internal returns (uint) {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
     }
