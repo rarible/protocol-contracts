@@ -109,7 +109,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
-            } else  if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            } else  if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS || matchCalculate.assetClass == LibAsset.ERC721_ASSET_CLASS) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
