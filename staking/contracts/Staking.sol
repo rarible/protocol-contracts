@@ -98,8 +98,6 @@ contract Staking {
 
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
-//            uint miss = addAmount.sub(balance);
-//            require(token.transferFrom(deposits[idLock].locker, address(this), miss), "failure while transferring");
             require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
