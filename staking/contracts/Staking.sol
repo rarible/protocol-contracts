@@ -91,9 +91,14 @@ contract Staking {
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
         locks[account].locked.update(blockTime);
+        removeLines(idLock, account, delegate, newAmount, blockTime);
+        return addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+    }
 
-        uint balance = locks[account].amount.sub(locks[account].locked.initial.bias);
-        uint residue = locks[account].locked.remove(idLock, blockTime);
+    function removeLines(uint idLock, address account, address delegate, uint newAmount, uint toTime) internal {
+        uint bias = locks[account].locked.initial.bias;
+        uint balance = locks[account].amount.sub(bias);
+        (uint residue, uint slope) = locks[account].locked.remove(idLock, toTime);
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
 
         uint addAmount = newAmount.sub(residue);
@@ -102,9 +107,8 @@ contract Staking {
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
-        locks[delegate].balance.remove(idLock, blockTime);
-        totalSupplyLine.remove(idLock, blockTime);
-        return addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+        locks[delegate].balance.remove(idLock, toTime);
+        totalSupplyLine.remove(idLock, toTime);
     }
 
     function addLines(address account, address newDelegate, uint newAmount, uint newSlope, uint newCliff, uint blockTime) internal returns (uint) {
@@ -161,8 +165,8 @@ contract Staking {
         uint blockTime = roundTimestamp(block.timestamp);
         locks[account].locked.update(blockTime);
 
-        uint bias = locks[account].balance.remove(idLock, blockTime);
-        uint slope = lineData.line.slope;
+        (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
+//        uint slope = lineData.line.slope;
         uint cliff = lineData.cliff;
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
         locks[newDelegate].balance.add(idLock, line, cliff);
