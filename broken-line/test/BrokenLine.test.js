@@ -403,11 +403,14 @@ contract("BrokenLine", accounts => {
 
 			resultRemove = await forTest.removeTest(id1, 4);
 			let amount1;
+			let slope1;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.result;
+      	amount1 = ev.bias;
+      	slope1 = ev.slope;
         return true;
       });
       assert.equal(amount1, 90);
+      assert.equal(slope1, 10);
 
 			await forTest.update(5);
     	await assertCurrent([5, 0, 0]);
@@ -425,7 +428,7 @@ contract("BrokenLine", accounts => {
 			resultRemove = await forTest.removeTest(id1, 3);
 			let amount1;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.result;
+      	amount1 = ev.bias;
         return true;
       });
 
@@ -450,13 +453,23 @@ contract("BrokenLine", accounts => {
 			resultRemove = await forTest.removeTest(id1, 5);
 			let amount1;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.result;
+      	amount1 = ev.bias;
         return true;
       });
 			assert.equal(amount1, 4);
 
 			await forTest.update(5);
 			await assertCurrent([5, 0, 0]);
+		});
+
+		it("Check remove line whith unknown id, expect throw", async () => {
+			let id1 = 3;
+			await forTest.addTest([1, 20, 8], id1, 2);
+			await assertCurrent([1, 20, 0]);
+      let idUnknown = 213;
+			await expectThrow(
+    		forTest.removeTest(idUnknown, 5)
+    	);
 		});
 
 		it("Two line can be added with cliff, and tail step 5 - remove while cliff", async () => {
@@ -469,7 +482,7 @@ contract("BrokenLine", accounts => {
 			resultRemove = await forTest.removeTest(id1, 5);
 			let amount1;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.result;
+      	amount1 = ev.bias;
         return true;
       });
 			assert.equal(amount1, 17);
@@ -495,7 +508,7 @@ contract("BrokenLine", accounts => {
 			resultRemove = await forTest.removeTest(id1, 6);
 			let amount1;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.result;
+      	amount1 = ev.bias;
         return true;
       });
 			assert.equal(amount1, 0);
