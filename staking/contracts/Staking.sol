@@ -133,6 +133,10 @@ contract Staking {
         uint amountMultiplier = cliffSide.add(slopeSide).add(ST_FORMULA_MULTIPLIER).div(ST_FORMULA_MULTIPLIER);
         uint newAmount = amount.mul(amountMultiplier);
         uint newSlope = newAmount.div(slopePeriod);
+        //TODO: Do better, crutch detected!!! author:k.shcherbakov@rarible.com
+        if (newSlope < slope){
+            newSlope = slope;
+        }
         return(newAmount, newSlope);
     }
 
@@ -152,14 +156,14 @@ contract Staking {
     function delegate(uint idLock, address newDelegate) public {
         address account = deposits[idLock].delegate;
         require(account != address(0));
-        require(locks[account].balance.initiatedLines[idLock].line.bias != 0);
+        LibBrokenLine.LineData memory lineData = locks[account].balance.initiatedLines[idLock];
+        require(lineData.line.bias != 0);
         uint blockTime = roundTimestamp(block.timestamp);
         locks[account].locked.update(blockTime);
 
         uint bias = locks[account].balance.remove(idLock, blockTime);
-        uint slope = locks[account].balance.initiatedLines[idLock].line.slope;
-        uint cliff = locks[account].balance.initiatedLines[idLock].cliff;
-        require(bias > 0, "Impossible to delegate empty Line");
+        uint slope = lineData.line.slope;
+        uint cliff = lineData.cliff;
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
         locks[newDelegate].balance.add(idLock, line, cliff);
         deposits[id].locker = account;
