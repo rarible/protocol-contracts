@@ -149,7 +149,7 @@ contract Staking {
         require(oldEnd <= end, "New line period stake too short");
     }
 
-    function delegate(uint idLock, address newDelegate) internal {
+    function delegate(uint idLock, address newDelegate) public {
         address account = deposits[idLock].delegate;
         require(account != address(0));
         require(locks[account].balance.initiatedLines[idLock].line.bias != 0);
