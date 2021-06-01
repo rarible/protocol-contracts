@@ -129,18 +129,10 @@ contract Staking {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
 
         uint slopePeriod = amount.div(slope);
-        uint tail = amount.mod(slope);
-        if (tail > 0) {
-            slopePeriod++;
-        }
         uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
         uint amountMultiplier = cliffSide.add(slopeSide).add(ST_FORMULA_MULTIPLIER).div(ST_FORMULA_MULTIPLIER);
         uint newAmount = amount.mul(amountMultiplier);
         uint newSlope = newAmount.div(slopePeriod);
-        //TODO: Do better, crutch detected!!! author:k.shcherbakov@rarible.com
-        if (newSlope < slope){
-            newSlope = slope;
-        }
         return(newAmount, newSlope);
     }
 
@@ -166,7 +158,6 @@ contract Staking {
         locks[account].locked.update(blockTime);
 
         (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
-//        uint slope = lineData.line.slope;
         uint cliff = lineData.cliff;
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
         locks[newDelegate].balance.add(idLock, line, cliff);
