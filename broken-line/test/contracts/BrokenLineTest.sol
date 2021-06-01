@@ -7,7 +7,7 @@ import "../../contracts/LibBrokenLine.sol";
 
 contract BrokenLineTest {
     LibBrokenLine.BrokenLine public brokenLineTestLocal;
-    event resultRemoveLine(uint result);
+    event resultRemoveLine(uint bias, uint slope);
 
     function addTest(LibBrokenLine.Line memory line, uint id, uint cliff) public {
         LibBrokenLine.add(brokenLineTestLocal, id, line, cliff);
@@ -22,7 +22,7 @@ contract BrokenLineTest {
     }
 
     function removeTest(uint id, uint toTime) public {
-        uint result = LibBrokenLine.remove(brokenLineTestLocal, id, toTime);
-        emit resultRemoveLine(result);
+        (uint bias, uint slope) = LibBrokenLine.remove(brokenLineTestLocal, id, toTime);
+        emit resultRemoveLine(bias, slope);
     }
 }
