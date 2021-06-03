@@ -39,7 +39,6 @@ contract("Staking", accounts => {
 		deposite = accounts[1];
 		forTest = await StakingTest.new();
 		token = await ERC20.new();
-//		staking = await Staking.new(token.address);
 		staking = await Staking.new();
 		await staking.__Staking_init(token.address); //initialize, set owner
 	})
@@ -899,7 +898,6 @@ contract("Staking", accounts => {
  			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
 		});
-
 
   })
 })

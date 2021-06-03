@@ -38,17 +38,11 @@ contract Staking is OwnableUpgradeable{
     mapping (uint => Lockers) deposits;                 //idLock address User
     LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
 
-//    constructor(ERC20Upgradeable _token) public {
-//        token = _token;
-//        __Ownable_init_unchained();
-//    }
-
     function __Staking_init(ERC20Upgradeable _token) external initializer {
         token = _token;
         __Ownable_init_unchained();
     }
 
-    //Only owner
     function setStopLock(bool value) external onlyOwner{
         stopLock = value;
     }
