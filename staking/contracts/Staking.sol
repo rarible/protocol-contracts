@@ -61,7 +61,7 @@ contract Staking {
     }
 
     function totalSupply() public returns (uint) {
-        if (totalSupplyLine.initial.start == 0) { 
+        if (totalSupplyLine.initial.bias == 0) {
             return 0;
         }
         totalSupplyLine.update(roundTimestamp(block.timestamp));
@@ -69,7 +69,7 @@ contract Staking {
     }
 
     function balanceOf(address account) public returns (uint) {
-        if (locks[account].balance.initial.start == 0) { 
+        if (locks[account].balance.initial.bias == 0) {
             return 0;
         }
         locks[account].balance.update(roundTimestamp(block.timestamp));
@@ -90,7 +90,6 @@ contract Staking {
         address delegate = deposits[idLock].delegate;
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
-        locks[account].locked.update(blockTime);
         removeLines(idLock, account, delegate, newAmount, blockTime);
         return addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
     }
