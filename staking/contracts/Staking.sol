@@ -151,18 +151,15 @@ contract Staking {
 
     function delegate(uint idLock, address newDelegate) public {
         address account = deposits[idLock].delegate;
-        require(account != address(0));
+        require(account != address(0), "Delegate from address by idLock not found");
         LibBrokenLine.LineData memory lineData = locks[account].balance.initiatedLines[idLock];
-        require(lineData.line.bias != 0);
+        require(lineData.line.bias != 0, "Line already finished nothing to delegate");
         uint blockTime = roundTimestamp(block.timestamp);
-        locks[account].locked.update(blockTime);
-
         (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
         uint cliff = lineData.cliff;
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
         locks[newDelegate].balance.add(idLock, line, cliff);
-        deposits[id].locker = account;
-        deposits[id].delegate = newDelegate;
+        deposits[idLock].delegate = newDelegate;
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
