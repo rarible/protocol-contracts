@@ -38,8 +38,14 @@ contract Staking is OwnableUpgradeable{
     mapping (uint => Lockers) deposits;                 //idLock address User
     LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
 
-    constructor(ERC20Upgradeable _token) public {
+//    constructor(ERC20Upgradeable _token) public {
+//        token = _token;
+//        __Ownable_init_unchained();
+//    }
+
+    function __Staking_init(ERC20Upgradeable _token) external initializer {
         token = _token;
+        __Ownable_init_unchained();
     }
 
     //Only owner
@@ -85,11 +91,12 @@ contract Staking is OwnableUpgradeable{
 
     function withdraw() public  {
         locks[msg.sender].locked.update(roundTimestamp(block.timestamp));
-        uint value = locks[msg.sender].amount.sub(locks[msg.sender].locked.initial.bias);
+        uint value = locks[msg.sender].amount;
+        if (!stopLock) {
+            value = value.sub(locks[msg.sender].locked.initial.bias);
+        }
         if (value > 0) {
-            if (!stopLock) {
-                locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
-            }
+            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "failure while transferring");
         }
     }

@@ -39,7 +39,9 @@ contract("Staking", accounts => {
 		deposite = accounts[1];
 		forTest = await StakingTest.new();
 		token = await ERC20.new();
-		staking = await Staking.new(token.address);
+//		staking = await Staking.new(token.address);
+		staking = await Staking.new();
+		await staking.__Staking_init(token.address); //initialize, set owner
 	})
 
 	describe("Part1. Check base metods Staking contract, createLock, withdraw", () => {
@@ -674,7 +676,7 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
 		});
-//    TODO make test works, need to return bias and slope from remove()
+
 		it("Test2. CreateLock() and check balance delegated stRari, in tail time, after redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
@@ -840,6 +842,64 @@ contract("Staking", accounts => {
 		    forTest._delegate(staking.address, idLock, accounts[4])  //delegate from accounts[3]
 		  );
 		});
+
+  })
+
+	describe("Part6. Check setStopLock()", () => {
+
+		it("Test1. CreateLock() and check account and total balance stRari, after setStopLock", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+      await staking.setStopLock(true);    //STOP!!! only owner
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 0);
+ 			assert.equal(await token.balanceOf(staking.address), 60);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40);			//tail user balance
+
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 0);
+
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[4], 60, 2, 0);  //check stake
+			let idLock2;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock2 = ev.result;
+        return true;
+      });
+      assert.equal(idLock2, 0);
+			assert.equal(await token.balanceOf(staking.address), 60);				//balance contract dont change
+  		assert.equal(await token.balanceOf(accounts[2]), 40);			//balance user balance
+
+			let newAmount = 30;       //check restake
+			let newSlope = 5;
+			let newCliff = 0;
+			resultRestake = await forTest._restake(staking.address, idLock, accounts[5], newAmount, newSlope, newCliff);
+			let idNewLock = eventRestakeHandler(resultRestake);
+      assert.equal(idLock2, 0);
+			assert.equal(await token.balanceOf(staking.address), 60);				//balance contract dont change
+  		assert.equal(await token.balanceOf(accounts[2]), 40);			//balance user balance
+
+			staking.withdraw({ from: accounts[2] });  //chek withdraw
+ 			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+		});
+
 
   })
 })
