@@ -7,8 +7,9 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Staking {
+contract Staking is OwnableUpgradeable{
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -19,6 +20,7 @@ contract Staking {
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4;       //stFormula slope multiplier
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8;       //stFormula cliff multiplier
     ERC20Upgradeable public token;
+    bool private stopLock;                                  //flag stop locking. Extremely situation stop contract methods, allow withdraw()
     uint public id;                                         //id Line, successfully added to BrokenLine
 
     struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
@@ -40,8 +42,13 @@ contract Staking {
         token = _token;
     }
 
+    //Only owner
+    function setStopLock(bool value) external onlyOwner{
+        stopLock = value;
+    }
+
     function stake(address account, address delegate, uint amount, uint slope, uint cliff) public returns(uint) {
-        if (amount == 0) {
+        if ((amount == 0) || (stopLock)) {
             return 0;
         }
         uint period = amount.div(slope).add(cliff);
@@ -61,7 +68,7 @@ contract Staking {
     }
 
     function totalSupply() public returns (uint) {
-        if (totalSupplyLine.initial.bias == 0) {
+        if ((totalSupplyLine.initial.bias == 0) || (stopLock)) {
             return 0;
         }
         totalSupplyLine.update(roundTimestamp(block.timestamp));
@@ -69,7 +76,7 @@ contract Staking {
     }
 
     function balanceOf(address account) public returns (uint) {
-        if (locks[account].balance.initial.bias == 0) {
+        if ((locks[account].balance.initial.bias == 0) || (stopLock)) {
             return 0;
         }
         locks[account].balance.update(roundTimestamp(block.timestamp));
@@ -80,12 +87,17 @@ contract Staking {
         locks[msg.sender].locked.update(roundTimestamp(block.timestamp));
         uint value = locks[msg.sender].amount.sub(locks[msg.sender].locked.initial.bias);
         if (value > 0) {
-            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
+            if (!stopLock) {
+                locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
+            }
             require(token.transfer(msg.sender, value), "failure while transferring");
         }
     }
 
     function reStake(uint idLock, address newDelegate, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
+        if (stopLock) {
+            return 0;
+        }
         address account = deposits[idLock].locker;
         address delegate = deposits[idLock].delegate;
         uint blockTime = roundTimestamp(block.timestamp);
@@ -149,6 +161,9 @@ contract Staking {
     }
 
     function delegate(uint idLock, address newDelegate) public {
+        if (stopLock) {
+            return;
+        }
         address account = deposits[idLock].delegate;
         require(account != address(0), "Delegate from address by idLock not found");
         LibBrokenLine.LineData memory lineData = locks[account].balance.initiatedLines[idLock];
