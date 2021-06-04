@@ -47,7 +47,7 @@ contract Staking is OwnableUpgradeable{
         stopLock = value;
     }
 
-    function stake(address account, address delegate, uint amount, uint slope, uint cliff) public returns(uint) {
+    function stake(address account, address delegator, uint amount, uint slope, uint cliff) public returns(uint) {
         if ((amount == 0) || (stopLock)) {
             return 0;
         }
@@ -57,11 +57,11 @@ contract Staking is OwnableUpgradeable{
         LibBrokenLine.Line memory line = LibBrokenLine.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
         id++;
         totalSupplyLine.add(id, line, cliff);
-        locks[delegate].balance.add(id, line, cliff);
+        locks[delegator].balance.add(id, line, cliff);
         line = LibBrokenLine.Line(roundTimestamp(block.timestamp), amount, slope);
         locks[account].locked.add(id, line, cliff);
         deposits[id].locker = account;
-        deposits[id].delegate = delegate;
+        deposits[id].delegate = delegator;
         locks[account].amount = locks[account].amount.add(amount);
         require(token.transferFrom(account, address(this), amount), "failure while transferring");
         return id;
@@ -95,22 +95,22 @@ contract Staking is OwnableUpgradeable{
         }
     }
 
-    function reStake(uint idLock, address newDelegate, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
+    function reStake(uint idLock, address newDelegator, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
         if (stopLock) {
             return 0;
         }
         address account = deposits[idLock].locker;
-        address delegate = deposits[idLock].delegate;
+        address delegator = deposits[idLock].delegate;
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
-        removeLines(idLock, account, delegate, newAmount, blockTime);
-        return addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+        removeLines(idLock, account, delegator, newAmount, blockTime);
+        return addLines(account, newDelegator, newAmount, newSlope, newCliff, blockTime);
     }
 
-    function removeLines(uint idLock, address account, address delegate, uint newAmount, uint toTime) internal {
+    function removeLines(uint idLock, address account, address delegator, uint newAmount, uint toTime) internal {
         uint bias = locks[account].locked.initial.bias;
         uint balance = locks[account].amount.sub(bias);
-        (uint residue, uint slope) = locks[account].locked.remove(idLock, toTime);
+        (uint residue, ) = locks[account].locked.remove(idLock, toTime);        //original: (uint residue, uint slope), but slope not need here
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
 
         uint addAmount = newAmount.sub(residue);
@@ -119,25 +119,25 @@ contract Staking is OwnableUpgradeable{
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
-        locks[delegate].balance.remove(idLock, toTime);
+        locks[delegator].balance.remove(idLock, toTime);
         totalSupplyLine.remove(idLock, toTime);
     }
 
-    function addLines(address account, address newDelegate, uint newAmount, uint newSlope, uint newCliff, uint blockTime) internal returns (uint) {
+    function addLines(address account, address newDelegator, uint newAmount, uint newSlope, uint newCliff, uint blockTime) internal returns (uint) {
         (uint stAmount, uint stSlope) = getStake(newAmount, newSlope, newCliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
         id++;
         totalSupplyLine.add(id, line, newCliff);
-        locks[newDelegate].balance.add(id, line, newCliff);
+        locks[newDelegator].balance.add(id, line, newCliff);
         line = LibBrokenLine.Line(blockTime, newAmount, newSlope);
         locks[account].locked.add(id, line, newCliff);
         deposits[id].locker = account;
-        deposits[id].delegate = newDelegate;
+        deposits[id].delegate = newDelegator;
         return id;
     }
     
     //calculate and return (newAmount, newSlope), using formula k=(1000+((cliffPeriod)^2)*8+((slopePeriod)^2)*4)/1000, newAmount=k*amount
-    function getStake(uint amount, uint slope, uint cliff) internal returns (uint, uint) {
+    function getStake(uint amount, uint slope, uint cliff) internal pure returns (uint, uint) {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
 
         uint slopePeriod = amount.div(slope);
@@ -148,7 +148,7 @@ contract Staking is OwnableUpgradeable{
         return(newAmount, newSlope);
     }
 
-    function verification(address account, uint idLock, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal {
+    function verification(address account, uint idLock, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
         require(account != address(0), "Line with idLock already deleted");
         require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
         uint period = newAmount.div(newSlope).add(newCliff);
@@ -161,7 +161,7 @@ contract Staking is OwnableUpgradeable{
         require(oldEnd <= end, "New line period stake too short");
     }
 
-    function delegate(uint idLock, address newDelegate) public {
+    function delegate(uint idLock, address newDelegator) public {
         if (stopLock) {
             return;
         }
@@ -173,8 +173,8 @@ contract Staking is OwnableUpgradeable{
         (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
         uint cliff = lineData.cliff;
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
-        locks[newDelegate].balance.add(idLock, line, cliff);
-        deposits[idLock].delegate = newDelegate;
+        locks[newDelegator].balance.add(idLock, line, cliff);
+        deposits[idLock].delegate = newDelegator;
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
