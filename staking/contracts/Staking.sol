@@ -20,7 +20,7 @@ contract Staking is OwnableUpgradeable{
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4;       //stFormula slope multiplier
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8;       //stFormula cliff multiplier
     ERC20Upgradeable public token;
-    bool private stopLock;                                  //flag stop locking. Extremely situation stop contract methods, allow withdraw()
+    bool private stopLock;                                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
     uint public id;                                         //id Line, successfully added to BrokenLine
 
     struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
@@ -47,7 +47,7 @@ contract Staking is OwnableUpgradeable{
         stopLock = value;
     }
 
-    function stake(address account, address delegator, uint amount, uint slope, uint cliff) public returns(uint) {
+    function stake(address account, address delegator, uint amount, uint slope, uint cliff) external returns(uint) {
         if ((amount == 0) || (stopLock)) {
             return 0;
         }
@@ -67,7 +67,7 @@ contract Staking is OwnableUpgradeable{
         return id;
     }
 
-    function totalSupply() public returns (uint) {
+    function totalSupply() external returns (uint) {
         if ((totalSupplyLine.initial.bias == 0) || (stopLock)) {
             return 0;
         }
@@ -75,7 +75,7 @@ contract Staking is OwnableUpgradeable{
         return totalSupplyLine.initial.bias;
     }
 
-    function balanceOf(address account) public returns (uint) {
+    function balanceOf(address account) external returns (uint) {
         if ((locks[account].balance.initial.bias == 0) || (stopLock)) {
             return 0;
         }
@@ -83,7 +83,7 @@ contract Staking is OwnableUpgradeable{
         return locks[account].balance.initial.bias;
     }
 
-    function withdraw() public  {
+    function withdraw() external  {
         locks[msg.sender].locked.update(roundTimestamp(block.timestamp));
         uint value = locks[msg.sender].amount;
         if (!stopLock) {
@@ -95,7 +95,7 @@ contract Staking is OwnableUpgradeable{
         }
     }
 
-    function reStake(uint idLock, address newDelegator, uint newAmount, uint newSlope, uint newCliff) public returns (uint) {
+    function reStake(uint idLock, address newDelegator, uint newAmount, uint newSlope, uint newCliff) external returns (uint) {
         if (stopLock) {
             return 0;
         }
@@ -161,7 +161,7 @@ contract Staking is OwnableUpgradeable{
         require(oldEnd <= end, "New line period stake too short");
     }
 
-    function delegate(uint idLock, address newDelegator) public {
+    function delegate(uint idLock, address newDelegator) external {
         if (stopLock) {
             return;
         }
