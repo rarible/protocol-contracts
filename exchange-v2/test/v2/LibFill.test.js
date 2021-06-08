@@ -12,8 +12,8 @@ contract("LibFill", accounts => {
 	});
 
 	it("should fill order correctly (issue 5.1 from audit)", async () => {
-		//хочет купить по 20, 300 штук
-		const left = order.Order(ZERO, order.Asset("0x00000000", "0x", 6000), ZERO, order.Asset("0x00000000", "0x", 300), 1, 0, 0, "0xffffffff", "0x");
+		//хочет купить по 20, 30 штук
+		const left = order.Order(ZERO, order.Asset("0x00000000", "0x", 600), ZERO, order.Asset("0x00000000", "0x", 30), 1, 0, 0, "0xffffffff", "0x");
 		//хочет продать по 10 - 10 штук
 		const right = order.Order(ZERO, order.Asset("0x00000000", "0x", 10), ZERO, order.Asset("0x00000000", "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 		//результат - по 20, 5 штук
