@@ -8,8 +8,9 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./INextVersionStake.sol";
 
-contract Staking is OwnableUpgradeable{
+contract Staking is INextVersionStake, OwnableUpgradeable{
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -22,6 +23,7 @@ contract Staking is OwnableUpgradeable{
     ERC20Upgradeable public token;
     bool private stopLock;                                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
     uint public id;                                         //id Line, successfully added to BrokenLine
+    address public migrateTo;                               //address migrate to
 
     struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
         address locker;                     //locker address (lock creator)
@@ -179,5 +181,31 @@ contract Staking is OwnableUpgradeable{
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
+    }
+
+    function startMigration(address to) external onlyOwner {
+        migrateTo = to;
+    }
+
+    function stopMigration() external onlyOwner {
+        migrateTo = address(0);
+    }
+
+    function migrate (uint[] memory idLock) external {
+        if (migrateTo == address(0)) {
+            return;
+        }
+        uint blockTime = roundTimestamp(block.timestamp);
+        INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
+        for (uint256 i = 0; i < idLock.length; i++) {
+            address account = deposits[idLock[i]].locker;
+            address delegator = deposits[idLock[i]].delegate;
+            LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
+            try nextVersionStake.initiateData(idLock[i], lineData, account, delegator) {
+            } catch {
+                revert("Contract not support or error in interface INextVersionStake");
+            }
+            locks[account].locked.remove(idLock[i], blockTime);
+        }
     }
 }
