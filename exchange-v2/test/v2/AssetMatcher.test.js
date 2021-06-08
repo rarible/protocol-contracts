@@ -115,9 +115,8 @@ contract("AssetMatcher", accounts => {
 		});
 
 		it("should extract nothing single byte differs", async () => {
-			await expectThrow(
-				testing.matchAssetsTest(order.AssetType("0x00112233", "0x1122"), order.AssetType("0x00112233", "0x1111"))
-			)
+			const result = await testing.matchAssetsTest(order.AssetType("0x00112233", "0x1122"), order.AssetType("0x00112233", "0x1111"));
+			assert.equal(result[0], 0);
 		});
 	})
 });

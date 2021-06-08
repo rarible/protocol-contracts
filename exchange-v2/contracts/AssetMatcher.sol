@@ -39,31 +39,19 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         }
         if (classLeft == LibAsset.ERC20_ASSET_CLASS) {
             if (classRight == LibAsset.ERC20_ASSET_CLASS) {
-                (address addressLeft) = abi.decode(leftAssetType.data, (address));
-                (address addressRight) = abi.decode(rightAssetType.data, (address));
-                if (addressLeft == addressRight) {
-                    return leftAssetType;
-                }
+                return simpleMatch(leftAssetType, rightAssetType);
             }
             return LibAsset.AssetType(0, EMPTY);
         }
         if (classLeft == LibAsset.ERC721_ASSET_CLASS) {
             if (classRight == LibAsset.ERC721_ASSET_CLASS) {
-                (address addressLeft, uint tokenIdLeft) = abi.decode(leftAssetType.data, (address, uint));
-                (address addressRight, uint tokenIdRight) = abi.decode(rightAssetType.data, (address, uint));
-                if (addressLeft == addressRight && tokenIdLeft == tokenIdRight) {
-                    return leftAssetType;
-                }
+                return simpleMatch(leftAssetType, rightAssetType);
             }
             return LibAsset.AssetType(0, EMPTY);
         }
         if (classLeft == LibAsset.ERC1155_ASSET_CLASS) {
             if (classRight == LibAsset.ERC1155_ASSET_CLASS) {
-                (address addressLeft, uint tokenIdLeft) = abi.decode(leftAssetType.data, (address, uint));
-                (address addressRight, uint tokenIdRight) = abi.decode(rightAssetType.data, (address, uint));
-                if (addressLeft == addressRight && tokenIdLeft == tokenIdRight) {
-                    return leftAssetType;
-                }
+                return simpleMatch(leftAssetType, rightAssetType);
             }
             return LibAsset.AssetType(0, EMPTY);
         }
@@ -72,13 +60,18 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
             return IAssetMatcher(matcher).matchAssets(leftAssetType, rightAssetType);
         }
         if (classLeft == classRight) {
-            bytes32 leftHash = keccak256(leftAssetType.data);
-            bytes32 rightHash = keccak256(rightAssetType.data);
-            if (leftHash == rightHash) {
-                return leftAssetType;
-            }
+            return simpleMatch(leftAssetType, rightAssetType);
         }
         revert("not found IAssetMatcher");
+    }
+
+    function simpleMatch(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {
+        bytes32 leftHash = keccak256(leftAssetType.data);
+        bytes32 rightHash = keccak256(rightAssetType.data);
+        if (leftHash == rightHash) {
+            return leftAssetType;
+        }
+        return LibAsset.AssetType(0, EMPTY);
     }
 
     uint256[49] private __gap;
