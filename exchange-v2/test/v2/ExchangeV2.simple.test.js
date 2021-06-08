@@ -111,6 +111,15 @@ contract("ExchangeSimpleV2", accounts => {
 			);
 		})
 
+		it("order with salt 0 can't be canceled", async () => {
+			const { left, right } = await prepare2Orders()
+			left.salt = "0";
+
+			await expectThrow(
+				testing.cancel(left, { from: accounts[1] })
+			)
+		})
+
 		it("doesn't allow to fill more than 100% of the order", async () => {
 			const { left, right } = await prepare2Orders()
 			right.makeAsset.value = 100;
@@ -125,7 +134,7 @@ contract("ExchangeSimpleV2", accounts => {
 			);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[2]), 100);
+			assert.equal(await t1.bxalanceOf(accounts[2]), 100);
 			assert.equal(await t2.balanceOf(accounts[1]), 200);
 			assert.equal(await t2.balanceOf(accounts[2]), 0);
 		})

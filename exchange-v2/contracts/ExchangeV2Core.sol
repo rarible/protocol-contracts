@@ -26,6 +26,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
+        require(order.salt != 0, "0 salt can't be used");
         bytes32 orderKeyHash = LibOrder.hashKey(order);
         fills[orderKeyHash] = UINT256_MAX;
         emit Cancel(orderKeyHash, order.maker, order.makeAsset.assetType, order.takeAsset.assetType);
@@ -52,8 +53,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
         bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
         bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
-        uint leftOrderFill = fills[leftOrderKeyHash];
-        uint rightOrderFill = fills[rightOrderKeyHash];
+        uint leftOrderFill = getOrderFill(orderLeft, leftOrderKeyHash);
+        uint rightOrderFill = getOrderFill(orderRight, rightOrderKeyHash);
         LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
         require(newFill.takeValue > 0, "nothing to fill");
 
@@ -78,6 +79,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             }
         }
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.takeValue, newFill.makeValue, makeMatch, takeMatch);
+    }
+
+    function getOrderFill(LibOrder.Order memory order, bytes32 hash) internal view returns (uint fill) {
+        if (order.salt == 0) {
+            fill = 0;
+        } else {
+            fill = fills[hash];
+        }
     }
 
     function matchAssets(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {
