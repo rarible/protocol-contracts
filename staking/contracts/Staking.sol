@@ -117,7 +117,7 @@ contract Staking is OwnableUpgradeable{
 
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
-            require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "failure while transferring");
+            require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "Failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
@@ -191,7 +191,7 @@ contract Staking is OwnableUpgradeable{
         migrateTo = address(0);
     }
 
-    function migrate (uint[] memory idLock) external {
+    function migrate(uint[] memory idLock) external {
         if (migrateTo == address(0)) {
             return;
         }
@@ -199,13 +199,20 @@ contract Staking is OwnableUpgradeable{
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < idLock.length; i++) {
             address account = deposits[idLock[i]].locker;
+            require(msg.sender == account, "Migrate call not from owner idLock");
             address delegator = deposits[idLock[i]].delegate;
             LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
+            (uint residue, ) = locks[account].locked.remove(idLock[i], blockTime);
+
+            require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
+            locks[account].amount = locks[account].amount.sub(residue);
+
+            locks[delegator].balance.remove(idLock[i], blockTime);
+            totalSupplyLine.remove(idLock[i], blockTime);
             try nextVersionStake.initiateData(idLock[i], lineData, account, delegator) {
             } catch {
                 revert("Contract not support or contain an error in interface INextVersionStake");
             }
-            locks[account].locked.remove(idLock[i], blockTime);
         }
     }
 }

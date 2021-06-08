@@ -1,6 +1,8 @@
 const StakingTest = artifacts.require("StakingTest.sol");
 const Staking = artifacts.require("Staking.sol");
 const ERC20 = artifacts.require("TestERC20.sol");
+const TestNewStaking = artifacts.require("TestNewStaking.sol");
+const TestNewStakingNoInterface = artifacts.require("TestNewStakingNoInteface.sol");
 const truffleAssert = require('truffle-assertions');
 const tests = require("@daonomic/tests-common");
 const increaseTime = tests.increaseTime;
@@ -40,6 +42,8 @@ contract("Staking", accounts => {
 		forTest = await StakingTest.new();
 		token = await ERC20.new();
 		staking = await Staking.new();
+		newStaking = await TestNewStaking.new();
+		newStakingNoInterface = await TestNewStakingNoInterface.new();
 		await staking.__Staking_init(token.address); //initialize, set owner
 	})
 
@@ -927,6 +931,164 @@ contract("Staking", accounts => {
       });
       await expectThrow(
         staking.setStopLock(true, { from: accounts[8] })    //STOP!!! not owner
+      );
+		});
+  })
+
+	describe("Part7. Check Migration()", () => {
+
+		it("Test1. migrate() after start", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 60, 2, 0);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      await staking.startMigration(newStaking.address);    //Start migration!!!, only owner
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 240);
+ 			assert.equal(await token.balanceOf(staking.address), 60);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 240);
+
+      await staking.migrate([idLock], { from: accounts[2] });            //migrate
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 0);
+ 			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite after migrate
+ 			assert.equal(await token.balanceOf(newStaking.address), 60);		//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 0);
+		});
+
+		it("Test2. After 10 weeks migrate() slope works", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      let balanceOf;
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]); //check balance account
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 240);
+
+      await increaseTime(WEEK * 10);
+      await staking.startMigration(newStaking.address);    //Start migration!!!, only owner
+      await staking.migrate([idLock], { from: accounts[2] });            //migrate
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]); //check balance account
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 0);
+ 			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite after migrate, till withdraw
+ 			assert.equal(await token.balanceOf(newStaking.address), 40);		//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+
+      let totalBalance;
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 0);
+
+      staking.withdraw({ from: accounts[2] });
+      assert.equal(await token.balanceOf(staking.address), 0);         //after withdraw
+      assert.equal(await token.balanceOf(accounts[2]), 60);			      //tail user balance
+		});
+
+		it("Test3. After 10 weeks migrate() tial works", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 65, 6, 0);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      await increaseTime(WEEK * 10);
+      await staking.startMigration(newStaking.address);                   //Start migration!!!, only owner
+      await staking.migrate([idLock], { from: accounts[2] });             //migrate
+
+ 			assert.equal(await token.balanceOf(staking.address), 60);				    //balance Lock on deposite after migrate, till withdraw
+ 			assert.equal(await token.balanceOf(newStaking.address), 5);		      //balance Lock on deposite newContract
+   		assert.equal(await token.balanceOf(accounts[2]), 35);			          //tail user balance
+
+      let totalBalance;
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 0);
+
+      staking.withdraw({ from: accounts[2] });
+      assert.equal(await token.balanceOf(staking.address), 0);        //after withdraw oldContract
+      assert.equal(await token.balanceOf(newStaking.address), 5);		  //balance Lock on deposite newContract
+      assert.equal(await token.balanceOf(accounts[2]), 95);			      //tail user balance
+		});
+
+		it("Test4. migrate() to contract no supported INextVersionStake, throw", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      await staking.startMigration(newStakingNoInterface.address);    //Start migration!!!, only owner
+      await expectThrow(
+        staking.migrate([idLock], { from: accounts[2] })              //migrate, addres
+      );
+		});
+
+		it("Test5. startMigration() from not owner, throw", async () => {
+      await expectThrow(
+        staking.startMigration(newStaking.address, { from: accounts[8] })    //startMigration!!! not owner
+      );
+		});
+
+		it("Test6. stopMigration()  from not owner, throw", async () => {
+      await expectThrow(
+        staking.stopMigration({ from: accounts[8] })                        //stopMigration!!! not owner
       );
 		});
   })
