@@ -64,10 +64,10 @@ Amount stRari when the stake method is executed is calculated by the formula:
 
 stRari = k * Rari. 
 
-K = (0.2 + 0.8 * (cliffPeriod / 104) ^ 2 + 0.5 * (0.2 + 0.8 * (slopePeriod / 104) ^ 2)) * 1000.
+K = (0.07 + 0.93 * (cliffPeriod / 104) ^ 2 + 0.5 * (0.07 + 0.93 * (slopePeriod / 104) ^ 2)) * 1000.
 
 Amount stRari depends on the values of period cliff and period slope.
 The K coefficient changes non-linearly, as shown in the picture 7. 
-The longer the stake period, the more stRari the user will receive
+The longer the stake period, the more stRari the user will receive.
 
 ![Staking 2](test/svg/graphicK.svg)

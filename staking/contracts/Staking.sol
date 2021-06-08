@@ -16,9 +16,10 @@ contract Staking is OwnableUpgradeable{
     uint256 constant WEEK = 604800;                         //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch begining)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
-    uint256 constant ST_FORMULA_MULTIPLIER = 1000;          //stFormula multiplier
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4;       //stFormula slope multiplier
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8;       //stFormula cliff multiplier
+    uint256 constant ST_FORMULA_MULTIPLIER = 1081000;       //stFormula multiplier
+    uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula multiplier
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier
     ERC20Upgradeable public token;
     bool private stopLock;                                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
     uint public id;                                         //id Line, successfully added to BrokenLine
@@ -135,14 +136,14 @@ contract Staking is OwnableUpgradeable{
         deposits[id].delegate = newDelegator;
         return id;
     }
-    
-    //calculate and return (newAmount, newSlope), using formula k=(1000+((cliffPeriod)^2)*8+((slopePeriod)^2)*4)/1000, newAmount=k*amount
+    //original formula: (0,7+9,3*(cliffPeriod/104)^2+0,5*(0,7+9,3*(slopePeriod/104)^2))
+    //calculate and return (newAmount, newSlope), using formula k=((1135050+930*(cliffPeriod)^2+465*(slopePeriod)^2)/1081000, newAmount=k*amount
     function getStake(uint amount, uint slope, uint cliff) internal pure returns (uint, uint) {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
 
         uint slopePeriod = amount.div(slope);
         uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
-        uint amountMultiplier = cliffSide.add(slopeSide).add(ST_FORMULA_MULTIPLIER).div(ST_FORMULA_MULTIPLIER);
+        uint amountMultiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
         uint newAmount = amount.mul(amountMultiplier);
         uint newSlope = newAmount.div(slopePeriod);
         return(newAmount, newSlope);
