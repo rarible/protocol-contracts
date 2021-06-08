@@ -5,8 +5,6 @@ pragma abicoder v2;
 
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 
-contract INextVersionStake {
-    function initiateData(uint idLock, LibBrokenLine.LineData memory lineData, address locker, address delegate) external {
-
-    }
+interface INextVersionStake {
+    function initiateData(uint idLock, LibBrokenLine.LineData memory lineData, address locker, address delegate) external;
 }

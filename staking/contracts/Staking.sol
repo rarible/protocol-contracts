@@ -10,7 +10,7 @@ import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./INextVersionStake.sol";
 
-contract Staking is INextVersionStake, OwnableUpgradeable{
+contract Staking is OwnableUpgradeable{
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -203,7 +203,7 @@ contract Staking is INextVersionStake, OwnableUpgradeable{
             LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
             try nextVersionStake.initiateData(idLock[i], lineData, account, delegator) {
             } catch {
-                revert("Contract not support or error in interface INextVersionStake");
+                revert("Contract not support or contain an error in interface INextVersionStake");
             }
             locks[account].locked.remove(idLock[i], blockTime);
         }
