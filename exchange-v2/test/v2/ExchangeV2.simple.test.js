@@ -134,7 +134,7 @@ contract("ExchangeSimpleV2", accounts => {
 			);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.bxalanceOf(accounts[2]), 100);
+			assert.equal(await t1.balanceOf(accounts[2]), 100);
 			assert.equal(await t2.balanceOf(accounts[1]), 200);
 			assert.equal(await t2.balanceOf(accounts[2]), 0);
 		})
