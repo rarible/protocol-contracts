@@ -50,6 +50,14 @@ contract Staking is OwnableUpgradeable{
         stopLock = value;
     }
 
+    function startMigration(address to) external onlyOwner {
+        migrateTo = to;
+    }
+
+    function stopMigration() external onlyOwner {
+        migrateTo = address(0);
+    }
+
     function stake(address account, address delegator, uint amount, uint slope, uint cliff) external returns(uint) {
         if (stopLock) {
             return 0;
@@ -73,6 +81,48 @@ contract Staking is OwnableUpgradeable{
         return id;
     }
 
+    function reStake(uint idLock, address newDelegator, uint newAmount, uint newSlope, uint newCliff) external returns (uint) {
+        if (stopLock) {
+            return 0;
+        }
+        address account = deposits[idLock].locker;
+        address delegator = deposits[idLock].delegate;
+        uint blockTime = roundTimestamp(block.timestamp);
+        verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
+        removeLines(idLock, account, delegator, newAmount, blockTime);
+        return addLines(account, newDelegator, newAmount, newSlope, newCliff, blockTime);
+    }
+
+    function withdraw() external {
+        uint blockTime = roundTimestamp(block.timestamp);
+        locks[msg.sender].locked.update(blockTime);
+        uint value = locks[msg.sender].amount;
+        if (!stopLock) {
+            uint bias = locks[msg.sender].locked.initial.bias;
+            value = value.sub(bias);
+        }
+        if (value > 0) {
+            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
+            require(token.transfer(msg.sender, value), "Failure while transferring, withdraw");
+        }
+    }
+
+    function delegate(uint idLock, address newDelegator) external {
+        if (stopLock) {
+            return;
+        }
+        address account = deposits[idLock].delegate;
+        require(account != address(0), "Delegate from address by idLock not found");
+        LibBrokenLine.LineData memory lineData = locks[account].balance.initiatedLines[idLock];
+        require(lineData.line.bias != 0, "Line already finished nothing to delegate");
+        uint blockTime = roundTimestamp(block.timestamp);
+        (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
+        uint cliff = lineData.cliff;
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
+        locks[newDelegator].balance.add(idLock, line, cliff);
+        deposits[idLock].delegate = newDelegator;
+    }
+
     function totalSupply() external returns (uint) {
         if ((totalSupplyLine.initial.bias == 0) || (stopLock)) {
             return 0;
@@ -91,30 +141,43 @@ contract Staking is OwnableUpgradeable{
         return locks[account].balance.initial.bias;
     }
 
-    function withdraw() external {
-        uint blockTime = roundTimestamp(block.timestamp);
-        locks[msg.sender].locked.update(blockTime);
-        uint value = locks[msg.sender].amount;
-        if (!stopLock) {
-            uint bias = locks[msg.sender].locked.initial.bias;
-            value = value.sub(bias);
+    function migrate(uint[] memory idLock) external {
+        if (migrateTo == address(0)) {
+            return;
         }
-        if (value > 0) {
-            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
-            require(token.transfer(msg.sender, value), "Failure while transferring, withdraw");
+        uint blockTime = roundTimestamp(block.timestamp);
+        INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
+        for (uint256 i = 0; i < idLock.length; i++) {
+            address account = deposits[idLock[i]].locker;
+            require(msg.sender == account, "Migrate call not from owner idLock");
+            address delegator = deposits[idLock[i]].delegate;
+            LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
+            (uint residue, ) = locks[account].locked.remove(idLock[i], blockTime);
+
+            require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
+            locks[account].amount = locks[account].amount.sub(residue);
+
+            locks[delegator].balance.remove(idLock[i], blockTime);
+            totalSupplyLine.remove(idLock[i], blockTime);
+            try nextVersionStake.initiateData(idLock[i], lineData, account, delegator) {
+            } catch {
+                revert("Contract not support or contain an error in interface INextVersionStake");
+            }
         }
     }
 
-    function reStake(uint idLock, address newDelegator, uint newAmount, uint newSlope, uint newCliff) external returns (uint) {
-        if (stopLock) {
-            return 0;
-        }
-        address account = deposits[idLock].locker;
-        address delegator = deposits[idLock].delegate;
-        uint blockTime = roundTimestamp(block.timestamp);
-        verification(account, idLock, newAmount, newSlope, newCliff, blockTime);
-        removeLines(idLock, account, delegator, newAmount, blockTime);
-        return addLines(account, newDelegator, newAmount, newSlope, newCliff, blockTime);
+    function verification(address account, uint idLock, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
+        require(account != address(0), "Line with idLock already deleted");
+        require(newAmount > 0, "Lock amount Rari mast be > 0");
+        require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
+        uint period = newAmount.div(newSlope);
+        require(period <= TWO_YEAR_WEEKS, "Slope period more, than two years");
+        uint end = toTime.add(newCliff).add(period);
+        LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock];
+        LibBrokenLine.Line memory line = lineData.line;
+        uint oldPeriod = line.bias.div(line.slope);
+        uint oldEnd = line.start.add(lineData.cliff).add(oldPeriod);
+        require(oldEnd <= end, "New line period stake too short");
     }
 
     function removeLines(uint idLock, address account, address delegator, uint newAmount, uint toTime) internal {
@@ -159,70 +222,7 @@ contract Staking is OwnableUpgradeable{
         return(newAmount, newSlope);
     }
 
-    function verification(address account, uint idLock, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
-        require(account != address(0), "Line with idLock already deleted");
-        require(newAmount > 0, "Lock amount Rari mast be > 0");
-        require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
-        uint period = newAmount.div(newSlope);
-        require(period <= TWO_YEAR_WEEKS, "Slope period more, than two years");
-        uint end = toTime.add(newCliff).add(period);
-        LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock];
-        LibBrokenLine.Line memory line = lineData.line;
-        uint oldPeriod = line.bias.div(line.slope);
-        uint oldEnd = line.start.add(lineData.cliff).add(oldPeriod);
-        require(oldEnd <= end, "New line period stake too short");
-    }
-
-    function delegate(uint idLock, address newDelegator) external {
-        if (stopLock) {
-            return;
-        }
-        address account = deposits[idLock].delegate;
-        require(account != address(0), "Delegate from address by idLock not found");
-        LibBrokenLine.LineData memory lineData = locks[account].balance.initiatedLines[idLock];
-        require(lineData.line.bias != 0, "Line already finished nothing to delegate");
-        uint blockTime = roundTimestamp(block.timestamp);
-        (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
-        uint cliff = lineData.cliff;
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
-        locks[newDelegator].balance.add(idLock, line, cliff);
-        deposits[idLock].delegate = newDelegator;
-    }
-
     function roundTimestamp(uint ts) pure internal returns (uint) {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
-    }
-
-    function startMigration(address to) external onlyOwner {
-        migrateTo = to;
-    }
-
-    function stopMigration() external onlyOwner {
-        migrateTo = address(0);
-    }
-
-    function migrate(uint[] memory idLock) external {
-        if (migrateTo == address(0)) {
-            return;
-        }
-        uint blockTime = roundTimestamp(block.timestamp);
-        INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
-        for (uint256 i = 0; i < idLock.length; i++) {
-            address account = deposits[idLock[i]].locker;
-            require(msg.sender == account, "Migrate call not from owner idLock");
-            address delegator = deposits[idLock[i]].delegate;
-            LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
-            (uint residue, ) = locks[account].locked.remove(idLock[i], blockTime);
-
-            require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
-            locks[account].amount = locks[account].amount.sub(residue);
-
-            locks[delegator].balance.remove(idLock[i], blockTime);
-            totalSupplyLine.remove(idLock[i], blockTime);
-            try nextVersionStake.initiateData(idLock[i], lineData, account, delegator) {
-            } catch {
-                revert("Contract not support or contain an error in interface INextVersionStake");
-            }
-        }
     }
 }

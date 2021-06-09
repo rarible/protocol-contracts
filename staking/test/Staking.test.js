@@ -1016,7 +1016,7 @@ contract("Staking", accounts => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 240);
+      assert.equal(balanceOf, 60);
  			assert.equal(await token.balanceOf(staking.address), 60);				//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
 
@@ -1026,7 +1026,7 @@ contract("Staking", accounts => {
       	totalBalance = ev.result;
         return true;
       });
-      assert.equal(totalBalance, 240);
+      assert.equal(totalBalance, 60);
 
       await staking.migrate([idLock], { from: accounts[2] });            //migrate
 
@@ -1064,7 +1064,7 @@ contract("Staking", accounts => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 240);
+      assert.equal(balanceOf, 60);
 
       await increaseTime(WEEK * 10);
       await staking.startMigration(newStaking.address);    //Start migration!!!, only owner
