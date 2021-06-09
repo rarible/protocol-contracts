@@ -1153,4 +1153,181 @@ contract("Staking", accounts => {
       );
 		});
   })
+
+	describe("Part8. Check formula()", () => {
+
+		it("Test1. 28 weeks stRari=120", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 60, 2, 30);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 120);
+ 			assert.equal(await token.balanceOf(staking.address), 60);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 120);
+		});
+
+		it("Test2. 48 weeks stRari=384", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 96, 2, 48);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 384);
+ 			assert.equal(await token.balanceOf(staking.address), 96);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 4);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 384);
+		});
+
+		it("Test3. 84 weeks stRari=840", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 84, 1, 84);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 840);
+ 			assert.equal(await token.balanceOf(staking.address), 84);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 16);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 840);
+		});
+
+		it("Test4. 104 weeks stRari=1560", async () => {
+			await token.mint(accounts[2], 200);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 104, 1, 104);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 1560);
+ 			assert.equal(await token.balanceOf(staking.address), 104);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 96);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 1560);
+		});
+
+		it("Test5. 100 weeks, 100Rari, stRari=1400", async () => {
+			await token.mint(accounts[2], 200);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 100, 1, 104);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 1400);
+ 			assert.equal(await token.balanceOf(staking.address), 100);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 100);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 1400);
+		});
+
+		it("Test6. 104 weeks cliff , 100Rari, stRari=1000", async () => {
+			await token.mint(accounts[2], 200);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 100, 100, 104);  //first time stake
+			let idLock;
+      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
+       	idLock = ev.result;
+        return true;
+      });
+
+      resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
+      let balanceOf;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
+      	balanceOf = ev.result;
+        return true;
+      });
+      assert.equal(balanceOf, 1000);
+ 			assert.equal(await token.balanceOf(staking.address), 100);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 100);			      //tail user balance
+
+      resultBalanseOfValue = await forTest._totalSupply(staking.address); //check balance total
+      let totalBalance;
+      truffleAssert.eventEmitted(resultBalanseOfValue, 'totalBalanceResult', (ev) => {
+      	totalBalance = ev.result;
+        return true;
+      });
+      assert.equal(totalBalance, 1000);
+		});
+  })
 })
