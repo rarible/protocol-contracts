@@ -58,7 +58,7 @@ contract Staking is OwnableUpgradeable{
         migrateTo = address(0);
     }
 
-    function stake(address account, address delegator, uint amount, uint slope, uint cliff) external returns(uint) {
+    function stake(address account, address delegator, uint amount, uint slope, uint cliff) external returns (uint) {
         if (stopLock) {
             return 0;
         }

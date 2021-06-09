@@ -127,7 +127,7 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
-    function safeInt(uint value) internal returns (int result) {
+    function safeInt(uint value) pure internal returns (int result) {
         result = int(value);
         require(value == uint(result), "int cast error");
     }
