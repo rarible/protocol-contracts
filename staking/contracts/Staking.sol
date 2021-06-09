@@ -161,11 +161,9 @@ contract Staking is OwnableUpgradeable{
         require(account != address(0), "Line with idLock already deleted");
         require(newAmount > 0, "Lock amount Rari mast be > 0");
         require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
-        require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
         uint period = newAmount.div(newSlope);
         require(period <= TWO_YEAR_WEEKS, "Slope period more, than two years");
-        period = period.add(newCliff);
-        uint end = toTime.add(period);
+        uint end = toTime.add(newCliff).add(period);
         LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock];
         LibBrokenLine.Line memory line = lineData.line;
         uint oldPeriod = line.bias.div(line.slope);
