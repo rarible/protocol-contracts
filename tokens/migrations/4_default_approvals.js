@@ -8,6 +8,11 @@ const rinkeby = {
 	erc1155LazyMintTransferProxy: "0x7c4B13B5893cD82f371c5e28f12FB2F37542BbC5",
 	transferProxy: "0x7d47126a2600E22eab9eD6CF0e515678727779A6"
 }
+const ropsten = {
+	erc721LazyMintTransferProxy: "0x6c49c170c82C40709a32Fb4E827ad3011CD86227",
+	erc1155LazyMintTransferProxy: "0x9F7fBc52A53f85e57a5DAde35dFa14797A4dA412",
+	transferProxy: "0xf8e4ecac18b65fd04569ff1f0d561f74effaa206"
+}
 const e2e = {
 	erc721LazyMintTransferProxy: "0xe853B9994304264ff418b818A8D23FD39e8DABe6",
 	erc1155LazyMintTransferProxy: "0x6E605A7d1FD15e9087f0756ab57E0ED99735a7a7",
@@ -22,6 +27,8 @@ let settings = {
 	"default": def,
 	"rinkeby": rinkeby,
 	"rinkeby-fork": rinkeby,
+	"ropsten": ropsten,
+	"ropsten-fork": ropsten,
 	"e2e": e2e,
 	"e2e-fork": e2e
 };

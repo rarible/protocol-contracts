@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./INextVersionStake.sol";
 
 contract Staking is OwnableUpgradeable{
     using SafeMathUpgradeable for uint;
@@ -23,6 +24,7 @@ contract Staking is OwnableUpgradeable{
     ERC20Upgradeable public token;
     bool private stopLock;                                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
     uint public id;                                         //id Line, successfully added to BrokenLine
+    address public migrateTo;                               //address migrate to
 
     struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
         address locker;                     //locker address (lock creator)
@@ -123,7 +125,7 @@ contract Staking is OwnableUpgradeable{
 
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
-            require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "failure while transferring");
+            require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "Failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
         }
@@ -189,5 +191,38 @@ contract Staking is OwnableUpgradeable{
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
+    }
+
+    function startMigration(address to) external onlyOwner {
+        migrateTo = to;
+    }
+
+    function stopMigration() external onlyOwner {
+        migrateTo = address(0);
+    }
+
+    function migrate(uint[] memory idLock) external {
+        if (migrateTo == address(0)) {
+            return;
+        }
+        uint blockTime = roundTimestamp(block.timestamp);
+        INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
+        for (uint256 i = 0; i < idLock.length; i++) {
+            address account = deposits[idLock[i]].locker;
+            require(msg.sender == account, "Migrate call not from owner idLock");
+            address delegator = deposits[idLock[i]].delegate;
+            LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
+            (uint residue, ) = locks[account].locked.remove(idLock[i], blockTime);
+
+            require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
+            locks[account].amount = locks[account].amount.sub(residue);
+
+            locks[delegator].balance.remove(idLock[i], blockTime);
+            totalSupplyLine.remove(idLock[i], blockTime);
+            try nextVersionStake.initiateData(idLock[i], lineData, account, delegator) {
+            } catch {
+                revert("Contract not support or contain an error in interface INextVersionStake");
+            }
+        }
     }
 }
