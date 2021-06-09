@@ -63,7 +63,7 @@ Amount **stRari** is calculated by the formula:
 
 stRari = k * Rari. 
 
-K = (0.07 + 0.93 * (cliffPeriod / 104) ^ 2 + 0.5 * (0.07 + 0.93 * (slopePeriod / 104) ^ 2)) * 1000.
+K = (0.07 + 0.93 * (cliffPeriod / 104) ^ 2 + 0.5 * (0.07 + 0.93 * (slopePeriod / 104) ^ 2)).
 
 Amount **stRari** depends on the values of period cliff and period slope. The longer the stake period, the more **stRari** 
 the user will receive. Max staking period equal 2 years cliff period and 2 years slope period. 

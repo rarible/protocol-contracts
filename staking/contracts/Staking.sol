@@ -16,10 +16,10 @@ contract Staking is OwnableUpgradeable{
     uint256 constant WEEK = 604800;                         //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch begining)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
-    uint256 constant ST_FORMULA_MULTIPLIER = 1081000;       //stFormula multiplier
-    uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula multiplier
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier
+    uint256 constant ST_FORMULA_MULTIPLIER = 1081000;       //stFormula multiplier = TWO_YEAR_WEEKS^2 * 100
+    uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
     ERC20Upgradeable public token;
     bool private stopLock;                                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
     uint public id;                                         //id Line, successfully added to BrokenLine
@@ -49,22 +49,25 @@ contract Staking is OwnableUpgradeable{
     }
 
     function stake(address account, address delegator, uint amount, uint slope, uint cliff) external returns(uint) {
-        if ((amount == 0) || (stopLock)) {
+        if (stopLock) {
             return 0;
         }
-        uint period = amount.div(slope).add(cliff);
-        require(period <= TWO_YEAR_WEEKS, "Finish line time more, than two years");
+        require(amount > 0, "Lock amount Rari mast be > 0");
+        require(cliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
+        require(amount.div(slope) <= TWO_YEAR_WEEKS, "Slope period more, than two years");
+
+        uint blockTime = roundTimestamp(block.timestamp);
         (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(roundTimestamp(block.timestamp), stAmount, stSlope);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
         id++;
         totalSupplyLine.add(id, line, cliff);
         locks[delegator].balance.add(id, line, cliff);
-        line = LibBrokenLine.Line(roundTimestamp(block.timestamp), amount, slope);
+        line = LibBrokenLine.Line(blockTime, amount, slope);
         locks[account].locked.add(id, line, cliff);
         deposits[id].locker = account;
         deposits[id].delegate = delegator;
         locks[account].amount = locks[account].amount.add(amount);
-        require(token.transferFrom(account, address(this), amount), "failure while transferring");
+        require(token.transferFrom(account, address(this), amount), "Failure while transferring, while stake");
         return id;
     }
 
@@ -72,7 +75,8 @@ contract Staking is OwnableUpgradeable{
         if ((totalSupplyLine.initial.bias == 0) || (stopLock)) {
             return 0;
         }
-        totalSupplyLine.update(roundTimestamp(block.timestamp));
+        uint blockTime = roundTimestamp(block.timestamp);
+        totalSupplyLine.update(blockTime);
         return totalSupplyLine.initial.bias;
     }
 
@@ -80,19 +84,22 @@ contract Staking is OwnableUpgradeable{
         if ((locks[account].balance.initial.bias == 0) || (stopLock)) {
             return 0;
         }
-        locks[account].balance.update(roundTimestamp(block.timestamp));
+        uint blockTime = roundTimestamp(block.timestamp);
+        locks[account].balance.update(blockTime);
         return locks[account].balance.initial.bias;
     }
 
-    function withdraw() external  {
-        locks[msg.sender].locked.update(roundTimestamp(block.timestamp));
+    function withdraw() external {
+        uint blockTime = roundTimestamp(block.timestamp);
+        locks[msg.sender].locked.update(blockTime);
         uint value = locks[msg.sender].amount;
         if (!stopLock) {
-            value = value.sub(locks[msg.sender].locked.initial.bias);
+            uint bias = locks[msg.sender].locked.initial.bias;
+            value = value.sub(bias);
         }
         if (value > 0) {
             locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
-            require(token.transfer(msg.sender, value), "failure while transferring");
+            require(token.transfer(msg.sender, value), "Failure while transferring, withdraw");
         }
     }
 
@@ -136,6 +143,7 @@ contract Staking is OwnableUpgradeable{
         deposits[id].delegate = newDelegator;
         return id;
     }
+
     //original formula: (0,7+9,3*(cliffPeriod/104)^2+0,5*(0,7+9,3*(slopePeriod/104)^2))
     //calculate and return (newAmount, newSlope), using formula k=((1135050+930*(cliffPeriod)^2+465*(slopePeriod)^2)/1081000, newAmount=k*amount
     function getStake(uint amount, uint slope, uint cliff) internal pure returns (uint, uint) {
@@ -143,17 +151,20 @@ contract Staking is OwnableUpgradeable{
 
         uint slopePeriod = amount.div(slope);
         uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
-        uint amountMultiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
-        uint newAmount = amount.mul(amountMultiplier);
+        uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
+        uint newAmount = amount.mul(multiplier);
         uint newSlope = newAmount.div(slopePeriod);
         return(newAmount, newSlope);
     }
 
     function verification(address account, uint idLock, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
         require(account != address(0), "Line with idLock already deleted");
+        require(newAmount > 0, "Lock amount Rari mast be > 0");
+        require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
         require(locks[account].amount >= locks[account].locked.initial.bias, "Impossible to restake: amount < bias");
-        uint period = newAmount.div(newSlope).add(newCliff);
-        require(period <= TWO_YEAR_WEEKS, "New finish line time more, than two years");
+        uint period = newAmount.div(newSlope);
+        require(period <= TWO_YEAR_WEEKS, "Slope period more, than two years");
+        period = period.add(newCliff);
         uint end = toTime.add(period);
         LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock];
         LibBrokenLine.Line memory line = lineData.line;
