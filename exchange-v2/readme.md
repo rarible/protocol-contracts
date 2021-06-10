@@ -35,7 +35,7 @@ Logically, whole process can be divided into stages:
 - `bytes4` dataType - type of data, usually hash of some string, e.g.: "v1", "v2" (see more [here](./contracts/LibOrderData.md))
 - `bytes` data - generic data, can be anything, extendable part of the order (see more [here](./contracts/LibOrderData.md))
 
-#### Order message statements
+#### Order execution
 
 When user signs the order he states the following: 
 
@@ -47,7 +47,9 @@ This means:
 
 Fill of the order is saved inside smart contract and it relates to the take order part. Fill is stored inside mapping, where key is calculated using these fields: maker, make asset type, take asset type, salt. It means, fill of the orders which differ only in exchange rate, are stored in the same mapping slot.
 
-Also, orders which are fully filled, can be extended: users can sign new orders using the same salt (they can increase make.value and take.value for example). 
+Also, orders which are fully filled, can be extended: users can sign new orders using the same salt (they can increase make.value and take.value for example).
+
+Order rate priority: if rates for the exchange differ, but orders can be filled (for example, left order is 10X -> 100Y, but right is 100Y -> 5X), then left order dictates exchange rate. 
 
 #### Order validation
 
