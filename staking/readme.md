@@ -70,3 +70,17 @@ the user will receive. Max staking period equal 2 years cliff period and 2 years
 The K coefficient changes non-linearly, as shown in the picture 7. 
 
 ![Staking 2](documents/svg/Pict7GgraphicK.svg)
+
+#### stRari delegation
+
+Delegation is the right of the user to designate the beneficiary of the staked amount of **Rari**. In other words, 
+the user has the right to assign the address of another user or contract to whom the **stRari** will be listed.
+The delegation only touches on **stRari**, not on the amount of **Rari**. Calling method withdraw() **Rari** always 
+enumerates owner Lock, even if **stRari** is assigned to another user or contract.
+
+The delegation mechanism is very flexible. Delegation can be done by calling *stake()*, the entire amount of **stRari** 
+will be enumerated to another user. Delegation can be done by calling the *restake()* method, but this method aims 
+to change the **Lock** parameters. If there is no need to change the **Lock** parameters, the authors of the staking contract
+recommend using the *delegate()* method. The method aims to translate **stRari** for Lock with the given id. A delegated
+**Lock** with a given id can be redelegated an unlimited number of times. There is only one limitation, the delegation can
+only be owner Lock. 
