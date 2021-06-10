@@ -20,9 +20,10 @@ The **Lock** life mechanism with the specified parameters (**bias**, **slope**, 
 as a **broken line**. The user decides what type of line to choose and which parameters to set. When creating a **Lock**,
 **Rari** equal to the bias parameter transferred to the contract account. Depending on the parameters, **cliff** and **slope**
 **Lock** can be of 3 types:
-only cliff,
-cliff plus slope,
-only slope.
+- only cliff,
+- cliff plus slope,
+- only slope.
+
 For example, consider picture 1.
 
 ![Staking 1](documents/svg/Pict1StakeMethods.svg)
@@ -83,4 +84,47 @@ will be enumerated to another user. Delegation can be done by calling the *resta
 to change the **Lock** parameters. If there is no need to change the **Lock** parameters, the authors of the staking contract
 recommend using the *delegate()* method. The method aims to translate **stRari** for Lock with the given id. A delegated
 **Lock** with a given id can be redelegated an unlimited number of times. There is only one limitation, the delegation can
-only be owner Lock. 
+only be owner **Lock**.
+
+### Description methods
+##### Only owner contract methods
+**setStopLock**(bool *value*); Set mode for contract. When true impossible to *stake()*, *reStake()*, *delegate()*
+*withdraw()* enumerates all amount of Rari. When false - ordinary work.
+- Input parameter: *to* - true - set mode stop; false - set work mode.
+
+**startMigration**(address *to*); Set addres new contract, allow migration.
+- Input parameter: *to* - address new contract;
+
+**stopMigration**(); Deprecate migration.
+
+##### External methods
+**stake**(address *account*, address *delegator*, uint *amount*, uint *slope*, uint *cliff*) returns (uint); Stake Lock, return id Lock
+- Input parameter: *account* - address Lock owner;
+- Input parameter: *delegator* - address stRari delegator;
+- Input parameter: *amount* - amount Rari;
+- Input parameter: *slope* - value slope;
+- Input parameter: *cliff* - amount cliff;
+- Output: idLock. if 0 - can`t stake.
+
+**reStake**(uint *idLock*, address *newDelegator*, uint *newAmount*, uint *newSlope*, uint *newCliff*) returns (uint); Restake Lock with id, return new id Lock
+- Input parameter: *idLock* - id Lock to restake;
+- Input parameter: *newDelegator* - address stRari delegator;
+- Input parameter: *newAmount* - amount Rari;
+- Input parameter: *newSlope* - value slope;
+- Input parameter: *newCliff* - amount cliff.
+- Output: new idLock. if 0 - can`t reStake.
+
+**withdraw**(); Withdraw available amount of Rari to User.
+
+**delegate**(uint *idLock*, address *newDelegator*); Delegate Lock with id to delegator.
+- Input parameter: *idLock* - id Lock to restake;
+- Input parameter: *newDelegator* - address stRari delegator;
+
+**totalSupply**() returns (uint); Returns total amount stRari, staked on *staking* contract.
+- Output: amount stRari. if 0 - can`t return amount stRari.
+
+**balanceOf**(address *account*) returns (uint); Returns total amount stRari, staked on User with *account*.
+- Output: amount stRari. if 0 - can`t return amount stRari.
+
+**migrate**(uint[] memory *idLock*); Migrate Locks with id to a new contract.
+- Input parameter: *idLock* - array contains id Locks to migrate.
