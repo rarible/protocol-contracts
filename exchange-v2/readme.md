@@ -35,6 +35,20 @@ Logically, whole process can be divided into stages:
 - `bytes4` dataType - type of data, usually hash of some string, e.g.: "v1", "v2" (see more [here](./contracts/LibOrderData.md))
 - `bytes` data - generic data, can be anything, extendable part of the order (see more [here](./contracts/LibOrderData.md))
 
+#### Order message statements
+
+When user signs the order he states the following: 
+
+I would like to exchange my asset (make), up to make asset value, in return I would like to get take asset, not more than take value. Orders can be filled partly, but in this case rate of the exchange should be the same or should be more profitable for me.
+
+This means:
+- user can give less than make.value
+- user can't receive more than take.value (order is filled when user gets what he wants to receive)
+
+Fill of the order is saved inside smart contract and it relates to the take order part. Fill is stored inside mapping, where key is calculated using these fields: maker, make asset type, take asset type, salt. It means, fill of the orders which differ only in exchange rate, are stored in the same mapping slot.
+
+Also, orders which are fully filled, can be extended: users can sign new orders using the same salt (they can increase make.value and take.value for example). 
+
 #### Order validation
 
 - check start/end date of the orders
@@ -54,9 +68,9 @@ There are possible improvements to protocol using these custom matchers:
 - support for parametric assets. For example, user can put order to exchange 10ETH to any NFT from popular collection.
 - support for NFT bundles
 
-#### Order execution
+#### Transfers execution
 
-Order execution is done by TransferManager. There are 2 variants:
+Transfers are done by TransferManager. There are 2 variants:
 
 - SimpleTransferManager (it simply transfers assets from maker to taker and vice versa)
 - RaribleTransferManager (sophisticated version, it takes in account protocol commissions, royalties etc)

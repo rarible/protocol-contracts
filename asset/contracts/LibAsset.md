@@ -9,7 +9,7 @@ It consists of `asset class` and generic data (format of data is different for d
 
 `Asset` fields:
 - `AssetType` assetType
-- uint value
+- `uint` value
 
 `AssetType` fields:
 - `bytes4` assetClass
