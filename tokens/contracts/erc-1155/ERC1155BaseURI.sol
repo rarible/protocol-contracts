@@ -64,10 +64,5 @@ contract ERC1155BaseURI is ERC1155Upgradeable {
         _baseURI = baseURI_;
     }
 
-    function _clearTokenURI(uint256 tokenId) internal {
-        if (bytes(_tokenURIs[tokenId]).length != 0) {
-            delete _tokenURIs[tokenId];
-        }
-    }
     uint256[50] private __gap;
 }
