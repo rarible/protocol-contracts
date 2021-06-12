@@ -9,15 +9,16 @@ import "@rarible/royalties/contracts/LibPart.sol";
 
 contract RoyaltiesProviderTest is IRoyaltiesProvider {
 
-    mapping (address => LibPart.Part[]) internal royaltiesTest;
+    mapping (address => mapping(uint => LibPart.Part[])) internal royaltiesTest;
 
-    function initializeProvider(address token, LibPart.Part[] memory royalties) public {
+    function initializeProvider(address token, uint tokenId, LibPart.Part[] memory royalties) public {
+        delete royaltiesTest[token][tokenId];
         for (uint256 i = 0; i < royalties.length; i++) {
-            royaltiesTest[token].push(royalties[i]);
+            royaltiesTest[token][tokenId].push(royalties[i]);
         }
     }
 
-    function getRoyalties(address token, uint) override external view returns(LibPart.Part[] memory) {
-        return royaltiesTest[token];
+    function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
+        return royaltiesTest[token][tokenId];
     }
 }

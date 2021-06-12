@@ -10,6 +10,7 @@ const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 
 contract("RoyaltiesRegistry, test metods", accounts => {
 	let erc721TokenId1 = 51;
+	let erc721TokenId2 = 52;
 	let erc721;
 
 	beforeEach(async () => {
@@ -37,12 +38,14 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		it("SetRoyaltiesByToken, initialize by Owner, emit get", async () => {
 			await royaltiesRegistry.__RoyaltiesRegistry_init();//initialize Owner
     	await royaltiesRegistry.setRoyaltiesByToken(accounts[5], [[accounts[3], 600], [accounts[4], 1100]]); //set royalties by token and tokenId
+    	await royaltiesRegistry.setRoyaltiesByToken(accounts[5], [[accounts[3], 600], [accounts[4], 1100]]); //set royalties by token and tokenId
     	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, accounts[5], erc721TokenId1);
     	let royalties;
     	truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
     		royalties = ev.royalties;
       		return true;
       });
+      assert.equal(royalties.length, 2);
 			assert.equal(royalties[0].value, 600);
 			assert.equal(royalties[1].value, 1100);
 		})
@@ -69,12 +72,14 @@ contract("RoyaltiesRegistry, test metods", accounts => {
       await ERC721_V1OwnUpgrd.initialize( {from: ownerErc721});
 			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
     	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1,[[accounts[3], 500], [accounts[4], 1000]], {from: ownerErc721}); //set royalties by token and tokenId
+    	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1,[[accounts[3], 500], [accounts[4], 1000]], {from: ownerErc721}); //set royalties by token and tokenId
 			part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
 			let royalties;
       truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
       	royalties = ev.royalties;
         return true;
       });
+      assert.equal(royalties.length, 2);
 			assert.equal(royalties[0].value, 500);
 			assert.equal(royalties[1].value, 1000);
 		})
@@ -103,7 +108,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		it("SetProviderByToken, initialize by Owner", async () => {
   		await royaltiesRegistry.__RoyaltiesRegistry_init();//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
-      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
   		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
     	await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address); 							//set royalties by provider
 			part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
@@ -120,7 +125,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
   		await royaltiesRegistry.__RoyaltiesRegistry_init();																																//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
       ERC721_V1OwnUpgrd.initialize(); 																																											//set V1 interface
-      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); 	//initialize royalties provider
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 500], [accounts[4], 1000]]); 	//initialize royalties provider
   		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, [[accounts[5], 1000], [accounts[7], 1200]]);								//set royalties by contract
     	await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address); 								//set royalties by provider
     	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
@@ -137,7 +142,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		it("SetProviderByToken, initialize  by ownableUpgradaeble(ERC721_V1OwnUpgrd).owner ", async () => {
 			let ownerErc721 = accounts[6];
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
-      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 600], [accounts[4], 1100]]); 				//initialize royalties provider
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 600], [accounts[4], 1100]]); 				//initialize royalties provider
       await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
 			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
 			await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address, {from: ownerErc721}); //set royalties by provider
@@ -152,10 +157,26 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 			assert.equal(royalties.length, 2);
 		})
 
+		it("SetProviderByToken, initialize by ownableUpgradaeble(ERC721_V1OwnUpgrd).owner, royalties for erc721TokenId2 should be empty", async () => {
+			let ownerErc721 = accounts[6];
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 600], [accounts[4], 1100]]); 				//initialize royalties provider
+      await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
+			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId2, []);
+			await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address, {from: ownerErc721}); //set royalties by provider
+			part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId2);
+			let royalties;
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+      	royalties = ev.royalties;
+        return true;
+      });
+			assert.equal(royalties.length, 0);
+		})
+
 		it("SetProviderByToken, initialize by Owner, but provider not IRoyaltiesRegistry, result - no royalties", async () => {
   		await royaltiesRegistry.__RoyaltiesRegistry_init();//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
-      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 500], [accounts[4], 1000]]); //initialize royalties provider
   		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
     	await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, erc721.address); 														//set provider without IRoyaltiesRegistry
 			part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
@@ -170,7 +191,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		it("SetProviderByToken, initialize not initialized, expect throw ", async () => {
 			let ownerErc721 = accounts[6];
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
-      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,[[accounts[3], 600], [accounts[4], 1100]]);//initialize royalties provider
+      await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address,erc721TokenId1,[[accounts[3], 600], [accounts[4], 1100]]);//initialize royalties provider
       await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
 			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
     	await expectThrow(

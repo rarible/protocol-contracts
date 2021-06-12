@@ -13,7 +13,7 @@ contract RoyaltiesRegistryTest {
 
     function _getRoyalties(address royaltiesTest, address token, uint tokenId) external {
         IRoyaltiesProvider withRoyalties = IRoyaltiesProvider(royaltiesTest);
-        LibPart.Part[] memory royalties =  withRoyalties.getRoyalties(token, tokenId);
+        LibPart.Part[] memory royalties = withRoyalties.getRoyalties(token, tokenId);
         emit getRoyaltiesTest(royalties);
     }
 }
