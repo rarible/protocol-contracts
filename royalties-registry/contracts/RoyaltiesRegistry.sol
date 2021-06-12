@@ -64,7 +64,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		if (royaltiesSet.initialized) {
 			return royaltiesSet.royalties;
 		}
-		(bool result, LibPart.Part[] memory resultRoyalties) = providerExtractor(token);
+		(bool result, LibPart.Part[] memory resultRoyalties) = providerExtractor(token, tokenId);
 		if (result == false) {
 			resultRoyalties = royaltiesFromContract(token, tokenId);
 		}
@@ -117,11 +117,11 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 		return feesRecipients;
 	}
 
-	function providerExtractor(address token) internal returns (bool result, LibPart.Part[] memory royalties) {
+	function providerExtractor(address token, uint tokenId) internal returns (bool result, LibPart.Part[] memory royalties) {
 		address provider = royaltiesProviders[token];
 		if (provider != address(0x0)) {
 			IRoyaltiesProvider withRoyalties = IRoyaltiesProvider(provider);
-			try withRoyalties.getRoyalties(token, 0x0) returns (LibPart.Part[] memory royaltiesByProvider) {
+			try withRoyalties.getRoyalties(token, tokenId) returns (LibPart.Part[] memory royaltiesByProvider) {
 				royalties = royaltiesByProvider;
 				result = true;
 			} catch { }
