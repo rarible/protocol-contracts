@@ -8,6 +8,11 @@ const rinkeby = {
 	erc1155LazyMintTransferProxy: "0x7c4B13B5893cD82f371c5e28f12FB2F37542BbC5",
 	transferProxy: "0x7d47126a2600E22eab9eD6CF0e515678727779A6"
 }
+const mainnet = {
+	erc721LazyMintTransferProxy: "0xbb7829BFdD4b557EB944349b2E2c965446052497",
+	erc1155LazyMintTransferProxy: "0x75a8B7c0B22D973E0B46CfBD3e2f6566905AA79f",
+	transferProxy: "0x4fee7b061c97c9c496b01dbce9cdb10c02f0a0be"
+}
 const ropsten = {
 	erc721LazyMintTransferProxy: "0x6c49c170c82C40709a32Fb4E827ad3011CD86227",
 	erc1155LazyMintTransferProxy: "0x9F7fBc52A53f85e57a5DAde35dFa14797A4dA412",
@@ -29,6 +34,8 @@ let settings = {
 	"rinkeby-fork": rinkeby,
 	"ropsten": ropsten,
 	"ropsten-fork": ropsten,
+	"mainnet": mainnet,
+	"mainnet-fork": mainnet,
 	"e2e": e2e,
 	"e2e-fork": e2e
 };
