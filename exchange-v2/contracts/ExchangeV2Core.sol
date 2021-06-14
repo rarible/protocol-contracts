@@ -59,10 +59,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         require(newFill.takeValue > 0, "nothing to fill");
 
         if (orderLeft.salt != 0) {
-            fills[leftOrderKeyHash] = leftOrderFill + newFill.takeValue;
+            fills[leftOrderKeyHash] = leftOrderFill.add(newFill.takeValue);
         }
         if (orderRight.salt != 0) {
-            fills[rightOrderKeyHash] = rightOrderFill + newFill.makeValue;
+            fills[rightOrderKeyHash] = rightOrderFill.add(newFill.makeValue);
         }
 
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight);
@@ -70,12 +70,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
             if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value - totalMakeValue);
+                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value - totalTakeValue);
+                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.takeValue, newFill.makeValue, makeMatch, takeMatch);
