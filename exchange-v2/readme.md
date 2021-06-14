@@ -86,6 +86,12 @@ TODO: possible improvements:
 - support bundles
 - support random boxes
 
+#### Executing ETH transfers
+
+Makers of the orders and addresses in payouts field in `order.data` can be contracts. So, these contracts should have payable fallback functions to accept incoming ETH transfers. In other cases tx will fail.
+
+The same applies to origin field, royalties receivers.
+
 #### Fees
 
 RaribleTransferManager supports these types of fees:
