@@ -10,7 +10,7 @@ import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./INextVersionStake.sol";
 
-contract Staking is OwnableUpgradeable{
+contract Staking is OwnableUpgradeable {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -26,7 +26,7 @@ contract Staking is OwnableUpgradeable{
     uint public id;                         //id Line, successfully added to BrokenLine
     address public migrateTo;               //address migrate to
 
-    struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
+    struct Lockers {//initiate addresses, user (or contract), who locks and whom delegate
         address locker;                     //locker address (lock creator)
         address delegate;                   //delegate address (delegate creator)
     }
@@ -37,8 +37,8 @@ contract Staking is OwnableUpgradeable{
         uint amount;                        //user RARI (lockedAmount + amountready for transferBack)
     }
 
-    mapping (address => Locks) locks;                   //address User - Lock
-    mapping (uint => Lockers) deposits;                 //idLock address User
+    mapping(address => Locks) locks;                   //address User - Lock
+    mapping(uint => Lockers) deposits;                 //idLock address User
     LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
 
     function __Staking_init(ERC20Upgradeable _token) external initializer {
@@ -46,7 +46,7 @@ contract Staking is OwnableUpgradeable{
         __Ownable_init_unchained();
     }
 
-    function setStopLock(bool value) external onlyOwner{
+    function setStopLock(bool value) external onlyOwner {
         stopLock = value;
     }
 
@@ -152,7 +152,7 @@ contract Staking is OwnableUpgradeable{
             require(msg.sender == account, "Migrate call not from owner idLock");
             address delegator = deposits[idLock[i]].delegate;
             LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[idLock[i]];
-            (uint residue, ) = locks[account].locked.remove(idLock[i], blockTime);
+            (uint residue,) = locks[account].locked.remove(idLock[i], blockTime);
 
             require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
             locks[account].amount = locks[account].amount.sub(residue);
@@ -183,11 +183,12 @@ contract Staking is OwnableUpgradeable{
     function removeLines(uint idLock, address account, address delegator, uint newAmount, uint toTime) internal {
         uint bias = locks[account].locked.initial.bias;
         uint balance = locks[account].amount.sub(bias);
-        (uint residue, ) = locks[account].locked.remove(idLock, toTime);        //original: (uint residue, uint slope), but slope not need here
+        (uint residue,) = locks[account].locked.remove(idLock, toTime);
+        //original: (uint residue, uint slope), but slope not need here
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
 
         uint addAmount = newAmount.sub(residue);
-        if (addAmount > balance) { //need more, than balance, so need transfer ERC20 to this
+        if (addAmount > balance) {//need more, than balance, so need transfer ERC20 to this
             require(token.transferFrom(deposits[idLock].locker, address(this), addAmount.sub(balance)), "Failure while transferring");
             locks[account].amount = locks[account].amount.sub(residue);
             locks[account].amount = locks[account].amount.add(newAmount);
@@ -219,7 +220,7 @@ contract Staking is OwnableUpgradeable{
         uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
         uint newAmount = amount.mul(multiplier);
         uint newSlope = newAmount.div(slopePeriod);
-        return(newAmount, newSlope);
+        return (newAmount, newSlope);
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
