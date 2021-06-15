@@ -22,34 +22,62 @@ contract Staking is OwnableUpgradeable {
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
 
+    /**
+     * @dev ERC20 token to lock
+     */
     IERC20Upgradeable public token;
-    uint public id;                         //id Line, successfully added to BrokenLine
+    /**
+     * @dev counter for locks identifiers
+     */
+    uint public id;
 
-    bool private stopLock;                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
+    /**
+     * @dev true if contract entered not working state
+     */
+    bool private stopped;
     address public migrateTo;               //address migrate to
 
-    struct Lockers {//initiate addresses, user (or contract), who locks and whom delegate
-        address locker;                     //locker address (lock creator)
-        address delegate;                   //delegate address (delegate creator)
+    /**
+     * @dev locker - who locked ERC20 tokens. gelegate - who gets staked tokens
+     */
+    struct Lockers {
+        address locker;
+        address delegate;
     }
 
+    /**
+     * @dev describes state of user's balance.
+     *      balance - broken line describes stake
+     *      locked - broken line describes locked user's tokens
+     *      amount - total currently locked tokens
+     */
     struct Locks {
-        LibBrokenLine.BrokenLine balance;   //line of stRari balance
-        LibBrokenLine.BrokenLine locked;    //locked amount (RARI)
-        uint amount;                        //user RARI (lockedAmount + amountready for transferBack)
+        LibBrokenLine.BrokenLine balance;
+        LibBrokenLine.BrokenLine locked;
+        uint amount;
     }
 
-    mapping(address => Locks) locks;                   //address User - Lock
-    mapping(uint => Lockers) deposits;                 //idLock address User
-    LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
+    /**
+     * @dev key is user address
+     */
+    mapping(address => Locks) locks;
+    /**
+     * @dev key is lock id. value is locker + gelegate
+     */
+    mapping(uint => Lockers) deposits;
+    /**
+     * @dev totalSupply broken line
+     */
+    LibBrokenLine.BrokenLine public totalSupplyLine;
 
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
         __Ownable_init_unchained();
     }
 
-    function setStopLock(bool value) external onlyOwner {
-        stopLock = value;
+    function stop() external onlyOwner {
+        require(!stopped);
+        stopped = true;
     }
 
     function startMigration(address to) external onlyOwner {
@@ -61,8 +89,8 @@ contract Staking is OwnableUpgradeable {
     }
 
     function stake(address account, address delegator, uint amount, uint slope, uint cliff) external returns (uint) {
-        if (stopLock) {
-            return 0;
+        if (stopped) {
+            revert("stopped");
         }
         require(amount > 0, "Lock amount Rari mast be > 0");
         require(cliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
@@ -84,8 +112,8 @@ contract Staking is OwnableUpgradeable {
     }
 
     function reStake(uint idLock, address newDelegator, uint newAmount, uint newSlope, uint newCliff) external returns (uint) {
-        if (stopLock) {
-            return 0;
+        if (stopped) {
+            revert("stopped");
         }
         address account = deposits[idLock].locker;
         address delegator = deposits[idLock].delegate;
@@ -99,7 +127,7 @@ contract Staking is OwnableUpgradeable {
         uint blockTime = roundTimestamp(block.timestamp);
         locks[msg.sender].locked.update(blockTime);
         uint value = locks[msg.sender].amount;
-        if (!stopLock) {
+        if (!stopped) {
             uint bias = locks[msg.sender].locked.initial.bias;
             value = value.sub(bias);
         }
@@ -110,8 +138,8 @@ contract Staking is OwnableUpgradeable {
     }
 
     function delegate(uint idLock, address newDelegator) external {
-        if (stopLock) {
-            return;
+        if (stopped) {
+            revert("stopped");
         }
         address from = deposits[idLock].delegate;
         require(from != address(0), "Delegate from address by idLock not found");
@@ -126,7 +154,7 @@ contract Staking is OwnableUpgradeable {
     }
 
     function totalSupply() external returns (uint) {
-        if ((totalSupplyLine.initial.bias == 0) || (stopLock)) {
+        if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
             return 0;
         }
         uint blockTime = roundTimestamp(block.timestamp);
@@ -135,7 +163,7 @@ contract Staking is OwnableUpgradeable {
     }
 
     function balanceOf(address account) external returns (uint) {
-        if ((locks[account].balance.initial.bias == 0) || (stopLock)) {
+        if ((locks[account].balance.initial.bias == 0) || (stopped)) {
             return 0;
         }
         uint blockTime = roundTimestamp(block.timestamp);

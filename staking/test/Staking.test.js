@@ -910,7 +910,7 @@ contract("Staking", accounts => {
 
 	describe("Part6. Check setStopLock()", () => {
 
-		it("Test1. setStopLock() and check account and total balance stRari", async () => {
+		it("Test1. stop() and check account and total balance stRari", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
@@ -920,7 +920,7 @@ contract("Staking", accounts => {
         return true;
       });
 
-      await staking.setStopLock(true);    //STOP!!! only owner
+      await staking.stop();    //STOP!!! only owner
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]); //check balance account
       let balanceOf;
@@ -941,7 +941,7 @@ contract("Staking", accounts => {
       assert.equal(totalBalance, 0);
 		});
 
-		it("Test2. setStopLock() after check stake(), reStake() methods", async () => {
+		it("Test2. stop() after check stake(), reStake() methods", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
@@ -951,20 +951,12 @@ contract("Staking", accounts => {
         return true;
       });
 
-      await staking.setStopLock(true);    //STOP!!! only owner
+      await staking.stop();    //STOP!!! only owner
 
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[4], 60, 2, 0);  //check stake
-			let idLock2;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock2 = ev.result;
-        return true;
-      });
-      assert.equal(idLock2, 0);
-			assert.equal(await token.balanceOf(staking.address), 60);				//balance contract dont change
-  		assert.equal(await token.balanceOf(accounts[2]), 40);			//balance user balance
+			await expectThrow(forTest._stake(staking.address, accounts[2], accounts[4], 60, 2, 0));
 		});
 
-		it("Test3. setStopLock() and check withdraw()", async () => {
+		it("Test3. stop() and check withdraw()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
@@ -974,14 +966,14 @@ contract("Staking", accounts => {
         return true;
       });
 
-      await staking.setStopLock(true);    //STOP!!! only owner
+      await staking.stop();    //STOP!!! only owner
 
 			staking.withdraw({ from: accounts[2] });  //chek withdraw
  			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
 		});
 
-		it("Test4. setStopLock()  from not owner, throw", async () => {
+		it("Test4. stop()  from not owner, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
@@ -991,7 +983,7 @@ contract("Staking", accounts => {
         return true;
       });
       await expectThrow(
-        staking.setStopLock(true, { from: accounts[8] })    //STOP!!! not owner
+        staking.stop({ from: accounts[8] })    //STOP!!! not owner
       );
 		});
   })
