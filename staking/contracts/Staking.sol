@@ -22,9 +22,9 @@ contract Staking is OwnableUpgradeable{
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
     ERC20Upgradeable public token;
-    bool private stopLock;                                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
-    uint public id;                                         //id Line, successfully added to BrokenLine
-    address public migrateTo;                               //address migrate to
+    bool private stopLock;                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
+    uint public id;                         //id Line, successfully added to BrokenLine
+    address public migrateTo;               //address migrate to
 
     struct Lockers {                        //initiate addresses, user (or contract), who locks and whom delegate
         address locker;                     //locker address (lock creator)
@@ -111,14 +111,14 @@ contract Staking is OwnableUpgradeable{
         if (stopLock) {
             return;
         }
-        address account = deposits[idLock].delegate;
-        require(account != address(0), "Delegate from address by idLock not found");
-        LibBrokenLine.LineData memory lineData = locks[account].balance.initiatedLines[idLock];
+        address from = deposits[idLock].delegate;
+        require(from != address(0), "Delegate from address by idLock not found");
+        LibBrokenLine.LineData memory lineData = locks[from].balance.initiatedLines[idLock];
         require(lineData.line.bias != 0, "Line already finished nothing to delegate");
         uint blockTime = roundTimestamp(block.timestamp);
-        (uint bias, uint slope) = locks[account].balance.remove(idLock, blockTime);
-        uint cliff = lineData.cliff;
+        (uint bias, uint slope) = locks[from].balance.remove(idLock, blockTime);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
+        uint cliff = lineData.cliff;
         locks[newDelegator].balance.add(idLock, line, cliff);
         deposits[idLock].delegate = newDelegator;
     }

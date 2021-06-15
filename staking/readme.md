@@ -18,7 +18,7 @@ the user's weight when voting for community decisions.
 
 The **Lock** life mechanism with the specified parameters (**bias**, **slope**, **cliff**) is visually displayed along the timeline 
 as a **broken line**. The user decides what type of line to choose and which parameters to set. When creating a **Lock**,
-**Rari** equal to the bias parameter transferred to the contract account. Depending on the parameters, **cliff** and **slope**
+**Rari** equal to the **bias** parameter transferred to the contract account. Depending on the parameters, **cliff** and **slope**
 **Lock** can be of 3 types:
 - only cliff,
 - cliff plus slope,
@@ -31,19 +31,19 @@ For example, consider picture 1.
 When creating the **Lock**, amount **stRary** will be calculated using a special formula, but the form
 the line will be similar to the **Rary** line, consider picture 2. 
 
-![Staking 1](documents/svg/Pict2RariStrariLines.svg)
+![Staking 2](documents/svg/Pict2RariStrariLines.svg)
 
 If the user uses line type with cliff only, then the mechanism no withdraw **Rary** provided until the end time of **Lock**.
 When **slope** works, some amount of **Rary** can be withdraw back to the user, as shown in picture 3.
 
-![Staking 1](documents/svg/Pict3Withdraw.svg)
+![Staking 3](documents/svg/Pict3Withdraw.svg)
 
 The user can create an unlimited number of **Lock**.
 Each **Lock** created has a unique *id*. Moreover, with each creation
-**Lock** increases the amount **Rari** and the amount **stRari**. Mechanism for changing any amount
-Lock for **Rari** and similar **stRari** is visually displayed using **broken line**, consider picure 4.
+**Lock** increases the amount **Rari** and the amount **stRari**. Mechanism for changing Lock amount
+for **Rari** and similar **stRari** is visually displayed using **broken line**, consider picure 4.
 
-![Staking 2](documents/svg/Pict4BrokenLine.svg)
+![Staking 4](documents/svg/Pict4BrokenLine.svg)
 
 #### Modernize Lock
 
@@ -51,12 +51,12 @@ For each created **Lock**, user can execute the *restake* method, which allows y
 The following parameters are available for changing: **bias**, **cliff**, **slope**, as shown in picture 5. It is important, 
 that the **Lock** completion time during *restake* is not less than the initial **Lock** period, otherwise *restake* will fail. 
 
-![Staking 2](documents/svg/Pict5ReStakingNoTransfer.svg)
+![Staking 5](documents/svg/Pict5ReStakingNoTransfer.svg)
 
 If the *withdraw* operation performed before the *restake*, or when the *restake* increases the bias 
 to a high degree, then part of the missing **Rari** will be automatically transferred from the user to the contract, as shown in picture 6.
 
-![Staking 2](documents/svg/Pict6ReStakingTransfer.svg)
+![Staking 6](documents/svg/Pict6ReStakingTransfer.svg)
 
 #### stRari calculate
 
@@ -70,7 +70,7 @@ Amount **stRari** depends on the values of period cliff and period slope. The lo
 the user will receive. Max staking period equal 2 years cliff period and 2 years slope period. 
 The K coefficient changes non-linearly, as shown in the picture 7. 
 
-![Staking 2](documents/svg/Pict7GgraphicK.svg)
+![Staking 7](documents/svg/Pict7GgraphicK.svg)
 
 #### stRari delegation
 
