@@ -1138,12 +1138,6 @@ contract("Staking", accounts => {
         staking.startMigration(newStaking.address, { from: accounts[8] })    //startMigration!!! not owner
       );
 		});
-
-		it("Test6. stopMigration()  from not owner, throw", async () => {
-      await expectThrow(
-        staking.stopMigration({ from: accounts[8] })                        //stopMigration!!! not owner
-      );
-		});
   })
 
 	describe("Part8. Check formula()", () => {
