@@ -4,7 +4,7 @@ pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 import "@rarible/lib-broken-line/contracts/LibIntMapping.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -21,9 +21,11 @@ contract Staking is OwnableUpgradeable {
     uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
-    ERC20Upgradeable public token;
-    bool private stopLock;                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
+
+    IERC20Upgradeable public token;
     uint public id;                         //id Line, successfully added to BrokenLine
+
+    bool private stopLock;                  //flag stop locking. Extremely situation stop execution contract methods, allow withdraw()
     address public migrateTo;               //address migrate to
 
     struct Lockers {//initiate addresses, user (or contract), who locks and whom delegate
@@ -41,7 +43,7 @@ contract Staking is OwnableUpgradeable {
     mapping(uint => Lockers) deposits;                 //idLock address User
     LibBrokenLine.BrokenLine public totalSupplyLine;    //total stRARI balance
 
-    function __Staking_init(ERC20Upgradeable _token) external initializer {
+    function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
         __Ownable_init_unchained();
     }
