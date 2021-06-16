@@ -99,6 +99,8 @@ RaribleTransferManager supports these types of fees:
 - origin fees (origin and origin fee is set for every order. it can be different for two orders involved)
 - royalties (authors of the work will receive part of each sale)
 
+Royalties of the item can not be more than 30% for security reasons. If royalties are more than 30%, transaction is reverted.
+
 ##### Fees calculation, fee side
 
 To take a fee we need to calculate, what side of the deal can be used as money.
