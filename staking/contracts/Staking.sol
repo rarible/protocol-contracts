@@ -70,6 +70,27 @@ contract Staking is OwnableUpgradeable {
      */
     LibBrokenLine.BrokenLine public totalSupplyLine;
 
+    /**
+     * @dev Emitted when create Lock with parameters (account, delegate, amount, slope, cliff)
+     */
+    event Stake(address account, address delegate, uint amount, uint slope, uint cliff);
+    /**
+     * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlope, newCliff) for Lock with given id
+     */
+    event ReStake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff);
+    /**
+     * @dev Emitted when to set newDelegate address for Lock with given id
+     */
+    event Delegate(uint id, address newDelegate);
+    /**
+     * @dev Emitted when withdraw amount of Rari, account - msg.sender, value - amount Rari
+     */
+    event Withdraw(address account, uint value);
+    /**
+     * @dev Emitted when migrate Locks with given id, account - msg.sender
+     */
+    event Migrate(address account, uint[] id);
+
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
         __Ownable_init_unchained();
@@ -94,6 +115,7 @@ contract Staking is OwnableUpgradeable {
         uint blockTime = roundTimestamp(block.timestamp);
         addLines(account, delegate, amount, slope, cliff, blockTime);
         locks[account].amount = locks[account].amount.add(amount);
+        emit Stake(account, delegate, amount, slope, cliff);
         return counter;
     }
 
@@ -107,6 +129,7 @@ contract Staking is OwnableUpgradeable {
         counter++;
 
         addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+        emit ReStake(id, newDelegate, newAmount, newSlope, newCliff);
         return counter;
     }
 
@@ -122,6 +145,7 @@ contract Staking is OwnableUpgradeable {
             locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "Failure while transferring, withdraw");
         }
+        emit Withdraw(msg.sender, value);
     }
 
     function delegate(uint id, address newDelegate) external notStopped {
@@ -134,6 +158,7 @@ contract Staking is OwnableUpgradeable {
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
         locks[newDelegate].balance.add(id, line, cliff);
         deposits[id].delegate = newDelegate;
+        emit Delegate(id, newDelegate);
     }
 
     function totalSupply() external returns (uint) {
@@ -177,6 +202,7 @@ contract Staking is OwnableUpgradeable {
                 revert("Contract not support or contain an error in interface INextVersionStake");
             }
         }
+        emit Migrate(msg.sender, id);
     }
 
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
