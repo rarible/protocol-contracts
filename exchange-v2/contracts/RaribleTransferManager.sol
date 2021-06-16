@@ -95,8 +95,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        rest = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
-        rest = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
+        (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
+        (rest,) = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
         transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
     }
 
@@ -134,7 +134,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
-        return transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
+        (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
+        require(totalRoyalties <= 3000, "Royalties are too high (>30$)");
+        return result;
     }
 
     function transferFees(
@@ -145,9 +147,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address from,
         bytes4 transferDirection,
         bytes4 transferType
-    ) internal returns (uint restValue) {
+    ) internal returns (uint restValue, uint totalFees) {
+        totalFees = 0;
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
+            totalFees = totalFees.add(fees[i].value);
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
