@@ -92,14 +92,7 @@ contract Staking is OwnableUpgradeable {
         counter++;
 
         uint blockTime = roundTimestamp(block.timestamp);
-        (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
-        totalSupplyLine.add(counter, line, cliff);
-        locks[delegate].balance.add(counter, line, cliff);
-        line = LibBrokenLine.Line(blockTime, amount, slope);
-        locks[account].locked.add(counter, line, cliff);
-        deposits[counter].locker = account;
-        deposits[counter].delegate = delegate;
+        addLines(account, delegate, amount, slope, cliff, blockTime);
         locks[account].amount = locks[account].amount.add(amount);
         return counter;
     }
@@ -110,7 +103,11 @@ contract Staking is OwnableUpgradeable {
         uint blockTime = roundTimestamp(block.timestamp);
         verification(account, id, newAmount, newSlope, newCliff, blockTime);
         removeLines(id, account, delegate, newAmount, blockTime);
-        return addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+
+        counter++;
+
+        addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
+        return counter;
     }
 
     function withdraw() external {
@@ -214,17 +211,15 @@ contract Staking is OwnableUpgradeable {
         totalSupplyLine.remove(id, toTime);
     }
 
-    function addLines(address account, address newDelegate, uint newAmount, uint newSlope, uint newCliff, uint blockTime) internal returns (uint) {
-        (uint stAmount, uint stSlope) = getStake(newAmount, newSlope, newCliff);
+    function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint blockTime) internal {
+        (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
-        counter++;
-        totalSupplyLine.add(counter, line, newCliff);
-        locks[newDelegate].balance.add(counter, line, newCliff);
-        line = LibBrokenLine.Line(blockTime, newAmount, newSlope);
-        locks[account].locked.add(counter, line, newCliff);
+        totalSupplyLine.add(counter, line, cliff);
+        locks[delegate].balance.add(counter, line, cliff);
+        line = LibBrokenLine.Line(blockTime, amount, slope);
+        locks[account].locked.add(counter, line, cliff);
         deposits[counter].locker = account;
-        deposits[counter].delegate = newDelegate;
-        return counter;
+        deposits[counter].delegate = delegate;
     }
 
     //original formula: (0,7+9,3*(cliffPeriod/104)^2+0,5*(0,7+9,3*(slopePeriod/104)^2))
