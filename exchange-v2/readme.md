@@ -121,3 +121,9 @@ Then total amount of the asset (money side) should be calculated
 If buyer is using ERC-20 token for payment, then he must approve at least this calculated amount of tokens.
 
 If buyer is using ETH, then he must send this calculated amount of ETH with the tx.
+
+##### Cancelling the order
+
+cancel function can be used to cancel order. Such orders won't be matched and error will be thrown. This function is used by order maker to mark orders unfillable. This function can be invoked only by order maker.
+
+TODO: there is possibility to change authorization for cancel function - add authorization by signature. Possibly, this will be added in the future.
