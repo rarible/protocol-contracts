@@ -130,9 +130,8 @@ contract Staking is OwnableUpgradeable {
         LibBrokenLine.LineData memory lineData = locks[from].balance.initiatedLines[id];
         require(lineData.line.bias != 0, "deposit already finished");
         uint blockTime = roundTimestamp(block.timestamp);
-        (uint bias, uint slope) = locks[from].balance.remove(id, blockTime);
+        (uint bias, uint slope, uint cliff) = locks[from].balance.remove(id, blockTime);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
-        uint cliff = lineData.cliff;
         locks[newDelegate].balance.add(id, line, cliff);
         deposits[id].delegate = newDelegate;
     }
@@ -166,7 +165,7 @@ contract Staking is OwnableUpgradeable {
             require(msg.sender == account, "Migrate call not from owner id");
             address delegate = deposits[id[i]].delegate;
             LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[id[i]];
-            (uint residue,) = locks[account].locked.remove(id[i], blockTime);
+            (uint residue,,) = locks[account].locked.remove(id[i], blockTime);
 
             require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
             locks[account].amount = locks[account].amount.sub(residue);
@@ -197,7 +196,7 @@ contract Staking is OwnableUpgradeable {
     function removeLines(uint id, address account, address delegate, uint newAmount, uint toTime) internal {
         uint bias = locks[account].locked.initial.bias;
         uint balance = locks[account].amount.sub(bias);
-        (uint residue,) = locks[account].locked.remove(id, toTime);
+        (uint residue,,) = locks[account].locked.remove(id, toTime);
         //original: (uint residue, uint slope), but slope not need here
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
 
