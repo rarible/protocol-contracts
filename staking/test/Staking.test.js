@@ -1504,4 +1504,114 @@ contract("Staking", accounts => {
       assert.equal(totalBalance, 1000);
 		});
   })
+
+	describe("Part9. Check events emit()", () => {
+    //TODO check account addresses
+		it("Test1. check emit Stake()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			resultLock  = await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+
+			let account;
+			let delegate;
+			let amount;
+			let slope;
+			let cliff;
+      truffleAssert.eventEmitted(resultLock, 'Stake', (ev) => {
+       	account = ev.account;
+       	delegate = ev.delegate;
+       	amount = ev.amount;
+       	slope = ev.slope;
+       	cliff = ev.cliff;
+        return true;
+      });
+//      assert.equal(account, JSON.stringify(account[2]));
+//      assert.equal(delegate, account[3]);
+      assert.equal(amount, 20);
+      assert.equal(slope, 10);
+      assert.equal(cliff, 7);
+		});
+
+		it("Test2. check emit ReStake()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      let id = 1;
+      await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+			resultReStake  = await staking.reStake(id, accounts[2], 30, 5, 17);
+
+			let delegate;
+			let amount;
+			let slope;
+			let cliff;
+      truffleAssert.eventEmitted(resultReStake, 'ReStake', (ev) => {
+       	id = ev.id;
+       	delegate = ev.newDelegate;
+       	amount = ev.newAmount;
+       	slope = ev.newSlope;
+       	cliff = ev.newCliff;
+        return true;
+      });
+      assert.equal(id, 1);
+//      assert.equal(delegate, account[3]);
+      assert.equal(amount, 30);
+      assert.equal(slope, 5);
+      assert.equal(cliff, 17);
+		});
+
+		it("Test3. check emit Delegate()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      let id = 1;
+      await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+			resultDelegate  = await staking.delegate(id, accounts[4]);
+
+			let delegate;
+	    truffleAssert.eventEmitted(resultDelegate, 'Delegate', (ev) => {
+       	id = ev.id;
+       	delegate = ev.newDelegate;
+        return true;
+      });
+      assert.equal(id, 1);
+//      assert.equal(delegate, account[4]);
+		});
+
+		it("Test4. check emit Withdraw()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      let id = 1;
+      await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+      await increaseTime(WEEK * 8);
+			resultWithdraw  = await staking.withdraw({ from: accounts[2] });
+			let account;
+			let amount
+	    truffleAssert.eventEmitted(resultWithdraw, 'Withdraw', (ev) => {
+       	amount = ev.amount;
+       	account = ev.account;
+        return true;
+      });
+      assert.equal(amount, 10);
+//      assert.equal(account, account[2]);
+		});
+
+		it("Test5. check emit Migrate()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[2], 20, 10, 7);
+      await staking.stake(accounts[2], accounts[2], 30, 10, 7);
+      await staking.stake(accounts[2], accounts[2], 40, 10, 7);
+      await staking.startMigration(newStaking.address);
+			resultMigrate  = await staking.migrate([1, 2, 3], { from: accounts[2] });
+			let account;
+			let ids = [];
+	    truffleAssert.eventEmitted(resultMigrate, 'Migrate', (ev) => {
+       	account = ev.account;
+       	ids = ev.id;
+        return true;
+      });
+      assert.equal(ids[0], 1);
+      assert.equal(ids[1], 2);
+      assert.equal(ids[2], 3);
+//      assert.equal(account, account[2]);
+		});
+  })
 })

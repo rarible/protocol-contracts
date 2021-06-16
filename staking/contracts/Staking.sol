@@ -83,9 +83,9 @@ contract Staking is OwnableUpgradeable {
      */
     event Delegate(uint id, address newDelegate);
     /**
-     * @dev Emitted when withdraw amount of Rari, account - msg.sender, value - amount Rari
+     * @dev Emitted when withdraw amount of Rari, account - msg.sender, amount - amount Rari
      */
-    event Withdraw(address account, uint value);
+    event Withdraw(address account, uint amount);
     /**
      * @dev Emitted when migrate Locks with given id, account - msg.sender
      */
