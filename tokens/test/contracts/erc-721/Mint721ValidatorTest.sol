@@ -9,6 +9,6 @@ contract Mint721ValidatorTest is Mint721Validator {
     }
 
     function validateTest(LibERC721LazyMint.Mint721Data memory data, uint index) external view {
-        validate(data, index);
+        validate(data.creators[index].account, LibERC721LazyMint.hash(data), data.signatures[index]);
     }
 }

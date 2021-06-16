@@ -10,11 +10,8 @@ contract Mint1155Validator is ERC1271Validator {
         __EIP712_init_unchained("Mint1155", "1");
     }
 
-    function validate(address sender, LibERC1155LazyMint.Mint1155Data memory data, uint index) internal view {
-        address creator = data.creators[index].account;
-        if (sender != creator) {
-            validate1271(data.creators[index].account, LibERC1155LazyMint.hash(data), data.signatures[index]);
-        }
+    function validate(address account, bytes32 hash, bytes memory signature) internal view {
+        validate1271(account, hash, signature);
     }
     uint256[50] private __gap;
 }

@@ -39,10 +39,11 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC721: transfer caller is not owner nor approved");
 
+        bytes32 hash = LibERC721LazyMint.hash(data);
         for (uint i = 0; i < data.creators.length; i++) {
             address creator = data.creators[i].account;
             if (creator != sender) {
-                validate(data, i);
+                validate(creator, hash, data.signatures[i]);
             }
         }
 
@@ -55,7 +56,9 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
-        for(uint i=0; i < _creators.length; i++) {
+        for (uint i = 0; i < _creators.length; i++) {
+            require(_creators[i].account != address(0x0), "Account should be present");
+            require(_creators[i].value != 0, "Creator share should be positive");
             creatorsOfToken.push(_creators[i]);
             total = total.add(_creators[i].value);
         }
@@ -71,5 +74,6 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
     function getCreators(uint256 _id) external view returns (LibPart.Part[] memory) {
         return creators[_id];
     }
+
     uint256[50] private __gap;
 }

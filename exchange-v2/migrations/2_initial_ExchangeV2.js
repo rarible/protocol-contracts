@@ -9,6 +9,13 @@ const e2e = {
 	royaltiesRegistry: "0xEd9E4775a5d746fd4b36612fD0B2AfcB05b3147C"
 };
 
+const mainnet = {
+	communityWallet: "0x1cf0df2a5a20cd61d68d4489eebbf85b8d39e18a",
+	erc20TransferProxy: "0xb8e4526e0da700e9ef1f879af713d691f81507d8",
+	transferProxy: "0x4fee7b061c97c9c496b01dbce9cdb10c02f0a0be",
+	royaltiesRegistry: "0xC0fd7D55dF0786c09841076E9E5002Ac8B18c494"
+};
+
 const ropsten = {
 	communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
 	erc20TransferProxy: "0xa5a51d7b4933185da9c932e5375187f661cb0c69",
@@ -21,7 +28,9 @@ let settings = {
 	"e2e": e2e,
 	"e2e-fork": e2e,
 	"ropsten": ropsten,
-	"ropsten-fork": ropsten
+	"ropsten-fork": ropsten,
+	"mainnet": mainnet,
+	"mainnet-fork": mainnet
 };
 
 function getSettings(network) {

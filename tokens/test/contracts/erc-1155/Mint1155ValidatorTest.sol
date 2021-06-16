@@ -9,6 +9,8 @@ contract Mint1155ValidatorTest is Mint1155Validator {
     }
 
     function validateTest(address sender, LibERC1155LazyMint.Mint1155Data memory data, uint index) external view {
-        validate(sender, data, index);
+        if (sender != data.creators[index].account) {
+            validate(data.creators[index].account, LibERC1155LazyMint.hash(data), data.signatures[index]);
+        }
     }
 }

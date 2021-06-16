@@ -104,7 +104,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory matchCalculate,
         bytes4 transferDirection
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFee * 2);
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFee.mul(2));
         if (fee > 0) {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
@@ -164,14 +164,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint restValue = amount;
         for (uint256 i = 0; i < payouts.length - 1; i++) {
             uint currentAmount = amount.bp(payouts[i].value);
-            sumBps += payouts[i].value;
+            sumBps = sumBps.add(payouts[i].value);
             if (currentAmount > 0) {
                 restValue = restValue.sub(currentAmount);
                 transfer(LibAsset.Asset(matchCalculate, currentAmount), from, payouts[i].account, transferDirection, PAYOUT);
             }
         }
         LibPart.Part memory lastPayout = payouts[payouts.length - 1];
-        sumBps += lastPayout.value;
+        sumBps = sumBps.add(lastPayout.value);
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
         if (restValue > 0) {
             transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
@@ -195,7 +195,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
 
     function subFee(uint value, uint fee) internal pure returns (uint newValue, uint realFee) {
         if (value > fee) {
-            newValue = value - fee;
+            newValue = value.sub(fee);
             realFee = fee;
         } else {
             newValue = 0;

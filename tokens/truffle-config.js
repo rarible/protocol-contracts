@@ -22,6 +22,7 @@ function createNetwork(name) {
       gasPrice: gasPrice + "000000000",
       network_id: json.network_id,
       skipDryRun: true,
+      timeoutBlocks: 500000,
       networkCheckTimeout: 500000
     };
   } catch (e) {

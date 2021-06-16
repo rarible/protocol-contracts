@@ -13,9 +13,9 @@ import "./ERC1155BaseURI.sol";
 abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
     using SafeMathUpgradeable for uint;
 
-    mapping (uint256 => LibPart.Part[]) public creators;
-    mapping (uint => uint) private supply;
-    mapping (uint => uint) private minted;
+    mapping(uint256 => LibPart.Part[]) public creators;
+    mapping(uint => uint) private supply;
+    mapping(uint => uint) private minted;
 
     function __ERC1155Lazy_init_unchained() internal initializer {
         _registerInterface(0x6db15a0f);
@@ -46,17 +46,20 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
-        require(minter == data.creators[0].account, "tokenId incorrect");
-        require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");
-
-        require(data.supply > 0, "supply incorrect");
         require(_amount > 0, "amount incorrect");
-        require(bytes(data.uri).length > 0, "uri should be set");
 
         if (supply[data.tokenId] == 0) {
+            require(minter == data.creators[0].account, "tokenId incorrect");
+            require(data.supply > 0, "supply incorrect");
+            require(data.creators.length == data.signatures.length);
+
+            bytes32 hash = LibERC1155LazyMint.hash(data);
             for (uint i = 0; i < data.creators.length; i++) {
-                validate(sender, data, i);
+                address creator = data.creators[i].account;
+                if (creator != sender) {
+                    validate(creator, hash, data.signatures[i]);
+                }
             }
 
             _saveSupply(data.tokenId, data.supply);
@@ -84,7 +87,9 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
-        for(uint i=0; i < _creators.length; i++) {
+        for (uint i = 0; i < _creators.length; i++) {
+            require(_creators[i].account != address(0x0), "Account should be present");
+            require(_creators[i].value != 0, "Creator share should be positive");
             creatorsOfToken.push(_creators[i]);
             total = total.add(_creators[i].value);
         }
@@ -95,5 +100,6 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     function getCreators(uint256 _id) external view returns (LibPart.Part[] memory) {
         return creators[_id];
     }
+
     uint256[50] private __gap;
 }
