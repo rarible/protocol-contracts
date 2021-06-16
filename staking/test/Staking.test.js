@@ -1506,7 +1506,6 @@ contract("Staking", accounts => {
   })
 
 	describe("Part9. Check events emit()", () => {
-    //TODO check account addresses
 		it("Test1. check emit Stake()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
@@ -1525,8 +1524,8 @@ contract("Staking", accounts => {
        	cliff = ev.cliff;
         return true;
       });
-//      assert.equal(account, JSON.stringify(account[2]));
-//      assert.equal(delegate, account[3]);
+      assert.equal(account, accounts[2]);
+      assert.equal(delegate, accounts[3]);
       assert.equal(amount, 20);
       assert.equal(slope, 10);
       assert.equal(cliff, 7);
@@ -1536,8 +1535,8 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
-      await staking.stake(accounts[2], accounts[3], 20, 10, 7);
-			resultReStake  = await staking.reStake(id, accounts[2], 30, 5, 17);
+      await staking.stake(accounts[2], accounts[2], 20, 10, 7);
+			resultReStake  = await staking.reStake(id, accounts[3], 30, 5, 17);
 
 			let delegate;
 			let amount;
@@ -1552,7 +1551,7 @@ contract("Staking", accounts => {
         return true;
       });
       assert.equal(id, 1);
-//      assert.equal(delegate, account[3]);
+      assert.equal(delegate, accounts[3]);
       assert.equal(amount, 30);
       assert.equal(slope, 5);
       assert.equal(cliff, 17);
@@ -1572,7 +1571,7 @@ contract("Staking", accounts => {
         return true;
       });
       assert.equal(id, 1);
-//      assert.equal(delegate, account[4]);
+      assert.equal(delegate, accounts[4]);
 		});
 
 		it("Test4. check emit Withdraw()", async () => {
@@ -1590,7 +1589,7 @@ contract("Staking", accounts => {
         return true;
       });
       assert.equal(amount, 10);
-//      assert.equal(account, account[2]);
+      assert.equal(account, accounts[2]);
 		});
 
 		it("Test5. check emit Migrate()", async () => {
@@ -1611,7 +1610,7 @@ contract("Staking", accounts => {
       assert.equal(ids[0], 1);
       assert.equal(ids[1], 2);
       assert.equal(ids[2], 3);
-//      assert.equal(account, account[2]);
+      assert.equal(account, accounts[2]);
 		});
   })
 })
