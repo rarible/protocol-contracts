@@ -148,7 +148,7 @@ contract Staking is OwnableUpgradeable {
         emit Withdraw(msg.sender, value);
     }
 
-    function delegate(uint id, address newDelegate) external notStopped {
+    function depute(uint id, address newDelegate) external notStopped {
         address from = deposits[id].delegate;
         require(from != address(0), "deposit not exists");
         LibBrokenLine.LineData memory lineData = locks[from].balance.initiatedLines[id];

@@ -35,8 +35,8 @@ contract StakingTest {
         emit reStakeResult(result);
     }
 
-    function _delegate(address staking, uint idLock, address newDelegate) external {
+    function _depute(address staking, uint idLock, address newDelegate) external {
         Staking stakingTest = Staking(staking);
-        stakingTest.delegate(idLock, newDelegate);
+        stakingTest.depute(idLock, newDelegate);
     }
 }
