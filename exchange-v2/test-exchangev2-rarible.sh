@@ -11,4 +11,5 @@ truffle test \
         ./test/contracts/v2/TransferProxyTest.sol \
         ./test/contracts/v2/RaribleTransferManagerTest.sol \
         ./test/contracts/v2/TestRoyaltiesRegistry.sol \
-        ./test/contracts/tokens/TestERC721WithRoyaltyV1OwnableUpgradeable.sol
+        ./test/contracts/tokens/TestERC721WithRoyaltyV1OwnableUpgradeable.sol \
+        --compile-all

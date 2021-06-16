@@ -77,6 +77,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
             totalTakeValue = doTransfersWithFees(fill.takeValue, rightOrder.maker, rightOrderData, leftOrderData, takeMatch, makeMatch, TO_MAKER);
             transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
+        } else {
+            transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
+            transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
         }
     }
 
