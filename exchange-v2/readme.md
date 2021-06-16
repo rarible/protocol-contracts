@@ -127,3 +127,11 @@ If buyer is using ETH, then he must send this calculated amount of ETH with the 
 cancel function can be used to cancel order. Such orders won't be matched and error will be thrown. This function is used by order maker to mark orders unfillable. This function can be invoked only by order maker.
 
 TODO: there is possibility to change authorization for cancel function - add authorization by signature. Possibly, this will be added in the future.
+
+##### Contract events
+
+ExchangeV2 contract emits these events:
+- Match (when orders are matched)
+- Cancel (when user cancels the order)
+
+TODO: currently, there are no indexed fields in events, because rarible protocol uses internal indexing. Possibly, indexed fields will be added in future.  
