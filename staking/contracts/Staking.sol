@@ -114,10 +114,10 @@ contract Staking is OwnableUpgradeable {
     }
 
     function withdraw() external {
-        uint blockTime = roundTimestamp(block.timestamp);
-        locks[msg.sender].locked.update(blockTime);
         uint value = locks[msg.sender].amount;
         if (!stopped) {
+            uint blockTime = roundTimestamp(block.timestamp);
+            locks[msg.sender].locked.update(blockTime);
             uint bias = locks[msg.sender].locked.initial.bias;
             value = value.sub(bias);
         }
@@ -129,9 +129,9 @@ contract Staking is OwnableUpgradeable {
 
     function delegate(uint id, address newDelegate) external notStopped {
         address from = deposits[id].delegate;
-        require(from != address(0), "Delegate from address by id not found");
+        require(from != address(0), "deposit not exists");
         LibBrokenLine.LineData memory lineData = locks[from].balance.initiatedLines[id];
-        require(lineData.line.bias != 0, "Line already finished nothing to delegate");
+        require(lineData.line.bias != 0, "deposit already finished");
         uint blockTime = roundTimestamp(block.timestamp);
         (uint bias, uint slope) = locks[from].balance.remove(id, blockTime);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
