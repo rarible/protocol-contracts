@@ -67,23 +67,26 @@ library LibBrokenLine {
     /**
      *remove Line from BrokenLine, return line.bias, which actual now moment
      **/
-    function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint, uint) {
+    function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint bias, uint slope, uint cliff) {
         LineData memory lineData = brokenLine.initiatedLines[id];
         require(lineData.line.bias != 0, "Removing Line, which not exists");
         Line memory line = lineData.line;
 
         update(brokenLine, toTime);
         //check time Line is over
-        uint bias = line.bias;
-        uint slope = line.slope;
+        bias = line.bias;
+        slope = line.slope;
+        cliff = 0;
         uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff);  //for information: bias.div(slope) - this`s period while slope works
         if (toTime > finishTime) {
-            return (0, slope);
+            bias = 0;
+            return (bias, slope, cliff);
         }
         uint finishTimeMinusOne = finishTime.sub(1);
         int mod = safeInt(bias.mod(slope));
         uint cliffEnd = line.start.add(lineData.cliff).sub(1);
         if (toTime <= cliffEnd) { //cliff works
+            cliff = cliffEnd.sub(toTime).add(1);
             //in cliff finish time compensate change slope by oldLine.slope
             brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
             //in new Line finish point use oldLine.slope
@@ -103,7 +106,6 @@ library LibBrokenLine {
         brokenLine.slopeChanges.addToItem(finishTime, mod);
         brokenLine.initial.bias = brokenLine.initial.bias.sub(bias);
         brokenLine.initiatedLines[id].line.bias = 0;
-        return (bias, slope);
     }
 
     /**

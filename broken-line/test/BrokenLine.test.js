@@ -472,20 +472,24 @@ contract("BrokenLine", accounts => {
     	);
 		});
 
-		it("Two line can be added with cliff, and tail step 5 - remove while cliff", async () => {
+		it("Two line can be added with cliff, and tail step 5 - remove when cliff begin", async () => {
 			let id1 = 4;
 			let id2 = 5;
 			await forTest.addTest([1, 32, 15], id1, 3);
 			await forTest.addTest([1, 39, 12], id2, 3);
 			await assertCurrent([1, 71, 0]);
 
-			resultRemove = await forTest.removeTest(id1, 5);
-			let amount1;
+			resultRemove = await forTest.removeTest(id1, 1);
+			let amount;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.bias;
+      	amount = ev.bias;
+      	slope = ev.slope;
+        cliff = ev.cliff;
         return true;
       });
-			assert.equal(amount1, 17);
+			assert.equal(amount, 32);
+			assert.equal(slope, 15);
+			assert.equal(cliff, 3);
 
 			await forTest.update(5);
 			await assertCurrent([5, 27, 12]);
@@ -500,18 +504,120 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([8, 0, 0]);
 		});
 
-		it("One line can be added with cliff, and tail step 5 - remove when finish return 0", async () => {
+		it("Two line can be added with cliff, and tail step 5 - remove while cliff", async () => {
+			let id1 = 4;
+			let id2 = 5;
+			await forTest.addTest([1, 32, 15], id1, 3);
+			await forTest.addTest([1, 39, 12], id2, 3);
+			await assertCurrent([1, 71, 0]);
+
+			resultRemove = await forTest.removeTest(id1, 2);
+			let amount;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount = ev.bias;
+      	slope = ev.slope;
+        cliff = ev.cliff;
+        return true;
+      });
+			assert.equal(amount, 32);
+			assert.equal(slope, 15);
+			assert.equal(cliff, 2);
+
+			await forTest.update(5);
+			await assertCurrent([5, 27, 12]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 15, 12]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 3, 3]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
+		});
+
+		it("Two line can be added with cliff, and tail step 5 - remove when cliff finish", async () => {
+			let id1 = 4;
+			let id2 = 5;
+			await forTest.addTest([1, 32, 15], id1, 3);
+			await forTest.addTest([1, 39, 12], id2, 3);
+			await assertCurrent([1, 71, 0]);
+
+			resultRemove = await forTest.removeTest(id1, 4);
+			let amount;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount = ev.bias;
+      	slope = ev.slope;
+        cliff = ev.cliff;
+        return true;
+      });
+			assert.equal(amount, 32);
+			assert.equal(slope, 15);
+			assert.equal(cliff, 0);
+
+			await forTest.update(5);
+			await assertCurrent([5, 27, 12]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 15, 12]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 3, 3]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
+		});
+
+		it("Two line can be added with cliff, and tail step 5 - remove while slope", async () => {
+			let id1 = 4;
+			let id2 = 5;
+			await forTest.addTest([1, 32, 15], id1, 3);
+			await forTest.addTest([1, 39, 12], id2, 3);
+			await assertCurrent([1, 71, 0]);
+
+			resultRemove = await forTest.removeTest(id1, 5);
+			let amount;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amount = ev.bias;
+      	slope = ev.slope;
+        cliff = ev.cliff;
+        return true;
+      });
+			assert.equal(amount, 17);
+			assert.equal(slope, 15);
+			assert.equal(cliff, 0);
+
+			await forTest.update(5);
+			await assertCurrent([5, 27, 12]);
+
+			await forTest.update(6);
+			await assertCurrent([6, 15, 12]);
+
+			await forTest.update(7);
+			await assertCurrent([7, 3, 3]);
+
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
+		});
+
+		it("One line can be added with cliff, and tail step 5 - remove when finish return: bias = 0, cliff = 0", async () => {
 			let id1 = 3;
 			await forTest.addTest([1, 20, 10], id1, 2);
 			await assertCurrent([1, 20, 0]);
 
 			resultRemove = await forTest.removeTest(id1, 6);
-			let amount1;
+			let amount;
+			let slope;
+			let cliff;
       truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.bias;
+      	amount = ev.bias;
+      	slope = ev.slope;
+      	cliff = ev.cliff;
         return true;
       });
-			assert.equal(amount1, 0);
+			assert.equal(amount, 0);
+			assert.equal(slope, 10);
+			assert.equal(cliff, 0);
 		});
 
 	})
