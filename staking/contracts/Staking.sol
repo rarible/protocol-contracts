@@ -21,6 +21,7 @@ contract Staking is OwnableUpgradeable {
     uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
+    uint256 constant SPLIT_LOCK_MAX_PERCENT = 100;          //max percent 100%
 
     /**
      * @dev ERC20 token to lock
@@ -90,6 +91,10 @@ contract Staking is OwnableUpgradeable {
      * @dev Emitted when migrate Locks with given id, account - msg.sender
      */
     event Migrate(address account, uint[] id);
+    /**
+     * @dev Emitted when split Locks into two Locks
+     */
+    event Split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond);
 
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
@@ -203,6 +208,50 @@ contract Staking is OwnableUpgradeable {
             }
         }
         emit Migrate(msg.sender, id);
+    }
+
+    function split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond) external returns (uint idFirst, uint idSecond){
+        address account = deposits[id].locker;
+        address delegate = deposits[id].delegate;
+
+        require(account != address(0), "deposit not exists");
+        require(delegate != address(0), "deposit not exists");      //  TODO need it require?
+        require(delegateFirst != address(0), "delegate not exists");
+        require(delegateSecond != address(0), "delegate not exists");
+        require(shareFirst > 0, "share unacceptable value");
+        require(shareSecond > 0, "share unacceptable value");
+        require(shareSecond.add(shareSecond) == SPLIT_LOCK_MAX_PERCENT, "share unacceptable values");
+
+        uint blockTime = roundTimestamp(block.timestamp);
+        LibBrokenLine.Line memory line;
+        line.start = blockTime;
+        uint cliff;
+        (line.bias, line.slope, cliff) = locks[account].locked.remove(id, blockTime);
+        require(line.bias > 0, "deposit finished, nothing to split");
+        locks[account].amount = locks[account].amount.sub(line.bias);
+        locks[delegate].balance.remove(id, blockTime);
+        totalSupplyLine.remove(id, blockTime);
+        deposits[id].locker = address(0); //  TODO need it?
+        deposits[id].delegate = address(0); //  TODO need it?
+
+        uint period = line.bias.div(line.slope);
+
+        counter++;
+        idFirst = initiateLines(account, delegateFirst, line, period, cliff, shareFirst);
+
+        counter++;
+        idSecond = initiateLines(account, delegateSecond, line, period, cliff, shareSecond);
+        emit Split(id, delegateFirst, delegateSecond, shareFirst, shareSecond);
+    }
+
+    function initiateLines(address account, address delegate, LibBrokenLine.Line memory line, uint period, uint cliff, uint share) internal returns (uint newId){
+        uint newAmount = line.bias.mul(share).div(SPLIT_LOCK_MAX_PERCENT);
+        uint newSlope = newAmount.div(period);
+        require(newAmount > 0, "split, amount unacceptable value");
+        require(newSlope > 0, "split, slope unacceptable value");
+        addLines(account, delegate, newAmount, newSlope, cliff, line.start);
+        locks[account].amount = locks[account].amount.add(newAmount);
+        newId = counter;
     }
 
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
