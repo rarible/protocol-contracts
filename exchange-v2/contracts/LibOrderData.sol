@@ -3,7 +3,6 @@
 pragma solidity 0.7.6;
 
 import "./LibOrder.sol";
-import "./LibOrderData.sol";
 import "./LibOrderDataV1.sol";
 import "@rarible/royalties/contracts/LibPart.sol";
 
