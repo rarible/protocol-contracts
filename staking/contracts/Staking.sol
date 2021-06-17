@@ -220,7 +220,7 @@ contract Staking is OwnableUpgradeable {
         require(delegateSecond != address(0), "delegate not exists");
         require(shareFirst > 0, "share unacceptable value");
         require(shareSecond > 0, "share unacceptable value");
-        require(shareSecond.add(shareSecond) == SPLIT_LOCK_MAX_PERCENT, "share unacceptable values");
+        require(shareFirst.add(shareSecond) == SPLIT_LOCK_MAX_PERCENT, "share unacceptable values");
 
         uint blockTime = roundTimestamp(block.timestamp);
         LibBrokenLine.Line memory line;

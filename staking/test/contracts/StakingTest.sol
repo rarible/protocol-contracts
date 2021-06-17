@@ -10,6 +10,13 @@ contract StakingTest {
     event balanceOfResult(uint result);
     event totalBalanceResult(uint result);
     event reStakeResult(uint result);
+    event SplitTest(uint idFirst, uint idSecond);
+
+    Staking public stakingTestContract;
+
+    function __StakingTest_init(Staking staking) external {
+        stakingTestContract = staking;
+    }
 
     function _stake(address staking, address locker, address delegate, uint amount, uint slope, uint cliff) external {
         Staking stakingTest = Staking(staking);
@@ -38,5 +45,10 @@ contract StakingTest {
     function _depute(address staking, uint idLock, address newDelegate) external {
         Staking stakingTest = Staking(staking);
         stakingTest.depute(idLock, newDelegate);
+    }
+
+    function _split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond) external {
+        (uint firstId, uint secondId) = stakingTestContract.split(id, delegateFirst, delegateSecond, shareFirst, shareSecond);
+        emit SplitTest(firstId, secondId);
     }
 }
