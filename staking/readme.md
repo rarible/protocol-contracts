@@ -1,18 +1,31 @@
 ## Staking
-#### Need to know before:
-**bias** — amount of reserved Rari/stRari.
 
-**slope** — the rate of bias decrease, amount of Rari/stRari by which bias will decrease per unit of time equal to one week.
+This contract is based on [LibBrokenLine](../broken-line/readme.md).
 
-**cliff** — period in weeks, when bias value constant.
+This contract locks ERC-20 tokens and issues back staked tokens. These staked tokens are not transferrable, but they can be delegated to other users. Tokens unlock linearly. 
 
-**Lock** — stake object (deposit) with a unique id that is defined by parameters **bias**, **slope**, **cliff**, **timeStart**.
+![Line](../broken-line/documents/line.svg)
 
-**broken line** — the sum of all Locks, represented as a curve of the amount Rari/stRari over time.
-### About
-Staking contract - designed to reserve users **Rari** to the account of a smart contract.
-Instead of **Rari**, the user is awarded **stRary** points, the sum of which determines 
-the user's weight when voting for community decisions.
+User locks tokens on `start` moment, amount of locked tokens is `bias`. In `cliff` period amount of locked tokens doesn't change, then it starts to decline linearly. 
+
+Staked balance behaves pretty the same way, but initial `bias` is multiplied by multiplier calculated using `Stake` parameters (slope, cliff, bias etc.) 
+
+### Features
+
+Functions supported for every user:
+ - stake - create new `Stake`. Initial bias of the `Stake` depends on locked token amount and other parameters of the `Stake` (cliff, period etc.)
+ - reStake - change parameters of the `Stake`. It's possible to extend period and increase locked amount
+ - withdraw - withdraw unlocked ERC-20 tokens (if something is unlocked already)
+ - delegateTo - delegates specific `Stake` to other user
+ - split - TBD
+
+### Functions to read the data
+ - totalSupply - calculates sum of all staked balances
+ - balanceOf(address) - calculates current power for specified user (sums all his Stakes and all delegated Stakes)
+ 
+
+
+-----------------------------------------------------
 
 #### Creating Lock
 
