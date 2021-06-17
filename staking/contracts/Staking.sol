@@ -210,7 +210,7 @@ contract Staking is OwnableUpgradeable {
         emit Migrate(msg.sender, id);
     }
 
-    function split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond) external returns (uint idFirst, uint idSecond){
+    function split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond) external returns (uint idFirst, uint idSecond) {
         address account = deposits[id].locker;
         address delegate = deposits[id].delegate;
 

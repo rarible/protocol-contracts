@@ -1613,4 +1613,8 @@ contract("Staking", accounts => {
       assert.equal(account, accounts[2]);
 		});
   })
+
+	describe("Part10. Check split()", () => {
+
+  })
 })
