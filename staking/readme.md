@@ -6,7 +6,7 @@
 
 **cliff** — period in weeks, when bias value constant.
 
-**Lock** — stake object with a unique id that is defined by parameters **bias**, **slope**, **cliff**, **timeStart**.
+**Lock** — stake object (deposit) with a unique id that is defined by parameters **bias**, **slope**, **cliff**, **timeStart**.
 
 **broken line** — the sum of all Locks, represented as a curve of the amount Rari/stRari over time.
 ### About
@@ -85,6 +85,14 @@ to change the **Lock** parameters. If there is no need to change the **Lock** pa
 recommend using the *depute()* method. The method aims to translate **stRari** for Lock with the given id. A delegated
 **Lock** with a given id can be redelegated an unlimited number of times. There is only one limitation, the delegation can
 only be owner **Lock**.
+
+##### Contract events
+Staking contract emits these events:
+- Stake(when create new deposit)
+- ReStake(when change deposit parameters)
+- Delegate(when set new delegate)
+- Withdraw(when withdraw amount of Rari)
+- Migrate(when migrate deposits to new contract)
 
 ### Description methods
 ##### Only owner contract methods
