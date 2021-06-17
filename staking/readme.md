@@ -82,33 +82,33 @@ enumerates owner Lock, even if **stRari** is assigned to another user or contrac
 The delegation mechanism is very flexible. Delegation can be done by calling *stake()*, the entire amount of **stRari** 
 will be enumerated to another user. Delegation can be done by calling the *restake()* method, but this method aims 
 to change the **Lock** parameters. If there is no need to change the **Lock** parameters, the authors of the staking contract
-recommend using the *delegate()* method. The method aims to translate **stRari** for Lock with the given id. A delegated
+recommend using the *depute()* method. The method aims to translate **stRari** for Lock with the given id. A delegated
 **Lock** with a given id can be redelegated an unlimited number of times. There is only one limitation, the delegation can
 only be owner **Lock**.
 
 ### Description methods
 ##### Only owner contract methods
-**setStopLock**(bool *value*); Set mode for contract. When true impossible to *stake()*, *reStake()*, *delegate()*
+**stop**(); Set stop mode for contract. Stop mode means impossible to *stake()*, *reStake()*, *delegate()*
 *withdraw()* enumerates all amount of Rari. When false - ordinary work.
-- Input parameter: *to* - true - set mode stop; false - set work mode.
 
 **startMigration**(address *to*); Set addres new contract, allow migration.
 - Input parameter: *to* - address new contract;
 
-**stopMigration**(); Deprecate migration.
-
 ##### External methods
-**stake**(address *account*, address *delegator*, uint *amount*, uint *slope*, uint *cliff*) returns (uint); Stake Lock, return id Lock
+**__Staking_init**(IERC20Upgradeable *_token*); Initialize contract.
+- Input parameter: *_token* - token for ERC20 transfer;
+
+**stake**(address *account*, address *delegate*, uint *amount*, uint *slope*, uint *cliff*) returns (uint); Stake Lock, return id Lock
 - Input parameter: *account* - address Lock owner;
-- Input parameter: *delegator* - address stRari delegator;
+- Input parameter: *delegate* - address stRari delegate;
 - Input parameter: *amount* - amount Rari;
 - Input parameter: *slope* - value slope;
 - Input parameter: *cliff* - amount cliff;
 - Output: idLock. if 0 - can`t stake.
 
-**reStake**(uint *idLock*, address *newDelegator*, uint *newAmount*, uint *newSlope*, uint *newCliff*) returns (uint); Restake Lock with id, return new id Lock
+**reStake**(uint *idLock*, address *newDelegate*, uint *newAmount*, uint *newSlope*, uint *newCliff*) returns (uint); Restake Lock with id, return new id Lock
 - Input parameter: *idLock* - id Lock to restake;
-- Input parameter: *newDelegator* - address stRari delegator;
+- Input parameter: *newDelegate* - address stRari delegate;
 - Input parameter: *newAmount* - amount Rari;
 - Input parameter: *newSlope* - value slope;
 - Input parameter: *newCliff* - amount cliff.
@@ -116,9 +116,9 @@ only be owner **Lock**.
 
 **withdraw**(); Withdraw available amount of Rari to User.
 
-**delegate**(uint *idLock*, address *newDelegator*); Delegate Lock with id to delegator.
+**depute**(uint *idLock*, address *newDelegate*); Delegate Lock with id to delegate.
 - Input parameter: *idLock* - id Lock to restake;
-- Input parameter: *newDelegator* - address stRari delegator;
+- Input parameter: *newDelegate* - address stRari delegate;
 
 **totalSupply**() returns (uint); Returns total amount stRari, staked on *staking* contract.
 - Output: amount stRari. if 0 - can`t return amount stRari.
