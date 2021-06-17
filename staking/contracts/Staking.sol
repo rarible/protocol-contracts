@@ -305,7 +305,7 @@ contract Staking is OwnableUpgradeable {
         uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
         uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
         stakeAmount = amount.mul(multiplier);
-        stakeSlope = stakeAmount.div(slopePeriod);
+        stakeSlope = slope.mul(multiplier);
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
