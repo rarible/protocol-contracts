@@ -20,3 +20,4 @@ Library allows to sum any amount of such lines and calculate value y without ite
 
 - add - adds one more line to the broken line, lines should have unique ids
 - remove - removes line from the broken line
+- update - refreshes broken line up to current time - this operation can make many state changes but it can be done in some transactions 
