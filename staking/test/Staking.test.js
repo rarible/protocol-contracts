@@ -136,7 +136,30 @@ contract("Staking", accounts => {
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
 		});
 
-		it("Test6. Try to createLock() more than 2 year slopePeriod, throw", async () => {
+		it("Test6. Try to createLock() to another user and check withdraw(), from creator stake account, no changes", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await staking.stake(accounts[3], accounts[3], 30, 10, 0, { from: accounts[2] });
+			/*one week later*/
+			await increaseTime(WEEK);
+			staking.withdraw({ from: accounts[2] });
+ 			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
+		});
+
+		it("Test7. Try to createLock() to another user and check withdraw(), from account address, amount changes", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await staking.stake(accounts[3], accounts[3], 30, 10, 0, { from: accounts[2] });
+			/*one week later*/
+			await increaseTime(WEEK);
+			staking.withdraw({ from: accounts[3] });
+ 			assert.equal(await token.balanceOf(staking.address), 20);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
+   		assert.equal(await token.balanceOf(accounts[3]), 10);			//tail user balance
+		});
+
+		it("Test8. Try to createLock() more than 2 year slopePeriod, throw", async () => {
 			await token.mint(accounts[2], 2000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
@@ -144,7 +167,7 @@ contract("Staking", accounts => {
 			);
     });
 
-		it("Test7. Try to createLock() more than 2 year cliffPeriod, throw", async () => {
+		it("Test9. Try to createLock() more than 2 year cliffPeriod, throw", async () => {
 			await token.mint(accounts[2], 2000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
@@ -152,7 +175,7 @@ contract("Staking", accounts => {
 			);
 		});
 
-		it("Test8. Try to createLock() more amount == 0, throw", async () => {
+		it("Test10. Try to createLock() more amount == 0, throw", async () => {
 			await token.mint(accounts[2], 2000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
