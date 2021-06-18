@@ -11,10 +11,10 @@ contract StakingTest {
     event totalBalanceResult(uint result);
     event reStakeResult(uint result);
 
-    function _stake(address staking, address locker, address delegate, uint amount, uint slope, uint cliff) external {
-        Staking stakingTest = Staking(staking);
-        uint result = stakingTest.stake(locker, delegate, amount, slope, cliff);
-        emit createLockResult(result);
+    Staking public stakingTestContract;
+
+    function __StakingTest_init(Staking staking) external {
+        stakingTestContract = staking;
     }
 
     function _balanceOf(address staking, address account) external {

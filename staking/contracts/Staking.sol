@@ -102,7 +102,7 @@ contract Staking is OwnableUpgradeable {
         require(amount > 0, "amount negative");
         require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
         require(amount.div(slope) <= TWO_YEAR_WEEKS, "period too big");
-        require(token.transferFrom(account, address(this), amount), "transfer failed");
+        require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         counter++;
 

@@ -37,6 +37,24 @@ contract("Staking", accounts => {
     return idLock;
 	}
 
+  function balanceOfEventHandler(resultBalanceOfMethod) {
+    let balance;
+    truffleAssert.eventEmitted(resultBalanceOfMethod, 'balanceOfResult', (ev) => {
+    	balance = ev.result;
+      return true;
+    });
+    return balance;
+  }
+
+  function totalBalanceEventHandler(resultTotalSupplyMethod){
+    let totalBalance;
+    truffleAssert.eventEmitted(resultTotalSupplyMethod, 'totalBalanceResult', (ev) => {
+    	totalBalance = ev.result;
+      return true;
+    });
+    return totalBalance;
+  }
+
 	beforeEach(async () => {
 		deposite = accounts[1];
 		forTest = await StakingTest.new();
@@ -45,6 +63,7 @@ contract("Staking", accounts => {
 		newStaking = await TestNewStaking.new();
 		newStakingNoInterface = await TestNewStakingNoInterface.new();
 		await staking.__Staking_init(token.address); //initialize, set owner
+		forTest.__StakingTest_init(staking.address);
 	})
 
 	describe("Part1. Check base metods Staking contract, createLock, withdraw", () => {
@@ -52,37 +71,23 @@ contract("Staking", accounts => {
 		it("Test1. Try to createLock() and check balance", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address, accounts[2], accounts[2], 20, 10, 0);
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 20, 10, 0, { from: accounts[2] });
 
       resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[2]);
-      let balanceOf;
-      truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
-      	balanceOf = ev.result;
-        return true;
-      });
+      let balanceOf = balanceOfEventHandler(resultBalanseOfValue);
+
 			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 80);			//tail user balance
-      assert.equal(idLock, 1);
       assert.equal(balanceOf, 20);
 		});
 
 		it("Test2. Try to createLock() and check totalBalance", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-
-			await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 0);
+      await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
 
 			let resultTotalBalance = await forTest._totalSupply(staking.address);
-			let totalBalance;
-      truffleAssert.eventEmitted(resultTotalBalance, 'totalBalanceResult', (ev) => {
-       	totalBalance = ev.result;
-        return true;
-      });
+			let totalBalance = totalBalanceEventHandler(resultTotalBalance);
  			assert.equal(await token.balanceOf(staking.address), 30);				//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
 			assert.equal(totalBalance, 30);
@@ -91,8 +96,7 @@ contract("Staking", accounts => {
 		it("Test3. Try to createLock() and check withdraw()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 0);
+      await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
 			/*3 week later*/
 			await increaseTime(WEEK * 3);
 			staking.withdraw({ from: accounts[2] });
@@ -108,8 +112,7 @@ contract("Staking", accounts => {
 		it("Test4. Try to createLock() and check withdraw(), with cliff", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 3);
+			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
 			/*3 week later nothing change, because cliff */
 			await increaseTime(WEEK * 3);
 			staking.withdraw({ from: accounts[2] });
@@ -125,8 +128,7 @@ contract("Staking", accounts => {
 		it("Test5. Try to createLock() and check withdraw(), from another account, no changes", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 0);
+      await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
 			/*one week later*/
 			await increaseTime(WEEK);
 			staking.withdraw({ from: accounts[3] });
@@ -138,7 +140,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 2000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
-			  forTest._stake(staking.address ,accounts[2], accounts[2], 1050, 10, 0)
+			  staking.stake(accounts[2], accounts[2], 1050, 10, 0, { from: accounts[2] })
 			);
     });
 
@@ -146,7 +148,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 2000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
-			  forTest._stake(staking.address ,accounts[2], accounts[2], 105, 10, 105)
+        staking.stake(accounts[2], accounts[2], 105, 10, 105, { from: accounts[2] })
 			);
 		});
 
@@ -154,7 +156,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 2000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
-			  forTest._stake(staking.address ,accounts[2], accounts[2], 0, 10, 10)
+			  staking.stake(accounts[2], accounts[2], 0, 10, 10, { from: accounts[2] })
 			);
 		});
 	})
@@ -163,11 +165,10 @@ contract("Staking", accounts => {
 		it("Test1.1. Change slope, line with cliff, in cliff time", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 3);
+			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
-
-			let idLock = eventLockHandler(resultLock);
+			let idLock = 1;
 
 			await increaseTime(WEEK * 2); //2 week later nothing change, because cliff
 			let newAmount = 30;
@@ -192,11 +193,10 @@ contract("Staking", accounts => {
 		it("Test1.2. Change slope, amount, cliff, line with cliff, in cliff time, transfer erc20", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 3);
+			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
-
-			let idLock = eventLockHandler(resultLock);
+			let idLock = 1;
 
 			await increaseTime(WEEK * 2); //2 week later nothing change, because cliff
 			let newAmount = 80;
@@ -221,8 +221,8 @@ contract("Staking", accounts => {
 		it("Test2. Change slope, line with cliff, in slope time", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 4); //4 week later change, because slope
 			let newAmount = 30;
@@ -238,14 +238,13 @@ contract("Staking", accounts => {
 			staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 100);			//user balance
-
 		});
 
 		it("Test3. Change slope, amount, cliff, with cliff, in tail time, enough ERC20 for restake", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 37, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 37, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 6); //4 week later change, because slope
 			let newAmount = 10;
@@ -271,8 +270,8 @@ contract("Staking", accounts => {
 		it("Test4. Change slope, cliff, amount, line with cliff, in tail time, additionally transfer ERC20 for restake", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 37, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 37, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 6); //4 week later change, because slope
 			staking.withdraw({ from: accounts[2] });
@@ -299,8 +298,8 @@ contract("Staking", accounts => {
 		it("Test5. Change slope, amount, with cliff, in tail time, less amount, then now is, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 38, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 6); //6 week later change, because slope
 			let newAmount = 5;
@@ -314,8 +313,8 @@ contract("Staking", accounts => {
 		it("Test6. Change slope, amount, with cliff, in cliff time, New line period stake too short, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 38, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 2); //2 week later no change, because cliff
 			let newAmount = 5;
@@ -329,8 +328,8 @@ contract("Staking", accounts => {
 		it("Test7. Change slope, amount, with cliff, in cliff time, New line amount == 0, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 38, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 2); //2 week later no change, because cliff
 			let newAmount = 0;
@@ -344,8 +343,8 @@ contract("Staking", accounts => {
 		it("Test8. Change slope, amount, with cliff, in cliff time, New line new cliffPeriod more 2 years, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 38, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 2); //2 week later no change, because cliff
 			let newAmount = 60;
@@ -359,8 +358,8 @@ contract("Staking", accounts => {
 		it("Test9. Change slope, amount, with cliff, in cliff time, New line new slopePeriod more 2 years, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address ,accounts[2], accounts[2], 38, 10, 3);
-			let idLock = eventLockHandler(resultLock);
+			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
+			let idLock = 1;
 
 			await increaseTime(WEEK * 2); //2 week later no change, because cliff
 			let newAmount = 1050;
@@ -370,7 +369,6 @@ contract("Staking", accounts => {
 				forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff)
 			);
 		});
-
 	})
 
 	describe("Part3. Check restake metods Staking() Two and more lines ", () => {
@@ -380,10 +378,10 @@ contract("Staking", accounts => {
 			await token.mint(accounts[3], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[3] });
 
-			let resultLock1  = await forTest._stake(staking.address ,accounts[2], accounts[2], 30, 10, 3);
-			let idLock1 = eventLockHandler(resultLock1);
-			let resultLock2  = await forTest._stake(staking.address ,accounts[3], accounts[3], 50, 10, 3);
-			let idLock2 = eventLockHandler(resultLock2);
+			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
+			let idLock1 = 1;
+			await staking.stake(accounts[3], accounts[3], 50, 10, 3, { from: accounts[3] });
+			let idLock2 = 2;
 
 			await increaseTime(WEEK * 2); //2 week later nothing change, because cliff
 			let newAmount = 50;
@@ -432,12 +430,12 @@ contract("Staking", accounts => {
 			await token.mint(accounts[4], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[4] });
 
-			let resultLock1  = await forTest._stake(staking.address ,accounts[2], accounts[2], 20, 5, 2);
-			let idLock1 = eventLockHandler(resultLock1);
-			let resultLock2  = await forTest._stake(staking.address ,accounts[3], accounts[3], 30, 10, 3);
-			let idLock2 = eventLockHandler(resultLock2);
-			let resultLock3  = await forTest._stake(staking.address ,accounts[4], accounts[4], 40, 10, 4);
-			let idLock3 = eventLockHandler(resultLock3);
+			await staking.stake(accounts[2], accounts[2], 20, 5, 2, { from: accounts[2] });
+			let idLock1 = 1;
+			await staking.stake(accounts[3], accounts[3], 30, 10, 3, { from: accounts[3] });
+			let idLock2 = 2;
+			await staking.stake(accounts[4], accounts[4], 40, 10, 4, { from: accounts[4] });
+			let idLock3 = 3;
 
 			await increaseTime(WEEK * 4); //4 week later nothing change, because cliff
 			let newAmount = 30;
@@ -498,12 +496,12 @@ contract("Staking", accounts => {
 			await token.mint(accounts[4], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[4] });
 
-			let resultLock1  = await forTest._stake(staking.address ,accounts[2], accounts[2], 20, 5, 2);
-			let idLock1 = eventLockHandler(resultLock1);
-			let resultLock2  = await forTest._stake(staking.address ,accounts[3], accounts[3], 32, 10, 3);
-			let idLock2 = eventLockHandler(resultLock2);
-			let resultLock3  = await forTest._stake(staking.address ,accounts[4], accounts[4], 40, 10, 4);
-			let idLock3 = eventLockHandler(resultLock3);
+			await staking.stake(accounts[2], accounts[2], 20, 5, 2, { from: accounts[2] });
+			let idLock1 = 1;
+			await staking.stake(accounts[3], accounts[3], 32, 10, 3, { from: accounts[3] });
+			let idLock2 = 2;
+			await staking.stake(accounts[4], accounts[4], 40, 10, 4, { from: accounts[4] });
+			let idLock3 = 3;
 
 			await increaseTime(WEEK * 6); //6 week later nothing change, because cliff
 			let newAmount = 22;
@@ -553,12 +551,8 @@ contract("Staking", accounts => {
 		it("Test1. restake() and check balance delegated stRari", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });
+			let idLock = 1;
 
       resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -597,12 +591,8 @@ contract("Staking", accounts => {
 		it("Test2. restake() and check balance delegated stRari, after that redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -661,12 +651,9 @@ contract("Staking", accounts => {
 		it("Test3. restake() and check balance delegated stRari, unknown idLine, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
+
       await increaseTime(WEEK*30); //20 week later
 			let newAmount = 30;
 			let newSlope = 2;
@@ -684,12 +671,8 @@ contract("Staking", accounts => {
 		it("Test1. delegate() and check balance delegated stRari, after redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -744,12 +727,8 @@ contract("Staking", accounts => {
 		it("Test2.1 delegate() and check balance delegated stRari, in tail time, after redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 63, 10, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 63, 10, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -804,12 +783,8 @@ contract("Staking", accounts => {
 		it("Test2.2 delegate() and check balance delegated stRari, in cliff time, cliff > 0 after redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 63, 10, 2);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 63, 10, 2, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -872,12 +847,8 @@ contract("Staking", accounts => {
 		it("Test2.3 delegate() and check balance delegated stRari, in slope time, cliff > 0 after redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 63, 10, 2);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 63, 10, 2, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -932,12 +903,8 @@ contract("Staking", accounts => {
 		it("Test2.4 delegate() and check balance delegated stRari, in tail time, cliff > 0 after redelegate", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 63, 10, 2);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 63, 10, 2, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -992,12 +959,9 @@ contract("Staking", accounts => {
 		it("Test3. delegate() and check totalBalance, balance delegated stRari, after that redelegate and redelegate back", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
+
       //check balances after _stake()
       resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[3]);
       let balanceOf;
@@ -1083,12 +1047,9 @@ contract("Staking", accounts => {
 		it("Test4. delegate() stRari, after finish time Line, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
+
       await increaseTime(WEEK*30); //20 week later
 		  await expectThrow(
 		    forTest._delegateTo(staking.address, idLock, accounts[4])  //delegate from accounts[3]
@@ -1101,12 +1062,8 @@ contract("Staking", accounts => {
 		it("Test1. stop() and check account and total balance stRari", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       await staking.stop();    //STOP!!! only owner
 
@@ -1132,27 +1089,19 @@ contract("Staking", accounts => {
 		it("Test2. stop() after check stake(), restake() methods", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       await staking.stop();    //STOP!!! only owner
 
-			await expectThrow(forTest._stake(staking.address, accounts[2], accounts[4], 60, 2, 0));
+			await expectThrow(staking.stake(accounts[2], accounts[4], 60, 2, 0, { from: accounts[2] }));
 		});
 
 		it("Test3. stop() and check withdraw()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       await staking.stop();    //STOP!!! only owner
 
@@ -1164,12 +1113,9 @@ contract("Staking", accounts => {
 		it("Test4. stop()  from not owner, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(resultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
+
       await expectThrow(
         staking.stop({ from: accounts[8] })    //STOP!!! not owner
       );
@@ -1181,12 +1127,8 @@ contract("Staking", accounts => {
 		it("Test1. migrate() after start", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       await staking.startMigration(newStaking.address);    //Start migration!!!, only owner
 
@@ -1231,12 +1173,8 @@ contract("Staking", accounts => {
 		it("Test2. After 10 weeks migrate() slope works", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       let balanceOf;
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[3]); //check balance account
@@ -1276,12 +1214,8 @@ contract("Staking", accounts => {
 		it("Test3. After 10 weeks migrate() tial works", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 65, 6, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 65, 6, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       await increaseTime(WEEK * 10);
       await staking.startMigration(newStaking.address);                   //Start migration!!!, only owner
@@ -1308,12 +1242,8 @@ contract("Staking", accounts => {
 		it("Test4. migrate() to contract no supported INextVersionStake, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       await staking.startMigration(newStakingNoInterface.address);    //Start migration!!!, only owner
       await expectThrow(
@@ -1333,12 +1263,8 @@ contract("Staking", accounts => {
 		it("Test1. 28 weeks stRari=120", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 60, 2, 30);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 60, 2, 30, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
       let balanceOf;
@@ -1362,12 +1288,8 @@ contract("Staking", accounts => {
 		it("Test2. 48 weeks stRari=384", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 96, 2, 48);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 96, 2, 48, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
       let balanceOf;
@@ -1391,12 +1313,8 @@ contract("Staking", accounts => {
 		it("Test3. 84 weeks stRari=840", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 84, 1, 84);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 84, 1, 84, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
       let balanceOf;
@@ -1420,12 +1338,8 @@ contract("Staking", accounts => {
 		it("Test4. 104 weeks stRari=1560", async () => {
 			await token.mint(accounts[2], 200);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 104, 1, 104);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 104, 1, 104, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
       let balanceOf;
@@ -1449,12 +1363,8 @@ contract("Staking", accounts => {
 		it("Test5. 100 weeks, 100Rari, stRari=1400", async () => {
 			await token.mint(accounts[2], 200);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 100, 1, 104);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 100, 1, 104, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
       let balanceOf;
@@ -1478,12 +1388,8 @@ contract("Staking", accounts => {
 		it("Test6. 104 weeks cliff , 100Rari, stRari=1000", async () => {
 			await token.mint(accounts[2], 200);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			rezultLock = await forTest._stake(staking.address, accounts[2], accounts[2], 100, 100, 104);  //first time stake
-			let idLock;
-      truffleAssert.eventEmitted(rezultLock, 'createLockResult', (ev) => {
-       	idLock = ev.result;
-        return true;
-      });
+			await staking.stake(accounts[2], accounts[2], 100, 100, 104, { from: accounts[2] });  //first time stake
+			let idLock = 1;
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[2]); //check balance account
       let balanceOf;
@@ -1509,7 +1415,7 @@ contract("Staking", accounts => {
 		it("Test1. check emit Stake()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			resultLock  = await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+			resultLock  = await staking.stake(accounts[2], accounts[3], 20, 10, 7, { from: accounts[2] });
 
 			let account;
 			let delegate;
@@ -1535,7 +1441,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
-      await staking.stake(accounts[2], accounts[2], 20, 10, 7);
+      await staking.stake(accounts[2], accounts[2], 20, 10, 7, { from: accounts[2] });
 			resultReStake  = await staking.restake(id, accounts[3], 30, 5, 17);
 
 			let delegate;
@@ -1561,7 +1467,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
-      await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+      await staking.stake(accounts[2], accounts[3], 20, 10, 7, { from: accounts[2] });
 			resultDelegate  = await staking.delegateTo(id, accounts[4]);
 
 			let delegate;
@@ -1578,7 +1484,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
-      await staking.stake(accounts[2], accounts[3], 20, 10, 7);
+      await staking.stake(accounts[2], accounts[3], 20, 10, 7, { from: accounts[2] });
       await increaseTime(WEEK * 8);
 			resultWithdraw  = await staking.withdraw({ from: accounts[2] });
 			let account;
@@ -1595,9 +1501,9 @@ contract("Staking", accounts => {
 		it("Test5. check emit Migrate()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-      await staking.stake(accounts[2], accounts[2], 20, 10, 7);
-      await staking.stake(accounts[2], accounts[2], 30, 10, 7);
-      await staking.stake(accounts[2], accounts[2], 40, 10, 7);
+      await staking.stake(accounts[2], accounts[2], 20, 10, 7, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[2], 30, 10, 7, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[2], 40, 10, 7, { from: accounts[2] });
       await staking.startMigration(newStaking.address);
 			resultMigrate  = await staking.migrate([1, 2, 3], { from: accounts[2] });
 			let account;
