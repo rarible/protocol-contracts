@@ -115,6 +115,7 @@ contract Staking is OwnableUpgradeable {
 
     function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped returns (uint) {
         address account = stakes[id].account;
+        require(account == msg.sender, "owner not detected");
         address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);
         verification(account, id, newAmount, newSlope, newCliff, time);

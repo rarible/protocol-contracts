@@ -197,8 +197,7 @@ contract("Staking", accounts => {
 			let newAmount = 30;
 			let newSlope = 5;
 			let newCliff = 0;
-			resultRestake = await forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
 
@@ -225,8 +224,7 @@ contract("Staking", accounts => {
 			let newAmount = 80;
 			let newSlope = 5;
 			let newCliff = 6;
-			resultRestake = await forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 80);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 20);			//tail user balance
 
@@ -251,8 +249,7 @@ contract("Staking", accounts => {
 			let newAmount = 30;
 			let newSlope = 5;
 			let newCliff = 0;
-			resultRestake = await forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] });
 			staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
@@ -273,8 +270,7 @@ contract("Staking", accounts => {
 			let newAmount = 10;
 			let newSlope = 5;
 			let newCliff = 2;
-			resultRestake = await forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] });
 			staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 10);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 90);			//tail user balance
@@ -301,8 +297,7 @@ contract("Staking", accounts => {
 			let newAmount = 10;
 			let newSlope = 5;
 			let newCliff = 2;
-			resultRestake = await forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] });
 
  			assert.equal(await token.balanceOf(staking.address), 10);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 90);			//tail user balance
@@ -329,7 +324,7 @@ contract("Staking", accounts => {
 			let newSlope = 5;
 			let newCliff = 2;
 			await expectThrow(
-				forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff)
+				staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] })
 			);
 		});
 
@@ -344,7 +339,7 @@ contract("Staking", accounts => {
 			let newSlope = 5;
 			let newCliff = 2;
 			await expectThrow(
-				forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff)
+				staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] })
 			);
 		});
 
@@ -359,7 +354,7 @@ contract("Staking", accounts => {
 			let newSlope = 5;
 			let newCliff = 2;
 			await expectThrow(
-				forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff)
+				staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] })
 			);
 		});
 
@@ -374,7 +369,7 @@ contract("Staking", accounts => {
 			let newSlope = 5;
 			let newCliff = 105;
 			await expectThrow(
-				forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff)
+				staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] })
 			);
 		});
 
@@ -389,7 +384,7 @@ contract("Staking", accounts => {
 			let newSlope = 5;
 			let newCliff = 10;
 			await expectThrow(
-				forTest._restake(staking.address, idLock, accounts[2], newAmount, newSlope, newCliff)
+				staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] })
 			);
 		});
 	})
@@ -410,8 +405,7 @@ contract("Staking", accounts => {
 			let newAmount = 50;
 			let newSlope = 5;
 			let newCliff = 0;
-			resultRestake = await forTest._restake(staking.address, idLock2, accounts[3], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock2, accounts[3], newAmount, newSlope, newCliff, { from: accounts[3] });
  			assert.equal(await token.balanceOf(staking.address), 80);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
    		assert.equal(await token.balanceOf(accounts[3]), 50);			//tail user balance
@@ -464,8 +458,7 @@ contract("Staking", accounts => {
 			let newAmount = 30;
 			let newSlope = 5;
 			let newCliff = 1;
-			resultRestake = await forTest._restake(staking.address, idLock2, accounts[3], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock2, accounts[3], newAmount, newSlope, newCliff, { from: accounts[3] });
 			staking.withdraw({ from: accounts[2] });
 			staking.withdraw({ from: accounts[3] });
 			staking.withdraw({ from: accounts[4] });
@@ -530,8 +523,7 @@ contract("Staking", accounts => {
 			let newAmount = 22;
 			let newSlope = 5;
 			let newCliff = 1;
-			resultRestake = await forTest._restake(staking.address, idLock2, accounts[3], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock2, accounts[3], newAmount, newSlope, newCliff, { from: accounts[3] });
 			staking.withdraw({ from: accounts[2] });
 			staking.withdraw({ from: accounts[3] });
 			staking.withdraw({ from: accounts[4] });
@@ -642,8 +634,7 @@ contract("Staking", accounts => {
 			let newAmount = 20;
 			let newSlope = 2;
 			let newCliff = 0;
-			resultRestake = await forTest._restake(staking.address, idLock, accounts[4], newAmount, newSlope, newCliff);
-			let idNewLock = eventRestakeHandler(resultRestake);
+			await staking.restake(idLock, accounts[4], newAmount, newSlope, newCliff, { from: accounts[2] });
 
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
@@ -684,7 +675,7 @@ contract("Staking", accounts => {
 			staking.withdraw({ from: accounts[2] });
 			let idLockUndefined = 4;
 		  await expectThrow(
-		    forTest._restake(staking.address, idLockUndefined, accounts[4], newAmount, newSlope, newCliff)
+		    staking.restake(idLockUndefined, accounts[4], newAmount, newSlope, newCliff, { from: accounts[2] })
 		  );
 		});
   })
@@ -1465,7 +1456,7 @@ contract("Staking", accounts => {
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
       await staking.stake(accounts[2], accounts[2], 20, 10, 7, { from: accounts[2] });
-			resultReStake  = await staking.restake(id, accounts[3], 30, 5, 17);
+			resultReStake  = await staking.restake(id, accounts[3], 30, 5, 17, { from: accounts[2] });
 
 			let delegate;
 			let amount;
