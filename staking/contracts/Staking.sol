@@ -119,7 +119,12 @@ contract Staking is OwnableUpgradeable {
         address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);
         verification(account, id, newAmount, newSlope, newCliff, time);
-        removeLines(id, account, delegate, newAmount, time);
+
+        uint bias = accounts[account].locked.initial.bias;
+        uint balance = accounts[account].amount.sub(bias);
+
+        uint residue = removeLines(id, account, delegate, time);
+        rebalance(id, account, residue, newAmount, balance);
 
         counter++;
 
@@ -216,21 +221,20 @@ contract Staking is OwnableUpgradeable {
         require(oldEnd <= end, "New line period stake too short");
     }
 
-    function removeLines(uint id, address account, address delegate, uint newAmount, uint toTime) internal {
-        uint bias = accounts[account].locked.initial.bias;
-        uint balance = accounts[account].amount.sub(bias);
-        (uint residue,,) = accounts[account].locked.remove(id, toTime);
-        //original: (uint residue, uint slope), but slope not need here
-        require(residue <= newAmount, "Impossible to restake: less amount, then now is");
+    function removeLines(uint id, address account, address delegate, uint toTime) internal returns (uint residue) {
+        accounts[delegate].balance.remove(id, toTime);
+        totalSupplyLine.remove(id, toTime);
+        (residue,,) = accounts[account].locked.remove(id, toTime);
+    }
 
+    function rebalance(uint id, address account, uint residue, uint newAmount, uint balance) internal {
+        require(residue <= newAmount, "Impossible to restake: less amount, then now is");
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) {//need more, than balance, so need transfer ERC20 to this
             require(token.transferFrom(stakes[id].account, address(this), addAmount.sub(balance)), "Failure while transferring");
             accounts[account].amount = accounts[account].amount.sub(residue);
             accounts[account].amount = accounts[account].amount.add(newAmount);
         }
-        accounts[delegate].balance.remove(id, toTime);
-        totalSupplyLine.remove(id, toTime);
     }
 
     function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
