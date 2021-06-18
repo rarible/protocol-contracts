@@ -49,7 +49,9 @@ Fill of the order is saved inside smart contract and it relates to the take orde
 
 Also, orders which are fully filled, can be extended: users can sign new orders using the same salt (they can increase make.value and take.value for example).
 
-Order rate priority: if rates for the exchange differ, but orders can be filled (for example, left order is 10X -> 100Y, but right is 100Y -> 5X), then left order dictates exchange rate. 
+Order rate priority: if rates for the exchange differ, but orders can be filled (for example, left order is 10X -> 100Y, but right is 100Y -> 5X), then left order dictates exchange rate.
+
+Rounding errors: to calculate fill amounts, mathematical operations are used. When rounding is performed and error is more than 0.1%, rounding error will be thrown and order can't be executed.
 
 #### Order validation
 
