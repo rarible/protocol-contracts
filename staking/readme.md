@@ -30,7 +30,7 @@ Functions supported for every user:
 
 #### Creating Stake
 
-**stake** (address account, address delegate, uint amount, uint slope, uint cliff) - create `Stake`
+**stake** (address account, address delegate, uint amount, uint slope, uint cliff)
 
 `Stake` can be of 3 types:
 - only cliff,
