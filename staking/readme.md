@@ -27,7 +27,6 @@ Functions supported for every user:
 ### Functions for owner only
  - **stop**() - enter stopped state of the contract. Users can only withdraw tokens in this state. `Stakes` can not be created/modified.
  - **startMigration(address to)** - enter migration state of the contract. Owner specifies address of the new staking contract (it should implement specific interface). In this state users can migrate their `Stakes` to this new contract
------------------------------------------------------
 
 #### Creating Stake
 
