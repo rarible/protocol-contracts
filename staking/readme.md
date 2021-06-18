@@ -70,7 +70,7 @@ If there is not enough tokens locked for restake, then Staking contract will tra
 #### Delegation
 
 Users can delegate their stake to other accounts. This can be done when creating (stake), updating (restake). 
-Also, special function delegate can be used to delegate one Stake to other account. 
+Also, special function delegate can be used to delegate one Stake to other account without changing `Stake` parameters.
 
 #### Stake value calculation
 
