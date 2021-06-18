@@ -29,8 +29,8 @@ contract StakingTest {
         emit totalBalanceResult(result);
     }
 
-    function _delegateTo(address staking, uint idLock, address newDelegate) external {
-        Staking stakingTest = Staking(staking);
-        stakingTest.delegateTo(idLock, newDelegate);
-    }
+//    function _delegateTo(address staking, uint idLock, address newDelegate) external {
+//        Staking stakingTest = Staking(staking);
+//        stakingTest.delegateTo(idLock, newDelegate);
+//    }
 }

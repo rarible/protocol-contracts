@@ -115,7 +115,7 @@ contract Staking is OwnableUpgradeable {
 
     function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped returns (uint) {
         address account = stakes[id].account;
-        require(account == msg.sender, "owner not detected");
+        require(account == msg.sender, "call not from owner id");
         address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);
         verification(account, id, newAmount, newSlope, newCliff, time);
@@ -144,6 +144,8 @@ contract Staking is OwnableUpgradeable {
     }
 
     function delegateTo(uint id, address newDelegate) external notStopped {
+        address account = stakes[id].account;
+        require(account == msg.sender, "call not from owner id");
         address from = stakes[id].delegate;
         require(from != address(0), "deposit not exists");
         LibBrokenLine.LineData memory lineData = accounts[from].balance.initiatedLines[id];
@@ -182,7 +184,7 @@ contract Staking is OwnableUpgradeable {
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < id.length; i++) {
             address account = stakes[id[i]].account;
-            require(msg.sender == account, "Migrate call not from owner id");
+            require(msg.sender == account, "call not from owner id");
             address delegate = stakes[id[i]].delegate;
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
