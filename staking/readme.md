@@ -13,18 +13,20 @@ Staked balance behaves pretty the same way, but initial `bias` is multiplied by 
 ### Features
 
 Functions supported for every user:
- - stake - create new `Stake`. Initial bias of the `Stake` depends on locked token amount and other parameters of the `Stake` (cliff, period etc.)
- - reStake - change parameters of the `Stake`. It's possible to extend period and increase locked amount
- - withdraw - withdraw unlocked ERC-20 tokens (if something is unlocked already)
- - delegateTo - delegates specific `Stake` to other user
- - split - TBD
+ - **stake** - create new `Stake`. Initial bias of the `Stake` depends on locked token amount and other parameters of the `Stake` (cliff, period etc.)
+ - **reStake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
+ - **withdraw** - withdraw unlocked ERC-20 tokens (if something is unlocked already)
+ - **delegateTo** - delegates specific `Stake` to other user
+ - **split** - TBD
+ - **migrate** - this function can be called only in `Migration` state. Will migrate user's `Stakes` to new contract 
 
 ### Functions to read the data
- - totalSupply - calculates sum of all staked balances
- - balanceOf(address) - calculates current power for specified user (sums all his Stakes and all delegated Stakes)
+ - **totalSupply**() - calculates sum of all staked balances
+ - **balanceOf**(address account) - calculates current power for specified user (sums all his Stakes and all delegated Stakes)
  
-
-
+### Functions for owner only
+ - **stop**() - enter stopped state of the contract. Users can only withdraw tokens in this state. `Stakes` can not be created/modified.
+ - **startMigration(address to)** - enter migration state of the contract. Owner specifies address of the new staking contract (it should implement specific interface). In this state users can migrate their `Stakes` to this new contract
 -----------------------------------------------------
 
 #### Creating Lock

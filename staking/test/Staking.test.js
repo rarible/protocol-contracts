@@ -713,21 +713,21 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 80);
 
-		  await forTest._depute(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
+		  await forTest._delegateTo(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
 
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _depute
+      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]); //for check balance accounts[4]
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 20);    //stRary balance accounts[4], after _depute
+      assert.equal(balanceOf, 20);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK*10); //10 week later
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]);
@@ -773,21 +773,21 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 3);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 97);
 
-		  await forTest._depute(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
+		  await forTest._delegateTo(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
 
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _depute
+      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]); //for check balance accounts[4]
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 3);    //stRary balance accounts[4], after _depute
+      assert.equal(balanceOf, 3);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK); //1 week later
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]);
@@ -833,21 +833,21 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 63);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 37);
 
-		  await forTest._depute(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
+		  await forTest._delegateTo(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
 
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _depute
+      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]); //for check balance accounts[4]
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 63);    //stRary balance accounts[4], after _depute
+      assert.equal(balanceOf, 63);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK); //1 week later cliff works
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]);
@@ -901,21 +901,21 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 43);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 57);
 
-		  await forTest._depute(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
+		  await forTest._delegateTo(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
 
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _depute
+      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]); //for check balance accounts[4]
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 43);    //stRary balance accounts[4], after _depute
+      assert.equal(balanceOf, 43);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK*5); //5 week later cliff, slope finished, tail finished
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]);
@@ -961,21 +961,21 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 3);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 97);
 
-		  await forTest._depute(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
+		  await forTest._delegateTo(staking.address, idLock, accounts[4]);  //delegate from accounts[3]
 
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _depute
+      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]); //for check balance accounts[4]
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 3);    //stRary balance accounts[4], after _depute
+      assert.equal(balanceOf, 3);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK); //1 week later cliff, slope finished, tail finished
       resultBalanseOfValue = await forTest._balanceOf(staking.address, accounts[4]);
@@ -1028,23 +1028,23 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 80);			      //miss user balance stRari
 
-		  await forTest._depute(staking.address, idLock, accounts[4]);  //delegate from accounts[3] to accounts[4]
+		  await forTest._delegateTo(staking.address, idLock, accounts[4]);  //delegate from accounts[3] to accounts[4]
       resultBalanceOfValueAccount_3  = await forTest._balanceOf(staking.address, accounts[3]); //for check balance accounts[3]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_3, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _depute()
+      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo()
 
       resultBalanceOfValueAccount_4  = await forTest._balanceOf(staking.address, accounts[4]); //for check balance accounts[4]
       truffleAssert.eventEmitted(resultBalanceOfValueAccount_4, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
         return true;
       });
-      assert.equal(balanceOf, 20);    //stRary balance accounts[3], after _depute()
+      assert.equal(balanceOf, 20);    //stRary balance accounts[3], after _delegateTo()
 
   		await increaseTime(WEEK*5); //5 week later
-		  await forTest._depute(staking.address, idLock, accounts[3]);  //delegate from accounts[4] to accounts[3] (delegate back)
+		  await forTest._delegateTo(staking.address, idLock, accounts[3]);  //delegate from accounts[4] to accounts[3] (delegate back)
       resultBalanseOfValue  = await forTest._balanceOf(staking.address, accounts[4]);
       truffleAssert.eventEmitted(resultBalanseOfValue, 'balanceOfResult', (ev) => {
       	balanceOf = ev.result;
@@ -1091,7 +1091,7 @@ contract("Staking", accounts => {
       });
       await increaseTime(WEEK*30); //20 week later
 		  await expectThrow(
-		    forTest._depute(staking.address, idLock, accounts[4])  //delegate from accounts[3]
+		    forTest._delegateTo(staking.address, idLock, accounts[4])  //delegate from accounts[3]
 		  );
 		});
   })
@@ -1129,7 +1129,7 @@ contract("Staking", accounts => {
       assert.equal(totalBalance, 0);
 		});
 
-		it("Test2. stop() after check stake(), reStake() methods", async () => {
+		it("Test2. stop() after check stake(), restake() methods", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			resultLock = await forTest._stake(staking.address, accounts[2], accounts[3], 60, 2, 0);  //first time stake
@@ -1516,7 +1516,7 @@ contract("Staking", accounts => {
 			let amount;
 			let slope;
 			let cliff;
-      truffleAssert.eventEmitted(resultLock, 'Stake', (ev) => {
+      truffleAssert.eventEmitted(resultLock, 'StakeCreate', (ev) => {
        	account = ev.account;
        	delegate = ev.delegate;
        	amount = ev.amount;
@@ -1531,23 +1531,23 @@ contract("Staking", accounts => {
       assert.equal(cliff, 7);
 		});
 
-		it("Test2. check emit ReStake()", async () => {
+		it("Test2. check emit Restake()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
       await staking.stake(accounts[2], accounts[2], 20, 10, 7);
-			resultReStake  = await staking.reStake(id, accounts[3], 30, 5, 17);
+			resultReStake  = await staking.restake(id, accounts[3], 30, 5, 17);
 
 			let delegate;
 			let amount;
 			let slope;
 			let cliff;
-      truffleAssert.eventEmitted(resultReStake, 'ReStake', (ev) => {
+      truffleAssert.eventEmitted(resultReStake, 'Restake', (ev) => {
        	id = ev.id;
-       	delegate = ev.newDelegate;
-       	amount = ev.newAmount;
-       	slope = ev.newSlope;
-       	cliff = ev.newCliff;
+       	delegate = ev.delegate;
+       	amount = ev.amount;
+       	slope = ev.slope;
+       	cliff = ev.cliff;
         return true;
       });
       assert.equal(id, 1);
@@ -1562,12 +1562,12 @@ contract("Staking", accounts => {
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       let id = 1;
       await staking.stake(accounts[2], accounts[3], 20, 10, 7);
-			resultDelegate  = await staking.depute(id, accounts[4]);
+			resultDelegate  = await staking.delegateTo(id, accounts[4]);
 
 			let delegate;
 	    truffleAssert.eventEmitted(resultDelegate, 'Delegate', (ev) => {
        	id = ev.id;
-       	delegate = ev.newDelegate;
+       	delegate = ev.delegate;
         return true;
       });
       assert.equal(id, 1);

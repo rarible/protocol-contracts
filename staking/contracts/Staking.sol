@@ -27,69 +27,63 @@ contract Staking is OwnableUpgradeable {
      */
     IERC20Upgradeable public token;
     /**
-     * @dev counter for locks identifiers
+     * @dev counter for Stake identifiers
      */
     uint public counter;
 
     /**
-     * @dev true if contract entered not working state
+     * @dev true if contract entered stopped state
      */
     bool private stopped;
-    address public migrateTo;               //address migrate to
+    /**
+     * @dev address to migrate Stakes to (zero if not in migration state)
+     */
+    address public migrateTo;
 
     /**
-     * @dev locker - who locked ERC20 tokens. gelegate - who gets staked tokens
+     * @dev represents one user Stake
      */
-    struct Lockers {
-        address locker;
+    struct Stake {
+        address account;
         address delegate;
     }
 
     /**
-     * @dev describes state of user's balance.
+     * @dev describes state of accounts's balance.
      *      balance - broken line describes stake
-     *      locked - broken line describes locked user's tokens
-     *      amount - total currently locked tokens
+     *      locked - broken line describes how many tokens are locked
+     *      amount - total currently locked tokens (including tokens which can be withdrawed)
      */
-    struct Locks {
+    struct Account {
         LibBrokenLine.BrokenLine balance;
         LibBrokenLine.BrokenLine locked;
         uint amount;
     }
 
-    /**
-     * @dev key is user address
-     */
-    mapping(address => Locks) locks;
-    /**
-     * @dev key is lock id. value is locker + gelegate
-     */
-    mapping(uint => Lockers) deposits;
-    /**
-     * @dev totalSupply broken line
-     */
+    mapping(address => Account) accounts;
+    mapping(uint => Stake) stakes;
     LibBrokenLine.BrokenLine public totalSupplyLine;
 
     /**
      * @dev Emitted when create Lock with parameters (account, delegate, amount, slope, cliff)
      */
-    event Stake(address account, address delegate, uint amount, uint slope, uint cliff);
+    event StakeCreate(uint indexed id, address indexed account, address indexed delegate, uint time, uint amount, uint slope, uint cliff);
     /**
      * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlope, newCliff) for Lock with given id
      */
-    event ReStake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff);
+    event Restake(uint indexed id, address indexed delegate, uint time, uint amount, uint slope, uint cliff);
     /**
      * @dev Emitted when to set newDelegate address for Lock with given id
      */
-    event Delegate(uint id, address newDelegate);
+    event Delegate(uint indexed id, address indexed delegate, uint time);
     /**
      * @dev Emitted when withdraw amount of Rari, account - msg.sender, amount - amount Rari
      */
-    event Withdraw(address account, uint amount);
+    event Withdraw(address indexed account, uint amount);
     /**
      * @dev Emitted when migrate Locks with given id, account - msg.sender
      */
-    event Migrate(address account, uint[] id);
+    event Migrate(address indexed account, uint[] id);
 
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
@@ -112,91 +106,91 @@ contract Staking is OwnableUpgradeable {
 
         counter++;
 
-        uint blockTime = roundTimestamp(block.timestamp);
-        addLines(account, delegate, amount, slope, cliff, blockTime);
-        locks[account].amount = locks[account].amount.add(amount);
-        emit Stake(account, delegate, amount, slope, cliff);
+        uint time = roundTimestamp(block.timestamp);
+        addLines(account, delegate, amount, slope, cliff, time);
+        accounts[account].amount = accounts[account].amount.add(amount);
+        emit StakeCreate(counter, account, delegate, time, amount, slope, cliff);
         return counter;
     }
 
-    function reStake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped returns (uint) {
-        address account = deposits[id].locker;
-        address delegate = deposits[id].delegate;
-        uint blockTime = roundTimestamp(block.timestamp);
-        verification(account, id, newAmount, newSlope, newCliff, blockTime);
-        removeLines(id, account, delegate, newAmount, blockTime);
+    function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped returns (uint) {
+        address account = stakes[id].account;
+        address delegate = stakes[id].delegate;
+        uint time = roundTimestamp(block.timestamp);
+        verification(account, id, newAmount, newSlope, newCliff, time);
+        removeLines(id, account, delegate, newAmount, time);
 
         counter++;
 
-        addLines(account, newDelegate, newAmount, newSlope, newCliff, blockTime);
-        emit ReStake(id, newDelegate, newAmount, newSlope, newCliff);
+        addLines(account, newDelegate, newAmount, newSlope, newCliff, time);
+        emit Restake(id, newDelegate, time, newAmount, newSlope, newCliff);
         return counter;
     }
 
     function withdraw() external {
-        uint value = locks[msg.sender].amount;
+        uint value = accounts[msg.sender].amount;
         if (!stopped) {
-            uint blockTime = roundTimestamp(block.timestamp);
-            locks[msg.sender].locked.update(blockTime);
-            uint bias = locks[msg.sender].locked.initial.bias;
+            uint time = roundTimestamp(block.timestamp);
+            accounts[msg.sender].locked.update(time);
+            uint bias = accounts[msg.sender].locked.initial.bias;
             value = value.sub(bias);
         }
         if (value > 0) {
-            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
+            accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "Failure while transferring, withdraw");
         }
         emit Withdraw(msg.sender, value);
     }
 
-    function depute(uint id, address newDelegate) external notStopped {
-        address from = deposits[id].delegate;
+    function delegateTo(uint id, address newDelegate) external notStopped {
+        address from = stakes[id].delegate;
         require(from != address(0), "deposit not exists");
-        LibBrokenLine.LineData memory lineData = locks[from].balance.initiatedLines[id];
+        LibBrokenLine.LineData memory lineData = accounts[from].balance.initiatedLines[id];
         require(lineData.line.bias != 0, "deposit already finished");
-        uint blockTime = roundTimestamp(block.timestamp);
-        (uint bias, uint slope, uint cliff) = locks[from].balance.remove(id, blockTime);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, bias, slope);
-        locks[newDelegate].balance.add(id, line, cliff);
-        deposits[id].delegate = newDelegate;
-        emit Delegate(id, newDelegate);
+        uint time = roundTimestamp(block.timestamp);
+        (uint bias, uint slope, uint cliff) = accounts[from].balance.remove(id, time);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope);
+        accounts[newDelegate].balance.add(id, line, cliff);
+        stakes[id].delegate = newDelegate;
+        emit Delegate(id, newDelegate, time);
     }
 
     function totalSupply() external returns (uint) {
         if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint blockTime = roundTimestamp(block.timestamp);
-        totalSupplyLine.update(blockTime);
+        uint time = roundTimestamp(block.timestamp);
+        totalSupplyLine.update(time);
         return totalSupplyLine.initial.bias;
     }
 
     function balanceOf(address account) external returns (uint) {
-        if ((locks[account].balance.initial.bias == 0) || (stopped)) {
+        if ((accounts[account].balance.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint blockTime = roundTimestamp(block.timestamp);
-        locks[account].balance.update(blockTime);
-        return locks[account].balance.initial.bias;
+        uint time = roundTimestamp(block.timestamp);
+        accounts[account].balance.update(time);
+        return accounts[account].balance.initial.bias;
     }
 
     function migrate(uint[] memory id) external {
         if (migrateTo == address(0)) {
             return;
         }
-        uint blockTime = roundTimestamp(block.timestamp);
+        uint time = roundTimestamp(block.timestamp);
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < id.length; i++) {
-            address account = deposits[id[i]].locker;
+            address account = stakes[id[i]].account;
             require(msg.sender == account, "Migrate call not from owner id");
-            address delegate = deposits[id[i]].delegate;
-            LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[id[i]];
-            (uint residue,,) = locks[account].locked.remove(id[i], blockTime);
+            address delegate = stakes[id[i]].delegate;
+            LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
+            (uint residue,,) = accounts[account].locked.remove(id[i], time);
 
             require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
-            locks[account].amount = locks[account].amount.sub(residue);
+            accounts[account].amount = accounts[account].amount.sub(residue);
 
-            locks[delegate].balance.remove(id[i], blockTime);
-            totalSupplyLine.remove(id[i], blockTime);
+            accounts[delegate].balance.remove(id[i], time);
+            totalSupplyLine.remove(id[i], time);
             try nextVersionStake.initiateData(id[i], lineData, account, delegate) {
             } catch {
                 revert("Contract not support or contain an error in interface INextVersionStake");
@@ -212,7 +206,7 @@ contract Staking is OwnableUpgradeable {
         uint period = newAmount.div(newSlope);
         require(period <= TWO_YEAR_WEEKS, "Slope period more, than two years");
         uint end = toTime.add(newCliff).add(period);
-        LibBrokenLine.LineData memory lineData = locks[account].locked.initiatedLines[id];
+        LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id];
         LibBrokenLine.Line memory line = lineData.line;
         uint oldPeriod = line.bias.div(line.slope);
         uint oldEnd = line.start.add(lineData.cliff).add(oldPeriod);
@@ -220,31 +214,31 @@ contract Staking is OwnableUpgradeable {
     }
 
     function removeLines(uint id, address account, address delegate, uint newAmount, uint toTime) internal {
-        uint bias = locks[account].locked.initial.bias;
-        uint balance = locks[account].amount.sub(bias);
-        (uint residue,,) = locks[account].locked.remove(id, toTime);
+        uint bias = accounts[account].locked.initial.bias;
+        uint balance = accounts[account].amount.sub(bias);
+        (uint residue,,) = accounts[account].locked.remove(id, toTime);
         //original: (uint residue, uint slope), but slope not need here
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
 
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) {//need more, than balance, so need transfer ERC20 to this
-            require(token.transferFrom(deposits[id].locker, address(this), addAmount.sub(balance)), "Failure while transferring");
-            locks[account].amount = locks[account].amount.sub(residue);
-            locks[account].amount = locks[account].amount.add(newAmount);
+            require(token.transferFrom(stakes[id].account, address(this), addAmount.sub(balance)), "Failure while transferring");
+            accounts[account].amount = accounts[account].amount.sub(residue);
+            accounts[account].amount = accounts[account].amount.add(newAmount);
         }
-        locks[delegate].balance.remove(id, toTime);
+        accounts[delegate].balance.remove(id, toTime);
         totalSupplyLine.remove(id, toTime);
     }
 
-    function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint blockTime) internal {
+    function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
         (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(blockTime, stAmount, stSlope);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
         totalSupplyLine.add(counter, line, cliff);
-        locks[delegate].balance.add(counter, line, cliff);
-        line = LibBrokenLine.Line(blockTime, amount, slope);
-        locks[account].locked.add(counter, line, cliff);
-        deposits[counter].locker = account;
-        deposits[counter].delegate = delegate;
+        accounts[delegate].balance.add(counter, line, cliff);
+        line = LibBrokenLine.Line(time, amount, slope);
+        accounts[account].locked.add(counter, line, cliff);
+        stakes[counter].account = account;
+        stakes[counter].delegate = delegate;
     }
 
     //original formula: (0,7+9,3*(cliffPeriod/104)^2+0,5*(0,7+9,3*(slopePeriod/104)^2))
