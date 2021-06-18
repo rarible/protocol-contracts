@@ -1,14 +1,14 @@
 ## Staking
 
-This contract is based on [LibBrokenLine](../broken-line/readme.md).
-
 This contract locks ERC-20 tokens and issues back staked tokens. These staked tokens are not transferrable, but they can be delegated to other users. Tokens unlock linearly. 
 
 ![Line](../broken-line/documents/line.svg)
 
 User locks tokens on `start` moment, amount of locked tokens is `bias`. In `cliff` period amount of locked tokens doesn't change, then it starts to decline linearly. 
 
-Staked balance behaves pretty the same way, but initial `bias` is multiplied by `value k` calculated using `Stake` parameters (slope, cliff, bias etc.) 
+Staked balance behaves pretty the same way, but initial `bias` is multiplied by `value k` calculated using `Stake` parameters (slope, cliff, bias etc.)
+
+This contract is based on [LibBrokenLine](../broken-line/readme.md).
 
 ### Features
 
