@@ -22,6 +22,22 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 
 	describe("RoyaltiesRegistry metods works:", () => {
 
+		it("simple V1 royalties", async () => {
+  		await royaltiesRegistry.__RoyaltiesRegistry_init();																																//initialize Owner
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      ERC721_V1OwnUpgrd.initialize(); 																																											//set V1 interface
+  		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, [[accounts[5], 1000], [accounts[7], 1200]]);								//set royalties by contract
+    	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
+			let royalties;
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+      	royalties = ev.royalties;
+        return true;
+      });
+			assert.equal(royalties[0].value, 1000);
+			assert.equal(royalties[1].value, 1200);
+			assert.equal(royalties.length, 2);
+  	})
+
 		it("SetRoyaltiesByTokenAndTokenId, initialize by Owner, emit get", async () => {
 			await royaltiesRegistry.__RoyaltiesRegistry_init();//initialize Owner
     	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(accounts[5], erc721TokenId1, [[accounts[3], 600], [accounts[4], 1100]]); //set royalties by token and tokenId

@@ -120,6 +120,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
                 result[i].value = uint96(values[i]);
                 result[i].account = recipients[i];
             }
+            return result;
         }
         return new LibPart.Part[](0);
     }
