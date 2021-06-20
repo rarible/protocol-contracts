@@ -38,7 +38,7 @@ library LibBrokenLine {
     }
 
     /**
-     *add Line, save data in LineData
+     * @dev Run update BrokenLine. Add Line, save data in LineData
      **/
     function add(BrokenLine storage brokenLine, uint id, Line memory line, uint cliff) internal {
         require(line.slope != 0, "Slope == 0, unacceptable value for slope");
@@ -65,7 +65,7 @@ library LibBrokenLine {
     }
 
     /**
-     *remove Line from BrokenLine, return line.bias, which actual now moment
+     * @dev Run update BrokenLine. Remove Line from BrokenLine, return bias, slope, cliff.
      **/
     function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint bias, uint slope, uint cliff) {
         LineData memory lineData = brokenLine.initiatedLines[id];
@@ -109,7 +109,7 @@ library LibBrokenLine {
     }
 
     /**
-     * Update initial Line by parameter toTime. CalculateВысчитывает и применяет все изменения из slopeChanges за этот период
+     * @dev Update initial Line by parameter toTime. Calculate and set all changes
      **/
     function update(BrokenLine storage brokenLine, uint toTime) internal {
         uint bias = brokenLine.initial.bias;
