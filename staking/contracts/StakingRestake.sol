@@ -52,10 +52,10 @@ contract StakingRestake is StakingBase {
     function rebalance(uint id, address account, uint residue, uint newAmount, uint balance) internal {
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
         uint addAmount = newAmount.sub(residue);
-        if (addAmount > balance) {//need more, than balance, so need transfer ERC20 to this
-            require(token.transferFrom(stakes[id].account, address(this), addAmount.sub(balance)), "Failure while transferring");
-            accounts[account].amount = accounts[account].amount.sub(residue);
-            accounts[account].amount = accounts[account].amount.add(newAmount);
+        if (addAmount > balance) {
+            uint transferAmount = addAmount.sub(balance);    //need more, than balance, so need transfer tokens to this
+            require(token.transferFrom(stakes[id].account, address(this), transferAmount), "Failure while transferring");
+            accounts[account].amount = accounts[account].amount.add(transferAmount);
         }
     }
 }
