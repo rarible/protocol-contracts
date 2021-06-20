@@ -51,12 +51,9 @@ contract Staking is StakingBase, StakingRestake {
 
     function delegateTo(uint id, address newDelegate) external notStopped {
         verifyStakeOwner(id);
-        address from = stakes[id].delegate;
-        require(from != address(0), "deposit not exists");
-        LibBrokenLine.LineData memory lineData = accounts[from].balance.initiatedLines[id];
-        require(lineData.line.bias != 0, "deposit already finished");
+        address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);
-        (uint bias, uint slope, uint cliff) = accounts[from].balance.remove(id, time);
+        (uint bias, uint slope, uint cliff) = accounts[delegate].balance.remove(id, time);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope);
         accounts[newDelegate].balance.add(id, line, cliff);
         stakes[id].delegate = newDelegate;
@@ -89,13 +86,14 @@ contract Staking is StakingBase, StakingRestake {
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < id.length; i++) {
             address account = verifyStakeOwner(id[i]);
-            address delegate = stakes[id[i]].delegate;
+            //save data Line before remove
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
 
             require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
             accounts[account].amount = accounts[account].amount.sub(residue);
 
+            address delegate = stakes[id[i]].delegate;
             accounts[delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
             try nextVersionStake.initiateData(id[i], lineData, account, delegate) {

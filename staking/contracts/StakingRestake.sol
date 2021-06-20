@@ -28,6 +28,11 @@ contract StakingRestake is StakingBase {
         return counter;
     }
 
+    /**
+     * @dev Verification parameters:
+     *      1. amount > 0, restake more or equal staked tokens
+     *      2. cliff period and slope period less or equal two years
+     */
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
         require(newAmount > 0, "Lock amount Rari mast be > 0");
         require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
