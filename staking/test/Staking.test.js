@@ -32,9 +32,6 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			await staking.stake(accounts[2], accounts[2], 20, 10, 0, { from: accounts[2] });
-//      let result = await staking.balanceOf.call(accounts[2]);
-//      console.log("sksResult:"+result);
-//      assert.equal(result, 20);
       balanceOf  = await staking.balanceOf.call(accounts[2]);
 
 			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite
@@ -140,6 +137,22 @@ contract("Staking", accounts => {
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await expectThrow(
 			  staking.stake(accounts[2], accounts[2], 0, 10, 10, { from: accounts[2] })
+			);
+		});
+
+		it("Test11. Try to createLock() more slope == 0, throw", async () => {
+			await token.mint(accounts[2], 2000);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await expectThrow(
+			  staking.stake(accounts[2], accounts[2], 20, 0, 10, { from: accounts[2] })
+			);
+		});
+
+		it("Test12. Try to createLock() more slope more amount, throw", async () => {
+			await token.mint(accounts[2], 2000);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await expectThrow(
+			  staking.stake(accounts[2], accounts[2], 20, 40, 0, { from: accounts[2] })
 			);
 		});
 	})
@@ -318,7 +331,22 @@ contract("Staking", accounts => {
 			);
 		});
 
-		it("Test8. Change slope, amount, with cliff, in cliff time, New line new cliffPeriod more 2 years, throw", async () => {
+		it("Test8. Change slope, amount, with cliff, in cliff time, New line slope == 0, throw", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
+			let idLock = 1;
+
+			await increaseTime(WEEK * 2); //2 week later no change, because cliff
+			let newAmount = 60;
+			let newSlope = 0;
+			let newCliff = 2;
+			await expectThrow(
+				staking.restake(idLock, accounts[2], newAmount, newSlope, newCliff, { from: accounts[2] })
+			);
+		});
+
+		it("Test9. Change slope, amount, with cliff, in cliff time, New line new cliffPeriod more 2 years, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });
@@ -333,7 +361,7 @@ contract("Staking", accounts => {
 			);
 		});
 
-		it("Test9. Change slope, amount, with cliff, in cliff time, New line new slopePeriod more 2 years, throw", async () => {
+		it("Test10. Change slope, amount, with cliff, in cliff time, New line new slopePeriod more 2 years, throw", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			await staking.stake(accounts[2], accounts[2], 38, 10, 3, { from: accounts[2] });

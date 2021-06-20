@@ -30,20 +30,21 @@ contract StakingRestake is StakingBase {
 
     /**
      * @dev Verification parameters:
-     *      1. amount > 0, restake more or equal staked tokens
+     *      1. amount > 0, slope > 0
      *      2. cliff period and slope period less or equal two years
+     *      3. newFinishTime more or equal noldFinishTime
      */
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
-        require(newAmount > 0, "Lock amount Rari mast be > 0");
-        require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
+        require(newAmount > 0, "amount negative");
+        require(newCliff <= TWO_YEAR_WEEKS, "cliff too big");
         uint period = newAmount.div(newSlope);
-        require(period <= TWO_YEAR_WEEKS, "Slope period more, than two years");
-        uint end = toTime.add(newCliff).add(period);
+        require(period <= TWO_YEAR_WEEKS, "slope too big");
+        uint newEnd = toTime.add(newCliff).add(period);
         LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id];
         LibBrokenLine.Line memory line = lineData.line;
-        uint oldPeriod = line.bias.div(line.slope);
-        uint oldEnd = line.start.add(lineData.cliff).add(oldPeriod);
-        require(oldEnd <= end, "New line period stake too short");
+        period = line.bias.div(line.slope);
+        uint oldEnd = line.start.add(lineData.cliff).add(period);
+        require(oldEnd <= newEnd, "new line period stake too short");
     }
 
     function removeLines(uint id, address account, address delegate, uint toTime) internal returns (uint residue) {
