@@ -38,7 +38,9 @@ library LibBrokenLine {
     }
 
     /**
-     * @dev Run update BrokenLine. Add Line, save data in LineData
+     * @dev Add Line, save data in LineData. Run update BrokenLine, require:
+     *      1. slope != 0, slope <= bias
+     *      2. line not exists
      **/
     function add(BrokenLine storage brokenLine, uint id, Line memory line, uint cliff) internal {
         require(line.slope != 0, "Slope == 0, unacceptable value for slope");
@@ -65,7 +67,7 @@ library LibBrokenLine {
     }
 
     /**
-     * @dev Run update BrokenLine. Remove Line from BrokenLine, return bias, slope, cliff.
+     * @dev Remove Line from BrokenLine, return bias, slope, cliff. Run update BrokenLine.
      **/
     function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint bias, uint slope, uint cliff) {
         LineData memory lineData = brokenLine.initiatedLines[id];
