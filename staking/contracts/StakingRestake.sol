@@ -35,7 +35,7 @@ contract StakingRestake is StakingBase {
      *      3. newFinishTime more or equal noldFinishTime
      */
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
-        require(newAmount > 0, "amount negative");
+        require(newAmount > 0, "zero amount");
         require(newCliff <= TWO_YEAR_WEEKS, "cliff too big");
         uint period = newAmount.div(newSlope);
         require(period <= TWO_YEAR_WEEKS, "slope too big");
@@ -58,7 +58,7 @@ contract StakingRestake is StakingBase {
         uint addAmount = newAmount.sub(residue);
         if (addAmount > balance) {
             uint transferAmount = addAmount.sub(balance);    //need more, than balance, so need transfer tokens to this
-            require(token.transferFrom(stakes[id].account, address(this), transferAmount), "Failure while transferring");
+            require(token.transferFrom(stakes[id].account, address(this), transferAmount), "transfer failed");
             accounts[account].amount = accounts[account].amount.add(transferAmount);
         }
     }

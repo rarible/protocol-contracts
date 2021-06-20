@@ -117,7 +117,7 @@ contract StakingBase is OwnableUpgradeable {
 
     function verifyStakeOwner(uint id) internal view returns (address account) {
         account = stakes[id].account;
-        require(account == msg.sender, "call not from owner id");
+        require(account == msg.sender, "caller not a stake owner");
     }
 
     /**

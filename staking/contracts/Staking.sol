@@ -20,7 +20,7 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     function stake(address account, address delegate, uint amount, uint slope, uint cliff) external notStopped returns (uint) {
-        require(amount > 0, "amount negative");
+        require(amount > 0, "zero amount");
         require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
         require(amount.div(slope) <= TWO_YEAR_WEEKS, "period too big");
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
@@ -44,7 +44,7 @@ contract Staking is StakingBase, StakingRestake {
         }
         if (value > 0) {
             accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
-            require(token.transfer(msg.sender, value), "Failure while transferring, withdraw");
+            require(token.transfer(msg.sender, value), "transfer failed");
         }
         emit Withdraw(msg.sender, value);
     }
@@ -90,16 +90,13 @@ contract Staking is StakingBase, StakingRestake {
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
 
-            require(token.transfer(migrateTo, residue), "Failure while transferring in staking migration");
+            require(token.transfer(migrateTo, residue), "transfer failed");
             accounts[account].amount = accounts[account].amount.sub(residue);
 
             address delegate = stakes[id[i]].delegate;
             accounts[delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
-            try nextVersionStake.initiateData(id[i], lineData, account, delegate) {
-            } catch {
-                revert("Contract not support or contain an error in interface INextVersionStake");
-            }
+            nextVersionStake.initiateData(id[i], lineData, account, delegate);
         }
         emit Migrate(msg.sender, id);
     }
