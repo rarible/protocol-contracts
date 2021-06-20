@@ -50,8 +50,7 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     function delegateTo(uint id, address newDelegate) external notStopped {
-        address account = stakes[id].account;
-        require(account == msg.sender, "call not from owner id");
+        verifyStakeOwner(id);
         address from = stakes[id].delegate;
         require(from != address(0), "deposit not exists");
         LibBrokenLine.LineData memory lineData = accounts[from].balance.initiatedLines[id];
@@ -89,8 +88,7 @@ contract Staking is StakingBase, StakingRestake {
         uint time = roundTimestamp(block.timestamp);
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < id.length; i++) {
-            address account = stakes[id[i]].account;
-            require(msg.sender == account, "call not from owner id");
+            address account = verifyStakeOwner(id[i]);
             address delegate = stakes[id[i]].delegate;
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);

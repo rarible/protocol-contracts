@@ -115,6 +115,11 @@ contract StakingBase is OwnableUpgradeable {
         return ts.div(WEEK).sub(STARTING_POINT_WEEK);
     }
 
+    function verifyStakeOwner(uint id) internal returns (address account) {
+        account = stakes[id].account;
+        require(account == msg.sender, "call not from owner id");
+    }
+
     /**
      * @dev Throws if stopped
      */

@@ -10,15 +10,14 @@ contract StakingRestake is StakingBase {
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
     function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped returns (uint) {
-        address account = stakes[id].account;
-        require(account == msg.sender, "call not from owner id");
-        address delegate = stakes[id].delegate;
+        address account = verifyStakeOwner(id);
         uint time = roundTimestamp(block.timestamp);
         verification(account, id, newAmount, newSlope, newCliff, time);
 
         uint bias = accounts[account].locked.initial.bias;
         uint balance = accounts[account].amount.sub(bias);
 
+        address delegate = stakes[id].delegate;
         uint residue = removeLines(id, account, delegate, time);
         rebalance(id, account, residue, newAmount, balance);
 
@@ -30,7 +29,6 @@ contract StakingRestake is StakingBase {
     }
 
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
-        require(account != address(0), "Line with id already deleted");
         require(newAmount > 0, "Lock amount Rari mast be > 0");
         require(newCliff <= TWO_YEAR_WEEKS, "Cliff period more, than two years");
         uint period = newAmount.div(newSlope);
