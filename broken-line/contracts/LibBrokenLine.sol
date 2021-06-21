@@ -117,7 +117,10 @@ library LibBrokenLine {
         uint bias = brokenLine.initial.bias;
         uint slope = brokenLine.initial.slope;
         uint time = brokenLine.initial.start;
-        require(toTime >= time, "can't update BrokenLine for past time");
+        if (time == toTime) {
+            return;
+        }
+        require(toTime > time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
             int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);

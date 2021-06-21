@@ -45,6 +45,7 @@ contract StakingRestake is StakingBase {
     }
 
     function removeLines(uint id, address account, address delegate, uint toTime) internal returns (uint residue) {
+        updateLines(account, delegate, toTime);
         accounts[delegate].balance.remove(id, toTime);
         totalSupplyLine.remove(id, toTime);
         (residue,,) = accounts[account].locked.remove(id, toTime);

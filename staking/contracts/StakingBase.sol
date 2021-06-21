@@ -89,6 +89,7 @@ contract StakingBase is OwnableUpgradeable {
     }
 
     function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
+        updateLines(account, delegate, time);
         (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
         totalSupplyLine.add(counter, line, cliff);
@@ -97,6 +98,12 @@ contract StakingBase is OwnableUpgradeable {
         accounts[account].locked.add(counter, line, cliff);
         stakes[counter].account = account;
         stakes[counter].delegate = delegate;
+    }
+
+    function updateLines(address account, address delegate, uint time) internal {
+        totalSupplyLine.update(time);
+        accounts[delegate].balance.update(time);
+        accounts[account].locked.update(time);
     }
 
     //original formula: (0,7+9,3*(cliffPeriod/104)^2+0,5*(0,7+9,3*(slopePeriod/104)^2))
