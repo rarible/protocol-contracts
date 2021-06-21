@@ -9,49 +9,36 @@ contract StakingSplit is StakingBase {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    function split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond) external returns (uint idFirst, uint idSecond) {
-        address account = stakes[id].account;
-        require(account == msg.sender, "call not from owner id");
-        address delegate = stakes[id].delegate;
+    function split(uint id, address delegateOne, address delegateTwo, uint shareOne, uint shareTwo) external returns (uint idFirst, uint idSecond) {
+        address account =  verifyStakeOwner(id);
+        require(shareOne > 0, "share unacceptable value");
+        require(shareTwo > 0, "share unacceptable value");
+        require(shareOne.add(shareTwo) == SPLIT_LOCK_MAX_PERCENT, "share unacceptable values");
 
-        require(account != address(0), "deposit not exists");
-        require(delegate != address(0), "deposit not exists");      //  TODO need it require?
-        require(delegateFirst != address(0), "delegate not exists");
-        require(delegateSecond != address(0), "delegate not exists");
-        require(shareFirst > 0, "share unacceptable value");
-        require(shareSecond > 0, "share unacceptable value");
-        require(shareFirst.add(shareSecond) == SPLIT_LOCK_MAX_PERCENT, "share unacceptable values");
-
-        uint blockTime = roundTimestamp(block.timestamp);
-        LibBrokenLine.Line memory line;
-        line.start = blockTime;
-        uint cliff;
-        (line.bias, line.slope, cliff) = accounts[account].locked.remove(id, blockTime);
-        require(line.bias > 0, "deposit finished, nothing to split");
-        accounts[account].amount = accounts[account].amount.sub(line.bias);
-        accounts[delegate].balance.remove(id, blockTime);
-        totalSupplyLine.remove(id, blockTime);
-        stakes[id].account = address(0); //  TODO need it?
-        stakes[id].delegate = address(0); //  TODO need it?
-
-        uint period = line.bias.div(line.slope);
+        uint time = roundTimestamp(block.timestamp);
+        (uint bias, uint slope, uint cliff) = removeLines2(id, account, time);
 
         counter++;
-        idFirst = initiateLines(account, delegateFirst, line, period, cliff, shareFirst);
+        idFirst = initiateLines(account, delegateOne, bias, slope, cliff, shareOne, time);
 
         counter++;
-        idSecond = initiateLines(account, delegateSecond, line, period, cliff, shareSecond);
-        emit Split(id, delegateFirst, delegateSecond, shareFirst, shareSecond);
+        idSecond = initiateLines(account, delegateTwo, bias, slope, cliff, shareTwo, time);
+        emit Split(id, delegateOne, delegateTwo, shareOne, shareTwo);
     }
 
-    function initiateLines(address account, address delegate, LibBrokenLine.Line memory line, uint period, uint cliff, uint share) internal returns (uint newId){
-        uint newAmount = line.bias.mul(share).div(SPLIT_LOCK_MAX_PERCENT);
-        uint newSlope = newAmount.div(period);
+    function removeLines2(uint id, address account, uint toTime) internal returns (uint residue, uint slope, uint cliff) {
+        address delegate = stakes[id].delegate;
+        accounts[delegate].balance.remove(id, toTime);
+        totalSupplyLine.remove(id, toTime);
+        (residue, slope, cliff) = accounts[account].locked.remove(id, toTime);
+    }
+
+    function initiateLines(address account, address delegate, uint bias, uint slope, uint cliff, uint share, uint toTime) internal returns (uint newId){
+        uint newAmount = bias.mul(share).div(SPLIT_LOCK_MAX_PERCENT);
         require(newAmount > 0, "split, amount unacceptable value");
-        require(newSlope > 0, "split, slope unacceptable value");
-        addLines(account, delegate, newAmount, newSlope, cliff, line.start);
-        accounts[account].amount = accounts[account].amount.add(newAmount);
+        uint period = bias.div(slope);
+        uint newSlope = newAmount.div(period);
+        addLines(account, delegate, newAmount, newSlope, cliff, toTime);
         newId = counter;
     }
-
 }

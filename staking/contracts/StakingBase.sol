@@ -19,6 +19,7 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
+    uint256 constant SPLIT_LOCK_MAX_PERCENT = 100;          //max percent 100%
 
     /**
      * @dev ERC20 token to lock
@@ -82,6 +83,10 @@ contract StakingBase is OwnableUpgradeable {
      * @dev Emitted when migrate Locks with given id, account - msg.sender
      */
     event Migrate(address indexed account, uint[] id);
+    /**
+     * @dev Emitted when split Locks into two Locks
+     */
+    event Split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond);
 
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
