@@ -15,7 +15,8 @@ contract StakingRestake is StakingBase {
         verification(account, id, newAmount, newSlope, newCliff, time);
 
         address delegate = stakes[id].delegate;
-        uint residue = removeLines(id, account, delegate, time);
+        uint residue;
+        (residue,,) = removeLines(id, account, delegate, time);
         rebalance(id, account, residue, newAmount);
 
         counter++;
@@ -42,12 +43,6 @@ contract StakingRestake is StakingBase {
         period = line.bias.div(line.slope);
         uint oldEnd = line.start.add(lineData.cliff).add(period);
         require(oldEnd <= newEnd, "new line period stake too short");
-    }
-
-    function removeLines(uint id, address account, address delegate, uint toTime) internal returns (uint residue) {
-        accounts[delegate].balance.remove(id, toTime);
-        totalSupplyLine.remove(id, toTime);
-        (residue,,) = accounts[account].locked.remove(id, toTime);
     }
 
     function rebalance(uint id, address account, uint residue, uint newAmount) internal {

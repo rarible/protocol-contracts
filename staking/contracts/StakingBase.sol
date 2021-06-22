@@ -125,6 +125,12 @@ contract StakingBase is OwnableUpgradeable {
         require(account == msg.sender, "caller not a stake owner");
     }
 
+    function removeLines(uint id, address account, address delegate, uint toTime) internal returns (uint residue, uint slope, uint cliff) {
+        accounts[delegate].balance.remove(id, toTime);
+        totalSupplyLine.remove(id, toTime);
+        (residue, slope, cliff) = accounts[account].locked.remove(id, toTime);
+    }
+
     /**
      * @dev Throws if stopped
      */
