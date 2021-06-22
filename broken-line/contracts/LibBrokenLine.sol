@@ -114,10 +114,13 @@ library LibBrokenLine {
      * @dev Update initial Line by parameter toTime. Calculate and set all changes
      **/
     function update(BrokenLine storage brokenLine, uint toTime) internal {
+        uint time = brokenLine.initial.start;
+        if (time == toTime) {
+            return;
+        }
         uint bias = brokenLine.initial.bias;
         uint slope = brokenLine.initial.slope;
-        uint time = brokenLine.initial.start;
-        require(toTime >= time, "can't update BrokenLine for past time");
+        require(toTime > time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
             int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);

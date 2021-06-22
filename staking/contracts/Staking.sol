@@ -54,8 +54,10 @@ contract Staking is StakingBase, StakingRestake, StakingSplit {
         verifyStakeOwner(id);
         address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);
+        accounts[delegate].balance.update(time);
         (uint bias, uint slope, uint cliff) = accounts[delegate].balance.remove(id, time);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope);
+        accounts[newDelegate].balance.update(time);
         accounts[newDelegate].balance.add(id, line, cliff);
         stakes[id].delegate = newDelegate;
         emit Delegate(id, newDelegate, time);
@@ -87,6 +89,8 @@ contract Staking is StakingBase, StakingRestake, StakingSplit {
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < id.length; i++) {
             address account = verifyStakeOwner(id[i]);
+            address delegate = stakes[id[i]].delegate;
+            updateLines(account, delegate, time);
             //save data Line before remove
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
@@ -94,7 +98,6 @@ contract Staking is StakingBase, StakingRestake, StakingSplit {
             require(token.transfer(migrateTo, residue), "transfer failed");
             accounts[account].amount = accounts[account].amount.sub(residue);
 
-            address delegate = stakes[id[i]].delegate;
             accounts[delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
             nextVersionStake.initiateData(id[i], lineData, account, delegate);
