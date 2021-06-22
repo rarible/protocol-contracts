@@ -15,8 +15,10 @@ contract StakingRestake is StakingBase {
         verification(account, id, newAmount, newSlope, newCliff, time);
 
         address delegate = stakes[id].delegate;
+        accounts[account].locked.update(time);
+        uint bias = accounts[account].locked.initial.bias;
         uint residue = removeLines(id, account, delegate, time);
-        rebalance(id, account, residue, newAmount);
+        rebalance(id, account, bias, residue, newAmount);
 
         counter++;
 
@@ -51,10 +53,11 @@ contract StakingRestake is StakingBase {
         (residue,,) = accounts[account].locked.remove(id, toTime);
     }
 
-    function rebalance(uint id, address account, uint residue, uint newAmount) internal {
+    function rebalance(uint id, address account, uint bias, uint residue, uint newAmount) internal {
         require(residue <= newAmount, "Impossible to restake: less amount, then now is");
         uint addAmount = newAmount.sub(residue);
-        uint balance = accounts[account].amount.sub(residue);
+        uint amount = accounts[account].amount;
+        uint balance = amount.sub(bias);
         if (addAmount > balance) {
             uint transferAmount = addAmount.sub(balance);    //need more, than balance, so need transfer tokens to this
             require(token.transferFrom(stakes[id].account, address(this), transferAmount), "transfer failed");
