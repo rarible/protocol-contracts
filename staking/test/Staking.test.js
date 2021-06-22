@@ -1272,7 +1272,32 @@ contract("Staking", accounts => {
       assert.equal(account, accounts[2]);
 		});
 
-		it("Test5. check emit Migrate()", async () => {
+		it("Test5. check emit Split()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      let id = 1;
+      await staking.stake(accounts[2], accounts[3], 20, 10, 7, { from: accounts[2] });
+      await increaseTime(WEEK * 8);
+			resultSplit  = await staking.split(id, accounts[4], accounts[5], 25, 75, { from: accounts[2] });
+			let account1, account2;
+			let share1, share2, idEvent;
+//			Split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond)
+	    truffleAssert.eventEmitted(resultSplit, 'Split', (ev) => {
+       	account1 = ev.delegateOne;
+       	account2 = ev.delegateTwo;
+       	share1 = ev.shareOne;
+       	share2 = ev.shareTwo;
+       	idEvent = ev.id;
+        return true;
+      });
+      assert.equal(idEvent, 1);
+      assert.equal(account1, accounts[4]);
+      assert.equal(account2, accounts[5]);
+      assert.equal(share1, 25);
+      assert.equal(share2, 75);
+		});
+
+		it("Test6. check emit Migrate()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[2], 20, 10, 7, { from: accounts[2] });
@@ -1432,5 +1457,64 @@ contract("Staking", accounts => {
   		assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
   	});
+//TODO do this test work
+//  	it("Test.4. split() and check balance delegated stRari, in slope time after split 50/50%", async () => {
+//  		await token.mint(accounts[2], 100);
+//   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+//  		await staking.stake(accounts[2], accounts[3], 42, 6, 2, { from: accounts[2] });  //first time stake
+//      let idLock = 1;
+//
+//      let balanceOf = await staking.balanceOf.call(accounts[3]);
+//  		assert.equal(await token.balanceOf(staking.address), 42);				//balance Lock on deposite
+//  		assert.equal(await token.balanceOf(accounts[2]), 58);			//tail user balance
+//      assert.equal(balanceOf, 42);
+//
+//      await increaseTime(WEEK*3); //1 week later, slope works
+//      balanceOf = await staking.balanceOf.call(accounts[3]);
+//      assert.equal(balanceOf, 36);
+//      staking.withdraw({ from: accounts[2] });
+//  		assert.equal(await token.balanceOf(staking.address), 36);				//balance Lock on deposite
+//  		assert.equal(await token.balanceOf(accounts[2]), 64);
+//
+//  	  await staking.split(idLock, accounts[4], accounts[5], 50, 50, { from: accounts[2] });  //split from accounts[3]
+//      balanceOf  = await staking.balanceOf.call(accounts[3]); //for check balance accounts[3]
+//      assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _split
+//      let totalBalance = await staking.totalSupply.call();
+//      assert.equal(totalBalance, 36);
+//  		assert.equal(await token.balanceOf(staking.address), 36);				//balance Lock on deposite
+//  		assert.equal(await token.balanceOf(accounts[2]), 64);			//tail user balance
+//
+//      balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
+//      assert.equal(balanceOf, 18);    //stRary balance accounts[4], after _split
+//      balanceOf = await staking.balanceOf.call(accounts[5]); //for check balance accounts[4]
+//      assert.equal(balanceOf, 18);    //stRary balance accounts[5], after _split
+//
+//      //after split delegate
+//      staking.delegateTo(2, accounts[6], { from: accounts[2] });
+//      balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
+//      assert.equal(balanceOf, 0);    //stRary balance accounts[4], after delegateTo
+//      balanceOf = await staking.balanceOf.call(accounts[6]); //for check balance accounts[6]
+//      assert.equal(balanceOf, 18);    //stRary balance accounts[6], after delegateTo
+//
+//      //after split restake
+//      staking.restake(3, (accounts[7]), 50, 5, 2, { from: accounts[2]} );
+//      balanceOf = await staking.balanceOf.call(accounts[5]); //for check balance accounts[5]
+//      assert.equal(balanceOf, 0);    //stRary balance accounts[5], after restake
+//      balanceOf = await staking.balanceOf.call(accounts[7]); //for check balance accounts[7]
+//      assert.equal(balanceOf, 50);    //stRary balance accounts[6], after restake
+//      totalBalance = await staking.totalSupply.call();
+//      assert.equal(totalBalance, 68);
+//  		assert.equal(await token.balanceOf(staking.address), 68);				//balance Lock on deposite
+//  		assert.equal(await token.balanceOf(accounts[2]), 32);			//tail user balance
+//TODO check it works
+//   		await increaseTime(WEEK*1); //1 week later all will finish
+//      balanceOf = await staking.balanceOf.call(accounts[4]);
+//      assert.equal(balanceOf, 0);
+//      balanceOf = await staking.balanceOf.call(accounts[5]);
+//      assert.equal(balanceOf, 0);
+//      staking.withdraw({ from: accounts[2] });
+//  		assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
+//  		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+//  	});
   })
 })

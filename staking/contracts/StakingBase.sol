@@ -86,7 +86,7 @@ contract StakingBase is OwnableUpgradeable {
     /**
      * @dev Emitted when split Locks into two Locks
      */
-    event Split(uint id, address delegateFirst, address delegateSecond, uint shareFirst, uint shareSecond);
+    event Split(uint id, address delegateOne, address delegateTwo, uint shareOne, uint shareTwo);
 
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;
