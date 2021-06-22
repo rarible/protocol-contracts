@@ -23,12 +23,21 @@ const ropsten = {
 	royaltiesRegistry: "0x1331B6a79101fa18218179e78849f1759b846124"
 };
 
+const rinkeby = {
+	communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
+	erc20TransferProxy: "0x2fce8435f0455edc702199741411dbcd1b7606ca",
+	transferProxy: "0x7d47126a2600e22eab9ed6cf0e515678727779a6",
+	royaltiesRegistry: "0xdA8e7D4cF7BA4D5912a68c1e40d3D89828fA6EE8"
+};
+
 let settings = {
 	"default": e2e,
 	"e2e": e2e,
 	"e2e-fork": e2e,
 	"ropsten": ropsten,
 	"ropsten-fork": ropsten,
+	"rinkeby": rinkeby,
+	"rinkeby-fork": rinkeby,
 	"mainnet": mainnet,
 	"mainnet-fork": mainnet
 };
