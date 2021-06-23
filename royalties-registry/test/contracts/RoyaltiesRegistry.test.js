@@ -3,6 +3,7 @@ const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 const RoyaltiesRegistryTest = artifacts.require("RoyaltiesRegistryTest.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
+const TestERC721RoyaltyV2OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV2OwnableUpgradeable");
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 const truffleAssert = require('truffle-assertions');
 
@@ -23,9 +24,9 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 	describe("RoyaltiesRegistry metods works:", () => {
 
 		it("simple V1 royalties", async () => {
-  		await royaltiesRegistry.__RoyaltiesRegistry_init();																																//initialize Owner
+  		await royaltiesRegistry.__RoyaltiesRegistry_init();											//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
-      ERC721_V1OwnUpgrd.initialize(); 																																											//set V1 interface
+      ERC721_V1OwnUpgrd.initialize(); 																				//set V1 interface
   		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, [[accounts[5], 1000], [accounts[7], 1200]]);								//set royalties by contract
     	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
 			let royalties;
@@ -36,6 +37,52 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 			assert.equal(royalties[0].value, 1000);
 			assert.equal(royalties[1].value, 1200);
 			assert.equal(royalties.length, 2);
+  	})
+
+  	it("simple V1 royalties, set empty, check empty", async () => {
+  		await royaltiesRegistry.__RoyaltiesRegistry_init();                     //initialize Owner
+      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      ERC721_V1OwnUpgrd.initialize();                                         //set V1 interface
+  		await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);					//set royalties by contract empty
+    	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
+			let royalties;
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+      	royalties = ev.royalties;
+        return true;
+      });
+			assert.equal(royalties.length, 0);
+  	})
+
+		it("simple V2 royalties", async () => {
+  		await royaltiesRegistry.__RoyaltiesRegistry_init();               	//initialize Owner
+      ERC721_V2OwnUpgrd = await TestERC721RoyaltyV2OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      ERC721_V2OwnUpgrd.initialize();                                   	//set V2 interface
+  		await ERC721_V2OwnUpgrd.mint(accounts[2], erc721TokenId1, [[accounts[5], 700], [accounts[6], 800], [accounts[7], 900], [accounts[8], 1000]]);  //set royalties by contract
+    	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2OwnUpgrd.address, erc721TokenId1);
+			let royalties;
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+      	royalties = ev.royalties;
+        return true;
+      });
+			assert.equal(royalties[0].value, 700);
+			assert.equal(royalties[1].value, 800);
+			assert.equal(royalties[2].value, 900);
+			assert.equal(royalties[3].value, 1000);
+			assert.equal(royalties.length, 4);
+  	})
+
+  	it("simple V2 royalties, set empty, check empty", async () => {
+  		await royaltiesRegistry.__RoyaltiesRegistry_init();                   //initialize Owner
+      ERC721_V2OwnUpgrd = await TestERC721RoyaltyV2OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      ERC721_V2OwnUpgrd.initialize();                                       //set V2 interface
+  		await ERC721_V2OwnUpgrd.mint(accounts[2], erc721TokenId1, []);        //set royalties by contract empty
+    	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2OwnUpgrd.address, erc721TokenId1);
+			let royalties;
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+      	royalties = ev.royalties;
+        return true;
+      });
+			assert.equal(royalties.length, 0);
   	})
 
 		it("SetRoyaltiesByTokenAndTokenId, initialize by Owner, emit get", async () => {
