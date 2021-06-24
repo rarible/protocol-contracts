@@ -15,8 +15,8 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant WEEK = 604800;                         //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch begining)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
-    uint256 constant ST_FORMULA_MULTIPLIER = 1081000;       //stFormula multiplier = TWO_YEAR_WEEKS^2 * 100
-    uint256 constant ST_FORMULA_COMPENSATE = 1135050;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
+    uint256 constant ST_FORMULA_MULTIPLIER = 1081600;       //stFormula multiplier = TWO_YEAR_WEEKS^2 * 100
+    uint256 constant ST_FORMULA_COMPENSATE = 1135680;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
 
