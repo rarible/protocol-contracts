@@ -15,10 +15,11 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant WEEK = 604800;                         //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch begining)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
-    uint256 constant ST_FORMULA_MULTIPLIER = 1081600;       //stFormula multiplier = TWO_YEAR_WEEKS^2 * 100
-    uint256 constant ST_FORMULA_COMPENSATE = 1135680;       //stFormula compensate = (0.7+0.35) * ST_FORMULA_MULTIPLIER
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 465;     //stFormula slope multiplier = 0.93 * 0.5 * 100
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 930;     //stFormula cliff multiplier = 0.93 * 100
+    uint256 constant ST_FORMULA_MULTIPLIER = 10816;         //stFormula multiplier = TWO_YEAR_WEEKS^2
+    uint256 constant ST_FORMULA_DIVIDER = 1000;             //stFormula divider
+    uint256 constant ST_FORMULA_COMPENSATE = 11356800;      //stFormula compensate = (0.7 + 0.35) * ST_FORMULA_MULTIPLIER * 1000
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4650;    //stFormula slope multiplier = 9.3 * 0.5 * 1000
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 9300;    //stFormula cliff multiplier = 9.3 * 1000
 
     /**
      * @dev ERC20 token to lock
@@ -107,15 +108,15 @@ contract StakingBase is OwnableUpgradeable {
     }
 
     //original formula: (0,7+9,3*(cliffPeriod/104)^2+0,5*(0,7+9,3*(slopePeriod/104)^2))
-    //calculate and return (newAmount, newSlope), using formula k=((1135050+930*(cliffPeriod)^2+465*(slopePeriod)^2)/1081000, newAmount=k*amount
+    //calculate and return (newAmount, newSlope), using formula k=((11350500+9300*(cliffPeriod)^2+4650*(slopePeriod)^2)/10816, newAmount=k*amount/ST_FORMULA_DIVIDER
     function getStake(uint amount, uint slope, uint cliff) internal pure returns (uint stakeAmount, uint stakeSlope) {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
 
         uint slopePeriod = amount.div(slope);
         uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
         uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
-        stakeAmount = amount.mul(multiplier);
-        stakeSlope = slope.mul(multiplier);
+        stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
+        stakeSlope = slope.mul(multiplier).div(ST_FORMULA_DIVIDER);
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
