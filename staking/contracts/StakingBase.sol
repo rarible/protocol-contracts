@@ -107,7 +107,12 @@ contract StakingBase is OwnableUpgradeable {
         accounts[account].locked.update(time);
     }
 
-    //calculate and return (newAmount, newSlope), using formula k=((11356800 + 9300 * (cliffPeriod)^2 + 4650 * (slopePeriod)^2) / 10816; newAmount=k*amount/ST_FORMULA_DIVIDER
+    /**
+     * Сalculate and return (newAmount, newSlope), using formula:
+     * k = (ST_FORMULA_COMPENSATE + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod)^2 + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod)^2) / ST_FORMULA_MULTIPLIER
+     * newAmount=k*amount/ST_FORMULA_DIVIDER
+     * newSlope=k*slope/ST_FORMULA_DIVIDER
+     **/
     function getStake(uint amount, uint slope, uint cliff) internal pure returns (uint stakeAmount, uint stakeSlope) {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
 
