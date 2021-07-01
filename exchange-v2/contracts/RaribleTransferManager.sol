@@ -135,7 +135,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
         (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
-        require(totalRoyalties <= 3000, "Royalties are too high (>30$)");
+        require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
         return result;
     }
 

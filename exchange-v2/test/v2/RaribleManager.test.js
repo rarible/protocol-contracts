@@ -432,7 +432,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		})
 
 		it("Transfer from ERC20 to ERC1155(RoyaltiesV2), royalties are too high", async () => {
-			const { left, right } = await prepare20_1155V2Orders(105, 8, 2000, 1001)
+			const { left, right } = await prepare20_1155V2Orders(105, 8, 2000, 3001)
 
 			await expectThrow(
 				testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 6], left, right)
