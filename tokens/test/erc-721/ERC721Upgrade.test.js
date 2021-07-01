@@ -1,6 +1,8 @@
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
-const Impl = artifacts.require("ERC721RaribleUser");
+const Impl = artifacts.require("ERC721RaribleUser.sol");
+const ERC721Factory = artifacts.require("ERC721Factory.sol");
+const truffleAssert = require('truffle-assertions');
 
 const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -10,14 +12,29 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 	let impl;
 	let proxy;
 	let token;
+	let factory;
 	const tokenOwner = accounts[1];
 
 	beforeEach(async () => {
 		impl = await Impl.new();
 		beacon = await UpgradeableBeacon.new(impl.address);
-		proxy = await BeaconProxy.new(beacon.address, "0x");
-		token = await Impl.at(proxy.address);
-		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], { from: tokenOwner });
+
+		factory = await ERC721Factory.new(beacon.address, beacon.address);
+
+		resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", []);
+//todo удалить коментарий. но пока евент не прихоит,
+		truffleAssert.eventEmitted(resultCreateToken, 'CreateERC721RaribleUser', (ev) => {
+     	tokenOwner = ev.owner;
+      return true;
+    });
+//todo код ниже удалить тут я эмитил proxy сам
+//    truffleAssert.eventEmitted(resultCreateToken, 'SetProxy', (ev) => {
+//     	token = ev.proxy;
+//      return true;
+//    });
+//todo код ниже удалить пока как пример
+//		token = await Impl.at(proxy);
+//		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], { from: tokenOwner });
 	})
 
 	it("should work through beacon proxy", async () => {
