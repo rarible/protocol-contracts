@@ -1292,16 +1292,22 @@ contract("Staking", accounts => {
 			let amount;
 			let slope;
 			let cliff;
+			let account;
+			let counter;
       truffleAssert.eventEmitted(resultReStake, 'Restake', (ev) => {
        	id = ev.id;
+       	account = ev.account;
        	delegate = ev.delegate;
+       	counter = ev.counter;
        	amount = ev.amount;
        	slope = ev.slope;
        	cliff = ev.cliff;
         return true;
       });
       assert.equal(id, 1);
+      assert.equal(account, accounts[2]);
       assert.equal(delegate, accounts[3]);
+      assert.equal(counter, 2);
       assert.equal(amount, 30);
       assert.equal(slope, 5);
       assert.equal(cliff, 17);
@@ -1315,13 +1321,19 @@ contract("Staking", accounts => {
 			resultDelegate  = await staking.delegateTo(id, accounts[4], { from: accounts[2] });
 
 			let delegate;
+			let time;
+			let account;
 	    truffleAssert.eventEmitted(resultDelegate, 'Delegate', (ev) => {
        	id = ev.id;
        	delegate = ev.delegate;
+       	account = ev.account;
+       	time = ev.time
         return true;
       });
       assert.equal(id, 1);
+      assert.equal(account, accounts[2]);
       assert.equal(delegate, accounts[4]);
+//      assert.equal(time, 11); now 11 is actual, but after some time test`ll not be passed. We check it works 05.07.2021.
 		});
 
 		it("Test4. check emit Withdraw()", async () => {
@@ -1361,6 +1373,39 @@ contract("Staking", accounts => {
       assert.equal(ids[1], 2);
       assert.equal(ids[2], 3);
       assert.equal(account, accounts[2]);
+		});
+
+		it("Test6. check emit StartMigration()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			resultLock  = await staking.stake(accounts[2], accounts[3], 20, 10, 7, { from: accounts[2] });
+
+			startMigrationRezult  = await staking.startMigration(newStaking.address, { from: accounts[0] });
+
+			let account;
+			let newContract;
+      truffleAssert.eventEmitted(startMigrationRezult, 'StartMigration', (ev) => {
+       	account = ev.account;
+       	newContract = ev.to;
+        return true;
+      });
+      assert.equal(account, accounts[0]);
+      assert.equal(newContract, newStaking.address);
+		});
+
+		it("Test7. check emit StopStaking()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+			resultLock  = await staking.stake(accounts[2], accounts[3], 20, 10, 7, { from: accounts[2] });
+
+			stopResult  = await staking.stop({ from: accounts[0] });
+
+			let account;
+      truffleAssert.eventEmitted(stopResult, 'StopStaking', (ev) => {
+       	account = ev.account;
+        return true;
+      });
+      assert.equal(account, accounts[0]);
 		});
   })
 })

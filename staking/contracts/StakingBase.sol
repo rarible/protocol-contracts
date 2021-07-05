@@ -70,11 +70,11 @@ contract StakingBase is OwnableUpgradeable {
     /**
      * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlope, newCliff) for Lock with given id
      */
-    event Restake(uint indexed id, address indexed delegate, uint time, uint amount, uint slope, uint cliff);
+    event Restake(uint indexed id, address indexed account, address indexed delegate, uint counter, uint time, uint amount, uint slope, uint cliff);
     /**
      * @dev Emitted when to set newDelegate address for Lock with given id
      */
-    event Delegate(uint indexed id, address indexed delegate, uint time);
+    event Delegate(uint indexed id, address indexed account, address indexed delegate, uint time);
     /**
      * @dev Emitted when withdraw amount of Rari, account - msg.sender, amount - amount Rari
      */
@@ -83,6 +83,16 @@ contract StakingBase is OwnableUpgradeable {
      * @dev Emitted when migrate Locks with given id, account - msg.sender
      */
     event Migrate(address indexed account, uint[] id);
+    /**
+     * @dev Stop run contract functions, accept withdraw, account - msg.sender
+     */
+    event StopStaking(address indexed account);
+    /**
+     * @dev StartMigration initiate migration to another contract, account - msg.sender, to - address delegate to
+     */
+    event StartMigration(address indexed account, address indexed to);
+
+
 
     function __Staking_init(IERC20Upgradeable _token) external initializer {
         token = _token;

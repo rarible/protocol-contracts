@@ -23,7 +23,7 @@ contract StakingRestake is StakingBase {
         counter++;
 
         addLines(account, newDelegate, newAmount, newSlope, newCliff, time);
-        emit Restake(id, newDelegate, time, newAmount, newSlope, newCliff);
+        emit Restake(id, account, newDelegate, counter, time, newAmount, newSlope, newCliff);
         return counter;
     }
 

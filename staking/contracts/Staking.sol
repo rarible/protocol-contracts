@@ -13,10 +13,12 @@ contract Staking is StakingBase, StakingRestake {
 
     function stop() external onlyOwner notStopped {
         stopped = true;
+        emit StopStaking(msg.sender);
     }
 
     function startMigration(address to) external onlyOwner {
         migrateTo = to;
+        emit StartMigration(msg.sender, to);
     }
 
     function stake(address account, address delegate, uint amount, uint slope, uint cliff) external notStopped returns (uint) {
@@ -50,7 +52,7 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     function delegateTo(uint id, address newDelegate) external notStopped {
-        verifyStakeOwner(id);
+        address account = verifyStakeOwner(id);
         address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);
         accounts[delegate].balance.update(time);
@@ -59,7 +61,7 @@ contract Staking is StakingBase, StakingRestake {
         accounts[newDelegate].balance.update(time);
         accounts[newDelegate].balance.add(id, line, cliff);
         stakes[id].delegate = newDelegate;
-        emit Delegate(id, newDelegate, time);
+        emit Delegate(id, account, newDelegate, time);
     }
 
     function totalSupply() external returns (uint) {
