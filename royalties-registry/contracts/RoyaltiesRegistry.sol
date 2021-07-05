@@ -98,7 +98,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
             try v2.getRoyalties(tokenId) returns (LibPart.Part[] memory result) {
                 return result;
             } catch {}
-        } else if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
+        } else {
             RoyaltiesV1 v1 = RoyaltiesV1(token);
             address payable[] memory recipients;
             try v1.getFeeRecipients(tokenId) returns (address payable[] memory result) {
