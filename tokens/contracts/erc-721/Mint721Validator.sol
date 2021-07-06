@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity 0.7.6;
 
 import "../erc-1271/ERC1271Validator.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
