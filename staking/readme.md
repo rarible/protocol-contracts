@@ -67,6 +67,10 @@ If there is not enough tokens locked for restake, then Staking contract will tra
 
 ![Staking 6](documents/svg/Pict6ReStakingTransfer.svg)
 
+Method restake will not run if cut corner original stake detects. To prevent cutting corners user need to set correct parameters (amount, slope, cliff) as shown in picture 7.
+
+![Staking 7](documents/svg/Pict8СutCorner.svg)
+
 #### Delegation
 
 Users can delegate their stake to other accounts. This can be done when creating (stake), updating (restake). 
@@ -82,9 +86,9 @@ K = ( 11356800 + 9300 * (cliffPeriod)^2 + 4650 * (slopePeriod)^2) / 10816;
 
 Stake value depends on the values of period cliff and period slope. The longer the stake period, the more stake 
 the user will receive. Max staking period equal 2 years cliff period and 2 years slope period. 
-The K coefficient changes non-linearly, as shown in the picture 7. 
+The K coefficient changes non-linearly, as shown in the picture 8. 
 
-![Staking 7](documents/svg/Pict7GgraphicK.svg)
+![Staking 8](documents/svg/Pict7GgraphicK.svg)
 
 ##### Contract events
 Staking contract emits these events:

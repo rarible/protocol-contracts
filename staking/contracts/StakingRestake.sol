@@ -44,6 +44,15 @@ contract StakingRestake is StakingBase {
         period = line.bias.div(line.slope);
         uint oldEnd = line.start.add(lineData.cliff).add(period);
         require(oldEnd <= newEnd, "new line period stake too short");
+        //check Line with new parameters don`t cut corner old Line
+        uint oldCliffEnd = line.start.add(lineData.cliff);
+        uint newCliffEnd = toTime.add(newCliff);
+        if (oldCliffEnd > newCliffEnd) {
+            uint balance = oldCliffEnd.sub(newCliffEnd);
+            uint oldBias = line.bias;
+            uint newBias = newAmount.sub(balance.mul(newSlope));
+            require(newBias >= oldBias, "detect cut deposit corner");
+        }
     }
 
     function removeLines(uint id, address account, address delegate, uint toTime) internal returns (uint residue) {
