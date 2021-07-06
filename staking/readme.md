@@ -67,7 +67,7 @@ If there is not enough tokens locked for restake, then Staking contract will tra
 
 ![Staking 6](documents/svg/Pict6ReStakingTransfer.svg)
 
-Method restake will not run if cut corner original stake detects. To prevent cutting corners user need to set correct parameters (amount, slope, cliff) as shown in picture 7.
+Restake will throw if new `Stake` "cuts the corder" of the old `Stake`. In any period of time amount of locked ERC20 tokens should not be less than in original `Stake` (picture 7).   
 
 ![Staking 7](documents/svg/Pict8СutCorner.svg)
 
