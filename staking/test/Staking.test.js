@@ -1294,7 +1294,7 @@ contract("Staking", accounts => {
 
 	describe("Part8. Check calculation token newAmount, newSlope by formula", () => {
 
-		it("Test. Set different parameters getStake(amount, slope, cliff), check result newAmount, newSlope", async () => {
+		it("Test1. Set different parameters getStake(amount, slope, cliff), check result newAmount, newSlope", async () => {
       let result = [];
       // slope = 30, cliff = 30, koeff = 2210,
 		  result = await testStaking.getStakeTest(60000, 2000, 30);
@@ -1327,6 +1327,42 @@ contract("Staking", accounts => {
 		  assert.equal(result[1], 1076400);
 
 		});
+
+		it("Test2. Try to createLock() slope 100 max amount 5200, max cliff", async () => {
+    	await token.mint(accounts[2], 6000);
+    	await token.approve(staking.address, 1000000, { from: accounts[2] });
+    	await staking.stake(accounts[2], accounts[2], 5200, 100, 52, { from: accounts[2] }); //k=4537
+      let balanceOf  = await staking.balanceOf.call(accounts[2]);
+
+    	assert.equal(await token.balanceOf(staking.address), 5200);				//balance Lock on deposite
+    	assert.equal(await token.balanceOf(accounts[2]), 800);			//tail user balance
+      assert.equal(balanceOf, 23592);
+
+      await increaseTime(WEEK*104);
+			staking.withdraw({ from: accounts[2] });
+			balanceOf = await staking.balanceOf.call(accounts[2]);
+      assert.equal(balanceOf, 36);
+ 			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 6000);			//tail user balance
+    });
+
+		it("Test3. Try to createLock() slope 1000 max amount 52000, max cliff", async () => {
+    	await token.mint(accounts[2], 60000);
+    	await token.approve(staking.address, 1000000, { from: accounts[2] });
+    	await staking.stake(accounts[2], accounts[2], 52000, 1000, 52, { from: accounts[2] }); //k=4537
+      let balanceOf  = await staking.balanceOf.call(accounts[2]);
+
+    	assert.equal(await token.balanceOf(staking.address), 52000);				//balance Lock on deposite
+    	assert.equal(await token.balanceOf(accounts[2]), 8000);			//tail user balance
+      assert.equal(balanceOf, 235924);
+
+      await increaseTime(WEEK*104);
+			staking.withdraw({ from: accounts[2] });
+			balanceOf = await staking.balanceOf.call(accounts[2]);
+      assert.equal(balanceOf, 0);
+ 			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 60000);			//tail user balance
+    });
   })
 
 	describe("Part9. Check events emit()", () => {
