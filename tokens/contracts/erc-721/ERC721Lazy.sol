@@ -50,7 +50,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         _safeMint(to, data.tokenId);
         _saveRoyalties(data.tokenId, data.royalties);
         _saveCreators(data.tokenId, data.creators);
-        _setTokenURI(data.tokenId, data.uri);
+        _setTokenURI(data.tokenId, data.tokenURI);
     }
 
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
