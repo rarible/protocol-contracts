@@ -17,7 +17,6 @@ Functions supported for every user:
  - **restake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
  - **withdraw** - withdraw unlocked ERC-20 tokens (if something is unlocked already)
  - **delegateTo** - delegates specific `Stake` to other user
- - **split** - TBD
  - **migrate** - this function can be called only in `Migration` state. Will migrate user's `Stakes` to new contract 
 
 ### Functions to read the data
@@ -97,3 +96,5 @@ Staking contract emits these events:
 - Delegate - when Stake is delegated to other account
 - Withdraw - when user withdraws tokens
 - Migrate - when user migrates his stakes to new contract
+- StopStaking - when user deprecate to run contract functions accept withdraw
+- StartMigration - when user set address migrate to
