@@ -14,7 +14,7 @@ This contract is based on [LibBrokenLine](../broken-line/readme.md).
 
 Functions supported for every user:
  - **stake** - create new `Stake`. Initial bias of the `Stake` depends on locked token amount and other parameters of the `Stake` (cliff, period etc.)
- - **reStake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
+ - **restake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
  - **withdraw** - withdraw unlocked ERC-20 tokens (if something is unlocked already)
  - **delegateTo** - delegates specific `Stake` to other user
  - **split** - TBD
@@ -93,7 +93,7 @@ The K coefficient changes non-linearly, as shown in the picture 8.
 ##### Contract events
 Staking contract emits these events:
 - StakeCreate - when Stake is created
-- Restate - when Stake parameters change
+- Restake - when Stake parameters change
 - Delegate - when Stake is delegated to other account
 - Withdraw - when user withdraws tokens
 - Migrate - when user migrates his stakes to new contract
