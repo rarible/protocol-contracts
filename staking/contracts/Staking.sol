@@ -37,18 +37,44 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     function withdraw() external {
-        uint value = accounts[msg.sender].amount;
+        uint value = readyToWithdraw();
+        if (value > 0) {
+            accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
+            require(token.transfer(msg.sender, value), "transfer failed");
+        }
+        emit Withdraw(msg.sender, value);
+    }
+
+    // Amount available for withdrawal
+    function readyToWithdraw() public returns (uint value) {
+        value = accounts[msg.sender].amount;
         if (!stopped) {
             uint time = roundTimestamp(block.timestamp);
             accounts[msg.sender].locked.update(time);
             uint bias = accounts[msg.sender].locked.initial.bias;
             value = value.sub(bias);
         }
-        if (value > 0) {
-            accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
-            require(token.transfer(msg.sender, value), "transfer failed");
-        }
-        emit Withdraw(msg.sender, value);
+    }
+
+    //Remaining locked amount
+    function locked() external returns (uint) {
+        return accounts[msg.sender].amount;
+    }
+
+    //For a given Line id, the owner and delegate addresses.
+    function getAccountAndDelegate(uint id) external returns (address account, address delegate) {
+        account = stakes[id].account;
+        delegate = stakes[id].delegate;
+    }
+
+    //Field stopped of the staking contract
+    function getStopped() external returns (bool) {
+        return stopped;
+    }
+
+    //Getting "current week" of the contract.
+    function getWeek() external returns (uint) {
+        return roundTimestamp(block.timestamp);
     }
 
     function delegateTo(uint id, address newDelegate) external notStopped {
