@@ -111,4 +111,6 @@ contract Staking is StakingBase, StakingRestake {
         }
         emit Migrate(msg.sender, id);
     }
+
+    uint256[50] private __gap;
 }

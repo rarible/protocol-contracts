@@ -146,4 +146,6 @@ contract StakingBase is OwnableUpgradeable {
         require(!stopped, "stopped");
         _;
     }
+
+    uint256[50] private __gap;
 }

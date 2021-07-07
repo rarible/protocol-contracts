@@ -73,4 +73,6 @@ contract StakingRestake is StakingBase {
             accounts[account].amount = accounts[account].amount.add(transferAmount);
         }
     }
+
+    uint256[50] private __gap;
 }
