@@ -11,6 +11,12 @@ contract Staking is StakingBase, StakingRestake {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
+    function __Staking_init(IERC20Upgradeable _token) external initializer {
+        __StakingBase_init_unchained(_token);
+        __Ownable_init_unchained();
+        __Context_init_unchained();
+    }
+
     function stop() external onlyOwner notStopped {
         stopped = true;
         emit StopStaking(msg.sender);
