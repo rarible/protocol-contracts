@@ -7,7 +7,7 @@ import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 
 contract Mint721Validator is ERC1271Validator {
     function __Mint721Validator_init_unchained() internal initializer {
-        __EIP712_init("Mint721", "1");
+        __EIP712_init_unchained("Mint721", "1");
     }
 
     function validate(address account, bytes32 hash, bytes memory signature) internal view {
