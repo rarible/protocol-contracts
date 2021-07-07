@@ -126,11 +126,15 @@ contract StakingBase is OwnableUpgradeable {
     function getStake(uint amount, uint slope, uint cliff) public pure returns (uint stakeAmount, uint stakeSlope) {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
 
-        uint slopePeriod = amount.div(slope);
+        uint slopePeriod = divUp(amount, slope);
         uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
         uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
         stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
-        stakeSlope = slope.mul(multiplier).div(ST_FORMULA_DIVIDER);
+        stakeSlope = divUp(stakeAmount, slopePeriod);
+    }
+
+    function divUp(uint a, uint b) internal pure returns (uint) {
+        return ((a.sub(1)).div(b)).add(1);
     }
 
     function roundTimestamp(uint ts) pure internal returns (uint) {
