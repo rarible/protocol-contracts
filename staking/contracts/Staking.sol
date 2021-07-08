@@ -56,7 +56,7 @@ contract Staking is StakingBase, StakingRestake {
         value = accounts[msg.sender].amount;
         if (!stopped) {
             uint time = roundTimestamp(block.timestamp);
-            (uint bias,) = accounts[msg.sender].locked.actualize(time);
+            uint bias = accounts[msg.sender].locked.actualValue(time);
             value = value.sub(bias);
         }
     }
@@ -95,7 +95,7 @@ contract Staking is StakingBase, StakingRestake {
             return 0;
         }
         uint time = roundTimestamp(block.timestamp);
-        (uint bias,) = totalSupplyLine.actualize(time);
+        uint bias = totalSupplyLine.actualValue(time);
         return bias;
     }
 
@@ -104,7 +104,7 @@ contract Staking is StakingBase, StakingRestake {
             return 0;
         }
         uint time = roundTimestamp(block.timestamp);
-        (uint bias,) = accounts[account].balance.actualize(time);
+        uint bias = accounts[account].balance.actualValue(time);
         return bias;
     }
 
