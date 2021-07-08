@@ -97,6 +97,11 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         emit Creators(tokenId, _creators);
     }
 
+    function updateAccount(uint256 _id, address _from, address _to) external {
+        require(_msgSender() == _from, "not allowed");
+        super._updateAccount(_id, _from, _to);
+    }
+
     function getCreators(uint256 _id) external view returns (LibPart.Part[] memory) {
         return creators[_id];
     }
