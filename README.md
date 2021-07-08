@@ -6,6 +6,19 @@ Consists of:
 - Tokens: for storing information about NFTs
 - Specifications for on-chain royalties supported by Rarible
 
+## Compile, Test, Deploy
+
+```shell
+yarn
+yarn bootstrap
+```
+
+then use truffle to compile, test: cd into directory and then
+
+```shell
+truffle test --compile-all
+```
+
 ## Overview of the protocol
 
 Rarible protocol is a combination of smart-contracts for exchanging tokens, tokens themselves, APIs for order creation, discovery, standards used in smart contracts.
