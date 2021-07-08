@@ -68,7 +68,8 @@ contract StakingRestake is StakingBase {
         uint amount = accounts[account].amount;
         uint balance = amount.sub(bias);
         if (addAmount > balance) {
-            uint transferAmount = addAmount.sub(balance);    //need more, than balance, so need transfer tokens to this
+            //need more, than balance, so need transfer tokens to this
+            uint transferAmount = addAmount.sub(balance);
             require(token.transferFrom(stakes[id].account, address(this), transferAmount), "transfer failed");
             accounts[account].amount = accounts[account].amount.add(transferAmount);
         }
