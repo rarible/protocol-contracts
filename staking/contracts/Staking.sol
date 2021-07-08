@@ -27,7 +27,7 @@ contract Staking is StakingBase, StakingRestake {
         emit StartMigration(msg.sender, to);
     }
 
-    function stake(address account, address delegate, uint amount, uint slope, uint cliff) external notStopped returns (uint) {
+    function stake(address account, address delegate, uint amount, uint slope, uint cliff) external notStopped notMigrating returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
         require(divUp(amount, slope) <= TWO_YEAR_WEEKS, "period too big");
@@ -62,22 +62,22 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     //Remaining locked amount
-    function locked() external view notStopped returns (uint) {
+    function locked() external view returns (uint) {
         return accounts[msg.sender].amount;
     }
 
     //For a given Line id, the owner and delegate addresses.
-    function getAccountAndDelegate(uint id) external view notStopped returns (address account, address delegate) {
+    function getAccountAndDelegate(uint id) external view returns (address account, address delegate) {
         account = stakes[id].account;
         delegate = stakes[id].delegate;
     }
 
     //Getting "current week" of the contract.
-    function getWeek() external view notStopped returns (uint) {
+    function getWeek() external view returns (uint) {
         return roundTimestamp(block.timestamp);
     }
 
-    function delegateTo(uint id, address newDelegate) external notStopped {
+    function delegateTo(uint id, address newDelegate) external notStopped notMigrating {
         address account = verifyStakeOwner(id);
         address delegate = stakes[id].delegate;
         uint time = roundTimestamp(block.timestamp);

@@ -9,7 +9,7 @@ contract StakingRestake is StakingBase {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped returns (uint) {
+    function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped notMigrating returns (uint) {
         address account = verifyStakeOwner(id);
         uint time = roundTimestamp(block.timestamp);
         verification(account, id, newAmount, newSlope, newCliff, time);

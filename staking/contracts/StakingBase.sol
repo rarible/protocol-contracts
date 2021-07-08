@@ -152,5 +152,10 @@ contract StakingBase is OwnableUpgradeable {
         _;
     }
 
+    modifier notMigrating() {
+        require(migrateTo == address(0), "migrating");
+        _;
+    }
+
     uint256[50] private __gap;
 }
