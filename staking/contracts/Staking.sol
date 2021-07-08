@@ -37,7 +37,7 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     function withdraw() external {
-        uint value = readyToWithdraw();
+        uint value = getAvailableForWithdraw();
         if (value > 0) {
             accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "transfer failed");
@@ -46,7 +46,7 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     // Amount available for withdrawal
-    function readyToWithdraw() public returns (uint value) {
+    function getAvailableForWithdraw() public returns (uint value) {
         value = accounts[msg.sender].amount;
         if (!stopped) {
             uint time = roundTimestamp(block.timestamp);
@@ -65,11 +65,6 @@ contract Staking is StakingBase, StakingRestake {
     function getAccountAndDelegate(uint id) external view returns (address account, address delegate) {
         account = stakes[id].account;
         delegate = stakes[id].delegate;
-    }
-
-    //Field stopped of the staking contract
-    function getStopped() external view returns (bool) {
-        return stopped;
     }
 
     //Getting "current week" of the contract.

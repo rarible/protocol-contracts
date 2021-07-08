@@ -13,7 +13,7 @@ contract StakingBase is OwnableUpgradeable {
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
     uint256 constant WEEK = 604800;                         //seconds one week
-    uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch begining)
+    uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch start)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
     uint256 constant ST_FORMULA_MULTIPLIER = 10816;         //stFormula multiplier = TWO_YEAR_WEEKS^2
     uint256 constant ST_FORMULA_DIVIDER = 1000;             //stFormula divider
@@ -33,7 +33,8 @@ contract StakingBase is OwnableUpgradeable {
     /**
      * @dev true if contract entered stopped state
      */
-    bool internal stopped;
+    bool public stopped;
+
     /**
      * @dev address to migrate Stakes to (zero if not in migration state)
      */
@@ -120,8 +121,8 @@ contract StakingBase is OwnableUpgradeable {
     /**
      * Сalculate and return (newAmount, newSlope), using formula:
      * k = (ST_FORMULA_COMPENSATE + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod)^2 + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod)^2) / ST_FORMULA_MULTIPLIER
-     * newAmount=k*amount/ST_FORMULA_DIVIDER
-     * newSlope=k*slope/ST_FORMULA_DIVIDER
+     * newAmount = k * amount / ST_FORMULA_DIVIDER
+     * newSlope = newAmount / slopePeriod
      **/
     function getStake(uint amount, uint slope, uint cliff) public pure returns (uint stakeAmount, uint stakeSlope) {
         uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
