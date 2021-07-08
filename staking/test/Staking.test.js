@@ -53,7 +53,7 @@ contract("Staking", accounts => {
 			assert.equal(totalBalance, 31);
 		});
 
-		it("Test3. Try to createLock() and check withdraw()", async () => {
+		it("Test3.1. CreateLock() and check withdraw()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
@@ -67,6 +67,46 @@ contract("Staking", accounts => {
 			staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock ondeposite
    		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+		});
+
+		it("Test3.2. CreateLock() and check locked()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[2], 85, 10, 0, { from: accounts[2] });
+
+			let lockedValue = await staking.locked.call({ from: accounts[2] });
+   		assert.equal(lockedValue, 85);			//locked from: accounts[2]
+
+			lockedValue = await staking.locked.call({ from: accounts[3] });
+   		assert.equal(lockedValue, 0);			//locked from: accounts[3]
+		});
+
+		it("Test3.3. CreateLock() and check getAvailableForWithdraw()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
+			/*3 week later*/
+			await increaseTime(WEEK * 2);
+			let availableForWithdraw = await staking.getAvailableForWithdraw.call({ from: accounts[2] });
+ 			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
+   		assert.equal(availableForWithdraw, 20);			//availableForWithdraw after 2 weeks
+		});
+
+		it("Test3.4. CreateLock() and check getAccountAndDelegate()", async () => {
+			await token.mint(accounts[2], 100);
+   		await token.approve(staking.address, 1000000, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[3], 30, 10, 0, { from: accounts[2] });
+			/*3 week later*/
+			await increaseTime(WEEK * 2);
+			let accountAndDelegate = await staking.getAccountAndDelegate.call(1);
+   		assert.equal(accountAndDelegate[0], accounts[2]);
+   		assert.equal(accountAndDelegate[1], accounts[3]);
+		});
+
+		it("Test3.5. Check getWeek()", async () => {
+			let week = await staking.getWeek.call();
+   		//assert.equal(week, 20); checked 08.07.21, later test crashed
 		});
 
 		it("Test4. Try to createLock() and check withdraw(), with cliff", async () => {

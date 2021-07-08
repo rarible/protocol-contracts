@@ -57,18 +57,18 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     //Remaining locked amount
-    function locked() external view returns (uint) {
+    function locked() external view notStopped returns (uint) {
         return accounts[msg.sender].amount;
     }
 
     //For a given Line id, the owner and delegate addresses.
-    function getAccountAndDelegate(uint id) external view returns (address account, address delegate) {
+    function getAccountAndDelegate(uint id) external view notStopped returns (address account, address delegate) {
         account = stakes[id].account;
         delegate = stakes[id].delegate;
     }
 
     //Getting "current week" of the contract.
-    function getWeek() external view returns (uint) {
+    function getWeek() external view notStopped returns (uint) {
         return roundTimestamp(block.timestamp);
     }
 
