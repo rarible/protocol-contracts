@@ -36,12 +36,12 @@ contract StakingRestake is StakingBase {
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
         require(newAmount > 0, "zero amount");
         require(newCliff <= TWO_YEAR_WEEKS, "cliff too big");
-        uint period = newAmount.div(newSlope);
+        uint period = divUp(newAmount, newSlope);
         require(period <= TWO_YEAR_WEEKS, "slope too big");
         uint newEnd = toTime.add(newCliff).add(period);
         LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id];
         LibBrokenLine.Line memory line = lineData.line;
-        period = line.bias.div(line.slope);
+        period = divUp(line.bias, line.slope);
         uint oldEnd = line.start.add(lineData.cliff).add(period);
         require(oldEnd <= newEnd, "new line period stake too short");
         //check Line with new parameters don`t cut corner old Line
