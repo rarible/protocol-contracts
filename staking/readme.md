@@ -14,10 +14,9 @@ This contract is based on [LibBrokenLine](../broken-line/readme.md).
 
 Functions supported for every user:
  - **stake** - create new `Stake`. Initial bias of the `Stake` depends on locked token amount and other parameters of the `Stake` (cliff, period etc.)
- - **reStake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
+ - **restake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
  - **withdraw** - withdraw unlocked ERC-20 tokens (if something is unlocked already)
  - **delegateTo** - delegates specific `Stake` to other user
- - **split** - TBD
  - **migrate** - this function can be called only in `Migration` state. Will migrate user's `Stakes` to new contract 
 
 ### Functions to read the data
@@ -67,7 +66,7 @@ If there is not enough tokens locked for restake, then Staking contract will tra
 
 ![Staking 6](documents/svg/Pict6ReStakingTransfer.svg)
 
-Method restake will not run if cut corner original stake detects. To prevent cutting corners user need to set correct parameters (amount, slope, cliff) as shown in picture 7.
+Restake will throw if new `Stake` "cuts the corder" of the old `Stake`. In any period of time amount of locked ERC20 tokens should not be less than in original `Stake` (picture 7).   
 
 ![Staking 7](documents/svg/Pict8СutCorner.svg)
 
@@ -93,7 +92,9 @@ The K coefficient changes non-linearly, as shown in the picture 8.
 ##### Contract events
 Staking contract emits these events:
 - StakeCreate - when Stake is created
-- Restate - when Stake parameters change
+- Restake - when Stake parameters change
 - Delegate - when Stake is delegated to other account
 - Withdraw - when user withdraws tokens
 - Migrate - when user migrates his stakes to new contract
+- StopStaking - when user deprecate to run contract functions accept withdraw
+- StartMigration - when user set address migrate to

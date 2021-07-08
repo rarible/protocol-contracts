@@ -77,6 +77,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
             totalTakeValue = doTransfersWithFees(fill.takeValue, rightOrder.maker, rightOrderData, leftOrderData, takeMatch, makeMatch, TO_MAKER);
             transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
+        } else {
+            transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
+            transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
         }
     }
 
@@ -92,8 +95,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        rest = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
-        rest = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
+        (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
+        (rest,) = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
         transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
     }
 
@@ -131,7 +134,9 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
         (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
         LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
-        return transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
+        (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
+        require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
+        return result;
     }
 
     function transferFees(
@@ -142,9 +147,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address from,
         bytes4 transferDirection,
         bytes4 transferType
-    ) internal returns (uint restValue) {
+    ) internal returns (uint restValue, uint totalFees) {
+        totalFees = 0;
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
+            totalFees = totalFees.add(fees[i].value);
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -65,7 +65,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             _saveSupply(data.tokenId, data.supply);
             _saveRoyalties(data.tokenId, data.royalties);
             _saveCreators(data.tokenId, data.creators);
-            _setTokenURI(data.tokenId, data.uri);
+            _setTokenURI(data.tokenId, data.tokenURI);
         }
 
         _mint(to, data.tokenId, _amount, "");

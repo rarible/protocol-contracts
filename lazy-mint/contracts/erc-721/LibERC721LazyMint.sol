@@ -9,7 +9,7 @@ library LibERC721LazyMint {
 
     struct Mint721Data {
         uint tokenId;
-        string uri;
+        string tokenURI;
         LibPart.Part[] creators;
         LibPart.Part[] royalties;
         bytes[] signatures;
@@ -29,7 +29,7 @@ library LibERC721LazyMint {
         return keccak256(abi.encode(
                 MINT_AND_TRANSFER_TYPEHASH,
                 data.tokenId,
-                keccak256(bytes(data.uri)),
+                keccak256(bytes(data.tokenURI)),
                 keccak256(abi.encodePacked(creatorsBytes)),
                 keccak256(abi.encodePacked(royaltiesBytes))
             ));

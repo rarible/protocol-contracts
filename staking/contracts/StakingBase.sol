@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -93,11 +93,8 @@ contract StakingBase is OwnableUpgradeable {
      */
     event StartMigration(address indexed account, address indexed to);
 
-
-
-    function __Staking_init(IERC20Upgradeable _token) external initializer {
+    function __StakingBase_init_unchained(IERC20Upgradeable _token) internal initializer {
         token = _token;
-        __Ownable_init_unchained();
     }
 
     function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
@@ -154,4 +151,6 @@ contract StakingBase is OwnableUpgradeable {
         require(!stopped, "stopped");
         _;
     }
+
+    uint256[50] private __gap;
 }

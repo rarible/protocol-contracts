@@ -49,7 +49,9 @@ Fill of the order is saved inside smart contract and it relates to the take orde
 
 Also, orders which are fully filled, can be extended: users can sign new orders using the same salt (they can increase make.value and take.value for example).
 
-Order rate priority: if rates for the exchange differ, but orders can be filled (for example, left order is 10X -> 100Y, but right is 100Y -> 5X), then left order dictates exchange rate. 
+Order rate priority: if rates for the exchange differ, but orders can be filled (for example, left order is 10X -> 100Y, but right is 100Y -> 5X), then left order dictates exchange rate.
+
+Rounding errors: to calculate fill amounts, mathematical operations are used. When rounding is performed and error is more than 0.1%, rounding error will be thrown and order can't be executed.
 
 #### Order validation
 
@@ -99,6 +101,8 @@ RaribleTransferManager supports these types of fees:
 - origin fees (origin and origin fee is set for every order. it can be different for two orders involved)
 - royalties (authors of the work will receive part of each sale)
 
+Royalties of the item can not be more than 30% for security reasons. If royalties are more than 30%, transaction is reverted.
+
 ##### Fees calculation, fee side
 
 To take a fee we need to calculate, what side of the deal can be used as money.
@@ -119,3 +123,17 @@ Then total amount of the asset (money side) should be calculated
 If buyer is using ERC-20 token for payment, then he must approve at least this calculated amount of tokens.
 
 If buyer is using ETH, then he must send this calculated amount of ETH with the tx.
+
+##### Cancelling the order
+
+cancel function can be used to cancel order. Such orders won't be matched and error will be thrown. This function is used by order maker to mark orders unfillable. This function can be invoked only by order maker.
+
+TODO: there is possibility to change authorization for cancel function - add authorization by signature. Possibly, this will be added in the future.
+
+##### Contract events
+
+ExchangeV2 contract emits these events:
+- Match (when orders are matched)
+- Cancel (when user cancels the order)
+
+TODO: currently, there are no indexed fields in events, because rarible protocol uses internal indexing. Possibly, indexed fields will be added in future.  

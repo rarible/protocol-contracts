@@ -15,7 +15,8 @@ truffle test \
             ./test/contracts/tokens/TestERC1155WithRoyaltiesV1.sol \
             ./test/contracts/tokens/TestERC1155WithRoyaltiesV2.sol \
             ./test/contracts/tokens/TestERC721WithRoyaltiesV1_InterfaceError.sol \
-            ./test/contracts/tokens/TestERC1155WithRoyaltiesV2_InterfaceError.sol
+            ./test/contracts/tokens/TestERC1155WithRoyaltiesV2_InterfaceError.sol \
+            --compile-all
 
 
 

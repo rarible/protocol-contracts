@@ -65,6 +65,8 @@ mintAndTransfer for ERC-1155 can be called multiple times until total minted amo
 
 Function mintAndTransfer can be used for regular mint (when creator mints NFT). Or it can be used for lazy mint: when creator signs mint request data and then anyone can mint NFT.
 
+transferFromOrMint first transfers tokens already minted, then it mints token if necessary 
+
 ### Smart-contract wide operator
 
 Our smart contracts have one smart-contract wide operator (Rarible protocol Exchange contracts). This prevents users from approving transfers to our Exchange contracts. This way users save gas fees.

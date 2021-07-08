@@ -9,7 +9,7 @@ library LibERC1155LazyMint {
 
     struct Mint1155Data {
         uint tokenId;
-        string uri;
+        string tokenURI;
         uint supply;
         LibPart.Part[] creators;
         LibPart.Part[] royalties;
@@ -31,7 +31,7 @@ library LibERC1155LazyMint {
                 MINT_AND_TRANSFER_TYPEHASH,
                 data.tokenId,
                 data.supply,
-                keccak256(bytes(data.uri)),
+                keccak256(bytes(data.tokenURI)),
                 keccak256(abi.encodePacked(creatorsBytes)),
                 keccak256(abi.encodePacked(royaltiesBytes))
             ));

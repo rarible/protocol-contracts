@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./StakingBase.sol";
@@ -73,4 +73,6 @@ contract StakingRestake is StakingBase {
             accounts[account].amount = accounts[account].amount.add(transferAmount);
         }
     }
+
+    uint256[50] private __gap;
 }
