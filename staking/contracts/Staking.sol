@@ -70,22 +70,22 @@ contract Staking is StakingBase, StakingRestake {
         emit Delegate(id, account, newDelegate, time);
     }
 
-    function totalSupply() external returns (uint) {
+    function totalSupply() external view returns (uint) {
         if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
             return 0;
         }
         uint time = roundTimestamp(block.timestamp);
-        totalSupplyLine.update(time);
-        return totalSupplyLine.initial.bias;
+        (uint bias,) = totalSupplyLine.actualize(time);
+        return bias;
     }
 
-    function balanceOf(address account) external returns (uint) {
+    function balanceOf(address account) external view returns (uint) {
         if ((accounts[account].balance.initial.bias == 0) || (stopped)) {
             return 0;
         }
         uint time = roundTimestamp(block.timestamp);
-        accounts[account].balance.update(time);
-        return accounts[account].balance.initial.bias;
+        (uint bias,) = accounts[account].balance.actualize(time);
+        return bias;
     }
 
     function migrate(uint[] memory id) external {
