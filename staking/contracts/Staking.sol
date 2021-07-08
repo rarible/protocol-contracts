@@ -52,12 +52,11 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     // Amount available for withdrawal
-    function getAvailableForWithdraw() public returns (uint value) {
+    function getAvailableForWithdraw() public view returns (uint value) {
         value = accounts[msg.sender].amount;
         if (!stopped) {
             uint time = roundTimestamp(block.timestamp);
-            accounts[msg.sender].locked.update(time);
-            uint bias = accounts[msg.sender].locked.initial.bias;
+            (uint bias,) = accounts[msg.sender].locked.actualize(time);
             value = value.sub(bias);
         }
     }
