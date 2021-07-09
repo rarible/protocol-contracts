@@ -13,7 +13,7 @@ contract ERC721Factory {
     IBeacon public beacon;
     address public beaconAddress;
 
-    event SetProxy(BeaconProxy proxy);
+    event CreateProxy(BeaconProxy proxy);
 
     constructor (IBeacon _beacon, address _beaconAddress) {
         beacon = _beacon;
@@ -23,6 +23,6 @@ contract ERC721Factory {
     function createToken( string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external {
         BeaconProxy beaconProxy = new BeaconProxy(beaconAddress, "");
         ERC721RaribleUser(beacon.implementation()).__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
-        emit SetProxy(beaconProxy);
+        emit CreateProxy(beaconProxy);
     }
 }

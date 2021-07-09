@@ -14,6 +14,7 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 	let token;
 	let factory;
 	const tokenOwner = accounts[1];
+	let tokenOwnerTmp;
 
 	beforeEach(async () => {
 		impl = await Impl.new();
@@ -23,15 +24,15 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 
 		resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", []);
 //todo удалить коментарий. но пока евент не прихоит,
-		truffleAssert.eventEmitted(resultCreateToken, 'CreateERC721RaribleUser', (ev) => {
-     	tokenOwner = ev.owner;
-      return true;
-    });
-//todo код ниже удалить тут я эмитил proxy сам
-//    truffleAssert.eventEmitted(resultCreateToken, 'SetProxy', (ev) => {
-//     	token = ev.proxy;
+//		truffleAssert.eventEmitted(resultCreateToken, 'CreateERC721RaribleUser', (ev) => {
+//     	tokenOwnerTmp = ev.owner;
 //      return true;
 //    });
+//todo код ниже удалить тут я эмитил proxy сам
+    truffleAssert.eventEmitted(resultCreateToken, 'CreateProxy', (ev) => {
+     	token = ev.proxy;
+      return true;
+    });
 //todo код ниже удалить пока как пример
 //		token = await Impl.at(proxy);
 //		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], { from: tokenOwner });
