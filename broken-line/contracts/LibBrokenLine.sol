@@ -125,7 +125,7 @@ library LibBrokenLine {
         while (time < toTime) {
             bias = bias.sub(slope);
             int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
-            require (newSlope >= 0, "slope < 0, something wrong with slope");
+            require(newSlope >= 0, "slope < 0, something wrong with slope");
             slope = uint(newSlope);
             brokenLine.slopeChanges[time] = 0;
             time = time.add(1);
