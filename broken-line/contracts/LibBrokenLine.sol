@@ -115,19 +115,33 @@ library LibBrokenLine {
      * @dev Update initial Line by parameter toTime. Calculate and set all changes
      **/
     function update(BrokenLine storage brokenLine, uint toTime) internal {
-        (uint bias, uint slope) = actualize(brokenLine, toTime);
+        uint time = brokenLine.initial.start;
+        if (time == toTime) {
+            return;
+        }
+        uint bias = brokenLine.initial.bias;
+        uint slope = brokenLine.initial.slope;
+        require(toTime > time, "can't update BrokenLine for past time");
+        while (time < toTime) {
+            bias = bias.sub(slope);
+            int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
+            require(newSlope >= 0, "slope < 0, something wrong with slope");
+            slope = uint(newSlope);
+            brokenLine.slopeChanges[time] = 0;
+            time = time.add(1);
+        }
         brokenLine.initial.start = toTime;
         brokenLine.initial.bias = bias;
         brokenLine.initial.slope = slope;
     }
 
-    function actualize(BrokenLine storage brokenLine, uint toTime) internal view returns (uint bias, uint slope) {
+    function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint bias) {
         uint time = brokenLine.initial.start;
         if (time == toTime) {
-            return (brokenLine.initial.bias, brokenLine.initial.slope);
+            return (brokenLine.initial.bias);
         }
         bias = brokenLine.initial.bias;
-        slope = brokenLine.initial.slope;
+        uint slope = brokenLine.initial.slope;
         require(toTime > time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);

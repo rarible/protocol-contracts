@@ -56,7 +56,7 @@ contract Staking is StakingBase, StakingRestake {
         value = accounts[msg.sender].amount;
         if (!stopped) {
             uint time = roundTimestamp(block.timestamp);
-            (uint bias,) = accounts[msg.sender].locked.actualize(time);
+            uint bias = accounts[msg.sender].locked.actualValue(time);
             value = value.sub(bias);
         }
     }
@@ -95,8 +95,7 @@ contract Staking is StakingBase, StakingRestake {
             return 0;
         }
         uint time = roundTimestamp(block.timestamp);
-        (uint bias,) = totalSupplyLine.actualize(time);
-        return bias;
+        return totalSupplyLine.actualValue(time);
     }
 
     function balanceOf(address account) external view returns (uint) {
@@ -104,8 +103,7 @@ contract Staking is StakingBase, StakingRestake {
             return 0;
         }
         uint time = roundTimestamp(block.timestamp);
-        (uint bias,) = accounts[account].balance.actualize(time);
-        return bias;
+        return accounts[account].balance.actualValue(time);
     }
 
     function migrate(uint[] memory id) external {
