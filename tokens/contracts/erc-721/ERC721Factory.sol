@@ -8,6 +8,9 @@ import "@openzeppelin/contracts/proxy/IBeacon.sol";
 import "@openzeppelin/contracts/proxy/UpgradeableBeacon.sol";
 import "@openzeppelin/contracts/proxy/BeaconProxy.sol";
 
+//contract ERC721Factory is BeaconProxy {
+//contract ERC721Factory is IBeacon {
+//abstract contract ERC721Factory is BeaconProxy {
 contract ERC721Factory {
 
     IBeacon public beacon;
@@ -22,7 +25,9 @@ contract ERC721Factory {
 
     function createToken( string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external {
         BeaconProxy beaconProxy = new BeaconProxy(beaconAddress, "");
-        ERC721RaribleUser(beacon.implementation()).__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
+//        ERC721RaribleUser(beacon.implementation()).__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
+        beaconProxy._implementation().__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
+//        IBeacon(beaconProxy).implementation().__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
         emit CreateProxy(beaconProxy);
     }
 }
