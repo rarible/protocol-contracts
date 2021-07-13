@@ -74,10 +74,10 @@ contract("Staking", accounts => {
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[2], 85, 10, 0, { from: accounts[2] });
 
-			let lockedValue = await staking.locked.call({ from: accounts[2] });
+			let lockedValue = await staking.locked.call(accounts[2]);
    		assert.equal(lockedValue, 85);			//locked from: accounts[2]
 
-			lockedValue = await staking.locked.call({ from: accounts[3] });
+			lockedValue = await staking.locked.call(accounts[3]);
    		assert.equal(lockedValue, 0);			//locked from: accounts[3]
 		});
 
@@ -87,7 +87,7 @@ contract("Staking", accounts => {
       await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
 			/*3 week later*/
 			await increaseTime(WEEK * 2);
-			let availableForWithdraw = await staking.getAvailableForWithdraw.call({ from: accounts[2] });
+			let availableForWithdraw = await staking.getAvailableForWithdraw.call(accounts[2]);
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
    		assert.equal(availableForWithdraw, 20);			//availableForWithdraw after 2 weeks
