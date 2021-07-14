@@ -119,16 +119,18 @@ library LibBrokenLine {
         if (time == toTime) {
             return;
         }
-        uint bias = brokenLine.initial.bias;
         uint slope = brokenLine.initial.slope;
-        require(toTime > time, "can't update BrokenLine for past time");
-        while (time < toTime) {
-            bias = bias.sub(slope);
-            int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
-            require(newSlope >= 0, "slope < 0, something wrong with slope");
-            slope = uint(newSlope);
-            brokenLine.slopeChanges[time] = 0;
-            time = time.add(1);
+        uint bias = brokenLine.initial.bias;
+        if (bias != 0) {
+            require(toTime > time, "can't update BrokenLine for past time");
+            while (time < toTime) {
+                bias = bias.sub(slope);
+                int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
+                require(newSlope >= 0, "slope < 0, something wrong with slope");
+                slope = uint(newSlope);
+                brokenLine.slopeChanges[time] = 0;
+                time = time.add(1);
+            }
         }
         brokenLine.initial.start = toTime;
         brokenLine.initial.bias = bias;
@@ -137,10 +139,10 @@ library LibBrokenLine {
 
     function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint bias) {
         uint time = brokenLine.initial.start;
-        if (time == toTime) {
-            return (brokenLine.initial.bias);
-        }
         bias = brokenLine.initial.bias;
+        if ((time == toTime) || (bias == 0)){
+            return (bias);
+        }
         uint slope = brokenLine.initial.slope;
         require(toTime > time, "can't update BrokenLine for past time");
         while (time < toTime) {

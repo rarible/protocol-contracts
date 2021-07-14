@@ -43,7 +43,7 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     function withdraw() external {
-        uint value = getAvailableForWithdraw();
+        uint value = getAvailableForWithdraw(msg.sender);
         if (value > 0) {
             accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "transfer failed");
@@ -52,18 +52,18 @@ contract Staking is StakingBase, StakingRestake {
     }
 
     // Amount available for withdrawal
-    function getAvailableForWithdraw() public view returns (uint value) {
-        value = accounts[msg.sender].amount;
+    function getAvailableForWithdraw(address account) public view returns (uint value) {
+        value = accounts[account].amount;
         if (!stopped) {
             uint time = roundTimestamp(block.timestamp);
-            uint bias = accounts[msg.sender].locked.actualValue(time);
+            uint bias = accounts[account].locked.actualValue(time);
             value = value.sub(bias);
         }
     }
 
     //Remaining locked amount
-    function locked() external view returns (uint) {
-        return accounts[msg.sender].amount;
+    function locked(address account) external view returns (uint) {
+        return accounts[account].amount;
     }
 
     //For a given Line id, the owner and delegate addresses.
