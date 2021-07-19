@@ -1,33 +1,43 @@
 const LibSignatureTest = artifacts.require("LibSignatureTest.sol");
-const order = require("../order");
-const sign = order.sign;
-const ZERO = "0x0000000000000000000000000000000000000000";
+const {signPersonalMessage} = require("../sign.js");
+const util = require('ethereumjs-util');
 
 contract("LibSignature", accounts => {
-	let testing;
+	let libSignature;
 
 	beforeEach(async () => {
-		testing = await LibSignatureTest.new();
+		libSignature = await LibSignatureTest.new();
 	});
 
-	it("should return correct params from signature", async () => {
-		const testOrder = order.Order(accounts[1], order.Asset("0xffffffff", "0x", 100), ZERO, order.Asset("0xffffffff", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+	it("should return correct signer, case: v > 30", async () => {
+		const msg = "myMessage";
+		const hash = await libSignature.getKeccak(msg)
+		const signature = await signPersonalMessage(hash, accounts[1]);
 
-		const signature = await getSignature(testOrder, accounts[1]);
+		const sig2 = signature.r + signature.s.substr(2) + (signature.v + 4).toString(16)
 
-        const r = "0x" + signature.slice(2, 66);
-        const s = "0x" + signature.slice(66, 130);
-        const v = parseInt(signature.slice(130, 132), 16)
+		const signer = await libSignature.recoverFromSigTest(hash, sig2);
 
-		const params = await testing.getParamsFromSigTest(signature);
-
-        assert.equal(params[0], r, "r param of signature")
-        assert.equal(params[1], s, "s param of signature")
-        assert.equal(params[2], v, "v param of signature")
+		assert.equal(signer, accounts[1], "signer");
 	});
 
-	async function getSignature(order, signer) {
-		return sign(order, signer, testing.address);
-	}
+	it("should return correct signer, default case: v < 30", async () => {
+		const msg = "hello world";
+		const hash = await libSignature.getKeccak(msg)
+
+		//some random privateKey
+		const privateKey = new Buffer("f1a884c5c58e8770b294e7db47eadc8ac5c5466211aa109515268c881c921ec4", "hex")
+		
+		//getting ethereum address of the given private key
+		const realSigner = web3.utils.toChecksumAddress("0x" + util.privateToAddress(privateKey).toString('hex'))
+
+		const signature = util.ecsign(util.toBuffer(hash), privateKey);
+
+		const sig2 = "0x" + signature.r.toString('hex') + signature.s.toString('hex') + signature.v.toString(16)
+
+		const signer = await libSignature.recoverFromSigTest(hash, sig2);
+		assert.equal(signer, realSigner, "signer");
+
+	});
 
 });

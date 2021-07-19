@@ -32,12 +32,6 @@ contract("OrderValidator", accounts => {
 		await testing.validateOrderTest(testOrder, "0x", { from: accounts[5] });
 	});
 
-	it("should validate correctly the v > 30 case", async () => {
-		const testOrder = order.Order(accounts[1], order.Asset("0xffffffff", "0x", 100), ZERO, order.Asset("0xffffffff", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-		const signature = await getSignature(testOrder, accounts[1]);
-		await testing.validateOrderTest(testOrder, signature);
-	});
-
 	async function getSignature(order, signer) {
 		return sign(order, signer, testing.address);
 	}
