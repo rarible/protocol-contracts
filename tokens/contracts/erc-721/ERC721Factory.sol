@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "./ERC721RaribleUser.sol";
 import "./TokenProxy.sol";
 import "@openzeppelin/contracts/proxy/IBeacon.sol";
+import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 
 contract ERC721Factory {
 
@@ -21,5 +22,9 @@ contract ERC721Factory {
         TokenProxy tokenProxy = new TokenProxy(address(beacon), "");
         ERC721RaribleUser(tokenProxy.implementation()).__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
         emit CreateProxy(tokenProxy);
+    }
+
+    function _mintAndTransfer(TokenProxy tokenProxy, LibERC721LazyMint.Mint721Data memory data, address to) public {
+        ERC721RaribleUser(tokenProxy.implementation()).mintAndTransfer(data, to);
     }
 }

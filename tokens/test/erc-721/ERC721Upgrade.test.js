@@ -44,8 +44,9 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
-
-    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+    console.log("Before call _mintAndTransfer");
+//    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+    const tx = await factory._mintAndTransfer(token, [tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: factory});//error minter is not the owner
 
 		console.log("mint through proxy", tx.receipt.gasUsed);
     assert.equal(await token.ownerOf(tokenId), transferTo);
