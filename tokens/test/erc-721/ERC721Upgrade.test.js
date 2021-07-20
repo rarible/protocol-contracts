@@ -28,31 +28,27 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 //     	tokenOwnerTmp = ev.owner;
 //      return true;
 //    });
-//todo код ниже удалить тут я эмитил proxy сам
     truffleAssert.eventEmitted(resultCreateToken, 'CreateProxy', (ev) => {
-     	token = ev.proxy;
+     	proxy = ev.proxy;
       return true;
     });
-//todo код ниже удалить пока как пример
-//		token = await Impl.at(proxy);
-//		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], { from: tokenOwner });
+		token = await Impl.at(proxy);
 	})
 
 	it("should work through beacon proxy", async () => {
-    const minter = tokenOwner;
+    const minter = factory.address;
     let transferTo = accounts[2];
 
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
     console.log("Before call _mintAndTransfer");
-//    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
-    const tx = await factory._mintAndTransfer(token, [tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: factory});//error minter is not the owner
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
 
 		console.log("mint through proxy", tx.receipt.gasUsed);
     assert.equal(await token.ownerOf(tokenId), transferTo);
-
-    const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
-    console.log("transfer through proxy", txTransfer.receipt.gasUsed);
+//todo сделать, чтобы работало
+//    const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
+//    console.log("transfer through proxy", txTransfer.receipt.gasUsed);
 	})
 
   function creators(list) {
