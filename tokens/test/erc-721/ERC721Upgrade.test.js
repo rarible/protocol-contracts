@@ -20,7 +20,7 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 		impl = await Impl.new();
 		beacon = await UpgradeableBeacon.new(impl.address);
 
-		factory = await ERC721Factory.new(beacon.address, beacon.address);
+		factory = await ERC721Factory.new(beacon.address);
 
 		resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", []);
 //todo удалить коментарий. но пока евент не прихоит,
