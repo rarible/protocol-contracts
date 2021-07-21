@@ -1,7 +1,7 @@
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const Impl = artifacts.require("ERC721RaribleUser.sol");
-const ERC721Factory = artifacts.require("ERC721Factory.sol");
+const ERC721Factory = artifacts.require("ERC721RaribleUserFactory.sol");
 const truffleAssert = require('truffle-assertions');
 
 const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";

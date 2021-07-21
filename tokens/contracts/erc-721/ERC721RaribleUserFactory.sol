@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * The beacon should be initialized before call ERC721Factory constructor.
  *
  */
-contract ERC721Factory is Ownable {
+contract ERC721RaribleUserFactory is Ownable {
     IBeacon public beacon;
 
     event CreateProxy(BeaconProxy proxy);
