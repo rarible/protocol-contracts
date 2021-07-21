@@ -1,5 +1,9 @@
 const Testing = artifacts.require("ERC721Rarible.sol");
 const ERC1271 = artifacts.require("TestERC1271.sol");
+const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
+const BeaconProxy = artifacts.require("BeaconProxy.sol");
+const ERC721Factory = artifacts.require("ERC721RaribleFactory.sol");
+const truffleAssert = require('truffle-assertions');
 
 const { sign } = require("./mint");
 const { expectThrow } = require("@daonomic/tests-common");
@@ -9,6 +13,8 @@ contract("ERC721Rarible", accounts => {
   let token;
   let tokenOwner = accounts[9];
   let erc1271;
+  let beacon;
+  let proxy;
   const name = 'FreeMintableRarible';
   const chainId = 1;
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -23,6 +29,27 @@ contract("ERC721Rarible", accounts => {
     await token.__ERC721Rarible_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com");
     await token.transferOwnership(tokenOwner);
     erc1271 = await ERC1271.new();
+  });
+
+ it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
+    beacon = await UpgradeableBeacon.new(token.address);
+    factory = await ERC721Factory.new(beacon.address);
+    resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", {from: tokenOwner});
+    truffleAssert.eventEmitted(resultCreateToken, 'CreateProxyERC721Rarible', (ev) => {
+     	proxy = ev.proxy;
+      return true;
+    });
+    tokenByProxy = await Testing.at(proxy);
+
+    const minter = tokenOwner;
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+
+    assert.equal(await tokenByProxy.ownerOf(tokenId), transferTo);
   });
 
   it("check for ERC165 interface", async () => {
