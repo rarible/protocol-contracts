@@ -2,7 +2,7 @@ const Testing = artifacts.require("ERC1155Rarible.sol");
 const ERC1271 = artifacts.require("TestERC1271.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
-const ERC721Factory = artifacts.require("ERC1155RaribleFactory.sol");
+const ERC1155Factory = artifacts.require("ERC1155RaribleFactory.sol");
 const truffleAssert = require('truffle-assertions');
 
 const { expectThrow } = require("@daonomic/tests-common");
@@ -26,7 +26,7 @@ contract("ERC1155Rarible", accounts => {
 
   it("mint and transfer by minter, token create by Factory", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC721Factory.new(beacon.address);
+    factory = await ERC1155Factory.new(beacon.address);
     resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'CreateProxyERC1155Rarible', (ev) => {
      	proxy = ev.proxy;
