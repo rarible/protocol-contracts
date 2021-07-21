@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
@@ -47,10 +47,10 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
             }
         }
 
-        _mint(to, data.tokenId);
+        _safeMint(to, data.tokenId);
         _saveRoyalties(data.tokenId, data.royalties);
         _saveCreators(data.tokenId, data.creators);
-        _setTokenURI(data.tokenId, data.uri);
+        _setTokenURI(data.tokenId, data.tokenURI);
     }
 
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {

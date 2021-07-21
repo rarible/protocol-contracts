@@ -99,7 +99,42 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     	assert.equal(await t1.balanceOf(accounts[1]), 0);
     	assert.equal(await t1.balanceOf(accounts[2]), 100);
     })
-	})
+
+		it("ERC721 to ETH order maker ETH != who pay, both orders have to be with signature ", async () => {
+		  await erc721.mint(accounts[1], erc721TokenId1);
+		  await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+
+		  const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+			const right = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+
+    	let signatureLeft = await getSignature(left, accounts[1]);
+    	let signatureRight = await getSignature(right, accounts[2]);
+    	await verifyBalanceChange(accounts[7], 206, async () =>
+    		verifyBalanceChange(accounts[1], -194, async () =>
+    			verifyBalanceChange(protocol, -12, () =>
+    			  //NB! from: accounts[7] - who pay for NFT != order Maker
+    				testing.matchOrders(left, signatureLeft, right, signatureRight, { from: accounts[7], value: 300, gasPrice: 0 })
+    			)
+    		)
+    	)
+    	assert.equal(await erc721.balanceOf(accounts[1]), 0);
+    	assert.equal(await erc721.balanceOf(accounts[2]), 1);
+    })
+
+	  it("ERC721 to ETH order maker ETH != who pay, ETH orders have no signature, throw", async () => {
+		  await erc721.mint(accounts[1], erc721TokenId1);
+		  await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+
+		  const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+			const right = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
+
+    	let signatureLeft = await getSignature(left, accounts[1]);
+
+      await expectThrow(
+    			testing.matchOrders(left, signatureLeft, right, "0x", { from: accounts[7], value: 300, gasPrice: 0 })
+    	);
+    })
+  });
 
 	describe("Do matchOrders(), orders dataType == V1", () => {
 		it("From ERC20(100) to ERC20(200) Protocol, Origin fees, no Royalties ", async () => {

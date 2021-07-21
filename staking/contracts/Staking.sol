@@ -1,90 +1,134 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
+import "./INextVersionStake.sol";
+import "./StakingBase.sol";
+import "./StakingRestake.sol";
 
-contract Staking {
+contract Staking is StakingBase, StakingRestake {
     using SafeMathUpgradeable for uint;
-    using LibBrokenLine for BrokenLineDomain.BrokenLine;
+    using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant WEEK = 604800;                 //seconds one week
-    uint256 constant STARTING_POINT_WEEK = 2676;    //starting point week (Staking Epoch begining)
-    ERC20Upgradeable public token;
-
-    struct Locks {
-        BrokenLineDomain.BrokenLine balance;   //line of stRari balance
-        BrokenLineDomain.BrokenLine locked;    //locked amount (RARI)
-        uint amount;                           //user RARI (lockedAmount+ amountready for transferBack)
+    function __Staking_init(IERC20Upgradeable _token) external initializer {
+        __StakingBase_init_unchained(_token);
+        __Ownable_init_unchained();
+        __Context_init_unchained();
     }
 
-    mapping (address => Locks) locks;                   //address User - Lock
-    BrokenLineDomain.BrokenLine public totalSupplyLine; //total stRARI balance
-
-    constructor(ERC20Upgradeable _token) public {
-        token = _token;
+    function stop() external onlyOwner notStopped {
+        stopped = true;
+        emit StopStaking(msg.sender);
     }
 
-    function createLock(address account, uint amount, uint slope, uint cliff) public {
-        //todo проверки
-        uint blockTime = roundTimestamp(block.timestamp);
-        BrokenLineDomain.Line memory line = BrokenLineDomain.Line(blockTime, getStake(amount, slope, cliff), slope);
-        BrokenLineDomain.Line memory lineLocked = BrokenLineDomain.Line(blockTime, amount, slope);
-
-        totalSupplyLine.add(line, cliff);
-        locks[account].balance.add(line, cliff);
-        locks[account].locked.add(lineLocked, cliff);
-        locks[account].amount = locks[account].amount.add(amount);
-        require(token.transferFrom(account, address(this), amount), "failure while transferring");
-
-        // как меняется lock общий, когда юзер приходит/уходит/меняет
-        // 1. нужно применить пропущенные изменения (окончания локов)
-        // 2. если добавляем, то
+    function startMigration(address to) external onlyOwner {
+        migrateTo = to;
+        emit StartMigration(msg.sender, to);
     }
 
-    function totalSupply() public returns (uint) {
-        if (totalSupplyLine.initial.start == 0) { //no lock
-            return 0;
-        }
-        totalSupplyLine.update(roundTimestamp(block.timestamp));
-        return totalSupplyLine.initial.bias;
+    function stake(address account, address delegate, uint amount, uint slope, uint cliff) external notStopped notMigrating returns (uint) {
+        require(amount > 0, "zero amount");
+        require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
+        require(divUp(amount, slope) <= TWO_YEAR_WEEKS, "period too big");
+        require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
+
+        counter++;
+
+        uint time = roundTimestamp(block.timestamp);
+        addLines(account, delegate, amount, slope, cliff, time);
+        accounts[account].amount = accounts[account].amount.add(amount);
+        emit StakeCreate(counter, account, delegate, time, amount, slope, cliff);
+        return counter;
     }
 
-    function balanceOf(address account) public returns (uint) {
-        if (locks[account].balance.initial.start == 0) { //no lock
-            return 0;
-        }
-        locks[account].balance.update(roundTimestamp(block.timestamp));
-        return locks[account].balance.initial.bias;
-    }
-
-    function withdraw() public  {
-        locks[msg.sender].balance.update(roundTimestamp(block.timestamp));
-        uint value = locks[msg.sender].amount.sub(locks[msg.sender].balance.initial.bias);
+    function withdraw() external {
+        uint value = getAvailableForWithdraw(msg.sender);
         if (value > 0) {
-            locks[msg.sender].amount = locks[msg.sender].amount.sub(value);
-            require(token.transfer(msg.sender, value), "failure while transferring");
+            accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
+            require(token.transfer(msg.sender, value), "transfer failed");
         }
-        //todo Lock delete
+        emit Withdraw(msg.sender, value);
     }
 
-    function getStake(uint amount, uint slope, uint cliff) internal returns (uint){
-        return amount;
+    // Amount available for withdrawal
+    function getAvailableForWithdraw(address account) public view returns (uint value) {
+        value = accounts[account].amount;
+        if (!stopped) {
+            uint time = roundTimestamp(block.timestamp);
+            uint bias = accounts[account].locked.actualValue(time);
+            value = value.sub(bias);
+        }
     }
 
-    function increaseUnlockTime(uint lockId, uint period) public {
-
+    //Remaining locked amount
+    function locked(address account) external view returns (uint) {
+        return accounts[account].amount;
     }
 
-    function increaseLockedValue(uint lockId, uint period) public {
-
+    //For a given Line id, the owner and delegate addresses.
+    function getAccountAndDelegate(uint id) external view returns (address account, address delegate) {
+        account = stakes[id].account;
+        delegate = stakes[id].delegate;
     }
 
-    function roundTimestamp(uint ts) pure internal returns (uint) {
-        return ts.div(WEEK).sub(STARTING_POINT_WEEK);
+    //Getting "current week" of the contract.
+    function getWeek() external view returns (uint) {
+        return roundTimestamp(block.timestamp);
     }
+
+    function delegateTo(uint id, address newDelegate) external notStopped notMigrating {
+        address account = verifyStakeOwner(id);
+        address delegate = stakes[id].delegate;
+        uint time = roundTimestamp(block.timestamp);
+        accounts[delegate].balance.update(time);
+        (uint bias, uint slope, uint cliff) = accounts[delegate].balance.remove(id, time);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope);
+        accounts[newDelegate].balance.update(time);
+        accounts[newDelegate].balance.add(id, line, cliff);
+        stakes[id].delegate = newDelegate;
+        emit Delegate(id, account, newDelegate, time);
+    }
+
+    function totalSupply() external view returns (uint) {
+        if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
+            return 0;
+        }
+        uint time = roundTimestamp(block.timestamp);
+        return totalSupplyLine.actualValue(time);
+    }
+
+    function balanceOf(address account) external view returns (uint) {
+        if ((accounts[account].balance.initial.bias == 0) || (stopped)) {
+            return 0;
+        }
+        uint time = roundTimestamp(block.timestamp);
+        return accounts[account].balance.actualValue(time);
+    }
+
+    function migrate(uint[] memory id) external {
+        if (migrateTo == address(0)) {
+            return;
+        }
+        uint time = roundTimestamp(block.timestamp);
+        INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
+        for (uint256 i = 0; i < id.length; i++) {
+            address account = verifyStakeOwner(id[i]);
+            address delegate = stakes[id[i]].delegate;
+            updateLines(account, delegate, time);
+            //save data Line before remove
+            LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
+            (uint residue,,) = accounts[account].locked.remove(id[i], time);
+
+            require(token.transfer(migrateTo, residue), "transfer failed");
+            accounts[account].amount = accounts[account].amount.sub(residue);
+
+            accounts[delegate].balance.remove(id[i], time);
+            totalSupplyLine.remove(id[i], time);
+            nextVersionStake.initiateData(id[i], lineData, account, delegate);
+        }
+        emit Migrate(msg.sender, id);
+    }
+
+    uint256[50] private __gap;
 }
-

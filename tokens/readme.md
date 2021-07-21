@@ -26,7 +26,7 @@ For ERC-721 function has following signature: `mintAndTransfer(LibERC721LazyMint
 ```
     struct Mint721Data {
         uint tokenId;
-        string uri;
+        string tokenURI;
         address[] creators;
         LibPart.Part[] royalties;
         bytes[] signatures;
@@ -34,9 +34,9 @@ For ERC-721 function has following signature: `mintAndTransfer(LibERC721LazyMint
 ```  
 
 - **tokenId** - regular ERC-721 tokenId
-- **uri** - suffix for the token uri. prefix is usually "ipfs:/"
+- **tokenURI** - suffix for the token uri. prefix is usually "ipfs:/"
 - **creators** - array of addresses who considered authors of the work. Will be saved, anyone can query this info.
-- **fees** - array of royalties, will be saved. . Will be saved, anyone can query this info.
+- **royalties** - array of royalties, will be saved. . Will be saved, anyone can query this info.
 - **signatures** - array of signatures of this information. Signature should be present for every creator (only exception is when creator sends mint transaction)
 
 For ERC-1155 function has some more arguments: `mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount)`
@@ -44,7 +44,7 @@ For ERC-1155 function has some more arguments: `mintAndTransfer(LibERC1155LazyMi
 ```
     struct Mint1155Data {
         uint tokenId;
-        string uri;
+        string tokenURI;
         uint supply;
         address[] creators;
         LibPart.Part[] royalties;
@@ -53,10 +53,10 @@ For ERC-1155 function has some more arguments: `mintAndTransfer(LibERC1155LazyMi
 ```
 
 - **tokenId** - ERC-1155 tokenId
-- **uri** - suffix for the token uri. prefix is usually "ipfs:/"
+- **tokenURI** - suffix for the token uri. prefix is usually "ipfs:/"
 - **supply** - total supply for tokenId. can not be changed after initial mint.
 - **creators** - array of addresses who considered authors of the work. Will be saved, anyone can query this info.
-- **fees** - array of royalties, will be saved. . Will be saved, anyone can query this info.
+- **royalties** - array of royalties, will be saved. . Will be saved, anyone can query this info.
 - **signatures** - array of signatures of this information. Signature should be present for every creator (only exception is when creator sends mint transaction)
 
 mintAndTransfer for ERC-1155 can be called multiple times until total minted amount is not equal to supply.
