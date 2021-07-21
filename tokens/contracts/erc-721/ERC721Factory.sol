@@ -7,8 +7,9 @@ import "./ERC721RaribleUser.sol";
 import "@openzeppelin/contracts/proxy/IBeacon.sol";
 import "@openzeppelin/contracts/proxy/BeaconProxy.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC721Factory {
+contract ERC721Factory is Ownable{
 
     IBeacon public beacon;
 
@@ -20,7 +21,9 @@ contract ERC721Factory {
 
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external {
         BeaconProxy beaconProxy = new BeaconProxy(address(beacon), "");
-        ERC721RaribleUser(address(beaconProxy)).__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
+        ERC721RaribleUser token = ERC721RaribleUser(address(beaconProxy));
+        token.__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
+        token.transferOwnership(msg.sender);
         emit CreateProxy(beaconProxy);
     }
 }

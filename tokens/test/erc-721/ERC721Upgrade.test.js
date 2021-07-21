@@ -19,15 +19,8 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 	beforeEach(async () => {
 		impl = await Impl.new();
 		beacon = await UpgradeableBeacon.new(impl.address);
-
 		factory = await ERC721Factory.new(beacon.address);
-
-		resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", []);
-//todo удалить коментарий. но пока евент не прихоит,
-//		truffleAssert.eventEmitted(resultCreateToken, 'CreateERC721RaribleUser', (ev) => {
-//     	tokenOwnerTmp = ev.owner;
-//      return true;
-//    });
+		resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'CreateProxy', (ev) => {
      	proxy = ev.proxy;
       return true;
@@ -36,7 +29,7 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 	})
 
 	it("should work through beacon proxy", async () => {
-    const minter = factory.address;
+    const minter = tokenOwner;
     let transferTo = accounts[2];
 
     const tokenId = minter + "b00000000000000000000001";
@@ -46,9 +39,9 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 
 		console.log("mint through proxy", tx.receipt.gasUsed);
     assert.equal(await token.ownerOf(tokenId), transferTo);
-//todo сделать, чтобы работало
-//    const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
-//    console.log("transfer through proxy", txTransfer.receipt.gasUsed);
+
+    const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
+    console.log("transfer through proxy", txTransfer.receipt.gasUsed);
 	})
 
   function creators(list) {
