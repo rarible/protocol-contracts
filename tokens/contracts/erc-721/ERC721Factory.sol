@@ -6,11 +6,15 @@ pragma abicoder v2;
 import "./ERC721RaribleUser.sol";
 import "@openzeppelin/contracts/proxy/IBeacon.sol";
 import "@openzeppelin/contracts/proxy/BeaconProxy.sol";
-import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC721Factory is Ownable{
-
+/**
+ * @dev This contract is for creating proxy to access ERC721RaribleUser token.
+ *
+ * The beacon should be initialized before call ERC721Factory constructor.
+ *
+ */
+contract ERC721Factory is Ownable {
     IBeacon public beacon;
 
     event CreateProxy(BeaconProxy proxy);
@@ -23,7 +27,7 @@ contract ERC721Factory is Ownable{
         BeaconProxy beaconProxy = new BeaconProxy(address(beacon), "");
         ERC721RaribleUser token = ERC721RaribleUser(address(beaconProxy));
         token.__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
-        token.transferOwnership(msg.sender);
+        token.transferOwnership(_msgSender());
         emit CreateProxy(beaconProxy);
     }
 }
