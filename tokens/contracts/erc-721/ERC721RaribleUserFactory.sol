@@ -11,13 +11,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /**
  * @dev This contract is for creating proxy to access ERC721RaribleUser token.
  *
- * The beacon should be initialized before call ERC721Factory constructor.
+ * The beacon should be initialized before call ERC721RaribleUserFactory constructor.
  *
  */
 contract ERC721RaribleUserFactory is Ownable {
     IBeacon public beacon;
 
-    event CreateProxy(BeaconProxy proxy);
+    event CreateRaribleUserProxy(BeaconProxy proxy);
 
     constructor(IBeacon _beacon) {
         beacon = _beacon;
@@ -28,6 +28,6 @@ contract ERC721RaribleUserFactory is Ownable {
         ERC721RaribleUser token = ERC721RaribleUser(address(beaconProxy));
         token.__ERC721RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
         token.transferOwnership(_msgSender());
-        emit CreateProxy(beaconProxy);
+        emit CreateRaribleUserProxy(beaconProxy);
     }
 }

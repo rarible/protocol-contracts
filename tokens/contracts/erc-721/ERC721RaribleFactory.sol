@@ -9,9 +9,9 @@ import "@openzeppelin/contracts/proxy/BeaconProxy.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @dev This contract is for creating proxy to access ERC721RaribleUser token.
+ * @dev This contract is for creating proxy to access ERC721Rarible token.
  *
- * The beacon should be initialized before call ERC721Factory constructor.
+ * The beacon should be initialized before call ERC721RaribleFactory constructor.
  *
  */
 contract ERC721RaribleFactory is Ownable {
