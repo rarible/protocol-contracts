@@ -35,7 +35,7 @@ contract("ERC721Rarible", accounts => {
     beacon = await UpgradeableBeacon.new(token.address);
     factory = await ERC721Factory.new(beacon.address);
     resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", {from: tokenOwner});
-    truffleAssert.eventEmitted(resultCreateToken, 'CreateProxyERC721Rarible', (ev) => {
+    truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
      	proxy = ev.proxy;
       return true;
     });

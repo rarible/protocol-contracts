@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ERC721RaribleFactory is Ownable {
     IBeacon public beacon;
 
-    event CreateProxyERC721Rarible(BeaconProxy proxy);
+    event Create721RaribleProxy(BeaconProxy proxy);
 
     constructor(IBeacon _beacon) {
         beacon = _beacon;
@@ -28,6 +28,6 @@ contract ERC721RaribleFactory is Ownable {
         ERC721Rarible token = ERC721Rarible(address(beaconProxy));
         token.__ERC721Rarible_init(_name, _symbol, baseURI, contractURI);
         token.transferOwnership(_msgSender());
-        emit CreateProxyERC721Rarible(beaconProxy);
+        emit Create721RaribleProxy(beaconProxy);
     }
 }
