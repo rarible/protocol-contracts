@@ -22,5 +22,13 @@ abstract contract SimpleTransferManager is ITransferManager {
         totalMakeValue = fill.makeValue;
         totalTakeValue = fill.takeValue;
     }
+
+    function calculateTotalAmount(
+        uint amount,
+        uint feeOnTopBp,
+        LibPart.Part[] memory orderOriginFees
+    ) internal override pure returns (uint total){
+        return amount;
+    }
     uint256[50] private __gap;
 }

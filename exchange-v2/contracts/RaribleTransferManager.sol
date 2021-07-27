@@ -9,17 +9,14 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./LibFill.sol";
 import "./LibFeeSide.sol";
-import "./LibOrderDataV1.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "./LibOrderData.sol";
 import "./lib/BpLibrary.sol";
 
 abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-    uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
     address public defaultFeeReceiver;
@@ -189,7 +186,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) internal pure returns (uint total){
+    ) internal override pure returns (uint total){
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
