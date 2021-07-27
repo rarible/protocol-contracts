@@ -1,4 +1,8 @@
 const Testing = artifacts.require("ERC1155RaribleUser.sol");
+const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
+const BeaconProxy = artifacts.require("BeaconProxy.sol");
+const ERC1155Factory = artifacts.require("ERC1155RaribleUserFactory.sol");
+const truffleAssert = require('truffle-assertions');
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require("./mint");
@@ -7,6 +11,8 @@ const { sign } = require("./mint");
 contract("ERC1155RaribleUser", accounts => {
 
   let token;
+  let beacon;
+  let proxy;
   let tokenOwner = accounts[9];
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const name = 'FreeMintable';
@@ -15,6 +21,31 @@ contract("ERC1155RaribleUser", accounts => {
   beforeEach(async () => {
     token = await Testing.new();
     await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], {from: tokenOwner});
+  });
+
+  it("mint and transfer by minter, token create by Factory", async () => {
+    beacon = await UpgradeableBeacon.new(token.address);
+    factory = await ERC1155Factory.new(beacon.address);
+    resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", [], {from: tokenOwner});
+    truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleUserProxy', (ev) => {
+     	proxy = ev.proxy;
+      return true;
+    });
+    tokenByProxy = await Testing.at(proxy);
+
+    let minter = tokenOwner;
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "/uri";
+    let supply = 5;
+    let mint = 2;
+
+    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+
+		assert.equal(await tokenByProxy.uri(tokenId), "ipfs:/" + tokenURI);
+    assert.equal(await tokenByProxy.balanceOf(transferTo, tokenId), mint);
+    assert.equal(await tokenByProxy.balanceOf(minter, tokenId), 0);
   });
 
   it("check for ERC165 interface", async () => {
