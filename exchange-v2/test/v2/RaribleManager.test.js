@@ -12,6 +12,11 @@ const ERC1155_V2 = artifacts.require("TestERC1155WithRoyaltiesV2.sol");
 const ERC721_V1_Error = artifacts.require("TestERC721WithRoyaltiesV1_InterfaceError.sol");
 const ERC1155_V2_Error = artifacts.require("TestERC1155WithRoyaltiesV2_InterfaceError.sol");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
+const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
+const ERC1155LazyMintTest = artifacts.require("ERC1155LazyMintTest.sol");
+const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol")
+const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxyTest.sol")
+
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -334,6 +339,108 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
       return { left, right }
     }
+	})
+
+  describe("Check lazy with royalties", () => {
+
+		it("Transfer from  ERC721lazy to ERC20 ", async () => {
+		  const erc721Test = await ERC721LazyMintTest.new();
+		  const proxy = await ERC721LazyMintTransferProxy.new();
+		  await proxy.__OperatorRole_init();
+		  await proxy.addOperator(testing.address);
+		  await testing.setTransferProxy(id("ERC721_LAZY"), proxy.address)
+
+		  await t1.mint(accounts[2], 106);
+		  await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+		  const encodedMintData = await erc721Test.encode([1, "uri", [[accounts[1], 0]], [[accounts[5], 2000], [accounts[6], 1000]], []]);
+
+		  const left = Order(accounts[1], Asset(id("ERC721_LAZY"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+		  const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("ERC721_LAZY"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+
+      await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
+
+		  assert.equal(await erc721Test.ownerOf(1), accounts[2]);
+		  assert.equal(await t1.balanceOf(accounts[1]), 67);
+		  assert.equal(await t1.balanceOf(accounts[2]), 3);
+		  assert.equal(await t1.balanceOf(accounts[5]), 20);
+		  assert.equal(await t1.balanceOf(accounts[6]), 10);
+		})
+
+		it("Transfer from  ERC1155lazy to ERC20 ", async () => {
+		  const erc1155Test = await ERC1155LazyMintTest.new();
+		  const proxy = await ERC1155LazyMintTransferProxy.new();
+		  await proxy.__OperatorRole_init();
+		  await proxy.addOperator(testing.address);
+		  await testing.setTransferProxy(id("ERC1155_LAZY"), proxy.address)
+
+		  await t1.mint(accounts[2], 106);
+		  await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+		  const encodedMintData = await erc1155Test.encode([1, "uri", 5, [[accounts[1], 0]], [[accounts[5], 2000], [accounts[6], 1000]], []]);
+
+		  const left = Order(accounts[1], Asset(id("ERC1155_LAZY"), encodedMintData, 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+		  const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("ERC1155_LAZY"), encodedMintData, 5), 1, 0, 0, "0xffffffff", "0x");
+
+      await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], left, right);
+
+		  assert.equal(await erc1155Test.balanceOf(accounts[2], 1), 5);
+		  assert.equal(await t1.balanceOf(accounts[1]), 67);
+		  assert.equal(await t1.balanceOf(accounts[2]), 3);
+		  assert.equal(await t1.balanceOf(accounts[5]), 20);
+		  assert.equal(await t1.balanceOf(accounts[6]), 10);
+		})
+
+		it("Transfer from ETH to ERC721Lazy", async () => {
+		  const erc721Test = await ERC721LazyMintTest.new();
+		  const proxy = await ERC721LazyMintTransferProxy.new();
+		  await proxy.__OperatorRole_init();
+		  await proxy.addOperator(testing.address);
+		  await testing.setTransferProxy(id("ERC721_LAZY"), proxy.address)
+		  const encodedMintData = await erc721Test.encode([1, "uri", [[accounts[2], 0]], [[accounts[5], 2000], [accounts[6], 1000]], []]);
+
+      const left = Order(accounts[1], Asset(ETH, "0x", 100), ZERO, Asset(id("ERC721_LAZY"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+		  const right = Order(accounts[2], Asset(id("ERC721_LAZY"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+      await verifyBalanceChange(accounts[1], 103, () =>
+      	verifyBalanceChange(accounts[2], -67, () =>
+      	  verifyBalanceChange(accounts[5], -20, () =>
+      	    verifyBalanceChange(accounts[6], -10, () =>
+        	    verifyBalanceChange(protocol, -6, () =>
+          	    testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right,
+            	    {value: 103, from: accounts[1], gasPrice: 0}
+            	  )
+            	)
+            )
+          )
+        )
+      );
+      assert.equal(await erc721Test.ownerOf(1), accounts[1]);
+		})
+
+		it("Transfer from ETH to ERC1155Lazy", async () => {
+		  const erc1155Test = await ERC1155LazyMintTest.new();
+		  const proxy = await ERC1155LazyMintTransferProxy.new();
+		  await proxy.__OperatorRole_init();
+		  await proxy.addOperator(testing.address);
+		  await testing.setTransferProxy(id("ERC1155_LAZY"), proxy.address)
+		  const encodedMintData = await erc1155Test.encode([1, "uri", 5, [[accounts[2], 0]], [[accounts[5], 2000], [accounts[6], 1000]], []]);
+
+      const left = Order(accounts[1], Asset(ETH, "0x", 100), ZERO, Asset(id("ERC1155_LAZY"), encodedMintData, 5), 1, 0, 0, "0xffffffff", "0x");
+		  const right = Order(accounts[2], Asset(id("ERC1155_LAZY"), encodedMintData, 5), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+      await verifyBalanceChange(accounts[1], 103, () =>
+      	verifyBalanceChange(accounts[2], -67, () =>
+      	  verifyBalanceChange(accounts[5], -20, () =>
+      	    verifyBalanceChange(accounts[6], -10, () =>
+        	    verifyBalanceChange(protocol, -6, () =>
+          	    testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 5], left, right,
+            	    {value: 103, from: accounts[1], gasPrice: 0}
+            	  )
+            	)
+            )
+          )
+        )
+      );
+      assert.equal(await erc1155Test.balanceOf(accounts[1], 1), 5);
+		})
+
 	})
 
   describe("Check doTransfers() with Royalties fees", () => {

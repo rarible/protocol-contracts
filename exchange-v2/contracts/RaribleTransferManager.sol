@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
+import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "./LibFill.sol";
 import "./LibFeeSide.sol";
 import "./LibOrderDataV1.sol";
@@ -129,14 +131,26 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address from,
         bytes4 transferDirection
     ) internal returns (uint) {
-        if (matchNft.assetClass != LibAsset.ERC1155_ASSET_CLASS && matchNft.assetClass != LibAsset.ERC721_ASSET_CLASS) {
-            return rest;
-        }
-        (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
-        LibPart.Part[] memory fees = royaltiesRegistry.getRoyalties(token, tokenId);
+        LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft);
+
         (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
         require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
         return result;
+    }
+
+    function getRoyaltiesByAssetType(LibAsset.AssetType memory matchNft) internal returns (LibPart.Part[] memory) {
+        if (matchNft.assetClass == LibAsset.ERC1155_ASSET_CLASS || matchNft.assetClass == LibAsset.ERC721_ASSET_CLASS) {
+            (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
+            return royaltiesRegistry.getRoyalties(token, tokenId);
+        } else if (matchNft.assetClass == LibERC1155LazyMint.ERC1155_LAZY_ASSET_CLASS) {
+            (address token, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(matchNft.data, (address, LibERC1155LazyMint.Mint1155Data));
+            return data.royalties;
+        } else if (matchNft.assetClass == LibERC721LazyMint.ERC721_LAZY_ASSET_CLASS) {
+            (address token, LibERC721LazyMint.Mint721Data memory data) = abi.decode(matchNft.data, (address, LibERC721LazyMint.Mint721Data));
+            return data.royalties;
+        }
+        LibPart.Part[] memory empty;
+        return empty;
     }
 
     function transferFees(
