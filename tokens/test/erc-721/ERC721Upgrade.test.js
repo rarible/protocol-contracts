@@ -39,6 +39,7 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 
 		console.log("mint through proxy", tx.receipt.gasUsed);
     assert.equal(await token.ownerOf(tokenId), transferTo);
+    assert.equal(await token.name(), "name")
 
     const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
     console.log("transfer through proxy", txTransfer.receipt.gasUsed);

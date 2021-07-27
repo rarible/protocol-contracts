@@ -24,9 +24,9 @@ contract ERC1155RaribleUserFactory is Ownable {
     }
 
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external {
-        BeaconProxy beaconProxy = new BeaconProxy(address(beacon), "");
+        bytes memory data = abi.encodeWithSelector(ERC1155RaribleUser(0).__ERC1155RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators);
+        BeaconProxy beaconProxy = new BeaconProxy(address(beacon), data);
         ERC1155RaribleUser token = ERC1155RaribleUser(address(beaconProxy));
-        token.__ERC1155RaribleUser_init(_name, _symbol, baseURI, contractURI, operators);
         token.transferOwnership(_msgSender());
         emit Create1155RaribleUserProxy(beaconProxy);
     }

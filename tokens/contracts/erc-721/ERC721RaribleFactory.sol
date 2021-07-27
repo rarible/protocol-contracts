@@ -24,9 +24,9 @@ contract ERC721RaribleFactory is Ownable {
     }
 
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) external {
-        BeaconProxy beaconProxy = new BeaconProxy(address(beacon), "");
+        bytes memory data = abi.encodeWithSelector(ERC721Rarible(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI);
+        BeaconProxy beaconProxy = new BeaconProxy(address(beacon), data);
         ERC721Rarible token = ERC721Rarible(address(beaconProxy));
-        token.__ERC721Rarible_init(_name, _symbol, baseURI, contractURI);
         token.transferOwnership(_msgSender());
         emit Create721RaribleProxy(beaconProxy);
     }
