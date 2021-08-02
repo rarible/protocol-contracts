@@ -30,6 +30,6 @@ abstract contract ITransferManager is ITransferExecutor {
     function calculateTotalAmount(uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) internal virtual returns (uint total);
+    ) internal virtual view returns (uint total);
     
 }
