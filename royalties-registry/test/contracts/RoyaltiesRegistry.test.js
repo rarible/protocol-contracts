@@ -9,7 +9,7 @@ const truffleAssert = require('truffle-assertions');
 
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 
-contract("RoyaltiesRegistry, test metods", accounts => {
+contract("RoyaltiesRegistry, test methods", accounts => {
 	let erc721TokenId1 = 51;
 	let erc721TokenId2 = 52;
 	let erc721;
@@ -21,7 +21,7 @@ contract("RoyaltiesRegistry, test metods", accounts => {
 		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 	});
 
-	describe("RoyaltiesRegistry metods works:", () => {
+	describe("RoyaltiesRegistry methods works:", () => {
 
 		it("simple V1 royalties", async () => {
   		await royaltiesRegistry.__RoyaltiesRegistry_init();											//initialize Owner
