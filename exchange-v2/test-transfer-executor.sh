@@ -8,4 +8,5 @@ truffle test \
         ./test/contracts/tokens/TestERC20.sol \
         ./test/contracts/tokens/TestERC721.sol \
         ./test/contracts/tokens/TestERC721Dep.sol \
-        ./test/contracts/tokens/TestERC1155.sol
+        ./test/contracts/tokens/TestERC1155.sol \
+        --compile-all
