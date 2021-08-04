@@ -10,11 +10,11 @@ import "@rarible/royalties/contracts/LibPart.sol";
 interface IERC1155LazyMint is IERC1155Upgradeable {
 
     event Supply(
-        uint256 indexed tokenId,
+        uint256 tokenId,
         uint256 value
     );
     event Creators(
-        uint256 indexed tokenId,
+        uint256 tokenId,
         LibPart.Part[] creators
     );
 
