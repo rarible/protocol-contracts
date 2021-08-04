@@ -6,6 +6,7 @@ import "@rarible/royalties/contracts/LibPart.sol";
 
 library LibERC721LazyMint {
     bytes4 constant public ERC721_LAZY_ASSET_CLASS = bytes4(keccak256("ERC721_LAZY"));
+    bytes4 constant _INTERFACE_ID_MINT_AND_TRANSFER = 0x8486f69f;
 
     struct Mint721Data {
         uint tokenId;

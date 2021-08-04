@@ -6,6 +6,7 @@ import "@rarible/royalties/contracts/LibPart.sol";
 
 library LibERC1155LazyMint {
     bytes4 constant public ERC1155_LAZY_ASSET_CLASS = bytes4(keccak256("ERC1155_LAZY"));
+    bytes4 constant _INTERFACE_ID_MINT_AND_TRANSFER = 0x6db15a0f;
 
     struct Mint1155Data {
         uint tokenId;

@@ -25,13 +25,13 @@ contract RoyaltiesV1Impl is AbstractRoyalties, RoyaltiesV1 {
         return result;
     }
 
-    function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _royalties) override internal {
+    function _onRoyaltiesSet(uint256 id, LibPart.Part[] memory _royalties) override internal {
         address[] memory recipients = new address[](_royalties.length);
         uint[] memory bps = new uint[](_royalties.length);
         for (uint i = 0; i < _royalties.length; i++) {
             recipients[i] = _royalties[i].account;
             bps[i] = _royalties[i].value;
         }
-        emit SecondarySaleFees(_id, recipients, bps);
+        emit SecondarySaleFees(id, recipients, bps);
     }
 }

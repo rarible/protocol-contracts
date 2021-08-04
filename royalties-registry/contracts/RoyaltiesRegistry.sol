@@ -95,10 +95,10 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory) {
         if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
             RoyaltiesV2 v2 = RoyaltiesV2(token);
-            try v2.getRoyalties(tokenId) returns (LibPart.Part[] memory result) {
+            try v2.getRaribleV2Royalties(tokenId) returns (LibPart.Part[] memory result) {
                 return result;
             } catch {}
-        } else if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES)) {
+        } else {
             RoyaltiesV1 v1 = RoyaltiesV1(token);
             address payable[] memory recipients;
             try v1.getFeeRecipients(tokenId) returns (address payable[] memory result) {
