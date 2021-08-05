@@ -71,14 +71,14 @@ module.exports = async function (deployer, network) {
 	const settings = getSettings(network)
 
   const impl721 = await getProxyImplementation(ERC721Rarible, network)
-	console.log("impl721 is", impl721)
-	const beacon721 = await deployer.deploy(ERC721RaribleBeacon, impl721, { gas: 500000 });
-	const factory721 = await deployer.deploy(ERC721RaribleFactory, beacon721.address, settings.transferProxy, settings.erc721LazyMintTransferProxy, {gas: 1500000});
+	console.log("impl721 is", impl721)	
+	const beacon721 = await ERC721RaribleBeacon.deployed().catch(() => deployer.deploy(ERC721RaribleBeacon, impl721, { gas: 500000 }));
+	const factory721 = await ERC721RaribleFactory.deployed().catch(() => deployer.deploy(ERC721RaribleFactory, beacon721.address, settings.transferProxy, settings.erc721LazyMintTransferProxy, {gas: 1500000}));
 	console.log("721 factory", factory721.address)
 
   const impl1155 = await getProxyImplementation(ERC1155Rarible, network)
-	console.log("impl1155 is", impl1155)
-	const beacon1155 = await deployer.deploy(ERC1155RaribleBeacon, impl1155, { gas: 500000 });
-	const factory1155 = await deployer.deploy(ERC1155RaribleFactory, beacon1155.address, settings.transferProxy, settings.erc1155LazyMintTransferProxy, {gas: 1500000});
+	console.log("impl1155 is", impl1155)	
+	const beacon1155 = await ERC1155RaribleBeacon.deployed().catch(() => deployer.deploy(ERC1155RaribleBeacon, impl1155, { gas: 500000 }));
+	const factory1155 = await ERC1155RaribleFactory.deployed().catch(() => deployer.deploy(ERC1155RaribleFactory, beacon1155.address, settings.transferProxy, settings.erc1155LazyMintTransferProxy, {gas: 1500000}));
 	console.log("1155 factory", factory1155.address)
 };
