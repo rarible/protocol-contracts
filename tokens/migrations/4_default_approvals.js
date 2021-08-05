@@ -4,8 +4,8 @@ const ERC721Rarible = artifacts.require('ERC721Rarible');
 const ERC1155Rarible = artifacts.require('ERC1155Rarible');
 
 const rinkeby = {
-	erc721LazyMintTransferProxy: "0xE6bB91E8fAcf3717D5f28093Efc8E0fE00994cb1",
-	erc1155LazyMintTransferProxy: "0x7c4B13B5893cD82f371c5e28f12FB2F37542BbC5",
+	erc721LazyMintTransferProxy: "0x75fDbe19C2dc673384dDc14C9F453dB86F5f32E8",
+	erc1155LazyMintTransferProxy: "0x0cF0AAb68432a3710ECbf2f1b112a11cEe31a83C",
 	transferProxy: "0x7d47126a2600E22eab9eD6CF0e515678727779A6"
 }
 const mainnet = {
