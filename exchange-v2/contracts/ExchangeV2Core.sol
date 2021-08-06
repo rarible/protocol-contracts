@@ -10,7 +10,6 @@ import "./AssetMatcher.sol";
 import "./TransferExecutor.sol";
 import "./ITransferManager.sol";
 import "./lib/LibTransfer.sol";
-import "./MetaTransaction.sol";
 
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
     using SafeMathUpgradeable for uint;
@@ -20,8 +19,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     //state of the orders
     mapping(bytes32 => uint) public fills;
-    mapping(address => uint256) private nonces;
-    bytes32 internal domainSeparator;
 
     //events
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
@@ -104,22 +101,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
-    function initialize(string memory name, string memory version) external {
-        domainSeparator = LibEIP712MetaTransaction.setDomainSeparator(name, version);
-    }
-
-    function executeMetaTransaction(address userAddress,
-        bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) public payable returns (bytes memory) {
-        return LibEIP712MetaTransaction._executeMetaTransaction(userAddress, nonces, domainSeparator, functionSignature, sigR, sigS, sigV);
-    }
-
-    function getNonce(address user) external view returns (uint256 nonce) {
-        nonce = nonces[user];
-    }
-
-    function msgSender() external view returns(address sender) {
-        return LibEIP712MetaTransaction._msgSender();
-    }
-
-    uint256[47] private __gap;
+//    uint256[49] private __gap;
 }

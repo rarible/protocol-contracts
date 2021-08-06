@@ -106,7 +106,7 @@ library LibEIP712MetaTransaction {
         return signer == user;
     }
 
-    function _msgSender() internal view returns(address sender) {
+    function __msgSender() internal view returns(address payable sender) {
         if(msg.sender == address(this)) {
             bytes memory array = msg.data;
             uint256 index = msg.data.length;

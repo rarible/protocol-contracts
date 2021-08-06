@@ -5,9 +5,10 @@ pragma abicoder v2;
 
 import "./ExchangeV2Core.sol";
 import "./RaribleTransferManager.sol";
+import "./MetaTransaction.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
-contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
+contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager, MetaTransaction {
     function __ExchangeV2_init(
         INftTransferProxy _transferProxy,
         IERC20TransferProxy _erc20TransferProxy,
@@ -21,4 +22,6 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
     }
+
+    uint256[50] private __gap;
 }
