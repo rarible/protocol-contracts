@@ -1,4 +1,9 @@
 const os = require('os');
+const trezorProvider = require("@rarible/trezor-provider");
+const createTrezorProvider = trezorProvider.createProvider;
+const Web3ProviderEngine = require("web3-provider-engine");
+
+Web3ProviderEngine.prototype.send = Web3ProviderEngine.prototype.sendAsync;
 
 let apiKey;
 try {
@@ -16,8 +21,13 @@ function createNetwork(name) {
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
 
     return {
-      provider: () => createProvider(json.address, json.key, json.url),
-      from: json.address,
+      provider: () => {
+      	if (json.path != null) {
+      		return createTrezorProvider({url: json.url, path: json.path, chainId: json.network_id});
+      	} else {
+      		return createProvider(json.address, json.key, json.url);
+      	}
+      },
       gas: 4500000,
       gasPrice: gasPrice + "000000000",
       network_id: json.network_id,
