@@ -7,7 +7,6 @@ import "../../../contracts/ExchangeV2Core.sol";
 import "../../../contracts/MetaTransaction.sol";
 import "./SimpleTransferManager.sol";
 
-//contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, MetaTransaction, SimpleTransferManager { Error:New storage layout is incompatible
 contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, SimpleTransferManager, MetaTransaction {
     function __ExchangeSimpleV2_init(
         INftTransferProxy _transferProxy,
@@ -17,5 +16,9 @@ contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, SimpleTransferManager, MetaT
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __OrderValidator_init_unchained();
+    }
+
+    function _msgSender() internal view virtual override(ContextUpgradeable, MetaTransaction) returns (address payable) {
+        return super._msgSender();
     }
 }

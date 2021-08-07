@@ -9,6 +9,8 @@ abstract contract MetaTransaction is ContextUpgradeable {
     mapping(address => uint256) private nonces;
     bytes32 internal domainSeparator;
 
+    event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
+
     function setDomainSeparator(string memory name, string memory version) external {
         domainSeparator = LibEIP712MetaTransaction.setDomainSeparator(name, version);
     }
@@ -23,7 +25,6 @@ abstract contract MetaTransaction is ContextUpgradeable {
     }
 
     function _msgSender() internal view virtual override returns (address payable) {
-        //    function msgSender() external view returns (address) {
         return LibEIP712MetaTransaction.__msgSender();
     }
 }

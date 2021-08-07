@@ -23,5 +23,9 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager, MetaTransaction {
         __OrderValidator_init_unchained();
     }
 
+    function _msgSender() internal view virtual override(ContextUpgradeable, MetaTransaction) returns (address payable) {
+        return super._msgSender();
+    }
+
     uint256[50] private __gap;
 }

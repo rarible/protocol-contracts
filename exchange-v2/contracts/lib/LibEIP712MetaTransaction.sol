@@ -23,7 +23,7 @@ library LibEIP712MetaTransaction {
 
     /*
      * Domain structure.
-     * Data(information to for making metatransaction method uniq) about method and contract
+     * Data(information to for making metaTransaction method uniq) about method and contract
      */
     struct EIP712Domain {
         string name;
@@ -34,7 +34,7 @@ library LibEIP712MetaTransaction {
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
 
-    function setDomainSeparator(string memory name, string memory version) internal returns(bytes32 domainSeparator){
+    function setDomainSeparator(string memory name, string memory version) internal returns (bytes32 domainSeparator){
         domainSeparator = keccak256(abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
@@ -51,7 +51,7 @@ library LibEIP712MetaTransaction {
     * "\\x19" makes the encoding deterministic
     * "\\x01" is the version byte to make it compatible to EIP-191
     */
-    function toTypedMessageHash(bytes32 messageHash, bytes32 _domainSeparator) internal view returns(bytes32) {
+    function toTypedMessageHash(bytes32 messageHash, bytes32 _domainSeparator) internal view returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", _domainSeparator, messageHash));
     }
 
@@ -74,14 +74,14 @@ library LibEIP712MetaTransaction {
 
     function hashMetaTransaction(MetaTransaction memory metaTx) internal pure returns (bytes32) {
         return keccak256(abi.encode(
-            META_TRANSACTION_TYPEHASH,
-            metaTx.nonce,
-            metaTx.from,
-            keccak256(metaTx.functionSignature)
-        ));
+                META_TRANSACTION_TYPEHASH,
+                metaTx.nonce,
+                metaTx.from,
+                keccak256(metaTx.functionSignature)
+            ));
     }
 
-    function _executeMetaTransaction(address userAddress, mapping (address => uint256) storage _nonces, bytes32 _domainSeparator,
+    function _executeMetaTransaction(address userAddress, mapping(address => uint256) storage _nonces, bytes32 _domainSeparator,
         bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) internal returns (bytes memory) {
         bytes4 destinationFunctionSig = convertBytesToBytes4(functionSignature);
         require(destinationFunctionSig != msg.sig, "functionSignature can not be of executeMetaTransaction method");
@@ -106,12 +106,12 @@ library LibEIP712MetaTransaction {
         return signer == user;
     }
 
-    function __msgSender() internal view returns(address payable sender) {
-        if(msg.sender == address(this)) {
+    function __msgSender() internal view returns (address payable sender) {
+        if (msg.sender == address(this)) {
             bytes memory array = msg.data;
             uint256 index = msg.data.length;
             assembly {
-                // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
+            // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
                 sender := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
             }
         } else {
