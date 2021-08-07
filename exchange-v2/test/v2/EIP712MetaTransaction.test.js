@@ -485,9 +485,8 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
     t1 = await TestERC20.new();
     t2 = await TestERC20.new();
 
-    testContract.setDomainSeparator("TestContract", "1");
     domainData = {
-      name: "TestContract",
+      name: "ExchangeV2",
       version: "1",
       verifyingContract: testContract.address,
       chainId: 1337
