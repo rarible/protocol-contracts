@@ -43,6 +43,16 @@ contract("ERC721MetaTxTest", accounts => {
   		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
   });
 
+  it("Upgrade, which use MetaTransaction for ERC721RaribleUserMeta token works", async () => {
+  		const wrapper = await ERC721UserMetaTx.at(ERC721UserNoMetaTx.address);
+  		await expectThrow(
+  			wrapper.getNonce(ZERO_ADDRESS)
+  		);
+
+  		await upgradeProxy(ERC721UserNoMetaTx.address, ERC721UserMetaTx);
+  		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
+  });
+
   it("Upgrade, which use MetaTransaction for ERC1155RaribleMeta token works", async () => {
   		const wrapper = await ERC1155MetaTx.at(erc1155NoMetaTx.address);
   		await expectThrow(
