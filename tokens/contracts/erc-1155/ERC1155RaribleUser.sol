@@ -50,5 +50,10 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
         require(owner() == data.creators[0].account, "minter is not the owner");
         super.mintAndTransfer(data, to, _amount);
     }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
     uint256[50] private __gap;
 }

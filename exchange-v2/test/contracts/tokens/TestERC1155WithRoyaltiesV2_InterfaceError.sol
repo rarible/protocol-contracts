@@ -17,8 +17,8 @@ contract TestERC1155WithRoyaltiesV2_InterfaceError is Initializable, AbstractRoy
         _saveRoyalties(tokenId, _fees);
     }
 
-    function getRoyalties(uint256) override external pure returns (LibPart.Part[] memory) {
-        revert("getRoyalties failed");
+    function getRaribleV2Royalties(uint256) override external pure returns (LibPart.Part[] memory) {
+        revert("getRaribleV2Royalties failed");
     }
 
     function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _fees) override internal {}

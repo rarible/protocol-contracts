@@ -12,11 +12,25 @@ import "./Mint721Validator.sol";
 abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
     using SafeMathUpgradeable for uint;
 
+    bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
+    bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
+    bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
+    bytes4 private constant _INTERFACE_ID_ERC721_ENUMERABLE = 0x780e9d63;
+
     // tokenId => creators
     mapping(uint256 => LibPart.Part[]) private creators;
 
     function __ERC721Lazy_init_unchained() internal initializer {
-        _registerInterface(0x8486f69f);
+
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+        return interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
+        || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
+        || interfaceId == _INTERFACE_ID_ERC165
+        || interfaceId == _INTERFACE_ID_ERC721
+        || interfaceId == _INTERFACE_ID_ERC721_METADATA
+        || interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE;
     }
 
     function transferFromOrMint(

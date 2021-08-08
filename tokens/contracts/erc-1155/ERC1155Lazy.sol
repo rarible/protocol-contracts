@@ -13,12 +13,24 @@ import "./ERC1155BaseURI.sol";
 abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
     using SafeMathUpgradeable for uint;
 
+    bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
+    bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
+    bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
+
     mapping(uint256 => LibPart.Part[]) public creators;
     mapping(uint => uint) private supply;
     mapping(uint => uint) private minted;
 
     function __ERC1155Lazy_init_unchained() internal initializer {
-        _registerInterface(0x6db15a0f);
+
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+        return interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
+        || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
+        || interfaceId == _INTERFACE_ID_ERC165
+        || interfaceId == _INTERFACE_ID_ERC1155
+        || interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI;
     }
 
     function transferFromOrMint(
