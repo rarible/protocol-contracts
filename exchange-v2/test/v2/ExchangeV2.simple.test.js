@@ -20,14 +20,16 @@ contract("ExchangeSimpleV2", accounts => {
 	let t2;
 	let libOrder;
 
-	beforeEach(async () => {
+	const resetState = async () => {
 		libOrder = await LibOrderTest.new();
 		transferProxy = await TransferProxyTest.new();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
-	});
+	}
+
+	beforeEach(resetState);
 
 	it("upgrade works", async () => {
 		const wrapper = await ExchangeSimpleV2_1.at(testing.address);
@@ -41,41 +43,51 @@ contract("ExchangeSimpleV2", accounts => {
 
 	describe("matchOrders", () => {
 		it("eth orders work, rest is returned to taker", async () => {
-			await t1.mint(accounts[1], 100);
-			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await runTest(async createOrder => {
+				await t1.mint(accounts[1], 100);
+				await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
-			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-			const right = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+				const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+				const right = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+				
+				const {signature, valMatch} = await createOrder(left, accounts[1])
+				await expectThrow(
+					testing.matchOrders(left, signature, right, "0x", { from: accounts[2], value: 199 })
+				);
 
-			await expectThrow(
-				testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2], value: 199 })
-			);
-			await verifyBalanceChange(accounts[2], 200, async () =>
-				verifyBalanceChange(accounts[1], -200, async () =>
-					testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2], value: 201, gasPrice: 0 })
+				await verifyBalanceChange(accounts[2], 200, async () =>
+					verifyBalanceChange(accounts[1], -200, async () =>
+						testing.matchOrders(left, signature, right, "0x", { from: accounts[2], value: valMatch, gasPrice: 0 })
+					)
 				)
-			)
-			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[2]), 100);
+				assert.equal(await t1.balanceOf(accounts[1]), 0);
+				assert.equal(await t1.balanceOf(accounts[2]), 100);	
+			})
+			
 		});
 
 		it("eth orders work, rest is returned to taker (other side)", async () => {
-			await t1.mint(accounts[1], 100);
-			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
-			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-			const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			await runTest(async createOrder => {
+				await t1.mint(accounts[1], 100);
+				await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
-			await expectThrow(
-				testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 199 })
-			);
-			await verifyBalanceChange(accounts[2], 200, async () =>
-				verifyBalanceChange(accounts[1], -200, async () =>
-					testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 201, gasPrice: 0 })
+				const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+				const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
+				const {signature, valMatch} = await createOrder(right, accounts[1])
+				await expectThrow(
+					testing.matchOrders(left, "0x", right, signature, { from: accounts[2], value: 199 })
+				);
+				await verifyBalanceChange(accounts[2], 200, async () =>
+					verifyBalanceChange(accounts[1], -200, async () =>
+						testing.matchOrders(left, "0x", right, signature, { from: accounts[2], value: valMatch, gasPrice: 0 })
+					)
 				)
-			)
-			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[2]), 100);
+				assert.equal(await t1.balanceOf(accounts[1]), 0);
+				assert.equal(await t1.balanceOf(accounts[2]), 100);
+			})
+			
 		});
 
 		it("only owner can change transfer proxy", async () => {
@@ -86,17 +98,23 @@ contract("ExchangeSimpleV2", accounts => {
 		})
 
 		it("simplest possible exchange works", async () => {
-			const { left, right } = await prepare2Orders()
+			await runTest(async createOrder => {
+				const { left, right } = await prepare2Orders()
 
-			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]));
+				const dataLeft = await createOrder(left, accounts[1], 0)
+				const dataRight = await createOrder(right, accounts[2], 0)
 
-			assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
-			assert.equal(await testing.fills(await libOrder.hashKey(right)), 100);
+				await testing.matchOrders(left, dataLeft.signature, right, dataRight.signature);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[2]), 100);
-			assert.equal(await t2.balanceOf(accounts[1]), 200);
-			assert.equal(await t2.balanceOf(accounts[2]), 0);
+				assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
+				assert.equal(await testing.fills(await libOrder.hashKey(right)), 100);
+
+				assert.equal(await t1.balanceOf(accounts[1]), 0);
+				assert.equal(await t1.balanceOf(accounts[2]), 100);
+				assert.equal(await t2.balanceOf(accounts[1]), 200);
+				assert.equal(await t2.balanceOf(accounts[2]), 0);
+			})
+			
 		})
 
 		it("cancel", async () => {
@@ -121,38 +139,49 @@ contract("ExchangeSimpleV2", accounts => {
 		})
 
 		it("doesn't allow to fill more than 100% of the order", async () => {
-			const { left, right } = await prepare2Orders()
-			right.makeAsset.value = 100;
-			right.takeAsset.value = 50;
-			right.salt = 0;
+			await runTest(async createOrder => {
+				const { left, right } = await prepare2Orders()
+				right.makeAsset.value = 100;
+				right.takeAsset.value = 50;
+				right.salt = 0;
 
-			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
-			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+				const {signature} = await createOrder(left, accounts[1])
 
-			await expectThrow(
-				testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] })
-			);
+				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-			assert.equal(await t1.balanceOf(accounts[1]), 0);
-			assert.equal(await t1.balanceOf(accounts[2]), 100);
-			assert.equal(await t2.balanceOf(accounts[1]), 200);
-			assert.equal(await t2.balanceOf(accounts[2]), 0);
+				await expectThrow(
+					testing.matchOrders(left, signature, right, "0x", { from: accounts[2] })
+				);
+
+				assert.equal(await t1.balanceOf(accounts[1]), 0);
+				assert.equal(await t1.balanceOf(accounts[2]), 100);
+				assert.equal(await t2.balanceOf(accounts[1]), 200);
+				assert.equal(await t2.balanceOf(accounts[2]), 0);
+			})
+			
 		})
 
 	})
 
 	describe("validate", () => {
 		it("should not let proceed if taker is not correct", async () => {
-			const { left, right } = await prepare2Orders()
-			left.taker = accounts[3]
+			await runTest(async createOrder => {
+				const { left, right } = await prepare2Orders()
+				left.taker = accounts[3]
 
-			await expectThrow(
-				testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]))
-			);
+				const leftData = await createOrder(left, accounts[1], 0)
+				const rightData = await createOrder(right, accounts[2], 0)
 
-			await expectThrow(
-				testing.matchOrders(right, await getSignature(right, accounts[2]), left, await getSignature(left, accounts[1]))
-			);
+				await expectThrow(
+					testing.matchOrders(left, leftData.signature, right, rightData.signature)
+				);
+
+				await expectThrow(
+					testing.matchOrders(right, rightData.signature, left, leftData.signature)
+				);
+			})
+			
 
 		});
 
@@ -182,12 +211,18 @@ contract("ExchangeSimpleV2", accounts => {
 
 	describe("asset matcher", () => {
 		it("should throw if assets do not match", async () => {
-			const { left, right } = await prepare2Orders()
-			left.takeAsset.assetType.data = enc(accounts[1]);
+			await runTest(async createOrder => {
+				const { left, right } = await prepare2Orders()
+				left.takeAsset.assetType.data = enc(accounts[1]);
+				
+				const leftData = await createOrder(left, accounts[1], 0)
+				const rightData = await createOrder(right, accounts[2], 0)
 
-			await expectThrow(
-				testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]))
-			);
+				await expectThrow(
+					testing.matchOrders(left, leftData.signature, right, rightData.signature)
+				);	
+			})
+			
 		})
 	})
 
@@ -204,6 +239,59 @@ contract("ExchangeSimpleV2", accounts => {
 
 	async function getSignature(order, signer) {
 		return sign(order, signer, testing.address);
+	}
+
+	// creates an onchain order
+	async function createOnchainOrder(order, orderMaker, verify) {
+		//calculating amount of eth required for matching
+		let valMatch = 0;
+		let valCreate = 0;
+
+		if (order.makeAsset.assetType.assetClass == ETH){
+			valCreate = order.makeAsset.value * 2;
+		}
+		if (order.takeAsset.assetType.assetClass == ETH){
+			valMatch = order.takeAsset.value * 2;
+		}
+
+		const finalVerify = (!!verify) ? verify : 0;
+
+		//creating an onchain order
+		await verifyBalanceChange(orderMaker, finalVerify, async () =>
+			await testing.upsertOrder(order, { from: orderMaker, value: valCreate, gasPrice: 0 })
+		)
+
+		const amountToVerify = (finalVerify > 0) ? 0 : finalVerify;
+
+		return {signature:"0x", valMatch: valMatch, amountToVerify: amountToVerify};
+	}
+
+	//creates an offchaing order
+	async function createOffchainOrder(order, signer, verify) {
+		//getting the signature 
+		const sig = await getSignature(order, signer)
+
+		//calculating amount of eth required for matching
+		let valMatch = 0
+		if (order.makeAsset.assetType.assetClass == ETH){
+			valMatch = order.makeAsset.value * 2;
+		}
+		if (order.takeAsset.assetType.assetClass == ETH){
+			valMatch = order.takeAsset.value * 2;
+		}
+
+		const amountToVerify = (!!verify) ? verify : 0;
+
+		return {signature: sig, valMatch: valMatch, amountToVerify: amountToVerify};
+	}
+
+	//runs tests both for onchain and offchain cases
+	async function runTest(fn) {
+		await fn(createOffchainOrder)
+		
+		await resetState();
+		
+		await fn(createOnchainOrder)
 	}
 
 });
