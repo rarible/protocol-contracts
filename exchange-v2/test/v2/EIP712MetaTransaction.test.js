@@ -54,18 +54,6 @@ let executeMetaTransactionABI = {
     "stateMutability": "payable",
     "type": "function"
 };
-//let setQuoteAbi = {
-//    "inputs": [{
-//        "internalType": "string",
-//        "name": "newQuote",
-//        "type": "string"
-//    }],
-//    "name": "setQuote",
-//    "outputs": [],
-//    "payable": false,
-//    "stateMutability": "nonpayable",
-//    "type": "function"
-//};
 
 let matchOrdersAbi = {
     "inputs": [
@@ -451,11 +439,10 @@ const getTransactionData = async (nonce, abi, params) => {
     primaryType: "MetaTransaction",
     message: message
   };
-//    console.log("domainData", domainData)
   const signature = sigUtil.signTypedData_v4(new Buffer(privateKey.substring(2, 66), 'hex'), {
     data: dataToSign
   });
-//    console.log("sks:"+sigUtil.recoverTypedSignature_v4({sig:signature, data:dataToSign}) );
+//    console.log("test:"+sigUtil.recoverTypedSignature_v4({sig:signature, data:dataToSign}) ); for test only
   let r = signature.slice(0, 66);
   let s = "0x".concat(signature.slice(66, 130));
   let v = "0x".concat(signature.slice(130, 132));
