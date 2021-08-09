@@ -26,6 +26,10 @@ abstract contract ERC721RaribleUserBase is OwnableUpgradeable, ERC721BurnableUpg
         }
     }
 
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721Lazy) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
         require(owner() == data.creators[0].account, "minter is not the owner");
         super.mintAndTransfer(data, to);
