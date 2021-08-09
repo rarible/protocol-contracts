@@ -1,6 +1,8 @@
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
-const Impl = artifacts.require("ERC721RaribleUser");
+const Impl = artifacts.require("ERC721RaribleUser.sol");
+const ERC721Factory = artifacts.require("ERC721RaribleUserFactory.sol");
+const truffleAssert = require('truffle-assertions');
 
 const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -10,14 +12,20 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 	let impl;
 	let proxy;
 	let token;
+	let factory;
 	const tokenOwner = accounts[1];
+	let tokenOwnerTmp;
 
 	beforeEach(async () => {
 		impl = await Impl.new();
 		beacon = await UpgradeableBeacon.new(impl.address);
-		proxy = await BeaconProxy.new(beacon.address, "0x");
-		token = await Impl.at(proxy.address);
-		await token.__ERC721RaribleUser_init("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], { from: tokenOwner });
+		factory = await ERC721Factory.new(beacon.address);
+		resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], {from: tokenOwner});
+    truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleUserProxy', (ev) => {
+     	proxy = ev.proxy;
+      return true;
+    });
+		token = await Impl.at(proxy);
 	})
 
 	it("should work through beacon proxy", async () => {
@@ -26,11 +34,12 @@ contract("ERC721RaribleUser - upgrade", accounts => {
 
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
-
+    console.log("Before call _mintAndTransfer");
     const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
 
 		console.log("mint through proxy", tx.receipt.gasUsed);
     assert.equal(await token.ownerOf(tokenId), transferTo);
+    assert.equal(await token.name(), "name")
 
     const txTransfer = await token.safeTransferFrom(transferTo, minter, tokenId, { from: transferTo });
     console.log("transfer through proxy", txTransfer.receipt.gasUsed);
