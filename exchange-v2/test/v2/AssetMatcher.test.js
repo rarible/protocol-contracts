@@ -1,5 +1,6 @@
 const AssetMatcherTest = artifacts.require("AssetMatcherTest.sol");
 const TestAssetMatcher = artifacts.require("TestAssetMatcher.sol");
+const CustomCollectionAssetMatcher = artifacts.require("AssetMatcherCollection.sol");
 const order = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
@@ -25,6 +26,22 @@ contract("AssetMatcher", accounts => {
 		const result = await testing.matchAssetsTest(order.AssetType(ERC20, encoded), order.AssetType(id("BLA"), encoded));
 		assert.equal(result[0], ERC20);
 		assert.equal(result[1], encoded);
+	})
+
+	it("setAssetMatcher for collection (custom matcher) works", async () => {
+	  const tokenId = 3000;
+		const encoded = enc(accounts[5]);
+		const encodedNFT = enc(accounts[5], tokenId);
+
+		await expectThrow(
+			testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(id("COLLECTION"), encoded))
+		);
+
+		const testMatcher = await CustomCollectionAssetMatcher.new();
+		await testing.setAssetMatcher(id("COLLECTION"), testMatcher.address);
+		const result = await testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(id("COLLECTION"), encoded));
+		assert.equal(result[0], ERC1155);
+		assert.equal(result[1], encodedNFT);
 	})
 
 	describe("ETH", () => {
