@@ -6,13 +6,13 @@ pragma abicoder v2;
 import "./IAssetMatcher.sol";
 
 /*
- * Custom matcher for collection (any elements/or all from collection)
+ * Custom matcher for collection (assetClass, that need any/all elements from collection)
  */
 contract AssetMatcherCollection is IAssetMatcher {
 
     bytes constant EMPTY = "";
 
-    function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) external view override returns (LibAsset.AssetType memory) {
+    function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) public pure override returns (LibAsset.AssetType memory) {
         if ((rightAssetType.assetClass == LibAsset.ERC721_ASSET_CLASS) || (rightAssetType.assetClass == LibAsset.ERC1155_ASSET_CLASS)) {
             (address leftToken) = abi.decode(leftAssetType.data, (address));
             (address rightToken, uint tokenId) = abi.decode(rightAssetType.data, (address, uint));
