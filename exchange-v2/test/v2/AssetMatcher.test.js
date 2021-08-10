@@ -6,7 +6,8 @@ const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const tests = require("@daonomic/tests-common");
 const expectThrow = tests.expectThrow;
-const { enc, ETH, ERC20, ERC721, ERC1155, id } = require("../assets");
+const { enc, ETH, ERC20, ERC721, ERC1155, COLLECTION, id } = require("../assets");
+const truffleAssert = require('truffle-assertions');
 
 contract("AssetMatcher", accounts => {
 	let testing;
@@ -28,20 +29,63 @@ contract("AssetMatcher", accounts => {
 		assert.equal(result[1], encoded);
 	})
 
-	it("setAssetMatcher for collection (custom matcher) works", async () => {
+	it("setAssetMatcher for collection (custom matcher) ERC1155 <-> COLLECTION matches", async () => {
 	  const tokenId = 3000;
 		const encoded = enc(accounts[5]);
 		const encodedNFT = enc(accounts[5], tokenId);
 
 		await expectThrow(
-			testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(id("COLLECTION"), encoded))
+			testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded))
 		);
 
 		const testMatcher = await CustomCollectionAssetMatcher.new();
-		await testing.setAssetMatcher(id("COLLECTION"), testMatcher.address);
-		const result = await testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(id("COLLECTION"), encoded));
+		const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
+		const result = await testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded));
+
+		let assetTypeRes;
+		let matcher;
+		truffleAssert.eventEmitted(setRes, 'MatcherChange', (ev) => {
+     	assetTypeRes = ev.assetType;
+     	matcher = ev.matcher;
+      return true;
+    });
+
 		assert.equal(result[0], ERC1155);
 		assert.equal(result[1], encodedNFT);
+		assert.equal(matcher, testMatcher.address);
+	})
+
+	it("setAssetMatcher for collection (custom matcher) ERC721 <-> COLLECTION matches", async () => {
+	  const tokenId = 3000;
+		const encoded = enc(accounts[5]);
+		const encodedNFT = enc(accounts[5], tokenId);
+
+		await expectThrow(
+			testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded))
+		);
+
+		const testMatcher = await CustomCollectionAssetMatcher.new();
+		const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
+		const result = await testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded));
+
+		assert.equal(result[0], ERC721);
+		assert.equal(result[1], encodedNFT);
+	})
+
+	it("setAssetMatcher for collection (custom matcher) ERC20 <-> COLLECTION don`t match", async () => {
+	  const tokenId = 3000;
+		const encoded = enc(accounts[5]);
+		const encodedNFT = enc(accounts[5], tokenId);
+
+		await expectThrow(
+			testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded))
+		);
+
+		const testMatcher = await CustomCollectionAssetMatcher.new();
+		const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
+		const result = await testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded));
+
+		assert.equal(result[0], 0);
 	})
 
 	describe("ETH", () => {
