@@ -1,9 +1,5 @@
 const AssetMatcherCollection = artifacts.require("AssetMatcherCollection.sol");
 const order = require("../order");
-const EIP712 = require("../EIP712");
-const ZERO = "0x0000000000000000000000000000000000000000";
-const tests = require("@daonomic/tests-common");
-const expectThrow = tests.expectThrow;
 const { enc, ETH, ERC20, ERC721, ERC1155, COLLECTION, id } = require("../assets");
 
 contract("AssetMatcherCustom", accounts => {
