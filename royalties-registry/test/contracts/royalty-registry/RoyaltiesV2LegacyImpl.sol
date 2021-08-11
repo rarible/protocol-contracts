@@ -3,7 +3,7 @@
 pragma solidity >=0.6.2 <0.8.0;
 pragma abicoder v2;
 
-import "./RoyaltyV2Legacy.sol";
+import "../../../contracts/providers/RoyaltyV2Legacy.sol";
 
 contract RoyaltiesV2LegacyImpl is RoyaltyV2Legacy {
 

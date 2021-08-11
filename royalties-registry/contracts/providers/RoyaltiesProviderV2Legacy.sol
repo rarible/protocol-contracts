@@ -4,7 +4,7 @@ pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
-import "../../test/contracts/royalty-registry/RoyaltyV2Legacy.sol";
+import "./RoyaltyV2Legacy.sol";
 
 contract RoyaltiesProviderV2Legacy is IRoyaltiesProvider {
     function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
