@@ -27,6 +27,22 @@ contract("AssetMatcherCustom", accounts => {
       assert.equal(result[1], encodedNFT);
     });
 
+    it("Collection COLLECTION <-> ERC1155 (another collection) don`t match!", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[6], tokenId);
+      const result = await testingCustom.matchAssets(order.AssetType(COLLECTION, encoded), order.AssetType(ERC1155, encodedNFT));
+      assert.equal(result[0], 0);
+    });
+
+    it("Collection COLLECTION <-> ERC721 (another collection) don`t match!", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[6], tokenId);
+      const result = await testingCustom.matchAssets(order.AssetType(COLLECTION, encoded), order.AssetType(ERC721, encodedNFT));
+      assert.equal(result[0], 0);
+    });
+
     it("Collection COLLECTION <-> ERC20  don`t match", async () => {
       const encoded = enc(accounts[5]);
       const encodedERC20 = enc(accounts[5]);
