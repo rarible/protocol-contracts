@@ -56,6 +56,7 @@ Then, in this method the following actions are done:
     - finally, `transferPayouts`() is executed as the final action of `doTransfersWithFees`()
 
 
+
 - `transferPayouts`()
     - tranfers assets to payout address
     - orders can have any number of payout addresses, e.g. payouts can be split 50/50 between 2 accounts, or any other way
@@ -64,7 +65,7 @@ Then, in this method the following actions are done:
     - if `transferPayouts`() called for the nft side(non fee side), then it tranfers full amount of this asset
 
 
-So, to it all sum up, lets try to calculate all fees with a simple example
+So, to sum it all up, lets try to calculate all fees for a simple example
 - there are 2 orders
     1. `ETH 100` => `1 ERC721`, `orderMaker` = acc1, `origins` = [[acc2, 3%], [acc3, 10%]], `payouts` = [[acc1, 100%]] 
     2. `1 ERC721` => `100 ETH`, `orderMaker` = acc4, `origins` = [[]], `payouts` = [[acc4, 70%], [acc5, 30%]]
@@ -77,11 +78,11 @@ So, to it all sum up, lets try to calculate all fees with a simple example
         - lets assume protocol fee = 3%
         - lets calculate ETH amount to be sent for acc1
             - 100 ETH + 3% protocolFee + 3% acc2-origin + 10% acc3-origin = 100 + 0,16*100 = 116 ETH
-        - so acc1 need to send 116 ETH, from which 3 is going to be his part of the protocol fee, 3 sent to acc2 as origin, 10 sent to acc3 as origin too
+        - so acc1 needs to send 116 ETH, from which 3 is going to be his part of the protocol fee, 3 sent to acc2 as origin, 10 sent to acc3 as origin too
         - 3 more ETH are taken as acc4 prtocol fee, 97 left
         - 30 ETH payed as royalty to nft creator, 67 left
         - right order doesn't have origins, so we skip it
-        - what's left is divided between acc4 and acc5, as it says in right order payouts `payouts` = [[acc4, 70%], [acc5, 30%]], so 20,1 ETH goes to acc5, 46,9 ETH to acc4
+        - what's left is divided between acc4 and acc5, as it says in right order payouts (`payouts` = [[acc4, 70%], [acc5, 30%]]), so 20,1 ETH goes to acc5, 46,9 ETH to acc4
         - tranfer is done
 
 
