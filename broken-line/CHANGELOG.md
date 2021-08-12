@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/rariblecom/protocol-contracts/compare/@rarible/lib-broken-line@0.2.1...@rarible/lib-broken-line@0.3.0) (2021-08-12)
+
+
+### Features
+
+* make update() as original, add actualValue() - return BrokenLine actual bias ([f936ea8](https://github.com/rariblecom/protocol-contracts/commit/f936ea891f21c09f0bf2beee5eada07e2fa6fa8a))
+
+
+
+
+
 ## [0.2.1](https://github.com/rariblecom/protocol-contracts/compare/@rarible/lib-broken-line@0.2.0...@rarible/lib-broken-line@0.2.1) (2021-07-08)
 
 **Note:** Version bump only for package @rarible/lib-broken-line
