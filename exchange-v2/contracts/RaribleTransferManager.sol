@@ -134,7 +134,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft);
 
         (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
-        require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
+        require(totalRoyalties <= 9000, "Royalties are too high (>90%)");
         return result;
     }
 
