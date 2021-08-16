@@ -7,6 +7,8 @@ const TestERC721RoyaltyV2OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV2
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 const TestERC721RoyaltyV2Legacy = artifacts.require("TestERC721RoyaltyV2Legacy.sol");
 const RoyaltiesProviderV2Legacy = artifacts.require("RoyaltiesProviderV2Legacy.sol");
+const TestERC721ArtBlocks = artifacts.require("TestERC721ArtBlocks.sol");
+const RoyaltiesProviderArtBlocks = artifacts.require("RoyaltiesProviderArtBlocks.sol");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -195,6 +197,77 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			assert.equal(event["tokenId"], erc721TokenId1, "token id");
 			assert.equal(event.royalties[0][0], royaltiesToSet[0][0], "royalty recepient 0");
 			assert.equal(event.royalties[0][1], royaltiesToSet[0][1], "token address 0");
+
+		})
+		
+		it("using royaltiesProvider artBlocks", async () => {
+			await royaltiesRegistry.__RoyaltiesRegistry_init();
+
+			const artBlocksAddr = accounts[5];
+			const artistAdrr = accounts[2];
+			const addPayeeAddr = accounts[4];
+
+			//deploying contracts
+			const token = await TestERC721ArtBlocks.new("Rarible", "RARI", "https://ipfs.rarible.com");
+
+			//error when creating provider without artBlocks address
+			await expectThrow(
+				RoyaltiesProviderArtBlocks.new("0x0000000000000000000000000000000000000000")
+			);
+
+			const provider = await RoyaltiesProviderArtBlocks.new(artBlocksAddr);
+
+			//setting provider in registry
+			await royaltiesRegistry.setProviderByToken(token.address, provider.address);
+
+			//creating token and setting royalties
+			await token.mint(artistAdrr, erc721TokenId1);
+			await token.updateProjectAdditionalPayeeInfo(erc721TokenId1, addPayeeAddr, 44);
+			await token.updateProjectSecondaryMarketRoyaltyPercentage(erc721TokenId1, 15);
+
+			//getting royalties for token
+			const royaltiesFromProvider = await provider.getRoyalties(token.address, erc721TokenId1);
+
+			assert.equal(royaltiesFromProvider[0].account, artBlocksAddr, "artBlocks royalty address")
+			assert.equal(royaltiesFromProvider[0].value, 250, "artBlocks royalty percentage")
+
+			assert.equal(royaltiesFromProvider[1].account, artistAdrr, "artist royalty address")
+			assert.equal(royaltiesFromProvider[1].value, 840, "artBlocks royalty percentage")
+
+			assert.equal(royaltiesFromProvider[2].account, addPayeeAddr, "additional payee royalty address")
+			assert.equal(royaltiesFromProvider[2].value, 660, "additional payee royalty percentage")
+			
+			//changing artBlocksAddr
+			const newArtBlocksAddr = accounts[6]
+			await provider.setArtblocksAddress(newArtBlocksAddr, {from: artBlocksAddr})
+
+			await expectThrow(
+				provider.setArtblocksAddress(artBlocksAddr, {from: artBlocksAddr})
+			);
+
+			await expectThrow(
+				provider.setArtblocksAddress("0x0000000000000000000000000000000000000000", {from: newArtBlocksAddr})
+			);
+
+			//checking royalties
+			let event;
+			const tx = await royaltiesRegistry.getRoyalties(token.address, erc721TokenId1)
+			truffleAssert.eventEmitted(tx, 'RoyaltiesSetForToken', (ev) => {
+				event = ev;
+				return true;
+			});
+			assert.equal(event["token"], token.address, "token address");
+			assert.equal(event["tokenId"], erc721TokenId1, "token id");
+
+			assert.equal(event.royalties[0].account, newArtBlocksAddr, "artBlocks addr");
+			assert.equal(event.royalties[0].value, 250, "artBlocks value");
+
+			assert.equal(event.royalties[1].account, artistAdrr, "artist addr");
+			assert.equal(event.royalties[1].value, 840, "artist value");
+
+			assert.equal(event.royalties[2].account, addPayeeAddr, "additional payee addr");
+			assert.equal(event.royalties[2].value, 660, "additional payee value");
+			
 
 		})
 
