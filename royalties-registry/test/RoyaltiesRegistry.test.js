@@ -5,6 +5,9 @@ const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
 const TestERC721RoyaltyV2OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV2OwnableUpgradeable");
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
+const TestERC721RoyaltyV2Legacy = artifacts.require("TestERC721RoyaltyV2Legacy.sol");
+const RoyaltiesProviderV2Legacy = artifacts.require("RoyaltiesProviderV2Legacy.sol");
+
 const truffleAssert = require('truffle-assertions');
 
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
@@ -194,7 +197,7 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			assert.equal(event.royalties[0][1], royaltiesToSet[0][1], "token address 0");
 
 		})
-		
+
 		it("SetProviderByToken, initialize by Owner", async () => {
   		await royaltiesRegistry.__RoyaltiesRegistry_init();//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
