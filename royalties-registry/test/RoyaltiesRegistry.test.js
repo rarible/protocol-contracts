@@ -168,6 +168,33 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 	})
 
 	describe ("ExternalProviders test:", () => {
+
+		it("using royaltiesProvider v2 legacy", async () => {
+			await royaltiesRegistry.__RoyaltiesRegistry_init();
+
+			const token = await TestERC721RoyaltyV2Legacy.new("Rarible", "RARI", "https://ipfs.rarible.com");
+			const provider = await RoyaltiesProviderV2Legacy.new();
+
+			await royaltiesRegistry.setProviderByToken(token.address, provider.address);
+
+			const royaltiesToSet = [[accounts[1], 1000]]
+			await token.mint(accounts[2], erc721TokenId1);
+			await token._saveRoyalties(erc721TokenId1, royaltiesToSet)
+
+			let event;
+			const tx = await royaltiesRegistry.getRoyalties(token.address, erc721TokenId1)
+			truffleAssert.eventEmitted(tx, 'RoyaltiesSetForToken', (ev) => {
+				event = ev;
+				return true;
+			});
+
+			assert.equal(event["token"], token.address, "token address");
+			assert.equal(event["tokenId"], erc721TokenId1, "token id");
+			assert.equal(event.royalties[0][0], royaltiesToSet[0][0], "royalty recepient 0");
+			assert.equal(event.royalties[0][1], royaltiesToSet[0][1], "token address 0");
+
+		})
+		
 		it("SetProviderByToken, initialize by Owner", async () => {
   		await royaltiesRegistry.__RoyaltiesRegistry_init();//initialize Owner
       ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com");
