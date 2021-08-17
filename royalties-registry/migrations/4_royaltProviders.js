@@ -2,12 +2,10 @@ const RoyaltiesRegistry = artifacts.require('RoyaltiesRegistry');
 const RoyaltiesProviderV2Legacy = artifacts.require("RoyaltiesProviderV2Legacy");
 
 const rinkeby = {
-    v2Legacy: [],
+    v2Legacy: ["0x0A093d230ba7845BcA0898851B093B8B19bc1Ae1"],
 }
 const mainnet = {
-    v2Legacy: [
-
-    ],
+    v2Legacy: ["0x0A093d230ba7845BcA0898851B093B8B19bc1Ae1"],
 }
 const ropsten = {
     v2Legacy: [],
@@ -54,6 +52,7 @@ async function setV2LegacyProvider(deployer, royaltiesRegistry, settings){
         return;
     }
     for (const token of settings.v2Legacy){
+    		console.log("setting royalty provider for ", token)
         await royaltiesRegistry.setProviderByToken(token, providerV2Legacy.address,{ gas: 100000 });
         console.log(`set royaltyProviderV2Legacy ${providerV2Legacy.address} for token ${token}`)
     }
