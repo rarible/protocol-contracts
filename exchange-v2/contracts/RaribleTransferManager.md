@@ -9,17 +9,17 @@ Types of fees supported:
 - royalties (provided by external `IRoyaltiesProvider`)
 
 ### Algorithm
-The tranfering of assets takes places inside doTransfers() method, it takes following parameters as arguments:
-- `LibAsset.AssetType` memory `makeMatch` - `AssetType` of a make-side asset of the order
-- `LibAsset.AssetType` memory `takeMatch` - `AssetType` of a take-side asset of the order
-- `LibFill.FillResult` memory `fill` - values from both sides to be transfered by this match
-- `LibOrder.Order` memory `leftOrder` - left order data
-- `LibOrder.Order` memory `rightOrder` - right order data
+The transfering of assets takes places inside `doTransfers`, it takes following parameters as arguments:
+- `LibAsset.AssetType` `makeMatch` - `AssetType` of a make-side asset of the order
+- `LibAsset.AssetType` `takeMatch` - `AssetType` of a take-side asset of the order
+- `LibFill.FillResult` `fill` - values from both sides to be transfered by this match
+- `LibOrder.Order` `leftOrder` - left order data
+- `LibOrder.Order` `rightOrder` - right order data
 
 Then, in this method the following actions are done:
 
 1. At first, fee side of the deal is calculated (Asset that can be interpreted as money). All fees and royalties will be taken in that Asset.
-    - to do so, we use `LibFeeSide.getFeeSide`() method, it takes assetClasses of both sides as arguments (e.g. "`ETH`" and "`ERC20`") and tries to determine which side is the fee side
+    - to do so, we use `LibFeeSide.getFeeSide`, it takes assetClasses of both sides as arguments (e.g. "`ETH`" and "`ERC20`") and tries to determine which side is the fee side
     - firstly it checks both assets for being `ETH`, if assetClass of any side is `ETH` then that side is the fee-side
     - if there is no `ETH` in this match, both sides are checked for being `ERC20`
     - then both sides are checked for being `ERC1155`
@@ -28,15 +28,15 @@ Then, in this method the following actions are done:
 
 2. then transfers are made:
     - if fee side is make:
-        - `doTransfersWithFees`() is called for the make side,
-        - `transferPayouts`() for the take side
+        - `doTransfersWithFees` is called for the make side,
+        - `transferPayouts` for the take side
     - fee side is take 
-        - `doTransfersWithFees`() is called for the take side,
-        - `transferPayouts`() for the make side
+        - `doTransfersWithFees` is called for the take side,
+        - `transferPayouts` for the make side
     - fee side is NONE:
-        - `transferPayouts`() is called for both sides
+        - `transferPayouts` is called for both sides
 
-- `doTransfersWithFees`() 
+- `doTransfersWithFees` 
     - calculates total amount of asset that is going to be transfered
     - transfers protocol fee to protocol/community
         - now protocol fee is set at 3%
@@ -53,16 +53,16 @@ Then, in this method the following actions are done:
         - royalties can't be over 50 %
     - after that, origin fees are tranfered
         - origins can be added to any order, order maker just need to set any number of accounts and corresponing fee persentage
-    - finally, `transferPayouts`() is executed as the final action of `doTransfersWithFees`()
+    - finally, `transferPayouts` is executed as the final action of `doTransfersWithFees`()
 
 
 
-- `transferPayouts`()
+- `transferPayouts`
     - tranfers assets to payout address
     - orders can have any number of payout addresses, e.g. payouts can be split 50/50 between 2 accounts, or any other way
     - payuots are set in order by order maker
-    - if `transferPayouts`() called in the end of `doTransfersWithFees`(), then it tranfers all that's left after paying fees
-    - if `transferPayouts`() called for the nft side(non fee side), then it tranfers full amount of this asset
+    - if `transferPayouts` called in the end of `doTransfersWithFees`(), then it tranfers all that's left after paying fees
+    - if `transferPayouts` called for the nft side(non fee side), then it tranfers full amount of this asset
 
 
 So, to sum it all up, lets try to calculate all fees for a simple example
@@ -76,7 +76,7 @@ So, to sum it all up, lets try to calculate all fees for a simple example
         - there is only one payout address and 1 token, so it simply gets tranfered to acc1
     - `doTransfersWithFees`(100 ETH)
         - lets assume protocol fee = 3%
-        - lets calculate ETH amount to be sent for acc1
+        - lets calculate ETH amount to be sent by acc1
             - 100 ETH + 3% protocolFee + 3% acc2-origin + 10% acc3-origin = 100 + 0,16*100 = 116 ETH
         - so acc1 needs to send 116 ETH, from which 3 is going to be his part of the protocol fee, 3 sent to acc2 as origin, 10 sent to acc3 as origin too
         - 3 more ETH are taken as acc4 prtocol fee, 97 left
