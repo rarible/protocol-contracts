@@ -42,11 +42,11 @@ Then, in this method the following actions are done:
         - now protocol fee is set at 3%
         - both users pay protocol fee and origin fees (from their order), so if the fee side value is 100 eth, the user that sends ether should send at least 
             ```
-            amount + (protocolFee + origin fees) * amount = 100 + 0,03*100 = 103 ETH
+            amount + (protocol fee + origin fees) * amount = 100 + 0,03*100 = 103 ETH
             ```
             and the user that gets ether will get
             ```
-            amount - (protocolFee + origin fees) * amount = 100 - 0,03*100 = 97 ETH
+            amount - (protocol fee + origin fees) * amount = 100 - 0,03*100 = 97 ETH
             ``` 
     - then royalties are transfered
         - royalty is a fee that transfered to creator of `ERC1155`/`ERC721` token from every purchase
@@ -55,7 +55,7 @@ Then, in this method the following actions are done:
         - origin fees can be added to any order, it's an array of address + value
     - finally, `transferPayouts` is executed as the final action of `doTransfersWithFees`
 
-
+![Fees](../images/fees.svg)
 
 - `transferPayouts`
     - tranfers assets to payout address
