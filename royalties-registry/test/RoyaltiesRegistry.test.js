@@ -239,7 +239,14 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			
 			//changing artBlocksAddr
 			const newArtBlocksAddr = accounts[6]
-			await provider.setArtblocksAddress(newArtBlocksAddr, {from: artBlocksAddr})
+			let eventSetAddr;
+			const txSetAddr = await provider.setArtblocksAddress(newArtBlocksAddr, {from: artBlocksAddr})
+			truffleAssert.eventEmitted(txSetAddr, 'ArtblocksAddressChanged', (ev) => {
+				eventSetAddr = ev;
+				return true;
+			});
+			assert.equal(eventSetAddr._from, artBlocksAddr, "from artBlocks addr");
+			assert.equal(eventSetAddr._to, newArtBlocksAddr, "to artBlocks addr");
 
 			await expectThrow(
 				provider.setArtblocksAddress(artBlocksAddr, {from: artBlocksAddr})

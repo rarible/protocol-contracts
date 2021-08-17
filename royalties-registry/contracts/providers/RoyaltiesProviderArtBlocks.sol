@@ -14,8 +14,10 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider {
     uint96 artblocksPercentage = 250;
     address payable artblocksAddress;
 
+    event ArtblocksAddressChanged(address _from, address _to);
+
     constructor(address payable _artblocksAddress) {
-        require(_artblocksAddress != address(0), "need to set artblocksAddress");
+        require(_artblocksAddress != address(0), "invalid artblocksAddress");
         artblocksAddress = _artblocksAddress;
     }
 
@@ -56,11 +58,12 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider {
     }
 
     function setArtblocksAddress(address payable _artblocksAddress) external {
-        require(_artblocksAddress != address(0), "need to set artblocksAddress");
+        require(_artblocksAddress != address(0), "invalid artblocksAddress");
         require(msg.sender == artblocksAddress, "no permission to change artblocksAddress");
 
         artblocksAddress = _artblocksAddress;
 
+        emit ArtblocksAddressChanged(msg.sender, _artblocksAddress);
     }
 
 
