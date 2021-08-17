@@ -47,7 +47,7 @@ module.exports = async function (deployer, network) {
 
 };
 
-// sets royaltyProvider for v2 legacy royalty
+// sets royalties Provider for v2 legacy royalty
 async function setV2LegacyProvider(deployer, royaltiesRegistry, settings){
     const providerV2Legacy = await RoyaltiesProviderV2Legacy.deployed().catch(() => deployer.deploy(RoyaltiesProviderV2Legacy,{ gas: 500000 }));
     if (!settings.v2Legacy) {
@@ -55,6 +55,6 @@ async function setV2LegacyProvider(deployer, royaltiesRegistry, settings){
     }
     for (const token of settings.v2Legacy){
         await royaltiesRegistry.setProviderByToken(token, providerV2Legacy.address,{ gas: 100000 });
-        console.log(`set royaltyProviderV2Legacy ${providerV2Legacy.address} for token ${token}`)
+        console.log(`set royalties ProviderV2Legacy ${providerV2Legacy.address} for token ${token}`)
     }
 }
