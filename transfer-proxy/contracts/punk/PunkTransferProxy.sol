@@ -15,7 +15,7 @@ contract PunkTransferProxy is ITransferProxy {
         require(ICryptoPunksMarket(token).punkIndexToAddress(punkIndex) == from, "Seller not punk owner");
         //buy punk to proxy, now proxy is owner
         ICryptoPunksMarket(token).buyPunk(punkIndex);
-        //offer punk to
-        ICryptoPunksMarket(token).offerPunkForSaleToAddress(punkIndex, 0, to);
+        //Transfer ownership of a punk to buyer
+        ICryptoPunksMarket(token).transferPunk(to, punkIndex);
     }
 }
