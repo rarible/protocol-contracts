@@ -209,13 +209,8 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 
 			//deploying contracts
 			const token = await TestERC721ArtBlocks.new("Rarible", "RARI", "https://ipfs.rarible.com");
-
-			//error when creating provider without artBlocks address
-			await expectThrow(
-				RoyaltiesProviderArtBlocks.new("0x0000000000000000000000000000000000000000")
-			);
-
-			const provider = await RoyaltiesProviderArtBlocks.new(artBlocksAddr);
+			const provider = await RoyaltiesProviderArtBlocks.new();
+			await provider.__RoyaltiesProviderArtBlocks_init({from: artBlocksAddr});
 
 			//setting provider in registry
 			await royaltiesRegistry.setProviderByToken(token.address, provider.address);
@@ -240,20 +235,16 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			//changing artBlocksAddr
 			const newArtBlocksAddr = accounts[6]
 			let eventSetAddr;
-			const txSetAddr = await provider.setArtblocksAddress(newArtBlocksAddr, {from: artBlocksAddr})
-			truffleAssert.eventEmitted(txSetAddr, 'ArtblocksAddressChanged', (ev) => {
+			const txSetAddr = await provider.transferOwnership(newArtBlocksAddr, {from: artBlocksAddr})
+			truffleAssert.eventEmitted(txSetAddr, 'OwnershipTransferred', (ev) => {
 				eventSetAddr = ev;
 				return true;
 			});
-			assert.equal(eventSetAddr._from, artBlocksAddr, "from artBlocks addr");
-			assert.equal(eventSetAddr._to, newArtBlocksAddr, "to artBlocks addr");
+			assert.equal(eventSetAddr.previousOwner, artBlocksAddr, "from artBlocks addr");
+			assert.equal(eventSetAddr.newOwner, newArtBlocksAddr, "to artBlocks addr");
 
 			await expectThrow(
-				provider.setArtblocksAddress(artBlocksAddr, {from: artBlocksAddr})
-			);
-
-			await expectThrow(
-				provider.setArtblocksAddress("0x0000000000000000000000000000000000000000", {from: newArtBlocksAddr})
+				provider.transferOwnership(artBlocksAddr, {from: artBlocksAddr})
 			);
 
 			//checking royalties
@@ -274,8 +265,21 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 
 			assert.equal(event.royalties[2].account, addPayeeAddr, "additional payee addr");
 			assert.equal(event.royalties[2].value, 660, "additional payee value");
-			
 
+			//setting new artblocksPercentage
+			let eventChangePercentage;
+			const txChangePercentage = await provider.setArtblocksPercentage(300, {from: newArtBlocksAddr})
+			truffleAssert.eventEmitted(txChangePercentage, 'ArtblocksPercentageChanged', (ev) => {
+				eventChangePercentage = ev;
+				return true;
+			});
+			assert.equal(eventChangePercentage._who, newArtBlocksAddr, "from artBlocks addr");
+			assert.equal(eventChangePercentage._old, 250, "old percentage");
+			assert.equal(eventChangePercentage._new, 300, "new percentage");
+
+			await expectThrow(
+				provider.setArtblocksPercentage(0, {from: artBlocksAddr})
+			);
 		})
 
 		it("SetProviderByToken, initialize by Owner", async () => {

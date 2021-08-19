@@ -50,29 +50,33 @@ function getSettings(network) {
 module.exports = async function (deployer, network) {
     const settings = getSettings(network)
     const royaltiesRegistry = await RoyaltiesRegistry.deployed();
-
-    await setArtBlocksProvider(deployer, royaltiesRegistry, settings)
+    await setArtBlocksProvider(deployer, network, royaltiesRegistry, settings)
 
 };
 
 // sets royalties Provider for v2 legacy royalty
-async function setArtBlocksProvider(deployer, royaltiesRegistry, settings){
-    if (!settings.tokens) {
-        return;
-    }
-    if (settings.tokens.length == 0) {
+async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settings){
+    // can't deploy without token address
+    if (!settings.tokens || settings.tokens.length == 0) {
         return;
     }
 
-    const artBlocksAddr = (!!settings.artblocksAddress) ? settings.artblocksAddress : ZERO;
-    const royaltiesProviderArtBlocks = await RoyaltiesProviderArtBlocks.deployed().catch(
-        () => deployer.deploy(RoyaltiesProviderArtBlocks, artBlocksAddr, { gas: 500000 })
+    //can't deploy without artblocksAddress
+    if (!settings.artblocksAddress || settings.artblocksAddress == ""){
+        console.log(`artblocksAddress not set on network ${network} for tokens :${settings.tokens}`)
+        return;
+    }
+
+    await RoyaltiesProviderArtBlocks.deployed().catch(
+        async () => {
+            const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, { gas: 1000000 });
+            await contract.__RoyaltiesProviderArtBlocks_init({from: settings.artblocksAddress, gas: 200000})
+            console.log(`set artblocksAddress ${settings.artblocksAddress} for royaltiesProviderArtBlocks ${contract.address}`)
+            for (const token of settings.tokens){
+                await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });
+                console.log(`set royalties royaltiesProviderArtBlocks ${contract.address} for token ${token}`)
+            }
+            return contract;
+        }
     );
-    console.log(`set artblocksAddress ${artBlocksAddr} for royaltiesProviderArtBlocks ${royaltiesProviderArtBlocks.address}`)
-    
-    for (const token of settings.tokens){
-        await royaltiesRegistry.setProviderByToken(token, royaltiesProviderArtBlocks.address,{ gas: 100000 });
-        console.log(`set royalties royaltiesProviderArtBlocks ${royaltiesProviderArtBlocks.address} for token ${token}`)
-    }
-
 }

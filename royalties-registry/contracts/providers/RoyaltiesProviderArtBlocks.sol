@@ -6,19 +6,21 @@ pragma abicoder v2;
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./RoyaltyArtBlocks.sol";
 import "../lib/BpLibrary.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider {
+contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, OwnableUpgradeable {
     using SafeMathUpgradeable for uint;
     using BpLibrary for uint;
 
-    uint96 artblocksPercentage = 250;
-    address payable artblocksAddress;
+    uint96 artblocksPercentage;
 
-    event ArtblocksAddressChanged(address _from, address _to);
+    event ArtblocksPercentageChanged(address _who, uint96 _old, uint96 _new);
 
-    constructor(address payable _artblocksAddress) {
-        require(_artblocksAddress != address(0), "invalid artblocksAddress");
-        artblocksAddress = _artblocksAddress;
+    function __RoyaltiesProviderArtBlocks_init() external initializer {
+        __Ownable_init();
+
+        //initail value is 250
+        setArtblocksPercentage(250);
     }
 
     function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
@@ -38,7 +40,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider {
         }
 
         //calculating artBLocks part
-        result[0].account = artblocksAddress;
+        result[0].account = payable(owner());
         result[0].value = artblocksPercentage;
 
         // additional payee percentage * 100
@@ -57,15 +59,10 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider {
         return result;
     }
 
-    function setArtblocksAddress(address payable _artblocksAddress) external {
-        require(_artblocksAddress != address(0), "invalid artblocksAddress");
-        require(msg.sender == artblocksAddress, "no permission to change artblocksAddress");
-
-        artblocksAddress = _artblocksAddress;
-
-        emit ArtblocksAddressChanged(msg.sender, _artblocksAddress);
+    //sets new value for artblocksPercentage
+    function setArtblocksPercentage(uint96 _artblocksPercentage) onlyOwner public {
+        emit ArtblocksPercentageChanged(_msgSender(), artblocksPercentage, _artblocksPercentage);
+        artblocksPercentage = _artblocksPercentage;
     }
-
-
 
 }
