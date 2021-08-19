@@ -4,7 +4,9 @@ const RoyaltiesProviderArtBlocks = artifacts.require("RoyaltiesProviderArtBlocks
 const ZERO = "0x0000000000000000000000000000000000000000";
 
 const rinkeby = {
-    tokens: [],
+    tokens: [
+        "0x152eeE3DCc5526efd646E9b45c9a9672BfFcc097"
+    ],
     artblocksAddress: ""
 }
 const mainnet = {
