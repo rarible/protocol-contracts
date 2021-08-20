@@ -27,7 +27,7 @@ abstract contract SimpleTransferManager is ITransferManager {
         uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) internal override pure returns (uint total){
+    ) internal override pure returns (uint total) {
         return amount;
     }
     uint256[50] private __gap;

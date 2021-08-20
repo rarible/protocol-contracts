@@ -60,7 +60,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	beforeEach(resetState);
 
-	describe("onchain orders creation", () => {
+	describe("onchain orders", () => {
         it("should create, update then cancel order", async () => {
             const maker = accounts[2]
             const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");

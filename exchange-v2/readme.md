@@ -135,5 +135,6 @@ TODO: there is possibility to change authorization for cancel function - add aut
 ExchangeV2 contract emits these events:
 - Match (when orders are matched)
 - Cancel (when user cancels the order)
+- UpsertOrder (when user creates or updates onchain order)
 
 TODO: currently, there are no indexed fields in events, because rarible protocol uses internal indexing. Possibly, indexed fields will be added in future.  
