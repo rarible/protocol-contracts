@@ -1,6 +1,6 @@
 const AssetMatcherTest = artifacts.require("AssetMatcherTest.sol");
 const TestAssetMatcher = artifacts.require("TestAssetMatcher.sol");
-const CustomCollectionAssetMatcher = artifacts.require("AssetMatcherCollection.sol");
+const CustomCollectionAssetMatcher = artifacts.require("AssetMatcherCollectionTest.sol");
 const order = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";

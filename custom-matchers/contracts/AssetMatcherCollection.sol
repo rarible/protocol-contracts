@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./IAssetMatcher.sol";
+import "../../exchange-v2/contracts/IAssetMatcher.sol";
 
 /*
  * Custom matcher for collection (assetClass, that need any/all elements from collection)

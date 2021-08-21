@@ -1,6 +1,6 @@
 const AssetMatcherCollection = artifacts.require("AssetMatcherCollection.sol");
-const order = require("../order");
-const { enc, ETH, ERC20, ERC721, ERC1155, COLLECTION, id } = require("../assets");
+const order = require("../../exchange-v2/test/order.js");
+const { enc, ETH, ERC20, ERC721, ERC1155, COLLECTION, id } = require("../../exchange-v2/test/assets.js");
 
 contract("AssetMatcherCustom", accounts => {
 	let testingCustom;
