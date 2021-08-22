@@ -234,5 +234,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return false;
     }
 
-    uint256[47] private __gap;
+    uint256[48] private __gap;
 }

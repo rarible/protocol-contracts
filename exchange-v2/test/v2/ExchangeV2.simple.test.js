@@ -41,6 +41,32 @@ contract("ExchangeSimpleV2", accounts => {
 		assert.equal(await wrapper.getSomething(), 10);
 	})
 
+	describe("onchain orders", () => {
+		it("isTheSameAsOnChain() works correctly", async () => {
+			const maker = accounts[2]
+			const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			const orderHash = await libOrder.hashKey(order);
+	
+			const existanceBeforeCreation = await testing.isTheSameAsOnChainTest(order, orderHash);
+			assert.equal(existanceBeforeCreation, false, "existance before creation")
+	
+			const createOrder = async () => testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 });
+			await verifyBalanceChange(maker, 200 , createOrder);
+	
+			const existanceAfterCreation = await testing.isTheSameAsOnChainTest(order, orderHash)
+			assert.equal(existanceAfterCreation, true, "existance after creation")
+	
+			const newOrder = Order(maker, Asset(ETH, "0x", 500), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			const newOrderHash = await libOrder.hashKey(newOrder);
+			assert.equal(orderHash, newOrderHash, "new order hash")
+	
+			const existanceOfNewOrder = await testing.isTheSameAsOnChainTest(newOrder, orderHash)
+			assert.equal(existanceOfNewOrder, false, "2 orders are different with the same hash")
+	
+		})
+	})
+
+
 	describe("matchOrders", () => {
 		it("eth orders work, rest is returned to taker", async () => {
 			await runTest(async createOrder => {
