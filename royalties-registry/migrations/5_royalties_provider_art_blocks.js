@@ -71,8 +71,7 @@ async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settin
 
     await RoyaltiesProviderArtBlocks.deployed().catch(
         async () => {
-            const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, { gas: 1000000 });
-            await contract.__RoyaltiesProviderArtBlocks_init({from: settings.artblocksAddress, gas: 200000})
+            const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, settings.artblocksAddress,  { gas: 1000000 });
             console.log(`set artblocksAddress ${settings.artblocksAddress} for royaltiesProviderArtBlocks ${contract.address}`)
             for (const token of settings.tokens){
                 await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });

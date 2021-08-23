@@ -209,8 +209,13 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 
 			//deploying contracts
 			const token = await TestERC721ArtBlocks.new("Rarible", "RARI", "https://ipfs.rarible.com");
-			const provider = await RoyaltiesProviderArtBlocks.new();
-			await provider.__RoyaltiesProviderArtBlocks_init({from: artBlocksAddr});
+			const provider = await RoyaltiesProviderArtBlocks.new({from: artBlocksAddr});
+
+			const owner = await provider.owner();
+			assert.equal(owner, artBlocksAddr, "owner")
+
+			const artblocksPercentage = await provider.artblocksPercentage();
+			assert.equal(artblocksPercentage, 250, "artblocksPercentage")
 
 			//setting provider in registry
 			await royaltiesRegistry.setProviderByToken(token.address, provider.address);

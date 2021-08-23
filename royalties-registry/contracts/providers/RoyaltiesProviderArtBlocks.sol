@@ -6,22 +6,15 @@ pragma abicoder v2;
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./RoyaltyArtBlocks.sol";
 import "../lib/BpLibrary.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, OwnableUpgradeable {
+contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
     using SafeMathUpgradeable for uint;
     using BpLibrary for uint;
 
-    uint96 artblocksPercentage;
+    uint96 public artblocksPercentage = 250;
 
     event ArtblocksPercentageChanged(address _who, uint96 _old, uint96 _new);
-
-    function __RoyaltiesProviderArtBlocks_init() external initializer {
-        __Ownable_init();
-
-        //initail value is 250
-        setArtblocksPercentage(250);
-    }
 
     function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
 
