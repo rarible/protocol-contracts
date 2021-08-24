@@ -17,7 +17,7 @@ const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, LOCK, UNLOCK, TO_LOCK, enc, id } = require("../assets");
 
 contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 	let testing;
@@ -60,7 +60,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	beforeEach(resetState);
 
-	describe("onchain orders", () => {
+	describe("on-chain orders", () => {
         it("should create, update then cancel order", async () => {
             const maker = accounts[2]
             const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
@@ -89,37 +89,53 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
             assert.equal(existanceAfterCanceling, false, "existance after updating")
         })
 
-		it("upsert event works", async () => {
+		it("upsert events works", async () => {
 			const maker = accounts[2]
             const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 
 			const tx = await testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 });
+			let orderFromEvent;
 			truffleAssert.eventEmitted(tx, 'UpsertOrder', (ev) => {
 				orderFromEvent = ev.order;
-			 return true;
-		   });
+			 	return true;
+		   	});
 
-		   //general data
-		   assert.equal(orderFromEvent.maker, order.maker, "maker")
-		   assert.equal(orderFromEvent.taker, order.taker, "taker")
-		   assert.equal(orderFromEvent.salt, order.salt, "salt")
-		   assert.equal(orderFromEvent.start, order.start, "start")
-		   assert.equal(orderFromEvent.end, order.end, "end")
-		   assert.equal(orderFromEvent.dataType, order.dataType, "dataType")
-		   assert.equal(orderFromEvent.data, order.data, "data")
+			//general data
+			assert.equal(orderFromEvent.maker, order.maker, "maker")
+			assert.equal(orderFromEvent.taker, order.taker, "taker")
+			assert.equal(orderFromEvent.salt, order.salt, "salt")
+			assert.equal(orderFromEvent.start, order.start, "start")
+			assert.equal(orderFromEvent.end, order.end, "end")
+			assert.equal(orderFromEvent.dataType, order.dataType, "dataType")
+			assert.equal(orderFromEvent.data, order.data, "data")
 
-		   //makeAsset
-		   assert.equal(orderFromEvent.makeAsset.assetType.assetClass, order.makeAsset.assetType.assetClass, "makeAsset assetType assetClass")
-		   assert.equal(orderFromEvent.makeAsset.assetType.data, order.makeAsset.assetType.data, "makeAsset assetType data")
-		   assert.equal(orderFromEvent.makeAsset.value, order.makeAsset.value, "makeAsset value")
+			//makeAsset
+			assert.equal(orderFromEvent.makeAsset.assetType.assetClass, order.makeAsset.assetType.assetClass, "makeAsset assetType assetClass")
+			assert.equal(orderFromEvent.makeAsset.assetType.data, order.makeAsset.assetType.data, "makeAsset assetType data")
+			assert.equal(orderFromEvent.makeAsset.value, order.makeAsset.value, "makeAsset value")
 
-		   //takeAsset
-		   assert.equal(orderFromEvent.takeAsset.assetType.assetClass, order.takeAsset.assetType.assetClass, "takeAsset assetType assetClass")
-		   assert.equal(orderFromEvent.takeAsset.assetType.data, order.takeAsset.assetType.data, "takeAsset assetType data")
-		   assert.equal(orderFromEvent.takeAsset.value, order.takeAsset.value, "takeAsset value")
+			//takeAsset
+			assert.equal(orderFromEvent.takeAsset.assetType.assetClass, order.takeAsset.assetType.assetClass, "takeAsset assetType assetClass")
+			assert.equal(orderFromEvent.takeAsset.assetType.data, order.takeAsset.assetType.data, "takeAsset assetType data")
+			assert.equal(orderFromEvent.takeAsset.value, order.takeAsset.value, "takeAsset value")
+
+			//Tranfer event
+			let tranferEvent;
+			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+				tranferEvent = ev;
+				return true;
+			});
+			assert.equal(tranferEvent.asset.assetType.assetClass, order.makeAsset.assetType.assetClass, "tranfer assetType assetclass" )
+			assert.equal(tranferEvent.asset.assetType.data, order.makeAsset.assetType.data, "tranfer assetType data" )
+			assert.equal(tranferEvent.asset.value, 206, "tranfer asset value")
+			assert.equal(tranferEvent.from, order.maker, "tranfer from")
+			assert.equal(tranferEvent.to, testing.address, "tranfer to")
+			assert.equal(tranferEvent.transferDirection, TO_LOCK, "transferDirection")
+			assert.equal(tranferEvent.transferType, LOCK, "transferType")
+
         })
 
-		it("update onchain order with fill", async () => {
+		it("update on-chain order with fill", async () => {
 			const makerLeft = accounts[1];
 			const makerRight = accounts[2];
 
@@ -176,6 +192,41 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			
 			assert.equal(await t1.balanceOf(makerLeft), 80);
 			assert.equal(await t1.balanceOf(makerRight), 20);
+		})
+
+		it("update protocolFee then update on-chain order", async () => {
+			const maker = accounts[2]
+            const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+            const orderHash = await libOrder.hashKey(order);
+
+			//protocol fee is not set for the order yet
+			const protocolFeeBeforeCreation = await testing.ordersProtocolFee(orderHash)
+			assert.equal(protocolFeeBeforeCreation.fee.toNumber(), 0, "protocolFeeBeforeCreation.fee")
+			assert.equal(protocolFeeBeforeCreation.set, false, "protocolFeeBeforeCreation.set")
+
+            const createOrder = async () => testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 });
+            await verifyBalanceChange(maker, 206, createOrder);
+
+			//changing protocol fee
+			await testing.setProtocolFee(2000)
+
+			//protocol fee is set, doesn't change to 2000 with global fee
+			const protocolFeeAfterCreation = await testing.ordersProtocolFee(orderHash)
+			assert.equal(protocolFeeAfterCreation.fee.toNumber(), 300, "protocolFeeAfterCreation.fee")
+			assert.equal(protocolFeeAfterCreation.set, true, "protocolFeeAfterCreation.set")
+
+            const addrOrigin = [[accounts[3], 1000], [accounts[5], 300]];
+            const encData = await encDataV1([[[accounts[2], 10000]], addrOrigin]);
+            const updatedOrder = Order(maker, Asset(ETH, "0x", 400), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encData);
+
+            const updateOrder = async () => testing.upsertOrder(updatedOrder, { from: maker, value: 500, gasPrice: 0 });
+            await verifyBalanceChange(maker, 258, updateOrder);
+
+            const cancelOrder = async () => testing.cancel(updatedOrder, { from: maker, gasPrice: 0 });
+            await verifyBalanceChange(maker, -464, cancelOrder);
+
+            const existanceAfterCanceling = await testing.checkOrderExistance(orderHash)
+            assert.equal(existanceAfterCanceling, false, "existance after updating")
 		})
 
     });
@@ -1067,7 +1118,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		return sign(order, signer, testing.address);
 	}
 
-	// creates an onchain order
+	// creates an on-chain order
 	async function createOnchainOrder(order, orderMaker, verify) {
 		//calculating amount of eth required for matching
 		let valMatch = 0;
@@ -1082,7 +1133,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 		const finalVerify = (!!verify) ? verify : 0;
 
-		//creating an onchain order
+		//creating an on-chain order
 		await verifyBalanceChange(orderMaker, finalVerify, async () =>
 			await testing.upsertOrder(order, { from: orderMaker, value: valCreate, gasPrice: 0 })
 		)
@@ -1111,7 +1162,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		return {signature: sig, valMatch: valMatch, amountToVerify: amountToVerify};
 	}
 
-	//runs tests both for onchain and offchain cases
+	//runs tests both for on-chain and offchain cases
 	async function runTest(fn) {
 		await fn(createOffchainOrder)
 		

@@ -41,7 +41,7 @@ contract("ExchangeSimpleV2", accounts => {
 		assert.equal(await wrapper.getSomething(), 10);
 	})
 
-	describe("onchain orders", () => {
+	describe("on-chain orders", () => {
 		it("isTheSameAsOnChain() works correctly", async () => {
 			const maker = accounts[2]
 			const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
@@ -267,7 +267,7 @@ contract("ExchangeSimpleV2", accounts => {
 		return sign(order, signer, testing.address);
 	}
 
-	// creates an onchain order
+	// creates an on-chain order
 	async function createOnchainOrder(order, orderMaker, verify) {
 		//calculating amount of eth required for matching
 		let valMatch = 0;
@@ -282,7 +282,7 @@ contract("ExchangeSimpleV2", accounts => {
 
 		const finalVerify = (!!verify) ? verify : 0;
 
-		//creating an onchain order
+		//creating an on-chain order
 		await verifyBalanceChange(orderMaker, finalVerify, async () =>
 			await testing.upsertOrder(order, { from: orderMaker, value: valCreate, gasPrice: 0 })
 		)
@@ -311,7 +311,7 @@ contract("ExchangeSimpleV2", accounts => {
 		return {signature: sig, valMatch: valMatch, amountToVerify: amountToVerify};
 	}
 
-	//runs tests both for onchain and offchain cases
+	//runs tests both for on-chain and offchain cases
 	async function runTest(fn) {
 		await fn(createOffchainOrder)
 		

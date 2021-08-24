@@ -23,5 +23,8 @@ const PROTOCOL = id("PROTOCOL");
 const ROYALTY = id("ROYALTY");
 const ORIGIN = id("ORIGIN");
 const PAYOUT = id("PAYOUT");
+const LOCK = id("LOCK");
+const UNLOCK = id("UNLOCK");
+const TO_LOCK = id("TO_LOCK");
 
-module.exports = { id, ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc }
+module.exports = { id, ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, LOCK, UNLOCK, TO_LOCK, enc }

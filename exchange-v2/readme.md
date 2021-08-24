@@ -143,6 +143,8 @@ ExchangeV2 contract emits these events:
 ExchangeV2 supports on-chain orders
 - on-chain order can be created using upsertOrder function
 - all the data of the created order is written in onChainOrders mapping
+- protocolFee value is set for every order at creation
+    - so protocolFee is always the same for the on-chain order 
 - if make side of the order is ETH, it's getting locked in the contract
 - UpsertOrder event is emitted
 - on-chain orders can be upodated using the same upsertOrder function

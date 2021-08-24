@@ -20,15 +20,22 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     //state of the orders
     mapping(bytes32 => uint) public fills; // take-side fills
 
-    //onchain orders
+    //on-chain orders
     mapping(bytes32 => LibOrder.Order) public onChainOrders;
+
+    //protocol fee is set at creation of an on-chain order, can't be changed later
+    struct OrderProtocolFee {
+        uint fee;
+        bool set;
+    }
+    mapping(bytes32 => OrderProtocolFee) public ordersProtocolFee;
 
     //events
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
     event UpsertOrder(LibOrder.Order order);
     
-    /// @dev Creates new or updates an onchain order
+    /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
         bytes32 orderKeyHash = LibOrder.hashKey(order);
 
@@ -37,6 +44,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         require(order.takeAsset.value > fills[orderKeyHash], "such take value is already filled");
         
         uint newTotal = getTotalValue(order, orderKeyHash);
+
+        //value of makeAsset that needs to be tranfered with tx 
         uint sentValue = newTotal;
 
         if(checkOrderExistance(orderKeyHash)) {
@@ -45,6 +54,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
 
+            //value of makeAsset that needs to be returned to order.maker due to updating of the order
             uint returnValue = (oldTotal > newTotal) ? oldTotal.sub(newTotal) : 0;
 
             transferLockedAsset(LibAsset.Asset(order.makeAsset.assetType, returnValue), address(this), order.maker, UNLOCK, TO_MAKER);
@@ -53,6 +63,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         if (order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(order.takeAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "wrong order: ETH to ETH trades are forbidden");
             require(msg.value >= sentValue, "not enough eth");
+
+            if (sentValue > 0) {
+                emit Transfer(LibAsset.Asset(order.makeAsset.assetType, sentValue), order.maker, address(this), TO_LOCK, LOCK);
+            }
 
             //returning "change" ETH if msg.value > sentValue
             if (msg.value > sentValue) {
@@ -70,11 +84,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
+
         bytes32 orderKeyHash = LibOrder.hashKey(order);
 
-        //if it's an onchain order
-        if (isTheSameAsOnChain(order, orderKeyHash)) {
-            transferLockedAsset(LibAsset.Asset(order.makeAsset.assetType, getTotalValue(order, orderKeyHash)), address(this), order.maker, UNLOCK, TO_MAKER);
+        //if it's an on-chain order
+        if (checkOrderExistance(orderKeyHash)) {
+            LibOrder.Order memory temp = onChainOrders[orderKeyHash];
+
+            //for now locking only ETH, so returning only locked ETH also
+            if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash)), address(this), temp.maker, UNLOCK, TO_MAKER);
+            }
             delete onChainOrders[orderKeyHash];
         }
 
@@ -158,7 +178,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {
         LibOrder.validate(order);
 
-        //no need to validate signature of an onchain order
+        //no need to validate signature of an on-chain order
         if (isTheSameAsOnChain(order, LibOrder.hashKey(order))) {
             return;
         } 
@@ -166,7 +186,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
-    /// @dev Checks order for existance onchain by orderKeyHash
+    /// @dev Checks order for existance on-chain by orderKeyHash
     function checkOrderExistance(bytes32 orderKeyHash) public view returns(bool) {
         if(onChainOrders[orderKeyHash].maker != address(0)) {
             return true;
@@ -185,9 +205,20 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Calculates total make amount of order, including fees and fill
-    function getTotalValue(LibOrder.Order memory order, bytes32 hash) internal view returns(uint) {
+    function getTotalValue(LibOrder.Order memory order, bytes32 hash) internal returns(uint) {
+        //using protocolFee from mapping ordersProtocolFee if it's set.
+        //otherwise using global protocolFee and setting it in mapping ordersProtocolFee for the order
+        uint currentProtocolFee = protocolFee;
+        if (ordersProtocolFee[hash].set){
+            currentProtocolFee = ordersProtocolFee[hash].fee;
+        } else {
+            currentProtocolFee = protocolFee;
+            ordersProtocolFee[hash].fee = currentProtocolFee;
+            ordersProtocolFee[hash].set = true;
+        }
+
         (uint remainingMake, ) = LibOrder.calculateRemaining(order, getOrderFill(order, hash));
-        uint totalAmount = calculateTotalAmount(remainingMake, protocolFee, LibOrderData.parse(order).originFees);
+        uint totalAmount = calculateTotalAmount(remainingMake, currentProtocolFee, LibOrderData.parse(order).originFees);
         return totalAmount;
     }
 
@@ -226,7 +257,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return false;
     }
 
-    /// @dev Checks if order is the same as his onchain version
+    /// @dev Checks if order is the same as his on-chain version
     function isTheSameAsOnChain(LibOrder.Order memory order, bytes32 hash) internal view returns(bool){
         if (LibOrder.hash(order) == LibOrder.hash(onChainOrders[hash])){
             return true;
@@ -234,5 +265,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return false;
     }
 
-    uint256[48] private __gap;
+    uint256[47] private __gap;
 }
