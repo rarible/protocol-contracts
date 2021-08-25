@@ -37,4 +37,13 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         __RaribleTransferManager_init_unchained(newProtocolFee, newCommunityWallet, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
     }
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint){
+        return protocolFee;
+    }
+
+    function getProtocolFee() override internal view returns(uint) {
+        return protocolFee;
+    }
+
 }

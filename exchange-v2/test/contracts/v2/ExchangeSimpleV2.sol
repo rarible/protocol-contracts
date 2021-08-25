@@ -17,7 +17,13 @@ contract ExchangeSimpleV2 is ExchangeV2Core, SimpleTransferManager {
         __OrderValidator_init_unchained();
     }
 
-    function isTheSameAsOnChainTest(LibOrder.Order memory order, bytes32 hash) external view returns(bool){
+    function isTheSameAsOnChainTest(LibOrder.Order memory order, bytes32 hash) external view returns(bool) {
         return isTheSameAsOnChain(order, hash);
+    }
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
+    }
+
+    function getProtocolFee() override internal view returns(uint) {
     }
 }

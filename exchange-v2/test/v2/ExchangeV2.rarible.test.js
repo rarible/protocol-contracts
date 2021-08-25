@@ -148,7 +148,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			const hashLeft = await libOrder.hashKey(left);
 			const hashRight = await libOrder.hashKey(right);
 
-			//creating iunchain order
+			//creating on-chain order
 			await testing.upsertOrder(left, { from: makerLeft, value: 300, gasPrice: 0 })
 			await testing.upsertOrder(right, { from: makerRight, gasPrice: 0 })
 
@@ -200,9 +200,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
             const orderHash = await libOrder.hashKey(order);
 
 			//protocol fee is not set for the order yet
-			const protocolFeeBeforeCreation = await testing.ordersProtocolFee(orderHash)
+			const protocolFeeBeforeCreation = await testing.onChainOrders(orderHash)
 			assert.equal(protocolFeeBeforeCreation.fee.toNumber(), 0, "protocolFeeBeforeCreation.fee")
-			assert.equal(protocolFeeBeforeCreation.set, false, "protocolFeeBeforeCreation.set")
 
             const createOrder = async () => testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 });
             await verifyBalanceChange(maker, 206, createOrder);
@@ -211,24 +210,60 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await testing.setProtocolFee(2000)
 
 			//protocol fee is set, doesn't change to 2000 with global fee
-			const protocolFeeAfterCreation = await testing.ordersProtocolFee(orderHash)
+			const protocolFeeAfterCreation = await testing.onChainOrders(orderHash)
 			assert.equal(protocolFeeAfterCreation.fee.toNumber(), 300, "protocolFeeAfterCreation.fee")
-			assert.equal(protocolFeeAfterCreation.set, true, "protocolFeeAfterCreation.set")
 
             const addrOrigin = [[accounts[3], 1000], [accounts[5], 300]];
             const encData = await encDataV1([[[accounts[2], 10000]], addrOrigin]);
             const updatedOrder = Order(maker, Asset(ETH, "0x", 400), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encData);
 
             const updateOrder = async () => testing.upsertOrder(updatedOrder, { from: maker, value: 500, gasPrice: 0 });
-            await verifyBalanceChange(maker, 258, updateOrder);
+            await verifyBalanceChange(maker, 326, updateOrder);
+
+			const protocolFeeAfterUpdate = await testing.onChainOrders(orderHash)
+			assert.equal(protocolFeeAfterUpdate.fee.toNumber(), 2000, "protocolFeeAfterUpdate.fee")
 
             const cancelOrder = async () => testing.cancel(updatedOrder, { from: maker, gasPrice: 0 });
-            await verifyBalanceChange(maker, -464, cancelOrder);
+            await verifyBalanceChange(maker, -532, cancelOrder);
 
             const existanceAfterCanceling = await testing.checkOrderExistance(orderHash)
             assert.equal(existanceAfterCanceling, false, "existance after updating")
 		})
 
+		it("match on-chain orders with different protocol fee", async () => {
+			const makerLeft = accounts[1];
+			const makerRight = accounts[2];
+
+			await t1.mint(accounts[2], 100);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+
+			const left = Order(makerLeft, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			const right = Order(makerRight, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+
+			//creating on-chain order
+			await verifyBalanceChange(testing.address, -206, () =>
+				verifyBalanceChange(makerLeft, 206, async () =>
+					await testing.upsertOrder(left, { from: makerLeft, value: 300, gasPrice: 0 })
+				)
+			)
+
+			//changing protocol fee
+			await testing.setProtocolFee(2000)
+
+			await testing.upsertOrder(right, { from: makerRight, gasPrice: 0 })
+
+			//mathing orders
+			await verifyBalanceChange(testing.address, 206, () =>
+				verifyBalanceChange(makerRight, -160, async () =>
+					verifyBalanceChange(protocol, -46, async () =>
+						testing.matchOrders(left, "0x", right, "0x", {from: makerRight, gasPrice: 0})
+					)
+				)
+			)
+			assert.equal(await t1.balanceOf(makerLeft), 100);
+			assert.equal(await t1.balanceOf(makerRight), 0);
+
+		})
     });
 
 	describe("matchOrders", () => {

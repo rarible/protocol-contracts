@@ -21,4 +21,18 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
     }
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
+        if (isTheSameAsOnChain(order, hash)) {
+            return onChainOrders[hash].fee;
+        } else {
+            return protocolFee;
+        }
+    }
+
+    function getProtocolFee() override internal view returns(uint) {
+        return protocolFee;
+    }
+
+
 }

@@ -22,8 +22,6 @@ abstract contract ITransferManager is ITransferExecutor {
     bytes4 constant LOCK = bytes4(keccak256("LOCK"));
     bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
 
-    uint public protocolFee;
-
     function doTransfers(
         LibAsset.AssetType memory makeMatch,
         LibAsset.AssetType memory takeMatch,
@@ -37,5 +35,9 @@ abstract contract ITransferManager is ITransferExecutor {
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
     ) internal virtual view returns (uint total);
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) virtual internal view returns(uint);
+    
+    function getProtocolFee() virtual internal view returns(uint);
     
 }

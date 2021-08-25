@@ -19,10 +19,17 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
+    uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
     address public defaultFeeReceiver;
     mapping(address => address) public feeReceivers;
+
+    /// @dev struct that stores protocolFee for both orders in a match
+    struct MatchProtocolFees {
+        uint feeSide;
+        uint nftSide;
+    }
 
     function __RaribleTransferManager_init_unchained(
         uint newProtocolFee,
@@ -68,31 +75,59 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeValue = fill.makeValue;
         totalTakeValue = fill.takeValue;
-        LibOrderDataV1.DataV1 memory leftOrderData = LibOrderData.parse(leftOrder);
-        LibOrderDataV1.DataV1 memory rightOrderData = LibOrderData.parse(rightOrder);
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeValue = doTransfersWithFees(fill.makeValue, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch,  TO_TAKER);
-            transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
+            totalMakeValue = doTransfersWithFees(
+                fill.makeValue, 
+                leftOrder.maker, 
+                getMatchProtocolFees(leftOrder, rightOrder, feeSide), 
+                LibOrderData.parse(leftOrder), 
+                LibOrderData.parse(rightOrder), 
+                makeMatch, 
+                takeMatch,  
+                TO_TAKER
+            );
+            transferPayouts(takeMatch, 
+                fill.takeValue, 
+                rightOrder.maker, 
+                LibOrderData.parse(leftOrder).payouts, 
+                TO_MAKER
+            );
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeValue = doTransfersWithFees(fill.takeValue, rightOrder.maker, rightOrderData, leftOrderData, takeMatch, makeMatch, TO_MAKER);
-            transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
+            totalTakeValue = doTransfersWithFees(
+                fill.takeValue, 
+                rightOrder.maker, 
+                getMatchProtocolFees(leftOrder, rightOrder, feeSide), 
+                LibOrderData.parse(rightOrder), 
+                LibOrderData.parse(leftOrder), 
+                takeMatch, 
+                makeMatch, 
+                TO_MAKER
+            );
+            transferPayouts(
+                makeMatch, 
+                fill.makeValue, 
+                leftOrder.maker, 
+                LibOrderData.parse(rightOrder).payouts, 
+                TO_TAKER
+            );
         } else {
-            transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
-            transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
+            transferPayouts(makeMatch, fill.makeValue, leftOrder.maker, LibOrderData.parse(rightOrder).payouts, TO_TAKER);
+            transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, LibOrderData.parse(leftOrder).payouts, TO_MAKER);
         }
     }
 
     function doTransfersWithFees(
         uint amount,
         address from,
+        MatchProtocolFees memory matchProtocolFee,
         LibOrderDataV1.DataV1 memory dataCalculate,
         LibOrderDataV1.DataV1 memory dataNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
-        uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
+        totalAmount = calculateTotalAmount(amount, matchProtocolFee.feeSide, dataCalculate.originFees);
+        uint rest = transferProtocolFee(totalAmount, amount, from, matchProtocolFee, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
         (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
         (rest,) = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
@@ -103,10 +138,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint totalAmount,
         uint amount,
         address from,
+        MatchProtocolFees memory matchProtocolFee,
         LibAsset.AssetType memory matchCalculate,
         bytes4 transferDirection
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFee.mul(2));
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, matchProtocolFee.feeSide + matchProtocolFee.nftSide);
         if (fee > 0) {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
@@ -200,7 +236,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) internal override pure returns (uint total){
+    ) internal override pure returns (uint total) {
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
@@ -221,6 +257,23 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
+    /// @dev rutrns MatchProtocolFees struct with protocol fees of both orders in a match
+    function getMatchProtocolFees(LibOrder.Order memory leftOrder, LibOrder.Order memory rightOrder, LibFeeSide.FeeSide feeSide) internal view returns(MatchProtocolFees memory){
+        MatchProtocolFees memory result;
+        uint leftFee = getOrderProtocolFee(leftOrder, LibOrder.hashKey(leftOrder));
+        uint rightFee = getOrderProtocolFee(rightOrder, LibOrder.hashKey(rightOrder));
+        if (feeSide == LibFeeSide.FeeSide.MAKE) {
+            result.feeSide = leftFee;
+            result.nftSide = rightFee;
+        } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
+            result.feeSide = rightFee;
+            result.nftSide = leftFee;
+        } else {
+            revert("unexpected feeSide = NONE");
+        }
+
+        return result;
+    }
 
     uint256[46] private __gap;
 }

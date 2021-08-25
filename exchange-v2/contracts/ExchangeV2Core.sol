@@ -21,14 +21,13 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     mapping(bytes32 => uint) public fills; // take-side fills
 
     //on-chain orders
-    mapping(bytes32 => LibOrder.Order) public onChainOrders;
+    mapping(bytes32 => OrderAndFee) public onChainOrders;
 
     //protocol fee is set at creation of an on-chain order, can't be changed later
-    struct OrderProtocolFee {
+    struct OrderAndFee {
+        LibOrder.Order order;
         uint fee;
-        bool set;
     }
-    mapping(bytes32 => OrderProtocolFee) public ordersProtocolFee;
 
     //events
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
@@ -45,12 +44,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         
         uint newTotal = getTotalValue(order, orderKeyHash);
 
-        //value of makeAsset that needs to be tranfered with tx 
+        //value of makeAsset that needs to be transfered with tx 
         uint sentValue = newTotal;
 
         if(checkOrderExistance(orderKeyHash)) {
-            LibOrder.Order memory oldOrder = onChainOrders[orderKeyHash];
-            uint oldTotal = getTotalValue(oldOrder, orderKeyHash);
+            uint oldTotal = getTotalValue(onChainOrders[orderKeyHash].order, orderKeyHash);
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
 
@@ -76,7 +74,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             //locking only ETH for now, not locking tokens
         }
 
-        onChainOrders[orderKeyHash] = order;
+        onChainOrders[orderKeyHash].fee = getProtocolFee();
+        onChainOrders[orderKeyHash].order = order;
 
         emit UpsertOrder(order);
     }
@@ -89,7 +88,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         //if it's an on-chain order
         if (checkOrderExistance(orderKeyHash)) {
-            LibOrder.Order memory temp = onChainOrders[orderKeyHash];
+            LibOrder.Order memory temp = onChainOrders[orderKeyHash].order;
 
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
@@ -188,7 +187,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     /// @dev Checks order for existance on-chain by orderKeyHash
     function checkOrderExistance(bytes32 orderKeyHash) public view returns(bool) {
-        if(onChainOrders[orderKeyHash].maker != address(0)) {
+        if(onChainOrders[orderKeyHash].order.maker != address(0)) {
             return true;
         } else {
             return false;
@@ -205,20 +204,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Calculates total make amount of order, including fees and fill
-    function getTotalValue(LibOrder.Order memory order, bytes32 hash) internal returns(uint) {
-        //using protocolFee from mapping ordersProtocolFee if it's set.
-        //otherwise using global protocolFee and setting it in mapping ordersProtocolFee for the order
-        uint currentProtocolFee = protocolFee;
-        if (ordersProtocolFee[hash].set){
-            currentProtocolFee = ordersProtocolFee[hash].fee;
-        } else {
-            currentProtocolFee = protocolFee;
-            ordersProtocolFee[hash].fee = currentProtocolFee;
-            ordersProtocolFee[hash].set = true;
-        }
-
+    function getTotalValue(LibOrder.Order memory order, bytes32 hash) internal view returns(uint) {
         (uint remainingMake, ) = LibOrder.calculateRemaining(order, getOrderFill(order, hash));
-        uint totalAmount = calculateTotalAmount(remainingMake, currentProtocolFee, LibOrderData.parse(order).originFees);
+        uint totalAmount = calculateTotalAmount(remainingMake, getOrderProtocolFee(order, hash), LibOrderData.parse(order).originFees);
         return totalAmount;
     }
 
@@ -258,12 +246,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Checks if order is the same as his on-chain version
-    function isTheSameAsOnChain(LibOrder.Order memory order, bytes32 hash) internal view returns(bool){
-        if (LibOrder.hash(order) == LibOrder.hash(onChainOrders[hash])){
+    function isTheSameAsOnChain(LibOrder.Order memory order, bytes32 hash) internal view returns(bool) {
+        if (LibOrder.hash(order) == LibOrder.hash(onChainOrders[hash].order)) {
             return true;
         }
         return false;
     }
 
-    uint256[47] private __gap;
+    uint256[48] private __gap;
 }
