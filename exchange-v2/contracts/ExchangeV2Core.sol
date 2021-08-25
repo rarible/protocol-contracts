@@ -23,7 +23,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     //on-chain orders
     mapping(bytes32 => OrderAndFee) public onChainOrders;
 
-    //protocol fee is set at creation of an on-chain order, can't be changed later
+    //struct to hold on-chain order and its protocol fee, fee is updated if order is updated
     struct OrderAndFee {
         LibOrder.Order order;
         uint fee;

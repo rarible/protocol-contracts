@@ -220,6 +220,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
             const updateOrder = async () => testing.upsertOrder(updatedOrder, { from: maker, value: 500, gasPrice: 0 });
             await verifyBalanceChange(maker, 326, updateOrder);
 
+			//protocol fee is changed after updating order
 			const protocolFeeAfterUpdate = await testing.onChainOrders(orderHash)
 			assert.equal(protocolFeeAfterUpdate.fee.toNumber(), 2000, "protocolFeeAfterUpdate.fee")
 
