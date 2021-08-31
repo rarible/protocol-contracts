@@ -7,7 +7,7 @@ const rinkeby = {
     tokens: [
         "0x152eeE3DCc5526efd646E9b45c9a9672BfFcc097"
     ],
-    artblocksAddress: ""
+    artblocksAddress: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4"
 }
 const mainnet = {
     tokens: [
@@ -69,15 +69,12 @@ async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settin
         return;
     }
 
-    await RoyaltiesProviderArtBlocks.deployed().catch(
-        async () => {
-            const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, settings.artblocksAddress,  { gas: 1000000 });
-            console.log(`set artblocksAddress ${settings.artblocksAddress} for royaltiesProviderArtBlocks ${contract.address}`)
-            for (const token of settings.tokens){
-                await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });
-                console.log(`set royalties royaltiesProviderArtBlocks ${contract.address} for token ${token}`)
-            }
-            return contract;
-        }
-    );
+    const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, settings.artblocksAddress,  { gas: 1000000 });
+    console.log(`set artblocksAddress ${settings.artblocksAddress} for royaltiesProviderArtBlocks ${contract.address}`)
+    for (const token of settings.tokens){
+        await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });
+        console.log(`set royalties royaltiesProviderArtBlocks ${contract.address} for token ${token}`)
+    }
+    
+    
 }
