@@ -39,7 +39,6 @@ contract RoyaltiesArtBlocksImpl is RoyaltyArtBlocks {
         address payable _additionalPayee,
         uint256 _additionalPayeePercentage
     ) public {
-        require(_additionalPayeePercentage <= 100, "Max of 100%");
         projects[_projectId].additionalPayee = _additionalPayee;
         projects[_projectId]
         .additionalPayeePercentage = _additionalPayeePercentage;
@@ -49,7 +48,6 @@ contract RoyaltiesArtBlocksImpl is RoyaltyArtBlocks {
         uint256 _projectId,
         uint256 _secondMarketRoyalty
     ) public {
-        require(_secondMarketRoyalty <= 100, "Max of 100%");
         projects[_projectId].secondMarketRoyalty = _secondMarketRoyalty;
     }
 }
