@@ -88,7 +88,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
 
     //sets new value for artblocksPercentage
     function setArtblocksPercentage(uint96 _artblocksPercentage) onlyOwner public {
-        require(_artblocksPercentage <= 10000,"_artblocksPercentage can't be > 10000");
+        require(_artblocksPercentage <= 10000,"_artblocksPercentage can't be > 100%");
         emit ArtblocksPercentageChanged(_msgSender(), artblocksPercentage, _artblocksPercentage);
         artblocksPercentage = _artblocksPercentage;
     }
