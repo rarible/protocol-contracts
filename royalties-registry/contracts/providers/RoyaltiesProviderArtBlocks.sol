@@ -23,7 +23,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
         //gettign artist and additionalPayee royalty part
         (address artistAddress, address additionalPayee, uint256 additionalPayeePercentage, uint256 royaltyFeeByID) = artBlocks.getRoyaltyData(tokenId);
 
-        require(additionalPayeePercentage <= 100 && royaltyFeeByID <= 100, "wrong additionalPayeePercentage value");
+        require(additionalPayeePercentage <= 100 && royaltyFeeByID <= 100, "wrong royalties percentages from artBlocks");
 
         //resulting royalties
         LibPart.Part[] memory result;
@@ -42,7 +42,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             return result;
 
         //if royaltyFeeByID > 0 and  0 < additionalPayeePercentage < 100
-        } else if (additionalPayeePercentage > 0 && additionalPayeePercentage < 100){
+        } else if (additionalPayeePercentage > 0 && additionalPayeePercentage < 100) {
             result = new LibPart.Part[](3);
 
             //calculating artBLocks part
@@ -54,7 +54,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
 
             //artist part
             result[1].account = payable(artistAddress);
-            result[1].value = uint96(royaltyFeeByID.mul(100)) - additionalPart;
+            result[1].value = uint96(royaltyFeeByID.mul(100).sub(additionalPart));
 
             result[2].account = payable(additionalPayee);
             result[2].value = additionalPart;
@@ -73,7 +73,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             //artist part
             if (additionalPayeePercentage == 0) {
                 result[1].account = payable(artistAddress);
-                result[1].value = uint96(royaltyFeeByID.mul(100)) - additionalPart;
+                result[1].value = uint96(royaltyFeeByID.mul(100).sub(additionalPart));
             }
 
             //additional payee part
