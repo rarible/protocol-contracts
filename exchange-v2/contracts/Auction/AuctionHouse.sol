@@ -3,9 +3,13 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
+
+//imports????
 import "../ITransferManager.sol";
 import "../lib/LibTransfer.sol";
 import "../LibOrder.sol";
+import "./LibAucDataV1.sol";
+import "./LibBidDataV1.sol";
 import "../TransferConstants.sol";
 
 abstract contract AbstractFeesDataFromRTM {
@@ -15,7 +19,7 @@ abstract contract AbstractFeesDataFromRTM {
     mapping(address => address) public feeReceivers;
 }
 
-contract AuctionHouse is TransferExecutor, TransferConstants {
+contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, TransferConstants {
 
     //auction struct
     struct Auction {
@@ -27,12 +31,12 @@ contract AuctionHouse is TransferExecutor, TransferConstants {
         uint endTime;
         uint minimalStep;
         uint minimalPrice;
+        uint protocolFee;
         bytes4 dataType; // aucv1
-        bytes data;//duration, origin, payouts(?), buyOutPrice, protocolFee
+        bytes data;//duration, buyOutPrice, origin, payouts(?)
         
         //todo: другие типы аукционов?
         //todo: обсудить с Сашей разные подходы к времени аукционов
-        //todo: задача сделать базовую версию, чтоб потом можно было апгрейднуть
         //todo: аукцион не удаляем, помечаем
     }
 
@@ -53,7 +57,7 @@ contract AuctionHouse is TransferExecutor, TransferConstants {
     uint256 private constant MAX_DURATION = 1000 days;
 
     event AuctionCreated(uint id, Auction auction);
-    event BidPlaced();
+    event BidPlaced(uint id);
     event AuctionCanceled();
     event AuctionFinished();
 
@@ -87,29 +91,37 @@ contract AuctionHouse is TransferExecutor, TransferConstants {
         uint minimalStep,
         uint minimalPrice,
         bytes4 dataType,
-        bytes data
+        bytes memory data
     ) public {
         uint currenAuctionId = getNextAndIncrementAuctionId();
-
-        require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ethere on auction");
-        require(duration >= EXTENSION_DURATION && duration <=  MAX_DURATION,"wrong auction duration");
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
+        require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
 
         auctions[currenAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
-            0,
+            Bid(0, "", ""),
             _msgSender(),
             payable(address(0)),
-            duration,
-            0,
+            endTime,
             minimalStep,
             minimalPrice,
-            buyOutPrice,
-            feeData.protocolFee()
+            feeData.protocolFee(),
+            dataType,
+            data
         );
 
-        emit AuctionCreated(currenAuctionId, auctions[currenAuctionId]);
+        //if no endTime, duration must be set
+        // if we now start time and end time 
+        if (endTime == 0){
+            require(aucData.duration >= EXTENSION_DURATION && aucData.duration <=  MAX_DURATION, "wrong auction duration");
 
+            if (aucData.startTime > 0){
+                auctions[currenAuctionId].endTime = aucData.startTime + aucData.duration;
+            }
+        } 
+
+        emit AuctionCreated(currenAuctionId, auctions[currenAuctionId]);
 
         transfer(_sellAsset, _msgSender(),  address(this) , TO_LOCK, LOCK);
     }
@@ -126,11 +138,11 @@ contract AuctionHouse is TransferExecutor, TransferConstants {
         //start action if minimal price is met
         if (currentAuction.endTime == 0) {
             require(_buyAssetValue >= currentAuction.minimalPrice, "bid can't be less than minimal price");
-            currentAuction.endTime = currentTime + currentAuction.duration;
+            //currentAuction.endTime = currentTime + currentAuction.duration;
             
         } else {
             //if this is not the first bid - return the previous bid
-            require(_buyAssetValue > currentAuction.amount, "new bid can't be less than current");
+            //require(_buyAssetValue > currentAuction.amount, "new bid can't be less than current");
             returnBid(_auctionId);
         }
 
