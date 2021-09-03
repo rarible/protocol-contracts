@@ -15,7 +15,7 @@ contract AssetMatcherCollection is IAssetMatcher {
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) public pure override returns (LibAsset.AssetType memory) {
         if ((rightAssetType.assetClass == LibAsset.ERC721_ASSET_CLASS) || (rightAssetType.assetClass == LibAsset.ERC1155_ASSET_CLASS)) {
             (address leftToken) = abi.decode(leftAssetType.data, (address));
-            (address rightToken, uint tokenId) = abi.decode(rightAssetType.data, (address, uint));
+            (address rightToken,) = abi.decode(rightAssetType.data, (address, uint));
             if (leftToken == rightToken) {
                 return LibAsset.AssetType(rightAssetType.assetClass, rightAssetType.data);
             }
