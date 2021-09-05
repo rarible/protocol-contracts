@@ -58,14 +58,14 @@ module.exports = async function (deployer, network) {
 };
 
 // sets royalties Provider for v2 legacy royalty
-async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settings){
+async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settings) {
     // can't deploy without token address
     if (!settings.tokens || settings.tokens.length == 0) {
         return;
     }
 
     //can't deploy without artblocksAddress
-    if (!settings.artblocksAddress || settings.artblocksAddress == ""){
+    if (!settings.artblocksAddress || settings.artblocksAddress == "") {
         console.log(`artblocksAddress not set on network ${network} for tokens :${settings.tokens}`)
         return;
     }
@@ -74,13 +74,10 @@ async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settin
     await contract.transferOwnership(settings.artblocksAddress)
 
     console.log(`set artblocksAddress ${await contract.owner()} for royaltiesProviderArtBlocks ${contract.address}`)
-    for (const token of settings.tokens){
+    for (const token of settings.tokens) {
         await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });
 
         console.log(`set royalties royaltiesProviderArtBlocks ${await royaltiesRegistry.royaltiesProviders(token)} for token ${token}`)
-        
     }
-    
-    
-    
+     
 }
