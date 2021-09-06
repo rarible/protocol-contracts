@@ -53,8 +53,6 @@ module.exports = async function (deployer, network) {
     const settings = getSettings(network)
     const royaltiesRegistry = await RoyaltiesRegistry.deployed();
     await setArtBlocksProvider(deployer, network, royaltiesRegistry, settings)
-
-
 };
 
 // sets royalties Provider for v2 legacy royalty
@@ -79,5 +77,4 @@ async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settin
 
         console.log(`set royalties royaltiesProviderArtBlocks ${await royaltiesRegistry.royaltiesProviders(token)} for token ${token}`)
     }
-     
 }
