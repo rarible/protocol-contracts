@@ -7,7 +7,7 @@ const rinkeby = {
     tokens: [
         "0x152eeE3DCc5526efd646E9b45c9a9672BfFcc097"
     ],
-    artblocksAddress: ""
+    artblocksAddress: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4"
 }
 const mainnet = {
     tokens: [
@@ -25,8 +25,8 @@ const e2e = {
     artblocksAddress: ""
 }
 const def = {
-    tokens: [],
-    artblocksAddress: ""
+    tokens: ["0x152eeE3DCc5526efd646E9b45c9a9672BfFcc097"],
+    artblocksAddress: "0x2932b7A2355D6fecc4b5c0B6BD44cC31df247a2e"
 }
 
 let settings = {
@@ -54,30 +54,30 @@ module.exports = async function (deployer, network) {
     const royaltiesRegistry = await RoyaltiesRegistry.deployed();
     await setArtBlocksProvider(deployer, network, royaltiesRegistry, settings)
 
+
 };
 
 // sets royalties Provider for v2 legacy royalty
-async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settings){
+async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settings) {
     // can't deploy without token address
     if (!settings.tokens || settings.tokens.length == 0) {
         return;
     }
 
     //can't deploy without artblocksAddress
-    if (!settings.artblocksAddress || settings.artblocksAddress == ""){
+    if (!settings.artblocksAddress || settings.artblocksAddress == "") {
         console.log(`artblocksAddress not set on network ${network} for tokens :${settings.tokens}`)
         return;
     }
 
-    await RoyaltiesProviderArtBlocks.deployed().catch(
-        async () => {
-            const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, settings.artblocksAddress,  { gas: 1000000 });
-            console.log(`set artblocksAddress ${settings.artblocksAddress} for royaltiesProviderArtBlocks ${contract.address}`)
-            for (const token of settings.tokens){
-                await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });
-                console.log(`set royalties royaltiesProviderArtBlocks ${contract.address} for token ${token}`)
-            }
-            return contract;
-        }
-    );
+    const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, { gas: 1000000});
+    await contract.transferOwnership(settings.artblocksAddress)
+
+    console.log(`set artblocksAddress ${await contract.owner()} for royaltiesProviderArtBlocks ${contract.address}`)
+    for (const token of settings.tokens) {
+        await royaltiesRegistry.setProviderByToken(token, contract.address,{ gas: 100000 });
+
+        console.log(`set royalties royaltiesProviderArtBlocks ${await royaltiesRegistry.royaltiesProviders(token)} for token ${token}`)
+    }
+     
 }

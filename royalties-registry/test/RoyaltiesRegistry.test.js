@@ -282,9 +282,90 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			assert.equal(eventChangePercentage._old, 250, "old percentage");
 			assert.equal(eventChangePercentage._new, 300, "new percentage");
 
+			//only owner can set %
 			await expectThrow(
 				provider.setArtblocksPercentage(0, {from: artBlocksAddr})
 			);
+
+			// _artblocksPercentage can't be over 10000
+			await expectThrow(
+				provider.setArtblocksPercentage(100000, {from: newArtBlocksAddr})
+			);
+		})
+
+		it("using royaltiesProvider artBlocks royalties edge cases", async () => {
+			await royaltiesRegistry.__RoyaltiesRegistry_init();
+
+			const artBlocksAddr = accounts[5];
+			const artistAdrr = accounts[2];
+			const addPayeeAddr = accounts[4];
+
+			//deploying contracts
+			const token = await TestERC721ArtBlocks.new("Rarible", "RARI", "https://ipfs.rarible.com");
+			const provider = await RoyaltiesProviderArtBlocks.new({from: artBlocksAddr});
+
+			const owner = await provider.owner();
+			assert.equal(owner, artBlocksAddr, "owner")
+
+			const artblocksPercentage = await provider.artblocksPercentage();
+			assert.equal(artblocksPercentage, 250, "artblocksPercentage")
+
+			//setting provider in registry
+			await royaltiesRegistry.setProviderByToken(token.address, provider.address);
+
+			//creating token and setting royalties
+			await token.mint(artistAdrr, erc721TokenId1);
+			await token.updateProjectAdditionalPayeeInfo(erc721TokenId1, addPayeeAddr, 0);
+			await token.updateProjectSecondaryMarketRoyaltyPercentage(erc721TokenId1, 15);
+
+			//getting royalties for token
+			//case artist = 15% additionalPatee = 0
+			const royaltiesFromProvider = await provider.getRoyalties(token.address, erc721TokenId1);
+			assert.equal(royaltiesFromProvider[0].account, artBlocksAddr, "artBlocks royalty address")
+			assert.equal(royaltiesFromProvider[0].value, 250, "artBlocks royalty percentage")
+
+			assert.equal(royaltiesFromProvider[1].account, artistAdrr, "artist royalty address")
+			assert.equal(royaltiesFromProvider[1].value, 1500, "artBlocks royalty percentage")
+
+			assert.equal(royaltiesFromProvider.length, 2, "should be 2 royalties")
+
+			//case artist = 15%, additionalPayee = 100% of 15%
+			await token.updateProjectAdditionalPayeeInfo(erc721TokenId1, addPayeeAddr, 100);
+			const royaltiesFromProvider2 = await provider.getRoyalties(token.address, erc721TokenId1);
+
+			assert.equal(royaltiesFromProvider2[0].account, artBlocksAddr, "artBlocks royalty address")
+			assert.equal(royaltiesFromProvider2[0].value, 250, "artBlocks royalty percentage")
+
+			assert.equal(royaltiesFromProvider2[1].account, addPayeeAddr, "artist royalty address")
+			assert.equal(royaltiesFromProvider2[1].value, 1500, "artBlocks royalty percentage")
+
+			assert.equal(royaltiesFromProvider2.length, 2, "should be 2 royalties")
+
+			//case additionalPayee > 100
+			await token.updateProjectAdditionalPayeeInfo(erc721TokenId1, addPayeeAddr, 110);
+			await expectThrow(
+				provider.getRoyalties(token.address, erc721TokenId1)
+			);
+			await token.updateProjectAdditionalPayeeInfo(erc721TokenId1, addPayeeAddr, 0);
+
+			//case artist > 100
+			await token.updateProjectSecondaryMarketRoyaltyPercentage(erc721TokenId1, 110);
+			await expectThrow(
+				provider.getRoyalties(token.address, erc721TokenId1)
+			);
+			await token.updateProjectSecondaryMarketRoyaltyPercentage(erc721TokenId1, 0);
+
+			//case artist = 0, additionalPayee = 0
+			const royaltiesFromProvider3 = await provider.getRoyalties(token.address, erc721TokenId1);
+			assert.equal(royaltiesFromProvider3[0].account, artBlocksAddr, "artBlocks royalty address")
+			assert.equal(royaltiesFromProvider3[0].value, 250, "artBlocks royalty percentage")
+			assert.equal(royaltiesFromProvider3.length, 1, "should be 1 royalties")
+
+			//case artist = 0, additionalPayee = 0, artBlocks = 0
+			await provider.setArtblocksPercentage(0, {from: artBlocksAddr})
+			const royaltiesFromProvider4 = await provider.getRoyalties(token.address, erc721TokenId1);
+			assert.equal(royaltiesFromProvider4.length, 0, "should be 0 royalties")
+			
 		})
 
 		it("SetProviderByToken, initialize by Owner", async () => {
