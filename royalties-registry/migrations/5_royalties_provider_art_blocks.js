@@ -71,7 +71,7 @@ async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settin
     }
 
     const contract = await deployer.deploy(RoyaltiesProviderArtBlocks, { gas: 1000000});
-    await contract.transferOwnership(settings.artblocksAddress)
+    await contract.transferOwnership(settings.artblocksAddress, { gas: 150000 });
 
     console.log(`set artblocksAddress ${await contract.owner()} for royaltiesProviderArtBlocks ${contract.address}`)
     for (const token of settings.tokens) {
