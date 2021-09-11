@@ -18,7 +18,7 @@ function createNetwork(name) {
     return {
       provider: () => createProvider(json.address, json.key, json.url),
       from: json.address,
-      gas: 5000000,
+      gas: 3000000,
       gasPrice: gasPrice + "000000000",
       network_id: json.network_id,
       skipDryRun: true,
