@@ -4,8 +4,8 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "../../../contracts/ExchangeV2Core.sol";
-import "../../../contracts/EIP712MetaTransaction.sol";
 import "./SimpleTransferManager.sol";
+import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 
 contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, SimpleTransferManager, EIP712MetaTransaction {
     function __ExchangeSimpleV2_init(

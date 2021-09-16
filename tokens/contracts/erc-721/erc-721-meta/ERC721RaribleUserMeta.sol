@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../../../exchange-v2/contracts/EIP712MetaTransaction.sol";
+import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 import "./ERC721RaribleUserBase.sol";
 
 contract ERC721RaribleUserMeta is ERC721RaribleUserBase, EIP712MetaTransaction {

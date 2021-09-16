@@ -100,7 +100,7 @@ const getTransactionData = async (nonce, abi, params) => {
   return {r, s, v, functionSignature};
 }
 
-contract("ERC721MetaTxTest", accounts => {
+contract("ERC721MetaTxTokenTest", accounts => {
   let erc721NoMetaTx;
   let erc721WithMetaTx;
   let erc721WithMetaTxTest;

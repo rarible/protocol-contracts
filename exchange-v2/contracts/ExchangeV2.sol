@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "./ExchangeV2Core.sol";
 import "./RaribleTransferManager.sol";
-import "./EIP712MetaTransaction.sol";
+import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTransaction {
