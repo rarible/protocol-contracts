@@ -1,6 +1,5 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const MetaTxTest = artifacts.require("MetaTxTest.sol");
-//const ERC721NoMetaTx = artifacts.require("ERC721Rarible.sol");
 
 const web3Abi = require('web3-eth-abi');
 const sigUtil = require('eth-sig-util');
@@ -29,6 +28,30 @@ let balanceOfAbi =  {
   "stateMutability": "view",
   "type": "function"
 };
+let sumAbi = {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "a",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "b",
+          "type": "uint256"
+        }
+      ],
+      "name": "testFunctionSum",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    };
 const domainType = [{
     name: "name",
     type: "string"
@@ -98,90 +121,60 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   let metaTxTest;
 
   beforeEach(async () => {
-//    erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", ""], { initializer: '__ERC721Rarible_init' });
     metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "1"], { initializer: '__MetaTxTest_init' });
 
     domainData = {
-          name: "ERC721RaribleMeta",
+          name: "MetaTxTest",
           version: "1",
           verifyingContract: metaTxTest.address,
           chainId: 1337
         };
   });
 
-//  it("Upgrade, which use MetaTransaction for ERC721RaribleMeta token works", async () => {
-//  		const wrapper = await MetaTxTest.at(erc721NoMetaTx.address);
-//  		await expectThrow(
-//  			wrapper.getNonce(ZERO_ADDRESS)
-//  		);
-//
-//  		await upgradeProxy(erc721NoMetaTx.address, MetaTxTest);
-//  		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
-//  });
-//
-  it("allien", async () => {
+  it("Call unknown abi-method, use metaTx, throw ", async () => {
   	let nonce = await metaTxTest.getNonce(publicKey);
-//  	let {
-//      r,
-//      s,
-//      v,
-//      functionSignature
-//    } = await getTransactionData(nonce, balanceOfAbi, [publicKey]);
-//    let resultExecMataTx = await erc721WithMetaTx.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]});
-//    let metaResult;
-//    truffleAssert.eventEmitted(resultExecMataTx, 'MetaTransactionExecuted', (ev) => {
-//     	metaResult = ev.result;
-//      return true;
-//    });
-//    var newNonce = await erc721WithMetaTx.getNonce(publicKey);
-//    assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, balanceOfAbi, [publicKey]);
+    await expectThrow(
+      metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
+     );
+
   });
 
-//  it("Use metaTransaction call for ERC721RaribleMeta token", async () => {
-//  	let nonce = await erc721WithMetaTx.getNonce(publicKey);
-//  	let {
-//      r,
-//      s,
-//      v,
-//      functionSignature
-//    } = await getTransactionData(nonce, balanceOfAbi, [publicKey]);
-//    let resultExecMataTx = await erc721WithMetaTx.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]});
-//    let metaResult;
-//    truffleAssert.eventEmitted(resultExecMataTx, 'MetaTransactionExecuted', (ev) => {
-//     	metaResult = ev.result;
-//      return true;
-//    });
-//    var newNonce = await erc721WithMetaTx.getNonce(publicKey);
-//    assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
-//  });
-//
-//  it("Upgrade, which use MetaTransaction for ERC721RaribleUserMeta token works", async () => {
-//  		const wrapper = await ERC721UserMetaTx.at(ERC721UserNoMetaTx.address);
-//  		await expectThrow(
-//  			wrapper.getNonce(ZERO_ADDRESS)
-//  		);
-//
-//  		await upgradeProxy(ERC721UserNoMetaTx.address, ERC721UserMetaTx);
-//  		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
-//  });
-//
-//  it("Upgrade, which use MetaTransaction for ERC1155RaribleMeta token works", async () => {
-//  		const wrapper = await ERC1155MetaTx.at(erc1155NoMetaTx.address);
-//  		await expectThrow(
-//  			wrapper.getNonce(ZERO_ADDRESS)
-//  		);
-//
-//  		await upgradeProxy(erc1155NoMetaTx.address, ERC1155MetaTx);
-//  		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
-//  });
-//
-//  it("Upgrade, which use MetaTransaction for ERC1155RaribleUserMeta token works", async () => {
-//  		const wrapper = await ERC1155UserMetaTx.at(erc1155UserNoMetaTx.address);
-//  		await expectThrow(
-//  			wrapper.getNonce(ZERO_ADDRESS)
-//  		);
-//
-//  		await upgradeProxy(erc1155UserNoMetaTx.address, ERC1155UserMetaTx);
-//  		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
-//  });
+  it("Call known abi-method, use metaTx ", async () => {
+  	let nonce = await metaTxTest.getNonce(publicKey);
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, sumAbi, [1, 2]);
+    let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
+
+    var newNonce = await metaTxTest.getNonce(publicKey);
+    assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+  });
+
+  it("Call known abi-method, check event from method which call as metaTx ", async () => {
+  	let nonce = await metaTxTest.getNonce(publicKey);
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, sumAbi, [5, 6]);
+    let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
+
+    let metaResult;
+    truffleAssert.eventEmitted(resultExecMataTx, 'SimpleEventSum', (ev) => {
+     	metaResult = ev.result;
+      return true;
+    });
+    assert.equal(metaResult, 11);
+  });
+
 });
