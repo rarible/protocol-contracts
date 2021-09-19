@@ -9,49 +9,10 @@ const { expectThrow } = require("@daonomic/tests-common");
 let ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 let publicKey = "0x726cDa2Ac26CeE89F645e55b78167203cAE5410E";
 let privateKey = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa6";
-let balanceOfAbi =  {
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "owner",
-      "type": "address"
-    }
-  ],
-  "name": "balanceOf",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-};
-let sumAbi = {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "a",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "b",
-          "type": "uint256"
-        }
-      ],
-      "name": "sumTest",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    };
+
+let balanceOfAbi =  require("./contracts/balanceOfAbi.json");
+let sumAbi = require("./contracts/sumAbi.json");
+
 const domainType = [{
     name: "name",
     type: "string"
