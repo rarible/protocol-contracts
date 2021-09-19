@@ -41,7 +41,7 @@ let sumAbi = {
           "type": "uint256"
         }
       ],
-      "name": "testFunctionSum",
+      "name": "sumTest",
       "outputs": [
         {
           "internalType": "uint256",
@@ -152,7 +152,7 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
       s,
       v,
       functionSignature
-    } = await getTransactionData(nonce, sumAbi, [1, 2]);
+    } = await getTransactionData(nonce, sumAbi, [5,6]);
     let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
 
     var newNonce = await metaTxTest.getNonce(publicKey);
