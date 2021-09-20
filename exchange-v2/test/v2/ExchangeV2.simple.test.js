@@ -45,7 +45,7 @@ contract("ExchangeSimpleV2", accounts => {
 			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
 
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-			const right = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+			const right = Order(ZERO, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 0, 0, 0, "0xffffffff", "0x");
 
 			await expectThrow(
 				testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2], value: 199 })
