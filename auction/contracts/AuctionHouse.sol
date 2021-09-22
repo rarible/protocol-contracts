@@ -3,14 +3,12 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-
-//imports????
-import "../ITransferManager.sol";
-import "../lib/LibTransfer.sol";
-import "../LibOrder.sol";
+import "../../exchange-v2/contracts/ITransferManager.sol";
+//import "../lib/LibTransfer.sol";
+//import "../LibOrder.sol";
 import "./LibAucDataV1.sol";
 import "./LibBidDataV1.sol";
-import "../TransferConstants.sol";
+//import "../TransferConstants.sol";
 
 abstract contract AbstractFeesDataFromRTM {
     uint public protocolFee;
@@ -63,16 +61,16 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
 
     function __AuctionHouse_init(
         INftTransferProxy _transferProxy,
-        IERC20TransferProxy _erc20TransferProxy,
-        address  payable _exchangeV2Proxy
+        IERC20TransferProxy _erc20TransferProxy
+//        address  payable _exchangeV2Proxy
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         _initializeAuctionId();
-
-        require(_exchangeV2Proxy != address(0), "_exchangeV2Proxy can't be zero");
-        feeData = AbstractFeesDataFromRTM(_exchangeV2Proxy);
+//TODO delete comments
+//        require(_exchangeV2Proxy != address(0), "_exchangeV2Proxy can't be zero");
+//        feeData = AbstractFeesDataFromRTM(_exchangeV2Proxy);
     }
 
     function _initializeAuctionId() internal {
@@ -94,6 +92,7 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         bytes memory data
     ) public {
         uint currenAuctionId = getNextAndIncrementAuctionId();
+        revert("SKS_Test");
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
 
@@ -119,40 +118,51 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
             if (aucData.startTime > 0){
                 auctions[currenAuctionId].endTime = aucData.startTime + aucData.duration;
             }
-        } 
-
-        emit AuctionCreated(currenAuctionId, auctions[currenAuctionId]);
-
+        }
         transfer(_sellAsset, _msgSender(),  address(this) , TO_LOCK, LOCK);
+        emit AuctionCreated(currenAuctionId, auctions[currenAuctionId]);
     }
 
+
     //put a bid and return locked assets for the last bid
-    function bid(uint _auctionId, uint _buyAssetValue) public {
-        Auction storage currentAuction = auctions[_auctionId];
-
-        uint currentTime = block.timestamp;
-
+    function bid(uint _auctionId, Bid memory bid) public {
         require(checkAuctionExistance(_auctionId), "there is no auction with this id");
-        
+        address payable bidPlacer = _msgSender();
+        if (buyOutVerify(_auctionId, bidPlacer)) {
+            //set auction finished
+        }
+        Auction storage currentAuction = auctions[_auctionId];
+        uint currentTime = block.timestamp;
+        uint _buyAssetValue = bid.amount;
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
 
         //start action if minimal price is met
-        if (currentAuction.endTime == 0) {
+        if (currentAuction.endTime == 0) { //no bid at all
             require(_buyAssetValue >= currentAuction.minimalPrice, "bid can't be less than minimal price");
-            //currentAuction.endTime = currentTime + currentAuction.duration;
-            
-        } else {
-            //if this is not the first bid - return the previous bid
-            //require(_buyAssetValue > currentAuction.amount, "new bid can't be less than current");
-            returnBid(_auctionId);
+            currentAuction.endTime = currentTime + aucData.duration;
+            //reserv on contract _buyAssetValue
+        } else { //there is bid in auction
+            require(currentAuction.endTime >= currentTime, "NFTMarketReserveAuction: Auction is over");
+            require(currentAuction.buyer != bidPlacer, "NFTMarketReserveAuction: You already have an outstanding bid");
+            uint256 minAmount = getMinimalNextBid(_auctionId);
+            require(_buyAssetValue >= minAmount, "NFTMarketReserveAuction: Bid amount too low");
         }
-
-        require(currentAuction.endTime > currentTime, "auction is already finished");
-
+        reserveValue(currentAuction.buyer, bidPlacer, currentAuction.lastBid.amount, _buyAssetValue);
+        currentAuction.lastBid.amount = _buyAssetValue;
+        currentAuction.buyer = bidPlacer;
         //extend auction if time left < EXTENSION_DURATION
         if (currentAuction.endTime - currentTime < EXTENSION_DURATION){
             currentAuction.endTime = currentTime + EXTENSION_DURATION;
         }
+        emit BidPlaced(_auctionId);
+    }
 
+    //
+    function buyOutVerify(uint _auctionId, address payable _buyAssetValue) internal returns(bool) {
+        return true;
+    }
+
+    function reserveValue(address oldBuyer, address newBuyer, uint oldAmount, uint) internal {
 
     }
 
@@ -200,6 +210,11 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
             return true;
         }
     }
-    
+
+    function encode(LibAucDataV1.DataV1 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
+
+
     uint256[50] private ______gap;
 }
