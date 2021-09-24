@@ -8,6 +8,8 @@ import "../../exchange-v2/contracts/ITransferManager.sol";
 //import "../LibOrder.sol";
 import "./LibAucDataV1.sol";
 import "./LibBidDataV1.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 //import "../TransferConstants.sol";
 
 abstract contract AbstractFeesDataFromRTM {
@@ -17,7 +19,7 @@ abstract contract AbstractFeesDataFromRTM {
     mapping(address => address) public feeReceivers;
 }
 
-contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, TransferConstants {
+contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, TransferConstants, IERC721Receiver, IERC1155Receiver {
 
     //auction struct
     struct Auction {
@@ -68,7 +70,7 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         _initializeAuctionId();
-//TODO delete comments
+//TODO delete comments make code work again
 //        require(_exchangeV2Proxy != address(0), "_exchangeV2Proxy can't be zero");
 //        feeData = AbstractFeesDataFromRTM(_exchangeV2Proxy);
     }
@@ -92,8 +94,8 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         bytes memory data
     ) public {
         uint currenAuctionId = getNextAndIncrementAuctionId();
-        revert("SKS_Test");
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
+
         require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
 
         auctions[currenAuctionId] = Auction(
@@ -105,11 +107,11 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
             endTime,
             minimalStep,
             minimalPrice,
-            feeData.protocolFee(),
+//            feeData.protocolFee(), TODO: do fee works
+            0,
             dataType,
             data
         );
-
         //if no endTime, duration must be set
         // if we now start time and end time 
         if (endTime == 0){
@@ -125,7 +127,8 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
 
 
     //put a bid and return locked assets for the last bid
-    function bid(uint _auctionId, Bid memory bid) public {
+    function putBid(uint _auctionId, Bid memory bid) public {
+//        revert("SKS_Test_3");
         require(checkAuctionExistance(_auctionId), "there is no auction with this id");
         address payable bidPlacer = _msgSender();
         if (buyOutVerify(_auctionId, bidPlacer)) {
@@ -215,6 +218,30 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         return abi.encode(data);
     }
 
+    function encodeBid(LibBidDataV1.DataV1 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
+
+    /**
+     * @dev See {IERC721Receiver-onERC721Received}.
+     *
+     * Always returns `IERC721Receiver.onERC721Received.selector`.
+     */
+    function onERC721Received(address, address, uint256, bytes memory) public virtual override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return this.supportsInterface(interfaceId);
+    }
 
     uint256[50] private ______gap;
 }
