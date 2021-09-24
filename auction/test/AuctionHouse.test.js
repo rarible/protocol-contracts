@@ -99,7 +99,7 @@ contract("Check Auction", accounts => {
           let dataV1 = await encDataV1([fees, 1000, 500, 18]); //originFees, duration, startTime, buyOutPrice
           let dataV1Type = id("V1");
           let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, 0, 1, 9, dataV1Type, dataV1, {from: accounts[1]});
-          assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 4); // after mint owner is auctionHouse
+          assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 7); // after mint owner is auctionHouse
         })
 
     });
@@ -128,7 +128,7 @@ contract("Check Auction", accounts => {
        let bidFees = [[accounts[6], 1500], [accounts[7], 3500]];
        let bidDataV1 = await bidEncDataV1([bidFees]);
        let bidDataV1Type = id("V1");
-       let bid = {amount:8, dataType:bidDataV1Type, data:bidDataV1};
+       let bid = {amount:10, dataType:bidDataV1Type, data:bidDataV1};
        let resultPutBid = await auctionHouse.putBid(auctionId, bid);
      })
 

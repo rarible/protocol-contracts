@@ -20,7 +20,7 @@ abstract contract AbstractFeesDataFromRTM {
 }
 
 contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, TransferConstants, IERC721Receiver, IERC1155Receiver {
-
+    bytes4 constant internal AUCTION_EMPTY_BID = 0x00000000;
     //auction struct
     struct Auction {
         LibAsset.Asset sellAsset;
@@ -140,7 +140,7 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
 
         //start action if minimal price is met
-        if (currentAuction.endTime == 0) { //no bid at all
+        if (currentAuction.buyer == address(0x0)) { //no bid at all
             require(_buyAssetValue >= currentAuction.minimalPrice, "bid can't be less than minimal price");
             currentAuction.endTime = currentTime + aucData.duration;
             //reserv on contract _buyAssetValue
@@ -165,7 +165,11 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         return true;
     }
 
-    function reserveValue(address oldBuyer, address newBuyer, uint oldAmount, uint) internal {
+    function reserveValue(address oldBuyer, address newBuyer, uint oldAmount, uint newAmount) internal {
+        if(oldBuyer != address(0x0)) {
+            //return reserved to oldBuyer
+        }
+        //send reserved to contract
 
     }
 
@@ -203,7 +207,12 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
     }
 
     function getMinimalNextBid(uint _auctionId) internal view returns(uint){
-
+        Auction storage currentAuction = auctions[_auctionId];
+        if(currentAuction.buyer == address(0x0)) {
+            return (currentAuction.minimalPrice);
+        } else {
+            return(currentAuction.lastBid.amount + currentAuction.minimalStep);
+        }
     }
 
     function checkAuctionExistance(uint _auctionId) internal view returns(bool){
