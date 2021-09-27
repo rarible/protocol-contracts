@@ -18,7 +18,7 @@ function createNetwork(name) {
     return {
       provider: () => createProvider(json.address, json.key, json.url),
       from: json.address,
-      gas: 50000,
+      gas: 5000000,
       gasPrice: gasPrice + "000000000",
       network_id: json.network_id,
       skipDryRun: true,
@@ -50,7 +50,8 @@ module.exports = {
     ropsten: createNetwork("ropsten"),
     mainnet: createNetwork("mainnet"),
     rinkeby: createNetwork("rinkeby"),
-    rinkeby2: createNetwork("rinkeby2")
+    rinkeby2: createNetwork("rinkeby2"),
+    polygon_mumbai: createNetwork("polygon_mumbai")
   },
 
   compilers: {
