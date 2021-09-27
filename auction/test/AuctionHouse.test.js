@@ -121,7 +121,6 @@ contract("Check Auction", accounts => {
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
       let endTime = await Math.floor(Date.now()/1000);
-      console.log("endTime:" + endTime);
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -145,7 +144,6 @@ contract("Check Auction", accounts => {
       let buyAssetType = await AssetType(ETH, encodedEth);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
       let endTime = await Math.floor(Date.now()/1000);
-      console.log("endTime:" + endTime);
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -156,7 +154,6 @@ contract("Check Auction", accounts => {
       let bidDataV1 = await bidEncDataV1([bidFees]);
       let bidDataV1Type = id("V1");
       let bid = {amount:10, dataType:bidDataV1Type, data:bidDataV1};
-      console.log("sks_test234");
       auctionHouse.setEthAddress(accounts[5]);
     	  await verifyBalanceChange(accounts[2], 15, async () =>
     		verifyBalanceChange(accounts[5], -10, async () =>

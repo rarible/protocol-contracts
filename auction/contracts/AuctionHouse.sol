@@ -3,14 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../exchange-v2/contracts/ITransferManager.sol";
-//import "../lib/LibTransfer.sol";
-//import "../LibOrder.sol";
-import "./LibAucDataV1.sol";
-import "./LibBidDataV1.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-//import "../TransferConstants.sol";
+import "./AuctionHouseBase.sol";
 
 abstract contract AbstractFeesDataFromRTM {
     uint public protocolFee;
@@ -19,48 +12,16 @@ abstract contract AbstractFeesDataFromRTM {
     mapping(address => address) public feeReceivers;
 }
 
-contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, TransferConstants, IERC721Receiver, IERC1155Receiver {
+contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, TransferExecutor, TransferConstants {
+    mapping(uint => Auction) public auctions;   //save auctions here
 
-    //auction struct
-    struct Auction {
-        LibAsset.Asset sellAsset;
-        LibAsset.AssetType buyAsset;
-        Bid lastBid;
-        address payable seller;
-        address payable buyer;
-        uint endTime;
-        uint minimalStep;
-        uint minimalPrice;
-        uint protocolFee;
-        bytes4 dataType; // aucv1
-        bytes data;//duration, buyOutPrice, origin, payouts(?)
-
-        //todo: другие типы аукционов?
-        //todo: обсудить с Сашей разные подходы к времени аукционов
-        //todo: аукцион не удаляем, помечаем
-    }
-
-    //bid struct
-    struct Bid {
-        uint amount;
-        bytes4 dataType;//bidv1
-        bytes data;//origin, payouts(?)
-    }
-
-    mapping(uint => Auction) public auctions;
-
-    uint256 private auctionId;
-    address payable public wallet;      //reserve ETH
+    uint256 private auctionId;          //unic. auction id
+    address payable public wallet;      //to reserve ETH
 
     AbstractFeesDataFromRTM feeData;
 
     uint256 private constant EXTENSION_DURATION = 15 minutes;
     uint256 private constant MAX_DURATION = 1000 days;
-
-    event AuctionCreated(uint id, Auction auction);
-    event BidPlaced(uint id);
-    event AuctionCanceled();
-    event AuctionFinished();
 
     function __AuctionHouse_init(
         INftTransferProxy _transferProxy,
@@ -233,35 +194,6 @@ contract AuctionHouse is Initializable, OwnableUpgradeable, TransferExecutor, Tr
         } else {
             return true;
         }
-    }
-
-    function encode(LibAucDataV1.DataV1 memory data) pure external returns (bytes memory) {
-        return abi.encode(data);
-    }
-
-    function encodeBid(LibBidDataV1.DataV1 memory data) pure external returns (bytes memory) {
-        return abi.encode(data);
-    }
-
-    /**
-     * @dev See {IERC721Receiver-onERC721Received}.
-     *
-     * Always returns `IERC721Receiver.onERC721Received.selector`.
-     */
-    function onERC721Received(address, address, uint256, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return this.supportsInterface(interfaceId);
     }
 
     uint256[50] private ______gap;
