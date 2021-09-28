@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.3](https://github.com/rariblecom/protocol-contracts/compare/@rarible/lazy-mint@0.5.2...@rarible/lazy-mint@0.5.3) (2021-08-12)
+
+
+### Bug Fixes
+
+* deployed new contracts to rinkeby ([c0ac431](https://github.com/rariblecom/protocol-contracts/commit/c0ac431f4b71a1cbd072b5bce1e347dc36e65ef9))
+* fix supportsInterface in tokens ([51fa04c](https://github.com/rariblecom/protocol-contracts/commit/51fa04ccebf12a92ca12805fc28885daac4d8abd))
+
+
+
+
+
 ## [0.5.2](https://github.com/rariblecom/protocol-contracts/compare/@rarible/lazy-mint@0.5.1...@rarible/lazy-mint@0.5.2) (2021-07-07)
 
 **Note:** Version bump only for package @rarible/lazy-mint
