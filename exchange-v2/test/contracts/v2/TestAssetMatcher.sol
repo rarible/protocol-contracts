@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../../contracts/IAssetMatcher.sol";
+import "@rarible/exchange-interfaces/contracts/IAssetMatcher.sol";
 
 contract TestAssetMatcher is IAssetMatcher {
 
