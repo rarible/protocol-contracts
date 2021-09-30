@@ -5,9 +5,9 @@ const { Asset } = require("../order");
 const { expectThrow } = require("@daonomic/tests-common");
 const { id, enc } = require("../assets");
 const truffleAssert = require('truffle-assertions');
+
 /*Proxy  buy punk, sfter Proxy transfer punk to buyer */
 contract("Exchange with PunkTransfer proxies", accounts => {
-  let marketTest;
   let punkIndex = 256;
 
 	beforeEach(async () => {
@@ -24,7 +24,6 @@ contract("Exchange with PunkTransfer proxies", accounts => {
     assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 1); //punk owner - accounts[1]
 		const encodedPunkData = await enc(cryptoPunksMarket.address, punkIndex);
 
-		let from, to, index;
     let res = await proxy.transfer(Asset(id("PUNK"), encodedPunkData, 1), accounts[1], accounts[2], { from: accounts[1] });
     assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 0);
     assert.equal(await cryptoPunksMarket.balanceOf(proxy.address), 0);
@@ -54,7 +53,6 @@ contract("Exchange with PunkTransfer proxies", accounts => {
     assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 1); //punk owner accounts[1]
 		const encodedPunkData = await enc(cryptoPunksMarket.address, punkIndex);
 
-		let from, to, index;
 		await expectThrow(
     	proxy.transfer(Asset(id("PUNK"), encodedPunkData, 1), accounts[1], accounts[2], { from: accounts[1] })
     );
