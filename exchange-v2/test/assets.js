@@ -15,7 +15,9 @@ function enc(token, tokenId) {
 const ETH = id("ETH");
 const ERC20 = id("ERC20");
 const ERC721 = id("ERC721");
+const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155 = id("ERC1155");
+const ERC1155_LAZY = id("ERC1155_LAZY");
 const COLLECTION = id("COLLECTION");
 const CRYPTO_PUNK = id("CRYPTO_PUNK");
 const ORDER_DATA_V1 = id("V1");
@@ -26,4 +28,4 @@ const ROYALTY = id("ROYALTY");
 const ORIGIN = id("ORIGIN");
 const PAYOUT = id("PAYOUT");
 
-module.exports = { id, ETH, ERC20, ERC721, ERC1155, COLLECTION, CRYPTO_PUNK, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc }
+module.exports = { id, ETH, ERC20, ERC721, ERC721_LAZY, ERC1155, ERC1155_LAZY, COLLECTION, CRYPTO_PUNK, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc }

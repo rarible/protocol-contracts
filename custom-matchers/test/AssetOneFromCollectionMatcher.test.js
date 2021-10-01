@@ -1,6 +1,6 @@
 const AssetMatcherCollection = artifacts.require("AssetMatcherCollection.sol");
 const order = require("../../exchange-v2/test/order.js");
-const { enc, ETH, ERC20, ERC721, ERC1155, COLLECTION, id } = require("../../exchange-v2/test/assets.js");
+const { enc, ETH, ERC20, ERC721, ERC721_LAZY, ERC1155, ERC1155_LAZY, COLLECTION, id } = require("../../exchange-v2/test/assets.js");
 
 contract("AssetMatcherCustom", accounts => {
 	let testingCustom;
@@ -19,12 +19,30 @@ contract("AssetMatcherCustom", accounts => {
       assert.equal(result[1], encodedNFT);
     });
 
+    it("Collection COLLECTION <-> ERC1155_LAZY  matches!", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[5], tokenId);
+      const result = await testingCustom.matchAssets(order.AssetType(COLLECTION, encoded), order.AssetType(ERC1155_LAZY, encodedNFT));
+      assert.equal(result[0], ERC1155_LAZY);
+      assert.equal(result[1], encodedNFT);
+    });
+
     it("Collection COLLECTION <-> ERC721  matches!", async () => {
       const tokenId = 3000;
       const encoded = enc(accounts[5]);
       const encodedNFT = enc(accounts[5], tokenId);
       const result = await testingCustom.matchAssets(order.AssetType(COLLECTION, encoded), order.AssetType(ERC721, encodedNFT));
       assert.equal(result[0], ERC721);
+      assert.equal(result[1], encodedNFT);
+    });
+
+    it("Collection COLLECTION <-> ERC721_LAZY  matches!", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[5], tokenId);
+      const result = await testingCustom.matchAssets(order.AssetType(COLLECTION, encoded), order.AssetType(ERC721_LAZY, encodedNFT));
+      assert.equal(result[0], ERC721_LAZY);
       assert.equal(result[1], encodedNFT);
     });
 
