@@ -3,6 +3,8 @@ const ERC1271 = artifacts.require("TestERC1271.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC721Factory = artifacts.require("ERC721RaribleFactory.sol");
+const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol");
+const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const truffleAssert = require('truffle-assertions');
 
 const { sign } = require("./mint");
@@ -31,12 +33,14 @@ contract("ERC721Rarible", accounts => {
     erc1271 = await ERC1271.new();
   });
 
- it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
+  it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
+    const proxyLazy = await ERC721LazyMintTransferProxy.new();
+    transferProxy = await TransferProxyTest.new();
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC721Factory.new(beacon.address);
+    factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
     resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
-     	proxy = ev.proxy;
+       proxy = ev.proxy;
       return true;
     });
     tokenByProxy = await Testing.at(proxy);
