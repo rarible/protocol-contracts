@@ -3,13 +3,13 @@ const order = require("../../exchange-v2/test/order.js");
 const { enc, ETH, ERC20, ERC721, ERC721_LAZY, ERC1155, ERC1155_LAZY, COLLECTION, id } = require("../../exchange-v2/test/assets.js");
 
 contract("AssetMatcherCustom", accounts => {
-	let testingCustom;
+  let testingCustom;
 
-	beforeEach(async () => {
-	  testingCustom = await AssetMatcherCollection.new();
-	});
+  beforeEach(async () => {
+    testingCustom = await AssetMatcherCollection.new();
+  });
 
-	describe("Check match by customMatcher Match one from Collection", () => {
+  describe("Check match by customMatcher Match one from Collection", () => {
     it("Collection COLLECTION <-> ERC1155  matches!", async () => {
       const tokenId = 3000;
       const encoded = enc(accounts[5]);
