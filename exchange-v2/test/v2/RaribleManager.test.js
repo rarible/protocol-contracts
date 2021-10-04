@@ -369,6 +369,40 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 0);//accounts[1] - not owner now
       assert.equal(await cryptoPunksMarket.balanceOf(accounts[2]), 1);//punk owner - accounts[2]
     })
+
+    it("Transfer from Crypto-punk to ETH, protocol fee 6% ", async () => {
+    	const { left, right } = await prepareETH_PunkOrders()
+
+      await verifyBalanceChange(accounts[0], 103, () =>
+      	verifyBalanceChange(accounts[2], -97, () =>
+        	verifyBalanceChange(protocol, -6, () =>
+          	testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right,
+            	{value: 103, from: accounts[0], gasPrice: 0}
+            )
+          )
+        )
+      );
+      assert.equal(await cryptoPunksMarket.balanceOf(accounts[2]), 0);//accounts[2] - not owner now
+      assert.equal(await cryptoPunksMarket.balanceOf(accounts[0]), 1);//punk owner - accounts[0]
+    })
+
+    async function prepareETH_PunkOrders() {
+      cryptoPunksMarket = await CryptoPunksMarket.new();
+      await cryptoPunksMarket.allInitialOwnersAssigned(); //allow test contract work with Punk CONTRACT_OWNER accounts[0]
+      let punkIndex = 256;
+      await cryptoPunksMarket.getPunk(punkIndex, { from: accounts[2] }); //accounts[2] - owner punk with punkIndex
+
+      const proxy = await PunkTransferProxy.new();
+      await proxy.__OperatorRole_init();
+      await proxy.addOperator(testing.address);
+      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[2] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
+
+      await testing.setTransferProxy(id("CRYPTO_PUNK"), proxy.address)
+      const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);
+      const left = Order(accounts[2], Asset(id("CRYPTO_PUNK"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+    	const right = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(id("CRYPTO_PUNK"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+    	return { left, right }
+    }
   })
 
   describe("Check lazy with royalties", () => {
