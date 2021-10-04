@@ -5,9 +5,9 @@ pragma abicoder v2;
 
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/ICryptoPunksMarket.sol";
-import "../roles/OperatorRole.sol";
+import "./OperatorRoleTest.sol";
 
-contract PunkTransferProxy is OperatorRole, ITransferProxy {
+contract PunkTransferProxyTest is OperatorRoleTest, ITransferProxy {
 
     function transfer(LibAsset.Asset memory asset, address from, address to) override external {
         (address token, uint punkIndex) = abi.decode(asset.assetType.data, (address, uint));

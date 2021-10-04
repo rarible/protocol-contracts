@@ -16,7 +16,8 @@ const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
 const ERC1155LazyMintTest = artifacts.require("ERC1155LazyMintTest.sol");
 const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol")
 const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxyTest.sol")
-
+const CryptoPunksMarket = artifacts.require("CryptoPunksMarket.sol");
+const PunkTransferProxy = artifacts.require("PunkTransferProxyTest.sol")
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -340,6 +341,35 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       return { left, right }
     }
 	})
+
+  describe("Check Crypto-punk transferring", () => {
+    it("Transfer Crypto-Punk to ERC20 ", async () => {
+      cryptoPunksMarket = await CryptoPunksMarket.new();
+      await cryptoPunksMarket.allInitialOwnersAssigned(); //allow test contract work with Punk CONTRACT_OWNER accounts[0]
+      let punkIndex = 256;
+      await cryptoPunksMarket.getPunk(punkIndex, { from: accounts[1] }); //accounts[1] - owner punk with punkIndex
+
+      const proxy = await PunkTransferProxy.new();
+      await proxy.__OperatorRole_init();
+      await proxy.addOperator(testing.address);
+      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
+
+      await testing.setTransferProxy(id("CRYPTO_PUNK"), proxy.address)
+      const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
+      await t1.mint(accounts[2], 106);
+      await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+
+      const left = Order(accounts[1], Asset(id("CRYPTO_PUNK"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("CRYPTO_PUNK"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+
+      await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
+
+      assert.equal(await t1.balanceOf(accounts[1]), 97); //get 97 because protocol down-fee
+      assert.equal(await t1.balanceOf(accounts[2]), 3);// accounts[1] pay 103 because protocol up-fee
+      assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 0);//accounts[1] - not owner now
+      assert.equal(await cryptoPunksMarket.balanceOf(accounts[2]), 1);//punk owner - accounts[2]
+    })
+  })
 
   describe("Check lazy with royalties", () => {
 
