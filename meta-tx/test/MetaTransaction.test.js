@@ -10,9 +10,9 @@ let ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 let publicKey = "0x726cDa2Ac26CeE89F645e55b78167203cAE5410E";
 let privateKey = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa6";
 
-let balanceOfAbi =  require("./contracts/balanceOfAbi.json");
-let sumAbi = require("./contracts/sumAbi.json");
-let executeMetaTransactionABI = require("./contracts/executeMetaTransactionABI.json");
+let balanceOfAbi =  require("./contracts/abi/balanceOfAbi.json");
+let sumAbi = require("./contracts/abi/sumAbi.json");
+let executeMetaTransactionABI = require("./contracts/abi/executeMetaTransactionAbi.json");
 
 const domainType = [{
     name: "name",
