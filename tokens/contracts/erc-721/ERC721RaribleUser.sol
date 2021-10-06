@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721BurnableUpgradeable.sol";
+import "./ERC721BurnableUpgradeable.sol";
 import "./ERC721Lazy.sol";
 import "../HasContractURI.sol";
 
@@ -37,5 +37,10 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
         require(owner() == data.creators[0].account, "minter is not the owner");
         super.mintAndTransfer(data, to);
     }
+
+    function _mint(address to, uint256 tokenId) internal override(ERC721Lazy, ERC721Upgradeable) {
+        super._mint(to, tokenId);
+    }
+
     uint256[50] private __gap;
 }
