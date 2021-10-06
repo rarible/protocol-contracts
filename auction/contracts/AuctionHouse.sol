@@ -4,12 +4,14 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./AuctionHouseBase.sol";
+import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
 
 contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, TransferExecutor {
+    using LibTransfer for address;
+
     mapping(uint => Auction) public auctions;   //save auctions here
 
     uint256 private auctionId;          //unic. auction id
-    address payable public wallet;      //to reserve ETH
     address private nftTransferProxy;
     address private erc20TransferProxy;
 
@@ -84,10 +86,6 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         }
     }
 
-    function setEthAddress(address payable _addr) public {
-        wallet = _addr;
-    }
-
     function _initializeAuctionId() internal {
         auctionId = 1;
     }
@@ -96,13 +94,13 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         return auctionId++;
     }
 
-    //put a bid and return locked assets for the last bid--------------------------------------RPC-94
+    //put a bid and return locked assets for the last bid--------------------------------------RPC-94-putBid
     function putBid(uint _auctionId, Bid memory bid) payable external {
-        require(checkAuctionExistance(_auctionId), "there is no auction with this id");
+        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {
-            //set auction finished
+            //TODO set auction finished
         }
         Auction storage currentAuction = auctions[_auctionId];
         uint currentTime = block.timestamp;
@@ -112,11 +110,11 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             require(newAmount >= currentAuction.minimalPrice, "bid can't be less than minimal price");
             currentAuction.endTime = currentTime + aucData.duration;
-        } else {    //there is bid in auction
-            require(currentAuction.endTime >= currentTime, "NFTMarketReserveAuction: Auction is over");
-            require(currentAuction.buyer != newBuyer, "NFTMarketReserveAuction: You already have an outstanding bid");
+        } else {//there is bid in auction
+            require(currentAuction.endTime >= currentTime, "auction is over");
+            require(currentAuction.buyer != newBuyer, "already have an outstanding bid");
             uint256 minAmount = getMinimalNextBid(_auctionId);
-            require(newAmount >= minAmount, "NFTMarketReserveAuction: Bid amount too low");
+            require(newAmount >= minAmount, "bid amount too low");
         }
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
         currentAuction.lastBid.amount = newAmount;
@@ -128,44 +126,32 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         emit BidPlaced(_auctionId);
     }
 
-    function saveBid(Auction memory _auction, address payable newBuyer, uint amount) internal {
-        reserveValue(_auction.buyAsset, _auction.buyer, newBuyer, _auction.lastBid.amount, amount);
-        _auction.lastBid.amount = amount;
-        _auction.buyer = newBuyer;
-    }
-
     function reserveValue(LibAsset.AssetType memory _buyAssetType, address oldBuyer, address newBuyer, uint oldAmount, uint newAmount) internal {
-        if (oldBuyer != address(0x0)) {
-            //return reserved to oldBuyer
-            LibAsset.Asset memory returnAsset;
-            returnAsset.assetType = _buyAssetType;
-            returnAsset.value = oldAmount;
-            if ((returnAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) && (returnAsset.value == 10)) {
-                transfer(returnAsset, address(0x0), oldBuyer, TO_LOCK, UNLOCK);
+        LibAsset.Asset memory transferAsset;
+        if (oldBuyer != address(0x0)) {//return oldAmount to oldBuyer
+            transferAsset = makeAsset(_buyAssetType, oldAmount);
+            if ((transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS)) {
+                address(oldBuyer).transferEth(oldAmount);
             } else {
-                transfer(returnAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
+                transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
             }
         }
-        //send reserved to contract
-        LibAsset.Asset memory reservedAsset;
-        reservedAsset.assetType = _buyAssetType;
-        //        reservedAsset.value = newAmount - oldAmount; TODO do it, now spend more ether than need
-        //todo use function to transfer ether, which send ether back, when ether more, than need
-        reservedAsset.value = newAmount;
-        if (reservedAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            transfer(reservedAsset, address(0x0), wallet, TO_LOCK, LOCK);
-        } else if (reservedAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
-            transfer(reservedAsset, newBuyer, address(this), TO_LOCK, LOCK);
+        transferAsset = makeAsset(_buyAssetType, newAmount);
+        if (transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            if (msg.value > newAmount) {//more ETH than need
+                address(newBuyer).transferEth(msg.value - newAmount);
+            }
+        } else if (transferAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
+            transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
             (address token) = abi.decode(_buyAssetType.data, (address));
             IERC20Upgradeable(token).approve(erc20TransferProxy, newAmount);
         }
     }
 
-    function transferAmount(LibAsset.AssetType memory _assetType, address from, address to, uint amount, bytes4 _direction, bytes4 _type) internal {
-        LibAsset.Asset memory _asset;
+    function makeAsset(LibAsset.AssetType memory _assetType, uint amount) internal returns (LibAsset.Asset memory _asset) {
         _asset.assetType = _assetType;
         _asset.value = amount;
-        transfer(_asset, from, to, _direction, _type);
+        return _asset;
     }
 
     function getMinimalNextBid(uint _auctionId) internal view returns (uint){
@@ -177,7 +163,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         }
     }
 
-    function checkAuctionExistance(uint _auctionId) internal view returns (bool){
+    function checkAuctionExistence(uint _auctionId) internal view returns (bool){
         if (auctions[_auctionId].seller == address(0)) {
             return false;
         } else {
