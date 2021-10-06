@@ -48,7 +48,7 @@ module.exports = async function (deployer, network) {
   await erc721Proxy.setDefaultApproval(erc721LazyMintTransferProxy, true, { gas: 100000 });
   await erc721Proxy.setDefaultApproval(transferProxy, true, { gas: 100000 });
 
-  //deploying erc721 proxy
+  //deploying erc1155 proxy
   const erc1155Proxy = await deployProxy(ERC1155Rarible, ["Rarible", "RARI", "ipfs:/", ""], { deployer, initializer: '__ERC1155Rarible_init' });
   console.log("deployed erc1155 at", erc1155Proxy.address)
   //setting default approvers
