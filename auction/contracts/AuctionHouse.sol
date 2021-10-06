@@ -9,7 +9,6 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
     mapping(uint => Auction) public auctions;   //save auctions here
 
     uint256 private auctionId;          //unic. auction id
-    address payable public wallet;      //to reserve ETH
     address private nftTransferProxy;
     address private erc20TransferProxy;
 
