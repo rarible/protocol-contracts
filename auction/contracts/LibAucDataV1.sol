@@ -17,7 +17,7 @@ library LibAucDataV1 {
     }
 
     function parse(bytes memory data, bytes4 dataType) internal pure returns (DataV1 memory aucData) {
-        if (dataType == V1){
+        if (dataType == V1) {
             aucData = abi.decode(data, (DataV1));
         }
     }
