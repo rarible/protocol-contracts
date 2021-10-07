@@ -179,6 +179,35 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         }
         return false;
     }
+    //RPC-95
+    function finishAuction(uint _auctionId) payable public onlyOwner {
+        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
+        Auction storage currentAuction = auctions[_auctionId];
+        address seller = currentAuction.seller;
+        uint amount = currentAuction.lastBid.amount;
+        if (currentAuction.buyer == address(0x0)) {//no bid at all
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
+        } else {
+            transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT);//nft to buyer
+            if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
+                address(seller).transferEth(amount);
+            } else {
+                transferAmount(currentAuction.buyAsset, address(this), seller, amount, TO_SELLER, PAYOUT);
+            }
+        }
+        deactivateAuction(_auctionId);
+        emit AuctionFinished( _auctionId);
+    }
 
+    function deactivateAuction(uint _auctionId) internal {
+        auctions[_auctionId].seller == address(0);
+    }
+
+    function transferAmount(LibAsset.AssetType memory _assetType, address from, address to, uint amount, bytes4 _direction, bytes4 _type) internal {
+        LibAsset.Asset memory _asset;
+        _asset.assetType = _assetType;
+        _asset.value = amount;
+        transfer(_asset, from, to, _direction, _type);
+    }
     uint256[50] private ______gap;
 }
