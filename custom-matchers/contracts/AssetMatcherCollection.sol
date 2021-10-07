@@ -16,10 +16,7 @@ contract AssetMatcherCollection is IAssetMatcher, Initializable, OperatorRole {
     bytes constant EMPTY = "";
 
     function __AssetMatcherCollection_init() initializer external {
-//        __Ownable_init();
-//        __OperatorRole_init();
-        __Context_init_unchained();
-        __Ownable_init_unchained();
+        __Ownable_init();
     }
 
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) onlyOperator public view override returns (LibAsset.AssetType memory) {
@@ -32,9 +29,5 @@ contract AssetMatcherCollection is IAssetMatcher, Initializable, OperatorRole {
             }
         }
         return LibAsset.AssetType(0, EMPTY);
-    }
-
-    function getOperator(address askedAddr) public view returns (bool) {
-        return operators[askedAddr];
     }
 }
