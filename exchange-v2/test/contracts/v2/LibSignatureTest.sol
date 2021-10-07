@@ -3,7 +3,7 @@
 pragma solidity ^0.7.0;
 pragma abicoder v2;
 
-import "../../../contracts/Lib/LibSignature.sol";
+import "../../../contracts/lib/LibSignature.sol";
 import "../../../contracts/LibOrder.sol";
 import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
