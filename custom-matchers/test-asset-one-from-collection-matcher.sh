@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 truffle test ./test/AssetOneFromCollectionMatcher.test.js \
-              --compile-all
+            ./test/contracts/AssetMatcherTestShmest.sol \
+            --compile-all

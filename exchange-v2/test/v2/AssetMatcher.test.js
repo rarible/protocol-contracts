@@ -11,10 +11,14 @@ const truffleAssert = require('truffle-assertions');
 
 contract("AssetMatcher", accounts => {
 	let testing;
+	let testMatcher;
 
 	beforeEach(async () => {
 		testing = await AssetMatcherTest.new();
 		await testing.__AssetMatcherTest_init();
+		testMatcher = await CustomCollectionAssetMatcher.new();
+    testMatcher.__AssetMatcherCollection_init();
+    testMatcher.addOperator(testing.address);
 	});
 
 	it("setAssetMatcher works", async () => {
@@ -38,7 +42,9 @@ contract("AssetMatcher", accounts => {
         testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded))
       );
 
-      const testMatcher = await CustomCollectionAssetMatcher.new();
+//      const testMatcher = await CustomCollectionAssetMatcher.new();
+//      testMatcher.__AssetMatcherCollection_init();
+//      testMatcher.addOperator(testing.address);
       const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
       const result = await testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded));
 
@@ -64,7 +70,7 @@ contract("AssetMatcher", accounts => {
         testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded))
       );
 
-      const testMatcher = await CustomCollectionAssetMatcher.new();
+//      const testMatcher = await CustomCollectionAssetMatcher.new();
       const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
       const result = await testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded));
 
@@ -81,7 +87,7 @@ contract("AssetMatcher", accounts => {
         testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded))
       );
 
-      const testMatcher = await CustomCollectionAssetMatcher.new();
+//      const testMatcher = await CustomCollectionAssetMatcher.new();
       const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
       const result = await testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded));
 
