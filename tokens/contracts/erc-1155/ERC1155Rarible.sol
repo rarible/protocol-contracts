@@ -9,11 +9,11 @@ contract ERC1155Rarible is ERC1155Base {
     event CreateERC1155Rarible(address owner, string name, string symbol);
 
     function __ERC1155Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) external initializer {
-        initializeERC1155Rarible(_name, _symbol, baseURI, contractURI);
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
         emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
     }
 
-    function initializeERC1155Rarible(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) internal {
+    function __ERC1155Rarible_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) internal {
         __Ownable_init_unchained();
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();

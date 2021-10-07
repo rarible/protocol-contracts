@@ -11,7 +11,7 @@ contract ERC1155RaribleMeta is ERC1155Rarible, EIP712MetaTransaction {
     event CreateERC1155RaribleMeta(address owner, string name, string symbol);
 
     function __ERC1155RaribleMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) external initializer {
-        initializeERC1155Rarible(_name, _symbol, baseURI, contractURI);
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
         __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
         emit CreateERC1155RaribleMeta(_msgSender(), _name, _symbol);
     }

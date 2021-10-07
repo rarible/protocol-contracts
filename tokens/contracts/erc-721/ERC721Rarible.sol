@@ -10,11 +10,11 @@ contract ERC721Rarible is ERC721Base {
     event CreateERC721Rarible(address owner, string name, string symbol);
 
     function __ERC721Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) external initializer {
-        initializeERC721Rarible(_name, _symbol, baseURI, contractURI);
+        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
-    function initializeERC721Rarible(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) internal {
+    function __ERC721Rarible_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) internal {
         _setBaseURI(baseURI);
         __ERC721Lazy_init_unchained();
         __RoyaltiesV2Upgradeable_init_unchained();

@@ -13,11 +13,11 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
     event CreateERC721RaribleUser(address owner, string name, string symbol);
 
     function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external initializer {
-        initializeERC721RaribleUser(_name, _symbol, baseURI, contractURI, operators);
+        __ERC721RaribleUser_init_unchained(_name, _symbol, baseURI, contractURI, operators);
         emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
     }
 
-    function initializeERC721RaribleUser(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) internal {
+    function __ERC721RaribleUser_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) internal {
         _setBaseURI(baseURI);
         __ERC721Lazy_init_unchained();
         __Context_init_unchained();
