@@ -3,13 +3,15 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@rarible/tokens-minimal/contracts/erc-721/ERC721UpgradeableMinimal.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
-import "./Mint721Validator.sol";
+import "../Mint721Validator.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "./ERC721URI.sol";
 
-abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
+abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, ERC721URI {
     using SafeMathUpgradeable for uint;
 
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
@@ -67,6 +69,16 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         _setTokenURI(data.tokenId, data.tokenURI);
     }
 
+    function _emitMintEvent(address to, uint tokenId) internal override virtual {
+        address minter = address(tokenId >> 96);
+        if (minter != to) {
+            emit Transfer(address(0), minter, tokenId);
+            emit Transfer(minter, to, tokenId);
+        } else {
+            emit Transfer(address(0), to, tokenId);
+        }
+    }
+
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
@@ -87,6 +99,14 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
     function getCreators(uint256 _id) external view returns (LibPart.Part[] memory) {
         return creators[_id];
+    }
+
+    function tokenURI(uint256 tokenId) public view virtual override(ERC721UpgradeableMinimal, ERC721URI) returns (string memory) {
+        return ERC721URI.tokenURI(tokenId);
+    }
+
+    function _clearMetadata(uint256 tokenId) internal override(ERC721UpgradeableMinimal, ERC721URI) virtual {
+        return ERC721URI._clearMetadata(tokenId);
     }
 
     uint256[50] private __gap;

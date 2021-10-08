@@ -3,9 +3,9 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./ERC721Base.sol";
+import "./ERC721BaseMinimal.sol";
 
-contract ERC721Rarible is ERC721Base {
+contract ERC721RaribleMinimal is ERC721BaseMinimal {
 
     event CreateERC721Rarible(address owner, string name, string symbol);
 

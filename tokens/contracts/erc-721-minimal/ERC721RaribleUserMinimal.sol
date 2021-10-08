@@ -4,11 +4,11 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721BurnableUpgradeable.sol";
-import "./ERC721Lazy.sol";
+import "./ERC721BurnableUpgradeableMinimal.sol";
+import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
 
-contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC721Lazy, HasContractURI {
+contract ERC721RaribleUserMinimal is OwnableUpgradeable, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
 
     event CreateERC721RaribleUser(address owner, string name, string symbol);
 
@@ -29,7 +29,7 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
         emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721Lazy) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721LazyMinimal) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -37,5 +37,18 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
         require(owner() == data.creators[0].account, "minter is not the owner");
         super.mintAndTransfer(data, to);
     }
+
+    function tokenURI(uint256 tokenId) public view virtual override(ERC721UpgradeableMinimal, ERC721LazyMinimal) returns (string memory) {
+        return ERC721LazyMinimal.tokenURI(tokenId);
+    }
+
+    function _clearMetadata(uint256 tokenId) internal override(ERC721UpgradeableMinimal, ERC721LazyMinimal) virtual {
+        return ERC721LazyMinimal._clearMetadata(tokenId);
+    }
+
+    function _emitMintEvent(address to, uint tokenId) internal override(ERC721UpgradeableMinimal, ERC721LazyMinimal) virtual {
+        return ERC721LazyMinimal._emitMintEvent(to, tokenId);
+    }
+    
     uint256[50] private __gap;
 }
