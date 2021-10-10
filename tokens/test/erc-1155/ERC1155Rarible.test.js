@@ -17,6 +17,7 @@ contract("ERC1155Rarible", accounts => {
   let proxy;
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const name = 'FreeMintable';
+  const ZERO = "0x0000000000000000000000000000000000000000";
 
   beforeEach(async () => {
     token = await Testing.new();
@@ -26,7 +27,7 @@ contract("ERC1155Rarible", accounts => {
 
   it("mint and transfer by minter, token create by Factory", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC1155Factory.new(beacon.address);
+    factory = await ERC1155Factory.new(beacon.address, ZERO, ZERO);
     resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
      	proxy = ev.proxy;
