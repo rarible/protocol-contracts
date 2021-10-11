@@ -192,17 +192,14 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         address seller = currentAuction.seller;
         uint amount = currentAuction.lastBid.amount;
         if (currentAuction.buyer == address(0x0)) {//no bid at all
-            //            revert("SKS+log_0");
             transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
             //nft back to seller
         } else {
-            //            revert("SKS+log_1");
             transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT);
             //nft to buyer
             if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 address(seller).transferEth(amount);
             } else {
-                //                revert("SKS+log_2");
                 transferAmount(currentAuction.buyAsset, address(this), seller, amount, TO_SELLER, PAYOUT);
             }
         }
