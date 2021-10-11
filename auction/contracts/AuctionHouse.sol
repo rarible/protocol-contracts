@@ -181,22 +181,31 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
     }
     //RPC-95
     function finishAuction(uint _auctionId) payable public onlyOwner {
+        _finishAuction(_auctionId);
+        deactivateAuction(_auctionId);
+        emit AuctionFinished(_auctionId);
+    }
+
+    function _finishAuction(uint _auctionId) internal {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         uint amount = currentAuction.lastBid.amount;
         if (currentAuction.buyer == address(0x0)) {//no bid at all
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
+            //            revert("SKS+log_0");
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
+            //nft back to seller
         } else {
-            transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT);//nft to buyer
+            //            revert("SKS+log_1");
+            transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT);
+            //nft to buyer
             if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 address(seller).transferEth(amount);
             } else {
+                //                revert("SKS+log_2");
                 transferAmount(currentAuction.buyAsset, address(this), seller, amount, TO_SELLER, PAYOUT);
             }
         }
-        deactivateAuction(_auctionId);
-        emit AuctionFinished( _auctionId);
     }
 
     function deactivateAuction(uint _auctionId) internal {
@@ -210,51 +219,21 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         transfer(_asset, from, to, _direction, _type);
     }
 
-    //RPC-96
-    //buyout and cancel auction
-    function buyOut(uint _auctionId, Bid memory bid) public {
+    //RPC-98 buyout and cancel auction
+    function buyOut(uint _auctionId, Bid memory bid) public payable {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionFinishTime(_auctionId), "auction finished");
         uint newAmount = bid.amount;
         address payable newBuyer = _msgSender();
         require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
-        saveBid(auctions[_auctionId], newBuyer, newAmount);
-        finishAuction(_auctionId);
-        emit AuctionBuaOut(_auctionId);
-    }
-
-    function checkAuctionFinishTime(uint _auctionId) internal view returns (bool){
-        if (auctions[_auctionId].endTime < block.timestamp) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    function saveBid(Auction memory _auction, address payable newBuyer, uint amount) internal {
-        reserveValue(_auction.buyAsset, _auction.buyer, newBuyer, _auction.lastBid.amount, amount);
-        _auction.lastBid.amount = amount;
-        _auction.buyer = newBuyer;
-    }
-
-    //cancel auction without bid
-    function cancel(uint _auctionId) public {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         Auction storage currentAuction = auctions[_auctionId];
-        address seller = currentAuction.seller;
-        require(seller == _msgSender(), "auction owner not detected");
-        address buyer = currentAuction.buyer;
-        uint amount = currentAuction.lastBid.amount;
-        if (buyer == address(0x0)) {//no bid at all
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
-            deactivateAuction(_auctionId);
-            emit AuctionCancelled(_auctionId);
-        }
+        reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
+        currentAuction.lastBid.amount = newAmount;
+        currentAuction.buyer = newBuyer;
+
+        _finishAuction(_auctionId);
+        deactivateAuction(_auctionId);
+        emit AuctionBuyOut(_auctionId);
     }
 
-    modifier auctionOwner(uint _auctionId) {
-
-        _;
-    }
     uint256[50] private ______gap;
 }
