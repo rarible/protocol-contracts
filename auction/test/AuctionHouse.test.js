@@ -305,7 +305,7 @@ contract("Check Auction", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[1]); // after mint owner is auctionHouse
     })
 
-    it("Put bid:721<->20, after cancel auction, no", async () => {
+    it("Put bid:721<->20, after cancel auction, no changes, because bid already put", async () => {
       //auction initialize
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
