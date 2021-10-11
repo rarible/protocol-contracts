@@ -210,34 +210,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         transfer(_asset, from, to, _direction, _type);
     }
 
-    //RPC-96
-    //buyout and cancel auction
-    function buyOut(uint _auctionId, Bid memory bid) public {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionFinishTime(_auctionId), "auction finished");
-        uint newAmount = bid.amount;
-        address payable newBuyer = _msgSender();
-        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
-        saveBid(auctions[_auctionId], newBuyer, newAmount);
-        finishAuction(_auctionId);
-        emit AuctionBuaOut(_auctionId);
-    }
-
-    function checkAuctionFinishTime(uint _auctionId) internal view returns (bool){
-        if (auctions[_auctionId].endTime < block.timestamp) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    function saveBid(Auction memory _auction, address payable newBuyer, uint amount) internal {
-        reserveValue(_auction.buyAsset, _auction.buyer, newBuyer, _auction.lastBid.amount, amount);
-        _auction.lastBid.amount = amount;
-        _auction.buyer = newBuyer;
-    }
-
-    //cancel auction without bid
+    //RPC-96-cancel auction without bid
     function cancel(uint _auctionId) public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         Auction storage currentAuction = auctions[_auctionId];
@@ -252,9 +225,5 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         }
     }
 
-    modifier auctionOwner(uint _auctionId) {
-
-        _;
-    }
     uint256[50] private ______gap;
 }
