@@ -40,7 +40,7 @@ abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver, Transfe
 
     event AuctionCreated(uint id, Auction auction);
 
-    function encode(LibAucDataV1.DataV1 memory data) pure external returns (bytes memory) {
+    function encode(LibAucDataV1.DataV1 memory data) pure public returns (bytes memory) {
         return abi.encode(data);
     }
 

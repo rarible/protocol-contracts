@@ -37,36 +37,46 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         bytes4 dataType,
         bytes memory data
     ) public {
-        uint currenAuctionId = getNextAndIncrementAuctionId();
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
-
+        uint currentAuctionId = getNextAndIncrementAuctionId();
         require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
-
-        auctions[currenAuctionId] = Auction(
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
+        (uint startTimeCalculate, uint endTimeCalculate) = manageTimeRange(aucData.startTime, endTime, aucData.duration);
+        LibAucDataV1.DataV1 memory newAuctionData = aucData;
+        if (startTimeCalculate != aucData.startTime) {
+            newAuctionData.startTime = startTimeCalculate;
+        }
+        bytes memory newData = encode(newAuctionData);
+        auctions[currentAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
             Bid(0, "", ""),
             _msgSender(),
             payable(address(0)),
-            endTime,
+            endTimeCalculate,
             minimalStep,
             minimalPrice,
             0,
             dataType,
-            data
+            newData
         );
-        //if no endTime, duration must be set
-        // if we now start time and end time 
-        if (endTime == 0) {
-            require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "wrong auction duration");
-
-            if (aucData.startTime > 0) {
-                auctions[currenAuctionId].endTime = aucData.startTime + aucData.duration;
-            }
-        }
         transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);
-        emit AuctionCreated(currenAuctionId, auctions[currenAuctionId]);
+        emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
+    }
+
+    function manageTimeRange(uint _startTime, uint _endTime, uint _duration) internal returns (uint startTime, uint endTime){
+        if (_startTime == 0) {
+            startTime = block.timestamp;
+        } else {
+            startTime = _startTime;
+        }
+        if (_endTime == 0) {
+            require(_duration >= EXTENSION_DURATION && _duration <= MAX_DURATION, "wrong auction duration");
+            endTime = startTime + _duration;
+        } else {
+            endTime = _endTime;
+        }
+        require(endTime > startTime, "error in auction time range");
     }
 
     function setApproveForTransferProxy(LibAsset.Asset memory _asset) internal {
