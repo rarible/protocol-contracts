@@ -61,6 +61,9 @@ async function getProxyImplementation(contract, network) {
 	if (network === "e2e") {
 		network = "unknown-17"
 	}
+  if (network === "test") {
+		network = "unknown-1337"
+	}
 	const json = require(`../.openzeppelin/${network}.json`)
 	const c = await ProxyAdmin.at(json.admin.address)
 	const deployed = await contract.deployed()
