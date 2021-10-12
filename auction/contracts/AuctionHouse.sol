@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "./AuctionHouseBase.sol";
 import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
 
-contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, TransferExecutor {
+contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
     using LibTransfer for address;
 
     mapping(uint => Auction) public auctions;   //save auctions here
@@ -23,7 +23,6 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         IERC20TransferProxy _erc20TransferProxy
     ) external initializer {
         __Context_init_unchained();
-        __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         _initializeAuctionId();
         nftTransferProxy = address(_transferProxy);
@@ -62,7 +61,6 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         // if we now start time and end time 
         if (endTime == 0) {
             require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "wrong auction duration");
-
             if (aucData.startTime > 0) {
                 auctions[currenAuctionId].endTime = aucData.startTime + aucData.duration;
             }
@@ -180,15 +178,17 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         return false;
     }
     //RPC-95
-    function finishAuction(uint _auctionId) payable public onlyOwner {
+    //    function finishAuction(uint _auctionId) payable public onlyOwner {
+    function finishAuction(uint _auctionId) payable public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
+        require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         uint amount = currentAuction.lastBid.amount;
-        if (currentAuction.buyer == address(0x0)) {//no bid at all
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
+        if (currentAuction.buyer == address(0x0)) {//no bid at all, nft back to seller
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
         } else {
-            transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT);//nft to buyer
+            transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT); //nft transfer to buyer
             if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 address(seller).transferEth(amount);
             } else {
@@ -196,7 +196,17 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
             }
         }
         deactivateAuction(_auctionId);
-        emit AuctionFinished( _auctionId);
+        emit AuctionFinished(_auctionId);
+    }
+
+    function checkAuctionRangeTime(uint _auctionId) internal view returns (bool){
+        uint currentTime = block.timestamp;
+        Auction storage currentAuction = auctions[_auctionId];
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
+        if (currentTime >= aucData.startTime && currentTime <= currentAuction.endTime) {
+            return true;
+        }
+        return false;
     }
 
     function deactivateAuction(uint _auctionId) internal {
@@ -209,5 +219,6 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         _asset.value = amount;
         transfer(_asset, from, to, _direction, _type);
     }
+
     uint256[50] private ______gap;
 }
