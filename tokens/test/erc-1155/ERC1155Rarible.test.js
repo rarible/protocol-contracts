@@ -17,6 +17,7 @@ contract("ERC1155Rarible", accounts => {
   let proxy;
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const name = 'FreeMintable';
+  const ZERO = "0x0000000000000000000000000000000000000000";
 
   beforeEach(async () => {
     token = await Testing.new();
@@ -26,7 +27,7 @@ contract("ERC1155Rarible", accounts => {
 
   it("mint and transfer by minter, token create by Factory", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC1155Factory.new(beacon.address);
+    factory = await ERC1155Factory.new(beacon.address, ZERO, ZERO);
     resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
      	proxy = ev.proxy;
@@ -35,18 +36,21 @@ contract("ERC1155Rarible", accounts => {
     tokenByProxy = await Testing.at(proxy);
 
     let minter = tokenOwner;
-    let transferTo = accounts[2];
+    let transferTo = minter;
 
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "/uri";
     let supply = 5;
     let mint = 2;
 
-    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
-
+    const tx = await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+    const TransferSingle = await tokenByProxy.getPastEvents("TransferSingle", {
+      fromBlock: tx.receipt.blockNumber,
+      toBlock: tx.receipt.blockNumber
+    });
+    assert.equal(TransferSingle.length, 1, "TransferSingle.length")
 		assert.equal(await tokenByProxy.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await tokenByProxy.balanceOf(transferTo, tokenId), mint);
-    assert.equal(await tokenByProxy.balanceOf(minter, tokenId), 0);
   });
 
   it("check for ERC165 interface", async () => {
@@ -90,7 +94,26 @@ contract("ERC1155Rarible", accounts => {
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+    const TransferSingle = await token.getPastEvents("TransferSingle", {
+      fromBlock: tx.receipt.blockNumber,
+      toBlock: tx.receipt.blockNumber
+    });
+    assert.equal(TransferSingle.length, 2, "TransferSingle.length")
+    const transferEvent0 = TransferSingle[0]
+    const transferEvent1 = TransferSingle[1]
+
+    assert.equal(transferEvent0.args.operator, whiteListProxy, "transfer 0 operator")
+    assert.equal(transferEvent0.args.from, "0x0000000000000000000000000000000000000000", "transfer 0 from")
+    assert.equal(transferEvent0.args.to, minter, "transfer 0 to")
+    assert.equal("0x" + transferEvent0.args.id.toString(16), tokenId.toLowerCase(), "transfer 0 tokenId")
+    assert.equal(transferEvent0.args.value.toString(), mint, "transfer 0 value")
+
+    assert.equal(transferEvent1.args.operator, whiteListProxy, "transfer 1 operator")
+    assert.equal(transferEvent1.args.from, minter, "transfer 1 from")
+    assert.equal(transferEvent1.args.to, transferTo, "transfer 1 to")
+    assert.equal("0x" + transferEvent1.args.id.toString(16), tokenId.toLowerCase(), "transfer 1 tokenId")
+    assert.equal(transferEvent1.args.value.toString(), mint, "transfer 1 value")
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
   });

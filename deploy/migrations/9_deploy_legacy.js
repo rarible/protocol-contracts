@@ -55,7 +55,7 @@ module.exports = async function (deployer, network) {
       settings.rarible_token_legacy.signer,
       settings.rarible_token_legacy.contractURI,
       settings.rarible_token_legacy.tokenURIPrefix,
-      { gas: 8000000 }
+      { gas: 5000000 }
     );
     const raribleTokenLegacy = await RaribleToken.deployed();
     console.log(`deployed raribleTokenLegacy at ${raribleTokenLegacy.address}`)
@@ -69,7 +69,7 @@ module.exports = async function (deployer, network) {
       settings.mintable_token_legacy.newOwner,
       settings.mintable_token_legacy.contractURI,
       settings.mintable_token_legacy.tokenURIPrefix,
-      { gas: 8000000 }
+      { gas: 5000000 }
     );
     const mintableTokenLegacy = await MintableToken.deployed();
     console.log(`deployed mintableTokenLegacy at ${mintableTokenLegacy.address}`)
