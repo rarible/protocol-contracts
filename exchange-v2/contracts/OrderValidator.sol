@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 
-import "./interfaces/ERC1271.sol";
+import "./interfaces/IERC1271.sol";
 import "./LibOrder.sol";
 import "./lib/LibSignature.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
@@ -21,14 +21,18 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
 
     function validate(LibOrder.Order memory order, bytes memory signature) internal view {
         if (order.salt == 0) {
-            require(_msgSender() == order.maker, "maker is not tx sender");
+            if (order.maker != address(0)) {
+                require(_msgSender() == order.maker, "maker is not tx sender");
+            } else {
+                order.maker = _msgSender();
+            }
         } else {
             if (_msgSender() != order.maker) {
                 bytes32 hash = LibOrder.hash(order);
                 if (_hashTypedDataV4(hash).recover(signature) != order.maker) {
                     if (order.maker.isContract()) {
                         require(
-                            ERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
+                            IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
                             "contract order signature verification error"
                         );
                     } else {
