@@ -41,23 +41,19 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         (uint startTimeCalculate, uint endTimeCalculate) = setTimeRange(aucData.startTime, endTime, aucData.duration);
-        LibAucDataV1.DataV1 memory newAuctionData = aucData;
-        if (startTimeCalculate != aucData.startTime) {
-            newAuctionData.startTime = startTimeCalculate;
-        }
-        bytes memory newData = encode(newAuctionData);
         auctions[currentAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
             Bid(0, "", ""),
             _msgSender(),
             payable(address(0)),
+            startTimeCalculate,
             endTimeCalculate,
             minimalStep,
             minimalPrice,
             0,
             dataType,
-            newData
+            data
         );
         transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);

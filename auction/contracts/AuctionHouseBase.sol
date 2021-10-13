@@ -19,6 +19,7 @@ abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver, Transfe
         Bid lastBid;
         address payable seller;
         address payable buyer;
+        uint startTime;
         uint endTime;
         uint minimalStep;
         uint minimalPrice;
