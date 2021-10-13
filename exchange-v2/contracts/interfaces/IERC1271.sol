@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 
-interface ERC1271 {
+interface IERC1271 {
 
     /**
      * @dev Should return whether the signature provided is valid for the provided data
