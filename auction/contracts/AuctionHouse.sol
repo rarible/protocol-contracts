@@ -40,7 +40,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         uint currentAuctionId = getNextAndIncrementAuctionId();
         require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
-        (uint startTimeCalculate, uint endTimeCalculate) = manageTimeRange(aucData.startTime, endTime, aucData.duration);
+        (uint startTimeCalculate, uint endTimeCalculate) = setTimeRange(aucData.startTime, endTime, aucData.duration);
         LibAucDataV1.DataV1 memory newAuctionData = aucData;
         if (startTimeCalculate != aucData.startTime) {
             newAuctionData.startTime = startTimeCalculate;
@@ -64,7 +64,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
         emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
     }
 
-    function manageTimeRange(uint _startTime, uint _endTime, uint _duration) internal returns (uint startTime, uint endTime){
+    function setTimeRange(uint _startTime, uint _endTime, uint _duration) internal returns (uint startTime, uint endTime){
         if (_startTime == 0) {
             startTime = block.timestamp;
         } else {

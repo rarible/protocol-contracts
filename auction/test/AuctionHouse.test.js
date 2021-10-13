@@ -6,6 +6,7 @@ const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const truffleAssert = require('truffle-assertions');
 const AuctionHouse = artifacts.require("AuctionHouse");
+const TestAuctionHouse = artifacts.require("TestAuctionHouse");
 
 const DAY = 86400;
 const WEEK = DAY * 7;
@@ -23,6 +24,7 @@ contract("Check Auction", accounts => {
   let erc721TokenId1 = 53;
   let erc1155TokenId1 = 54;
   let auctionHouse;
+  let testAuctionHouse;
 
   beforeEach(async () => {
     transferProxy = await TransferProxyTest.new();
@@ -32,10 +34,53 @@ contract("Check Auction", accounts => {
     erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
-
+    /*Auction*/
     auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address], { initializer: "__AuctionHouse_init" });
-
+    testAuctionHouse = await TestAuctionHouse.new();
   });
+  describe("test internal function setTimeRange", () => {
+    it("No start, No end, duration only", async () => {
+        let now = await Math.floor(Date.now()/1000); //define start time
+        let finish = now + 3600;
+        let result = await testAuctionHouse.setTimeRangeTest.call(0, 0, 3600);
+        assert.equal(now, result[0]);
+        assert.equal(finish, result[1]);
+    })
+    it("Yes start, No End, yes duration ", async () => {
+        let now = await Math.floor(Date.now()/1000); //define start time
+        let duration = 3600;
+        now = now + 1000;
+        let finish = now + duration;
+        let result = await testAuctionHouse.setTimeRangeTest.call(now, 0, duration);
+        assert.equal(now, result[0]);
+        assert.equal(finish, result[1]);
+    })
+    it("Yes start, No End, No duration, throw ", async () => {
+        let now = await Math.floor(Date.now()/1000); //define start time
+        let duration = 0;
+        now = now + 1000;
+        let finish = now + duration;
+        await expectThrow(
+          testAuctionHouse.setTimeRangeTest.call(now, 0, duration)
+        );
+    })
+    it("Yes start, yes End, start==end, throw ", async () => {
+        let now = await Math.floor(Date.now()/1000); //define start time
+        let duration = 3600;
+        let finish = now ;
+        await expectThrow(
+          testAuctionHouse.setTimeRangeTest.call(now, finish, duration)
+        );
+    })
+    it("Yes start, yes End, no duration, ok ", async () => {
+        var now = await Math.floor(Date.now()/1000); //define start time
+        let finish = now + 3600;
+        let result = await testAuctionHouse.setTimeRangeTest.call(now, finish, 0);
+        assert.equal(now, result[0]);
+        assert.equal(finish, result[1]);
+    })
+  });
+
   describe("create auction", () => {
     it("Check creation with ERC721, and start auction owner is auctionHouse", async () => {
       await erc721.mint(accounts[1], erc721TokenId1);
