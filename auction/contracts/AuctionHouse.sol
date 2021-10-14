@@ -5,9 +5,13 @@ pragma abicoder v2;
 
 import "./AuctionHouseBase.sol";
 import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
+import "@rarible/exchange-v2/contracts/lib/BpLibrary.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, TransferExecutor {
     using LibTransfer for address;
+    using BpLibrary for uint;
+    using SafeMathUpgradeable for uint;
 
     mapping(uint => Auction) public auctions;   //save auctions here
 
@@ -156,11 +160,13 @@ contract AuctionHouse is AuctionHouseBase, Initializable, OwnableUpgradeable, Tr
 
     function getMinimalNextBid(uint _auctionId) internal view returns (uint){
         Auction storage currentAuction = auctions[_auctionId];
+        uint amount;
         if (currentAuction.buyer == address(0x0)) {
-            return (currentAuction.minimalPrice);
+            amount = currentAuction.minimalPrice;
         } else {
-            return (currentAuction.lastBid.amount + currentAuction.minimalStep);
+            amount = currentAuction.lastBid.amount + currentAuction.minimalStep;
         }
+        return amount.add(amount.bp(currentAuction.protocolFee));
     }
 
     function checkAuctionExistence(uint _auctionId) internal view returns (bool){
