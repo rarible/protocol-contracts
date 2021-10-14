@@ -7,7 +7,7 @@ import "../../../contracts/lib/LibSignature.sol";
 import "../../../contracts/LibOrder.sol";
 import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
-contract LibSignatureTest is EIP712Upgradeable{
+contract LibSignatureTest is EIP712Upgradeable {
     using LibSignature for bytes32;
 
     function recoverFromSigTest(bytes32 hash, bytes memory signature) external pure returns (address) {
@@ -18,7 +18,7 @@ contract LibSignatureTest is EIP712Upgradeable{
         return hash.recover(v, r, s);
     }
 
-    function getKeccak(string memory message) external pure returns(bytes32){
+    function getKeccak(string memory message) external pure returns (bytes32) {
         return keccak256(bytes(message));
     }
 }
