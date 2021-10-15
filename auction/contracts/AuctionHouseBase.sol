@@ -10,7 +10,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@rarible/exchange-v2/contracts/TransferConstants.sol";
 
-abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver, TransferConstants {
+//abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver, TransferConstants {
+abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver {
 
     //auction struct
     struct Auction {

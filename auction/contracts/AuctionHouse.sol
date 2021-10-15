@@ -5,8 +5,10 @@ pragma abicoder v2;
 
 import "./AuctionHouseBase.sol";
 import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
+import "@rarible/exchange-v2/contracts/TransferManagerHelper.sol";
 
-contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
+//contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
+contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, TransferManagerHelper {
     using LibTransfer for address;
 
     mapping(uint => Auction) public auctions;   //save auctions here
@@ -20,11 +22,15 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
 
     function __AuctionHouse_init(
         INftTransferProxy _transferProxy,
-        IERC20TransferProxy _erc20TransferProxy
+        IERC20TransferProxy _erc20TransferProxy,
+        uint newProtocolFee,
+        address newDefaultFeeReceiver
     ) external initializer {
         __Context_init_unchained();
+        __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         _initializeAuctionId();
+        __TransferHelper_init_unchained(newProtocolFee, newDefaultFeeReceiver);
         nftTransferProxy = address(_transferProxy);
         erc20TransferProxy = address(_erc20TransferProxy);
     }
@@ -189,6 +195,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
             transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
         } else {
             transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT); //nft transfer to buyer
+            uint rest = doTransferFees(_auctionId);
             if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 address(seller).transferEth(amount);
             } else {
@@ -198,6 +205,21 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
         deactivateAuction(_auctionId);
         emit AuctionFinished(_auctionId);
     }
+
+        function doTransferFees(uint _auctionId) internal returns(uint) {
+            Auction storage currentAuction = auctions[_auctionId];
+            address seller = currentAuction.seller;
+            uint amount = currentAuction.lastBid.amount;
+            LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
+            LibPart.Part[] memory fees = aucData.originFees;
+            LibPart.Part[] memory emptyFees;
+            uint totalAmount = calculateTotalAmount(amount, protocolFee, emptyFees);
+            uint rest = transferProtocolFee(totalAmount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
+            uint totalFees;
+            (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, fees, address(this), TO_SELLER, ROYALTY);
+            require(totalFees <= 5000, "Auction fees are too high (>50%)");
+            return rest;
+        }
 
     function checkAuctionRangeTime(uint _auctionId) internal view returns (bool){
         uint currentTime = block.timestamp;

@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
-import "../../../../transfer-proxy/contracts/roles/OperatorRole.sol";
+import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
 
 contract ERC1155LazyMintTransferProxyTest is OperatorRole, ITransferProxy {
     function transfer(LibAsset.Asset memory asset, address from, address to) override onlyOperator external {

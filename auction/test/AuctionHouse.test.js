@@ -11,6 +11,7 @@ const DAY = 86400;
 const WEEK = DAY * 7;
 const { Order, Asset, AssetType, sign } = require("../../exchange-v2/test/order");
 const ZERO = "0x0000000000000000000000000000000000000000";
+const eth = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, enc, id } = require("../../exchange-v2/test/assets.js");
 
@@ -26,6 +27,8 @@ contract("Check Auction", accounts => {
   let encodedERC20;
   let dataV1Type = id("V1");
   let bidDataV1Type = id("V1");
+  let protocol = accounts[9];
+  let community = accounts[8];
 
   beforeEach(async () => {
     transferProxy = await TransferProxyTest.new();
@@ -36,7 +39,13 @@ contract("Check Auction", accounts => {
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
     /*Initialize AuctionHouse*/
-    auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address], { initializer: "__AuctionHouse_init" });
+//    auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address, 300, community], { initializer: "__AuctionHouse_init"});
+    auctionHouse = await AuctionHouse.new();
+    auctionHouse.__AuctionHouse_init(transferProxy.address, erc20TransferProxy.address, 300, community);
+    await auctionHouse.setFeeReceiver(eth, protocol);//
+    await auctionHouse.setFeeReceiver(erc20Token.address, protocol);//
+    await auctionHouse.setFeeReceiver(erc721.address, protocol);//
+    await auctionHouse.setFeeReceiver(erc1155.address, protocol);//
   });
 
   //nft, erc20 initialize
