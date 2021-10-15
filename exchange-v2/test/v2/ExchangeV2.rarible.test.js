@@ -12,12 +12,13 @@ const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest
 const truffleAssert = require('truffle-assertions');
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1OwnableUpgradeable");
+const AssetMatcherCollectionTest = artifacts.require("AssetMatcherCollectionTest.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNK, COLLECTION, enc, id } = require("../assets");
 
 contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 	let testing;
@@ -133,6 +134,25 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       await expectThrow(
     			testing.matchOrders(left, signatureLeft, right, "0x", { from: accounts[7], value: 300, gasPrice: 0 })
     	);
+    })
+
+    it("should match orders with ERC721 сollections", async () => {
+      const matcher = await AssetMatcherCollectionTest.new();
+      await matcher.__AssetMatcherCollection_init();
+      await matcher.addOperator(testing.address);
+
+      await erc721.mint(accounts[1], erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+
+      const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(COLLECTION, enc(erc721.address), 1), 1, 0, 0, "0xffffffff", "0x");
+
+      await testing.setAssetMatcher(COLLECTION, matcher.address);
+
+      await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]), {value: 300});
+
+      assert.equal(await erc721.balanceOf(accounts[1]), 0);
+      assert.equal(await erc721.balanceOf(accounts[2]), 1);
     })
   });
 
