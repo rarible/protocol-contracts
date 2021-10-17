@@ -149,6 +149,10 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
             transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
             (address token) = abi.decode(_buyAssetType.data, (address));
             IERC20Upgradeable(token).approve(erc20TransferProxy, newAmount);
+        } else if (transferAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
+            (address token, ) = abi.decode(_buyAssetType.data, (address, uint256));
+            IERC1155Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
         }
     }
 
@@ -158,12 +162,12 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         return _asset;
     }
 
-    function getMinimalNextBid(uint _auctionId) internal view returns (uint){
+    function getMinimalNextBid(uint _auctionId) internal view returns (uint minBid){
         Auction storage currentAuction = auctions[_auctionId];
         if (currentAuction.buyer == address(0x0)) {
-            return (currentAuction.minimalPrice);
+            minBid = currentAuction.minimalPrice;
         } else {
-            return (currentAuction.lastBid.amount + currentAuction.minimalStep);
+            minBid = currentAuction.lastBid.amount + currentAuction.minimalStep;
         }
     }
 
@@ -184,37 +188,33 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         return false;
     }
     //RPC-95
-    //    function finishAuction(uint _auctionId) payable public onlyOwner {
     function finishAuction(uint _auctionId) payable public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
-        uint amount = currentAuction.lastBid.amount;
-        if (currentAuction.buyer == address(0x0)) {//no bid at all, nft back to seller
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
+        address buyer = currentAuction.buyer;
+        if (buyer != address(0x0)) {//bid exists
+            uint rest = transferFees(_auctionId);       //transfer fee
+            transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT); //
+            transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT); //nft to buyer
         } else {
-            transfer(currentAuction.sellAsset, address(this), currentAuction.buyer, TO_BIDDER, PAYOUT); //nft transfer to buyer
-            uint rest = doTransferFees(_auctionId);
-            if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
-                address(seller).transferEth(amount);
-            } else {
-                transferAmount(currentAuction.buyAsset, address(this), seller, amount, TO_SELLER, PAYOUT);
-            }
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
         }
         deactivateAuction(_auctionId);
         emit AuctionFinished(_auctionId);
     }
 
-        function doTransferFees(uint _auctionId) internal returns(uint) {
+        function transferFees(uint _auctionId) internal returns(uint) {
             Auction storage currentAuction = auctions[_auctionId];
             address seller = currentAuction.seller;
             uint amount = currentAuction.lastBid.amount;
             LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
             LibPart.Part[] memory fees = aucData.originFees;
             LibPart.Part[] memory emptyFees;
-            uint totalAmount = calculateTotalAmount(amount, protocolFee, emptyFees);
-            uint rest = transferProtocolFee(totalAmount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
+//            uint totalAmount = calculateTotalAmount(amount, protocolFee, emptyFees);
+//            uint rest = transferProtocolFee(totalAmount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
+            uint rest = transferProtocolFee(amount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
             uint totalFees;
             (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, fees, address(this), TO_SELLER, ROYALTY);
             require(totalFees <= 5000, "Auction fees are too high (>50%)");

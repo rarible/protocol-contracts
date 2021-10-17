@@ -57,6 +57,14 @@ contract("Check Auction", accounts => {
     encodedERC20 = enc(erc20Token.address);
   };
 
+  async function prepare721_20value(value){
+    await erc721.mint(accounts[1], erc721TokenId1);
+    await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+    await erc20Token.mint(accounts[2], value);
+    await erc20Token.approve(erc20TransferProxy.address, value, { from: accounts[2] });
+    encodedERC20 = enc(erc20Token.address);
+  };
+
 
   describe("create auction", () => {
     it("Check creation with ERC721, and start auction owner is auctionHouse", async () => {
@@ -273,7 +281,7 @@ contract("Check Auction", accounts => {
       );
     })
 
-    it("Put bid:721<->20, after finish auction, nft goes to buyer", async () => {
+    it("Put bid:721<->20, no fee auction, after finish auction, nft goes to buyer", async () => {
       await prepare721_20();//nft, erc20 initialize
       await erc721.setApprovalForAll(accounts[0], true, {from: accounts[1]});
       let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
@@ -302,7 +310,39 @@ contract("Check Auction", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after mint owner is auctionHouse
     })
 
-    it("Put bid:721<->ETH, after finish auction, nft goes to buyer", async () => {
+    it("Put bid:721<->20, with fee, after finish auction, nft goes to buyer", async () => {
+      await prepare721_20value(1000);//nft, erc20 initialize
+      await erc721.setApprovalForAll(accounts[0], true, {from: accounts[1]});
+      let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
+
+      let buyAssetType = await AssetType(ERC20, encodedERC20);
+      let auctionFees = [[accounts[6], 1000], [accounts[7], 2000]];
+      let startTime = await Math.floor(Date.now()/1000); //define start time
+      let endTime = startTime + 3600;//auction finished 1hours ago
+      let dataV1 = await encDataV1([auctionFees, 1000, startTime, 500]); //originFees, duration, startTime, buyOutPrice
+
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 10, 90, dataV1Type, dataV1, {from: accounts[1]});
+      assert.equal(await erc721.ownerOf(erc721TokenId1), auctionHouse.address); // after mint owner is auctionHouse
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+      let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 100);
+      assert.equal(await erc20Token.balanceOf(accounts[2]), 900);
+      await increaseTime(7200);
+      let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 0);
+      assert.equal(await erc20Token.balanceOf(protocol), 6);
+      assert.equal(await erc20Token.balanceOf(accounts[6]), 10);
+      assert.equal(await erc20Token.balanceOf(accounts[7]), 20);
+      assert.equal(await erc20Token.balanceOf(accounts[1]), 64);
+      assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after mint owner is auctionHouse
+    })
+
+    it("Put bid:721<->ETH, no fee auction, after finish auction, nft goes to buyer", async () => {
       //auction initialize
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
@@ -333,6 +373,79 @@ contract("Check Auction", accounts => {
     	  )
     	)
     	assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]);
+    })
+
+    it("Put bid:721<->ETH,  with fee auction, after finish auction, nft goes to buyer", async () => {
+      //auction initialize
+      await erc721.mint(accounts[1], erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+      let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
+      const encodedEth = enc(auctionHouse.address);
+      let buyAssetType = await AssetType(ETH, encodedEth);
+      let auctionFees = [[accounts[6], 1000], [accounts[7], 2000]];
+      let startTime = await Math.floor(Date.now()/1000);
+      let endTime = startTime + 3600;
+      let dataV1 = await encDataV1([auctionFees, 1000, startTime, 180]); //originFees, duration, startTime, buyOutPrice
+
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 90, dataV1Type, dataV1, {from: accounts[1]});
+      assert.equal(await erc721.ownerOf(erc721TokenId1), auctionHouse.address);
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+    	await verifyBalanceChange(accounts[2], 100, async () =>
+    		verifyBalanceChange(auctionHouse.address, -100, async () =>
+         auctionHouse.putBid(auctionId, bid, { from: accounts[2], value: 150, gasPrice: 0 })
+    		)
+    	)
+    	await increaseTime(7200);
+    	await verifyBalanceChange(auctionHouse.address, 100, async () =>
+        verifyBalanceChange(accounts[1], -64, async () =>
+          verifyBalanceChange(accounts[6], -10, async () =>
+            verifyBalanceChange(accounts[7], -20, async () =>
+              verifyBalanceChange(protocol, -6, async () =>
+    	          auctionHouse.finishAuction(auctionId, {from: accounts[0]})
+    	        )
+    	      )
+    	    )
+    	  )
+    	)
+    	assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]);
+    })
+
+    it("Put bid:721<->1155, with fee auction, after finish auction, nft goes to buyer", async () => {
+      //auction initialize
+      await erc721.mint(accounts[1], erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+      await erc1155.mint(accounts[2], erc1155TokenId1, 200);
+      await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+      let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
+      const encoded1155 = enc(erc1155.address, erc1155TokenId1);
+      let buyAssetType = await AssetType(ERC1155, encoded1155);
+      let auctionFees = [[accounts[6], 1000], [accounts[7], 2000]];
+      let startTime = await Math.floor(Date.now()/1000);
+      let endTime = startTime + 3600;
+      let dataV1 = await encDataV1([auctionFees, 1000, startTime, 180]); //originFees, duration, startTime, buyOutPrice
+
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 90, dataV1Type, dataV1, {from: accounts[1]});
+      assert.equal(await erc721.ownerOf(erc721TokenId1), auctionHouse.address);
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+      let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 100);
+      assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 100);
+      await increaseTime(7200);
+      let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 0);
+      assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 64);
+      assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 10);
+      assert.equal(await erc1155.balanceOf(accounts[7], erc1155TokenId1), 20);
+      assert.equal(await erc1155.balanceOf(protocol, erc1155TokenId1), 6);
+      assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after mint owner is auctionHouse
     })
   });
 
