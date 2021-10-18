@@ -266,7 +266,7 @@ contract("Check Auction", accounts => {
     		)
     	)
     })
-
+    //TODO putBid with buyOut
     //TODO CHECK 1155<->20, 1155<->ETH
   });
 

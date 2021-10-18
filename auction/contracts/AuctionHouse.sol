@@ -105,13 +105,17 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         return auctionId++;
     }
 
-    //put a bid and return locked assets for the last bid--------------------------------------RPC-94-putBid
+    //put a bid and return locked assets for the last bid
     function putBid(uint _auctionId, Bid memory bid) payable external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
+        //TODO check time range
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {
-            //TODO set auction finished
+            _buyOut(_auctionId, newAmount);
+            doTransfers(_auctionId);
+            deactivateAuction(_auctionId);
+            emit AuctionBuyOut(_auctionId);
         }
         Auction storage currentAuction = auctions[_auctionId];
         uint currentTime = block.timestamp;
@@ -158,7 +162,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
             IERC20Upgradeable(token).approve(erc20TransferProxy, newAmount);
         } else if (transferAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
             transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
-            (address token, ) = abi.decode(_buyAssetType.data, (address, uint256));
+            (address token,) = abi.decode(_buyAssetType.data, (address, uint256));
             IERC1155Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
         }
     }
@@ -194,7 +198,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
         return false;
     }
-    //RPC-95
+    //finishAuction
     function finishAuction(uint _auctionId) payable public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
@@ -208,15 +212,19 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) {//bid exists
-            uint rest = transferFees(_auctionId);       //transfer fee
-            transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT); //
-            transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT); //nft to buyer
+            uint rest = transferFees(_auctionId);
+            //transfer fee
+            transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT);
+            //
+            transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT);
+            //nft to buyer
         } else {
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
+            //nft back to seller
         }
     }
 
-    function transferFees(uint _auctionId) internal returns(uint) {
+    function transferFees(uint _auctionId) internal returns (uint) {
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         uint amount = currentAuction.lastBid.amount;
@@ -251,7 +259,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         transfer(_asset, from, to, _direction, _type);
     }
 
-    //RPC-96-cancel auction without bid
+    //cancel auction without bid
     function cancel(uint _auctionId) public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         Auction storage currentAuction = auctions[_auctionId];
@@ -260,26 +268,31 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         address buyer = currentAuction.buyer;
         uint amount = currentAuction.lastBid.amount;
         if (buyer == address(0x0)) {//no bid at all
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
+            //nft back to seller
             deactivateAuction(_auctionId);
             emit AuctionCancelled(_auctionId);
         }
     }
 
-    //RPC-98 buyout
+    //buyout
     function buyOut(uint _auctionId, Bid memory bid) public payable {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
         uint newAmount = bid.amount;
+        _buyOut(_auctionId, newAmount);
+        doTransfers(_auctionId);
+        deactivateAuction(_auctionId);
+        emit AuctionBuyOut(_auctionId);
+    }
+
+    function _buyOut(uint _auctionId, uint newAmount)  internal {
         address payable newBuyer = _msgSender();
         require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
         Auction storage currentAuction = auctions[_auctionId];
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
         currentAuction.lastBid.amount = newAmount;
         currentAuction.buyer = newBuyer;
-        doTransfers(_auctionId);
-        deactivateAuction(_auctionId);
-        emit AuctionBuyOut(_auctionId);
     }
 
     uint256[50] private ______gap;
