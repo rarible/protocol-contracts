@@ -7,7 +7,7 @@ import "../../../contracts/AssetMatcher.sol";
 
 contract AssetMatcherTest is Initializable, OwnableUpgradeable, AssetMatcher {
 
-    function __AssetMatcherTest_init() external {
+    function __AssetMatcherTest_init() external initializer {
         __Ownable_init_unchained();
     }
 
