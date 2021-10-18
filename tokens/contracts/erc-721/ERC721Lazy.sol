@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "./ERC721Upgradeable.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
@@ -11,6 +11,8 @@ import "../Mint721Validator.sol";
 
 abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
     using SafeMathUpgradeable for uint;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
+    using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToAddressMap;
 
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
     bytes4 private constant _INTERFACE_ID_ERC721 = 0x80ac58cd;
@@ -65,6 +67,25 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         _saveRoyalties(data.tokenId, data.royalties);
         _saveCreators(data.tokenId, data.creators);
         _setTokenURI(data.tokenId, data.tokenURI);
+    }
+
+    function _mint(address to, uint256 tokenId) internal virtual override {
+        require(to != address(0), "ERC721: mint to the zero address");
+        require(!_exists(tokenId), "ERC721: token already minted");
+
+        _beforeTokenTransfer(address(0), to, tokenId);
+
+        _holderTokens[to].add(tokenId);
+
+        _tokenOwners.set(tokenId, to);
+
+        address minter = address(tokenId >> 96);
+        if (minter != to) {
+            emit Transfer(address(0), minter, tokenId);
+            emit Transfer(minter, to, tokenId);
+        } else {
+            emit Transfer(address(0), to, tokenId);
+        }
     }
 
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {

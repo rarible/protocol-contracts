@@ -1,8 +1,8 @@
 #### Features
-1. `RoyaltiesProviderArtBlocks` allows to retrive royalties of artBlocks collections`.
+1. `RoyaltiesProviderArtBlocks` allows to retrive royalties of artBlocks collections.
 
 1. ## artblocks address
-    - owner of the contract recieves artblocks part of the royalty
+    - owner of the contract receives artblocks part of the royalty
     - owner can be changed using `transferOwnership`(address newOwner) method
     - event `OwnershipTransferred`(address indexed previousOwner, address indexed newOwner) is emitted when owner changed
 
