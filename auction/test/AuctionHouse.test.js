@@ -92,15 +92,15 @@ contract("Check Auction", accounts => {
         assert.equal(finish, result[1]);
     })
   });
-    /*Initialize AuctionHouse*/
-//    auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address, 300, community], { initializer: "__AuctionHouse_init"});
-    auctionHouse = await AuctionHouse.new();
-    auctionHouse.__AuctionHouse_init(transferProxy.address, erc20TransferProxy.address, 300, community);
-    await auctionHouse.setFeeReceiver(eth, protocol);//
-    await auctionHouse.setFeeReceiver(erc20Token.address, protocol);//
-    await auctionHouse.setFeeReceiver(erc721.address, protocol);//
-    await auctionHouse.setFeeReceiver(erc1155.address, protocol);//
-  });
+//    /*Initialize AuctionHouse*/
+////    auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address, 300, community], { initializer: "__AuctionHouse_init"});
+//    auctionHouse = await AuctionHouse.new();
+//    auctionHouse.__AuctionHouse_init(transferProxy.address, erc20TransferProxy.address, 300, community);
+//    await auctionHouse.setFeeReceiver(eth, protocol);//
+//    await auctionHouse.setFeeReceiver(erc20Token.address, protocol);//
+//    await auctionHouse.setFeeReceiver(erc721.address, protocol);//
+//    await auctionHouse.setFeeReceiver(erc1155.address, protocol);//
+//  });
 
   //nft, erc20 initialize
   async function prepare721_20(){
@@ -306,7 +306,7 @@ contract("Check Auction", accounts => {
       let auctionFees = [[accounts[3], 100]];
       let startTime = await Math.floor(Date.now()/1000); //define start time
       startTime = startTime - 7200; //auction started 2hours ago
-      let endTime = startTime - 3600;//auction finished 1hours ago
+      let endTime = startTime + 3600;//auction finished 1hours ago
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 9, dataV1Type, dataV1, {from: accounts[1]});
