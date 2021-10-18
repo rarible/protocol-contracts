@@ -249,5 +249,21 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         transfer(_asset, from, to, _direction, _type);
     }
 
+    //RPC-96-cancel auction without bid
+    function cancel(uint _auctionId) public {
+        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
+        Auction storage currentAuction = auctions[_auctionId];
+        address seller = currentAuction.seller;
+        require(seller == _msgSender(), "auction owner not detected");
+        address buyer = currentAuction.buyer;
+        uint amount = currentAuction.lastBid.amount;
+        if (buyer == address(0x0)) {//no bid at all
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
+            deactivateAuction(_auctionId);
+            emit AuctionCancelled(_auctionId);
+        }
+    }
+
+
     uint256[50] private ______gap;
 }
