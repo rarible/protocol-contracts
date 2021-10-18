@@ -20,6 +20,7 @@ contract("ERC721Rarible", accounts => {
   const name = 'FreeMintableRarible';
   const chainId = 1;
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const ZERO = "0x0000000000000000000000000000000000000000";
 
   function creators(list) {
   	const value = 10000 / list.length
@@ -46,14 +47,17 @@ contract("ERC721Rarible", accounts => {
     tokenByProxy = await Testing.at(proxy);
 
     const minter = tokenOwner;
-    let transferTo = accounts[2];
-
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+    const tx = await tokenByProxy.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, {from: minter});
+    const Transfer = await tokenByProxy.getPastEvents("Transfer", {
+      fromBlock: tx.receipt.blockNumber,
+      toBlock: tx.receipt.blockNumber
+    });
+    assert.equal(Transfer.length, 1, "Transfer.length")
 
-    assert.equal(await tokenByProxy.ownerOf(tokenId), transferTo);
+    assert.equal(await tokenByProxy.ownerOf(tokenId), minter);
   });
 
   it("check for ERC165 interface", async () => {
@@ -103,7 +107,22 @@ contract("ERC721Rarible", accounts => {
 
     let whiteListProxy = accounts[5];
     await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy});
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy});
+    const Transfer = await token.getPastEvents("Transfer", {
+      fromBlock: tx.receipt.blockNumber,
+      toBlock: tx.receipt.blockNumber
+    });
+    assert.equal(Transfer.length, 2, "Transfer.length")
+    const transferEvent0 = Transfer[0]
+    const transferEvent1 = Transfer[1]
+
+    assert.equal(transferEvent0.args.from, "0x0000000000000000000000000000000000000000", "transfer 0 from")
+    assert.equal(transferEvent0.args.to, minter, "transfer 0 to")
+    assert.equal("0x" + transferEvent0.args.tokenId.toString(16), tokenId.toLowerCase(), "transfer 0 tokenId")
+
+    assert.equal(transferEvent1.args.from, minter, "transfer 1 from")
+    assert.equal(transferEvent1.args.to, transferTo, "transfer 1 to")
+    assert.equal("0x" + transferEvent1.args.tokenId.toString(16), tokenId.toLowerCase(), "transfer 1 tokenId")
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
     await checkCreators(tokenId, [minter]);
