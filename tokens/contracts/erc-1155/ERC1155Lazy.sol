@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "./ERC1155Upgradeable.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
@@ -81,13 +81,28 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         }
 
         _mint(to, data.tokenId, _amount, "");
+        if (minter != to) {
+            emit TransferSingle(sender, address(0), minter, data.tokenId, _amount);
+            emit TransferSingle(sender, minter, to, data.tokenId, _amount);
+        } else {
+            emit TransferSingle(sender, address(0), to, data.tokenId, _amount);
+        }
     }
 
     function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override {
         uint newMinted = amount.add(minted[id]);
         require(newMinted <= supply[id], "more than supply");
         minted[id] = newMinted;
-        super._mint(account, id, amount, data);
+
+        require(account != address(0), "ERC1155: mint to the zero address");
+
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, address(0), account, _asSingletonArray(id), _asSingletonArray(amount), data);
+
+        _balances[id][account] = _balances[id][account].add(amount);
+
+        _doSafeTransferAcceptanceCheck(operator, address(0), account, id, amount, data);
     }
 
     function _saveSupply(uint tokenId, uint _supply) internal {
