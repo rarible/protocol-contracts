@@ -1,18 +1,24 @@
 const AssetMatcherTest = artifacts.require("AssetMatcherTest.sol");
 const TestAssetMatcher = artifacts.require("TestAssetMatcher.sol");
+const CustomCollectionAssetMatcher = artifacts.require("AssetMatcherCollectionTest.sol");
 const order = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const tests = require("@daonomic/tests-common");
 const expectThrow = tests.expectThrow;
-const { enc, ETH, ERC20, ERC721, ERC1155, id } = require("../assets");
+const { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNK, COLLECTION, id } = require("../assets");
+const truffleAssert = require('truffle-assertions');
 
 contract("AssetMatcher", accounts => {
 	let testing;
+	let testMatcher;
 
 	beforeEach(async () => {
 		testing = await AssetMatcherTest.new();
 		await testing.__AssetMatcherTest_init();
+		testMatcher = await CustomCollectionAssetMatcher.new();
+    testMatcher.__AssetMatcherCollection_init();
+    testMatcher.addOperator(testing.address);
 	});
 
 	it("setAssetMatcher works", async () => {
@@ -26,6 +32,68 @@ contract("AssetMatcher", accounts => {
 		assert.equal(result[0], ERC20);
 		assert.equal(result[1], encoded);
 	})
+  describe("COLLECTION", () => {
+    it("setAssetMatcher for collection (custom matcher) ERC1155 <-> COLLECTION matches", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[5], tokenId);
+
+      await expectThrow(
+        testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded))
+      );
+
+//      const testMatcher = await CustomCollectionAssetMatcher.new();
+//      testMatcher.__AssetMatcherCollection_init();
+//      testMatcher.addOperator(testing.address);
+      const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
+      const result = await testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded));
+
+      let assetTypeRes;
+      let matcher;
+      truffleAssert.eventEmitted(setRes, 'MatcherChange', (ev) => {
+        assetTypeRes = ev.assetType;
+        matcher = ev.matcher;
+        return true;
+      });
+
+      assert.equal(result[0], ERC1155);
+      assert.equal(result[1], encodedNFT);
+      assert.equal(matcher, testMatcher.address);
+    })
+
+    it("setAssetMatcher for collection (custom matcher) ERC721 <-> COLLECTION matches", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[5], tokenId);
+
+      await expectThrow(
+        testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded))
+      );
+
+//      const testMatcher = await CustomCollectionAssetMatcher.new();
+      const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
+      const result = await testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded));
+
+      assert.equal(result[0], ERC721);
+      assert.equal(result[1], encodedNFT);
+    })
+
+    it("setAssetMatcher for collection (custom matcher) ERC20 <-> COLLECTION don`t match", async () => {
+      const tokenId = 3000;
+      const encoded = enc(accounts[5]);
+      const encodedNFT = enc(accounts[5], tokenId);
+
+      await expectThrow(
+        testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded))
+      );
+
+//      const testMatcher = await CustomCollectionAssetMatcher.new();
+      const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
+      const result = await testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded));
+
+      assert.equal(result[0], 0);
+    })
+  })
 
 	describe("ETH", () => {
 		it("should extract ETH type if both are ETHs", async () => {
@@ -38,6 +106,36 @@ contract("AssetMatcher", accounts => {
 			assert.equal(result[0], 0);
 		});
 	})
+
+  describe("CRYPTO_PUNK", () => {
+    it("Punk Id = 3000 <-> Punk Id = 3000 matches!", async () => {
+      const tokenId = 3000;
+      const encodedPunk1 = enc(accounts[5], tokenId);
+      const encodedPunk2 = enc(accounts[5], tokenId);
+      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNK, encodedPunk1), order.AssetType(CRYPTO_PUNK, encodedPunk2));
+      assert.equal(result[0], CRYPTO_PUNK);
+      assert.equal(result[1], encodedPunk1);
+    })
+
+    it("Punk Id = 3000 <-> Punk Id = 3001 don`t matches!", async () => {
+      const tokenId1 = 3000;
+      const tokenId2 = 3001;
+      const encodedPunk1 = enc(accounts[5], tokenId1);
+      const encodedPunk2 = enc(accounts[5], tokenId2);
+      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNK, encodedPunk1), order.AssetType(CRYPTO_PUNK, encodedPunk2));
+      assert.equal(result[0], 0);
+    })
+
+    it("Punk Id = 3000 <-> Punk Id = 3000, but different collections don`t matches!", async () => {
+      const tokenId1 = 3000;
+      const tokenId2 = 3000;
+      const encodedPunk1 = enc(accounts[5], tokenId1);
+      const encodedPunk2 = enc(accounts[6], tokenId2);
+      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNK, encodedPunk1), order.AssetType(CRYPTO_PUNK, encodedPunk2));
+      assert.equal(result[0], 0);
+    })
+
+  })
 
 	describe("ERC20", () => {
 		it("should extract ERC20 type if both are and addresses equal", async () => {
