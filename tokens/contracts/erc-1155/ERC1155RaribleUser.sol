@@ -4,7 +4,7 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155BurnableUpgradeable.sol";
+import "./ERC1155BurnableUpgradeable.sol";
 import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
 
@@ -16,6 +16,11 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
     string public symbol;
 
     function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external initializer {
+        __ERC1155RaribleUser_init_unchained(_name, _symbol, baseURI, contractURI, operators);
+        emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
+    }
+
+    function __ERC1155RaribleUser_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) internal {
         __Ownable_init_unchained();
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();
@@ -30,7 +35,6 @@ contract ERC1155RaribleUser is OwnableUpgradeable, ERC1155BurnableUpgradeable, E
         for(uint i = 0; i < operators.length; i++) {
             setApprovalForAll(operators[i], true);
         }
-        emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
     }
 
     function __ERC1155RaribleUser_init_unchained(string memory _name, string memory _symbol) internal initializer {

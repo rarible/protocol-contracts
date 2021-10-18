@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "./ERC1155Upgradeable.sol";
 
 abstract contract ERC1155DefaultApproval is ERC1155Upgradeable {
     mapping(address => bool) private defaultApprovals;

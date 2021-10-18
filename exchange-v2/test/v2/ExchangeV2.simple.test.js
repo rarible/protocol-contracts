@@ -5,12 +5,14 @@ const TestERC20 = artifacts.require("TestERC20.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
+const CryptoPunksMarket = artifacts.require("CryptoPunksMarket.sol");
+const PunkTransferProxy = artifacts.require("PunkTransferProxyTest.sol")
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNK, enc, id } = require("../assets");
 
 contract("ExchangeSimpleV2", accounts => {
 	let testing;
@@ -186,6 +188,32 @@ contract("ExchangeSimpleV2", accounts => {
 				assert.equal(await t2.balanceOf(accounts[2]), 0);
 			})
 			
+		})
+
+    it("should match orders with crypto punks", async () => {
+			const cryptoPunksMarket = await CryptoPunksMarket.new();
+      await cryptoPunksMarket.allInitialOwnersAssigned(); //allow test contract work with Punk CONTRACT_OWNER accounts[0]
+      let punkIndex = 256;
+      await cryptoPunksMarket.getPunk(punkIndex, { from: accounts[1] }); //accounts[1] - owner punk with punkIndex
+
+      const proxy = await PunkTransferProxy.new();
+      await proxy.__OperatorRole_init();
+      await proxy.addOperator(testing.address);
+      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
+
+      await testing.setTransferProxy((CRYPTO_PUNK), proxy.address)
+      const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
+      await t1.mint(accounts[2], 106);
+      await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
+
+      const left = Order(accounts[1], Asset((CRYPTO_PUNK), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset((CRYPTO_PUNK), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+
+			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]));
+
+      assert.equal(await t1.balanceOf(accounts[1]), 100); 
+      assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 0);//accounts[1] - not owner now
+      assert.equal(await cryptoPunksMarket.balanceOf(accounts[2]), 1);//punk owner - accounts[2]
 		})
 
 	})
