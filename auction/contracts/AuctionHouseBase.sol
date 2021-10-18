@@ -27,10 +27,6 @@ abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver {
         uint protocolFee;
         bytes4 dataType;        // aucv1
         bytes data;             //duration, buyOutPrice, origin, payouts(?)
-
-        //todo: другие типы аукционов?
-        //todo: обсудить с Сашей разные подходы к времени аукционов
-        //todo: аукцион не удаляем, помечаем
     }
 
     //bid struct
@@ -41,7 +37,7 @@ abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver {
     }
 
     event AuctionCreated(uint id, Auction auction);
-    event BidPlaced(uint id);
+    event BidPlaced(uint id, Bid bid, uint endTime);
     event AuctionFinished(uint id);
     event AuctionBuyOut(uint id);
     event AuctionCancelled(uint id);

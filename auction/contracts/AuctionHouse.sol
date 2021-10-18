@@ -134,7 +134,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         if (currentAuction.endTime - currentTime < EXTENSION_DURATION) {
             currentAuction.endTime = currentTime + EXTENSION_DURATION;
         }
-        emit BidPlaced(_auctionId);
+        emit BidPlaced(_auctionId, bid, currentAuction.endTime);
     }
 
     function reserveValue(LibAsset.AssetType memory _buyAssetType, address oldBuyer, address newBuyer, uint oldAmount, uint newAmount) internal {
@@ -198,6 +198,12 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
     function finishAuction(uint _auctionId) payable public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
+        doTransfers(_auctionId);
+        deactivateAuction(_auctionId);
+        emit AuctionFinished(_auctionId);
+    }
+
+    function doTransfers(uint _auctionId) internal {
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
@@ -208,31 +214,27 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         } else {
             transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);//nft back to seller
         }
-        deactivateAuction(_auctionId);
-        emit AuctionFinished(_auctionId);
     }
 
-        function transferFees(uint _auctionId) internal returns(uint) {
-            Auction storage currentAuction = auctions[_auctionId];
-            address seller = currentAuction.seller;
-            uint amount = currentAuction.lastBid.amount;
-            LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-            LibPart.Part[] memory fees = aucData.originFees;
-            LibPart.Part[] memory emptyFees;
-//            uint totalAmount = calculateTotalAmount(amount, protocolFee, emptyFees);
-//            uint rest = transferProtocolFee(totalAmount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
-            uint rest = transferProtocolFee(amount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
-            uint totalFees;
-            (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, fees, address(this), TO_SELLER, ROYALTY);
-            require(totalFees <= 5000, "Auction fees are too high (>50%)");
-            return rest;
-        }
+    function transferFees(uint _auctionId) internal returns(uint) {
+        Auction storage currentAuction = auctions[_auctionId];
+        address seller = currentAuction.seller;
+        uint amount = currentAuction.lastBid.amount;
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
+        LibPart.Part[] memory fees = aucData.originFees;
+        LibPart.Part[] memory emptyFees;
+        uint rest = transferProtocolFee(amount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
+        uint totalFees;
+        (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, fees, address(this), TO_SELLER, ROYALTY);
+        require(totalFees <= 5000, "Auction fees are too high (>50%)");
+        return rest;
+    }
 
     function checkAuctionRangeTime(uint _auctionId) internal view returns (bool){
         uint currentTime = block.timestamp;
         Auction storage currentAuction = auctions[_auctionId];
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        if (currentTime >= aucData.startTime && currentTime <= currentAuction.endTime) {
+        if ((currentTime >= aucData.startTime) && (currentTime <= currentAuction.endTime)) {
             return true;
         }
         return false;
@@ -264,6 +266,21 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
     }
 
+    //RPC-98 buyout
+    function buyOut(uint _auctionId, Bid memory bid) public payable {
+        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
+        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
+        uint newAmount = bid.amount;
+        address payable newBuyer = _msgSender();
+        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
+        Auction storage currentAuction = auctions[_auctionId];
+        reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
+        currentAuction.lastBid.amount = newAmount;
+        currentAuction.buyer = newBuyer;
+        doTransfers(_auctionId);
+        deactivateAuction(_auctionId);
+        emit AuctionBuyOut(_auctionId);
+    }
 
     uint256[50] private ______gap;
 }
