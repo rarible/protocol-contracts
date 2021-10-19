@@ -23,7 +23,6 @@ abstract contract TransferManagerHelper is OwnableUpgradeable, ITransferExecutor
     using SafeMathUpgradeable for uint;
 
     uint public protocolFee;
-//    IRoyaltiesProvider public royaltiesRegistry;
 
     address public defaultFeeReceiver;
     mapping(address => address) public feeReceivers;
@@ -31,16 +30,10 @@ abstract contract TransferManagerHelper is OwnableUpgradeable, ITransferExecutor
     function __TransferHelper_init_unchained(
         uint newProtocolFee,
         address newDefaultFeeReceiver
-//        IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
         protocolFee = newProtocolFee;
         defaultFeeReceiver = newDefaultFeeReceiver;
-//        royaltiesRegistry = newRoyaltiesProvider;
     }
-
-//    function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
-//        royaltiesRegistry = newRoyaltiesRegistry;
-//    }
 
     function setProtocolFee(uint newProtocolFee) external onlyOwner {
         protocolFee = newProtocolFee;
