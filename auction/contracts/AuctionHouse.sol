@@ -113,7 +113,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {
-            _buyOut(_auctionId, newAmount);
+            _buyOut(_auctionId, bid);
             doTransfers(_auctionId);
             deactivateAuction(_auctionId);
             emit AuctionBuyOut(_auctionId);
@@ -134,7 +134,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
             require(newAmount >= minAmount, "bid amount too low");
         }
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
-        currentAuction.lastBid.amount = newAmount;
+        currentAuction.lastBid = bid;
         currentAuction.buyer = newBuyer;
         //extend auction if time left < EXTENSION_DURATION
         if (currentAuction.endTime - currentTime < EXTENSION_DURATION) {
@@ -214,10 +214,13 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) {//bid exists
-            uint rest = transferFees(_auctionId);
+            (uint rest, uint restNft)  = transferAllFees(_auctionId);
             //transfer fee
             transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT);
             //
+            if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+                currentAuction.sellAsset.value = restNft;
+            }
             transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT);
             //nft to buyer
         } else {
@@ -226,18 +229,23 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
     }
 
-    function transferFees(uint _auctionId) internal returns (uint) {
+    function transferAllFees(uint _auctionId) internal returns (uint rest, uint restNft) {
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         uint amount = currentAuction.lastBid.amount;
+        rest = transferProtocolFee(amount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
+        restNft = currentAuction.sellAsset.value;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        LibPart.Part[] memory fees = aucData.originFees;
-        LibPart.Part[] memory emptyFees;
-        uint rest = transferProtocolFee(amount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
+        LibPart.Part[] memory auctionFees = aucData.originFees;
         uint totalFees;
-        (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, fees, address(this), TO_SELLER, ROYALTY);
+        (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, auctionFees, address(this), TO_SELLER, ROYALTY);
         require(totalFees <= 5000, "Auction fees are too high (>50%)");
-        return rest;
+        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            LibBidDataV1.DataV1 memory bidData = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
+            LibPart.Part[] memory bidFees = bidData.originFees;
+            (restNft, totalFees) = transferFees(currentAuction.sellAsset.assetType, restNft, restNft, bidFees, address(this), TO_BIDDER, ROYALTY);
+            require(totalFees <= 5000, "Bid fees are too high (>50%)");
+        }
     }
 
     function checkAuctionRangeTime(uint _auctionId) internal view returns (bool){
@@ -283,18 +291,18 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
         uint newAmount = bid.amount;
         require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
-        _buyOut(_auctionId, newAmount);
+        _buyOut(_auctionId, bid);
         doTransfers(_auctionId);
         deactivateAuction(_auctionId);
         emit AuctionBuyOut(_auctionId);
     }
 
-    function _buyOut(uint _auctionId, uint newAmount)  internal {
+    function _buyOut(uint _auctionId, Bid memory bid)  internal {
         address payable newBuyer = _msgSender();
-//        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
         Auction storage currentAuction = auctions[_auctionId];
+        uint newAmount = bid.amount;
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
-        currentAuction.lastBid.amount = newAmount;
+        currentAuction.lastBid = bid;
         currentAuction.buyer = newBuyer;
     }
 
