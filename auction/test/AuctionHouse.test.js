@@ -42,8 +42,9 @@ contract("Check Auction", accounts => {
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
     /*Auction*/
 //    auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address], { initializer: "__AuctionHouse_init" });
-    auctionHouse = await AuctionHouse.new();
-    auctionHouse.__AuctionHouse_init(transferProxy.address, erc20TransferProxy.address, 300, community);
+    auctionHouse = await deployProxy(AuctionHouse, [transferProxy.address, erc20TransferProxy.address, 300, community], { initializer: "__AuctionHouse_init" });
+//    auctionHouse = await AuctionHouse.new();
+//    auctionHouse.__AuctionHouse_init(transferProxy.address, erc20TransferProxy.address, 300, community);
     await auctionHouse.setFeeReceiver(eth, protocol);//
     await auctionHouse.setFeeReceiver(erc20Token.address, protocol);//
     await auctionHouse.setFeeReceiver(erc721.address, protocol);//
@@ -149,7 +150,7 @@ contract("Check Auction", accounts => {
   });
 
   describe("bid auction", () => {
-    it("Create auction:721<->20, put bid, walue = 10", async () => {
+    it("Tets1: Create auction:721<->20, put bid, walue = 10", async () => {
       //auction initialize
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
@@ -176,7 +177,7 @@ contract("Check Auction", accounts => {
       assert.equal(await erc20Token.balanceOf(auctionHouse.address), 10);
     })
 
-    it("Create auction:721<->20, put bid, walue = 10, after that put another bid = 11", async () => {
+    it("Tets2: Create auction:721<->20, put bid, walue = 10, after that put another bid = 11", async () => {
       //auction initialize
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
@@ -210,7 +211,7 @@ contract("Check Auction", accounts => {
       assert.equal(await erc20Token.balanceOf(accounts[7]), 89);
     })
 
-    it("Create auction:721<->ETH, put bid, walue = 10", async () => {
+    it("Tets3: Create auction:721<->ETH, put bid, walue = 10", async () => {
       //auction initialize
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
@@ -236,7 +237,84 @@ contract("Check Auction", accounts => {
     	)
     })
 
-    it("Create auction:721<->ETH, put bid, walue = 10 after put second bid value = 11", async () => {
+    it("Tets4.1: Create auction:721<->ETH no bid, put bid with outBuy walue = 10", async () => {
+      //auction initialize
+      await erc721.mint(accounts[1], erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+      let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
+      const encodedEth = enc(accounts[5]);
+      let buyAssetType = await AssetType(ETH, encodedEth);
+      let auctionFees = [];
+      let endTime = await timeNow();
+      let dataV1 = await encDataV1([auctionFees, 1000, endTime, 100]); //originFees, duration, startTime, buyOutPrice
+
+      let dataV1Type = id("V1");
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, 0, 1, 90, dataV1Type, dataV1, {from: accounts[1]});
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+      let bidDataV1Type = id("V1");
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+    	await verifyBalanceChange(accounts[2], 100, async () =>
+    	  verifyBalanceChange(auctionHouse.address, 0, async () =>
+    	    verifyBalanceChange(accounts[1], -94, async () =>
+    	      verifyBalanceChange(protocol, -6, async () =>
+              auctionHouse.putBid(auctionId, bid, { from: accounts[2], value: 200, gasPrice: 0 })
+            )
+          )
+    	  )
+    	)
+    	assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after new owner 721
+    })
+
+    it("Tets4.2: Create auction:721<->ETH Yes bid, put bid with outBuy walue = 10", async () => {
+      //auction initialize
+      await erc721.mint(accounts[1], erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+      let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
+      const encodedEth = enc(accounts[5]);
+      let buyAssetType = await AssetType(ETH, encodedEth);
+      let auctionFees = [];
+      let endTime = await timeNow();
+      let dataV1 = await encDataV1([auctionFees, 1000, endTime, 200]); //originFees, duration, startTime, buyOutPrice
+
+      let dataV1Type = id("V1");
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, 0, 1, 90, dataV1Type, dataV1, {from: accounts[1]});
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+      let bidDataV1Type = id("V1");
+
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+    	await verifyBalanceChange(accounts[2], 100, async () =>
+    	  verifyBalanceChange(auctionHouse.address, -100, async () =>
+    	    verifyBalanceChange(accounts[1], 0, async () =>
+    	      verifyBalanceChange(protocol, 0, async () =>
+              auctionHouse.putBid(auctionId, bid, { from: accounts[2], value: 200, gasPrice: 0 })
+            )
+          )
+    	  )
+    	)
+      assert.equal(await erc721.ownerOf(erc721TokenId1), auctionHouse.address);
+
+      let outBid = {amount:200, dataType:bidDataV1Type, data:bidDataV1};
+    	await verifyBalanceChange(accounts[3], 200, async () =>
+    	  verifyBalanceChange(auctionHouse.address, 100, async () =>
+    	    verifyBalanceChange(accounts[1], -188, async () =>
+    	      verifyBalanceChange(accounts[2], -100, async () =>
+    	        verifyBalanceChange(protocol, -12, async () =>
+                auctionHouse.putBid(auctionId, outBid, { from: accounts[3], value: 300, gasPrice: 0 })
+              )
+            )
+          )
+    	  )
+    	)
+    	assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[3]); // after new owner 721
+    })
+
+    it("Tets5: Create auction:721<->ETH, put bid, walue = 10 after put second bid value = 11", async () => {
       //auction initialize
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
@@ -270,7 +348,6 @@ contract("Check Auction", accounts => {
     		)
     	)
     })
-    //TODO putBid with buyOut
     //TODO CHECK 1155<->20, 1155<->ETH
   });
 
