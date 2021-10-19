@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 pragma abicoder v2;
-//await timeNow();
+
 import "./AuctionHouseBase.sol";
 import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
 import "@rarible/exchange-v2/contracts/TransferManagerHelper.sol";
@@ -117,6 +117,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
             doTransfers(_auctionId);
             deactivateAuction(_auctionId);
             emit AuctionBuyOut(_auctionId);
+            return;
         }
         Auction storage currentAuction = auctions[_auctionId];
         uint currentTime = block.timestamp;
@@ -281,6 +282,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
         uint newAmount = bid.amount;
+        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
         _buyOut(_auctionId, newAmount);
         doTransfers(_auctionId);
         deactivateAuction(_auctionId);
@@ -289,7 +291,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
 
     function _buyOut(uint _auctionId, uint newAmount)  internal {
         address payable newBuyer = _msgSender();
-        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
+//        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
         Auction storage currentAuction = auctions[_auctionId];
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
         currentAuction.lastBid.amount = newAmount;
