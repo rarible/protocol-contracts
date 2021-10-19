@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 pragma abicoder v2;
-
+//await timeNow();
 import "./AuctionHouseBase.sol";
 import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
 import "@rarible/exchange-v2/contracts/TransferManagerHelper.sol";
@@ -108,7 +108,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
     //put a bid and return locked assets for the last bid
     function putBid(uint _auctionId, Bid memory bid) payable external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        //TODO check time range
+        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");//TODO check time range
+
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {

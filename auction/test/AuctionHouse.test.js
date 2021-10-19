@@ -52,7 +52,7 @@ contract("Check Auction", accounts => {
   });
 
   //nft, erc20 initialize
-  async function prepare721_20(){
+  async function prepare721_20() {
     await erc721.mint(accounts[1], erc721TokenId1);
     await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
     await erc20Token.mint(accounts[2], 100);
@@ -60,24 +60,27 @@ contract("Check Auction", accounts => {
     encodedERC20 = enc(erc20Token.address);
   };
 
-  async function prepare721_20value(value){
+  async function prepare721_20value(value) {
     await erc721.mint(accounts[1], erc721TokenId1);
     await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
     await erc20Token.mint(accounts[2], value);
     await erc20Token.approve(erc20TransferProxy.address, value, { from: accounts[2] });
     encodedERC20 = enc(erc20Token.address);
   };
+  async function timeNow() {
+    return await testAuctionHouse.timeNow.call();
+  }
 
   describe("test internal function setTimeRange", () => {
-    it("No start, No end, duration only", async () => {
-        let now = await Math.floor(Date.now()/1000); //define start time
+    it("Tets1: No start, No end, duration only", async () => {
+        let now = parseInt(await timeNow()); //define start time
         let finish = now + 3600;
         let result = await testAuctionHouse.setTimeRangeTest.call(0, 0, 3600);
         assert.equal(now, result[0]);
         assert.equal(finish, result[1]);
     })
-    it("Yes start, No End, yes duration ", async () => {
-        let now = await Math.floor(Date.now()/1000); //define start time
+    it("Tets2: Yes start, No End, yes duration ", async () => {
+        let now = parseInt(await timeNow()); //define start time
         let duration = 3600;
         now = now + 1000;
         let finish = now + duration;
@@ -85,8 +88,8 @@ contract("Check Auction", accounts => {
         assert.equal(now, result[0]);
         assert.equal(finish, result[1]);
     })
-    it("Yes start, No End, No duration, throw ", async () => {
-        let now = await Math.floor(Date.now()/1000); //define start time
+    it("Tets3: Yes start, No End, No duration, throw ", async () => {
+        let now = parseInt(await timeNow()); //define start time
         let duration = 0;
         now = now + 1000;
         let finish = now + duration;
@@ -94,16 +97,16 @@ contract("Check Auction", accounts => {
           testAuctionHouse.setTimeRangeTest.call(now, 0, duration)
         );
     })
-    it("Yes start, yes End, start==end, throw ", async () => {
-        let now = await Math.floor(Date.now()/1000); //define start time
+    it("Tets4: Yes start, yes End, start==end, throw ", async () => {
+        let now = parseInt(await timeNow()); //define start time
         let duration = 3600;
         let finish = now ;
         await expectThrow(
           testAuctionHouse.setTimeRangeTest.call(now, finish, duration)
         );
     })
-    it("Yes start, yes End, no duration, ok ", async () => {
-        var now = await Math.floor(Date.now()/1000); //define start time
+    it("Tets5: Yes start, yes End, no duration, ok ", async () => {
+        var now = parseInt(await timeNow()); //define start time
         let finish = now + 3600;
         let result = await testAuctionHouse.setTimeRangeTest.call(now, finish, 0);
         assert.equal(now, result[0]);
@@ -157,11 +160,12 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
-      let endTime = await Math.floor(Date.now()/1000);
-      let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
+      let startTime = await timeNow();
+      let endTime = startTime + 100;
+      let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
-      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, 0, 1, 9, dataV1Type, dataV1, {from: accounts[1]});
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 9, dataV1Type, dataV1, {from: accounts[1]});
       //bid initialize
       let auctionId = 1;
       let bidFees = [[accounts[6], 1500], [accounts[7], 3500]];
@@ -183,7 +187,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
-      let endTime = await Math.floor(Date.now()/1000);
+      let endTime = await timeNow();
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -214,7 +218,7 @@ contract("Check Auction", accounts => {
       const encodedEth = enc(accounts[5]);
       let buyAssetType = await AssetType(ETH, encodedEth);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
-      let endTime = await Math.floor(Date.now()/1000);
+      let endTime = await timeNow();
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -240,7 +244,7 @@ contract("Check Auction", accounts => {
       const encodedEth = enc(accounts[5]);
       let buyAssetType = await AssetType(ETH, encodedEth);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
-      let endTime = await Math.floor(Date.now()/1000);
+      let endTime = await timeNow();
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -277,7 +281,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [];
-      let startTime = await Math.floor(Date.now()/1000); //define start time
+      let startTime = await timeNow(); //define start time
       startTime = startTime + 100; //auction will start after 100 sec
       let endTime = startTime + 3600;
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
@@ -295,7 +299,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100]];
-      let startTime = await Math.floor(Date.now()/1000); //define start time
+      let startTime = await timeNow(); //define start time
       startTime = startTime - 7200; //auction started 2hours ago
       let endTime = startTime + 3600;//auction finished 1hours ago
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
@@ -313,7 +317,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100]];
-      let startTime = await Math.floor(Date.now()/1000); //define start time
+      let startTime = await timeNow(); //define start time
       startTime = startTime - 120; //auction started 2min ago
       let endTime = startTime + 3600;//auction finished 1hours later
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
@@ -333,10 +337,8 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [];
-      let startTime = await Math.floor(Date.now()/1000); //define start time
-      startTime = startTime + 500; //auction started 2hours ago
-      let endTime = startTime + 3600;//auction finished 1hours ago
-
+      let startTime = await timeNow(); //define start time
+      let endTime = startTime + 60;
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 9, dataV1Type, dataV1, {from: accounts[1]});
@@ -350,7 +352,7 @@ contract("Check Auction", accounts => {
       let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
       assert.equal(await erc20Token.balanceOf(auctionHouse.address), 10);
       assert.equal(await erc20Token.balanceOf(accounts[2]), 90);
-//      await increaseTime(7200);
+      await increaseTime(1075); //increase ~18 min
       let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
       assert.equal(await erc20Token.balanceOf(auctionHouse.address), 0);
       assert.equal(await erc20Token.balanceOf(accounts[1]), 10);
@@ -364,9 +366,8 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[6], 1000], [accounts[7], 2000]];
-      let startTime = await Math.floor(Date.now()/1000); //define start time
-      startTime = startTime + 500; //auction started 2hours ago
-      let endTime = startTime + 3600;//auction finished 1hours ago
+      let startTime = await timeNow(); //define start time
+      let endTime = startTime + 60;//auction finished 1hours ago
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 500]); //originFees, duration, startTime, buyOutPrice
 
       let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 10, 90, dataV1Type, dataV1, {from: accounts[1]});
@@ -380,7 +381,7 @@ contract("Check Auction", accounts => {
       let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
       assert.equal(await erc20Token.balanceOf(auctionHouse.address), 100);
       assert.equal(await erc20Token.balanceOf(accounts[2]), 900);
-//      await increaseTime(7200);
+      await increaseTime(1075); //increase ~18 min
       let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
       assert.equal(await erc20Token.balanceOf(auctionHouse.address), 0);
       assert.equal(await erc20Token.balanceOf(protocol), 6);
@@ -398,10 +399,8 @@ contract("Check Auction", accounts => {
       const encodedEth = enc(auctionHouse.address);
       let buyAssetType = await AssetType(ETH, encodedEth);
       let auctionFees = [];
-      let startTime = await Math.floor(Date.now()/1000);
-      startTime = startTime + 500; //auction started 2hours ago
-      let endTime = startTime + 3600;//auction finished 1hours ago
-
+      let startTime = await timeNow();
+      let endTime = startTime + 60;//auction finished 1hours ago
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 9, dataV1Type, dataV1, {from: accounts[1]});
@@ -416,7 +415,7 @@ contract("Check Auction", accounts => {
          auctionHouse.putBid(auctionId, bid, { from: accounts[2], value: 15, gasPrice: 0 })
     		)
     	)
-//    	await increaseTime(7200);
+    	await increaseTime(1075);
     	await verifyBalanceChange(auctionHouse.address, 10, async () =>
         verifyBalanceChange(accounts[1], -10, async () =>
     	    auctionHouse.finishAuction(auctionId, {from: accounts[0]})
@@ -433,10 +432,8 @@ contract("Check Auction", accounts => {
       const encodedEth = enc(auctionHouse.address);
       let buyAssetType = await AssetType(ETH, encodedEth);
       let auctionFees = [[accounts[6], 1000], [accounts[7], 2000]];
-      let startTime = await Math.floor(Date.now()/1000);
-//      let endTime = startTime + 3600;
-      startTime = startTime + 500 ; //auction started 2hours ago
-      let endTime = startTime + 3600;//auction finished 1hours ago
+      let startTime = await timeNow();
+      let endTime = startTime + 60;//auction finished 1hours ago
 
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 180]); //originFees, duration, startTime, buyOutPrice
 
@@ -452,7 +449,7 @@ contract("Check Auction", accounts => {
          auctionHouse.putBid(auctionId, bid, { from: accounts[2], value: 150, gasPrice: 0 })
     		)
     	)
-//    	await increaseTime(7200);
+    	await increaseTime(1075);
     	await verifyBalanceChange(auctionHouse.address, 100, async () =>
         verifyBalanceChange(accounts[1], -64, async () =>
           verifyBalanceChange(accounts[6], -10, async () =>
@@ -477,10 +474,8 @@ contract("Check Auction", accounts => {
       const encoded1155 = enc(erc1155.address, erc1155TokenId1);
       let buyAssetType = await AssetType(ERC1155, encoded1155);
       let auctionFees = [[accounts[6], 1000], [accounts[7], 2000]];
-      let startTime = await Math.floor(Date.now()/1000);
-//      let endTime = startTime + 3600;
-      startTime = startTime + 500; //auction started 2hours ago
-      let endTime = startTime + 3600;//auction finished 1hours ago
+      let startTime = await timeNow();
+      let endTime = startTime + 60;//auction finished 1hours ago
 
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 180]); //originFees, duration, startTime, buyOutPrice
 
@@ -494,7 +489,7 @@ contract("Check Auction", accounts => {
       let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
       assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 100);
       assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 100);
-//      await increaseTime(7200);
+      await increaseTime(1075);
       let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
       assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 0);
       assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 64);
@@ -517,7 +512,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100]];
-      let endTime = await Math.floor(Date.now()/1000);
+      let endTime = await timeNow();
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -540,7 +535,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 100], [accounts[4], 300]];
-      let endTime = await Math.floor(Date.now()/1000);
+      let endTime = await timeNow();
       let dataV1 = await encDataV1([auctionFees, 1000, endTime, 18]); //originFees, duration, startTime, buyOutPrice
 
       let dataV1Type = id("V1");
@@ -576,16 +571,12 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20Local);
       let auctionFees = [[accounts[3], 1000]];
-      let startTime = await Math.floor(Date.now()/1000);
+      let startTime = await timeNow();
       var localtime = startTime
       startTime = startTime - 60;
       let endTime = startTime + 3600;
-//      console.log("localtime:"+localtime);
-//      console.log("startTime:"+startTime);
-//      console.log("endTime:"+endTime);
 
       let dataV1 = await encDataV1([auctionFees, 1000, 0, 100]); //originFees, duration, startTime, buyOutPrice
-
       let dataV1Type = id("V1");
       let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, 0, 1, 90, dataV1Type, dataV1, {from: accounts[1]});
       assert.equal(await erc721.ownerOf(erc721TokenId1), auctionHouse.address); // after mint owner is auctionHouse
@@ -617,7 +608,7 @@ contract("Check Auction", accounts => {
 
       let buyAssetType = await AssetType(ERC20, encodedERC20);
       let auctionFees = [[accounts[3], 1000]];
-      let startTime = await Math.floor(Date.now()/1000);
+      let startTime = await timeNow();
       let endTime = startTime + 3600;
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 100]); //originFees, duration, startTime, buyOutPrice
 
@@ -656,7 +647,7 @@ contract("Check Auction", accounts => {
       const encodedEth = enc(accounts[5]);
       let buyAssetType = await AssetType(ETH, encodedEth);
       let auctionFees = [[accounts[3], 1000]];
-      let startTime = await Math.floor(Date.now()/1000);
+      let startTime = await timeNow();
       let endTime = startTime + 36000;
       let dataV1 = await encDataV1([auctionFees, 1000, startTime, 100]); //originFees, duration, startTime, buyOutPrice
 
@@ -680,6 +671,7 @@ contract("Check Auction", accounts => {
     	assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after payOut owner is mr. payOut
     })
   });
+
   function encDataV1(tuple) {
     return auctionHouse.encode(tuple);
   }

@@ -9,4 +9,8 @@ contract TestAuctionHouse is AuctionHouse {
     function setTimeRangeTest(uint _startTime, uint _endTime, uint _duration) external returns (uint, uint) {
         return setTimeRange(_startTime, _endTime, _duration);
     }
+
+    function timeNow() external returns(uint) {
+        return block.timestamp;
+    }
 }
