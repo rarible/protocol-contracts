@@ -147,11 +147,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         LibAsset.Asset memory transferAsset;
         if (oldBuyer != address(0x0)) {//return oldAmount to oldBuyer
             transferAsset = makeAsset(_buyAssetType, oldAmount);
-            if ((transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS)) {
-                address(oldBuyer).transferEth(oldAmount);
-            } else {
-                transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
-            }
+            transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
         }
         transferAsset = makeAsset(_buyAssetType, newAmount);
         if (transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
@@ -166,6 +162,10 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
             transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
             (address token,) = abi.decode(_buyAssetType.data, (address, uint256));
             IERC1155Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
+        } else if (transferAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
+            transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
+            (address token,) = abi.decode(_buyAssetType.data, (address, uint256));
+            IERC721Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
         }
     }
 
@@ -218,7 +218,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
             //transfer fee
             transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT);
             //
-            if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS
+                || currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 currentAuction.sellAsset.value = restNft;
             }
             transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT);
@@ -240,7 +241,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         uint totalFees;
         (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, auctionFees, address(this), TO_SELLER, ROYALTY);
         require(totalFees <= 5000, "Auction fees are too high (>50%)");
-        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS
+            || currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             LibBidDataV1.DataV1 memory bidData = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
             LibPart.Part[] memory bidFees = bidData.originFees;
             (restNft, totalFees) = transferFees(currentAuction.sellAsset.assetType, restNft, restNft, bidFees, address(this), TO_BIDDER, ROYALTY);
