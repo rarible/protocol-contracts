@@ -20,6 +20,6 @@ Method `getNonce` - return id transaction, for generating uniq signature
 - `address` userAddress - address who execute and pay for transaction;
 - `uint256` nonce.
 
-Don't forget about method `_msgSender()` - reterns address, who call metaTransaction. Use this method insted of msg.sender.
+Don't forget about method `_msgSender()` - reterns address, who call metaTransaction. Use this method instead of msg.sender.
 
 See tests [here](../test/EIP712MetaTransaction.test.js) to make clear transfer metaTransactions
