@@ -4,11 +4,13 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./AuctionHouseBase.sol";
+import "./TokenToAuction.sol";
+
 import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
 import "@rarible/exchange-v2/contracts/TransferManagerHelper.sol";
 
 //contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
-contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, TransferManagerHelper {
+contract AuctionHouse is AuctionHouseBase, TransferExecutor, TransferManagerHelper, TokenToAuction {
     using LibTransfer for address;
 
     mapping(uint => Auction) public auctions;   //save auctions here
@@ -21,18 +23,25 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
     uint256 private constant MAX_DURATION = 1000 days;
 
     function __AuctionHouse_init(
-        INftTransferProxy _transferProxy,
-        IERC20TransferProxy _erc20TransferProxy,
+        address _transferProxy,
+        address _erc20TransferProxy,
         uint newProtocolFee,
         address newDefaultFeeReceiver
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        _initializeAuctionId();
         __TransferHelper_init_unchained(newProtocolFee, newDefaultFeeReceiver);
-        nftTransferProxy = address(_transferProxy);
-        erc20TransferProxy = address(_erc20TransferProxy);
+        __AuctionHouse_init_unchained(_transferProxy, _erc20TransferProxy);
+    }
+
+     function __AuctionHouse_init_unchained(
+        address _transferProxy,
+        address _erc20TransferProxy
+    ) internal initializer {
+        auctionId = 1;
+        nftTransferProxy = _transferProxy;
+        erc20TransferProxy = _erc20TransferProxy;
     }
 
     //creates auction and locks assets to sell
@@ -46,7 +55,11 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         bytes memory data
     ) public {
         uint currentAuctionId = getNextAndIncrementAuctionId();
-        require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
+        require(
+            _sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS && 
+            _sellAsset.assetType.assetClass != LibAsset.ERC20_ASSET_CLASS,
+            "can't sell ETH or ERC20 on auction"
+        );
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         (uint startTimeCalculate, uint endTimeCalculate) = setTimeRange(aucData.startTime, endTime, aucData.duration);
         auctions[currentAuctionId] = Auction(
@@ -65,6 +78,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         );
         transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);
+
+        setAuctionForToken(_sellAsset, currentAuctionId);
         emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
     }
 
@@ -97,19 +112,13 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
     }
 
-    function _initializeAuctionId() internal {
-        auctionId = 1;
-    }
-
     function getNextAndIncrementAuctionId() internal returns (uint256) {
         return auctionId++;
     }
 
     //put a bid and return locked assets for the last bid
     function putBid(uint _auctionId, Bid memory bid) payable external {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");//TODO check time range
-
+        require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {
@@ -175,7 +184,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         return _asset;
     }
 
-    function getMinimalNextBid(uint _auctionId) internal view returns (uint minBid){
+    function getMinimalNextBid(uint _auctionId) public view returns (uint minBid){
         Auction storage currentAuction = auctions[_auctionId];
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
@@ -205,6 +214,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
         doTransfers(_auctionId);
+        deleteAuctionForToken(auctions[_auctionId].sellAsset);
         deactivateAuction(_auctionId);
         emit AuctionFinished(_auctionId);
     }
@@ -279,8 +289,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
 
     //buyout
     function buyOut(uint _auctionId, Bid memory bid) public payable {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
+        require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
+
         uint newAmount = bid.amount;
         require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
         _buyOut(_auctionId, newAmount);
@@ -296,6 +306,14 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
         currentAuction.lastBid.amount = newAmount;
         currentAuction.buyer = newBuyer;
+    }
+
+    function getCurrentBuyer(uint _auctionId) public view returns(address) {
+        return auctions[_auctionId].buyer;
+    }
+
+    function isFinalized(uint256 _auctionId) public view returns (bool){
+        return (checkAuctionExistence(_auctionId) && checkAuctionRangeTime(_auctionId));
     }
 
     uint256[50] private ______gap;

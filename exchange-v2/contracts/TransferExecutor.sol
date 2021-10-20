@@ -19,10 +19,10 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
 
     event ProxyChange(bytes4 indexed assetType, address proxy);
 
-    function __TransferExecutor_init_unchained(INftTransferProxy transferProxy, IERC20TransferProxy erc20TransferProxy) internal {
-        proxies[LibAsset.ERC20_ASSET_CLASS] = address(erc20TransferProxy);
-        proxies[LibAsset.ERC721_ASSET_CLASS] = address(transferProxy);
-        proxies[LibAsset.ERC1155_ASSET_CLASS] = address(transferProxy);
+    function __TransferExecutor_init_unchained(address transferProxy, address erc20TransferProxy) internal {
+        proxies[LibAsset.ERC20_ASSET_CLASS] = erc20TransferProxy;
+        proxies[LibAsset.ERC721_ASSET_CLASS] = transferProxy;
+        proxies[LibAsset.ERC1155_ASSET_CLASS] = transferProxy;
     }
 
     function setTransferProxy(bytes4 assetType, address proxy) external onlyOwner {

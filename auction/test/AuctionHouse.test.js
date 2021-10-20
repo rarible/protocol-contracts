@@ -72,7 +72,7 @@ contract("Check Auction", accounts => {
     return await testAuctionHouse.timeNow.call();
   }
 
-  describe("test internal function setTimeRange", () => {
+  describe("test internal functions", () => {
     it("Tets1: No start, No end, duration only", async () => {
         let now = parseInt(await timeNow()); //define start time
         let finish = now + 3600;
@@ -113,6 +113,30 @@ contract("Check Auction", accounts => {
         assert.equal(now, result[0]);
         assert.equal(finish, result[1]);
     })
+    it("getAuctionByToken works", async () => {
+        //auction initialize
+        await erc721.mint(accounts[1], erc721TokenId1);
+        await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+        let sellAsset = await Asset(ERC721, enc(erc721.address, erc721TokenId1), 1);
+        const encodedEth = enc(accounts[5]);
+        let buyAssetType = await AssetType(ETH, encodedEth);
+        let auctionFees = [[accounts[3], 1000]];
+        let startTime = await timeNow();
+        let endTime = startTime + 36000;
+        let dataV1 = await encDataV1([auctionFees, 1000, startTime, 100]); //originFees, duration, startTime, buyOutPrice
+  
+        let dataV1Type = id("V1");
+        let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, endTime, 1, 90, dataV1Type, dataV1, {from: accounts[1]});
+        
+        let auctionId;
+        truffleAssert.eventEmitted(resultStartAuction, 'AuctionCreated', (ev) => {
+            auctionId = ev.id;
+          return true;
+        });
+        
+        assert.equal(await auctionHouse.getAuctionByToken(erc721.address, erc721TokenId1), auctionId);
+
+      })
   });
 
   describe("create auction", () => {
@@ -747,7 +771,9 @@ contract("Check Auction", accounts => {
     	)
     	assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after payOut owner is mr. payOut
     })
+
   });
+
 
   function encDataV1(tuple) {
     return auctionHouse.encode(tuple);
