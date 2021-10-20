@@ -108,7 +108,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
     //put a bid and return locked assets for the last bid
     function putBid(uint _auctionId, Bid memory bid) payable external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");//TODO check time range
+        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
 
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
@@ -136,7 +136,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
         currentAuction.lastBid = bid;
         currentAuction.buyer = newBuyer;
-        //extend auction if time left < EXTENSION_DURATION
+
         if (currentAuction.endTime - currentTime < EXTENSION_DURATION) {
             currentAuction.endTime = currentTime + EXTENSION_DURATION;
         }
@@ -200,6 +200,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
         return false;
     }
+
     //finishAuction
     function finishAuction(uint _auctionId) payable public {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
@@ -214,19 +215,15 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) {//bid exists
-            (uint rest, uint restNft)  = transferAllFees(_auctionId);
-            //transfer fee
+            (uint rest, uint restNft) = transferAllFees(_auctionId); //transfer fee
             transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT);
-            //
-            if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS
-                || currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
+            if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS ||
+                currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 currentAuction.sellAsset.value = restNft;
             }
-            transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT);
-            //nft to buyer
+            transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT);//nft to buyer
         } else {
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
-            //nft back to seller
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft back to seller
         }
     }
 
@@ -241,8 +238,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         uint totalFees;
         (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, auctionFees, address(this), TO_SELLER, ROYALTY);
         require(totalFees <= 5000, "Auction fees are too high (>50%)");
-        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS
-            || currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
+        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS ||
+            currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             LibBidDataV1.DataV1 memory bidData = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
             LibPart.Part[] memory bidFees = bidData.originFees;
             (restNft, totalFees) = transferFees(currentAuction.sellAsset.assetType, restNft, restNft, bidFees, address(this), TO_BIDDER, ROYALTY);
@@ -280,8 +277,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         address buyer = currentAuction.buyer;
         uint amount = currentAuction.lastBid.amount;
         if (buyer == address(0x0)) {//no bid at all
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK);
-            //nft back to seller
+            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
             deactivateAuction(_auctionId);
             emit AuctionCancelled(_auctionId);
         }
@@ -299,7 +295,7 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         emit AuctionBuyOut(_auctionId);
     }
 
-    function _buyOut(uint _auctionId, Bid memory bid)  internal {
+    function _buyOut(uint _auctionId, Bid memory bid) internal {
         address payable newBuyer = _msgSender();
         Auction storage currentAuction = auctions[_auctionId];
         uint newAmount = bid.amount;
