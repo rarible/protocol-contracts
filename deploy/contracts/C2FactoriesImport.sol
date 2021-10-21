@@ -9,7 +9,6 @@ import "@rarible/tokens/contracts/erc-721-minimal/ERC721RaribleUserMinimal.sol";
 import "@rarible/tokens/contracts/create-2/ERC721RaribleFactoryC2.sol";
 import "@rarible/tokens/contracts/create-2/ERC721RaribleUserFactoryC2.sol";
 
-
 //tokens 1155
 import "@rarible/tokens/contracts/erc-1155/ERC1155Rarible.sol";
 import "@rarible/tokens/contracts/erc-1155/ERC1155RaribleUser.sol";

@@ -4,6 +4,8 @@ const adminJson = require("@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json
 const ProxyAdmin = contract(adminJson)
 ProxyAdmin.setProvider(web3.currentProvider)
 
+const { getProxyImplementation } = require("./config.js")
+
 const ERC721Rarible = artifacts.require('ERC721Rarible');
 const ERC721RaribleFactory = artifacts.require('ERC721RaribleFactory');
 const ERC721RaribleBeacon = artifacts.require('ERC721RaribleBeacon');
@@ -13,28 +15,6 @@ const ERC1155RaribleFactory = artifacts.require('ERC1155RaribleFactory');
 const TransferProxy = artifacts.require('TransferProxy');
 const ERC721LazyMintTransferProxy = artifacts.require('ERC721LazyMintTransferProxy');
 const ERC1155LazyMintTransferProxy = artifacts.require('ERC1155LazyMintTransferProxy');
-
-async function getProxyImplementation(contract, network) {
-  if (network === "test") {
-    network = "unknown-1337"
-  }
-
-  if (network === "e2e") {
-    network = "unknown-17"
-  }
-
-  let json;
-  try {
-    json = require(`../.openzeppelin/${network}.json`)
-  } catch (e) {
-    const tconfig = require('../truffle-config.js')
-    const network_id = tconfig.networks[network].network_id;
-    json = require(`../.openzeppelin/unknown-${network_id}.json`)
-  }
-  const c = await ProxyAdmin.at(json.admin.address)
-  const deployed = await contract.deployed()
-  return c.getProxyImplementation(deployed.address)
-}
 
 module.exports = async function (deployer, network) {
   const transferProxy = (await TransferProxy.deployed()).address;
@@ -57,7 +37,7 @@ module.exports = async function (deployer, network) {
 
   //deploying erc712 factory
   //ERC721Rarible implementation
-  const erc721 = await getProxyImplementation(ERC721Rarible, network)
+  const erc721 = await getProxyImplementation(ERC721Rarible, network, ProxyAdmin)
 
   //deploying ERC721RaribleBeacon
   const beacon721 = await deployer.deploy(ERC721RaribleBeacon, erc721, { gas: 1000000 });
@@ -68,7 +48,7 @@ module.exports = async function (deployer, network) {
 
   //deploying erc1155 factory
   //ERC1155Rarible implementation
-  const erc1155 = await getProxyImplementation(ERC1155Rarible, network)
+  const erc1155 = await getProxyImplementation(ERC1155Rarible, network, ProxyAdmin)
 
   //deploying ERC1155RaribleBeacon
   const beacon1155 = await deployer.deploy(ERC1155RaribleBeacon, erc1155, { gas: 1000000 });
