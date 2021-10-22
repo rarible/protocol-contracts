@@ -36,7 +36,6 @@ contract ERC721RaribleFactoryC2 is Ownable {
         emit Create721RaribleProxy(beaconProxy);
     }
 
-
     //deploying BeaconProxy contract with create2
     function deployProxy(bytes memory data, uint salt) internal returns(address proxy){
         bytes memory bytecode = getCreationBytecode(data);
