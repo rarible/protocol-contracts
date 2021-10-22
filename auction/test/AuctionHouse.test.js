@@ -170,7 +170,22 @@ contract("Check Auction", accounts => {
       assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 7); // after mint owner is auctionHouse
     })
 
-    //TODO Check creation with ERC20
+    it("Check creation with ERC20, and start auction owner is auctionHouse", async () => {
+      await erc20Token.mint(accounts[1], 100);
+      await erc20Token.approve(erc20TransferProxy.address, 100, { from: accounts[1] });
+      const encodedERC20 = enc(erc20Token.address);
+
+      assert.equal(await erc20Token.balanceOf(accounts[1]), 100); // after mint owner is accounts[1]
+      let sellAsset = await Asset(ERC20, enc(erc20Token.address), 100);
+      const encodedNft = enc(erc721.address, erc721TokenId1);
+      let buyAssetType = await AssetType(ERC721, encodedNft);
+      let fees = [];
+      let dataV1 = await encDataV1([fees, 1000, 500, 1]); //originFees, duration, startTime, buyOutPrice
+      let dataV1Type = id("V1");
+      let resultStartAuction = await auctionHouse.startAuction( sellAsset, buyAssetType, 0, 1, 1, dataV1Type, dataV1, {from: accounts[1]});
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 100); // after mint owner is auctionHouse
+    })
+
   });
 
   describe("bid auction", () => {
@@ -372,7 +387,7 @@ contract("Check Auction", accounts => {
     		)
     	)
     })
-    //TODO CHECK 1155<->20, 1155<->ETH
+    //TODO CHECK 1155<->ETH
   });
 
   describe("finish auction", () => {
@@ -599,6 +614,83 @@ contract("Check Auction", accounts => {
       assert.equal(await erc1155.balanceOf(protocol, erc1155TokenId1), 6);
       assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]); // after mint owner is auctionHouse
     })
+
+    it("Test9: Put bid:1155<->20, with fee bid, after finish auction, 1155 goes to fee-masters and buyer", async () => {
+      //auction initialize
+      await erc1155.mint(accounts[1], erc1155TokenId1, 100);
+      await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
+      await erc20Token.mint(accounts[2], 100);
+      await erc20Token.approve(erc20TransferProxy.address, 100, { from: accounts[2] });
+
+      let sellAsset = await Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100);
+      const encodedERC20 = enc(erc20Token.address);
+      let buyAssetType = await AssetType(ERC20, encodedERC20);
+      let auctionFees = [];
+      let startTime = await timeNow();
+      let endTime = startTime + 60;//auction finished 1hours ago
+
+      let dataV1 = await encDataV1([auctionFees, 1000, startTime, 180]); //originFees, duration, startTime, buyOutPrice
+
+      let resultStartAuction = await auctionHouse.startAuction(sellAsset, buyAssetType, endTime, 1, 100, dataV1Type, dataV1, {from: accounts[1]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 100);
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [[accounts[6], 1000], [accounts[7], 2000]];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+      let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 100);
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 100);
+      assert.equal(await erc20Token.balanceOf(accounts[2]), 0);
+      await increaseTime(1075);
+      let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 0);
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 0);
+      assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 70);
+      assert.equal(await erc1155.balanceOf(accounts[6], erc1155TokenId1), 10);
+      assert.equal(await erc1155.balanceOf(accounts[7], erc1155TokenId1), 20);
+      assert.equal(await erc20Token.balanceOf(protocol), 6);
+      assert.equal(await erc20Token.balanceOf(accounts[1]), 94); // after mint owner is auctionHouse
+    })
+    it("Test10: Put bid:20<->1155, with fee bid, after finish auction, 20 goes to fee-masters and buyer", async () => {
+      //auction initialize
+      await erc20Token.mint(accounts[1], 100);
+      await erc20Token.approve(erc20TransferProxy.address, 100, { from: accounts[1] });
+      await erc1155.mint(accounts[2], erc1155TokenId1, 100);
+      await erc1155.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+      let sellAsset = await Asset(ERC20, enc(erc20Token.address), 100);
+      const encodedERC1155 = enc(erc1155.address, erc1155TokenId1);
+      let buyAssetType = await AssetType(ERC1155, encodedERC1155);
+      let auctionFees = [[accounts[5], 1000]];
+      let startTime = await timeNow();
+      let endTime = startTime + 60;//auction finished 1hours ago
+
+      let dataV1 = await encDataV1([auctionFees, 1000, startTime, 200]); //originFees, duration, startTime, buyOutPrice
+
+      let resultStartAuction = await auctionHouse.startAuction(sellAsset, buyAssetType, endTime, 1, 100, dataV1Type, dataV1, {from: accounts[1]});
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 100);
+      //bid initialize
+      let auctionId = 1;
+      let bidFees = [[accounts[6], 1000], [accounts[7], 2000]];
+      let bidDataV1 = await bidEncDataV1([bidFees]);
+      let bid = {amount:100, dataType:bidDataV1Type, data:bidDataV1};
+      let resultPutBid = await auctionHouse.putBid(auctionId, bid, {from: accounts[2]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 100);
+      assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 100);
+      assert.equal(await erc20Token.balanceOf(accounts[1]), 0);
+      await increaseTime(1075);
+      let resultFinishAuction = await auctionHouse.finishAuction(auctionId, {from: accounts[0]});
+      assert.equal(await erc1155.balanceOf(auctionHouse.address, erc1155TokenId1), 0);
+      assert.equal(await erc20Token.balanceOf(auctionHouse.address), 0);
+      assert.equal(await erc20Token.balanceOf(accounts[2]), 70); //goes to bidder
+      assert.equal(await erc20Token.balanceOf(accounts[6]), 10); //fee bid
+      assert.equal(await erc20Token.balanceOf(accounts[7]), 20); //fee bid
+      assert.equal(await erc1155.balanceOf(accounts[5], erc1155TokenId1), 10); //fee auction
+      assert.equal(await erc1155.balanceOf(protocol, erc1155TokenId1), 6); //fee protocol
+      assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 84); //goes to seller
+    })
   });
 
   describe("cancel auction", () => {
@@ -656,7 +748,6 @@ contract("Check Auction", accounts => {
       assert.equal(await erc20Token.balanceOf(auctionHouse.address), 10);
       assert.equal(await erc20Token.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.ownerOf(erc721TokenId1), auctionHouse.address); // after mint owner is auctionHouse
-      //
     })
   });
 

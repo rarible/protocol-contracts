@@ -13,6 +13,11 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
     event CreateERC721RaribleUser(address owner, string name, string symbol);
 
     function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external initializer {
+        __ERC721RaribleUser_init_unchained(_name, _symbol, baseURI, contractURI, operators);
+        emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
+    }
+
+    function __ERC721RaribleUser_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) internal {
         _setBaseURI(baseURI);
         __ERC721Lazy_init_unchained();
         __Context_init_unchained();
@@ -23,10 +28,9 @@ contract ERC721RaribleUser is OwnableUpgradeable, ERC721BurnableUpgradeable, ERC
         __HasContractURI_init_unchained(contractURI);
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC721_init_unchained(_name, _symbol);
-        for(uint i = 0; i < operators.length; i++) {
+        for (uint i = 0; i < operators.length; i++) {
             setApprovalForAll(operators[i], true);
         }
-        emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721Lazy) returns (bool) {
