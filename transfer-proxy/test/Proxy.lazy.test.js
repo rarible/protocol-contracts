@@ -23,7 +23,7 @@ contract("Exchange with LazyMint proxies", accounts => {
 
 		const encodedMintData = await erc721Test.encode([1, "uri", [[accounts[1], 0], [accounts[3], 0]], [], []]);
 		//transfer by ERC721LazyMintTransferProxy.transfer
-    proxy.transfer(Asset(id("ERC721_LAZY"), encodedMintData, 1), accounts[1], accounts[2], { from: accounts[1] });
+    await proxy.transfer(Asset(id("ERC721_LAZY"), encodedMintData, 1), accounts[1], accounts[2], { from: accounts[1] });
     //check owner token after transfer
     assert.equal(await erc721Test.ownerOf(1), accounts[2]);
 	})
@@ -47,7 +47,7 @@ contract("Exchange with LazyMint proxies", accounts => {
 
 	  const encodedMintData = await erc1155Test.encode([1, "uri", 10, [[accounts[1], 0], [accounts[3], 0]], [], []]);
 		//transfer by ERC721LazyMintTransferProxy.transfer
-    proxy.transfer(Asset(id("ERC1155_LAZY"), encodedMintData, 5), accounts[1], accounts[2], { from: accounts[1] });
+    await proxy.transfer(Asset(id("ERC1155_LAZY"), encodedMintData, 5), accounts[1], accounts[2], { from: accounts[1] });
     //check owner token after transfer
     assert.equal(await erc1155Test.balanceOf(accounts[2], 1), 5);
 	})
