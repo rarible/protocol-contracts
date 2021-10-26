@@ -10,7 +10,15 @@ contract TestAuctionHouse is AuctionHouse {
         return setTimeRange(_startTime, _endTime, _duration);
     }
 
-    function timeNow() external returns(uint) {
+    function timeNow() external view returns(uint) {
         return block.timestamp;
+    }
+
+    function encode(LibAucDataV1.DataV1 memory data) pure public returns (bytes memory) {
+        return abi.encode(data);
+    }
+
+    function encodeBid(LibBidDataV1.DataV1 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
     }
 }

@@ -5,13 +5,12 @@ pragma abicoder v2;
 
 import "./LibAucDataV1.sol";
 import "./LibBidDataV1.sol";
-import "@rarible/exchange-v2/contracts/ITransferManager.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@rarible/exchange-v2/contracts/TransferConstants.sol";
+import "./TokenToAuction.sol";
 
-//abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver, TransferConstants {
-abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver {
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
+
+abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction {
 
     //auction struct
     struct Auction {
@@ -36,35 +35,20 @@ abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver {
         bytes data;             //origin, payouts(?)
     }
 
-    event AuctionCreated(uint id, Auction auction);
-    event BidPlaced(uint id, Bid bid, uint endTime);
-    event AuctionFinished(uint id);
-    event AuctionBuyOut(uint id);
-    event AuctionCancelled(uint id);
+    event AuctionCreated(uint indexed id, Auction auction);
+    event BidPlaced(uint indexed id, Bid bid, uint endTime);
+    event AuctionFinished(uint indexed id);
+    event AuctionBuyOut(uint indexed id);
+    event AuctionCancelled(uint indexed id);
+    event AuctionDeactivated(uint indexed id, Auction auction);
 
-    function encode(LibAucDataV1.DataV1 memory data) pure public returns (bytes memory) {
-        return abi.encode(data);
+
+    function __AuctionHouseBase_init() internal initializer {
+        __ERC1155Holder_init();
+        __AuctuinHouseBase_init_uncahined();
     }
 
-    function encodeBid(LibBidDataV1.DataV1 memory data) pure external returns (bytes memory) {
-        return abi.encode(data);
-    }
-
-    /**
-     * @dev See {IERC721Receiver-onERC721Received}.
-     *
-     * Always returns `IERC721Receiver.onERC721Received.selector`.
-     */
-    function onERC721Received(address, address, uint256, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
+    function __AuctuinHouseBase_init_uncahined() internal initializer {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {

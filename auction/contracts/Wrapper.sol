@@ -4,6 +4,7 @@ pragma solidity 0.7.6;
 import "./IMarketWrapper.sol";
 //todo: change to interface!!
 import "./AuctionHouse.sol";
+import "./LibBidDataV1.sol";
 
 contract Wrapper is IMarketWrapper{
 
@@ -34,13 +35,14 @@ contract Wrapper is IMarketWrapper{
         }
 
     function bid(uint256 auctionId, uint256 bidAmount) external override{
-        /*
+      //Bid memory bid = new Bid()
+      /*
         (bool success, bytes memory returnData) =
-            address(market).call{value: bidAmount}(
-                abi.encodeWithSignature("putBid(uint256)", auctionId)
+            address(auction).call{value: bidAmount}(
+                abi.encodeWithSignature("putBid(uint256,Bid(uint amount, bytes4 dataType, bytes data))", auctionId, AuctionHouseBase.Bid(bidAmount, "", ""))
             );
         require(success, string(returnData));
-        */
+      */
     }
 
     function isFinalized(uint256 auctionId) external override view returns (bool){

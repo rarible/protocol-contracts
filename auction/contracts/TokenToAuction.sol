@@ -19,5 +19,6 @@ contract TokenToAuction {
         (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
         delete tokenToAuctionId[token][tokenId];
     }
-
+    
+    uint256[50] private ______gap;
 }
