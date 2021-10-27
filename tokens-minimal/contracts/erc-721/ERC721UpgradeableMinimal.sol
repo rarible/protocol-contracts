@@ -37,6 +37,9 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
+    // Mapping from token ID to flag == true, means token already burned
+    mapping(uint256 => bool) private _burnedTokens;
+
     /*
      *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
      *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
@@ -233,6 +236,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      * and stop existing when they are burned (`_burn`).
      */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
+        require(! _burnedTokens[tokenId], "token already burned");
         return _owners[tokenId] != address(0);
     }
 
@@ -329,6 +333,8 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
 
         _balances[owner] -= 1;
         delete _owners[tokenId];
+
+        _burnedTokens[tokenId] = true;  //set token is burned
 
         emit Transfer(owner, address(0), tokenId);
     }
@@ -429,5 +435,5 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         address to,
         uint256 tokenId
     ) internal virtual {}
-    uint256[44] private __gap;
+    uint256[43] private __gap;
 }
