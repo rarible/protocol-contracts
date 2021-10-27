@@ -26,385 +26,484 @@ contract("ERC1155Rarible", accounts => {
     erc1271 = await ERC1271.new();
   });
 
-  it("mint and transfer by minter, token create by Factory", async () => {
-    const proxyLazy = await ERC1155LazyMintTransferProxy.new();
-    transferProxy = await TransferProxyTest.new();
-    beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC1155Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
-    resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
-    truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
-     	proxy = ev.proxy;
-      return true;
+  describe("Mint and transfer ()", () => {
+    it("Run mintAndTransfer = 5, burn = 2, mintAndTransfer by the same minter = 3, ok", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 2;
+      let secondMintValue = supply - mint;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+
+      await token.burn(transferTo, tokenId, mint, {from: transferTo});
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter});
+      assert.equal(await token.balanceOf(transferTo, tokenId), secondMintValue);
     });
-    tokenByProxy = await Testing.at(proxy);
+    it("Run mintAndTransfer = 5, burn = 2, mintAndTransfer by the same minter = 4, throw", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
 
-    let minter = tokenOwner;
-    let transferTo = minter;
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 2;
+      let secondMintValue = 4; //more than tail
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
 
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "/uri";
-    let supply = 5;
-    let mint = 2;
-
-    const tx = await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
-    const TransferSingle = await tokenByProxy.getPastEvents("TransferSingle", {
-      fromBlock: tx.receipt.blockNumber,
-      toBlock: tx.receipt.blockNumber
+      await token.burn(transferTo, tokenId, mint, {from: transferTo});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
+      )
     });
-    assert.equal(TransferSingle.length, 1, "TransferSingle.length")
-		assert.equal(await tokenByProxy.uri(tokenId), "ipfs:/" + tokenURI);
-    assert.equal(await tokenByProxy.balanceOf(transferTo, tokenId), mint);
-  });
+    it("Run mintAndTransfer = 5, burn = 5, mintAndTransfer by the same minter = 1, throw", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
 
-  it("check for ERC165 interface", async () => {
-  	assert.equal(await token.supportsInterface("0x01ffc9a7"), true);
-  });
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 5;
+      let secondMintValue = 1;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
 
-  it("check for mintAndTransfer interface", async () => {
-  	assert.equal(await token.supportsInterface("0x6db15a0f"), true);
-  });
-
-  it("check for RoayltiesV2 interface", async () => {
-  	assert.equal(await token.supportsInterface("0xcad96cca"), true);
-  });
-
-  it("check for ERC1155 interfaces", async () => {
-  	assert.equal(await token.supportsInterface("0xd9b67a26"), true);
-  	assert.equal(await token.supportsInterface("0x0e89341c"), true);
-  });
-
-  it("approve for all", async () => {
-    let proxy = accounts[5];
-    assert.equal(await token.isApprovedForAll(accounts[1], proxy), false);
-
-    await token.setDefaultApproval(proxy, true, {from: tokenOwner});
-    assert.equal(await token.isApprovedForAll(accounts[1], proxy), true);
-
-    await token.setDefaultApproval(proxy, false, {from: tokenOwner});
-    assert.equal(await token.isApprovedForAll(accounts[1], proxy), false);
-  });
-
-  it("mint and transfer by proxy", async () => {
-    let minter = accounts[1];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
-    const TransferSingle = await token.getPastEvents("TransferSingle", {
-      fromBlock: tx.receipt.blockNumber,
-      toBlock: tx.receipt.blockNumber
+      await token.burn(transferTo, tokenId, mint, {from: transferTo});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
+      );
     });
-    assert.equal(TransferSingle.length, 2, "TransferSingle.length")
-    const transferEvent0 = TransferSingle[0]
-    const transferEvent1 = TransferSingle[1]
+    it("Run mintAndTransfer = 5, burn = 4, mintAndTransfer by the same minter = 1, throw", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
 
-    assert.equal(transferEvent0.args.operator, whiteListProxy, "transfer 0 operator")
-    assert.equal(transferEvent0.args.from, "0x0000000000000000000000000000000000000000", "transfer 0 from")
-    assert.equal(transferEvent0.args.to, minter, "transfer 0 to")
-    assert.equal("0x" + transferEvent0.args.id.toString(16), tokenId.toLowerCase(), "transfer 0 tokenId")
-    assert.equal(transferEvent0.args.value.toString(), mint, "transfer 0 value")
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 5;
+      let secondMintValue = 1;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
 
-    assert.equal(transferEvent1.args.operator, whiteListProxy, "transfer 1 operator")
-    assert.equal(transferEvent1.args.from, minter, "transfer 1 from")
-    assert.equal(transferEvent1.args.to, transferTo, "transfer 1 to")
-    assert.equal("0x" + transferEvent1.args.id.toString(16), tokenId.toLowerCase(), "transfer 1 tokenId")
-    assert.equal(transferEvent1.args.value.toString(), mint, "transfer 1 value")
+      await token.burn(transferTo, tokenId, 4, {from: transferTo});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
+      );
+      assert.equal(await token.balanceOf(transferTo, tokenId), secondMintValue);
+    });
+    it("Run mintAndTransfer = 4, burn = 3, mintAndTransfer by the same minter = 1, ok", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
 
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 4;
+      let secondMintValue = 1;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+
+      await token.burn(transferTo, tokenId, 3, {from: transferTo});
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
+      assert.equal(await token.balanceOf(transferTo, tokenId), 2);
+    });
+
   });
-
-  it("mint and transfer by minter", async () => {
-    let minter = accounts[1];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "/uri";
-    let supply = 5;
-    let mint = 2;
-
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
-
-		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-    assert.equal(await token.balanceOf(minter, tokenId), 0);
-  });
-
-  it("mint and transfer by minter several creators", async () => {
-    let minter = accounts[1];
-    const creator2 = accounts[3];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    const signature2 = await getSignature(tokenId, tokenURI, supply, creators([minter, creator2]), [], creator2);
-
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter, creator2]), [], [zeroWord, signature2]], transferTo, mint, {from: minter});
-
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-    await checkCreators(tokenId, [minter, creator2]);
-  });
-
-  it("mint and transfer to self by minter", async () => {
-    let minter = accounts[1];
-    let transferTo = minter;
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
-
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-    await checkCreators(tokenId, [minter]);
-  });
-
-  it("transferFromOrMint by minter", async () => {
-    let minter = accounts[1];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-		assert.equal(await token.balanceOf(minter, tokenId), 0);
-    await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter});
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-    assert.equal(await token.balanceOf(minter, tokenId), 0);
-    await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter});
-    await expectThrow(
-    	token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter})
-    )
-
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint * 2);
-    await checkCreators(tokenId, [minter]);
-
-    await expectThrow(
-    	token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, minter, 1, { from: minter })
-    )
-
-    await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, minter, 1, { from: transferTo })
-    assert.equal(await token.balanceOf(minter, tokenId), 1);
-  });
-
-  it("mint and transfer by approved proxy for all by minter", async () => {
-    let minter = accounts[1];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-
-    let proxy = accounts[5];
-    await token.setApprovalForAll(proxy, true, {from: minter});
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: proxy});
-
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-  });
-
-  it("second mint and transfer", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-
-    let transferTo = accounts[2];
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-
-    //не нужна подпись, uri, fees не проверяется
-    let transferTo2 = accounts[3];
-    let mint2 = 3;
-    await token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo2, tokenId), mint2);
-  });
-
-  it("second mint and transfer for the same person", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-
-    let transferTo = accounts[2];
-    let mint = 1;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-
-    //не нужна подпись, uri не проверяется
-    let mint2 = 2;
-    await token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo, mint2, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo, tokenId), 3);
-  });
-
-  it("second mint and transfer: wrong supply", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-
-    let transferTo = accounts[2];
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-
-    //не нужна подпись, uri не проверяется
-    let transferTo2 = accounts[3];
-    await expectThrow(
-      token.mintAndTransfer([tokenId, "any, idle", 10, creators([minter]), [], [zeroWord]], transferTo2, 4, {from: whiteListProxy})
-    );
-    await token.mintAndTransfer([tokenId, "any, idle", 10, creators([minter]), [], [zeroWord]], transferTo2, 3, {from: whiteListProxy});
-  });
-
-  it("second mint and transfer: more than supply", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-
-    let transferTo = accounts[2];
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
-
-    //не нужна подпись, uri не проверяется
-    let transferTo2 = accounts[3];
-    let mint2 = 4;
-    await expectThrow(
-      token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy})
-    );
-  });
-
-  it("mint and transfer with signature of not minter", async () => {
-    let minter = accounts[1];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], transferTo);
-
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-
-    await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
-    );
-  });
-
-  it("mint and transfer without approval", async () => {
-    let minter = accounts[1];
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-
-    await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: accounts[3]})
-    );
-  });
-
-  it("standard transfer from owner", async () => {
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    let supply = 5;
-    await token.mintAndTransfer([tokenId, "//uri", supply, creators([minter]), [],  [zeroWord]], minter, supply, {from: minter});
-
-    assert.equal(await token.balanceOf(minter, tokenId), supply);
-
-    let transferTo = accounts[2];
-    await token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: minter});
-
-    assert.equal(await token.balanceOf(transferTo, tokenId), supply);
-  });
-
-  it("standard transfer by approved contract", async () => {
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, supply, {from: minter});
-
-    assert.equal(await token.balanceOf(minter, tokenId), supply);
-
-    let transferTo = accounts[2];
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: whiteListProxy});
-
-    assert.equal(await token.balanceOf(transferTo, tokenId), supply);
-  });
-
-  it("standard transfer by not approved contract", async () => {
-    let minter = accounts[1];
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, supply, {from: minter});
-
-    assert.equal(await token.balanceOf(minter, tokenId), supply);
-
-    let transferTo = accounts[2];
-    await expectThrow(
-      token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: accounts[5]})
-    );
-  });
-
-  it("signature by contract wallet erc1271, with whitelist proxy", async () => {
-    const minter = erc1271;
-    let transferTo = accounts[2];
-
-    const tokenId = minter.address + "b00000000000000000000001";
-    const tokenURI = "//uri";
-    let supply = 5;
-    let mint = 2;
-
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-    await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, supply, {from: whiteListProxy})
-    );
-
-    await erc1271.setReturnSuccessfulValidSignature(true);
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, mint, {from: whiteListProxy});
-    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+  describe("Mint and transfer ()", () => {
+    it("mint and transfer by minter, token create by Factory", async () => {
+      const proxyLazy = await ERC1155LazyMintTransferProxy.new();
+      transferProxy = await TransferProxyTest.new();
+      beacon = await UpgradeableBeacon.new(token.address);
+      factory = await ERC1155Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
+      resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
+      truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
+       	proxy = ev.proxy;
+        return true;
+      });
+      tokenByProxy = await Testing.at(proxy);
+
+      let minter = tokenOwner;
+      let transferTo = minter;
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 2;
+
+      const tx = await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+      const TransferSingle = await tokenByProxy.getPastEvents("TransferSingle", {
+        fromBlock: tx.receipt.blockNumber,
+        toBlock: tx.receipt.blockNumber
+      });
+      assert.equal(TransferSingle.length, 1, "TransferSingle.length")
+	  	assert.equal(await tokenByProxy.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await tokenByProxy.balanceOf(transferTo, tokenId), mint);
+    });
+
+    it("check for ERC165 interface", async () => {
+    	assert.equal(await token.supportsInterface("0x01ffc9a7"), true);
+    });
+
+    it("check for mintAndTransfer interface", async () => {
+    	assert.equal(await token.supportsInterface("0x6db15a0f"), true);
+    });
+
+    it("check for RoayltiesV2 interface", async () => {
+    	assert.equal(await token.supportsInterface("0xcad96cca"), true);
+    });
+
+    it("check for ERC1155 interfaces", async () => {
+    	assert.equal(await token.supportsInterface("0xd9b67a26"), true);
+    	assert.equal(await token.supportsInterface("0x0e89341c"), true);
+    });
+
+    it("approve for all", async () => {
+      let proxy = accounts[5];
+      assert.equal(await token.isApprovedForAll(accounts[1], proxy), false);
+
+      await token.setDefaultApproval(proxy, true, {from: tokenOwner});
+      assert.equal(await token.isApprovedForAll(accounts[1], proxy), true);
+
+      await token.setDefaultApproval(proxy, false, {from: tokenOwner});
+      assert.equal(await token.isApprovedForAll(accounts[1], proxy), false);
+    });
+
+    it("mint and transfer by proxy", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+      const TransferSingle = await token.getPastEvents("TransferSingle", {
+        fromBlock: tx.receipt.blockNumber,
+        toBlock: tx.receipt.blockNumber
+      });
+      assert.equal(TransferSingle.length, 2, "TransferSingle.length")
+      const transferEvent0 = TransferSingle[0]
+      const transferEvent1 = TransferSingle[1]
+
+      assert.equal(transferEvent0.args.operator, whiteListProxy, "transfer 0 operator")
+      assert.equal(transferEvent0.args.from, "0x0000000000000000000000000000000000000000", "transfer 0 from")
+      assert.equal(transferEvent0.args.to, minter, "transfer 0 to")
+      assert.equal("0x" + transferEvent0.args.id.toString(16), tokenId.toLowerCase(), "transfer 0 tokenId")
+      assert.equal(transferEvent0.args.value.toString(), mint, "transfer 0 value")
+
+      assert.equal(transferEvent1.args.operator, whiteListProxy, "transfer 1 operator")
+      assert.equal(transferEvent1.args.from, minter, "transfer 1 from")
+      assert.equal(transferEvent1.args.to, transferTo, "transfer 1 to")
+      assert.equal("0x" + transferEvent1.args.id.toString(16), tokenId.toLowerCase(), "transfer 1 tokenId")
+      assert.equal(transferEvent1.args.value.toString(), mint, "transfer 1 value")
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    });
+
+    it("mint and transfer by minter", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 2;
+
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+    });
+
+    it("mint and transfer by minter several creators", async () => {
+      let minter = accounts[1];
+      const creator2 = accounts[3];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      const signature2 = await getSignature(tokenId, tokenURI, supply, creators([minter, creator2]), [], creator2);
+
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter, creator2]), [], [zeroWord, signature2]], transferTo, mint, {from: minter});
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      await checkCreators(tokenId, [minter, creator2]);
+    });
+
+    it("mint and transfer to self by minter", async () => {
+      let minter = accounts[1];
+      let transferTo = minter;
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      await checkCreators(tokenId, [minter]);
+    });
+
+    it("transferFromOrMint by minter", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+	  	assert.equal(await token.balanceOf(minter, tokenId), 0);
+      await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+      await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter});
+      await expectThrow(
+      	token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, transferTo, mint, {from: minter})
+      )
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint * 2);
+      await checkCreators(tokenId, [minter]);
+
+      await expectThrow(
+      	token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, minter, 1, { from: minter })
+      )
+
+      await token.transferFromOrMint([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, minter, 1, { from: transferTo })
+      assert.equal(await token.balanceOf(minter, tokenId), 1);
+    });
+
+    it("mint and transfer by approved proxy for all by minter", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+
+      let proxy = accounts[5];
+      await token.setApprovalForAll(proxy, true, {from: minter});
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: proxy});
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    });
+
+    it("second mint and transfer", async () => {
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+
+      let transferTo = accounts[2];
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+
+      //не нужна подпись, uri, fees не проверяется
+      let transferTo2 = accounts[3];
+      let mint2 = 3;
+      await token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo2, tokenId), mint2);
+    });
+
+    it("second mint and transfer for the same person", async () => {
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+
+      let transferTo = accounts[2];
+      let mint = 1;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+
+      //не нужна подпись, uri не проверяется
+      let mint2 = 2;
+      await token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo, mint2, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo, tokenId), 3);
+    });
+
+    it("second mint and transfer: wrong supply", async () => {
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+
+      let transferTo = accounts[2];
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+
+      //не нужна подпись, uri не проверяется
+      let transferTo2 = accounts[3];
+      await expectThrow(
+        token.mintAndTransfer([tokenId, "any, idle", 10, creators([minter]), [], [zeroWord]], transferTo2, 4, {from: whiteListProxy})
+      );
+      await token.mintAndTransfer([tokenId, "any, idle", 10, creators([minter]), [], [zeroWord]], transferTo2, 3, {from: whiteListProxy});
+    });
+
+    it("second mint and transfer: more than supply", async () => {
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+
+      let transferTo = accounts[2];
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+
+      //не нужна подпись, uri не проверяется
+      let transferTo2 = accounts[3];
+      let mint2 = 4;
+      await expectThrow(
+        token.mintAndTransfer([tokenId, "any, idle", supply, creators([minter]), [], [zeroWord]], transferTo2, mint2, {from: whiteListProxy})
+      );
+    });
+
+    it("mint and transfer with signature of not minter", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], transferTo);
+
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+      );
+    });
+
+    it("mint and transfer without approval", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: accounts[3]})
+      );
+    });
+
+    it("standard transfer from owner", async () => {
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      let supply = 5;
+      await token.mintAndTransfer([tokenId, "//uri", supply, creators([minter]), [],  [zeroWord]], minter, supply, {from: minter});
+
+      assert.equal(await token.balanceOf(minter, tokenId), supply);
+
+      let transferTo = accounts[2];
+      await token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: minter});
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), supply);
+    });
+
+    it("standard transfer by approved contract", async () => {
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, supply, {from: minter});
+
+      assert.equal(await token.balanceOf(minter, tokenId), supply);
+
+      let transferTo = accounts[2];
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      await token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: whiteListProxy});
+
+      assert.equal(await token.balanceOf(transferTo, tokenId), supply);
+    });
+
+    it("standard transfer by not approved contract", async () => {
+      let minter = accounts[1];
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, supply, {from: minter});
+
+      assert.equal(await token.balanceOf(minter, tokenId), supply);
+
+      let transferTo = accounts[2];
+      await expectThrow(
+        token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: accounts[5]})
+      );
+    });
+
+    it("signature by contract wallet erc1271, with whitelist proxy", async () => {
+      const minter = erc1271;
+      let transferTo = accounts[2];
+
+      const tokenId = minter.address + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 5;
+      let mint = 2;
+
+      let whiteListProxy = accounts[5];
+      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, supply, {from: whiteListProxy})
+      );
+
+      await erc1271.setReturnSuccessfulValidSignature(true);
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, mint, {from: whiteListProxy});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    });
   });
 
   function getSignature(tokenId, tokenURI, supply, creators, fees, account) {
