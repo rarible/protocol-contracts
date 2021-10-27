@@ -1,4 +1,5 @@
 const Testing = artifacts.require("ERC721RaribleUserMinimal.sol");
+const ERC721RaribleUser = artifacts.require("ERC721RaribleUser.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require('./mint');
@@ -6,6 +7,7 @@ const { sign } = require('./mint');
 contract("ERC721RaribleUserMinimal", accounts => {
 
   let token;
+  let erc721RaribleUser;
   let tokenOwner = accounts[9];
   const name = 'FreeMintableRarible';
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -15,9 +17,11 @@ contract("ERC721RaribleUserMinimal", accounts => {
   beforeEach(async () => {
     token = await Testing.new();
     await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], { from: tokenOwner });
+    erc721RaribleUser = await ERC721RaribleUser.new();
+    await erc721RaribleUser.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], { from: tokenOwner });
   });
 
-  describe("Burn ()", () => {
+  describe("Burn ERC721RaribleUserMinimal()", () => {
     it("Run mintAndTransfer, burn, mintAndTransfer by the same minter, throw", async () => {
       const minter = tokenOwner;
       let transferTo = accounts[2];
@@ -32,21 +36,51 @@ contract("ERC721RaribleUserMinimal", accounts => {
       );
     });
 
-    it("Run mintAndTransfer, burn, mintAndTransfer by another minter, throw", async () => {
+    it("Run transferFromOrMint, burn, transferFromOrMint by the same minter, throw", async () => {
       const minter = tokenOwner;
-      const anotherMinter = accounts[3];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+
+      await token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter});
+      assert.equal(await token.ownerOf(tokenId), transferTo);
+      await token.burn(tokenId, {from: transferTo});
+      await expectThrow(
+        token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter})
+      )
+    });
+  });
+
+  describe("Burn ERC721RaribleUser()", () => {
+    it("Run mintAndTransfer, burn, mintAndTransfer by the same minter, throw", async () => {
+      const minter = tokenOwner;
       let transferTo = accounts[2];
       let transferTo2 = accounts[4];
 
       const tokenId = minter + "b00000000000000000000001";
       const tokenURI = "//uri";
-      await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
-      await token.burn(tokenId, {from: transferTo});
+      await erc721RaribleUser.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+      await erc721RaribleUser.burn(tokenId, {from: transferTo});
       await expectThrow( //try once more mint and transfer
-        token.mintAndTransfer([tokenId, tokenURI, creators([anotherMinter]), [], [zeroWord]], transferTo2, {from: anotherMinter})
+        erc721RaribleUser.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo2, {from: minter})
       );
     });
 
+    it("Run transferFromOrMint, burn, transferFromOrMint by the same minter, throw", async () => {
+      const minter = tokenOwner;
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+
+      await erc721RaribleUser.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter});
+      assert.equal(await erc721RaribleUser.ownerOf(tokenId), transferTo);
+      await erc721RaribleUser.burn(tokenId, {from: transferTo});
+      await expectThrow(
+        erc721RaribleUser.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter})
+      )
+    });
   });
 
   describe("Mint and transfer ()", () => {

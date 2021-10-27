@@ -37,9 +37,6 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    // Mapping from token ID to flag == true, means token already burned
-    mapping(uint256 => bool) private _burnedTokens;
-
     /*
      *     bytes4(keccak256('balanceOf(address)')) == 0x70a08231
      *     bytes4(keccak256('ownerOf(uint256)')) == 0x6352211e
@@ -64,6 +61,9 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      *     => 0x06fdde03 ^ 0x95d89b41 ^ 0xc87b56dd == 0x5b5e139f
      */
     bytes4 private constant _INTERFACE_ID_ERC721_METADATA = 0x5b5e139f;
+
+    // Mapping from token ID to flag == true, means token already burned
+    mapping(uint256 => bool) private _burnedTokens;
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
@@ -333,8 +333,8 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
 
         _balances[owner] -= 1;
         delete _owners[tokenId];
-
-        _burnedTokens[tokenId] = true;  //set token is burned
+        //set token is burned
+        _burnedTokens[tokenId] = true;
 
         emit Transfer(owner, address(0), tokenId);
     }
