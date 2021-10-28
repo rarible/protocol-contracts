@@ -391,6 +391,11 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         return _burnedTokens[tokenId];
     }
 
+    /*Set token with tokenId burned*/
+    function _setBurned(uint256 tokenId) internal {
+        _burnedTokens[tokenId] = true;
+    }
+
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
      *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
