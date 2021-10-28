@@ -289,7 +289,6 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      * and stop existing when they are burned (`_burn`).
      */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        require(! _burnedTokens[tokenId], "token already burned");
         return _tokenOwners.contains(tokenId);
     }
 
@@ -343,6 +342,7 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      */
     function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
+        require(!_burnedTokens[tokenId], "token already burned");
         require(!_exists(tokenId), "ERC721: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
@@ -384,6 +384,11 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         _burnedTokens[tokenId] = true;
 
         emit Transfer(owner, address(0), tokenId);
+    }
+
+    /*Returns true if token with tokenId already burned*/
+    function _burned(uint256 tokenId) internal returns (bool) {
+        return _burnedTokens[tokenId];
     }
 
     /**

@@ -26,9 +26,10 @@ contract("ERC1155Rarible", accounts => {
     erc1271 = await ERC1271.new();
   });
 
-  describe("Mint and transfer ()", () => {
+  describe("burn after mint ()", () => {
     it("Run mintAndTransfer = 5, burn = 2, mintAndTransfer by the same minter = 3, ok", async () => {
       let minter = accounts[1];
+      let anotherUser = accounts[5];
       let transferTo = accounts[2];
 
       const tokenId = minter + "b00000000000000000000001";
@@ -122,6 +123,26 @@ contract("ERC1155Rarible", accounts => {
       assert.equal(await token.balanceOf(transferTo, tokenId), 2);
     });
 
+    it("Run mintAndTransfer = 4, burn = 3, mintAndTransfer by the same minter = 2, throw", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mint = 4;
+      let secondMintValue = 2;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+
+      await token.burn(transferTo, tokenId, 3, {from: transferTo});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
+      );
+      assert.equal(await token.balanceOf(transferTo, tokenId), 1);
+    });
   });
   describe("Mint and transfer ()", () => {
     it("mint and transfer by minter, token create by Factory", async () => {

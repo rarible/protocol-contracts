@@ -236,7 +236,6 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      * and stop existing when they are burned (`_burn`).
      */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        require(! _burnedTokens[tokenId], "token already burned");
         return _owners[tokenId] != address(0);
     }
 
@@ -297,6 +296,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      */
     function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
+        require(!_burnedTokens[tokenId], "token already burned");
         require(!_exists(tokenId), "ERC721: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
