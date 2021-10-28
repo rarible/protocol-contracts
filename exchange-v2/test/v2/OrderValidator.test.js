@@ -62,4 +62,16 @@ contract("OrderValidator", accounts => {
 			testing.validateOrderTest(testOrder, signature)
 		);
 	});
+
+  it("Test6. should validate IERC1271 with empty signature", async () => {
+		const testOrder = order.Order(erc1271.address, order.Asset("0xffffffff", "0x", 100), ZERO, order.Asset("0xffffffff", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+
+		await expectThrow(
+			testing.validateOrderTest(testOrder, "0x")
+		);
+
+		await erc1271.setReturnSuccessfulValidSignature(true);
+
+		await testing.validateOrderTest(testOrder, "0x");
+	});
 });
