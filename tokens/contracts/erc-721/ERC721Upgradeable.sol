@@ -88,6 +88,9 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      */
     bytes4 private constant _INTERFACE_ID_ERC721_ENUMERABLE = 0x780e9d63;
 
+    // Mapping from token ID to flag == true, means token already burned
+    mapping(uint256 => bool) private _burnedTokens;
+
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
@@ -339,6 +342,7 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      */
     function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
+        require(!_burnedTokens[tokenId], "token already burned");
         require(!_exists(tokenId), "ERC721: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
@@ -376,8 +380,15 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         _holderTokens[owner].remove(tokenId);
 
         _tokenOwners.remove(tokenId);
+        //set token is burned
+        _burnedTokens[tokenId] = true;
 
         emit Transfer(owner, address(0), tokenId);
+    }
+
+    /*Returns true if token with tokenId already burned*/
+    function _burned(uint256 tokenId) internal returns (bool) {
+        return _burnedTokens[tokenId];
     }
 
     /**
