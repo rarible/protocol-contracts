@@ -12,7 +12,7 @@ import "@rarible/exchange-v2/contracts/RaribleTransferManager.sol";
 contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferManager{
     using LibTransfer for address;
 
-    mapping(uint => Auction) public auctions;   //save auctions here
+    mapping(uint => Auction) auctions;   //save auctions here
 
     uint256 private auctionId;          //unic. auction id
 
@@ -42,28 +42,33 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     function startAuction(
         LibAsset.Asset memory _sellAsset,
         LibAsset.AssetType memory _buyAsset,
-        uint endTime,
         uint minimalStep,
         uint minimalPrice,
         bytes4 dataType,
         bytes memory data
-    ) public {
+    ) external {
         uint currentAuctionId = getNextAndIncrementAuctionId();
         require(
             _sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS && 
             _sellAsset.assetType.assetClass != LibAsset.ERC20_ASSET_CLASS,
             "can't sell ETH or ERC20 on auction"
         );
+
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
-        (uint startTimeCalculate, uint endTimeCalculate) = setTimeRange(aucData.startTime, endTime, aucData.duration);
+        require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "incorrect duration");
+
+        uint endTime = 0;
+        if (aucData.startTime > 0){
+            require (aucData.startTime >= block.timestamp, "incorrect start time");
+            endTime = aucData.startTime + aucData.duration;
+        }
         auctions[currentAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
             Bid(0, "", ""),
             _msgSender(),
             payable(address(0)),
-            startTimeCalculate,
-            endTimeCalculate,
+            endTime,
             minimalStep,
             minimalPrice,
             protocolFee,
@@ -77,27 +82,12 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
     }
 
-    function setTimeRange(uint _startTime, uint _endTime, uint _duration) internal view returns (uint startTime, uint endTime){
-        if (_startTime == 0) {
-            startTime = block.timestamp;
-        } else {
-            startTime = _startTime;
-        }
-        if (_endTime == 0) {
-            require(_duration >= EXTENSION_DURATION && _duration <= MAX_DURATION, "wrong auction duration");
-            endTime = startTime + _duration;
-        } else {
-            endTime = _endTime;
-        }
-        require(endTime > startTime, "error in auction time range");
-    }
-
     function setApproveForTransferProxy(LibAsset.Asset memory _asset) internal {
         if (_asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(_asset.assetType.data, (address));
             IERC20Upgradeable(token).approve(proxies[LibAsset.ERC20_ASSET_CLASS], _asset.value);
         } else if (_asset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
-            (address token, uint tokenId) = abi.decode(_asset.assetType.data, (address, uint256));
+            (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
             require(_asset.value == 1, "erc721 value error");
             IERC721Upgradeable(token).setApprovalForAll(proxies[LibAsset.ERC721_ASSET_CLASS], true);
         } else if (_asset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
@@ -119,21 +109,19 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
             _buyOut(_auctionId, bid);
             doTransfers(_auctionId);
             deactivateAuction(_auctionId);
-            emit AuctionBuyOut(_auctionId);
             return;
         }
         
         Auction memory currentAuction = auctions[_auctionId];
-        Bid memory lastBid = currentAuction.lastBid;
-        uint currentTime = block.timestamp;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-
+        uint currentTime = block.timestamp;
         //start action if minimal price is met
         if (currentAuction.buyer == address(0x0)) {//no bid at all
+            if (currentAuction.endTime == 0){
+                auctions[_auctionId].endTime = currentTime + aucData.duration;
+            }
             require(newAmount >= currentAuction.minimalPrice, "bid can't be less than minimal price");
-            auctions[_auctionId].endTime = currentTime + aucData.duration;
         } else {//there is bid in auction
-            require(currentAuction.endTime >= currentTime, "auction is over");
             require(currentAuction.buyer != newBuyer, "already have an outstanding bid");
             uint256 minAmount = getMinimalNextBid(_auctionId);
             require(newAmount >= minAmount, "bid amount too low");
@@ -142,7 +130,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
             currentAuction.buyAsset, 
             currentAuction.buyer, 
             newBuyer, 
-            getBidTotalAmount(lastBid, currentAuction.protocolFee), 
+            getBidTotalAmount(currentAuction.lastBid, currentAuction.protocolFee), 
             getBidTotalAmount(bid, currentAuction.protocolFee)
         );
         auctions[_auctionId].lastBid = bid;
@@ -172,7 +160,8 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     }
 
     function getMinimalNextBid(uint _auctionId) public view returns (uint minBid){
-        Auction memory currentAuction = auctions[_auctionId];
+        Auction storage currentAuction = auctions[_auctionId];
+
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
         } else {
@@ -189,23 +178,23 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     }
 
     function buyOutVerify(uint _auctionId, uint newAmount) internal view returns (bool) {
-        Auction memory currentAuction = auctions[_auctionId];
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
 
-        if (aucData.buyOutPrice <= newAmount) {
+        if (aucData.buyOutPrice > 0 && aucData.buyOutPrice <= newAmount) {
             return true;
         }
         return false;
     }
 
     //finishAuction
-    function finishAuction(uint _auctionId) payable public {
+    function finishAuction(uint _auctionId) external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
+        require(
+            !checkAuctionRangeTime(_auctionId) &&
+            auctions[_auctionId].buyer != address(0),
+            "only ended auction with bid can be finished");
         doTransfers(_auctionId);
-        deleteAuctionForToken(auctions[_auctionId].sellAsset);
         deactivateAuction(_auctionId);
-        emit AuctionFinished(_auctionId);
     }
 
     function doTransfers(uint _auctionId) internal {
@@ -244,47 +233,52 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     }
 
     function checkAuctionRangeTime(uint _auctionId) public view returns (bool){
+        Auction storage currentAuction = auctions[_auctionId];
+        uint endTime = auctions[_auctionId].endTime;
         uint currentTime = block.timestamp;
-        Auction memory currentAuction = auctions[_auctionId];
+
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        if ((currentTime >= aucData.startTime) && (currentTime <= currentAuction.endTime)) {
-            return true;
+        if (aucData.startTime > 0 && aucData.startTime > currentTime) {
+            return false;
         }
-        return false;
+        if (endTime > 0 && endTime < currentTime){
+            return false;
+        }
+        
+        return true;
     }
 
     function deactivateAuction(uint _auctionId) internal {
-        emit AuctionDeactivated(_auctionId, auctions[_auctionId]);
+        emit AuctionFinished(_auctionId, auctions[_auctionId]);
+        deleteAuctionForToken(auctions[_auctionId].sellAsset);
         delete auctions[_auctionId];
     }
 
     //cancel auction without bid
-    function cancel(uint _auctionId) public {
+    function cancel(uint _auctionId) external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        Auction memory currentAuction = auctions[_auctionId];
+        Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         require(seller == _msgSender(), "auction owner not detected");
-        require(currentAuction.buyer == address(0x0), "auctuins with bids can't be canceled");
+        address buyer = currentAuction.buyer;
+        require(buyer == address(0), "can't cancel auction with bid");
         transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
         deactivateAuction(_auctionId);
-        emit AuctionCancelled(_auctionId);
     }
 
     //buyout
-    function buyOut(uint _auctionId, Bid memory bid) public payable {
+    function buyOut(uint _auctionId, Bid memory bid) external payable {
         require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
 
-        uint newAmount = bid.amount;
-        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
+        require(buyOutVerify(_auctionId, bid.amount), "not enough for buyout auction");
         _buyOut(_auctionId, bid);
         doTransfers(_auctionId);
         deactivateAuction(_auctionId);
-        emit AuctionBuyOut(_auctionId);
     }
 
     function _buyOut(uint _auctionId, Bid memory bid) internal {
         address payable newBuyer = _msgSender();
-        Auction memory currentAuction = auctions[_auctionId];
+        Auction storage currentAuction = auctions[_auctionId];
         reserveValue(
             currentAuction.buyAsset, 
             currentAuction.buyer, 
@@ -292,8 +286,8 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
             getBidTotalAmount(currentAuction.lastBid, currentAuction.protocolFee), 
             getBidTotalAmount(bid, currentAuction.protocolFee)
         );
-        auctions[_auctionId].lastBid = bid;
-        auctions[_auctionId].buyer = newBuyer;
+        currentAuction.lastBid = bid;
+        currentAuction.buyer = newBuyer;
     }
 
     function getCurrentBuyer(uint _auctionId) public view returns(address) {

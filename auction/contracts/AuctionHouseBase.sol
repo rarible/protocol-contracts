@@ -19,29 +19,24 @@ abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgr
         Bid lastBid;
         address payable seller;
         address payable buyer;
-        uint startTime;
         uint endTime;
         uint minimalStep;
         uint minimalPrice;
         uint protocolFee;
-        bytes4 dataType;        // aucv1
-        bytes data;             //duration, buyOutPrice, origin, payouts(?)
+        bytes4 dataType;
+        bytes data;
     }
 
     //bid struct
     struct Bid {
         uint amount;
-        bytes4 dataType;        //bidv1
-        bytes data;             //origin, payouts(?)
+        bytes4 dataType;
+        bytes data;
     }
 
     event AuctionCreated(uint indexed id, Auction auction);
     event BidPlaced(uint indexed id, Bid bid, uint endTime);
-    event AuctionFinished(uint indexed id);
-    event AuctionBuyOut(uint indexed id);
-    event AuctionCancelled(uint indexed id);
-    event AuctionDeactivated(uint indexed id, Auction auction);
-
+    event AuctionFinished(uint indexed id, Auction auction);
 
     function __AuctionHouseBase_init() internal initializer {
         __ERC1155Holder_init();

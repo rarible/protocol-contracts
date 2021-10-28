@@ -59,9 +59,11 @@ module.exports = async function (deployer, network) {
     [transferProxy, erc20TransferProxy, 0, communityWallet, royaltiesRegistry],
     { deployer, initializer: '__AuctionHouse_init' }
   );
+  
   console.log(`deployed auction at ${auction.address}`)
 
   await deployer.deploy(Wrapper, auction.address);
   const wrapper = await Wrapper.deployed();
   console.log(`deployed wrapper at ${wrapper.address}`)
+  
 };

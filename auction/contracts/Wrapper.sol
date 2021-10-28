@@ -39,7 +39,7 @@ contract Wrapper is IMarketWrapper{
       /*
         (bool success, bytes memory returnData) =
             address(auction).call{value: bidAmount}(
-                abi.encodeWithSignature("putBid(uint256,Bid(uint amount, bytes4 dataType, bytes data))", auctionId, AuctionHouseBase.Bid(bidAmount, "", ""))
+                abi.encodeWithSignature("putBid(uint256,(uint256,bytes4,bytes))", auctionId, AuctionHouseBase.Bid(bidAmount, "", ""))
             );
         require(success, string(returnData));
       */
