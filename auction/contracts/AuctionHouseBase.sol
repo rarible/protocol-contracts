@@ -34,9 +34,10 @@ abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgr
         bytes data;
     }
 
-    event AuctionCreated(uint indexed id, Auction auction);
-    event BidPlaced(uint indexed id, Bid bid, uint endTime);
-    event AuctionFinished(uint indexed id, Auction auction);
+    event AuctionCreated(uint indexed auctionId, Auction auction);
+    event BidPlaced(uint indexed auctionId, Bid bid, uint endTime);
+    event AuctionFinished(uint indexed auctionId, Auction auction);
+    event AuctionCancelled(uint indexed auctionId);
 
     function __AuctionHouseBase_init() internal initializer {
         __ERC1155Holder_init();

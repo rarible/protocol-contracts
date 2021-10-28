@@ -84,7 +84,7 @@ contract("Check Auction", accounts => {
 
       let auctionId;
       truffleAssert.eventEmitted(resultStartAuction, 'AuctionCreated', (ev) => {
-        auctionId = ev.id;
+        auctionId = ev.auctionId;
         return true;
       });
 
@@ -95,7 +95,7 @@ contract("Check Auction", accounts => {
 
       let auctionId1;
       truffleAssert.eventEmitted(resultStartAuction1, 'AuctionCreated', (ev) => {
-        auctionId1 = ev.id;
+        auctionId1 = ev.auctionId;
         return true;
       });
       assert.equal(auctionId1.toNumber(), auctionId.toNumber() + 1, "auction id iterates")
@@ -140,7 +140,7 @@ contract("Check Auction", accounts => {
       const txBid = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[3] });
       let id;
       truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
-        id = ev.id;
+        id = ev.auctionId;
         return true;
       });
       assert.equal(id, 1, "id from event")
@@ -166,7 +166,7 @@ contract("Check Auction", accounts => {
   
       let id;
       truffleAssert.eventEmitted(txStart, 'AuctionCreated', (ev) => {
-        id = ev.id;
+        id = ev.auctionId;
         return true;
       });
       assert.equal(id, 1, "id from event")
@@ -186,7 +186,7 @@ contract("Check Auction", accounts => {
       bid = { amount: 20, dataType: V1, data: bidDataV1 };
       const txBuyOut = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[7] });
       truffleAssert.eventEmitted(txBuyOut, 'AuctionFinished', (ev) => {
-        id = ev.id;
+        id = ev.auctionId;
         return true;
       });
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
@@ -334,7 +334,7 @@ contract("Check Auction", accounts => {
       const txCancel = await testAuctionHouse.cancel(auctionId, { from: seller });
       let id;
       truffleAssert.eventEmitted(txCancel, 'AuctionFinished', (ev) => {
-        id = ev.id;
+        id = ev.auctionId;
         return true;
       });
       assert.equal(id, auctionId, "id from event")
@@ -359,7 +359,7 @@ contract("Check Auction", accounts => {
       const txFinish = await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
       let id;
       truffleAssert.eventEmitted(txFinish, 'AuctionFinished', (ev) => {
-        id = ev.id;
+        id = ev.auctionId;
         return true;
       });
       assert.equal(id, 1, "id from event")
@@ -491,7 +491,13 @@ contract("Check Auction", accounts => {
       await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
       let auctionId = 1;
-      await testAuctionHouse.cancel(auctionId, { from: seller });
+      const tx = await testAuctionHouse.cancel(auctionId, { from: seller });
+      let id;
+      truffleAssert.eventEmitted(tx, 'AuctionCancelled', (ev) => {
+        id = ev.auctionId;
+        return true;
+      });
+      assert.equal(id, 1, "id canceled")
       assert.equal(await erc721.ownerOf(erc721TokenId1), seller); // after mint owner is testAuctionHouse
     })
 
