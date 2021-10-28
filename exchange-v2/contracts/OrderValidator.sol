@@ -36,8 +36,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
                     );
                 } else {
                     require(_hashTypedDataV4(hash).recover(signature) == order.maker, "order signature verification error");
-                }
-                
+                }   
             }
         }
     }
