@@ -6,6 +6,7 @@ const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestAuctionHouse = artifacts.require("TestAuctionHouse");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry");
+const Wrapper = artifacts.require("Wrapper");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -527,6 +528,21 @@ contract("Check Auction", accounts => {
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 14);
       assert.equal(await erc20Token.balanceOf(seller), 0);
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
+    })
+  })
+
+  describe("wrapper", () => {
+    it("wrapper works correctly ", async () => {
+      const wrapper = await Wrapper.new(testAuctionHouse.address)
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareETH()
+      let dataV1 = await encDataV1([[], [], 1000, 0, 18]);
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
+      assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after start owner is testAuctionHouse
+      let auctionId = 1;
+      
+      //const tx = await wrapper.bid(auctionId, 0, {from: buyer, value: 10})
     })
   })
 

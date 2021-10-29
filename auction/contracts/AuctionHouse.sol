@@ -101,7 +101,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     }
 
     //put a bid and return locked assets for the last bid
-    function putBid(uint _auctionId, Bid memory bid) payable external {
+    function putBid(uint _auctionId, Bid memory bid) payable public {
         require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
@@ -301,6 +301,11 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
 
     function getBidTotalAmount(Bid memory bid, uint _protocolFee) internal view returns(uint){
         return calculateTotalAmount(bid.amount, _protocolFee, LibBidDataV1.getOrigin(bid.data, bid.dataType));
+    }
+
+    function putBidWrapper(uint256 _auctionId) external payable {
+      require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
+      //putBid(_auctionId, Bid(msg.value, "", ""));
     }
 
     uint256[50] private ______gap;
