@@ -39,5 +39,15 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         return super.supportsInterface(interfaceId);
     }
 
+    function burn(address account, uint256 id, uint256 value) public virtual override {
+        if(_isExist(id)) {
+            ERC1155BurnableUpgradeable.burn(account, id, value);
+        } else {
+            require(account == _msgSender(), "ERC1155: caller is not burner");
+            address minter = address(id >> 96);
+            require(minter == _msgSender(), "ERC1155: caller is not token owner");
+            ERC1155Lazy._setBurned(id, value);
+        }
+    }
     uint256[50] private __gap;
 }
