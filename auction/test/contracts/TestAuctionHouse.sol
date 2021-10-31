@@ -7,6 +7,7 @@ import "../../contracts/AuctionHouse.sol";
 
 contract TestAuctionHouse is AuctionHouse {
 
+    event timeStamp(uint time);
     function timeNow() external view returns(uint) {
         return block.timestamp;
     }
@@ -19,4 +20,12 @@ contract TestAuctionHouse is AuctionHouse {
         return abi.encode(data);
     }
     
+    function putBidTime(uint _auctionId, Bid memory bid) payable public {
+      putBid(_auctionId, bid);
+      emit timeStamp(block.timestamp);
+    }
+
+    function getAuction(uint _auctionId) public view returns(Auction memory){
+      return auctions[_auctionId];
+    }
 }

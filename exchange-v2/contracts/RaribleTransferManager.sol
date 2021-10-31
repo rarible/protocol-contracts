@@ -259,7 +259,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
-    /// @dev rutrns MatchProtocolFees struct with protocol fees of both orders in a match
+    /// @dev ruturns MatchProtocolFees struct with protocol fees of both orders in a match
     function getMatchProtocolFees(LibOrder.Order memory leftOrder, LibOrder.Order memory rightOrder, LibFeeSide.FeeSide feeSide) internal view returns(MatchProtocolFees memory){
         // gonna be fully usedused with onchain orders
         return MatchProtocolFees(protocolFee, protocolFee);
