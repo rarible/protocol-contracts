@@ -5,9 +5,10 @@ pragma abicoder v2;
 
 import "./ExchangeV2Core.sol";
 import "./RaribleTransferManager.sol";
+import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
-contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
+contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTransaction {
     function __ExchangeV2_init(
         INftTransferProxy _transferProxy,
         IERC20TransferProxy _erc20TransferProxy,
@@ -20,18 +21,10 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
-    }
-    
-    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
-        if (isTheSameAsOnChain(order, hash)) {
-            return onChainOrders[hash].fee;
-        } else {
-            return protocolFee;
-        }
+        __MetaTransaction_init_unchained("ExchangeV2", "1");
     }
 
-    function getProtocolFee() override internal view returns(uint) {
-        return protocolFee;
+    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
+        return super._msgSender();
     }
-
 }

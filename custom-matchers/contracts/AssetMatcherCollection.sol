@@ -21,9 +21,11 @@ contract AssetMatcherCollection is IAssetMatcher, Initializable, OperatorRole {
 
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) onlyOperator public view override returns (LibAsset.AssetType memory) {
         if (
-          (rightAssetType.assetClass != LibAsset.ETH_ASSET_CLASS) && 
-          (rightAssetType.assetClass != LibAsset.ERC20_ASSET_CLASS) &&
-          (rightAssetType.assetClass != LibAsset.COLLECTION)
+            (rightAssetType.assetClass == LibAsset.ERC721_ASSET_CLASS) || 
+            (rightAssetType.assetClass == LibERC721LazyMint.ERC721_LAZY_ASSET_CLASS) ||
+            (rightAssetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) || 
+            (rightAssetType.assetClass == LibERC1155LazyMint.ERC1155_LAZY_ASSET_CLASS) ||
+            (rightAssetType.assetClass == LibAsset.CRYPTO_PUNK)
         ) {
           (address leftToken) = abi.decode(leftAssetType.data, (address));
           (address rightToken,) = abi.decode(rightAssetType.data, (address, uint));

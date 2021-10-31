@@ -1,7 +1,7 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const ExchangeSimpleV2 = artifacts.require("ExchangeSimpleV2.sol");
 const ExchangeSimpleV2_MetaTx = artifacts.require("ExchangeSimpleV2_MetaTx.sol");
-const ExchangeV2 = artifacts.require("ExchangeV2.sol");
+const ExchangeMetaV2 = artifacts.require("ExchangeMetaV2.sol");
 
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
@@ -105,7 +105,7 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
     transferProxy = await TransferProxyTest.new();
     erc20TransferProxy = await ERC20TransferProxyTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
-    testContract = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
+    testContract = await deployProxy(ExchangeMetaV2, [transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
     testingSimpleContract = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
     t1 = await TestERC20.new();
     t2 = await TestERC20.new();
