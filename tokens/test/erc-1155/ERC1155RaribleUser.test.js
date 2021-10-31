@@ -22,6 +22,121 @@ contract("ERC1155RaribleUser", accounts => {
     token = await Testing.new();
     await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], {from: tokenOwner});
   });
+
+  describe("burn before mint ()", () => {
+    it("Test1. Supply = 5, burn = 2 not from minter, throw, mintAndTransfer by the minter = 5, ok", async () => {
+      let minter = tokenOwner;
+      let anotherUser = accounts[5];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001"; //save token creator
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 2;
+      let mintValue = 5;
+
+      await expectThrow(
+        token.burn(anotherUser, tokenId, burn, {from: anotherUser})  //token has another creator
+      );
+      await expectThrow(
+        token.burn(minter, tokenId, burn, {from: anotherUser})  //burn not from minter
+      );
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mintValue);
+    });
+
+    it("Test2. Supply = 5, burn = 2, mintAndTransfer by the same minter = 3, ok", async () => {
+      let minter = tokenOwner;
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 2;
+      let mintValue = supply - burn;
+
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter});
+      assert.equal(await token.balanceOf(transferTo, tokenId), mintValue);
+    });
+
+    it("Test3.1. Supply = 5, burn = 5, mintAndTransfer by the same minter = 1, burn==supply, throw", async () => {
+      let minter = tokenOwner;
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 5;
+      let mintValue = 1;
+
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
+      )
+      assert.equal(await token.balanceOf(transferTo, tokenId), 0);
+    });
+
+    it("Test3.2. Supply = 5, burn = 10, mintAndTransfer by the same minter = 1, burn>supply, throw", async () => {
+      let minter = tokenOwner;
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 10;
+      let mintValue = 1;
+
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
+      )
+      assert.equal(await token.balanceOf(transferTo, tokenId), 0);
+    });
+    it("Test4. Supply = 5, burn = 1, repeat 3 times, mintAndTransfer by the same minter = 3, more, throw", async () => {
+      let minter = tokenOwner;
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 1;
+      let mintValue = 3;
+
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
+      );
+      assert.equal(await token.balanceOf(transferTo, tokenId), 0);
+    });
+    it("Test5. Supply = 5, burn = 2, mintAndTransfer = 2, burn2, mintAndTransfer = 1, ok", async () => {
+      let minter = tokenOwner;
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 2;
+      let mintValue = 2;
+
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter}); // now owner is transferTo
+      assert.equal(await token.balanceOf(transferTo, tokenId), mintValue);
+      await token.burn(transferTo, tokenId, 1, {from: transferTo}); //owner burn 1
+      await token.burn(transferTo, tokenId, 1, {from: transferTo}); //owner burn 1,number of allBurned = 4
+
+      const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+      let whiteListProxy = transferTo;
+      await token.setApprovalForAll(whiteListProxy, true, {from: tokenOwner});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, 2, {from: whiteListProxy})//mint 2 impossible 4+2>supply==5
+      );
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, 1, {from: whiteListProxy});//mint 1 possible 4+1<=supply==5
+    });
+  });
+
   describe("burn after mint ()", () => {
     it("Run mintAndTransfer = 5, burn = 2, mintAndTransfer by the same minter = 3, ok", async () => {
       let minter = tokenOwner;
