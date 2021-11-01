@@ -339,6 +339,11 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         emit Transfer(owner, address(0), tokenId);
     }
 
+    /*Set token with tokenId burned*/
+    function _setBurned(uint256 tokenId) internal {
+        _burnedTokens[tokenId] = true;
+    }
+
     function _clearMetadata(uint256 tokenId) internal virtual {
     }
 
