@@ -51,7 +51,7 @@ abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgr
     /// @dev event that emits when auction is created
     event AuctionCreated(uint indexed auctionId, Auction auction);
     /// @dev event that emits when bid is placed
-    event BidPlaced(uint indexed auctionId, Bid bid, uint endTime);
+    event BidPlaced(uint indexed auctionId, address buyer, Bid bid, uint endTime);
     /// @dev event that emits when auction is finished
     event AuctionFinished(uint indexed auctionId, Auction auction);
     /// @dev event that emits when auction is canceled

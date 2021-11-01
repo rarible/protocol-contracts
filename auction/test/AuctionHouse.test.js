@@ -343,8 +343,10 @@ contract("AuctionHouse", accounts => {
 
       const txBid1 = await testAuctionHouse.putBidTime(auctionId, bid1, { from: buyer, value: 90, gasPrice: 0 })
       let endTime1;
+      let newbuyer1;
       truffleAssert.eventEmitted(txBid1, 'BidPlaced', (ev) => {
         endTime1 = ev.endTime;
+        newbuyer1 = ev.buyer;
         return true;
       });
       let now1;
@@ -352,14 +354,17 @@ contract("AuctionHouse", accounts => {
         now1 = ev.time;
         return true;
       });
-      assert.equal(endTime1, now1.toNumber() + duration, "endTime set correctly")
+      assert.equal(endTime1, now1.toNumber() + duration, "endTime set correctly 1")
+      assert.equal(newbuyer1, buyer, "correct buyer 1")
       await increaseTime(901);
 
       const bid2 = { amount: 91, dataType: V1, data: bidDataV1 };
       const txBid2 = await testAuctionHouse.putBidTime(auctionId, bid2, { from: accounts[3], value: 91, gasPrice: 0 })
       let endTime2;
+      let newbuyer2;
       truffleAssert.eventEmitted(txBid2, 'BidPlaced', (ev) => {
         endTime2 = ev.endTime;
+        newbuyer2 = ev.buyer;
         return true;
       });
       let now2;
@@ -367,7 +372,8 @@ contract("AuctionHouse", accounts => {
         now2 = ev.time;
         return true;
       });
-      assert.equal(endTime2, now2.toNumber() + extension, "endTime set correctly")
+      assert.equal(endTime2, now2.toNumber() + extension, "endTime set correctly 2")
+      assert.equal(newbuyer2, accounts[3], "correct buyer 2")
     })
   })
 

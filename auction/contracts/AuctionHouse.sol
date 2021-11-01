@@ -149,7 +149,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         if (currentAuction.endTime - currentTime < EXTENSION_DURATION) {
             auctions[_auctionId].endTime = currentTime + EXTENSION_DURATION;
         }
-        emit BidPlaced(_auctionId, bid, auctions[_auctionId].endTime);
+        emit BidPlaced(_auctionId, newBuyer, bid, auctions[_auctionId].endTime);
     }
 
     /// @dev reserves new bid and returns the last one if it exists
