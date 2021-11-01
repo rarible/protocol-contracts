@@ -5,66 +5,64 @@ pragma abicoder v2;
 
 import "./LibAucDataV1.sol";
 import "./LibBidDataV1.sol";
-import "@rarible/exchange-v2/contracts/ITransferManager.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@rarible/exchange-v2/contracts/TransferConstants.sol";
+import "./TokenToAuction.sol";
 
-//abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver, TransferConstants {
-abstract contract AuctionHouseBase is IERC721Receiver, IERC1155Receiver {
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 
-    //auction struct
+/// @dev contract with 
+abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction {
+    /// @dev auction struct
     struct Auction {
+        // asset that is being sold at auction
         LibAsset.Asset sellAsset;
+        // asset type that bids are taken in
         LibAsset.AssetType buyAsset;
+        // information about the current highest bid
         Bid lastBid;
+        // seller address
         address payable seller;
+        // buyer address
         address payable buyer;
-        uint startTime;
+        // the time when auction ends
         uint endTime;
+        // the minimal amount of the first bid
         uint minimalStep;
+        // the minimal step between bids
         uint minimalPrice;
+        // protocolFee at the time of the purchase
         uint protocolFee;
-        bytes4 dataType;        // aucv1
-        bytes data;             //duration, buyOutPrice, origin, payouts(?)
+        // version of Auction to correctly decode data field
+        bytes4 dataType;
+        // field to store additional information for Auction, can be seen in "LibAucDataV1.sol"
+        bytes data;
     }
 
-    //bid struct
+    /// @dev bid struct
     struct Bid {
+        // the amount 
         uint amount;
-        bytes4 dataType;        //bidv1
-        bytes data;             //origin, payouts(?)
+        // version of Bid to correctly decode data field
+        bytes4 dataType;
+        // field to store additional information for Bid, can be seen in "LibBidDataV1.sol"
+        bytes data;
     }
 
-    event AuctionCreated(uint id, Auction auction);
-    event BidPlaced(uint id, Bid bid, uint endTime);
-    event AuctionFinished(uint id);
-    event AuctionBuyOut(uint id);
-    event AuctionCancelled(uint id);
+    /// @dev event that emits when auction is created
+    event AuctionCreated(uint indexed auctionId, Auction auction);
+    /// @dev event that emits when bid is placed
+    event BidPlaced(uint indexed auctionId, address buyer, Bid bid, uint endTime);
+    /// @dev event that emits when auction is finished
+    event AuctionFinished(uint indexed auctionId, Auction auction);
+    /// @dev event that emits when auction is canceled
+    event AuctionCancelled(uint indexed auctionId);
 
-    function encode(LibAucDataV1.DataV1 memory data) pure public returns (bytes memory) {
-        return abi.encode(data);
+    function __AuctionHouseBase_init() internal initializer {
+        __ERC1155Holder_init();
+        __AuctuinHouseBase_init_uncahined();
     }
 
-    function encodeBid(LibBidDataV1.DataV1 memory data) pure external returns (bytes memory) {
-        return abi.encode(data);
-    }
-
-    /**
-     * @dev See {IERC721Receiver-onERC721Received}.
-     *
-     * Always returns `IERC721Receiver.onERC721Received.selector`.
-     */
-    function onERC721Received(address, address, uint256, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
+    function __AuctuinHouseBase_init_uncahined() internal initializer {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {

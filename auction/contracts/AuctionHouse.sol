@@ -4,179 +4,176 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./AuctionHouseBase.sol";
-import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
-import "@rarible/exchange-v2/contracts/TransferManagerHelper.sol";
 
-//contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor {
-contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, TransferManagerHelper {
+import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
+import "@rarible/exchange-v2/contracts/RaribleTransferManager.sol";
+
+/// @dev contract to create and interact with auctions 
+contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferManager{
     using LibTransfer for address;
 
-    mapping(uint => Auction) public auctions;   //save auctions here
+    /// @dev mapping to store data of auctions for auctionId
+    mapping(uint => Auction) auctions;
 
+    /// @dev latest auctionId
     uint256 private auctionId;          //unic. auction id
-    address private nftTransferProxy;
-    address private erc20TransferProxy;
 
+    /// @dev minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
     uint256 private constant EXTENSION_DURATION = 15 minutes;
+
+    /// @dev maximum auction duration
     uint256 private constant MAX_DURATION = 1000 days;
 
     function __AuctionHouse_init(
         INftTransferProxy _transferProxy,
         IERC20TransferProxy _erc20TransferProxy,
         uint newProtocolFee,
-        address newDefaultFeeReceiver
+        address newDefaultFeeReceiver,
+        IRoyaltiesProvider newRoyaltiesProvider
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        _initializeAuctionId();
-        __TransferHelper_init_unchained(newProtocolFee, newDefaultFeeReceiver);
-        nftTransferProxy = address(_transferProxy);
-        erc20TransferProxy = address(_erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
+        __AuctionHouseBase_init();
+        __AuctionHouse_init_unchained();
     }
 
-    //creates auction and locks assets to sell
+     function __AuctionHouse_init_unchained() internal initializer {
+        auctionId = 1;
+    }
+
+    /// @dev creates an auction and locks sell asset
     function startAuction(
         LibAsset.Asset memory _sellAsset,
         LibAsset.AssetType memory _buyAsset,
-        uint endTime,
         uint minimalStep,
         uint minimalPrice,
         bytes4 dataType,
         bytes memory data
-    ) public {
+    ) external {
         uint currentAuctionId = getNextAndIncrementAuctionId();
-        require(_sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "can't sell ETH on auction");
+        // ETH or ERC20 can't be a sell item
+        require(
+            _sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS && 
+            _sellAsset.assetType.assetClass != LibAsset.ERC20_ASSET_CLASS,
+            "can't sell ETH or ERC20 on auction"
+        );
+
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
-        (uint startTimeCalculate, uint endTimeCalculate) = setTimeRange(aucData.startTime, endTime, aucData.duration);
+        require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "incorrect duration");
+
+        uint endTime = 0;
+        if (aucData.startTime > 0){
+            require (aucData.startTime >= block.timestamp, "incorrect start time");
+            endTime = aucData.startTime + aucData.duration;
+        }
         auctions[currentAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
             Bid(0, "", ""),
             _msgSender(),
             payable(address(0)),
-            startTimeCalculate,
-            endTimeCalculate,
+            endTime,
             minimalStep,
             minimalPrice,
-            0,
+            protocolFee,
             dataType,
             data
         );
         transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);
+
+        setAuctionForToken(_sellAsset, currentAuctionId);
         emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
     }
 
-    function setTimeRange(uint _startTime, uint _endTime, uint _duration) internal returns (uint startTime, uint endTime){
-        if (_startTime == 0) {
-            startTime = block.timestamp;
-        } else {
-            startTime = _startTime;
-        }
-        if (_endTime == 0) {
-            require(_duration >= EXTENSION_DURATION && _duration <= MAX_DURATION, "wrong auction duration");
-            endTime = startTime + _duration;
-        } else {
-            endTime = _endTime;
-        }
-        require(endTime > startTime, "error in auction time range");
-    }
-
+    /// @dev sets approval for transfer proxy to transfer sell asset from this contract
     function setApproveForTransferProxy(LibAsset.Asset memory _asset) internal {
         if (_asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(_asset.assetType.data, (address));
-            IERC20Upgradeable(token).approve(erc20TransferProxy, _asset.value);
+            IERC20Upgradeable(token).approve(proxies[LibAsset.ERC20_ASSET_CLASS], _asset.value);
         } else if (_asset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
-            (address token, uint tokenId) = abi.decode(_asset.assetType.data, (address, uint256));
+            (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
             require(_asset.value == 1, "erc721 value error");
-            IERC721Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
+            IERC721Upgradeable(token).setApprovalForAll(proxies[LibAsset.ERC721_ASSET_CLASS], true);
         } else if (_asset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
             (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
-            IERC1155Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
+            IERC1155Upgradeable(token).setApprovalForAll(proxies[LibAsset.ERC1155_ASSET_CLASS], true);
         }
     }
 
-    function _initializeAuctionId() internal {
-        auctionId = 1;
-    }
-
+    /// @dev increments auctionId and returns new value
     function getNextAndIncrementAuctionId() internal returns (uint256) {
         return auctionId++;
     }
 
-    //put a bid and return locked assets for the last bid
-    function putBid(uint _auctionId, Bid memory bid) payable external {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
-
+    /// @dev put a bid and return locked assets for the last bid
+    function putBid(uint _auctionId, Bid memory bid) payable public {
+        require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {
             _buyOut(_auctionId, bid);
             doTransfers(_auctionId);
             deactivateAuction(_auctionId);
-            emit AuctionBuyOut(_auctionId);
             return;
         }
-        Auction storage currentAuction = auctions[_auctionId];
-        uint currentTime = block.timestamp;
+        
+        Auction memory currentAuction = auctions[_auctionId];
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-
+        uint currentTime = block.timestamp;
         //start action if minimal price is met
         if (currentAuction.buyer == address(0x0)) {//no bid at all
+            // set endTime if it's not set
+            if (currentAuction.endTime == 0){
+                auctions[_auctionId].endTime = currentTime + aucData.duration;
+            }
             require(newAmount >= currentAuction.minimalPrice, "bid can't be less than minimal price");
-            currentAuction.endTime = currentTime + aucData.duration;
         } else {//there is bid in auction
-            require(currentAuction.endTime >= currentTime, "auction is over");
             require(currentAuction.buyer != newBuyer, "already have an outstanding bid");
             uint256 minAmount = getMinimalNextBid(_auctionId);
             require(newAmount >= minAmount, "bid amount too low");
         }
-        reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
-        currentAuction.lastBid = bid;
-        currentAuction.buyer = newBuyer;
+        reserveValue(
+            currentAuction.buyAsset, 
+            currentAuction.buyer, 
+            newBuyer, 
+            getBidTotalAmount(currentAuction.lastBid, currentAuction.protocolFee), 
+            getBidTotalAmount(bid, currentAuction.protocolFee)
+        );
+        auctions[_auctionId].lastBid = bid;
+        auctions[_auctionId].buyer = newBuyer;
 
+        // extends auction time if it about to end
         if (currentAuction.endTime - currentTime < EXTENSION_DURATION) {
-            currentAuction.endTime = currentTime + EXTENSION_DURATION;
+            auctions[_auctionId].endTime = currentTime + EXTENSION_DURATION;
         }
-        emit BidPlaced(_auctionId, bid, currentAuction.endTime);
+        emit BidPlaced(_auctionId, newBuyer, bid, auctions[_auctionId].endTime);
     }
 
+    /// @dev reserves new bid and returns the last one if it exists
     function reserveValue(LibAsset.AssetType memory _buyAssetType, address oldBuyer, address newBuyer, uint oldAmount, uint newAmount) internal {
         LibAsset.Asset memory transferAsset;
         if (oldBuyer != address(0x0)) {//return oldAmount to oldBuyer
-            transferAsset = makeAsset(_buyAssetType, oldAmount);
+            transferAsset = LibAsset.Asset(_buyAssetType, oldAmount);
             transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
         }
-        transferAsset = makeAsset(_buyAssetType, newAmount);
+        transferAsset = LibAsset.Asset(_buyAssetType, newAmount);
         if (transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             if (msg.value > newAmount) {//more ETH than need
                 address(newBuyer).transferEth(msg.value - newAmount);
             }
-        } else if (transferAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
+        } else {
             transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
-            (address token) = abi.decode(_buyAssetType.data, (address));
-            IERC20Upgradeable(token).approve(erc20TransferProxy, newAmount);
-        } else if (transferAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
-            transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
-            (address token,) = abi.decode(_buyAssetType.data, (address, uint256));
-            IERC1155Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
-        } else if (transferAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
-            transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
-            (address token,) = abi.decode(_buyAssetType.data, (address, uint256));
-            IERC721Upgradeable(token).setApprovalForAll(nftTransferProxy, true);
-        }
+            setApproveForTransferProxy(transferAsset);
+        } 
     }
 
-    function makeAsset(LibAsset.AssetType memory _assetType, uint amount) internal returns (LibAsset.Asset memory _asset) {
-        _asset.assetType = _assetType;
-        _asset.value = amount;
-        return _asset;
-    }
-
-    function getMinimalNextBid(uint _auctionId) internal view returns (uint minBid){
+    /// @dev returns the minimal amount of the next bid (without fees)
+    function getMinimalNextBid(uint _auctionId) public view returns (uint minBid){
         Auction storage currentAuction = auctions[_auctionId];
+
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
         } else {
@@ -184,7 +181,8 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
     }
 
-    function checkAuctionExistence(uint _auctionId) internal view returns (bool){
+    /// @dev returns true if auction exists, false otherwise
+    function checkAuctionExistence(uint _auctionId) public view returns (bool){
         if (auctions[_auctionId].seller == address(0)) {
             return false;
         } else {
@@ -192,116 +190,143 @@ contract AuctionHouse is AuctionHouseBase, Initializable, TransferExecutor, Tran
         }
     }
 
-    function buyOutVerify(uint _auctionId, uint newAmount) internal returns (bool) {
-        Auction storage currentAuction = auctions[_auctionId];
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        if (aucData.buyOutPrice <= newAmount) {
+    /// @dev returns true if newAmount is enough for buyOut
+    function buyOutVerify(uint _auctionId, uint newAmount) internal view returns (bool) {
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
+
+        if (aucData.buyOutPrice > 0 && aucData.buyOutPrice <= newAmount) {
             return true;
         }
         return false;
     }
 
-    //finishAuction
-    function finishAuction(uint _auctionId) payable public {
+    /// @dev finishes, deletes and transfers all assets for an auction if it's ended (it exists, it has at least one bid, now > endTme)
+    function finishAuction(uint _auctionId) external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(!checkAuctionRangeTime(_auctionId), "current time in auction time range");
+        require(
+            !checkAuctionRangeTime(_auctionId) &&
+            auctions[_auctionId].buyer != address(0),
+            "only ended auction with bid can be finished");
         doTransfers(_auctionId);
         deactivateAuction(_auctionId);
-        emit AuctionFinished(_auctionId);
     }
 
+    /// @dev transfers auction assets (sellAsset to buyer, buyAsset to seller)
     function doTransfers(uint _auctionId) internal {
-        Auction storage currentAuction = auctions[_auctionId];
+        Auction memory currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) {//bid exists
-            (uint rest, uint restNft) = transferAllFees(_auctionId); //transfer fee
-            transferAmount(currentAuction.buyAsset, address(this), seller, rest, TO_SELLER, PAYOUT);
-            if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS ||
-                currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
-                currentAuction.sellAsset.value = restNft;
+            LibOrderDataV1.DataV1 memory bidData = LibBidDataV1.getPaymentData(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
+            if (bidData.payouts.length == 0){
+                LibPart.Part[] memory payout = new LibPart.Part[](1);
+                payout[0].account = payable(buyer);
+                payout[0].value = 10000;
+                bidData.payouts = payout;
             }
-            transfer(currentAuction.sellAsset, address(this), buyer, TO_BIDDER, PAYOUT);//nft to buyer
+            LibOrderDataV1.DataV1 memory aucData = LibAucDataV1.getPaymentData(currentAuction.data, currentAuction.dataType);
+            if (aucData.payouts.length == 0){
+                LibPart.Part[] memory payout = new LibPart.Part[](1);
+                payout[0].account = payable(seller);
+                payout[0].value = 10000;
+                aucData.payouts = payout;
+            }
+            doTransfersWithFees(
+                currentAuction.lastBid.amount, 
+                address(this), 
+                MatchProtocolFees(currentAuction.protocolFee, currentAuction.protocolFee),
+                bidData, 
+                aucData, 
+                currentAuction.buyAsset, 
+                currentAuction.sellAsset.assetType, 
+                TO_MAKER
+            );
+            transferPayouts(currentAuction.sellAsset.assetType, currentAuction.sellAsset.value, address(this), bidData.payouts, TO_TAKER);
         } else {
             transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft back to seller
         }
     }
 
-    function transferAllFees(uint _auctionId) internal returns (uint rest, uint restNft) {
-        Auction storage currentAuction = auctions[_auctionId];
-        address seller = currentAuction.seller;
-        uint amount = currentAuction.lastBid.amount;
-        rest = transferProtocolFee(amount, amount, address(this), currentAuction.buyAsset, TO_LOCK);
-        restNft = currentAuction.sellAsset.value;
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        LibPart.Part[] memory auctionFees = aucData.originFees;
-        uint totalFees;
-        (rest, totalFees) = transferFees(currentAuction.buyAsset, rest, amount, auctionFees, address(this), TO_SELLER, ROYALTY);
-        require(totalFees <= 5000, "Auction fees are too high (>50%)");
-        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS ||
-            currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
-            LibBidDataV1.DataV1 memory bidData = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
-            LibPart.Part[] memory bidFees = bidData.originFees;
-            (restNft, totalFees) = transferFees(currentAuction.sellAsset.assetType, restNft, restNft, bidFees, address(this), TO_BIDDER, ROYALTY);
-            require(totalFees <= 5000, "Bid fees are too high (>50%)");
-        }
-    }
-
-    function checkAuctionRangeTime(uint _auctionId) internal view returns (bool){
+    /// @dev returns true if auction started and hasn't finished yet, false otherwise
+    function checkAuctionRangeTime(uint _auctionId) public view returns (bool){
+        uint endTime = auctions[_auctionId].endTime;
         uint currentTime = block.timestamp;
-        Auction storage currentAuction = auctions[_auctionId];
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        if ((currentTime >= aucData.startTime) && (currentTime <= currentAuction.endTime)) {
-            return true;
+
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
+        if (aucData.startTime > 0 && aucData.startTime > currentTime) {
+            return false;
         }
-        return false;
+        if (endTime > 0 && endTime < currentTime){
+            return false;
+        }
+        
+        return true;
     }
 
+    /// @dev deletes auction after finalizing
     function deactivateAuction(uint _auctionId) internal {
-        auctions[_auctionId].seller == address(0);
+        emit AuctionFinished(_auctionId, auctions[_auctionId]);
+        deleteAuctionForToken(auctions[_auctionId].sellAsset);
+        delete auctions[_auctionId];
     }
 
-    function transferAmount(LibAsset.AssetType memory _assetType, address from, address to, uint amount, bytes4 _direction, bytes4 _type) internal {
-        LibAsset.Asset memory _asset;
-        _asset.assetType = _assetType;
-        _asset.value = amount;
-        transfer(_asset, from, to, _direction, _type);
-    }
-
-    //cancel auction without bid
-    function cancel(uint _auctionId) public {
+    /// @dev cancels existing auction without bid
+    function cancel(uint _auctionId) external {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         require(seller == _msgSender(), "auction owner not detected");
         address buyer = currentAuction.buyer;
-        uint amount = currentAuction.lastBid.amount;
-        if (buyer == address(0x0)) {//no bid at all
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
-            deactivateAuction(_auctionId);
-            emit AuctionCancelled(_auctionId);
-        }
+        require(buyer == address(0), "can't cancel auction with bid");
+        transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
+        deactivateAuction(_auctionId);
+        AuctionCancelled(_auctionId);
     }
 
-    //buyout
-    function buyOut(uint _auctionId, Bid memory bid) public payable {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        require(checkAuctionRangeTime(_auctionId), "current time out of  auction time range");
-        uint newAmount = bid.amount;
-        require(buyOutVerify(_auctionId, newAmount), "not enough for buyout auction");
+    /// @dev buyout auction if bid satisfies buyout condition
+    function buyOut(uint _auctionId, Bid memory bid) external payable {
+        require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
+
+        require(buyOutVerify(_auctionId, bid.amount), "not enough for buyout auction");
         _buyOut(_auctionId, bid);
         doTransfers(_auctionId);
         deactivateAuction(_auctionId);
-        emit AuctionBuyOut(_auctionId);
     }
 
+    /// @dev makes buyout bid the current bid
     function _buyOut(uint _auctionId, Bid memory bid) internal {
         address payable newBuyer = _msgSender();
         Auction storage currentAuction = auctions[_auctionId];
-        uint newAmount = bid.amount;
-        reserveValue(currentAuction.buyAsset, currentAuction.buyer, newBuyer, currentAuction.lastBid.amount, newAmount);
+        reserveValue(
+            currentAuction.buyAsset, 
+            currentAuction.buyer, 
+            newBuyer, 
+            getBidTotalAmount(currentAuction.lastBid, currentAuction.protocolFee), 
+            getBidTotalAmount(bid, currentAuction.protocolFee)
+        );
         currentAuction.lastBid = bid;
         currentAuction.buyer = newBuyer;
+    }
+
+    /// @dev return current highest bidder for an auction
+    function getCurrentBuyer(uint _auctionId) public view returns(address) {
+        return auctions[_auctionId].buyer;
+    }
+
+    /// @dev returns true if auction doesn't exist or finished or hasn't started yer, false otherwise
+    function isFinalized(uint256 _auctionId) public view returns (bool){
+        return (!checkAuctionExistence(_auctionId) || !checkAuctionRangeTime(_auctionId));
+    }
+
+    /// @dev returns total amount for a bid (protocol fee and bid origin fees included)
+    function getBidTotalAmount(Bid memory bid, uint _protocolFee) internal pure returns(uint){
+        return calculateTotalAmount(bid.amount, _protocolFee, LibBidDataV1.getOrigin(bid.data, bid.dataType));
+    }
+
+    /// @dev function to call from wrapper to put bid, WIP
+    function putBidWrapper(uint256 _auctionId) external payable {
+      require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
+      //putBid(_auctionId, Bid(msg.value, "", ""));
     }
 
     uint256[50] private ______gap;
