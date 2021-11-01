@@ -59,10 +59,6 @@ abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgr
 
     function __AuctionHouseBase_init() internal initializer {
         __ERC1155Holder_init();
-        __AuctuinHouseBase_init_uncahined();
-    }
-
-    function __AuctuinHouseBase_init_uncahined() internal initializer {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
