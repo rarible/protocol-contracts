@@ -6,8 +6,10 @@ pragma abicoder v2;
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
+import "@rarible/royalties/contracts/LibRoyalties2981.sol";
 import "@rarible/royalties/contracts/RoyaltiesV1.sol";
 import "@rarible/royalties/contracts/RoyaltiesV2.sol";
+import "@rarible/royalties/contracts/IERC2981.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -97,6 +99,11 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
             RoyaltiesV2 v2 = RoyaltiesV2(token);
             try v2.getRaribleV2Royalties(tokenId) returns (LibPart.Part[] memory result) {
                 return result;
+            } catch {}
+        } else if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
+            IERC2981 v2981 = IERC2981(token);
+            try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
+                return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
             } catch {}
         } else {
             RoyaltiesV1 v1 = RoyaltiesV1(token);

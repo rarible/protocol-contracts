@@ -23,15 +23,13 @@ contract("royalties 2981 ", accounts => {
 		console.log("used gas", tx.receipt.gasUsed);
 	})
 
-//	it("update allows to change royalty recipient", async () => {
-//		await impl.saveRoyalties(10, [{ account: accounts[1], value: 100 }]);
-//		await impl.updateAccount(10, accounts[1], accounts[2]);
-//
-//		const result = await impl.getRaribleV2Royalties(10);
-//		assert.equal(result.length, 1);
-//		assert.equal(result[0][0], accounts[2]);
-//		assert.equal(result[0][1], 100);
-//
-//	})
+	it("calculateRoyalties check", async () => {
+    const getterRoyalties = accounts[1];
+		const result = await impl.calculateRoyaltiesTest.call(getterRoyalties, 150000);
+		assert.equal(result.length, 1);
+		assert.equal(result[0][0], getterRoyalties);
+		assert.equal(result[0][1], 15);
+
+	})
 
 })
