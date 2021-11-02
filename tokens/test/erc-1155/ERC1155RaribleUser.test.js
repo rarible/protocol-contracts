@@ -1,7 +1,7 @@
 const Testing = artifacts.require("ERC1155RaribleUser.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
-const ERC1155Factory = artifacts.require("ERC1155RaribleUserFactory.sol");
+const ERC1155RaribleUserFactoryC2 = artifacts.require("ERC1155RaribleUserFactoryC2.sol");
 const truffleAssert = require('truffle-assertions');
 
 const { expectThrow } = require("@daonomic/tests-common");
@@ -25,13 +25,38 @@ contract("ERC1155RaribleUser", accounts => {
 
   it("mint and transfer by minter, token create by Factory", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC1155Factory.new(beacon.address);
-    resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", [], {from: tokenOwner});
+    factory = await ERC1155RaribleUserFactoryC2.new(beacon.address);
+    const salt = 3;
+
+    const addressBeforeDeploy = await factory.getAddress(name, "TST", "ipfs:/", "ipfs:/", [], salt)
+    const addfressWithDifferentSalt = await factory.getAddress(name, "TST", "ipfs:/", "ipfs:/", [], salt + 1)
+    const addressWithDifferentData = await factory.getAddress(name, "TSA", "ipfs:/", "ipfs:/", [], salt)
+
+    assert.notEqual(addressBeforeDeploy, addfressWithDifferentSalt, "different salt = different addresses")
+    assert.notEqual(addressBeforeDeploy, addressWithDifferentData, "different data = different addresses")
+
+    const resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", [], salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleUserProxy', (ev) => {
      	proxy = ev.proxy;
       return true;
     });
-    tokenByProxy = await Testing.at(proxy);
+    assert.equal(addressBeforeDeploy, proxy, "correct address got before deploy")
+    
+    let addrToken2;
+    const resultCreateToken2 = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", [], salt + 1, {from: tokenOwner});
+    truffleAssert.eventEmitted(resultCreateToken2, 'Create1155RaribleUserProxy', (ev) => {
+        addrToken2 = ev.proxy;
+      return true;
+    });
+    assert.equal(addrToken2, addfressWithDifferentSalt, "correct address got before deploy")
+
+    let addrToken3;
+    const resultCreateToken3 = await factory.createToken(name, "TSA", "ipfs:/", "ipfs:/", [], salt, {from: tokenOwner});
+    truffleAssert.eventEmitted(resultCreateToken3, 'Create1155RaribleUserProxy', (ev) => {
+      addrToken3 = ev.proxy;
+    return true;
+    });
+    assert.equal(addrToken3, addressWithDifferentData, "correct address got before deploy")
 
     let minter = tokenOwner;
     let transferTo = accounts[2];
@@ -41,8 +66,10 @@ contract("ERC1155RaribleUser", accounts => {
     let supply = 5;
     let mint = 2;
 
-    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+    tokenByProxy = await Testing.at(proxy);
 
+    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+    
 		assert.equal(await tokenByProxy.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await tokenByProxy.balanceOf(transferTo, tokenId), mint);
     assert.equal(await tokenByProxy.balanceOf(minter, tokenId), 0);

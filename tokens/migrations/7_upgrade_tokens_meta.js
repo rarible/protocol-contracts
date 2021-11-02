@@ -39,8 +39,8 @@ module.exports = async function (deployer, network) {
   const existing721 = await ERC721Rarible.deployed();
   await upgradeProxy(existing721.address, ERC721RaribleMeta, { deployer });
 
-	const existing1155 = await ERC1155Rarible.deployed();
-	await upgradeProxy(existing1155.address, ERC1155RaribleMeta, { deployer });
+  const existing1155 = await ERC1155Rarible.deployed();
+  await upgradeProxy(existing1155.address, ERC1155RaribleMeta, { deployer });
 
   //upgrading erc721 factory
   const erc721 = await getProxyImplementation(ERC721Rarible, network)

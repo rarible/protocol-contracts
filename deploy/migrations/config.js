@@ -43,10 +43,10 @@ const def = {
   },
   "mintable_token_legacy": {
     name: "Rarible",
-		symbol: "RARI",
-	  newOwner: "0x002ed05478c75974e08f0811517aa0e3eddc1380",
-		contractURI: "https://api-e2e.rarible.com/contractMetadata/{address}",
-		tokenURIPrefix: "ipfs://",
+    symbol: "RARI",
+    newOwner: "0x002ed05478c75974e08f0811517aa0e3eddc1380",
+    contractURI: "https://api-e2e.rarible.com/contractMetadata/{address}",
+    tokenURIPrefix: "ipfs://",
   },
 }
 
@@ -71,4 +71,25 @@ function getSettings(network) {
   }
 }
 
-module.exports = getSettings;
+async function getProxyImplementation(proxy, network, ProxyAdmin) {
+  if (network === "test") {
+    network = "unknown-1337"
+  }
+
+  if (network === "e2e") {
+    network = "unknown-17"
+  }
+
+  let json;
+  try {
+    json = require(`../.openzeppelin/${network}.json`)
+  } catch (e) {
+    const tconfig = require('../truffle-config.js')
+    const network_id = tconfig.networks[network].network_id;
+    json = require(`../.openzeppelin/unknown-${network_id}.json`)
+  }
+  const c = await ProxyAdmin.at(json.admin.address)
+  const deployed = await proxy.deployed()
+  return c.getProxyImplementation(deployed.address)
+}
+module.exports = { getSettings, getProxyImplementation };
