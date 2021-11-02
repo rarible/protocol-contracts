@@ -103,7 +103,12 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
         } else if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
             IERC2981 v2981 = IERC2981(token);
             try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
-                return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
+//                return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
+                LibPart.Part[] memory result = new LibPart.Part[](1);
+                result[0].account = payable(receiver);
+//                result[0].value = LibRoyalties2981.calculateRoyalty(royaltyAmount);
+                result[0].value = uint96(royaltyAmount * 100 / LibRoyalties2981._WEIGHT_VALUE);
+                return result;
             } catch {}
         } else {
             RoyaltiesV1 v1 = RoyaltiesV1(token);
