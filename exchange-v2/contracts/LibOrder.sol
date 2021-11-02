@@ -4,6 +4,7 @@ pragma solidity 0.7.6;
 
 import "./lib/LibMath.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "./LibOrderDataV2.sol";
 
 library LibOrder {
     using SafeMathUpgradeable for uint;
@@ -25,8 +26,14 @@ library LibOrder {
     }
 
     function calculateRemaining(Order memory order, uint fill) internal pure returns (uint makeValue, uint takeValue) {
-        takeValue = order.takeAsset.value.sub(fill);
-        makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
+        bool makeFill = LibOrderDataV2.getFillSide(order.data, order.dataType);
+        if (!makeFill){
+            takeValue = order.takeAsset.value.sub(fill);
+            makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
+        } else {
+            makeValue = order.makeAsset.value.sub(fill);
+            takeValue = LibMath.safeGetPartialAmountFloor(order.takeAsset.value, order.makeAsset.value, makeValue);
+        } 
     }
 
     function hashKey(Order memory order) internal pure returns (bytes32) {

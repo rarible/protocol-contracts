@@ -10,7 +10,7 @@ import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
 
-    function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {
+    function encode(LibOrderDataV2.DataV1 memory data) pure external returns (bytes memory) {
         return abi.encode(data);
     }
 

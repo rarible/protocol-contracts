@@ -17,4 +17,8 @@ contract LibOrderTest {
     function validate(LibOrder.Order calldata order) external view {
         LibOrder.validate(order);
     }
+
+    function encodeV2(LibOrderDataV2.DataV2 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
 }

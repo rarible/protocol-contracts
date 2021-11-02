@@ -11,7 +11,7 @@ import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "./LibFill.sol";
 import "./LibFeeSide.sol";
-import "./LibOrderDataV1.sol";
+import "./LibOrderDataV2.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
 import "./LibOrderData.sol";
@@ -71,8 +71,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeValue = fill.makeValue;
         totalTakeValue = fill.takeValue;
-        LibOrderDataV1.DataV1 memory leftOrderData = LibOrderData.parse(leftOrder);
-        LibOrderDataV1.DataV1 memory rightOrderData = LibOrderData.parse(rightOrder);
+        LibOrderDataV2.DataV1 memory leftOrderData = LibOrderData.parse(leftOrder);
+        LibOrderDataV2.DataV1 memory rightOrderData = LibOrderData.parse(rightOrder);
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
             totalMakeValue = doTransfersWithFees(fill.makeValue, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch,  TO_TAKER);
             transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
@@ -88,8 +88,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     function doTransfersWithFees(
         uint amount,
         address from,
-        LibOrderDataV1.DataV1 memory dataCalculate,
-        LibOrderDataV1.DataV1 memory dataNft,
+        LibOrderDataV2.DataV1 memory dataCalculate,
+        LibOrderDataV2.DataV1 memory dataNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
