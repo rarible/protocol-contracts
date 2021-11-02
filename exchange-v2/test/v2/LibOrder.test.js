@@ -17,7 +17,7 @@ contract("LibOrder", accounts => {
 		it("should calculate remaining amounts if fill=0", async () => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 0);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 0, false);
       assert.equal(result[0], 100);
       assert.equal(result[1], 200);
     });
@@ -25,7 +25,7 @@ contract("LibOrder", accounts => {
     it("should calculate remaining amounts if fill is specified", async () => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 20);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 20, false);
       assert.equal(result[0], 90);
       assert.equal(result[1], 180);
     });
@@ -33,7 +33,7 @@ contract("LibOrder", accounts => {
     it("should return 0s if filled fully", async () => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 200);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 200, false);
       assert.equal(result[0], 0);
       assert.equal(result[1], 0);
     });
@@ -42,7 +42,7 @@ contract("LibOrder", accounts => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
       await expectThrow(
-        lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 220)
+        lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 220, false)
       );
     });
   
@@ -50,7 +50,7 @@ contract("LibOrder", accounts => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
       await expectThrow(
-        lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 220)
+        lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, "0xffffffff", "0x"), 220, false)
       );
     });
   
@@ -58,7 +58,7 @@ contract("LibOrder", accounts => {
       const make = order.Asset("0x00000000", "0x", 200);
       const take = order.Asset("0x00000000", "0x", 600);
       const data = await encDataV2([ [], [], true ])
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, data), 100);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, data), 100, true);
       assert.equal(result.makeAmount, 100, "makeAmount");
       assert.equal(result.takeAmount, 300, "takeAmount");
     })
@@ -67,7 +67,7 @@ contract("LibOrder", accounts => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
       const data = await encDataV2([ [], [], false ])
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, data), 20);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, data), 20, false);
       assert.equal(result.makeAmount, 90, "makeAmount");
       assert.equal(result.takeAmount, 180, "takeAmount");
     })

@@ -53,17 +53,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
         bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
         bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
-        uint leftOrderFill = getOrderFill(orderLeft, leftOrderKeyHash);
-        uint rightOrderFill = getOrderFill(orderRight, rightOrderKeyHash);
-        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill);
-        require(newFill.takeValue > 0, "nothing to fill");
-
-        if (orderLeft.salt != 0) {
-            fills[leftOrderKeyHash] = leftOrderFill.add(newFill.takeValue);
-        }
-        if (orderRight.salt != 0) {
-            fills[rightOrderKeyHash] = rightOrderFill.add(newFill.makeValue);
-        }
+        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
 
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight);
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
@@ -81,12 +71,38 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.takeValue, newFill.makeValue, makeMatch, takeMatch);
     }
 
-    function getOrderFill(LibOrder.Order memory order, bytes32 hash) internal view returns (uint fill) {
+    function getFillSetNew(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight, bytes32 leftOrderKeyHash, bytes32 rightOrderKeyHash) internal returns(LibFill.FillResult memory){
+        (uint leftOrderFill, bool leftIsMakeFill) = getOrderFill(orderLeft, leftOrderKeyHash);
+        (uint rightOrderFill, bool rightIsMakeFill) = getOrderFill(orderRight, rightOrderKeyHash);
+        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftIsMakeFill, rightIsMakeFill);
+        
+        require(newFill.takeValue > 0 && newFill.makeValue > 0, "nothing to fill");
+
+        if (orderLeft.salt != 0) {
+            if (leftIsMakeFill){
+                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.makeValue);
+            } else {
+                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.takeValue);
+            }
+        }
+        
+        if (orderRight.salt != 0) {
+            if (rightIsMakeFill){
+                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.takeValue);
+            } else {
+                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.makeValue);
+            }
+        }
+        return newFill;
+    }
+
+    function getOrderFill(LibOrder.Order memory order, bytes32 hash) internal view returns (uint fill, bool isMakeFill) {
         if (order.salt == 0) {
             fill = 0;
         } else {
             fill = fills[hash];
         }
+        isMakeFill = LibOrderDataV2.isMakeFill(order.data, order.dataType);
     }
 
     function matchAssets(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {

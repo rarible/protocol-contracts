@@ -17,7 +17,7 @@ library LibOrderDataV2 {
     struct DataV2 {
         LibPart.Part[] payouts;
         LibPart.Part[] originFees;
-        bool makeFill;
+        bool isMakeFill;
     }
 
     function decodeOrderDataV1(bytes memory data, bytes4 dataType) internal pure returns (DataV1 memory orderData) {
@@ -34,10 +34,10 @@ library LibOrderDataV2 {
         
     }
 
-    function getFillSide(bytes memory data, bytes4 dataType) internal pure returns(bool){
+    function isMakeFill(bytes memory data, bytes4 dataType) internal pure returns(bool){
         if (dataType == V2) {
             DataV2 memory dataV2 = abi.decode(data, (DataV2));
-            return dataV2.makeFill;
+            return dataV2.isMakeFill;
         } else {
             return false;
         }
