@@ -80,14 +80,6 @@ async function deployERC1155Factory(deployer, transferProxy, erc1155LazyMintTran
   console.log(`deployed factory1155 at ${factory.address}`)
 }
 
-async function deployERC721Factory(deployer, transferProxy, erc721LazyMintTransferProxy) {
-  const beacon = await ERC721RaribleBeacon.deployed();
-
-  //deploying factory
-  const factory = await deployer.deploy(ERC721RaribleFactoryC2, beacon.address, transferProxy, erc721LazyMintTransferProxy, { gas: 1500000 });
-  console.log(`deployed factory721 at ${factory.address}`)
-}
-
 module.exports = async function (deployer, network) {
   const transferProxy = (await TransferProxy.deployed()).address;
   const erc721LazyMintTransferProxy = (await ERC721LazyMintTransferProxy.deployed()).address;
@@ -104,8 +96,5 @@ module.exports = async function (deployer, network) {
 
   //deploying new factory for ERC1155, using old beacon
   await deployERC1155Factory(deployer, transferProxy, erc1155LazyMintTransferProxy)
-
-  //deploying new factory for ERC721, using old beacon
-  await deployERC721Factory(deployer, transferProxy, erc721LazyMintTransferProxy)
   
 };
