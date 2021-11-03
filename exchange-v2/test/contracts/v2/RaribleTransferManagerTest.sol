@@ -10,7 +10,7 @@ import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
 
-    function encode(LibOrderDataV2.DataV1 memory data) pure external returns (bytes memory) {
+    function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {
         return abi.encode(data);
     }
 
@@ -23,9 +23,11 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder
+        LibOrder.Order memory rightOrder,
+        LibOrderDataV2.DataV2 memory leftOrderData,
+        LibOrderDataV2.DataV2 memory rightOrderData
     ) payable external {
-        doTransfers(makeMatch, takeMatch, fill, leftOrder, rightOrder);
+        doTransfers(makeMatch, takeMatch, fill, leftOrder, rightOrder, leftOrderData, rightOrderData);
     }
 
     function __TransferManager_init(

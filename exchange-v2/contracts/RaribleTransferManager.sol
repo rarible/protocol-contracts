@@ -11,10 +11,8 @@ import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "./LibFill.sol";
 import "./LibFeeSide.sol";
-import "./LibOrderDataV2.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "./LibOrderData.sol";
 import "./lib/BpLibrary.sol";
 
 abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
@@ -66,13 +64,13 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder
+        LibOrder.Order memory rightOrder,
+        LibOrderDataV2.DataV2 memory leftOrderData,
+        LibOrderDataV2.DataV2 memory rightOrderData
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeValue = fill.makeValue;
         totalTakeValue = fill.takeValue;
-        LibOrderDataV2.DataV1 memory leftOrderData = LibOrderData.parse(leftOrder);
-        LibOrderDataV2.DataV1 memory rightOrderData = LibOrderData.parse(rightOrder);
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
             totalMakeValue = doTransfersWithFees(fill.makeValue, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch,  TO_TAKER);
             transferPayouts(takeMatch, fill.takeValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
@@ -88,8 +86,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     function doTransfersWithFees(
         uint amount,
         address from,
-        LibOrderDataV2.DataV1 memory dataCalculate,
-        LibOrderDataV2.DataV1 memory dataNft,
+        LibOrderDataV2.DataV2 memory dataCalculate,
+        LibOrderDataV2.DataV2 memory dataNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection

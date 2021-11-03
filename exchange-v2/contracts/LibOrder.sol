@@ -4,10 +4,11 @@ pragma solidity 0.7.6;
 
 import "./lib/LibMath.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
-import "./LibOrderDataV2.sol";
 
 library LibOrder {
     using SafeMathUpgradeable for uint;
+
+    bytes4 constant public V2 = bytes4(keccak256("V2"));
 
     bytes32 constant ORDER_TYPEHASH = keccak256(
         "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
@@ -36,12 +37,24 @@ library LibOrder {
     }
 
     function hashKey(Order memory order) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
+        //order.data is in hash for V2 orders
+        if (order.dataType == V2){
+            return keccak256(abi.encode(
+                order.maker,
+                LibAsset.hash(order.makeAsset.assetType),
+                LibAsset.hash(order.takeAsset.assetType),
+                order.salt,
+                order.data
+            ));
+        } else {
+            return keccak256(abi.encode(
                 order.maker,
                 LibAsset.hash(order.makeAsset.assetType),
                 LibAsset.hash(order.takeAsset.assetType),
                 order.salt
             ));
+        }
+        
     }
 
     function hash(Order memory order) internal pure returns (bytes32) {

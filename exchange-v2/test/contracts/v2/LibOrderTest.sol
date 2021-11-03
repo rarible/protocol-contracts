@@ -18,7 +18,23 @@ contract LibOrderTest {
         LibOrder.validate(order);
     }
 
-    function encodeV2(LibOrderDataV2.DataV2 memory data) pure external returns (bytes memory) {
-        return abi.encode(data);
+    function hashV2(address maker, LibAsset.Asset memory makeAsset, LibAsset.Asset memory takeAsset, uint salt, bytes memory data) public pure returns(bytes32){
+        return keccak256(abi.encode(
+                maker,
+                LibAsset.hash(makeAsset.assetType),
+                LibAsset.hash(takeAsset.assetType),
+                salt,
+                data
+            ));
     }
+
+    function hashV1(address maker, LibAsset.Asset memory makeAsset, LibAsset.Asset memory takeAsset, uint salt) public pure returns(bytes32){
+        return keccak256(abi.encode(
+                maker,
+                LibAsset.hash(makeAsset.assetType),
+                LibAsset.hash(takeAsset.assetType),
+                salt
+            ));
+    }
+
 }

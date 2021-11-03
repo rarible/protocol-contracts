@@ -54,20 +54,18 @@ contract("LibOrder", accounts => {
       );
     });
   
-    it("should return correct reaming value for V2 order with data.makeFill = true", async () => {
+    it("should return correct reaming value for makeFill = true", async () => {
       const make = order.Asset("0x00000000", "0x", 200);
       const take = order.Asset("0x00000000", "0x", 600);
-      const data = await encDataV2([ [], [], true ])
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, data), 100, true);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, "0x"), 100, true);
       assert.equal(result.makeAmount, 100, "makeAmount");
       assert.equal(result.takeAmount, 300, "takeAmount");
     })
 
-    it("should return correct reaming value for V2 order with data.makeFill = false", async () => {
+    it("should return correct reaming value for makeFill = false", async () => {
       const make = order.Asset("0x00000000", "0x", 100);
       const take = order.Asset("0x00000000", "0x", 200);
-      const data = await encDataV2([ [], [], false ])
-      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, data), 20, false);
+      const result = await lib.calculateRemaining(order.Order(ZERO, make, ZERO, take, 1, 0, 0, ORDER_DATA_V2, "0x"), 20, false);
       assert.equal(result.makeAmount, 90, "makeAmount");
       assert.equal(result.takeAmount, 180, "takeAmount");
     })
@@ -108,7 +106,44 @@ contract("LibOrder", accounts => {
 
 	})
 
-  async function encDataV2(tuple) {
-    return await lib.encodeV2(tuple);
- }
+  describe("hashKey", () => {
+    const maker = accounts[1]
+    const makeAsset = order.Asset("0x00000000", "0x", 100)
+    const takeAsset = order.Asset("0x00000000", "0x", 100)
+    const salt = 1;
+    const data = "0x12"
+
+		it("should calculate correct hash key for no type order", async () => {
+      const test_order = order.Order(maker, makeAsset, ZERO, takeAsset, salt, 0, 0, "0xffffffff", data)
+		
+      const hash = await lib.hashKey(test_order);
+      const test_hash = await lib.hashV1(maker, makeAsset, takeAsset, salt);
+      const test_wrong_hash = await lib.hashV2(maker, makeAsset, takeAsset, salt, data);
+
+      assert.notEqual(hash, test_wrong_hash, "not equal to wrong hash")
+      assert.equal(hash, test_hash, "correct hash no type order")
+		})
+
+    it("should calculate correct hash key for V1 order", async () => {
+      const test_order = order.Order(maker, makeAsset, ZERO, takeAsset, salt, 0, 0, ORDER_DATA_V1, data)
+		
+      const hash = await lib.hashKey(test_order);
+      const test_hash = await lib.hashV1(maker, makeAsset, takeAsset, salt);
+      const test_wrong_hash = await lib.hashV2(maker, makeAsset, takeAsset, salt, data);
+
+      assert.notEqual(hash, test_wrong_hash, "not equal to wrong hash")
+      assert.equal(hash, test_hash, "correct hash V1 order")
+		})
+
+    it("should calculate correct hash key for V2 order", async () => {
+      const test_order = order.Order(maker, makeAsset, ZERO, takeAsset, salt, 0, 0, ORDER_DATA_V2, data)
+		
+      const hash = await lib.hashKey(test_order);
+      const test_hash = await lib.hashV2(maker, makeAsset, takeAsset, salt, data);
+      const test_wrong_hash = await lib.hashV1(maker, makeAsset, takeAsset, salt);
+      
+      assert.notEqual(hash, test_wrong_hash, "not equal to wrong hash")
+      assert.equal(hash, test_hash, "correct hash V2 order")
+		})
+	})
 });
