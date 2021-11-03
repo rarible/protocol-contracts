@@ -1,6 +1,6 @@
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
-const getSettings = require("./config.js")
+const { getSettings } = require("./config.js")
 
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry");
