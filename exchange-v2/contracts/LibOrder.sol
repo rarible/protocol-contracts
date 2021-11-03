@@ -27,12 +27,12 @@ library LibOrder {
     }
 
     function calculateRemaining(Order memory order, uint fill, bool isMakeFill) internal pure returns (uint makeValue, uint takeValue) {
-        if (!isMakeFill){
-            takeValue = order.takeAsset.value.sub(fill);
-            makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
-        } else {
+        if (isMakeFill){
             makeValue = order.makeAsset.value.sub(fill);
             takeValue = LibMath.safeGetPartialAmountFloor(order.takeAsset.value, order.makeAsset.value, makeValue);
+        } else {
+            takeValue = order.takeAsset.value.sub(fill);
+            makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue); 
         } 
     }
 
