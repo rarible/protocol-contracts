@@ -76,29 +76,29 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     function getFillSetNew(
-        LibOrder.Order memory orderLeft, 
-        LibOrder.Order memory orderRight, 
-        bytes32 leftOrderKeyHash, 
-        bytes32 rightOrderKeyHash,  
-        LibOrderDataV2.DataV2 memory leftOrderData, 
+        LibOrder.Order memory orderLeft,
+        LibOrder.Order memory orderRight,
+        bytes32 leftOrderKeyHash,
+        bytes32 rightOrderKeyHash,
+        LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) internal returns(LibFill.FillResult memory){
+    ) internal returns (LibFill.FillResult memory) {
         uint leftOrderFill = getOrderFill(orderLeft, leftOrderKeyHash);
         uint rightOrderFill = getOrderFill(orderRight, rightOrderKeyHash);
         LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftOrderData.isMakeFill, rightOrderData.isMakeFill);
-        
+
         require(newFill.rightValue > 0 && newFill.leftValue > 0, "nothing to fill");
 
         if (orderLeft.salt != 0) {
-            if (leftOrderData.isMakeFill){
+            if (leftOrderData.isMakeFill) {
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.leftValue);
             } else {
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.rightValue);
             }
         }
-        
+
         if (orderRight.salt != 0) {
-            if (rightOrderData.isMakeFill){
+            if (rightOrderData.isMakeFill) {
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.rightValue);
             } else {
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
