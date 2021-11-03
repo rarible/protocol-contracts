@@ -72,7 +72,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.takeValue, newFill.makeValue, makeMatch, takeMatch);
+        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
     }
 
     function getFillSetNew(
@@ -87,21 +87,21 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         uint rightOrderFill = getOrderFill(orderRight, rightOrderKeyHash);
         LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftOrderData.isMakeFill, rightOrderData.isMakeFill);
         
-        require(newFill.takeValue > 0 && newFill.makeValue > 0, "nothing to fill");
+        require(newFill.rightValue > 0 && newFill.leftValue > 0, "nothing to fill");
 
         if (orderLeft.salt != 0) {
             if (leftOrderData.isMakeFill){
-                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.makeValue);
+                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.leftValue);
             } else {
-                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.takeValue);
+                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.rightValue);
             }
         }
         
         if (orderRight.salt != 0) {
             if (rightOrderData.isMakeFill){
-                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.takeValue);
+                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.rightValue);
             } else {
-                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.makeValue);
+                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
             }
         }
         return newFill;

@@ -10,8 +10,8 @@ library LibFill {
     using SafeMathUpgradeable for uint;
 
     struct FillResult {
-        uint makeValue;
-        uint takeValue;
+        uint leftValue;
+        uint rightValue;
     }
 
     /**
