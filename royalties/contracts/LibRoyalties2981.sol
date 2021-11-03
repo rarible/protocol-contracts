@@ -10,7 +10,8 @@ library LibRoyalties2981 {
     bytes4 constant _INTERFACE_ID_ROYALTIES = 0x2a55205a;
     uint96 constant _WEIGHT_VALUE = 1000000;
 
-    function calculateRoyalties(address to, uint256 amount) internal returns (LibPart.Part[] memory) {
+    /*Method for converting amount to percent and forming LibPart*/
+    function calculateRoyalties(address to, uint256 amount) internal view returns (LibPart.Part[] memory) {
         LibPart.Part[] memory result;
         if (amount == 0) {
             return result;
@@ -20,12 +21,5 @@ library LibRoyalties2981 {
         result[0].account = payable(to);
         result[0].value = uint96(percent);
         return result;
-    }
-    function calculateRoyalty(uint256 amount) internal returns (uint96 result) {
-        result = uint96(amount);
-        if (amount == 0) {
-            return result;
-        }
-        result = uint96(amount * 100 / _WEIGHT_VALUE);
     }
 }
