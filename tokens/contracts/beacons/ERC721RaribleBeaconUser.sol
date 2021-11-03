@@ -2,7 +2,7 @@ pragma solidity ^0.7.0;
 
 import "@openzeppelin/contracts/proxy/UpgradeableBeacon.sol";
 
-contract ERC721RaribleBeacon is UpgradeableBeacon {
+contract ERC721RaribleBeaconUser is UpgradeableBeacon {
     constructor(address impl) UpgradeableBeacon(impl) {
 
     }

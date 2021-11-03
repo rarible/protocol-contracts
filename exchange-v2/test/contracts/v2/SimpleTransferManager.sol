@@ -12,15 +12,17 @@ abstract contract SimpleTransferManager is ITransferManager {
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder
+        LibOrder.Order memory rightOrder,
+        LibOrderDataV2.DataV2 memory leftOrderData,
+        LibOrderDataV2.DataV2 memory rightOrderData
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
 
-        transfer(LibAsset.Asset(makeMatch, fill.makeValue), leftOrder.maker, rightOrderBeneficiary, PAYOUT, TO_TAKER);
-        transfer(LibAsset.Asset(takeMatch, fill.takeValue), rightOrder.maker, leftOrderBeneficiary, PAYOUT, TO_MAKER);
-        totalMakeValue = fill.makeValue;
-        totalTakeValue = fill.takeValue;
+        transfer(LibAsset.Asset(makeMatch, fill.leftValue), leftOrder.maker, rightOrderBeneficiary, PAYOUT, TO_TAKER);
+        transfer(LibAsset.Asset(takeMatch, fill.rightValue), rightOrder.maker, leftOrderBeneficiary, PAYOUT, TO_MAKER);
+        totalMakeValue = fill.leftValue;
+        totalTakeValue = fill.rightValue;
     }
     uint256[50] private __gap;
 }

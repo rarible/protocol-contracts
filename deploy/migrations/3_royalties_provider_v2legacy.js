@@ -1,7 +1,7 @@
 const RoyaltiesRegistry = artifacts.require('RoyaltiesRegistry');
 const RoyaltiesProviderV2Legacy = artifacts.require("RoyaltiesProviderV2Legacy");
 
-const getSettings = require("./config.js")
+const { getSettings } = require("./config.js")
 
 module.exports = async function (deployer, network) {
   const settings = getSettings(network)
