@@ -113,37 +113,38 @@ contract("LibOrder", accounts => {
     const salt = 1;
     const data = "0x12"
 
-		it("should calculate correct hash key for no type order", async () => {
+    it("should calculate correct hash key for no type order", async () => {
       const test_order = order.Order(maker, makeAsset, ZERO, takeAsset, salt, 0, 0, "0xffffffff", data)
-		
+
       const hash = await lib.hashKey(test_order);
       const test_hash = await lib.hashV1(maker, makeAsset, takeAsset, salt);
       const test_wrong_hash = await lib.hashV2(maker, makeAsset, takeAsset, salt, data);
 
       assert.notEqual(hash, test_wrong_hash, "not equal to wrong hash")
       assert.equal(hash, test_hash, "correct hash no type order")
-		})
+    })
 
     it("should calculate correct hash key for V1 order", async () => {
       const test_order = order.Order(maker, makeAsset, ZERO, takeAsset, salt, 0, 0, ORDER_DATA_V1, data)
-		
+
       const hash = await lib.hashKey(test_order);
       const test_hash = await lib.hashV1(maker, makeAsset, takeAsset, salt);
       const test_wrong_hash = await lib.hashV2(maker, makeAsset, takeAsset, salt, data);
 
       assert.notEqual(hash, test_wrong_hash, "not equal to wrong hash")
       assert.equal(hash, test_hash, "correct hash V1 order")
-		})
+    })
 
     it("should calculate correct hash key for V2 order", async () => {
       const test_order = order.Order(maker, makeAsset, ZERO, takeAsset, salt, 0, 0, ORDER_DATA_V2, data)
-		
+
       const hash = await lib.hashKey(test_order);
       const test_hash = await lib.hashV2(maker, makeAsset, takeAsset, salt, data);
       const test_wrong_hash = await lib.hashV1(maker, makeAsset, takeAsset, salt);
-      
+
       assert.notEqual(hash, test_wrong_hash, "not equal to wrong hash")
       assert.equal(hash, test_hash, "correct hash V2 order")
-		})
-	})
+    })
+  })
+
 });
