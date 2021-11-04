@@ -3,7 +3,7 @@ const ExchangeSimpleV2 = artifacts.require("ExchangeSimpleV2.sol");
 const ExchangeSimpleV2_MetaTx = artifacts.require("ExchangeSimpleV2_MetaTx.sol");
 const ExchangeMetaV2 = artifacts.require("ExchangeMetaV2.sol");
 
-const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
+const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistryNew.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
@@ -105,6 +105,7 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
     transferProxy = await TransferProxyTest.new();
     erc20TransferProxy = await ERC20TransferProxyTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
+    await royaltiesRegistry.__TestRoyaltiesRegistryNew_init();
     testContract = await deployProxy(ExchangeMetaV2, [transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
     testingSimpleContract = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
     t1 = await TestERC20.new();

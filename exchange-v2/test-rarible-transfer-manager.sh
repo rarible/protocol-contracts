@@ -15,12 +15,14 @@ truffle test \
             ./test/contracts/v2/ERC721LazyMintTransferProxyTest.sol \
             ./test/contracts/v2/ERC1155LazyMintTransferProxyTest.sol \
             ./test/contracts/v2/PunkTransferProxyTest.sol \
+            ./test/contracts/v2/TestRoyaltiesRegistryNew.sol \
             ./test/contracts/tokens/TestERC721WithRoyaltiesV1.sol \
             ./test/contracts/tokens/TestERC721WithRoyaltiesV2.sol \
             ./test/contracts/tokens/TestERC1155WithRoyaltiesV1.sol \
             ./test/contracts/tokens/TestERC1155WithRoyaltiesV2.sol \
             ./test/contracts/tokens/TestERC721WithRoyaltiesV1_InterfaceError.sol \
             ./test/contracts/tokens/TestERC1155WithRoyaltiesV2_InterfaceError.sol \
+            ./test/contracts/tokens/TestERC721WithRoyaltyV2981.sol \
             --compile-all
 
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.2 <0.8.0;
+
 import "./LibPart.sol";
 
 library LibRoyalties2981 {
@@ -16,7 +17,7 @@ library LibRoyalties2981 {
         if (amount == 0) {
             return result;
         }
-        uint256 percent = (amount * 100 / _WEIGHT_VALUE);
+        uint256 percent = (amount * 100 / _WEIGHT_VALUE) * 100;
         result = new LibPart.Part[](1);
         result[0].account = payable(to);
         result[0].value = uint96(percent);
