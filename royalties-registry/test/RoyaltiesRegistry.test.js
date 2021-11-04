@@ -42,7 +42,7 @@ contract("RoyaltiesRegistry, test methods", accounts => {
       	royalties = ev.royalties;
         return true;
       });
-			assert.equal(royalties[0].value, 10);
+			assert.equal(royalties[0].value, 1000);
 			assert.equal(royalties[0].account, getRoyalties);
 			assert.equal(royalties.length, 1);
   	})
@@ -55,8 +55,7 @@ contract("RoyaltiesRegistry, test methods", accounts => {
       await ERC721_V2981.initialize();                                   	//set 2981 interface
 
     	part = await royaltiesRegistry.getRoyalties.call(ERC721_V2981.address, tokenId);
-			let royalties;
-			assert.equal(part[0].value, 10);
+			assert.equal(part[0].value, 1000);
 			assert.equal(part[0].account, getRoyalties);
 			assert.equal(part.length, 1);
   	})
