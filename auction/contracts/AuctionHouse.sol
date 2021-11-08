@@ -234,7 +234,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
             doTransfersWithFees(
                 currentAuction.lastBid.amount, 
                 address(this), 
-                MatchProtocolFees(currentAuction.protocolFee, currentAuction.protocolFee),
+                MatchFees(currentAuction.protocolFee, currentAuction.protocolFee, LibFeeSide.FeeSide.TAKE),
                 bidData, 
                 aucData, 
                 currentAuction.buyAsset, 
