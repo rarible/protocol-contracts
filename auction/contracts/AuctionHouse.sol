@@ -217,14 +217,14 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) {//bid exists
-            LibOrderDataV1.DataV1 memory bidData = LibBidDataV1.getPaymentData(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
+            LibOrderDataV2.DataV2 memory bidData = LibBidDataV1.getPaymentData(currentAuction.lastBid.data, currentAuction.lastBid.dataType);
             if (bidData.payouts.length == 0){
                 LibPart.Part[] memory payout = new LibPart.Part[](1);
                 payout[0].account = payable(buyer);
                 payout[0].value = 10000;
                 bidData.payouts = payout;
             }
-            LibOrderDataV1.DataV1 memory aucData = LibAucDataV1.getPaymentData(currentAuction.data, currentAuction.dataType);
+            LibOrderDataV2.DataV2 memory aucData = LibAucDataV1.getPaymentData(currentAuction.data, currentAuction.dataType);
             if (aucData.payouts.length == 0){
                 LibPart.Part[] memory payout = new LibPart.Part[](1);
                 payout[0].account = payable(seller);

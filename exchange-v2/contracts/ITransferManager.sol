@@ -25,8 +25,7 @@ abstract contract ITransferManager is ITransferExecutor {
     bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
 
     function doTransfers(
-        LibAsset.AssetType memory makeMatch,
-        LibAsset.AssetType memory takeMatch,
+        LibOrder.MatchedAssets memory matchedAssets,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
