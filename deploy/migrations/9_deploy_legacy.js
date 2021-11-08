@@ -1,4 +1,4 @@
-const getSettings = require("./config.js")
+const { getSettings } = require("./config.js")
 
 const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
 const TransferProxy = artifacts.require('TransferProxy');

@@ -29,7 +29,11 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
         } else {
             if (_msgSender() != order.maker) {
                 bytes32 hash = LibOrder.hash(order);
-                if (_hashTypedDataV4(hash).recover(signature) != order.maker) {
+                address signer;
+                if (signature.length == 65) {
+                    signer = _hashTypedDataV4(hash).recover(signature);
+                }
+                if  (signer != order.maker) {
                     if (order.maker.isContract()) {
                         require(
                             IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
@@ -38,7 +42,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
                     } else {
                         revert("order signature verification error");
                     }
-                }
+                }  
             }
         }
     }
