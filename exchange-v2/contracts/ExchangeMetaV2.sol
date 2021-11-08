@@ -27,4 +27,16 @@ contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTra
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
         return super._msgSender();
     }
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
+        if (isTheSameAsOnChain(order, hash)) {
+            return onChainOrders[hash].fee;
+        } else {
+            return protocolFee;
+        }
+    }
+
+    function getProtocolFee() override internal view returns(uint) {
+        return protocolFee;
+    }
 }

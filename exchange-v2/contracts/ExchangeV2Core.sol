@@ -129,21 +129,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
         
-        bool ethRequired = matchingRequiresEth(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
-
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
-        if (matchedAssets.makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS && ethRequired) {
-            require(matchedAssets.takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
-            require(msg.value >= totalMakeValue, "not enough eth");
-            if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
-            }
-        } else if (matchedAssets.takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS && ethRequired) {
-            require(msg.value >= totalTakeValue, "not enough eth");
-            if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
-            }
-        }
+        
+        returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
         deleteFilledOrder(orderLeft, leftOrderKeyHash);
         deleteFilledOrder(orderRight, rightOrderKeyHash);
@@ -181,6 +169,23 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             }
         }
         return newFill;
+    }
+
+    function returnChange(LibOrder.MatchedAssets memory matchedAssets, LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight, bytes32 leftOrderKeyHash, bytes32 rightOrderKeyHash, uint totalMakeValue, uint totalTakeValue) internal {
+        bool ethRequired = matchingRequiresEth(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
+
+        if (matchedAssets.makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS && ethRequired) {
+            require(matchedAssets.takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
+            require(msg.value >= totalMakeValue, "not enough eth");
+            if (msg.value > totalMakeValue) {
+                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
+            }
+        } else if (matchedAssets.takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS && ethRequired) {
+            require(msg.value >= totalTakeValue, "not enough eth");
+            if (msg.value > totalTakeValue) {
+                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
+            }
+        }
     }
 
     function getOrderFill(LibOrder.Order memory order, bytes32 hash) internal view returns (uint fill) {
