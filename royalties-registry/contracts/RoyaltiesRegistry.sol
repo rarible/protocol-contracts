@@ -95,15 +95,19 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     }
 
     function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory) {
+        (LibPart.Part[] memory royalties, bool ok) = royaltiesFromContractNative(token, tokenId);
+        if (!ok) {
+            return royaltiesFromContractSpecial(token, tokenId);
+        }
+        return royalties;
+    }
+
+    function royaltiesFromContractNative(address token, uint tokenId) internal view returns (LibPart.Part[] memory, bool) {
+        bool ok = true;
         if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
             RoyaltiesV2 v2 = RoyaltiesV2(token);
             try v2.getRaribleV2Royalties(tokenId) returns (LibPart.Part[] memory result) {
-                return result;
-            } catch {}
-        } else if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
-            IERC2981 v2981 = IERC2981(token);
-            try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
-                return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
+                return (result, ok);
             } catch {}
         } else {
             RoyaltiesV1 v1 = RoyaltiesV1(token);
@@ -111,23 +115,35 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
             try v1.getFeeRecipients(tokenId) returns (address payable[] memory result) {
                 recipients = result;
             } catch {
-                return new LibPart.Part[](0);
+                return (new LibPart.Part[](0), !ok);
             }
             uint[] memory values;
             try v1.getFeeBps(tokenId) returns (uint[] memory result) {
                 values = result;
             } catch {
-                return new LibPart.Part[](0);
+                return (new LibPart.Part[](0), !ok);
             }
             if (values.length != recipients.length) {
-                return new LibPart.Part[](0);
+                return (new LibPart.Part[](0), ok);
             }
             LibPart.Part[] memory result = new LibPart.Part[](values.length);
             for (uint256 i = 0; i < values.length; i++) {
                 result[i].value = uint96(values[i]);
                 result[i].account = recipients[i];
             }
-            return result;
+            return (result, ok);
+        }
+        return (new LibPart.Part[](0), !ok);
+    }
+
+    function royaltiesFromContractSpecial(address token, uint tokenId) internal view returns (LibPart.Part[] memory) {
+        if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
+            IERC2981 v2981 = IERC2981(token);
+            try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
+                return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
+            } catch {}
+        } else {
+            return new LibPart.Part[](0);
         }
         return new LibPart.Part[](0);
     }
