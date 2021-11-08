@@ -23,11 +23,9 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        LibOrder.Order memory rightOrder
     ) payable external {
-        doTransfers(LibOrder.MatchedAssets(makeMatch, takeMatch), fill, leftOrder, rightOrder, leftOrderData, rightOrderData);
+        doTransfers(LibOrder.MatchedAssets(makeMatch, takeMatch), fill, leftOrder, rightOrder, LibOrderData.parse(leftOrder), LibOrderData.parse(rightOrder));
     }
 
     function __TransferManager_init(

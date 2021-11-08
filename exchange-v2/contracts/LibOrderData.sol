@@ -3,9 +3,6 @@
 pragma solidity 0.7.6;
 
 import "./LibOrder.sol";
-import "./LibOrderDataV2.sol";
-import "./LibOrderDataV1.sol";
-import "@rarible/royalties/contracts/LibPart.sol";
 
 library LibOrderData {
     function parse(LibOrder.Order memory order) pure internal returns (LibOrderDataV2.DataV2 memory dataOrder) {
