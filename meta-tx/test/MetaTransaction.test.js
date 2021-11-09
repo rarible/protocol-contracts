@@ -12,6 +12,7 @@ let privateKey = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc
 
 let balanceOfAbi =  require("./contracts/abi/balanceOfAbi.json");
 let sumAbi = require("./contracts/abi/sumAbi.json");
+let getNonceAbi = require("./contracts/abi/getNonceAbi.json");
 let executeMetaTransactionABI = require("./contracts/abi/executeMetaTransactionAbi.json");
 
 const domainType = [{
@@ -120,6 +121,51 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
 
     var newNonce = await metaTxTest.getNonce(publicKey);
     assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+  });
+
+  it("Call known abi-method(getNonce), use metaTx, for check contract support metaTx", async () => {
+  	let nonce = await metaTxTest.getNonce(publicKey);
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, getNonceAbi, [ZERO_ADDRESS]);
+    let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
+
+    var newNonce = await metaTxTest.getNonce(publicKey);
+    assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+  });
+
+  it("Call known abi-method(getNonce), use metaTx, for check Event from contract support metaTx", async () => {
+  	let nonce = await metaTxTest.getNonce(publicKey);
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, getNonceAbi, [ZERO_ADDRESS]);
+    let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
+
+    let eventFunctionSignature;
+    truffleAssert.eventEmitted(resultExecMataTx, 'MetaTransactionExecuted', (ev) => {
+   	  eventFunctionSignature = ev.functionSignature;
+      return true;
+    });
+    assert.equal(functionSignature, eventFunctionSignature);
+  });
+
+  it("Call known abi-method(getNonceAbi), use metaTx, error in part v throw", async () => {
+  	let nonce = await metaTxTest.getNonce(publicKey);
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, getNonceAbi, [ZERO_ADDRESS]);
+    await expectThrow(
+      metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v+1, {from: accounts[0]}) //v+1 - insert error for test only
+    );
   });
 
   it("Call known abi-method, check event from method which call as metaTx ", async () => {
