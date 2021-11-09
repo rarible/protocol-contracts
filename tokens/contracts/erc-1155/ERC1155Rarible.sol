@@ -24,6 +24,7 @@ contract ERC1155Rarible is ERC1155Base {
         __ERC1155Burnable_init_unchained();
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC1155Base_init_unchained(_name, _symbol);
+        __MintControl_init_unchained();
         _setBaseURI(baseURI);
     }
 
