@@ -83,7 +83,7 @@ const getTransactionData = async (nonce, abi, params) => {
 async function areMetaTxSupported(addressContract) {
   let nonce;
 	try {
-	  nonce = await addressContract.getNonce(publicKey);
+	  nonce = await addressContract.getNonce.call(publicKey);
 	} catch {
      return(false);
   }
@@ -96,7 +96,7 @@ async function areMetaTxSupported(addressContract) {
   } = await getTransactionData(nonce, getNonceAbi, [ZERO_ADDRESS]);
 
   try {
-    await addressContract.executeMetaTransaction(publicKey, functionSignature, r, s, v);
+    await addressContract.executeMetaTransaction.call(publicKey, functionSignature, r, s, v);
   } catch {
     return(false);
   }
