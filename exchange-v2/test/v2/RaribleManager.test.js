@@ -11,7 +11,7 @@ const ERC1155_V1 = artifacts.require("TestERC1155WithRoyaltiesV1.sol");
 const ERC1155_V2 = artifacts.require("TestERC1155WithRoyaltiesV2.sol");
 const ERC721_V1_Error = artifacts.require("TestERC721WithRoyaltiesV1_InterfaceError.sol");
 const ERC1155_V2_Error = artifacts.require("TestERC1155WithRoyaltiesV2_InterfaceError.sol");
-const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistryNew.sol");
+const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
 const ERC1155LazyMintTest = artifacts.require("ERC1155LazyMintTest.sol");
 const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol")
@@ -58,7 +58,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
-		await royaltiesRegistry.__TestRoyaltiesRegistryNew_init();
 		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address);
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
