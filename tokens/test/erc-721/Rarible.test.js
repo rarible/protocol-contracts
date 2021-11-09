@@ -322,6 +322,28 @@ contract("ERC721Rarible", accounts => {
     );
   });
 
+  it("mint and transfer with minter access control", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    await token.enableMinterControl({from: tokenOwner});
+    assert.equal(await token.minterControlEnabled(), true);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
+    );
+
+    await token.grantMinter(minter, {from: tokenOwner})
+    assert.equal(await token.isValidMinter(minter), true);
+    assert.equal(await token.isValidMinter(transferTo), false);
+
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
+    assert.equal(await token.ownerOf(tokenId), transferTo);
+  });
+
   it("standard transfer from owner", async () => {
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
