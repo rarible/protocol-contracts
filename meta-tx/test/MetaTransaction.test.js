@@ -1,6 +1,7 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const MetaTxTest = artifacts.require("MetaTxTest.sol");
 const NoMetaTxTest = artifacts.require("NoMetaTxTest.sol");
+const NoGetNonceTxTest = artifacts.require("NoGetNonceTxTest.sol");
 
 const web3Abi = require('web3-eth-abi');
 const sigUtil = require('eth-sig-util');
@@ -80,12 +81,16 @@ const getTransactionData = async (nonce, abi, params) => {
   return {r, s, v, functionSignature};
 }
 
+/* @dev function, example how to check contract support metaTransaction
+  * addressContract - address contract
+  * return true - contract support metaTransaction, false - don`t support
+  */
 async function areMetaTxSupported(addressContract) {
   let nonce;
 	try {
 	  nonce = await addressContract.getNonce.call(publicKey);
 	} catch {
-     return(false);
+    return(false);
   }
 
 	let {
@@ -110,7 +115,6 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
 
   beforeEach(async () => {
     metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "1"], { initializer: '__MetaTxTest_init' });
-    noMetaTxTest = await NoMetaTxTest.new();
 
     domainData = {
           name: "MetaTxTest",
@@ -163,12 +167,22 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   });
 
   it("Check contract supports metaTransaction by method areMetaTxSupported, use contract yes MetaTx", async () => {
+    let nonceBefore = await metaTxTest.getNonce(ZERO_ADDRESS);
   	let result = await areMetaTxSupported(metaTxTest);
   	assert.equal(result, true);
+  	let nonceAfter = await metaTxTest.getNonce(ZERO_ADDRESS);
+  	assert.equal(Number(nonceBefore), Number(nonceAfter));
   });
 
   it("Check contract supports metaTransaction by method areMetaTxSupported, use contract no MetaTx", async () => {
+    let noMetaTxTest = await NoMetaTxTest.new();
   	let result = await areMetaTxSupported(noMetaTxTest);
+  	assert.equal(result, false);
+  });
+
+  it("Check contract supports metaTransaction by method areMetaTxSupported, use contract no MetaTx, no getNonce()", async () => {
+    let noGetNonceTxTest = await NoGetNonceTxTest.new();
+  	let result = await areMetaTxSupported(noGetNonceTxTest);
   	assert.equal(result, false);
   });
 
