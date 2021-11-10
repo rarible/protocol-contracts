@@ -49,12 +49,5 @@ function getSettings(network) {
 }
 
 module.exports = async function (deployer, network) {
-	const { erc721LazyMintTransferProxy, erc1155LazyMintTransferProxy, transferProxy } = getSettings(network);
-	const erc721 = await ERC721Rarible.deployed();
-	const erc1155 = await ERC1155Rarible.deployed();
 
-	await erc721.setDefaultApproval(erc721LazyMintTransferProxy, true, { gas: 100000 });
-	await erc721.setDefaultApproval(transferProxy, true, { gas: 100000 });
-	await erc1155.setDefaultApproval(erc1155LazyMintTransferProxy, true, { gas: 100000 });
-	await erc1155.setDefaultApproval(transferProxy, true, { gas: 100000 });
 };

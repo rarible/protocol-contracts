@@ -1,4 +1,4 @@
-const Testing = artifacts.require("ERC721RaribleUserMinimal.sol");
+const Testing = artifacts.require("ERC721Rarible.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require('./mint');

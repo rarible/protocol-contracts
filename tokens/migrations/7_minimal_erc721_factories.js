@@ -78,11 +78,8 @@ module.exports = async function (deployer, network) {
   const erc721LazyMintTransferProxy = settings.erc721LazyMintTransferProxy;
 
   //deploying erc721 proxy
-  const erc721Proxy = await deployProxy(ERC721RaribleMinimal, ["Rarible", "RARI", "ipfs:/", ""], { deployer, initializer: '__ERC721Rarible_init' });
+  const erc721Proxy = await deployProxy(ERC721RaribleMinimal, ["Rarible", "RARI", "ipfs:/", "", transferProxy, erc721LazyMintTransferProxy], { deployer, initializer: '__ERC721Rarible_init' });
   console.log("deployed minimal erc721 at", erc721Proxy.address)
-  //setting default approvers
-  await erc721Proxy.setDefaultApproval(erc721LazyMintTransferProxy, true, { gas: 100000 });
-  await erc721Proxy.setDefaultApproval(transferProxy, true, { gas: 100000 });
 
   //deploying erc712 factory
   //ERC721RaribleMinimal implementation

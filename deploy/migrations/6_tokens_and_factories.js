@@ -22,18 +22,12 @@ module.exports = async function (deployer, network) {
   const erc1155LazyMintTransferProxy = (await ERC1155LazyMintTransferProxy.deployed()).address;
 
   //deploying erc721 proxy
-  const erc721Proxy = await deployProxy(ERC721Rarible, ["Rarible", "RARI", "ipfs:/", ""], { deployer, initializer: '__ERC721Rarible_init' });
+  const erc721Proxy = await deployProxy(ERC721Rarible, ["Rarible", "RARI", "ipfs:/", "", transferProxy, erc721LazyMintTransferProxy], { deployer, initializer: '__ERC721Rarible_init' });
   console.log("deployed erc721 at", erc721Proxy.address)
-  //setting default approvers
-  await erc721Proxy.setDefaultApproval(erc721LazyMintTransferProxy, true, { gas: 100000 });
-  await erc721Proxy.setDefaultApproval(transferProxy, true, { gas: 100000 });
 
   //deploying erc1155 proxy
-  const erc1155Proxy = await deployProxy(ERC1155Rarible, ["Rarible", "RARI", "ipfs:/", ""], { deployer, initializer: '__ERC1155Rarible_init' });
+  const erc1155Proxy = await deployProxy(ERC1155Rarible, ["Rarible", "RARI", "ipfs:/", "", transferProxy, erc1155LazyMintTransferProxy], { deployer, initializer: '__ERC1155Rarible_init' });
   console.log("deployed erc1155 at", erc1155Proxy.address)
-  //setting default approvers
-  await erc1155Proxy.setDefaultApproval(erc1155LazyMintTransferProxy, true, { gas: 100000 });
-  await erc1155Proxy.setDefaultApproval(transferProxy, true, { gas: 100000 });
 
   //deploying erc712 factory
   //ERC721Rarible implementation
