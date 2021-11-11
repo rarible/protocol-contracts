@@ -15,11 +15,6 @@ contract Royalties2981Test {
     event Test(address account, uint value);
 
     function royaltyInfoTest(uint256 _tokenId, uint256 _salePrice) public {
-//        LibPart.Part[] memory result = royalties.get2981Royalties(_tokenId, _salePrice);
-//
-//        for (uint i = 0; i < result.length; i++) {
-//            emit Test(result[i].account, result[i].value);
-//        }
         (address account, uint value) = royalties.royaltyInfo(_tokenId, _salePrice);
         emit Test(account, value);
     }

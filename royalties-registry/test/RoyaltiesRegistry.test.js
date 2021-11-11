@@ -29,36 +29,36 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 
 	describe("RoyaltiesRegistry token supports IERC2981:", () => {
 
-		it("Get royalties by token, use RoyaltiesRegistryTest", async () => {
-		  const getRoyalties = accounts[1];
+    it("Get royalties by token, use RoyaltiesRegistryTest (event)", async () => {
+      const getRoyalties = accounts[1];
       const tokenId = getRoyalties + "b00000000000000000000001";
-  		await royaltiesRegistry.__RoyaltiesRegistry_init();               	//initialize Owner
-      ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      await royaltiesRegistry.__RoyaltiesRegistry_init();               	//initialize Owner
+      const ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
       await ERC721_V2981.initialize();                                   	//set 2981 interface
 
-    	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
-			let royalties;
+      let part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
+      let royalties;
       truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
-      	royalties = ev.royalties;
+        royalties = ev.royalties;
         return true;
       });
-			assert.equal(royalties[0].value, 1000);
-			assert.equal(royalties[0].account, getRoyalties);
-			assert.equal(royalties.length, 1);
-  	})
+      assert.equal(royalties[0].value, 1000);
+      assert.equal(royalties[0].account, getRoyalties);
+      assert.equal(royalties.length, 1);
+    })
 
-		it("Get royalties by token, use RoyaltiesRegistry", async () => {
-		  const getRoyalties = accounts[1];
+    it("Get royalties by token, use RoyaltiesRegistry (call)", async () => {
+      const getRoyalties = accounts[1];
       const tokenId = getRoyalties + "b00000000000000000000001";
-  		await royaltiesRegistry.__RoyaltiesRegistry_init();               	//initialize Owner
-      ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      await royaltiesRegistry.__RoyaltiesRegistry_init();               	//initialize Owner
+      const ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
       await ERC721_V2981.initialize();                                   	//set 2981 interface
 
-    	part = await royaltiesRegistry.getRoyalties.call(ERC721_V2981.address, tokenId);
-			assert.equal(part[0].value, 1000);
-			assert.equal(part[0].account, getRoyalties);
-			assert.equal(part.length, 1);
-  	})
+      let part = await royaltiesRegistry.getRoyalties.call(ERC721_V2981.address, tokenId);
+      assert.equal(part[0].value, 1000);
+      assert.equal(part[0].account, getRoyalties);
+      assert.equal(part.length, 1);
+    })
 	})
 
 	describe("RoyaltiesRegistry methods works:", () => {

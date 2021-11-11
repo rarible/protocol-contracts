@@ -48,6 +48,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let erc1155TokenId1 = 54;
 	let erc1155TokenId2 = 55;
 	let royaltiesRegistry;
+	let erc721V2981;
 
 	function encDataV1(tuple) {
 		return testing.encode(tuple)
@@ -84,9 +85,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		erc721V1_Error = await ERC721_V1_Error.new("Rarible", "RARI", "https://ipfs.rarible.com");
 		/*NFT 1155 RoyalitiesV2 with interface error*/
 		erc1155V2_Error = await ERC1155_V2_Error.new("https://ipfs.rarible.com");
-		/*NFT with royalty, support 2981*/
-		erc721V2981 = await ERC721V2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
-		await erc721V2981.initialize();
 	});
 
 	describe("Check doTransfers()", () => {
@@ -567,6 +565,10 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		}
 
 		it("Transfer from ERC20 to ERC721(Royalties-2981 - 10%), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
+			/*NFT with royalty, support 2981*/
+    	erc721V2981 = await ERC721V2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
+    	await erc721V2981.initialize();
+
 		  const royaltiesGetter = accounts[2];
 			const { left, right } = await prepare20_721V2981Orders(royaltiesGetter, 105)
 
