@@ -10,15 +10,16 @@ module.exports = async function (deployer, network) {
   let cryptoPunksMarket;
 
   if (settings.deploy_CryptoPunks) {
-    cryptoPunksMarket = await deployer.deploy(CryptoPunksMarket, { gas: 3500000 });
+    await deployer.deploy(CryptoPunksMarket, { gas: 4500000 });
+    cryptoPunksMarket = await CryptoPunksMarket.deployed();
   } else {
     cryptoPunksMarket = await CryptoPunksMarket.at(settings.address_CryptoPunks);
   }
-  console.log("deployed cryptoPunksMarket");
+  console.log("deployed cryptoPunksMarket:",  cryptoPunksMarket.address);
 
-  await deployer.deploy(PunkTransferProxy, { gas: 2500000 });
-  console.log("PunkTransferProxy deployed");
+  await deployer.deploy(PunkTransferProxy, { gas: 1500000 });
   const punkTransferProxy = await PunkTransferProxy.deployed();
+  console.log("PunkTransferProxy deployed: ", punkTransferProxy.address);
   await punkTransferProxy.__OperatorRole_init({ gas: 200000 });
 
   const exchangeV2 = await ExchangeV2.deployed();

@@ -9,6 +9,7 @@ const rinkeby = {
   },
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
   deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0x04C5e1adfdB11B293398120847fA2bda166a4584",
 }
 const mainnet = {
   v2Legacy: ["0x0A093d230ba7845BcA0898851B093B8B19bc1Ae1"],
@@ -26,14 +27,17 @@ const mainnet = {
 const ropsten = {
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
   deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0x04C5e1adfdB11B293398120847fA2bda166a4584",
 }
 const e2e = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
   deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0x04C5e1adfdB11B293398120847fA2bda166a4584",
 }
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
