@@ -287,6 +287,25 @@ contract("ERC1155Rarible", accounts => {
       await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
       assert.equal(await token.balanceOf(transferTo, tokenId), 2);
     });
+    //TODO make this test work!!!
+    it("Run mintAndTransfer = 5, burn = 7, mintAndTransfer by the same minter = 3, ok", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 10;
+      let mint = 5;
+      let secondMintValue = 3;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+
+      await token.burn(transferTo, tokenId, 6, {from: transferTo});
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
+      assert.equal(await token.balanceOf(transferTo, tokenId), 3);
+    });
 
     it("Run mintAndTransfer = 4, burn = 3, mintAndTransfer by the same minter = 2, throw", async () => {
       let minter = accounts[1];
