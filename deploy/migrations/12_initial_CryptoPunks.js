@@ -11,9 +11,7 @@ module.exports = async function (deployer, network) {
   console.log(settings)
   let addressCryptoPunksMarket;
   if (settings.deploy_CryptoPunks) {
-    const cryptoPunksMarket = await deployProxy(
-      CryptoPunksMarket, [], { deployer, initializer: 'CryptoPunksMarket()' }
-    );
+    const cryptoPunksMarket = await deployer.deploy(CryptoPunksMarket, { gas: 1500000 });
     addressCryptoPunksMarket = cryptoPunksMarket.address;
   } else {
     addressCryptoPunksMarket = settings.address_CryptoPunks;
@@ -28,4 +26,18 @@ module.exports = async function (deployer, network) {
   await punkTransferProxy.addOperator(exchangeV2);
 
   await exchangeV2.setTransferProxy(CRYPTO_PUNK, punkTransferProxy.address);
+  await setTestCryptoPunks(settings, punkTransferProxy.address);
 };
+
+async function setTestCryptoPunks(_settings, _punkTransferProxy) {
+  if (_settings.deploy_CryptoPunks) {
+    const cryptoPunksMarket = await CryptoPunksMarket.deployed();
+    await cryptoPunksMarket.allInitialOwnersAssigned();
+    let punkIndex = 1;
+    let punkNumber = 10;
+    while (punkIndex <= punkNumber) {
+      await cryptoPunksMarket.getPunk(punkIndex, {from : _settings.communityWallet});
+      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, _punkTransferProxy, { from: _settings.communityWallet });
+    }
+  }
+}
