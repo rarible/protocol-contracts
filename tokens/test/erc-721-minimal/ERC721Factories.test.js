@@ -24,7 +24,7 @@ contract("Test factories minimal", accounts => {
     let proxy;
     const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt)
 
-		const resultCreateToken = await factory.createPrivateToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, {from: tokenOwner});
+		const resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, {from: tokenOwner});
       truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleUserProxy', (ev) => {
         proxy = ev.proxy;
         return true;
@@ -52,7 +52,7 @@ contract("Test factories minimal", accounts => {
     let proxy;
     const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt)
 
-		const resultCreateToken = await factory.createPublicToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, {from: tokenOwner});
+		const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, {from: tokenOwner});
       truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
         proxy = ev.proxy;
         return true;

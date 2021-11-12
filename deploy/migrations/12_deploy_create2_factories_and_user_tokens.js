@@ -60,7 +60,7 @@ async function deployAndUpgrade1155(deployer, network, transferProxy, erc1155Laz
   //deploying new factory
   const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 1500000 });
   console.log(`deployed factory1155 at ${factory1155.address}`)
-
+  
 }
 
 module.exports = async function (deployer, network) {

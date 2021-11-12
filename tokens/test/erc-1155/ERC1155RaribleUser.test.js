@@ -22,7 +22,12 @@ contract("ERC1155RaribleUser", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], {from: tokenOwner});
+    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], accounts[6], accounts[7], {from: tokenOwner});
+  });
+
+  it("approve for all", async () => {
+    assert.equal(await token.isApprovedForAll(accounts[1], accounts[6]), true);
+    assert.equal(await token.isApprovedForAll(accounts[1], accounts[7]), true);
   });
 
   it("mint and transfer by minter, token create by Factory", async () => {
@@ -37,7 +42,7 @@ contract("ERC1155RaribleUser", accounts => {
     assert.notEqual(addressBeforeDeploy, addfressWithDifferentSalt, "different salt = different addresses")
     assert.notEqual(addressBeforeDeploy, addressWithDifferentData, "different data = different addresses")
 
-    const resultCreateToken = await factory.createPrivateToken(name, "TST", "ipfs:/", "ipfs:/", [], salt, {from: tokenOwner});
+    const resultCreateToken = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", [], salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleUserProxy', (ev) => {
      	proxy = ev.proxy;
       return true;
@@ -45,7 +50,7 @@ contract("ERC1155RaribleUser", accounts => {
     assert.equal(addressBeforeDeploy, proxy, "correct address got before deploy")
     
     let addrToken2;
-    const resultCreateToken2 = await factory.createPrivateToken(name, "TST", "ipfs:/", "ipfs:/", [], salt + 1, {from: tokenOwner});
+    const resultCreateToken2 = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", [], salt + 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken2, 'Create1155RaribleUserProxy', (ev) => {
         addrToken2 = ev.proxy;
       return true;
@@ -53,7 +58,7 @@ contract("ERC1155RaribleUser", accounts => {
     assert.equal(addrToken2, addfressWithDifferentSalt, "correct address got before deploy")
 
     let addrToken3;
-    const resultCreateToken3 = await factory.createPrivateToken(name, "TSA", "ipfs:/", "ipfs:/", [], salt, {from: tokenOwner});
+    const resultCreateToken3 = await factory.createToken(name, "TSA", "ipfs:/", "ipfs:/", [], salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken3, 'Create1155RaribleUserProxy', (ev) => {
       addrToken3 = ev.proxy;
     return true;

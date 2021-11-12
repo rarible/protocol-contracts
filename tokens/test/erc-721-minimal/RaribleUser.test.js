@@ -14,7 +14,7 @@ contract("ERC721RaribleUser minimal", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], { from: tokenOwner });
+    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], zeroAddress, zeroAddress, { from: tokenOwner });
   });
 
   it("check for ERC165 interface", async () => {

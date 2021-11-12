@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /**
  * @dev This contract is for creating proxy to access ERC721Rarible token.
  *
- * The beacon should be initialized before call ERC721RaribleFactory constructor.
+ * The beacon should be initialized before call ERC721RaribleFactoryC2 constructor.
  *
  */
 contract ERC721RaribleFactoryC2 is Ownable {
@@ -27,14 +27,14 @@ contract ERC721RaribleFactoryC2 is Ownable {
         lazyTransferProxy = _lazyTransferProxy;
     }
 
-    function createPublicToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {
+    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI), salt);
         ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
         token.transferOwnership(_msgSender());
         emit Create721RaribleProxy(beaconProxy);
     }
 
-    function createPrivateToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
+    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
         ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
         token.transferOwnership(_msgSender());
@@ -91,7 +91,7 @@ contract ERC721RaribleFactoryC2 is Ownable {
         return address(uint160(uint(hash)));
     }
 
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) pure internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators);
+    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
+        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
     }
 }

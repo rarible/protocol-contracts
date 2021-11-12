@@ -11,8 +11,8 @@ contract ERC721RaribleMeta is ERC721RaribleMinimal, EIP712MetaTransaction {
     event CreateERC721RaribleMeta(address owner, string name, string symbol);
     event CreateERC721RaribleUserMeta(address owner, string name, string symbol);
 
-    function __ERC721RaribleUserMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external initializer {
-        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
+    function __ERC721RaribleUserMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external initializer {
+        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         for(uint i = 0; i < operators.length; i++) {
             setApprovalForAll(operators[i], true);
@@ -26,11 +26,7 @@ contract ERC721RaribleMeta is ERC721RaribleMinimal, EIP712MetaTransaction {
     }
 
     function __ERC721RaribleMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external initializer {
-        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
-
-        //setting default approver for transferProxies
-        _setDefaultApproval(transferProxy, true);
-        _setDefaultApproval(lazyTransferProxy, true);
+        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         __MetaTransaction_init_unchained("ERC721RaribleMeta", "1");
 

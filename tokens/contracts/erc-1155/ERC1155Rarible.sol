@@ -12,8 +12,8 @@ contract ERC1155Rarible is ERC1155Base {
     event CreateERC1155Rarible(address owner, string name, string symbol);
     event CreateERC1155RaribleUser(address owner, string name, string symbol);
 
-    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) external initializer {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
+    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external initializer {
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
         for(uint i = 0; i < operators.length; i++) {
             setApprovalForAll(operators[i], true);
         }
@@ -23,17 +23,13 @@ contract ERC1155Rarible is ERC1155Base {
     }
     
     function __ERC1155Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external initializer {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI);
-
-        //setting default approver for transferProxies
-        _setDefaultApproval(transferProxy, true);
-        _setDefaultApproval(lazyTransferProxy, true);
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         isPrivate = false;
         emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
     }
 
-    function __ERC1155Rarible_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) internal {
+    function __ERC1155Rarible_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) internal {
         __Ownable_init_unchained();
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();
@@ -45,6 +41,10 @@ contract ERC1155Rarible is ERC1155Base {
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC1155Base_init_unchained(_name, _symbol);
         _setBaseURI(baseURI);
+
+        //setting default approver for transferProxies
+        _setDefaultApproval(transferProxy, true);
+        _setDefaultApproval(lazyTransferProxy, true);
     }
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override {

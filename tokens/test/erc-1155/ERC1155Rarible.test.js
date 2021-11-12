@@ -34,7 +34,6 @@ contract("ERC1155Rarible", accounts => {
     transferProxy = await TransferProxyTest.new();
     beacon = await UpgradeableBeacon.new(token.address);
     factory = await ERC1155RaribleFactoryC2.new(beacon.address, transferProxy.address, proxyLazy.address);
-
     const salt = 3;
 
     const addressBeforeDeploy = await factory.getAddress(name, "TSA", "ipfs:/", "ipfs:/", salt)
@@ -44,7 +43,7 @@ contract("ERC1155Rarible", accounts => {
     assert.notEqual(addressBeforeDeploy, addfressWithDifferentSalt, "different salt = different addresses")
     assert.notEqual(addressBeforeDeploy, addressWithDifferentData, "different data = different addresses")
 
-    const resultCreateToken = await factory.createPublicToken(name, "TSA", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
+    const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TSA", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
      	proxy = ev.proxy;
       return true;
@@ -52,7 +51,7 @@ contract("ERC1155Rarible", accounts => {
     assert.equal(addressBeforeDeploy, proxy, "correct address got before deploy")
     
     let addrToken2;
-    const resultCreateToken2 = await factory.createPublicToken(name, "TSA", "ipfs:/", "ipfs:/", salt + 1, {from: tokenOwner});
+    const resultCreateToken2 = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TSA", "ipfs:/", "ipfs:/", salt + 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken2, 'Create1155RaribleProxy', (ev) => {
         addrToken2 = ev.proxy;
       return true;
@@ -60,7 +59,7 @@ contract("ERC1155Rarible", accounts => {
     assert.equal(addrToken2, addfressWithDifferentSalt, "correct address got before deploy")
 
     let addrToken3;
-    const resultCreateToken3 = await factory.createPublicToken(name, "TST", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
+    const resultCreateToken3 = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TST", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken3, 'Create1155RaribleProxy', (ev) => {
       addrToken3 = ev.proxy;
     return true;
