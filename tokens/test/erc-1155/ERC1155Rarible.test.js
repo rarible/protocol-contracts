@@ -378,8 +378,8 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    await token.enableMinterControl({from: tokenOwner});
-    assert.equal(await token.minterControlEnabled(), true);
+    await token.enableMinterAccessControl({from: tokenOwner});
+    assert.equal(await token.minterAccessControlEnabled(), true);
 
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter})

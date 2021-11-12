@@ -329,8 +329,8 @@ contract("ERC721Rarible", accounts => {
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.enableMinterControl({from: tokenOwner});
-    assert.equal(await token.minterControlEnabled(), true);
+    await token.enableMinterAccessControl({from: tokenOwner});
+    assert.equal(await token.minterAccessControlEnabled(), true);
 
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
