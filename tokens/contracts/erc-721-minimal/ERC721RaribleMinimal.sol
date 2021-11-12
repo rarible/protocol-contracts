@@ -18,7 +18,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal {
         __Ownable_init_unchained();
         __ERC721Burnable_init_unchained();
         __Mint721Validator_init_unchained();
-        __MintControl_init_unchained();
+        __MinterAccessControl_init_unchained();
         __HasContractURI_init_unchained(contractURI);
         __ERC721_init_unchained(_name, _symbol);
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);

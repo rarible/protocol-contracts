@@ -23,7 +23,7 @@ contract ERC721Rarible is ERC721Base {
         __Ownable_init_unchained();
         __ERC721Burnable_init_unchained();
         __Mint721Validator_init_unchained();
-        __MintControl_init_unchained();
+        __MinterAccessControl_init_unchained();
         __HasContractURI_init_unchained(contractURI);
         __ERC721_init_unchained(_name, _symbol);
     }

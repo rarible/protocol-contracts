@@ -8,9 +8,9 @@ import "./ERC1155BurnableUpgradeable.sol";
 import "./ERC1155DefaultApproval.sol";
 import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
-import "../access/MintControl.sol";
+import "../access/MinterAccessControl.sol";
 
-abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI, MintControl {
+abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI, MinterAccessControl {
 
     string public name;
     string public symbol;

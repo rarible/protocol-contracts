@@ -8,9 +8,9 @@ import "./ERC721BurnableUpgradeableMinimal.sol";
 import "./ERC721DefaultApprovalMinimal.sol";
 import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
-import "../access/MintControl.sol";
+import "../access/MinterAccessControl.sol";
 
-abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI, MintControl {
+abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI, MinterAccessControl {
 
     function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
         _setDefaultApproval(operator, hasApproval);
