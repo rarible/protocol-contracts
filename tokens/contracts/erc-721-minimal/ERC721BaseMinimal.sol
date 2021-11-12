@@ -8,9 +8,8 @@ import "./ERC721BurnableUpgradeableMinimal.sol";
 import "./ERC721DefaultApprovalMinimal.sol";
 import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
-import "../access/MinterAccessControl.sol";
 
-abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI, MinterAccessControl {
+abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
 
     function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
         _setDefaultApproval(operator, hasApproval);
@@ -38,10 +37,6 @@ abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApproval
 
     function _emitMintEvent(address to, uint tokenId) internal override(ERC721UpgradeableMinimal, ERC721LazyMinimal) virtual {
         return ERC721LazyMinimal._emitMintEvent(to, tokenId);
-    }
-
-    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override validateMinter {
-        super.mintAndTransfer(data, to);
     }
 
     uint256[50] private __gap;

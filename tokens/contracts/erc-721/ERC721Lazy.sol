@@ -8,8 +8,9 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
 import "../Mint721Validator.sol";
+import "../access/MinterAccessControl.sol";
 
-abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
+abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, MinterAccessControl {
     using SafeMathUpgradeable for uint;
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToAddressMap;
@@ -47,7 +48,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         }
     }
 
-    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
+    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual validateMinter {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 

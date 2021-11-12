@@ -9,8 +9,9 @@ import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
 import "./Mint1155Validator.sol";
 import "./ERC1155BaseURI.sol";
+import "../access/MinterAccessControl.sol";
 
-abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
+abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, MinterAccessControl  {
     using SafeMathUpgradeable for uint;
 
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
@@ -54,7 +55,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         }
     }
 
-    function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override virtual {
+    function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override virtual validateMinter {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 

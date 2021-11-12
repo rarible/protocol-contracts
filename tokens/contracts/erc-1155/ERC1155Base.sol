@@ -8,9 +8,8 @@ import "./ERC1155BurnableUpgradeable.sol";
 import "./ERC1155DefaultApproval.sol";
 import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
-import "../access/MinterAccessControl.sol";
 
-abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI, MinterAccessControl {
+abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
 
     string public name;
     string public symbol;
@@ -38,10 +37,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
-    }
-
-    function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override validateMinter {
-        super.mintAndTransfer(data, to, _amount);
     }
 
     uint256[50] private __gap;

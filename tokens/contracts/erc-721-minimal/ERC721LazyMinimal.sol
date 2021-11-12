@@ -10,8 +10,9 @@ import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
 import "../Mint721Validator.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "./ERC721URI.sol";
+import "../access/MinterAccessControl.sol";
 
-abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, ERC721URI {
+abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, ERC721URI, MinterAccessControl {
     using SafeMathUpgradeable for uint;
 
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
@@ -47,7 +48,7 @@ abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal
         }
     }
 
-    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
+    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual validateMinter {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
