@@ -9,8 +9,8 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     mapping (address => bool) private _minters;
     bool public minterAccessControlEnabled;
 
-    event MinterAccessControlEnable();
-    event MinterAccessControlDisable();
+    event MinterAccessControlEnabled();
+    event MinterAccessControlDisabled();
     event MinterGranted(address indexed account);
     event MinterRevoked(address indexed account);
 
@@ -40,7 +40,7 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     function enableMinterAccessControl() external onlyOwner {
         require(!minterAccessControlEnabled, "MinterAccessControl: Already enabled");
         minterAccessControlEnabled = true;
-        emit MinterAccessControlEnable();
+        emit MinterAccessControlEnabled();
     }
 
     /**
@@ -49,7 +49,7 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     function disableMinterAccessControl() external onlyOwner  {
         require(minterAccessControlEnabled, "MinterAccessControl: Already disabled");
         minterAccessControlEnabled = false;
-        emit MinterAccessControlDisable();
+        emit MinterAccessControlDisabled();
     }
 
     /**
