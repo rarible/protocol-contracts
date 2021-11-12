@@ -16,22 +16,24 @@ contract("ERC1155Rarible", accounts => {
   let erc1271;
   let beacon;
   let proxy;
+  let proxyLazy;
+  let whiteListProxy = accounts[5];
+  
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const name = 'FreeMintable';
   const ZERO = "0x0000000000000000000000000000000000000000";
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", {from: tokenOwner});
+    proxyLazy = await ERC1155LazyMintTransferProxy.new();
+    await token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, proxyLazy.address, {from: tokenOwner});
     erc1271 = await ERC1271.new();
   });
 
   it("mint and transfer by minter, token create by Factory", async () => {
-    const proxyLazy = await ERC1155LazyMintTransferProxy.new();
     transferProxy = await TransferProxyTest.new();
     beacon = await UpgradeableBeacon.new(token.address);
     factory = await ERC1155RaribleFactoryC2.new(beacon.address, transferProxy.address, proxyLazy.address);
-
     const salt = 3;
 
     const addressBeforeDeploy = await factory.getAddress(name, "TSA", "ipfs:/", "ipfs:/", salt)
@@ -41,7 +43,7 @@ contract("ERC1155Rarible", accounts => {
     assert.notEqual(addressBeforeDeploy, addfressWithDifferentSalt, "different salt = different addresses")
     assert.notEqual(addressBeforeDeploy, addressWithDifferentData, "different data = different addresses")
 
-    const resultCreateToken = await factory.createToken(name, "TSA", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
+    const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TSA", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
      	proxy = ev.proxy;
       return true;
@@ -49,7 +51,7 @@ contract("ERC1155Rarible", accounts => {
     assert.equal(addressBeforeDeploy, proxy, "correct address got before deploy")
     
     let addrToken2;
-    const resultCreateToken2 = await factory.createToken(name, "TSA", "ipfs:/", "ipfs:/", salt + 1, {from: tokenOwner});
+    const resultCreateToken2 = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TSA", "ipfs:/", "ipfs:/", salt + 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken2, 'Create1155RaribleProxy', (ev) => {
         addrToken2 = ev.proxy;
       return true;
@@ -57,7 +59,7 @@ contract("ERC1155Rarible", accounts => {
     assert.equal(addrToken2, addfressWithDifferentSalt, "correct address got before deploy")
 
     let addrToken3;
-    const resultCreateToken3 = await factory.createToken(name, "TST", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
+    const resultCreateToken3 = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TST", "ipfs:/", "ipfs:/", salt, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken3, 'Create1155RaribleProxy', (ev) => {
       addrToken3 = ev.proxy;
     return true;
@@ -102,14 +104,8 @@ contract("ERC1155Rarible", accounts => {
   });
 
   it("approve for all", async () => {
-    let proxy = accounts[5];
-    assert.equal(await token.isApprovedForAll(accounts[1], proxy), false);
-
-    await token.setDefaultApproval(proxy, true, {from: tokenOwner});
-    assert.equal(await token.isApprovedForAll(accounts[1], proxy), true);
-
-    await token.setDefaultApproval(proxy, false, {from: tokenOwner});
-    assert.equal(await token.isApprovedForAll(accounts[1], proxy), false);
+    assert.equal(await token.isApprovedForAll(accounts[1], whiteListProxy), true);
+    assert.equal(await token.isApprovedForAll(accounts[1], proxyLazy.address), true);
   });
 
   it("mint and transfer by proxy", async () => {
@@ -123,8 +119,6 @@ contract("ERC1155Rarible", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
     const TransferSingle = await token.getPastEvents("TransferSingle", {
       fromBlock: tx.receipt.blockNumber,
@@ -238,16 +232,12 @@ contract("ERC1155Rarible", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
-    let proxy = accounts[5];
-    await token.setApprovalForAll(proxy, true, {from: minter});
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: proxy});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
   });
 
   it("second mint and transfer", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
@@ -268,8 +258,6 @@ contract("ERC1155Rarible", accounts => {
   });
 
   it("second mint and transfer for the same person", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
@@ -289,8 +277,6 @@ contract("ERC1155Rarible", accounts => {
   });
 
   it("second mint and transfer: wrong supply", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
@@ -312,8 +298,6 @@ contract("ERC1155Rarible", accounts => {
   });
 
   it("second mint and transfer: more than supply", async () => {
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     let minter = accounts[1];
     const tokenId = minter + "b00000000000000000000001";
     const tokenURI = "//uri";
@@ -344,9 +328,6 @@ contract("ERC1155Rarible", accounts => {
     let mint = 2;
 
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], transferTo);
-
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
 
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
@@ -393,8 +374,6 @@ contract("ERC1155Rarible", accounts => {
     assert.equal(await token.balanceOf(minter, tokenId), supply);
 
     let transferTo = accounts[2];
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: whiteListProxy});
 
     assert.equal(await token.balanceOf(transferTo, tokenId), supply);
@@ -411,7 +390,7 @@ contract("ERC1155Rarible", accounts => {
 
     let transferTo = accounts[2];
     await expectThrow(
-      token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: accounts[5]})
+      token.safeTransferFrom(minter, transferTo, tokenId, supply, [], {from: accounts[6]})
     );
   });
 
@@ -424,8 +403,6 @@ contract("ERC1155Rarible", accounts => {
     let supply = 5;
     let mint = 2;
 
-    let whiteListProxy = accounts[5];
-    await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter.address]), [], [zeroWord]], transferTo, supply, {from: whiteListProxy})
     );

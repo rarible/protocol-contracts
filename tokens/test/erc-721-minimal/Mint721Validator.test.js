@@ -4,7 +4,7 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require("./mint");
 
-contract("Mint721Validator", accounts => {
+contract("Mint721Validator minimal", accounts => {
 	let testing;
 	let erc1271;
 	let fees;

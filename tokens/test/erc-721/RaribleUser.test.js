@@ -1,4 +1,4 @@
-const Testing = artifacts.require("ERC721RaribleUserMinimal.sol");
+const Testing = artifacts.require("ERC721Rarible.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require('./mint');
@@ -14,7 +14,12 @@ contract("ERC721RaribleUser", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], { from: tokenOwner });
+    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], accounts[6], accounts[7], { from: tokenOwner });
+  });
+
+  it("approve for all", async () => {
+    assert.equal(await token.isApprovedForAll(accounts[1], accounts[6]), true);
+    assert.equal(await token.isApprovedForAll(accounts[1], accounts[7]), true);
   });
 
   it("check for ERC165 interface", async () => {
