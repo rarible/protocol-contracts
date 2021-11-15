@@ -151,10 +151,35 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         }
         // If both are set, concatenate the baseURI and tokenURI (via abi.encodePacked).
         if (bytes(_tokenURI).length > 0) {
-            return string(abi.encodePacked(base, _tokenURI));
+            return checkPrefix(base, _tokenURI);
         }
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
+    }
+
+    /// @dev checks if _tokenURI starts with base. if true returns _tokenURI, else base + _tokenURI
+    function checkPrefix(string memory base, string memory _tokenURI) internal pure returns(string memory){
+        bytes memory whatBytes = bytes (base);
+        bytes memory whereBytes = bytes (_tokenURI);
+
+        if (whatBytes.length > whereBytes.length){
+            return string(abi.encodePacked(base, _tokenURI));
+        }
+        
+        bool found = true;
+   
+        for (uint j = 0; j < whatBytes.length; j++){
+            if (whereBytes [j] != whatBytes [j]) {
+                found = false;
+                break;
+            }
+        }
+
+        if (found){
+            return _tokenURI;
+        } else {
+            return string(abi.encodePacked(base, _tokenURI));
+        }  
     }
 
     /**
