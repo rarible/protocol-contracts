@@ -34,7 +34,7 @@ async function deployMinimal721(deployer, network, transferProxy, erc721LazyMint
   console.log(`new impl 721 = ${await beacon721.implementation()}`);
 
   //deploying factory
-  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721.address, transferProxy, erc721LazyMintTransferProxy, { gas: 1500000 });
+  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721.address, transferProxy, erc721LazyMintTransferProxy, { gas: 2500000 });
   console.log(`deployed factory721 minimal at ${factory721.address}`)
 }
 
@@ -58,7 +58,7 @@ async function deployAndUpgrade1155(deployer, network, transferProxy, erc1155Laz
   console.log(`new impl 1155 = ${await beacon1155.implementation()}`)
 
   //deploying new factory
-  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 1500000 });
+  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 2500000 });
   console.log(`deployed factory1155 at ${factory1155.address}`)
   
 }

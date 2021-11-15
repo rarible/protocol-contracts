@@ -41,7 +41,7 @@ contract("ERC721Rarible", accounts => {
   it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
     factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
-    resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", 1, {from: tokenOwner});
+    const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
        proxy = ev.proxy;
       return true;
@@ -60,6 +60,38 @@ contract("ERC721Rarible", accounts => {
     assert.equal(Transfer.length, 1, "Transfer.length")
 
     assert.equal(await tokenByProxy.ownerOf(tokenId), minter);
+  });
+
+  it("checkPrefix should work correctly, checks for duplicating of the base part of the uri ", async () => {
+    beacon = await UpgradeableBeacon.new(token.address);
+    factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
+    const baseURI = "https://ipfs.rarible.com"
+    const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", baseURI, "https://ipfs.rarible.com", 1, {from: tokenOwner});
+    truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
+       proxy = ev.proxy;
+      return true;
+    });
+    tokenByProxy = await Testing.at(proxy);
+
+    const minter = tokenOwner;
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = baseURI + "/12345/456";
+
+    await tokenByProxy.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, {from: minter});
+    const gettokeURI = await tokenByProxy.tokenURI(tokenId);
+    assert.equal(gettokeURI, tokenURI, "token uri same with base")
+
+    const tokenId1 = minter + "b00000000000000000000002"
+    const tokenURI1 = "/12345/123512512/12312312";
+    await tokenByProxy.mintAndTransfer([tokenId1, tokenURI1, creators([minter]), [], [zeroWord]], minter, {from: minter});
+    const gettokeURI1 = await tokenByProxy.tokenURI(tokenId1);
+    assert.equal(gettokeURI1, baseURI + tokenURI1, "different uri")
+
+    const tokenId2 = minter + "b00000000000000000000003"
+    const tokenURI2 = "/12345/";
+    await tokenByProxy.mintAndTransfer([tokenId2, tokenURI2, creators([minter]), [], [zeroWord]], minter, {from: minter});
+    const gettokeURI2 = await tokenByProxy.tokenURI(tokenId2);
+    assert.equal(gettokeURI2, baseURI + tokenURI2, "different uri")
   });
 
   it("check for ERC165 interface", async () => {
