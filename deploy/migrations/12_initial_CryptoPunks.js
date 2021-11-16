@@ -3,7 +3,7 @@ const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 
 const { getSettings } = require("./config.js")
-const { CRYPTO_PUNK } = require("@rarible/exchange-v2/test/assets.js");
+const { CRYPTO_PUNKS } = require("@rarible/exchange-v2/test/assets.js");
 
 module.exports = async function (deployer, network) {
   const settings = getSettings(network);
@@ -26,7 +26,7 @@ module.exports = async function (deployer, network) {
 
   await punkTransferProxy.addOperator(exchangeV2.address);
 
-  await exchangeV2.setTransferProxy(CRYPTO_PUNK, punkTransferProxy.address);
+  await exchangeV2.setTransferProxy(CRYPTO_PUNKS, punkTransferProxy.address);
   await setTestCryptoPunks(settings, punkTransferProxy.address);
 };
 
