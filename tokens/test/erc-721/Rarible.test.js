@@ -274,7 +274,8 @@ contract("ERC721Rarible", accounts => {
 
     let proxy = accounts[5];
     await token.setApprovalForAll(proxy, true, {from: minter});
-    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: proxy});
+    const ttxx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: proxy});
+    console.log(ttxx.receipt.gasUsed)
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
   });

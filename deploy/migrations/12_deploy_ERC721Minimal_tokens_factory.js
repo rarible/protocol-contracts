@@ -7,14 +7,10 @@ ProxyAdmin.setProvider(web3.currentProvider)
 const { getProxyImplementation } = require("./config.js")
 
 const ERC721RaribleMinimal = artifacts.require('ERC721RaribleMinimal');
-const ERC721Rarible = artifacts.require('ERC721Rarible');
 
 const ERC721RaribleFactoryC2 = artifacts.require('ERC721RaribleFactoryC2');
-const ERC1155RaribleFactoryC2 = artifacts.require('ERC1155RaribleFactoryC2');
-const ERC1155Rarible = artifacts.require('ERC1155Rarible');
 
 const ERC721RaribleBeacon = artifacts.require('ERC721RaribleBeacon');
-const ERC1155RaribleBeacon = artifacts.require('ERC1155RaribleBeacon');
 
 const TransferProxy = artifacts.require('TransferProxy');
 const ERC721LazyMintTransferProxy = artifacts.require('ERC721LazyMintTransferProxy');
@@ -38,31 +34,6 @@ async function deployMinimal721(deployer, network, transferProxy, erc721LazyMint
   console.log(`deployed factory721 minimal at ${factory721.address}`)
 }
 
-async function upgrade721(deployer) {
-  //upgrade 721 proxy
-  const erc721Proxy = await ERC721Rarible.deployed();
-  await upgradeProxy(erc721Proxy.address, ERC721Rarible, { deployer });
-}
-
-async function deployAndUpgrade1155(deployer, network, transferProxy, erc1155LazyMintTransferProxy) {
-  //upgrade 1155 proxy
-  const erc1155Proxy = await ERC1155Rarible.deployed();
-  await upgradeProxy(erc1155Proxy.address, ERC1155Rarible, { deployer });
-
-  const erc1155 = await getProxyImplementation(ERC1155Rarible, network, ProxyAdmin)
-
-  //upgrading 1155 beacon
-  const beacon1155 = await ERC1155RaribleBeacon.deployed();
-  console.log(`old impl 1155 = ${await beacon1155.implementation()}`)
-  await beacon1155.upgradeTo(erc1155)
-  console.log(`new impl 1155 = ${await beacon1155.implementation()}`)
-
-  //deploying new factory
-  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 2500000 });
-  console.log(`deployed factory1155 at ${factory1155.address}`)
-  
-}
-
 module.exports = async function (deployer, network) {
   const transferProxy = (await TransferProxy.deployed()).address;
   const erc721LazyMintTransferProxy = (await ERC721LazyMintTransferProxy.deployed()).address;
@@ -70,8 +41,5 @@ module.exports = async function (deployer, network) {
 
   //deploy new erc721Minimal proxy and factory, use old 721 beacon
   await deployMinimal721(deployer, network, transferProxy, erc721LazyMintTransferProxy);
-
-  //upgrade old 1155 proxy, upgrade old 1155 beacon, deploy new 1155 factory
-  await deployAndUpgrade1155(deployer, network, transferProxy, erc1155LazyMintTransferProxy);
   
 };
