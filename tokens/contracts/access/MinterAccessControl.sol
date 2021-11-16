@@ -23,17 +23,6 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Modifier to validate if the sender is a valid minter
-     */
-    modifier validateMinter() {
-        require(
-            !minterAccessControlEnabled || _minters[_msgSender()],
-            "MinterAccessControl: caller not minter"
-        );
-        _;
-    }
-
-    /**
      * @dev Enable minter control
      * When enabled, only addresses added to `grantMinter` will be allowed to mint
      */

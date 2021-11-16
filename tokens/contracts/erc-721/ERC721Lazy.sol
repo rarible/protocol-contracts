@@ -48,13 +48,14 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         }
     }
 
-    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual validateMinter {
+    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
         require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC721: transfer caller is not owner nor approved");
+        require(isValidMinter(minter), "ERC721: minter not granted");
 
         bytes32 hash = LibERC721LazyMint.hash(data);
         for (uint i = 0; i < data.creators.length; i++) {

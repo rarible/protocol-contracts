@@ -55,11 +55,12 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         }
     }
 
-    function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override virtual validateMinter {
+    function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override virtual {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
 
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");
+        require(isValidMinter(minter), "ERC1155: minter not granted");
         require(_amount > 0, "amount incorrect");
 
         if (supply[data.tokenId] == 0) {
