@@ -27,9 +27,16 @@ abstract contract ERC721BurnableUpgradeableMinimal is Initializable, ContextUpgr
      * - The caller must own `tokenId` or be an approved operator.
      */
     function burn(uint256 tokenId) public virtual {
-        //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
-        _burn(tokenId);
+        if(!_exists(tokenId)) {
+            address owner = address(tokenId >> 96);
+            require(owner == _msgSender(), "ERC721Burnable: caller is not owner, not burn");
+            _setBurned(tokenId);
+        } else {
+            //solhint-disable-next-line max-line-length
+            require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
+            _burn(tokenId);
+        }
     }
+
     uint256[50] private __gap;
 }

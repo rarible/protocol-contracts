@@ -38,6 +38,68 @@ contract("ERC721Rarible minimal", accounts => {
     erc1271 = await ERC1271.new();
   });
 
+  describe("Burn before ERC721RaribleMinimal ()", () => {
+    it("Run burn from minter, mintAndTransfer by the same minter not possible, token burned, throw", async () => {
+      const minter = accounts[1];
+      let transferTo = accounts[4];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      //minter burn item, in tokenId minter address contains, ok
+      await token.burn(tokenId, {from: minter});
+      await expectThrow( //try to mint and transfer token, throw, because token was burned
+        token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
+      );
+    });
+
+    it("Run burn from another, throw, mintAndTransfer by the same minter is possible", async () => {
+      const minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      await expectThrow( //another burn item, in tokenId minter address contains, throw
+        token.burn(tokenId, {from: transferTo})
+      );
+      //mint and transfer token, ok, because token was not burned, possible to mint to a new user
+      await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+      assert.equal(await token.ownerOf(tokenId), transferTo);
+    });
+  });
+
+  describe("Burn after ERC721RaribleMinimal ()", () => {
+    it("Run mintAndTransfer, burn, mintAndTransfer by the same minter, throw", async () => {
+      const minter = accounts[1];
+      let transferTo = accounts[2];
+      let transferTo2 = accounts[4];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+
+      await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
+      await token.burn(tokenId, {from: transferTo});
+      await expectThrow( //try once more mint and transfer
+        token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo2, {from: minter})
+      );
+    });
+
+    it("Run transferFromOrMint, burn, transferFromOrMint by the same minter, throw", async () => {
+      const minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+
+      await token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter});
+      assert.equal(await token.ownerOf(tokenId), transferTo);
+      await token.burn(tokenId, {from: transferTo});
+      await expectThrow(
+        token.transferFromOrMint([tokenId, tokenURI, creators([minter]), [], [zeroWord]], minter, transferTo, {from: minter})
+      )
+    });
+
+  });
+
   it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
     factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
