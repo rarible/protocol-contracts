@@ -71,9 +71,6 @@ module.exports = async function (deployer, network) {
   //deploy new erc721Minimal proxy and factory, use old 721 beacon
   await deployMinimal721(deployer, network, transferProxy, erc721LazyMintTransferProxy);
 
-  //upgrade old 721 proxy
-  await upgrade721(deployer);
-
   //upgrade old 1155 proxy, upgrade old 1155 beacon, deploy new 1155 factory
   await deployAndUpgrade1155(deployer, network, transferProxy, erc1155LazyMintTransferProxy);
   
