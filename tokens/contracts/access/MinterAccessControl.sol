@@ -65,4 +65,6 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     function isValidMinter(address account) public view returns (bool) {
         return !minterAccessControlEnabled || _minters[account];
     }
+
+    uint256[50] private __gap;
 }
