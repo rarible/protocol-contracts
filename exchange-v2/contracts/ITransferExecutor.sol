@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "@rarible/libraries/contracts/LibAsset.sol";
 
 abstract contract ITransferExecutor {
 

@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 
 import "./lib/LibMath.sol";
-import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "@rarible/libraries/contracts/LibAsset.sol";
 import "./LibOrderDataV2.sol";
 import "./LibOrderDataV1.sol";
 
