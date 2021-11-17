@@ -10,7 +10,7 @@ const ERC721RaribleMinimal = artifacts.require('ERC721RaribleMinimal');
 
 const ERC721RaribleFactoryC2 = artifacts.require('ERC721RaribleFactoryC2');
 
-const ERC721RaribleBeacon = artifacts.require('ERC721RaribleBeacon');
+const ERC721RaribleMinimalBeacon = artifacts.require('ERC721RaribleMinimalBeacon');
 
 const TransferProxy = artifacts.require('TransferProxy');
 const ERC721LazyMintTransferProxy = artifacts.require('ERC721LazyMintTransferProxy');
@@ -27,13 +27,11 @@ module.exports = async function (deployer, network) {
   const erc721minimal = await getProxyImplementation(ERC721RaribleMinimal, network, ProxyAdmin)
 
   //upgrading 721 beacon
-  const beacon721 = await ERC721RaribleBeacon.deployed();
-  console.log(`old impl 721 = ${await beacon721.implementation()}`)
-  await beacon721.upgradeTo(erc721minimal)
-  console.log(`new impl 721 = ${await beacon721.implementation()}`);
+  await deployer.deploy(ERC721RaribleMinimalBeacon, erc721minimal, { gas: 1000000 });
+  const beacon721Minimal = await ERC721RaribleMinimalBeacon.deployed()
 
   //deploying factory
-  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721.address, transferProxy, erc721LazyMintTransferProxy, { gas: 2500000 });
+  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721Minimal.address, transferProxy, erc721LazyMintTransferProxy, { gas: 2500000 });
   console.log(`deployed factory721 minimal at ${factory721.address}`)
   
 };
