@@ -1,7 +1,7 @@
-const Testing = artifacts.require("ERC1155RaribleUser.sol");
+const Testing = artifacts.require("ERC1155Rarible.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
-const ERC1155RaribleUserFactoryC2 = artifacts.require("ERC1155RaribleUserFactoryC2.sol");
+const ERC1155RaribleUserFactoryC2 = artifacts.require("ERC1155RaribleFactoryC2.sol");
 const truffleAssert = require('truffle-assertions');
 
 const { expectThrow } = require("@daonomic/tests-common");
@@ -15,17 +15,24 @@ contract("ERC1155RaribleUser", accounts => {
   let proxy;
   let tokenOwner = accounts[9];
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
+  const ZERO = "0x0000000000000000000000000000000000000000";
+
   const name = 'FreeMintable';
   const whiteListProxy = accounts[5];
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], {from: tokenOwner});
+    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], accounts[6], accounts[7], {from: tokenOwner});
+  });
+
+  it("approve for all", async () => {
+    assert.equal(await token.isApprovedForAll(accounts[1], accounts[6]), true);
+    assert.equal(await token.isApprovedForAll(accounts[1], accounts[7]), true);
   });
 
   it("mint and transfer by minter, token create by Factory", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC1155RaribleUserFactoryC2.new(beacon.address);
+    factory = await ERC1155RaribleUserFactoryC2.new(beacon.address, ZERO, ZERO);
     const salt = 3;
 
     const addressBeforeDeploy = await factory.getAddress(name, "TST", "ipfs:/", "ipfs:/", [], salt)
