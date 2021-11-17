@@ -14,6 +14,10 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     string public name;
     string public symbol;
 
+    function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
+        _setDefaultApproval(operator, hasApproval);
+    }
+
     function isApprovedForAll(address _owner, address _operator) public override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) view returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }
@@ -33,6 +37,40 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
+    }
+
+    function burn(address account, uint256 id, uint256 value) public virtual override {
+        if (_isExist(id)) {
+            ERC1155BurnableUpgradeable.burn(account, id, value);
+        } else {
+            require(account == _msgSender(), "ERC1155: caller is not burner");
+            address minter = address(id >> 96);
+            require(minter == _msgSender(), "ERC1155: caller is not token owner");
+            ERC1155Lazy._setBurned(id, value);
+        }
+    }
+
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {
+        require(account != address(0), "ERC1155: burn from the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved"
+        );
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+
+        for (uint i = 0; i < ids.length; i++) {
+            if (_isExist(ids[i])) {
+                ERC1155Upgradeable._subBalance(account, ids[i], amounts[i]);
+            } else {
+                address minter = address(ids[i] >> 96);
+                require(minter == _msgSender(), "ERC1155: caller is not token owner");
+                ERC1155Lazy._setBurned(ids[i], amounts[i]);
+            }
+        }
+        emit TransferBatch(operator, account, address(0), ids, amounts);
     }
 
     uint256[50] private __gap;

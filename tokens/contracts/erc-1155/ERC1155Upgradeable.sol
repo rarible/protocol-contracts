@@ -334,6 +334,13 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         emit TransferBatch(operator, account, address(0), ids, amounts);
     }
 
+    function _subBalance(address account, uint256 id, uint256 amount) internal {
+        _balances[id][account] = _balances[id][account].sub(
+            amount,
+            "ERC1155: burn amount exceeds balance"
+        );
+    }
+
     /**
      * @dev Hook that is called before any token transfer. This includes minting
      * and burning, as well as batched variants.
