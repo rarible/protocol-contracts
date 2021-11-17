@@ -12,7 +12,7 @@ const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNK, enc, id } = require("../assets");
+const { ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNKS, enc, id } = require("../assets");
 
 contract("ExchangeSimpleV2", accounts => {
 	let testing;
@@ -152,13 +152,13 @@ contract("ExchangeSimpleV2", accounts => {
       await proxy.addOperator(testing.address);
       await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
 
-      await testing.setTransferProxy((CRYPTO_PUNK), proxy.address)
+      await testing.setTransferProxy((CRYPTO_PUNKS), proxy.address)
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
       await t1.mint(accounts[2], 106);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
 
-      const left = Order(accounts[1], Asset((CRYPTO_PUNK), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset((CRYPTO_PUNK), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+      const left = Order(accounts[1], Asset((CRYPTO_PUNKS), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset((CRYPTO_PUNKS), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
 
 			await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]));
 
