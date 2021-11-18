@@ -42,37 +42,57 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     function burn(address account, uint256 id, uint256 value) public virtual override {
         if (_isExist(id)) {
 //            ERC1155BurnableUpgradeable.burn(account, id, value);
-            burnExisted(account, id, value);
+            _burnExisted(account, id, value);
         } else {
 //            require(account == _msgSender(), "ERC1155: caller is not burner");
 //            address minter = address(id >> 96);
 //            require(minter == _msgSender(), "ERC1155: caller is not token owner");
 //            ERC1155Lazy._setBurned(id, value);
-            burnNotExisted(account, id, value);
+            _burnLazy(account, id, value);
         }
     }
 
-    function burnNotExisted(address account, uint256 id, uint256 value) internal {
+    function _burnLazy(address account, uint256 id, uint256 value) internal {
         require(account == _msgSender(), "ERC1155: caller is not burner");
         address minter = address(id >> 96);
         require(minter == _msgSender(), "ERC1155: caller is not token owner");
         ERC1155Lazy._setBurned(id, value);
     }
 
-    function burnExisted(address account, uint256 id, uint256 value) internal {
-        uint256 balance = balanceOf(account, id);
-        uint256 burnAmount = value;
-        uint256 burnMore = value;
-        if (value > balance){
-            burnAmount = balance;
-            burnMore = value - burnAmount;
+    function _burnExisted(address account, uint256 id, uint256 value) internal {
+        address owner = address(id >> 96);
+        if (owner == _msgSender()) {
+            uint256 balance = ERC1155Lazy._getSupply(id) - ERC1155Lazy._getMinted(id);
+            uint256 burnLazy = value;
+            uint256 burnMinted = 0;
+            if (value > balance){
+                burnLazy = balance;
+                burnMinted = value - burnLazy;
+            }
+//            ERC1155Lazy._setBurned(id, burnLazy);
+            _burnLazy(account, id, burnLazy);
+            if (burnMinted > 0) {
+                ERC1155BurnableUpgradeable.burn(account, id, burnMinted);
+            }
+        } else {
+            ERC1155BurnableUpgradeable.burn(account, id, value);
         }
-        ERC1155BurnableUpgradeable.burn(account, id, burnAmount);
-        if (burnMore > 0) {
-//todo            require(_getSupply[id] - _getMinted[id] >= burnMore, "Try to burn more available");
-//            burnNotExisted(account, id, burnAmount);
-            ERC1155Lazy._setBurned(id, value);
-        }
+
+//        uint256 balance = balanceOf(account, id);
+//        uint256 burnAmount = value;
+//        uint256 burnLazy = 0;
+//        if (value > balance){
+//            burnAmount = balance;
+//            burnLazy = value - burnAmount;
+//        }
+//        ERC1155BurnableUpgradeable.burn(account, id, burnAmount);
+//        if (burnLazy > 0) {
+//            uint supply = ERC1155Lazy._getSupply(id);
+//            uint minted = ERC1155Lazy._getMinted(id);
+//            require(supply - minted >= burnLazy, "Try to burn more available");
+////            burnLazy(account, id, burnAmount);
+//            ERC1155Lazy._setBurned(id, burnLazy);
+//        }
     }
 
     function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {

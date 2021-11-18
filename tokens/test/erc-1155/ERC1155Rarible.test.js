@@ -291,7 +291,7 @@ contract("ERC1155Rarible", accounts => {
       assert.equal(await token.balanceOf(transferTo, tokenId), 2);
     });
     //TODO make this test work!!!
-    it("Run mintAndTransfer = 5, burn = 7, mintAndTransfer by the same minter = 3, ok", async () => {
+    it("Run mintAndTransfer = 5, burn = 7, mint to new user = 3, ok", async () => {
       let minter = accounts[1];
       let transferTo = accounts[2];
 
@@ -299,15 +299,69 @@ contract("ERC1155Rarible", accounts => {
       const tokenURI = "/uri";
       let supply = 10;
       let mint = 5;
+      let burn = 7;
       let secondMintValue = 3;
       await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
 	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
       assert.equal(await token.balanceOf(transferTo, tokenId), mint);
       assert.equal(await token.balanceOf(minter, tokenId), 0);
 
-      await token.burn(transferTo, tokenId, 6, {from: transferTo});
-      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
-      assert.equal(await token.balanceOf(transferTo, tokenId), 3);
+      await expectThrow( //burn from new owner more than mint
+        token.burn(transferTo, tokenId, burn, {from: transferTo})
+      );
+      assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+      //from new owner amount burn == mint
+      await token.burn(transferTo, tokenId, mint, {from: transferTo});
+      assert.equal(await token.balanceOf(transferTo, tokenId), 0);
+      assert.equal(await token.balanceOf(minter, tokenId), 0);
+    });
+
+    it("Run mintAndTransfer = 5, burn = 7, by minter = 3, ok", async () => {
+      let minter = accounts[1];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 10;
+      let mint = 5;
+      let burn = 7;
+      let secondMintValue = 3;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(minter, tokenId), mint);
+
+      await expectThrow( //burn to much
+        token.burn(minter, tokenId, 500, {from: minter})
+      );
+      assert.equal(await token.balanceOf(minter, tokenId), mint);
+      //from new owner amount burn == mint
+      await token.burn(minter, tokenId, 7, {from: minter});
+      assert.equal(await token.balanceOf(minter, tokenId), 3);
+    });
+
+    it("Run mintAndTransfer = 5, burn = 5, by minter = 5, ok", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 10;
+      let mint = 5;
+      let burn = 7;
+      let secondMintValue = 3;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, mint, {from: minter});
+	  	assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
+      assert.equal(await token.balanceOf(minter, tokenId), mint);
+
+      await expectThrow( //burn to much
+        token.burn(minter, tokenId, 500, {from: minter})
+      );
+      assert.equal(await token.balanceOf(minter, tokenId), mint);
+      //from new owner amount burn == mint
+      await token.burn(minter, tokenId, mint, {from: minter});
+      assert.equal(await token.balanceOf(minter, tokenId), 5);
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, 1, {from: minter})
+      );
     });
 
     it("Run mintAndTransfer = 4, burn = 3, mintAndTransfer by the same minter = 2, throw", async () => {
@@ -350,7 +404,7 @@ contract("ERC1155Rarible", accounts => {
       return true;
     });
     assert.equal(addressBeforeDeploy, proxy, "correct address got before deploy")
-    
+
     let addrToken2;
     const resultCreateToken2 = await factory.methods['createToken(string,string,string,string,uint256)'](name, "TSA", "ipfs:/", "ipfs:/", salt + 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken2, 'Create1155RaribleProxy', (ev) => {

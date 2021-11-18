@@ -54,5 +54,9 @@ contract ERC1155Rarible is ERC1155Base {
         super.mintAndTransfer(data, to, _amount);
     }
 
+//    function burn(address account, uint256 id, uint256 value) public virtual override {
+//        revert("sks_test1");
+//        super.burn(account, id, value);
+//    }
     uint256[49] private __gap;
 }
