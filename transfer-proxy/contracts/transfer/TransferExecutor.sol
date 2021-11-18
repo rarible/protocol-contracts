@@ -3,7 +3,7 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "@rarible/libraries/contracts/LibAsset.sol";
+import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
