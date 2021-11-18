@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 
-import "@rarible/libraries/contracts/LibAsset.sol";
+import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 library LibFeeSide {
 

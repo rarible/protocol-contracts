@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
-import "@rarible/libraries/contracts/LibAsset.sol";
+import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
