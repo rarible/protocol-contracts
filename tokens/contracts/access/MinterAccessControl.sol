@@ -4,9 +4,12 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/EnumerableSetUpgradeable.sol";
 
 contract MinterAccessControl is Initializable, OwnableUpgradeable {
-    mapping (address => bool) private _minters;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
+
+    EnumerableSetUpgradeable.AddressSet private _minters;
     bool public minterAccessControlEnabled;
 
     event MinterAccessControlEnabled();
@@ -45,8 +48,8 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
      * @dev Add `_minter` to the list of allowed minters.
      */
     function grantMinter(address _minter) external onlyOwner {
-        require(!_minters[_minter], 'MinterAccessControl: Already minter');
-        _minters[_minter] = true;
+        require(!_minters.contains(_minter), 'MinterAccessControl: Already minter');
+        _minters.add(_minter);
         emit MinterGranted(_minter);
     }
 
@@ -54,8 +57,8 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
      * @dev Revoke `_minter` from the list of allowed minters.
      */
     function revokeMinter(address _minter) external onlyOwner {
-        require(_minters[_minter], 'MinterAccessControl: Not minter');
-        _minters[_minter] = false;
+        require(_minters.contains(_minter), 'MinterAccessControl: Not minter');
+        _minters.remove(_minter);
         emit MinterRevoked(_minter);
     }
 
@@ -63,7 +66,7 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
      * @dev Returns `true` if minterControl is not enabled or `account` has been granted to minters.
      */
     function isValidMinter(address account) public view returns (bool) {
-        return !minterAccessControlEnabled || _minters[account];
+        return !minterAccessControlEnabled || _minters.contains(account);
     }
 
     uint256[50] private __gap;
