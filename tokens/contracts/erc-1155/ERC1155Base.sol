@@ -86,11 +86,9 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
 
         for (uint i = 0; i < ids.length; i++) {
             if (_isExist(ids[i])) {
-                ERC1155Upgradeable._subBalance(account, ids[i], amounts[i]);
+                _burnExisted(account, ids[i], amounts[i]);
             } else {
-                address minter = address(ids[i] >> 96);
-                require(minter == _msgSender(), "ERC1155: caller is not token owner");
-                ERC1155Lazy._setBurned(ids[i], amounts[i]);
+                _burnLazy(account, ids[i], amounts[i]);
             }
         }
         emit TransferBatch(operator, account, address(0), ids, amounts);

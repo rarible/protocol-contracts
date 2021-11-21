@@ -29,56 +29,56 @@ contract("ERC1155Rarible", accounts => {
     await token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, proxyLazy.address, {from: tokenOwner});
     erc1271 = await ERC1271.new();
   });
-//  describe("burnBatch  ()", () => {
-//    it("Different situation with burnBatch, ok", async () => {
-//      let minter = accounts[1];
-//      let anotherUser = accounts[5];
-//      let transferTo = accounts[2];
-//
-//      const tokenId1 = minter + "b00000000000000000000001"; //save token creator
-//      const tokenId2 = minter + "b00000000000000000000002"; //save token creator
-//      const tokenId3 = minter + "b00000000000000000000003"; //save token creator
-//      const tokenId4 = minter + "b00000000000000000000004"; //save token creator
-//      const tokenId5 = transferTo + "b00000000000000000000005"; //save token creator
-//      const tokenURI = "/uri";
-//      let supply = 5;
-//      let burn = 2;
-//      let mintValue = 5;
-//      //mint, after do burnBatch
-//      await token.mintAndTransfer([tokenId4, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
-//      assert.equal(await token.balanceOf(transferTo, tokenId4), mintValue);
-//      await expectThrow(  //tokenId4 send to transferTo, try to burn from anotherUser, throw
-//          token.burnBatch(anotherUser, [tokenId4], [mintValue], {from: anotherUser})
-//      );
-//      await expectThrow(  //tokenId4 send to transferTo, try to burn from anotherUser, throw
-//          token.burnBatch(transferTo, [tokenId4], [mintValue], {from: anotherUser})
-//      );
-//      assert.equal(await token.balanceOf(transferTo, tokenId4), 5);
-//      //combine minted and not yet minted, try to burnBatch
-//      await token.burnBatch(transferTo, [tokenId4, tokenId5], [mintValue, mintValue], {from: transferTo})
-//      assert.equal(await token.balanceOf(transferTo, tokenId4), 0);
-//      await expectThrow(  //supply - burn < mintValue == 1, throw
-//        token.mintAndTransfer([tokenId5, tokenURI, supply, creators([minter]), [], [zeroWord]], anotherUser, 1, {from: transferTo})
-//      );
-//      //BurnBatch and after do mint
-//      await expectThrow(
-//        token.burnBatch(anotherUser, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: anotherUser})  //token has another creator
-//      );
-//      await expectThrow(
-//        token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: anotherUser})  //burn not from minter
-//      );
-//      await token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: minter})  //ok
-//
-//      await expectThrow(  //supply - burn < mintValue == 5, throw
-//        token.mintAndTransfer([tokenId1, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
-//      );
-//      await token.mintAndTransfer([tokenId2, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, 3, {from: minter})
-//      assert.equal(await token.balanceOf(transferTo, tokenId2), 3);
-//      await token.mintAndTransfer([tokenId3, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, 2, {from: minter})
-//      assert.equal(await token.balanceOf(transferTo, tokenId3), 2);
-//    });
-//  })
-//
+  describe("burnBatch  ()", () => {
+    it("Different situation with burnBatch, ok", async () => {
+      let minter = accounts[1];
+      let anotherUser = accounts[6];
+      let transferTo = accounts[2];
+
+      const tokenId1 = minter + "b00000000000000000000001"; //save token creator
+      const tokenId2 = minter + "b00000000000000000000002"; //save token creator
+      const tokenId3 = minter + "b00000000000000000000003"; //save token creator
+      const tokenId4 = minter + "b00000000000000000000004"; //save token creator
+      const tokenId5 = transferTo + "b00000000000000000000005"; //save token creator
+      const tokenURI = "/uri";
+      let supply = 5;
+      let burn = 2;
+      let mintValue = 5;
+      //mint, after do burnBatch
+      await token.mintAndTransfer([tokenId4, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
+      assert.equal(await token.balanceOf(transferTo, tokenId4), mintValue);
+      await expectThrow(  //tokenId4 send to transferTo, try to burn from anotherUser, throw
+        token.burnBatch(anotherUser, [tokenId4], [mintValue], {from: anotherUser})
+      );
+      await expectThrow(  //tokenId4 send to transferTo, try to burn from anotherUser, throw
+        token.burnBatch(transferTo, [tokenId4], [mintValue], {from: anotherUser})
+      );
+      assert.equal(await token.balanceOf(transferTo, tokenId4), 5);
+      //combine minted and not yet minted, try to burnBatch
+      await token.burnBatch(transferTo, [tokenId4, tokenId5], [mintValue, mintValue], {from: transferTo})
+      assert.equal(await token.balanceOf(transferTo, tokenId4), 0);
+      await expectThrow(  //supply - burn < mintValue == 1, throw
+        token.mintAndTransfer([tokenId5, tokenURI, supply, creators([minter]), [], [zeroWord]], anotherUser, 1, {from: transferTo})
+      );
+      //BurnBatch and after do mint
+      await expectThrow(
+        token.burnBatch(anotherUser, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: anotherUser})  //token has another creator
+      );
+      await expectThrow(
+        token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: anotherUser})  //burn not from minter
+      );
+      await token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: minter})  //ok
+
+      await expectThrow(  //supply - burn < mintValue == 5, throw
+        token.mintAndTransfer([tokenId1, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
+      );
+      await token.mintAndTransfer([tokenId2, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, 3, {from: minter})
+      assert.equal(await token.balanceOf(transferTo, tokenId2), 3);
+      await token.mintAndTransfer([tokenId3, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, 2, {from: minter})
+      assert.equal(await token.balanceOf(transferTo, tokenId3), 2);
+    });
+  })
+
 //  describe("burn before mint ()", () => {
 //    it("Test1. Supply = 5, burn = 2 not from minter, throw, mintAndTransfer by the minter = 5, ok", async () => {
 //      let minter = accounts[1];
