@@ -141,10 +141,10 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             (address token, uint tokenId) = abi.decode(matchNft.data, (address, uint));
             return royaltiesRegistry.getRoyalties(token, tokenId);
         } else if (matchNft.assetClass == LibERC1155LazyMint.ERC1155_LAZY_ASSET_CLASS) {
-            (address token, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(matchNft.data, (address, LibERC1155LazyMint.Mint1155Data));
+            (, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(matchNft.data, (address, LibERC1155LazyMint.Mint1155Data));
             return data.royalties;
         } else if (matchNft.assetClass == LibERC721LazyMint.ERC721_LAZY_ASSET_CLASS) {
-            (address token, LibERC721LazyMint.Mint721Data memory data) = abi.decode(matchNft.data, (address, LibERC721LazyMint.Mint721Data));
+            (, LibERC721LazyMint.Mint721Data memory data) = abi.decode(matchNft.data, (address, LibERC721LazyMint.Mint721Data));
             return data.royalties;
         }
         LibPart.Part[] memory empty;

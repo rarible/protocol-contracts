@@ -65,7 +65,7 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         revert("!found IAssetMatcher");
     }
 
-    function simpleMatch(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {
+    function simpleMatch(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private pure returns (LibAsset.AssetType memory) {
         bytes32 leftHash = keccak256(leftAssetType.data);
         bytes32 rightHash = keccak256(rightAssetType.data);
         if (leftHash == rightHash) {

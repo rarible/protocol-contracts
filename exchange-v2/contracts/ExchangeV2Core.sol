@@ -20,6 +20,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     //state of the orders
     mapping(bytes32 => uint) public fills;
 
+    string constant _req_eth = "!enough eth";
+    string constant _req_asset = "assets !match";
     //events
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
@@ -62,12 +64,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
-            require(msg.value >= totalMakeValue, "!enough eth");
+            require(msg.value >= totalMakeValue, _req_eth);
             if (msg.value > totalMakeValue) {
                 address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalTakeValue, "!enough eth");
+            require(msg.value >= totalTakeValue, _req_eth);
             if (msg.value > totalTakeValue) {
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
@@ -117,9 +119,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     function matchAssets(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {
         makeMatch = matchAssets(orderLeft.makeAsset.assetType, orderRight.takeAsset.assetType);
-        require(makeMatch.assetClass != 0, "assets !match");
+        require(makeMatch.assetClass != 0, _req_asset);
         takeMatch = matchAssets(orderLeft.takeAsset.assetType, orderRight.makeAsset.assetType);
-        require(takeMatch.assetClass != 0, "assets !match");
+        require(takeMatch.assetClass != 0, _req_asset);
     }
 
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {
@@ -127,5 +129,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
-    uint256[49] private __gap;
+    uint256[47] private __gap;
 }
