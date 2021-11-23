@@ -132,7 +132,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft);
 
         (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
-        require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
+        require(totalRoyalties <= 5000, "royalties > 50%");
         return result;
     }
 
@@ -191,7 +191,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
         LibPart.Part memory lastPayout = payouts[payouts.length - 1];
         sumBps = sumBps.add(lastPayout.value);
-        require(sumBps == 10000, "Sum payouts Bps not equal 100%");
+        require(sumBps == 10000, "payouts != 100%");
         if (restValue > 0) {
             transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
         }

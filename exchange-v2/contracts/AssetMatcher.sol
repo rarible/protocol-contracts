@@ -62,7 +62,7 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         if (classLeft == classRight) {
             return simpleMatch(leftAssetType, rightAssetType);
         }
-        revert("not found IAssetMatcher");
+        revert("!found IAssetMatcher");
     }
 
     function simpleMatch(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {

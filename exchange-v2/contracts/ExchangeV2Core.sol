@@ -25,8 +25,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
 
     function cancel(LibOrder.Order memory order) external {
-        require(_msgSender() == order.maker, "not a maker");
-        require(order.salt != 0, "0 salt can't be used");
+        require(_msgSender() == order.maker, "msgSender != maker");
+        require(order.salt != 0, "salt == 0");
         bytes32 orderKeyHash = LibOrder.hashKey(order);
         fills[orderKeyHash] = UINT256_MAX;
         emit Cancel(orderKeyHash, order.maker, order.makeAsset.assetType, order.takeAsset.assetType);
@@ -41,10 +41,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
-            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
+            require(orderRight.maker == orderLeft.taker, "left taker failed");
         }
         if (orderRight.taker != address(0)) {
-            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
+            require(orderRight.taker == orderLeft.maker, "right taker failed");
         }
         matchAndTransfer(orderLeft, orderRight);
     }
@@ -62,12 +62,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
-            require(msg.value >= totalMakeValue, "not enough eth");
+            require(msg.value >= totalMakeValue, "!enough eth");
             if (msg.value > totalMakeValue) {
                 address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalTakeValue, "not enough eth");
+            require(msg.value >= totalTakeValue, "!enough eth");
             if (msg.value > totalTakeValue) {
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
@@ -117,9 +117,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     function matchAssets(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {
         makeMatch = matchAssets(orderLeft.makeAsset.assetType, orderRight.takeAsset.assetType);
-        require(makeMatch.assetClass != 0, "assets don't match");
+        require(makeMatch.assetClass != 0, "assets !match");
         takeMatch = matchAssets(orderLeft.takeAsset.assetType, orderRight.makeAsset.assetType);
-        require(takeMatch.assetClass != 0, "assets don't match");
+        require(takeMatch.assetClass != 0, "assets !match");
     }
 
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {

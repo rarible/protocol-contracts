@@ -22,7 +22,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
     function validate(LibOrder.Order memory order, bytes memory signature) internal view {
         if (order.salt == 0) {
             if (order.maker != address(0)) {
-                require(_msgSender() == order.maker, "maker is not tx sender");
+                require(_msgSender() == order.maker, "maker !tx sender");
             } else {
                 order.maker = _msgSender();
             }
@@ -37,10 +37,10 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
                     if (order.maker.isContract()) {
                         require(
                             IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
-                            "contract order signature verification error"
+                            "contract order signature error"
                         );
                     } else {
-                        revert("order signature verification error");
+                        revert("order signature error");
                     }
                 }  
             }
