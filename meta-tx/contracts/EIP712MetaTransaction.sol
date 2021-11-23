@@ -61,18 +61,18 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
     function executeMetaTransaction(address userAddress,
         bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) public payable returns (bytes memory) {
         bytes4 destinationFunctionSig = convertBytesToBytes4(functionSignature);
-        require(destinationFunctionSig != msg.sig, "functionSignature can not be of executeMetaTransaction method");
+        require(destinationFunctionSig != msg.sig, "run executeMetaTransaction");
         MetaTransaction memory metaTx = MetaTransaction({
         nonce : nonces[userAddress],
         from : userAddress,
         functionSignature : functionSignature
         });
-        require(verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
+        require(verify(userAddress, metaTx, sigR, sigS, sigV), "signer != signature");
         nonces[userAddress] = nonces[userAddress].add(1);
         // Append userAddress at the end to extract it from calling context
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
 
-        require(success, "Function call not successful");
+        require(success, "Function call err.");
         emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
         return returnData;
     }
@@ -92,7 +92,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
 
     function verify(address user, MetaTransaction memory metaTx, bytes32 sigR, bytes32 sigS, uint8 sigV) internal view returns (bool) {
         address signer = ecrecover(toTypedMessageHash(hashMetaTransaction(metaTx)), sigV, sigR, sigS);
-        require(signer != address(0), "Invalid signature");
+        require(signer != address(0), "bad signature");
         return signer == user;
     }
 
