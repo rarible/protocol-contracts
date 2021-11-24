@@ -93,6 +93,10 @@ contract("ERC1155Rarible", accounts => {
       await expectThrow(
         token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: anotherUser})  //burn not from minter
       );
+      await expectThrow(
+        token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: transferTo})  //burn not from minter
+      );
+
       await token.burnBatch(minter, [tokenId1, tokenId2, tokenId3], [burn, burn, burn], {from: minter})  //ok
 
       await expectThrow(  //supply - burn < mintValue == 5, throw
@@ -128,6 +132,11 @@ contract("ERC1155Rarible", accounts => {
       assert.equal(await token.balanceOf(transferTo, tokenId4), 3);
       await token.burnBatch(transferTo, [tokenId4], [1], {from: transferTo});//transferTo burn only minted
       assert.equal(await token.balanceOf(transferTo, tokenId4), 2);
+
+      await expectThrow( //minter burn more than lazy
+        token.burnBatch(minter, [tokenId4], [burn], {from: minter})
+      )
+
       await token.burnBatch(minter, [tokenId4], [3], {from: minter});//minter burn only lazy
       assert.equal(await token.balanceOf(transferTo, tokenId4), 2);
       await expectThrow( // caller is not owner nor approved, throw
@@ -270,9 +279,6 @@ contract("ERC1155Rarible", accounts => {
       await token.burn(transferTo, tokenId, 1, {from: transferTo}); //owner burn 1,number of allBurned = 4
 
       const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
-      let whiteListProxy = transferTo;
-      await token.setDefaultApproval(whiteListProxy, true, {from: tokenOwner});
-
       await expectThrow(
         token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, 2, {from: whiteListProxy})//mint 2 impossible 4+2>supply==5
       );

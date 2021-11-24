@@ -14,10 +14,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     string public name;
     string public symbol;
 
-    function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
-        _setDefaultApproval(operator, hasApproval);
-    }
-
     function isApprovedForAll(address _owner, address _operator) public override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) view returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }
@@ -85,11 +81,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
 
         for (uint i = 0; i < ids.length; i++) {
-            if (_isExist(ids[i])) {
-                _burnExisted(account, ids[i], amounts[i]);
-            } else {
-                _burnLazy(account, ids[i], amounts[i]);
-            }
+            burn(account, ids[i], amounts[i]);
         }
         emit TransferBatch(operator, account, address(0), ids, amounts);
     }
