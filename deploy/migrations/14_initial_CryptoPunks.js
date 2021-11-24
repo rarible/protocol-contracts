@@ -15,11 +15,11 @@ module.exports = async function (deployer, network) {
   } else {
     cryptoPunksMarket = await CryptoPunksMarket.at(settings.address_CryptoPunks);
   }
-  console.log("deployed cryptoPunksMarket:",  cryptoPunksMarket.address);
+  console.log("cryptoPunksMarket address: ",  cryptoPunksMarket.address);
 
   await deployer.deploy(PunkTransferProxy, { gas: 1500000 });
   const punkTransferProxy = await PunkTransferProxy.deployed();
-  console.log("PunkTransferProxy deployed: ", punkTransferProxy.address);
+  console.log("deployed punkTransferProxy: ", punkTransferProxy.address);
   await punkTransferProxy.__OperatorRole_init({ gas: 200000 });
 
   const exchangeV2 = await ExchangeV2.deployed();
@@ -27,18 +27,18 @@ module.exports = async function (deployer, network) {
   await punkTransferProxy.addOperator(exchangeV2.address);
 
   await exchangeV2.setTransferProxy(CRYPTO_PUNKS, punkTransferProxy.address);
-  await setTestCryptoPunks(settings, punkTransferProxy.address);
+  await setTestCryptoPunks(settings.deploy_CryptoPunks, settings.address_ownerTestCryptoPunks, punkTransferProxy.address);
 };
 
-async function setTestCryptoPunks(_settings, _punkTransferProxy) {
-  if (_settings.deploy_CryptoPunks) {
+async function setTestCryptoPunks(_needDeploy, _owner, _punkTransferProxy) {
+  if (_needDeploy) {
     const cryptoPunksMarket = await CryptoPunksMarket.deployed();
     await cryptoPunksMarket.allInitialOwnersAssigned();
     let punkIndex = 1;
     let punkNumber = 10;
     while (punkIndex <= punkNumber) {
-      await cryptoPunksMarket.getPunk(punkIndex, { from: _settings.address_ownerTestCryptoPunks });
-      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, _punkTransferProxy, { from: _settings.address_ownerTestCryptoPunks });
+      await cryptoPunksMarket.getPunk(punkIndex, { from: _owner });
+      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, _punkTransferProxy, { from: _owner });
       punkIndex++;
     }
   }
