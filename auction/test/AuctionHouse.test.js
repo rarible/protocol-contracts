@@ -69,7 +69,14 @@ contract("AuctionHouse", accounts => {
       //trying maxx duration 86400000
       dataV1 = await encDataV1([[], auctionFees, 86400000, 0, 100])
       await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller })
-      await testAuctionHouse.cancel(1, { from: seller });
+      const txCancel = await testAuctionHouse.cancel(1, { from: seller });
+
+      let auctionId;
+      truffleAssert.eventEmitted(txCancel, 'AuctionCancelled', (ev) => {
+        auctionId = ev.auctionId;
+        return true;
+      });
+      assert.equal(auctionId, 1, "cancel event correct")
 
       dataV1 = await encDataV1([[], auctionFees, 900, 0, 100])
       await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller })

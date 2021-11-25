@@ -271,11 +271,10 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         require(seller == _msgSender(), "auction owner not detected");
-        address buyer = currentAuction.buyer;
-        require(buyer == address(0), "can't cancel auction with bid");
+        require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
         deactivateAuction(_auctionId);
-        AuctionCancelled(_auctionId);
+        emit AuctionCancelled(_auctionId);
     }
 
     /// @dev buyout auction if bid satisfies buyout condition
