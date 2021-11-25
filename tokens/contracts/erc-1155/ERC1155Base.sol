@@ -53,11 +53,11 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     function _burnExisted(address account, uint256 id, uint256 value) internal {
         address owner = address(id >> 96);
         if (owner == _msgSender()) {
-            uint256 balance = ERC1155Lazy._getSupply(id) - ERC1155Lazy._getMinted(id);
+            uint256 balanceLazy = ERC1155Lazy._getSupply(id) - ERC1155Lazy._getMinted(id);
             uint256 burnLazy = value;
             uint256 burnMinted = 0;
-            if (value > balance){
-                burnLazy = balance;
+            if (value > balanceLazy){
+                burnLazy = balanceLazy;
                 burnMinted = value - burnLazy;
             }
             _burnLazy(account, id, burnLazy);
