@@ -565,34 +565,34 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		}
 
 		it("Transfer from ERC20 to ERC721(Royalties-2981 - 10%), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			/*NFT with royalty, support 2981*/
-    	erc721V2981 = await ERC721V2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
-    	await erc721V2981.initialize();
-
-		  const royaltiesGetter = accounts[2];
-			const { left, right } = await prepare20_721V2981Orders(royaltiesGetter, 105)
-
-			await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
-
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 87);
-			assert.equal(await t1.balanceOf(royaltiesGetter), 10); //(Royalties-2981 - 10%)
-			assert.equal(await erc721V2981.balanceOf(accounts[1]), 1);
-			assert.equal(await erc721V2981.balanceOf(accounts[0]), 0);
-			assert.equal(await t1.balanceOf(protocol), 6);
-		})
-
+      /*NFT with royalty, support 2981*/
+      erc721V2981 = await ERC721V2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      await erc721V2981.initialize();
+    
+      const royaltiesGetter = accounts[2];
+      const { left, right } = await prepare20_721V2981Orders(royaltiesGetter, 105)
+    
+      await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right);
+    
+      assert.equal(await t1.balanceOf(accounts[1]), 2);
+      assert.equal(await t1.balanceOf(accounts[0]), 87);
+      assert.equal(await t1.balanceOf(royaltiesGetter), 10); //(Royalties-2981 - 10%)
+      assert.equal(await erc721V2981.balanceOf(accounts[1]), 1);
+      assert.equal(await erc721V2981.balanceOf(accounts[0]), 0);
+      assert.equal(await t1.balanceOf(protocol), 6);
+    })
+    
 		async function prepare20_721V2981Orders(_royaltiesGetter, t1Amount = 105) {
-		  const erc721_2981_TokenId = _royaltiesGetter + "b00000000000000000000001";
-			await t1.mint(accounts[1], t1Amount);
-			await erc721V2981.mint(accounts[0], erc721_2981_TokenId);
-			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
-			await erc721V2981.setApprovalForAll(transferProxy.address, true, {from: accounts[0]});
-
-			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V2981.address, erc721_2981_TokenId), 1), 1, 0, 0, "0xffffffff", "0x");
-			const right = Order(accounts[0], Asset(ERC721, enc(erc721V2981.address, erc721_2981_TokenId), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-			return { left, right }
-		}
+      const erc721_2981_TokenId = _royaltiesGetter + "b00000000000000000000001";
+      await t1.mint(accounts[1], t1Amount);
+      await erc721V2981.mint(accounts[0], erc721_2981_TokenId);
+      await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+      await erc721V2981.setApprovalForAll(transferProxy.address, true, { from: accounts[0] });
+    
+      const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V2981.address, erc721_2981_TokenId), 1), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[0], Asset(ERC721, enc(erc721V2981.address, erc721_2981_TokenId), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+      return { left, right }
+    }
 
 		it("Transfer from ERC1155(RoyaltiesV1) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right } = await prepare1155V1_20Orders(8, 105)
