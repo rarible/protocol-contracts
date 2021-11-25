@@ -52,7 +52,6 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         bytes4 dataType,
         bytes memory data
     ) external {
-        uint currentAuctionId = getNextAndIncrementAuctionId();
         // ETH or ERC20 can't be a sell item
         require(
             _sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS && 
@@ -68,6 +67,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
             require (aucData.startTime >= block.timestamp, "incorrect start time");
             endTime = aucData.startTime + aucData.duration;
         }
+        uint currentAuctionId = getNextAndIncrementAuctionId();
         auctions[currentAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
@@ -183,11 +183,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
 
     /// @dev returns true if auction exists, false otherwise
     function checkAuctionExistence(uint _auctionId) public view returns (bool){
-        if (auctions[_auctionId].seller == address(0)) {
-            return false;
-        } else {
-            return true;
-        }
+        return auctions[_auctionId].seller != address(0);
     }
 
     /// @dev returns true if newAmount is enough for buyOut
@@ -249,13 +245,12 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
     function checkAuctionRangeTime(uint _auctionId) public view returns (bool){
-        uint endTime = auctions[_auctionId].endTime;
         uint currentTime = block.timestamp;
-
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
         if (aucData.startTime > 0 && aucData.startTime > currentTime) {
             return false;
         }
+        uint endTime = auctions[_auctionId].endTime;
         if (endTime > 0 && endTime < currentTime){
             return false;
         }
