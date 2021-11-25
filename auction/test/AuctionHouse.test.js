@@ -7,6 +7,7 @@ const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestAuctionHouse = artifacts.require("TestAuctionHouse");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry");
 const Wrapper = artifacts.require("Wrapper");
+const PartyBidTest = artifacts.require("PartyBidTest");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -15,6 +16,7 @@ const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, enc, id } = require("../../exchange-v2/test/assets.js");
 
 const { increaseTime } = require("@daonomic/tests-common");
+const zeroAddress = "0x0000000000000000000000000000000000000000";
 
 contract("AuctionHouse", accounts => {
   let royaltiesRegistry;
@@ -595,17 +597,65 @@ contract("AuctionHouse", accounts => {
   })
 
   describe("wrapper", () => {
-    it("wrapper works correctly ", async () => {
+    it("wrapper bid and finilize work correctly ", async () => {
       const wrapper = await Wrapper.new(testAuctionHouse.address)
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareETH()
-      let dataV1 = await encDataV1([[], [], 1000, 0, 18]);
+      const auctionId = 1;
+      let dataV1 = await encDataV1([[], [], 1000, 0, 0]);
 
-      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
-      assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after start owner is testAuctionHouse
-      let auctionId = 1;
+      await testAuctionHouse.setProtocolFee(0)
 
-      //const tx = await wrapper.bid(auctionId, 0, {from: buyer, value: 10})
+      assert.equal(await wrapper.auctionIdMatchesToken(auctionId, erc721.address, erc721TokenId1), false, "auctionIdMatchesToken before creation")
+      assert.equal(await wrapper.isFinalized(auctionId), true, "isFinalized before creation")
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 10, 100, V1, dataV1, { from: seller });
+
+      assert.equal(await wrapper.auctionIdMatchesToken(auctionId, erc721.address, erc721TokenId1), true, "auctionIdMatchesToken after creation")
+      assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address);
+      assert.equal(await wrapper.getMinimumBid(auctionId), 100, "get first minimal bid")
+      assert.equal(await wrapper.getCurrentHighestBidder(auctionId), zeroAddress, "getCurrentHighestBidder before first bid")
+      assert.equal(await wrapper.isFinalized(auctionId), false, "isFinalized after creation")
+
+      //deploy party bid
+      const partyBid = await PartyBidTest.new(wrapper.address, erc721.address, erc721TokenId1, auctionId)
+
+      await partyBid.contribute({from: accounts[2], value: 50})
+      assert.equal((await web3.eth.getBalance(partyBid.address)).toString(), "50", "balance after 1 contribution")
+      
+      await partyBid.contribute({from: accounts[3], value: 50})
+      assert.equal((await web3.eth.getBalance(partyBid.address)).toString(), "100", "balance after 2 contribution")
+
+      const txBid = await partyBid.bid()
+      assert.equal((await web3.eth.getBalance(partyBid.address)).toString(), "0", "party bidbalance after bid contribution")
+      assert.equal((await web3.eth.getBalance(testAuctionHouse.address)).toString(), "100", "auction balance after bid contribution")
+      assert.equal(await wrapper.getMinimumBid(auctionId), 110, "get second minimal bid")
+      assert.equal(await wrapper.getCurrentHighestBidder(auctionId), partyBid.address, "getCurrentHighestBidder after bid")
+      assert.equal(await wrapper.isFinalized(auctionId), false, "isFinalized after bid")
+
+      const BidPlaced = (await testAuctionHouse.getPastEvents("BidPlaced", {
+        fromBlock: txBid.receipt.blockNumber,
+        toBlock: txBid.receipt.blockNumber
+      }))[0].args;
+
+      assert.equal(BidPlaced.auctionId.toString(), "1", "correct auctionId")
+      assert.equal(BidPlaced.buyer, partyBid.address, "correct buyer")
+      assert.equal(BidPlaced.bid.amount, 100, "correct amount")
+
+      await increaseTime(1001);
+
+      const txFin = await partyBid.finalize()
+
+      const AuctionFinished = (await testAuctionHouse.getPastEvents("AuctionFinished", {
+        fromBlock: txFin.receipt.blockNumber,
+        toBlock: txFin.receipt.blockNumber
+      }))[0].args;
+      assert.equal(AuctionFinished.auctionId, 1, "auction id")
+
+      assert.equal(await erc721.ownerOf(erc721TokenId1), partyBid.address, "nft goes to partBid");
+      assert.equal(await wrapper.auctionIdMatchesToken(auctionId, erc721.address, erc721TokenId1), false, "auctionIdMatchesToken after finilization")
+      assert.equal(await wrapper.getCurrentHighestBidder(auctionId), zeroAddress, "getCurrentHighestBidder before after finilization")
+      assert.equal(await wrapper.isFinalized(auctionId), true, "isFinalized after finilization")
     })
   })
 
