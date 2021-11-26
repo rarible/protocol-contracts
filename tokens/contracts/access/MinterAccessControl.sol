@@ -10,38 +10,16 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
     EnumerableSetUpgradeable.AddressSet private _minters;
-    bool public minterAccessControlEnabled;
-
-    event MinterAccessControlEnabled();
-    event MinterAccessControlDisabled();
+    
     event MinterGranted(address indexed account);
     event MinterRevoked(address indexed account);
 
-    function __MinterAccessControl_init() internal initializer {
+    function __MinterAccessControl_init() external initializer {
         __Ownable_init_unchained();
         __MinterAccessControl_init_unchained();
     }
 
     function __MinterAccessControl_init_unchained() internal initializer {
-    }
-
-    /**
-     * @dev Enable minter control
-     * When enabled, only addresses added to `grantMinter` will be allowed to mint
-     */
-    function enableMinterAccessControl() external onlyOwner {
-        require(!minterAccessControlEnabled, "MinterAccessControl: Already enabled");
-        minterAccessControlEnabled = true;
-        emit MinterAccessControlEnabled();
-    }
-
-    /**
-     * @dev Disable minter control
-     */
-    function disableMinterAccessControl() external onlyOwner  {
-        require(minterAccessControlEnabled, "MinterAccessControl: Already disabled");
-        minterAccessControlEnabled = false;
-        emit MinterAccessControlDisabled();
     }
 
     /**
@@ -63,10 +41,10 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Returns `true` if minterControl is not enabled or `account` has been granted to minters.
+     * @dev Returns `true` if `account` has been granted to minters.
      */
     function isValidMinter(address account) public view returns (bool) {
-        return !minterAccessControlEnabled || _minters.contains(account);
+        return _minters.contains(account);
     }
 
     uint256[50] private __gap;
