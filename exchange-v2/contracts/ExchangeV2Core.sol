@@ -3,15 +3,20 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./LibFill.sol";
-import "./LibOrder.sol";
-import "./OrderValidator.sol";
+//import "./LibFill.sol";
+//import "./LibOrder.sol";
+import "@rarible/exchange-v2/contracts/LibFill.sol";
+//import "./LibOrderData.sol";
+import "@rarible/exchange-v2/contracts/LibOrderData.sol";
+//import "./OrderValidator.sol";
+import "@rarible/exchange-v2/contracts/OrderValidator.sol";
 import "./AssetMatcher.sol";
-import "./TransferExecutor.sol";
-import "./ITransferManager.sol";
-import "./lib/LibTransfer.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
+import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
+import {ITransferManager} from "@rarible/transfer-manager/contracts/ITransferManager.sol";
+import "./EmptyGap.sol";
+
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
@@ -19,10 +24,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     //state of the orders
     mapping(bytes32 => uint) public fills;
-
+    ITransferManager public raribleTransferManager;
     //events
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
+
+    function setTransferManager(ITransferManager newRaribleTransferManager) external {
+        raribleTransferManager = newRaribleTransferManager;
+    }
 
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
@@ -59,7 +68,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
 
-        (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
+        (uint totalMakeValue, uint totalTakeValue) = ITransferManager(raribleTransferManager).doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");

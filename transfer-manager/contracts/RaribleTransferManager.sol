@@ -9,13 +9,13 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
-import "./LibFill.sol";
-import "./LibFeeSide.sol";
+import "@rarible/exchange-v2/contracts/LibFill.sol";
+import "@rarible/exchange-v2/contracts/LibFeeSide.sol";
 import "./ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "./lib/BpLibrary.sol";
+import "@rarible/exchange-v2/contracts/lib/BpLibrary.sol";
 
-abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
+contract RaribleTransferManager is TransferExecutor, ITransferManager {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
@@ -28,11 +28,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     function __RaribleTransferManager_init_unchained(
         uint newProtocolFee,
         address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider
+        IRoyaltiesProvider newRoyaltiesProvider,
+        INftTransferProxy transferProxy,
+        IERC20TransferProxy erc20TransferProxy
     ) internal initializer {
         protocolFee = newProtocolFee;
         defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
+        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
     }
 
     function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
@@ -67,7 +70,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
+    ) override external returns (uint totalMakeValue, uint totalTakeValue) {
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;
