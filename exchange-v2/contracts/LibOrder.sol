@@ -4,6 +4,8 @@ pragma solidity 0.7.6;
 
 import "./lib/LibMath.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "./LibOrderDataV2.sol";
+import "./LibOrderDataV1.sol";
 
 library LibOrder {
     using SafeMathUpgradeable for uint;
@@ -24,18 +26,35 @@ library LibOrder {
         bytes data;
     }
 
-    function calculateRemaining(Order memory order, uint fill) internal pure returns (uint makeValue, uint takeValue) {
-        takeValue = order.takeAsset.value.sub(fill);
-        makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
+    function calculateRemaining(Order memory order, uint fill, bool isMakeFill) internal pure returns (uint makeValue, uint takeValue) {
+        if (isMakeFill){
+            makeValue = order.makeAsset.value.sub(fill);
+            takeValue = LibMath.safeGetPartialAmountFloor(order.takeAsset.value, order.makeAsset.value, makeValue);
+        } else {
+            takeValue = order.takeAsset.value.sub(fill);
+            makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue); 
+        } 
     }
 
     function hashKey(Order memory order) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
+        //order.data is in hash for V2 orders
+        if (order.dataType == LibOrderDataV2.V2){
+            return keccak256(abi.encode(
+                order.maker,
+                LibAsset.hash(order.makeAsset.assetType),
+                LibAsset.hash(order.takeAsset.assetType),
+                order.salt,
+                order.data
+            ));
+        } else {
+            return keccak256(abi.encode(
                 order.maker,
                 LibAsset.hash(order.makeAsset.assetType),
                 LibAsset.hash(order.takeAsset.assetType),
                 order.salt
             ));
+        }
+        
     }
 
     function hash(Order memory order) internal pure returns (bytes32) {

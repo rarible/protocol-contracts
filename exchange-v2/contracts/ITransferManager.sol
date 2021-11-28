@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "./LibFill.sol";
 import "./TransferExecutor.sol";
+import "./LibOrderData.sol";
 
 abstract contract ITransferManager is ITransferExecutor {
     bytes4 constant TO_MAKER = bytes4(keccak256("TO_MAKER"));
@@ -20,6 +21,8 @@ abstract contract ITransferManager is ITransferExecutor {
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder
+        LibOrder.Order memory rightOrder,
+        LibOrderDataV2.DataV2 memory leftOrderData,
+        LibOrderDataV2.DataV2 memory rightOrderData
     ) internal virtual returns (uint totalMakeValue, uint totalTakeValue);
 }

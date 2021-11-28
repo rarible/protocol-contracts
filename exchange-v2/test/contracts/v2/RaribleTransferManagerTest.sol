@@ -14,6 +14,10 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         return abi.encode(data);
     }
 
+    function encodeV2(LibOrderDataV2.DataV2 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
+
     function checkDoTransfers(
         LibAsset.AssetType memory makeMatch,
         LibAsset.AssetType memory takeMatch,
@@ -21,7 +25,7 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder
     ) payable external {
-        doTransfers(makeMatch, takeMatch, fill, leftOrder, rightOrder);
+        doTransfers(makeMatch, takeMatch, fill, leftOrder, rightOrder, LibOrderData.parse(leftOrder), LibOrderData.parse(rightOrder));
     }
 
     function __TransferManager_init(
