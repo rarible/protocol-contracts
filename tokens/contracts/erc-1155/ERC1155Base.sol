@@ -14,10 +14,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     string public name;
     string public symbol;
 
-    function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
-        _setDefaultApproval(operator, hasApproval);
-    }
-
     function isApprovedForAll(address _owner, address _operator) public override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) view returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }

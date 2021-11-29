@@ -3,6 +3,8 @@
 pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "../LibURI.sol";
+
 import "./ERC1155Upgradeable.sol";
 
 contract ERC1155BaseURI is ERC1155Upgradeable {
@@ -37,7 +39,7 @@ contract ERC1155BaseURI is ERC1155Upgradeable {
         }
         // If both are set, concatenate the baseURI and tokenURI (via abi.encodePacked).
         if (bytes(_tokenURI).length > 0) {
-            return string(abi.encodePacked(base, _tokenURI));
+            return LibURI.checkPrefix(base, _tokenURI);
         }
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));

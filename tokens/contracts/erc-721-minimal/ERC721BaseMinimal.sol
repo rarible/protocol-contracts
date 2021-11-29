@@ -11,10 +11,6 @@ import "../HasContractURI.sol";
 
 abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
 
-    function setDefaultApproval(address operator, bool hasApproval) external onlyOwner {
-        _setDefaultApproval(operator, hasApproval);
-    }
-
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal virtual override(ERC721UpgradeableMinimal, ERC721DefaultApprovalMinimal) view returns (bool) {
         return ERC721DefaultApprovalMinimal._isApprovedOrOwner(spender, tokenId);
     }

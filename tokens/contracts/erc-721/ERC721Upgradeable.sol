@@ -14,6 +14,7 @@ import "@openzeppelin/contracts-upgradeable/utils/EnumerableSetUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/EnumerableMapUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "../LibURI.sol";
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
@@ -88,6 +89,9 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      */
     bytes4 private constant _INTERFACE_ID_ERC721_ENUMERABLE = 0x780e9d63;
 
+    // Mapping from token ID to flag == true, means token already burned
+    mapping(uint256 => bool) private _burnedTokens;
+
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
@@ -151,7 +155,7 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         }
         // If both are set, concatenate the baseURI and tokenURI (via abi.encodePacked).
         if (bytes(_tokenURI).length > 0) {
-            return string(abi.encodePacked(base, _tokenURI));
+            return LibURI.checkPrefix(base, _tokenURI);
         }
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
@@ -339,6 +343,7 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      */
     function _mint(address to, uint256 tokenId) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
+        require(!_burnedTokens[tokenId], "token already burned");
         require(!_exists(tokenId), "ERC721: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
@@ -376,8 +381,18 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         _holderTokens[owner].remove(tokenId);
 
         _tokenOwners.remove(tokenId);
-
+        _setBurned(tokenId);
         emit Transfer(owner, address(0), tokenId);
+    }
+
+    /*Returns true if token with tokenId already burned*/
+    function _burned(uint256 tokenId) internal returns (bool) {
+        return _burnedTokens[tokenId];
+    }
+
+    /*Set token with tokenId burned*/
+    function _setBurned(uint256 tokenId) internal {
+        _burnedTokens[tokenId] = true;
     }
 
     /**
@@ -477,5 +492,5 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual { }
-    uint256[41] private __gap;
+    uint256[40] private __gap;
 }
