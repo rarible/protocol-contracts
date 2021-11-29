@@ -21,7 +21,7 @@ contract Wrapper is IMarketWrapper{
     }
 
     function getMinimumBid(uint256 auctionId) external override view returns (uint256){
-        auction.getMinimalNextBid(auctionId);
+        return auction.getMinimalNextBid(auctionId);
     }
 
     function getCurrentHighestBidder(uint256 auctionId)

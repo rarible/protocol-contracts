@@ -71,6 +71,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
     function _mint(address to, uint256 tokenId) internal virtual override {
         require(to != address(0), "ERC721: mint to the zero address");
+        require(!_burned(tokenId), "token already burned");
         require(!_exists(tokenId), "ERC721: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);

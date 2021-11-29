@@ -52,7 +52,6 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         bytes4 dataType,
         bytes memory data
     ) external {
-        uint currentAuctionId = getNextAndIncrementAuctionId();
         // ETH or ERC20 can't be a sell item
         require(
             _sellAsset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS && 
@@ -68,6 +67,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
             require (aucData.startTime >= block.timestamp, "incorrect start time");
             endTime = aucData.startTime + aucData.duration;
         }
+        uint currentAuctionId = getNextAndIncrementAuctionId();
         auctions[currentAuctionId] = Auction(
             _sellAsset,
             _buyAsset,
@@ -110,7 +110,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
 
     /// @dev put a bid and return locked assets for the last bid
     function putBid(uint _auctionId, Bid memory bid) payable public {
-        require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
+        checkAuctionInProgress(_auctionId);
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         if (buyOutVerify(_auctionId, newAmount)) {
@@ -183,11 +183,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
 
     /// @dev returns true if auction exists, false otherwise
     function checkAuctionExistence(uint _auctionId) public view returns (bool){
-        if (auctions[_auctionId].seller == address(0)) {
-            return false;
-        } else {
-            return true;
-        }
+        return auctions[_auctionId].seller != address(0);
     }
 
     /// @dev returns true if newAmount is enough for buyOut
@@ -249,13 +245,12 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
     function checkAuctionRangeTime(uint _auctionId) public view returns (bool){
-        uint endTime = auctions[_auctionId].endTime;
         uint currentTime = block.timestamp;
-
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
         if (aucData.startTime > 0 && aucData.startTime > currentTime) {
             return false;
         }
+        uint endTime = auctions[_auctionId].endTime;
         if (endTime > 0 && endTime < currentTime){
             return false;
         }
@@ -276,16 +271,15 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
         require(seller == _msgSender(), "auction owner not detected");
-        address buyer = currentAuction.buyer;
-        require(buyer == address(0), "can't cancel auction with bid");
+        require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
         deactivateAuction(_auctionId);
-        AuctionCancelled(_auctionId);
+        emit AuctionCancelled(_auctionId);
     }
 
     /// @dev buyout auction if bid satisfies buyout condition
     function buyOut(uint _auctionId, Bid memory bid) external payable {
-        require(!isFinalized(_auctionId), "auction for this acutionId is inactive");
+        checkAuctionInProgress(_auctionId);
 
         require(buyOutVerify(_auctionId, bid.amount), "not enough for buyout auction");
         _buyOut(_auctionId, bid);
@@ -308,14 +302,19 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         currentAuction.buyer = newBuyer;
     }
 
-    /// @dev return current highest bidder for an auction
+    /// @dev returns current highest bidder for an auction
     function getCurrentBuyer(uint _auctionId) public view returns(address) {
         return auctions[_auctionId].buyer;
     }
 
-    /// @dev returns true if auction doesn't exist or finished or hasn't started yer, false otherwise
+    /// @dev returns true if auction in progress, false otherwise
+    function checkAuctionInProgress(uint _auctionId) internal view{
+        require(checkAuctionExistence(_auctionId) && checkAuctionRangeTime(_auctionId), "auction is inactive");
+    }
+
+    /// @dev returns true if auction doesn't exist or already finished, false otherwise
     function isFinalized(uint256 _auctionId) public view returns (bool){
-        return (!checkAuctionExistence(_auctionId) || !checkAuctionRangeTime(_auctionId));
+        return auctions[_auctionId].seller == address(0);
     }
 
     /// @dev returns total amount for a bid (protocol fee and bid origin fees included)
@@ -323,10 +322,10 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         return calculateTotalAmount(bid.amount, _protocolFee, LibBidDataV1.getOrigin(bid.data, bid.dataType));
     }
 
-    /// @dev function to call from wrapper to put bid, WIP
+    /// @dev function to call from wrapper to put bid
     function putBidWrapper(uint256 _auctionId) external payable {
       require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
-      //putBid(_auctionId, Bid(msg.value, "", ""));
+      putBid(_auctionId, Bid(msg.value, "", ""));
     }
 
     uint256[50] private ______gap;
