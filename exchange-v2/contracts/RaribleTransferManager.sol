@@ -272,8 +272,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         } else if (result.feeSide == LibFeeSide.FeeSide.TAKE) {
             result.feeSideProtocolFee = rightFee;
             result.nftSideProtocolFee = leftFee;
-        } else {
-            revert("unexpected feeSide = NONE");
         }
 
         return result;

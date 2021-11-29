@@ -37,18 +37,21 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
         bytes32 orderKeyHash = LibOrder.hashKey(order);
+        LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
 
         //checking if order is correct
         require(_msgSender() == order.maker, "order.maker must be msg.sender");
-        require(order.takeAsset.value > fills[orderKeyHash], "such take value is already filled");
+        require(orderNotFilled(order, orderKeyHash, dataNewOrder), "order already filled");
         
-        uint newTotal = getTotalValue(order, orderKeyHash);
+        uint newTotal = getTotalValue(order, orderKeyHash, dataNewOrder);
 
         //value of makeAsset that needs to be transfered with tx 
         uint sentValue = newTotal;
 
-        if(checkOrderExistance(orderKeyHash)) {
-            uint oldTotal = getTotalValue(onChainOrders[orderKeyHash].order, orderKeyHash);
+        //return locked assets only for ETH_ASSET_CLASS for now
+        if(checkOrderExistance(orderKeyHash) && order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            LibOrder.Order memory oldOrder = onChainOrders[orderKeyHash].order;
+            uint oldTotal = getTotalValue(oldOrder, orderKeyHash, LibOrderData.parse(oldOrder));
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
 
@@ -92,7 +95,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash)), address(this), temp.maker, UNLOCK, TO_MAKER);
+                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, LibOrderData.parse(temp))), address(this), temp.maker, UNLOCK, TO_MAKER);
             }
             delete onChainOrders[orderKeyHash];
         }
@@ -233,8 +236,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Calculates total make amount of order, including fees and fill
-    function getTotalValue(LibOrder.Order memory order, bytes32 hash) internal view returns(uint) {
-        LibOrderDataV2.DataV2 memory dataOrder = LibOrderData.parse(order);
+    function getTotalValue(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal view returns(uint) {
         (uint remainingMake, ) = LibOrder.calculateRemaining(order, getOrderFill(order, hash), dataOrder.isMakeFill);
         uint totalAmount = calculateTotalAmount(remainingMake, getOrderProtocolFee(order, hash), dataOrder.originFees);
         return totalAmount;
@@ -281,6 +283,16 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return true;
         }
         return false;
+    }
+
+    function orderNotFilled(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal view returns(bool){
+        uint value;
+        if (dataOrder.isMakeFill) {
+            value = order.makeAsset.value;
+        } else { 
+            value = order.takeAsset.value;
+        }
+        return (value > fills[hash]);
     }
 
     uint256[48] private __gap;
