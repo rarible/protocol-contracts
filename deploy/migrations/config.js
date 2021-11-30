@@ -1,3 +1,4 @@
+const ethUtil = require('ethereumjs-util');
 
 const rinkeby = {
   v2Legacy: ["0x0A093d230ba7845BcA0898851B093B8B19bc1Ae1"],
@@ -92,4 +93,12 @@ async function getProxyImplementation(proxy, network, ProxyAdmin) {
   const deployed = await proxy.deployed()
   return c.getProxyImplementation(deployed.address)
 }
-module.exports = { getSettings, getProxyImplementation };
+
+function id(str) {
+	return `0x${ethUtil.keccak256(str).toString("hex").substring(0, 8)}`;
+}
+
+const ERC721_LAZY = id("ERC721_LAZY");
+const ERC1155_LAZY = id("ERC1155_LAZY");
+
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY };

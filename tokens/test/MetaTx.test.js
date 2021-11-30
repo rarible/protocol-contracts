@@ -1,13 +1,9 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const ERC721MetaTx = artifacts.require("ERC721RaribleMeta.sol");
-const ERC721UserMetaTx = artifacts.require("ERC721RaribleUserMeta.sol");
-const ERC1155MetaTx = artifacts.require("ERC1155RaribleMeta.sol");
-const ERC1155UserMetaTx = artifacts.require("ERC1155RaribleUserMeta.sol");
+const ERC721NoMetaTx = artifacts.require("ERC721RaribleMinimal.sol");
 
-const ERC721NoMetaTx = artifacts.require("ERC721Rarible.sol");
-const ERC721UserNoMetaTx = artifacts.require("ERC721RaribleUser.sol");
+const ERC1155MetaTx = artifacts.require("ERC1155RaribleMeta.sol");
 const ERC1155NoMetaTx = artifacts.require("ERC1155Rarible.sol");
-const ERC1155UserNoMetaTx = artifacts.require("ERC1155RaribleUser.sol");
 
 const web3Abi = require('web3-eth-abi');
 const sigUtil = require('eth-sig-util');
@@ -94,17 +90,17 @@ contract("ERC721MetaTxTokenTest", accounts => {
   let erc1155UserWithMetaTx;
 
   beforeEach(async () => {
-    erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", ""], { initializer: '__ERC721Rarible_init' });
-    erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", ""], { initializer: '__ERC721RaribleMeta_init' });
+    erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });
+    erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleMeta_init' });
 
-    erc721UserNoMetaTx = await deployProxy(ERC721UserNoMetaTx, ["Rarible", "RARI", "ipfs:/", "", []], { initializer: '__ERC721RaribleUser_init' });
-    erc721UserWithMetaTx = await deployProxy(ERC721UserMetaTx, ["Rarible", "RARI", "ipfs:/", "", []], { initializer: '__ERC721RaribleUserMeta_init' });
+    erc721UserNoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleUser_init' });
+    erc721UserWithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleUserMeta_init' });
 
-    erc1155NoMetaTx = await deployProxy(ERC1155NoMetaTx, ["Rarible", "RARI", "ipfs:/", ""], { initializer: '__ERC1155Rarible_init' });
-    erc1155WithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", ""], { initializer: '__ERC1155RaribleMeta_init' });
+    erc1155NoMetaTx = await deployProxy(ERC1155NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155Rarible_init' });
+    erc1155WithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleMeta_init' });
 
-    erc1155UserNoMetaTx = await deployProxy(ERC1155UserNoMetaTx, ["Rarible", "RARI", "ipfs:/", "", []], { initializer: '__ERC1155RaribleUser_init' });
-    erc1155UserWithMetaTx = await deployProxy(ERC1155UserMetaTx, ["Rarible", "RARI", "ipfs:/", "", []], { initializer: '__ERC1155RaribleUserMeta_init' });
+    erc1155UserNoMetaTx = await deployProxy(ERC1155NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleUser_init' });
+    erc1155UserWithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleUserMeta_init' });
 
     domainData721Rarible = {
           name: "ERC721RaribleMeta",
@@ -161,12 +157,12 @@ contract("ERC721MetaTxTokenTest", accounts => {
   });
 
   it("Upgrade, which use MetaTransaction for ERC721RaribleUserMeta token works", async () => {
-  		const wrapper = await ERC721UserMetaTx.at(ERC721UserNoMetaTx.address);
+  		const wrapper = await ERC721MetaTx.at(ERC721NoMetaTx.address);
   		await expectThrow(
   			wrapper.getNonce(ZERO_ADDRESS)
   		);
 
-  		await upgradeProxy(ERC721UserNoMetaTx.address, ERC721UserMetaTx);
+  		await upgradeProxy(ERC721NoMetaTx.address, ERC721MetaTx);
   		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
   });
 
@@ -217,12 +213,12 @@ contract("ERC721MetaTxTokenTest", accounts => {
   });
 
   it("Upgrade, which use MetaTransaction for ERC1155RaribleUserMeta token works", async () => {
-  		const wrapper = await ERC1155UserMetaTx.at(erc1155UserNoMetaTx.address);
+  		const wrapper = await ERC1155MetaTx.at(erc1155UserNoMetaTx.address);
   		await expectThrow(
   			wrapper.getNonce(ZERO_ADDRESS)
   		);
 
-  		await upgradeProxy(erc1155UserNoMetaTx.address, ERC1155UserMetaTx);
+  		await upgradeProxy(erc1155UserNoMetaTx.address, ERC1155MetaTx);
   		assert.equal(await wrapper.getNonce(ZERO_ADDRESS), 0);
   });
 

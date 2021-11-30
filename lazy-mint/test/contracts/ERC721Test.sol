@@ -4,11 +4,11 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 import "../../contracts/erc-721/LibERC721LazyMint.sol";
-import "@openzeppelin/contracts-upgradeable/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
+import "@rarible/libraries/contracts/LibSignature.sol";
 
 contract ERC721Test is EIP712Upgradeable {
-    using ECDSAUpgradeable for bytes32;
+    using LibSignature for bytes32;
 
     function __ERC721Test_init() external initializer {
         __EIP712_init("Mint721", "1");
