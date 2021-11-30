@@ -70,7 +70,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) override external returns (uint totalMakeValue, uint totalTakeValue) {
+    ) override payable external returns (uint totalMakeValue, uint totalTakeValue) {
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;

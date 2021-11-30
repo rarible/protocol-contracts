@@ -15,5 +15,5 @@ interface ITransferManager {
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) external returns (uint totalMakeValue, uint totalTakeValue);
+    ) payable external returns (uint totalMakeValue, uint totalTakeValue);
 }
