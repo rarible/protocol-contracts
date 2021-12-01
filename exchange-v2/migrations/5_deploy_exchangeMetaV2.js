@@ -55,7 +55,7 @@ module.exports = async function (deployer, network) {
 
     const metaExchangeV2 = await deployProxy(
         ExchangeMetaV2,
-        [transferProxy, erc20TransferProxy, 0, communityWallet, royaltiesRegistry],
+        [],
         { deployer, initializer: '__ExchangeV2_init' }
     );
     console.log(`deployed exchangeV2 with metaTransactions at ${metaExchangeV2.address}`)   

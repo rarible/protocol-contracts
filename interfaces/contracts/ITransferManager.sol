@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/LibFill.sol";
+import "@rarible/libraries/contracts/LibFill.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 interface ITransferManager {

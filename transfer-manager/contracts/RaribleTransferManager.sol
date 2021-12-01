@@ -9,11 +9,12 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
-import "@rarible/exchange-v2/contracts/LibFill.sol";
-import "@rarible/exchange-v2/contracts/LibFeeSide.sol";
-import "./ITransferManager.sol";
+import "@rarible/libraries/contracts/LibFill.sol";
+import "@rarible/libraries/contracts/LibFeeSide.sol";
+import "@rarible/libraries/contracts/BpLibrary.sol";
+import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "@rarible/exchange-v2/contracts/lib/BpLibrary.sol";
+
 
 contract RaribleTransferManager is TransferExecutor, ITransferManager {
     using BpLibrary for uint;

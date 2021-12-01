@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.7.6;
+pragma abicoder v2;
 
-import "../../../contracts/ITransferManager.sol";
+import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
-abstract contract SimpleTransferManager is ITransferManager {
+abstract contract SimpleTransferManager is TransferExecutor, ITransferManager {
     using SafeMathUpgradeable for uint;
 
     function doTransfers(
@@ -15,7 +17,7 @@ abstract contract SimpleTransferManager is ITransferManager {
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
+    ) override payable external returns (uint totalMakeValue, uint totalTakeValue) {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
 

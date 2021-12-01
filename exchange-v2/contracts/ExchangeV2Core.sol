@@ -3,17 +3,13 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-//import "./LibFill.sol";
-//import "./LibOrder.sol";
-import "@rarible/exchange-v2/contracts/LibFill.sol";
-//import "./LibOrderData.sol";
-import "@rarible/exchange-v2/contracts/LibOrderData.sol";
-//import "./OrderValidator.sol";
-import "@rarible/exchange-v2/contracts/OrderValidator.sol";
+import "@rarible/libraries/contracts/LibFill.sol";
+import "@rarible/libraries/contracts/LibOrderData.sol";
+import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
 
 import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
-import {ITransferManager} from "@rarible/transfer-manager/contracts/ITransferManager.sol";
+import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./EmptyGap.sol";
 
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator {

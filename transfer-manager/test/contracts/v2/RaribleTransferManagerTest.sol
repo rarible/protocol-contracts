@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "../../../contracts/RaribleTransferManager.sol";
 import "../../../contracts/ITransferExecutor.sol";
 import "@rarible/exchange-v2/contracts/OrderValidator.sol";
-import "@rarible/exchange-v2/contracts/LibOrderData.sol";
+import "@rarible/libraries/contracts/LibOrderData.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
@@ -15,9 +15,9 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         return abi.encode(data);
     }
 
-//    function encodeV2(LibOrderDataV2.DataV2 memory data) pure external returns (bytes memory) {
-//        return abi.encode(data);
-//    }
+    function encodeV2(LibOrderDataV2.DataV2 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
 
     function makeOrderData(
         LibOrder.Order memory order

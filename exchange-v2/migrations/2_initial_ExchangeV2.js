@@ -55,7 +55,7 @@ module.exports = async function (deployer, network) {
 
   await deployProxy(
   	ExchangeV2,
-  	[transferProxy, erc20TransferProxy, 0, communityWallet, royaltiesRegistry],
+  	[],
   	{ deployer, initializer: '__ExchangeV2_init' }
   );
 };
