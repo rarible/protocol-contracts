@@ -182,13 +182,25 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
             (resultRoyalties, royaltiesType) = providerExtractor(token, tokenId);
         }
 
-        //try royalties from contract
+        //rarible royalties-v2
         if (royaltiesType == 0) {
-            (resultRoyalties, royaltiesType) = royaltiesFromContract(token, tokenId);
+            (resultRoyalties, royaltiesType) = getRoyaltiesRaribleV2(token, tokenId);
+        }
+
+        //rarible royalties-v1
+        if (royaltiesType == 0) {
+            (resultRoyalties, royaltiesType) = getRoyaltiesRaribleV1(token, tokenId);
+        }
+
+        //eip-2981
+        if (royaltiesType == 0) {
+            (resultRoyalties, royaltiesType) = getRoyaltiesEIP2981(token, tokenId);
         }
 
         //save royalties type
-        setRoyaltiesType(token, royaltiesType);
+        if (royaltiesType > 0) {
+            setRoyaltiesType(token, royaltiesType);
+        }
         return resultRoyalties;
     }
 
@@ -214,17 +226,8 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
         emit RoyaltiesSetForToken(token, tokenId, royalties);
     }
 
-    /// @dev tries to get royalties for token an tokenId from external contract
-    function royaltiesFromContract(address token, uint tokenId) internal view returns (LibPart.Part[] memory, uint) {
-        (LibPart.Part[] memory royalties, uint royaltiesType) = royaltiesFromContractNative(token, tokenId);
-        if (royaltiesType > 0) {
-            return (royalties, royaltiesType);
-        }
-        return royaltiesFromContractSpecial(token, tokenId);
-    }
-
-    /// @dev tries to get rarible-v1 and rarible-v2 royalties for token and tokenId 
-    function royaltiesFromContractNative(address token, uint tokenId) internal view returns (LibPart.Part[] memory, uint) {
+    /// @dev tries to get royalties rarible-v2 for token and tokenId
+    function getRoyaltiesRaribleV2(address token, uint tokenId) internal view returns (LibPart.Part[] memory, uint){
         if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
             RoyaltiesV2 v2 = RoyaltiesV2(token);
             try v2.getRaribleV2Royalties(tokenId) returns (LibPart.Part[] memory result) {
@@ -233,16 +236,21 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
                 return (new LibPart.Part[](0), 0);
             }
         }
+        return (new LibPart.Part[](0), 0);
+    }
+
+    /// @dev tries to get royalties rarible-v1 for token and tokenId
+    function getRoyaltiesRaribleV1(address token, uint tokenId) internal view returns (LibPart.Part[] memory, uint){
         RoyaltiesV1 v1 = RoyaltiesV1(token);
         address payable[] memory recipients;
-        try v1.getFeeRecipients(tokenId) returns (address payable[] memory result) {
-            recipients = result;
+        try v1.getFeeRecipients(tokenId) returns (address payable[] memory resultRecipients) {
+            recipients = resultRecipients;
         } catch {
             return (new LibPart.Part[](0), 0);
         }
         uint[] memory values;
-        try v1.getFeeBps(tokenId) returns (uint[] memory result) {
-            values = result;
+        try v1.getFeeBps(tokenId) returns (uint[] memory resultValues) {
+            values = resultValues;
         } catch {
             return (new LibPart.Part[](0), 0);
         }
@@ -258,7 +266,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     }
 
     /// @dev tries to get royalties EIP-2981 for token and tokenId
-    function royaltiesFromContractSpecial(address token, uint tokenId) internal view returns (LibPart.Part[] memory, uint) {
+    function getRoyaltiesEIP2981(address token, uint tokenId) internal view returns (LibPart.Part[] memory, uint) {
         if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
             IERC2981 v2981 = IERC2981(token);
             try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {

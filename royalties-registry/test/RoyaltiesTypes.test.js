@@ -6,7 +6,6 @@ const TestERC721RoyaltyV2OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV2
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 const TestERC721WithRoyaltiesV2981 = artifacts.require("TestERC721WithRoyaltyV2981.sol");
 
-const truffleAssert = require('truffle-assertions');
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
 const { expectThrow, verifyBalanceChange, assertEq } = require("@daonomic/tests-common");
