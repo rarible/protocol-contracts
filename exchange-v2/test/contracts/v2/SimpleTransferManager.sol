@@ -16,15 +16,16 @@ abstract contract SimpleTransferManager is TransferExecutor, ITransferManager {
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
-    ) override payable external returns (uint totalMakeValue, uint totalTakeValue) {
+        LibOrderDataV2.DataV2 memory rightOrderData,
+        uint ethValue
+    ) override payable external  {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
 
         transfer(LibAsset.Asset(makeMatch, fill.leftValue), leftOrder.maker, rightOrderBeneficiary, PAYOUT, TO_TAKER);
         transfer(LibAsset.Asset(takeMatch, fill.rightValue), rightOrder.maker, leftOrderBeneficiary, PAYOUT, TO_MAKER);
-        totalMakeValue = fill.leftValue;
-        totalTakeValue = fill.rightValue;
+//        totalMakeValue = fill.leftValue;
+//        totalTakeValue = fill.rightValue;
     }
     uint256[50] private __gap;
 }

@@ -63,20 +63,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
 
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
-
-        (uint totalMakeValue, uint totalTakeValue) = ITransferManager(raribleTransferManager).doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
+        uint ethValue = msg.value;
+        /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
-            require(msg.value >= totalMakeValue, "not enough eth");
-            if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
-            }
+            require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
+            require(ethValue > 0, "eth == 0");
+            address(raribleTransferManager).transferEth(ethValue);
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalTakeValue, "not enough eth");
-            if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
-            }
+            require(ethValue > 0, "eth == 0");
+            address(raribleTransferManager).transferEth(ethValue);
         }
+        ITransferManager(raribleTransferManager).doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, ethValue);
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
     }
 
@@ -131,6 +128,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrder.validate(order);
         validate(order, signature);
     }
+
+//    fallback() external payable { }
 
     uint256[49] private __gap;
 }

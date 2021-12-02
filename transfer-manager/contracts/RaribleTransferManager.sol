@@ -19,6 +19,7 @@ import "./TransferExecutor.sol";
 contract RaribleTransferManager is TransferExecutor, ITransferManager {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
+    using LibTransfer for address;
 
     uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
@@ -63,7 +64,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         return defaultFeeReceiver;
     }
 
-    function doTransfers(
+    function doTransfersMain(
         LibAsset.AssetType memory makeMatch,
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
@@ -71,7 +72,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) override payable external returns (uint totalMakeValue, uint totalTakeValue) {
+    ) internal returns (uint totalMakeValue, uint totalTakeValue) {
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;
@@ -84,6 +85,22 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         } else {
             transferPayouts(makeMatch, fill.leftValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
             transferPayouts(takeMatch, fill.rightValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
+        }
+    }
+
+    function doTransfers(
+        LibAsset.AssetType memory makeMatch,
+        LibAsset.AssetType memory takeMatch,
+        LibFill.FillResult memory fill,
+        LibOrder.Order memory leftOrder,
+        LibOrder.Order memory rightOrder,
+        LibOrderDataV2.DataV2 memory leftOrderData,
+        LibOrderDataV2.DataV2 memory rightOrderData,
+        uint ethValue
+    ) override payable external {
+        (uint totalMakeValue, uint totalTakeValue) = doTransfersMain(makeMatch, takeMatch, fill, leftOrder, rightOrder, leftOrderData, rightOrderData);
+        if (ethValue > 0) {
+            deReturnResidue(makeMatch, takeMatch, leftOrder, rightOrder, totalMakeValue, totalTakeValue, ethValue);
         }
     }
 
@@ -201,6 +218,26 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         }
     }
 
+    function deReturnResidue(
+        LibAsset.AssetType memory makeMatch,
+        LibAsset.AssetType memory takeMatch,
+        LibOrder.Order memory leftOrder,
+        LibOrder.Order memory rightOrder,
+        uint totalMakeValue,
+        uint totalTakeValue,
+        uint ethValue
+    ) internal {
+        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            if (ethValue > totalMakeValue) {
+                address(leftOrder.maker).transferEth(ethValue.sub(totalMakeValue));
+            }
+        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            if (ethValue > totalTakeValue) {
+                address(rightOrder.maker).transferEth(ethValue.sub(totalTakeValue));
+            }
+        }
+    }
+
     function calculateTotalAmount(
         uint amount,
         uint feeOnTopBp,
@@ -226,6 +263,8 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         }
     }
 
+    /*for transferring eth to contract*/
+    fallback() external payable { }
 
     uint256[46] private __gap;
 }
