@@ -14,18 +14,22 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
-
+    /// @dev deprecated
     event RoyaltiesSetForToken(address indexed token, uint indexed tokenId, LibPart.Part[] royalties);
+    /// @dev emitted when royalties set for token in 
     event RoyaltiesSetForContract(address indexed token, LibPart.Part[] royalties);
 
+    /// @dev struct to store royalties in royaltiesByToken
     struct RoyaltiesSet {
         bool initialized;
         LibPart.Part[] royalties;
     }
 
+    /// @dev deprecated
     mapping(bytes32 => RoyaltiesSet) public royaltiesByTokenAndTokenId;
+    /// @dev stores royalties for token contract, set in setRoyaltiesByToken() method
     mapping(address => RoyaltiesSet) public royaltiesByToken;
-    //stores external provider and royalties type for token contract
+    /// @dev stores external provider and royalties type for token contract
     mapping(address => uint) public royaltiesProviders;
 
     /// @dev total amount or supported royalties types
