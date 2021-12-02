@@ -5,6 +5,7 @@ const TestERC721RoyaltyV1OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV1
 const TestERC721RoyaltyV2OwnUpgrd = artifacts.require("TestERC721WithRoyaltiesV2OwnableUpgradeable");
 const TestRoyaltiesProvider = artifacts.require("RoyaltiesProviderTest.sol");
 const TestERC721WithRoyaltiesV2981 = artifacts.require("TestERC721WithRoyaltyV2981.sol");
+const TestERC721 = artifacts.require("TestERC721.sol");
 
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
@@ -33,7 +34,7 @@ contract("RoyaltiesRegistry, royalties types test", accounts => {
 	describe("royalties types are set correctly", () => {
 
     it("test royalties type = 1, royalties set in royaltiesByToken", async () => {
-      const token = accounts[4];
+      const token = royaltiesRegistry.address;
 
       await royaltiesRegistry.setRoyaltiesByToken(token, defaultRoyalties)
       assert.equal(await royaltiesRegistry.getRoyaltiesType(token), 1, "setRoyaltiesByToken type = 1")
@@ -81,7 +82,7 @@ contract("RoyaltiesRegistry, royalties types test", accounts => {
     })
 
     it("test royalties type = 4, royalties from external provider", async () => {
-      const token = accounts[4];
+      const token = royaltiesRegistry.address;
 
       const testRoyaltiesProvider = await TestRoyaltiesProvider.new();
       await testRoyaltiesProvider.initializeProvider(token, defaultTokenId1, defaultRoyalties);
@@ -185,19 +186,33 @@ contract("RoyaltiesRegistry, royalties types test", accounts => {
         royaltiesRegistry.forceSetRoyaltiesType(token, 6)
       );
 
+      //only owner can clear royalties
+      await expectThrow(
+        royaltiesRegistry.clearRoyaltiesType(token,  {from: accounts[3]})
+      );
+
       //clearRoyaltiesType
       await royaltiesRegistry.clearRoyaltiesType(token);
       assert.equal(await royaltiesRegistry.getRoyaltiesType(token), 0, "clearRoyaltiesType ")
       assert.equal(await royaltiesRegistry.getProvider(token), ZERO_ADDRESS, "provider is not set")
+    })
+
+    it("contract without supports interface returns empty royalties", async () => {
+      const token = royaltiesRegistry.address
+
+      await royaltiesRegistry.getRoyalties(token, defaultTokenId1)
+      assert.equal(await royaltiesRegistry.getRoyaltiesType(token), 0, "type 0 ")
+      assert.equal((await royaltiesRegistry.getRoyalties.call(token, defaultTokenId1)).length, 0, "royalties 0")
+
     })
 	})
 
   describe("upgrade checks", () => {
 
     it("check storage after upgrade", async () => {
-      const token = accounts[4];
-      const token2 = accounts[5]
-      const token3 = accounts[6]
+      const token = (await TestERC721.new()).address;
+      const token2 = (await TestERC721.new()).address;
+      const token3 = (await TestERC721.new()).address;
 
       const tokenId3 = 11234;
 
@@ -222,9 +237,8 @@ contract("RoyaltiesRegistry, royalties types test", accounts => {
 
       assert.equal(await royaltiesRegistry.getRoyaltiesType(token2), 0, "")
       assert.equal(await royaltiesRegistry.getRoyaltiesType(token3), 0, "")
-
-      assert.equal((await royaltiesRegistry.getRoyalties.call(token, tokenId3))[0].accounts, royaltiesFromTokenAndTokenId[0].accounts, "royaltiesFromTokenAndTokenId")
-      assert.equal((await royaltiesRegistry.getRoyalties.call(token, tokenId3))[0].value, royaltiesFromTokenAndTokenId[0].value, "royaltiesFromTokenAndTokenId")
+      
+      assert.equal((await royaltiesRegistry.getRoyalties.call(token, tokenId3)).length, 0, "royaltiesFromTokenAndTokenId")
 
       assert.equal((await royaltiesRegistry.getRoyalties.call(token2, tokenId3))[0].accounts, royaltiesFromToken[0].accounts, "royaltiesFromToken")
       assert.equal((await royaltiesRegistry.getRoyalties.call(token2, tokenId3))[0].value, royaltiesFromToken[0].value, "royaltiesFromToken")
@@ -238,6 +252,7 @@ contract("RoyaltiesRegistry, royalties types test", accounts => {
 
       assert.equal(await royaltiesRegistry.getRoyaltiesType(token2), 1, "royaltiesFromToken type 1")
       assert.equal(await royaltiesRegistry.getRoyaltiesType(token3), 4, "external provider type 4")
+      
 
     })
 

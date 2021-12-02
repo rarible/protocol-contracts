@@ -116,18 +116,6 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			assert.equal(royalties.length, 0);
   	})
 
-		it("SetRoyaltiesByTokenAndTokenId, initialize by Owner, emit get", async () => {
-    	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(accounts[5], erc721TokenId1, [[accounts[3], 600], [accounts[4], 1100]]); //set royalties by token and tokenId
-    	part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, accounts[5], erc721TokenId1);
-    	let royalties;
-    	truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
-    		royalties = ev.royalties;
-      	return true;
-     	});
-			assert.equal(royalties[0].value, 600);
-			assert.equal(royalties[1].value, 1100);
-		})
-
 		it("SetRoyaltiesByToken, initialize by Owner, emit get", async () => {
     	await royaltiesRegistry.setRoyaltiesByToken(accounts[5], [[accounts[3], 600], [accounts[4], 1100]]); //set royalties by token and tokenId
     	await royaltiesRegistry.setRoyaltiesByToken(accounts[5], [[accounts[3], 600], [accounts[4], 1100]]); //set royalties by token and tokenId
@@ -158,34 +146,6 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			assert.equal(royalties[1].value, 1000);
 		})
 
-		it("SetRoyaltiesByTokenAndTokenId, initialize by OwnableUpgradaeble(ERC721_V1OwnUpgrd).owner", async () => {
-			let ownerErc721 = accounts[6];
-      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721 });
-      await ERC721_V1OwnUpgrd.initialize( {from: ownerErc721});
-			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
-    	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1,[[accounts[3], 500], [accounts[4], 1000]], {from: ownerErc721}); //set royalties by token and tokenId
-    	await royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1,[[accounts[3], 500], [accounts[4], 1000]], {from: ownerErc721}); //set royalties by token and tokenId
-			part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V1OwnUpgrd.address, erc721TokenId1);
-			let royalties;
-      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
-      	royalties = ev.royalties;
-        return true;
-      });
-      assert.equal(royalties.length, 2);
-			assert.equal(royalties[0].value, 500);
-			assert.equal(royalties[1].value, 1000);
-		})
-
-		it("SetRoyaltiesByTokenandTokenId, royaltiesSum>100% throw detected ", async () => {
-			let ownerErc721 = accounts[6];
-      ERC721_V1OwnUpgrd = await TestERC721RoyaltyV1OwnUpgrd.new("Rarible", "RARI", "https://ipfs.rarible.com", {from: ownerErc721});
-      await ERC721_V1OwnUpgrd.initialize({from: ownerErc721});
-			await ERC721_V1OwnUpgrd.mint(accounts[2], erc721TokenId1, []);
-    	await expectThrow(
-    		royaltiesRegistry.setRoyaltiesByTokenAndTokenId(ERC721_V1OwnUpgrd.address, erc721TokenId1, [[accounts[3], 9200], [accounts[4], 1100]], {from: ownerErc721}) //set royalties by token and tokenId
-    	);
-		})
-
 	})
 
 	describe ("ExternalProviders test:", () => {
@@ -201,17 +161,9 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			await token.mint(accounts[2], erc721TokenId1);
 			await token._saveRoyalties(erc721TokenId1, royaltiesToSet)
 
-			let event;
-			const tx = await royaltiesRegistry.getRoyalties(token.address, erc721TokenId1)
-			truffleAssert.eventEmitted(tx, 'RoyaltiesSetForToken', (ev) => {
-				event = ev;
-				return true;
-			});
-
-			assert.equal(event["token"], token.address, "token address");
-			assert.equal(event["tokenId"], erc721TokenId1, "token id");
-			assert.equal(event.royalties[0][0], royaltiesToSet[0][0], "royalty recepient 0");
-			assert.equal(event.royalties[0][1], royaltiesToSet[0][1], "token address 0");
+			const royalties = await royaltiesRegistry.getRoyalties.call(token.address, erc721TokenId1)
+			assert.equal(royalties[0][0], royaltiesToSet[0][0], "royalty recepient 0");
+			assert.equal(royalties[0][1], royaltiesToSet[0][1], "token address 0");
 
 		})
 
@@ -267,23 +219,16 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			);
 
 			//checking royalties
-			let event;
-			const tx = await royaltiesRegistry.getRoyalties(token.address, erc721TokenId1)
-			truffleAssert.eventEmitted(tx, 'RoyaltiesSetForToken', (ev) => {
-				event = ev;
-				return true;
-			});
-			assert.equal(event["token"], token.address, "token address");
-			assert.equal(event["tokenId"], erc721TokenId1, "token id");
+			const royalties = await royaltiesRegistry.getRoyalties.call(token.address, erc721TokenId1)
 
-			assert.equal(event.royalties[0].account, newArtBlocksAddr, "artBlocks addr");
-			assert.equal(event.royalties[0].value, 250, "artBlocks value");
+			assert.equal(royalties[0].account, newArtBlocksAddr, "artBlocks addr");
+			assert.equal(royalties[0].value, 250, "artBlocks value");
 
-			assert.equal(event.royalties[1].account, artistAdrr, "artist addr");
-			assert.equal(event.royalties[1].value, 840, "artist value");
+			assert.equal(royalties[1].account, artistAdrr, "artist addr");
+			assert.equal(royalties[1].value, 840, "artist value");
 
-			assert.equal(event.royalties[2].account, addPayeeAddr, "additional payee addr");
-			assert.equal(event.royalties[2].value, 660, "additional payee value");
+			assert.equal(royalties[2].account, addPayeeAddr, "additional payee addr");
+			assert.equal(royalties[2].value, 660, "additional payee value");
 
 			//setting new artblocksPercentage
 			let eventChangePercentage;
