@@ -1,5 +1,5 @@
-const Testing = artifacts.require("MinterAccessControl.sol");
-const TestingV2 = artifacts.require("MinterAccessControlTest.sol");
+const TestingV1 = artifacts.require("MinterAccessControlTestV1.sol");
+const TestingV2 = artifacts.require("MinterAccessControlTestV2.sol");
 
 const { expectThrow } = require('@daonomic/tests-common');
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
@@ -14,7 +14,7 @@ contract("MinterAccessControl", accounts => {
   let tokenOwner = accounts[9];
 
   beforeEach(async () => {
-    token = await deployProxy(Testing, [], { initializer: '__MinterAccessControl_init' });
+    token = await deployProxy(TestingV1, [], { initializer: 'initialize' });
     await token.transferOwnership(tokenOwner);
   });
 

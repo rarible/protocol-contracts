@@ -14,7 +14,7 @@ contract MinterAccessControl is Initializable, OwnableUpgradeable {
     event MinterGranted(address indexed account);
     event MinterRevoked(address indexed account);
 
-    function __MinterAccessControl_init() external initializer {
+    function __MinterAccessControl_init() internal initializer {
         __Ownable_init_unchained();
         __MinterAccessControl_init_unchained();
     }
