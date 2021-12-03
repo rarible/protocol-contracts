@@ -20,6 +20,7 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
 
     function __ERC1155Burnable_init_unchained() internal initializer {
     }
+
     function burn(address account, uint256 id, uint256 value) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),

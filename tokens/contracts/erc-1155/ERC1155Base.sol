@@ -36,36 +36,24 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     }
 
     function burn(address account, uint256 id, uint256 value) public virtual override {
-        if (_isExist(id)) {
-            _burnExisted(account, id, value);
-        } else {
-            _burnLazy(account, id, value);
+        address creator = address(id >> 96);
+        if (creator == _msgSender() && _isNotExist(id)) {
+            ERC1155Lazy._setBurned(id, value);
+            return;
         }
-    }
-
-    function _burnLazy(address account, uint256 id, uint256 value) internal {
-        require(account == _msgSender(), "ERC1155: caller is not burner");
-        address minter = address(id >> 96);
-        require(minter == _msgSender(), "ERC1155: caller is not token owner");
-        ERC1155Lazy._setBurned(id, value);
-    }
-
-    function _burnExisted(address account, uint256 id, uint256 value) internal {
-        address owner = address(id >> 96);
-        if (owner == _msgSender()) {
+        uint256 burnMinted = value;
+        if (creator == _msgSender()) {
             uint256 balanceLazy = ERC1155Lazy._getSupply(id) - ERC1155Lazy._getMinted(id);
             uint256 burnLazy = value;
-            uint256 burnMinted = 0;
-            if (value > balanceLazy){
+            burnMinted = 0;
+            if (value > balanceLazy) {
                 burnLazy = balanceLazy;
                 burnMinted = value - burnLazy;
             }
-            _burnLazy(account, id, burnLazy);
-            if (burnMinted > 0) {
-                ERC1155BurnableUpgradeable.burn(account, id, burnMinted);
-            }
-        } else {
-            ERC1155BurnableUpgradeable.burn(account, id, value);
+            ERC1155Lazy._setBurned(id, burnLazy);
+        }
+        if (burnMinted > 0) {
+            ERC1155BurnableUpgradeable.burn(account, id, burnMinted);
         }
     }
 
