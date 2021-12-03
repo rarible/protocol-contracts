@@ -1,7 +1,7 @@
 const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 const IExchangeV2 = artifacts.require('IExchangeV2');
 
-const { CRYPTO_PUNK } = require("../assets");
+const { CRYPTO_PUNKS } = require("../assets");
 
 const rinkeby = {
 	exchangeV2: "0xd4a57a3bD3657D0d46B4C5bAC12b3F156B9B886b",
@@ -51,9 +51,9 @@ module.exports = async function (deployer, network) {
     return;
   }
 
-  // setting proxy in exchange v2 for assetType = CRYPTO_PUNK
+  // setting proxy in exchange v2 for assetType = CRYPTO_PUNKS
   const ExchangeV2 = await IExchangeV2.at(settings.exchangeV2)
-  await ExchangeV2.setTransferProxy(CRYPTO_PUNK, punkTransferProxy.address)
+  await ExchangeV2.setTransferProxy(CRYPTO_PUNKS, punkTransferProxy.address)
 
   // setting exchangev2 as operator in proxy contract
   await punkTransferProxy.addOperator(ExchangeV2.address)
