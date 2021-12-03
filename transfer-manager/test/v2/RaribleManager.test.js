@@ -24,7 +24,8 @@ const EIP712 = require("@rarible/exchange-v2/test/EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const eth = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, enc, encDataV2, id } = require("@rarible/exchange-v2/test/assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNK, COLLECTION, enc, encDataV2, id } = require("@rarible/exchange-v2/test/assets");
+const truffleAssert = require('truffle-assertions');
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let testing;
@@ -746,4 +747,184 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			return { left, right, dataOrderLeft, dataOrderRight }
 		}
 	})
+
+	describe("Catch emit event Transfer", () => {
+		it("From ETH(DataV1) to ERC721(DataV1) Protocol, check emit ", async () => {
+			const seller = accounts[1];
+			const sellerRoyaltiy = accounts[4];
+			const seller2 = accounts[3];
+			const buyer = accounts[2];
+			const originLeft1 = accounts[5];
+			const originLeft2 = accounts[6];
+			const originRight = accounts[7];
+
+			await erc721V1.mint(seller, erc721TokenId1, [[sellerRoyaltiy, 1000]]);
+    	await erc721V1.setApprovalForAll(transferProxy.address, true, {from: seller});
+
+			let addrOriginLeft = [[originLeft1, 500], [originLeft2, 600]];
+ 			let addrOriginRight = [[originRight, 700]];
+ 			let encDataLeft = await encDataV1([ [[buyer, 10000]], addrOriginLeft ]);
+ 			let encDataRight = await encDataV1([ [[seller, 5000], [seller2, 5000]], addrOriginRight ]);
+
+			const left = Order(buyer, Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+    	const right = Order(seller, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+      const dataOrderLeft = await testing.makeOrderData.call(left);
+      const dataOrderRight = await testing.makeOrderData.call(right);
+
+    	let tx = await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [200, 1], [300, buyer], left, right, dataOrderLeft, dataOrderRight,
+               {value: 300, from: buyer, gasPrice: 0});
+			let errorCounter = 0
+//			eventEmitted  - run by amount transfer, for fix err. need all transfers failed
+			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+				let result = false;
+				switch (ev.to){
+					case protocol:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PROTOCOL)) {
+							console.log("Error in protocol check:");
+							errorCounter++;
+						}
+					break
+					case seller:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ) {
+							console.log("Error in seller check:");
+							errorCounter++;
+						}
+					break
+					case sellerRoyaltiy:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ROYALTY) ) {
+							console.log("Error in seller check:");
+							errorCounter++;
+						}
+					break
+					case seller2:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ) {
+							console.log("Error in seller2 check:");
+							errorCounter++;
+						}
+					break
+					case originLeft1:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
+							console.log("Error in originLeft1 check:");
+							errorCounter++;
+						}
+					break
+					case originLeft2:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
+							console.log("Error in originLeft2 check:");
+							errorCounter++;
+						}
+					break
+					case originRight:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
+							console.log("Error in originRight check:");
+							errorCounter++;
+						}
+					break
+					case buyer:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ){
+							console.log("Error in buyer check:");
+							errorCounter++;
+						}
+					break
+				}
+				if (errorCounter > 0) {
+					result = false;
+				} else {
+					result = true;
+				}
+				return result;
+    	}, "Transfer shuold be emietted with correct parameters ");
+			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
+    })
+
+		it("From ERC1155(DataV2) to ETH(DataV1) Protocol, check emit ", async () => {
+			const seller = accounts[1];
+			const sellerRoyaltiy = accounts[4];
+			const seller2 = accounts[3];
+			const buyer = accounts[2];
+			const originLeft1 = accounts[5];
+			const originLeft2 = accounts[6];
+			const originRight = accounts[7];
+
+			await erc1155V2.mint(seller, erc1155TokenId1, [[sellerRoyaltiy, 1000]], 10);
+    	await erc1155V2.setApprovalForAll(transferProxy.address, true, {from: seller});
+
+			let addrOriginLeft = [[originLeft1, 500], [originLeft2, 600]];
+ 			let addrOriginRight = [[originRight, 700]];
+ 			let encDataLeft = await encDataV1([ [[seller, 5000], [seller2, 5000]] , addrOriginLeft ]);
+ 			let encDataRight = await encDataV1([ [[buyer, 10000]], addrOriginRight ]);
+
+			const left = Order(seller, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 5), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(buyer, Asset(ETH, "0x", 200), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 5), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+      const dataOrderLeft = await testing.makeOrderData.call(left);
+      const dataOrderRight = await testing.makeOrderData.call(right);
+
+    	let tx = await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 200], [300, buyer], left, right, dataOrderLeft, dataOrderRight,
+               {value: 300, from: buyer, gasPrice: 0});
+
+			let errorCounter = 0
+//			eventEmitted  - срабатывает по нескольким transfer, для фиксации ошибки нужно чтоб все трансферы завалились
+			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+				let result = false;
+				switch (ev.to){
+					case protocol:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PROTOCOL)) {
+							console.log("Error in protocol check:");
+							errorCounter++;
+						}
+					break
+					case seller:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ) {
+							console.log("Error in seller check:");
+							errorCounter++;
+						}
+					break
+					case sellerRoyaltiy:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ROYALTY) ) {
+							console.log("Error in seller check:");
+							errorCounter++;
+						}
+					break
+					case seller2:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ) {
+							console.log("Error in seller2 check:");
+							errorCounter++;
+						}
+					break
+					case originLeft1:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
+							console.log("Error in originLeft1 check:");
+							errorCounter++;
+						}
+					break
+					case originLeft2:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
+							console.log("Error in originLeft2 check:");
+							errorCounter++;
+						}
+					break
+					case originRight:
+						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
+							console.log("Error in originRight check:");
+							errorCounter++;
+						}
+					break
+					case buyer:
+						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ){
+							console.log("Error in buyer check:");
+							errorCounter++;
+						}
+					break
+				}
+				if (errorCounter > 0) {
+					result = false;
+				} else {
+					result = true;
+				}
+				return result;
+    	}, "Transfer shuold be emietted with correct parameters ");
+			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
+    })
+
+	}) //Catch emit event Transfer
 });

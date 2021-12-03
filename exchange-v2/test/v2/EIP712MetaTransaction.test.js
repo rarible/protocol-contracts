@@ -106,7 +106,7 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
     erc20TransferProxy = await ERC20TransferProxyTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
     testContract = await deployProxy(ExchangeMetaV2, [], { initializer: "__ExchangeV2_init" });
-    testingSimpleContract = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
+    testingSimpleContract = await deployProxy(ExchangeSimpleV2, [], { initializer: "__ExchangeSimpleV2_init" });
     t1 = await TestERC20.new();
     t2 = await TestERC20.new();
 
