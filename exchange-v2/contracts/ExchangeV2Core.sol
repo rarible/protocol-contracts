@@ -63,17 +63,20 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
 
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
-        uint ethValue = msg.value;
+        LibFill.FillEthTransfer memory ethFill;
+
         /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
-            require(ethValue > 0, "eth == 0");
-            address(raribleTransferManager).transferEth(ethValue);
+            require(msg.value > 0, "eth == 0");
+            address(raribleTransferManager).transferEth(msg.value);
+            ethFill = LibFill.fillEthBack(msg.value, _msgSender());
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(ethValue > 0, "eth == 0");
-            address(raribleTransferManager).transferEth(ethValue);
+            require(msg.value > 0, "eth == 0");
+            address(raribleTransferManager).transferEth(msg.value);
+            ethFill = LibFill.fillEthBack(msg.value, _msgSender());
         }
-        ITransferManager(raribleTransferManager).doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, ethValue);
+        ITransferManager(raribleTransferManager).doTransfers(makeMatch, takeMatch, newFill, ethFill, orderLeft, orderRight, leftOrderData, rightOrderData);
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
     }
 

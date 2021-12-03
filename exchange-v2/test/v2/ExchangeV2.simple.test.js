@@ -1,5 +1,6 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const ExchangeSimpleV2 = artifacts.require("ExchangeSimpleV2.sol");
+const SimpleTransferManager = artifacts.require("SimpleTransferManager.sol");
 const ExchangeSimpleV2_1 = artifacts.require("ExchangeSimpleV2_1.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
@@ -18,6 +19,7 @@ contract("ExchangeSimpleV2", accounts => {
 	let testing;
 	let transferProxy;
 	let erc20TransferProxy;
+	let simpleTransferManager;
 	let t1;
 	let t2;
 	let libOrder;
@@ -26,7 +28,14 @@ contract("ExchangeSimpleV2", accounts => {
 		libOrder = await LibOrderTest.new();
 		transferProxy = await TransferProxyTest.new();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
+		simpleTransferManager = await SimpleTransferManager.new();
+		await simpleTransferManager.__SimpleTransferManager_init();
+		await simpleTransferManager.setTransferProxy(ERC20, erc20TransferProxy.address);
+		await simpleTransferManager.setTransferProxy(ERC1155, transferProxy.address);
+		await simpleTransferManager.setTransferProxy(ERC721, transferProxy.address);
+		//transferProxy.address, erc20TransferProxy.address
+		testing = await deployProxy(ExchangeSimpleV2, [], { initializer: "__ExchangeSimpleV2_init" });
+		await testing.setTransferManager(simpleTransferManager.address);
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
 	});
@@ -54,7 +63,7 @@ contract("ExchangeSimpleV2", accounts => {
 			);
 			await verifyBalanceChange(accounts[2], 200, async () =>
 				verifyBalanceChange(accounts[1], -200, async () =>
-					testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2], value: 201, gasPrice: 0 })
+					testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2], value: 215, gasPrice: 0 })
 				)
 			)
 			assert.equal(await t1.balanceOf(accounts[1]), 0);
@@ -73,7 +82,7 @@ contract("ExchangeSimpleV2", accounts => {
 			);
 			await verifyBalanceChange(accounts[2], 200, async () =>
 				verifyBalanceChange(accounts[1], -200, async () =>
-					testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 201, gasPrice: 0 })
+					testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 215, gasPrice: 0 })
 				)
 			)
 			assert.equal(await t1.balanceOf(accounts[1]), 0);
@@ -82,9 +91,9 @@ contract("ExchangeSimpleV2", accounts => {
 
 		it("only owner can change transfer proxy", async () => {
 			await expectThrow(
-				testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[1] })
+				simpleTransferManager.setTransferProxy("0x00112233", accounts[2], { from: accounts[1] })
 			)
-			testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[0] });
+			simpleTransferManager.setTransferProxy("0x00112233", accounts[2], { from: accounts[0] });
 		})
 
 		it("simplest possible exchange works", async () => {
@@ -152,7 +161,8 @@ contract("ExchangeSimpleV2", accounts => {
       await proxy.addOperator(testing.address);
       await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
 
-      await testing.setTransferProxy((CRYPTO_PUNK), proxy.address)
+//      await testing.setTransferProxy((CRYPTO_PUNK), proxy.address)
+      await simpleTransferManager.setTransferProxy((CRYPTO_PUNK), proxy.address)
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
       await t1.mint(accounts[2], 106);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });

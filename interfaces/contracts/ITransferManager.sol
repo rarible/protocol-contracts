@@ -11,10 +11,10 @@ interface ITransferManager {
         LibAsset.AssetType memory makeMatch,
         LibAsset.AssetType memory takeMatch,
         LibFill.FillResult memory fill,
+        LibFill.FillEthTransfer memory ethBack,
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData,
-        uint ethValue
+        LibOrderDataV2.DataV2 memory rightOrderData
     ) payable external;
 }
