@@ -91,7 +91,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeValue = doTransfersWithFees(fill.leftValue, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch,  TO_TAKER);
+            totalMakeValue = doTransfersWithFees(fill.leftValue, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch, TO_TAKER);
             transferPayouts(takeMatch, fill.rightValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
             totalTakeValue = doTransfersWithFees(fill.rightValue, rightOrder.maker, rightOrderData, leftOrderData, takeMatch, makeMatch, TO_MAKER);
@@ -131,7 +131,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
                 tokenAddress = abi.decode(matchCalculate.data, (address));
-            } else  if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            } else if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
@@ -183,10 +183,10 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         restValue = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             totalFees = totalFees.add(fees[i].value);
-            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount,  fees[i].value);
+            (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), from,  fees[i].account, transferDirection, transferType);
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, transferDirection, transferType);
             }
         }
     }
@@ -261,7 +261,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
     }
 
     /*for transferring eth to contract*/
-    fallback() external payable { }
+    fallback() external payable {}
 
     uint256[46] private __gap;
 }

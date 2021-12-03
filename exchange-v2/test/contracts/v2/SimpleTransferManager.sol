@@ -25,7 +25,7 @@ contract SimpleTransferManager is TransferExecutor, ITransferManager {
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) override payable external  {
+    ) override payable external {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
 
@@ -56,7 +56,7 @@ contract SimpleTransferManager is TransferExecutor, ITransferManager {
     }
 
     /*for transferring eth to contract*/
-    fallback() external payable { }
+    fallback() external payable {}
 
     uint256[50] private __gap;
 }
