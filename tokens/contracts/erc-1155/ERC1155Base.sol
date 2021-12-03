@@ -38,21 +38,25 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     function burn(address account, uint256 id, uint256 value) public virtual override {
         address creator = address(id >> 96);
         if (creator == _msgSender() && _isNotExist(id)) {
+            //token not exists, burn Lazy by creator only
             ERC1155Lazy._setBurned(id, value);
             return;
         }
         uint256 burnMinted = value;
         if (creator == _msgSender()) {
+            //calculate Lazy value available for burn
             uint256 balanceLazy = ERC1155Lazy._getSupply(id) - ERC1155Lazy._getMinted(id);
             uint256 burnLazy = value;
             burnMinted = 0;
-            if (value > balanceLazy) {
+            if (value > balanceLazy) {//need to burn more than available
                 burnLazy = balanceLazy;
                 burnMinted = value - burnLazy;
             }
+            //token exists, burn Lazy by creator only
             ERC1155Lazy._setBurned(id, burnLazy);
         }
         if (burnMinted > 0) {
+            //token exists, burn Minted
             ERC1155BurnableUpgradeable.burn(account, id, burnMinted);
         }
     }
