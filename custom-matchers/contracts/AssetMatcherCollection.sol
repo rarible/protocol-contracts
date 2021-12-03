@@ -25,7 +25,7 @@ contract AssetMatcherCollection is IAssetMatcher, Initializable, OperatorRole {
             (rightAssetType.assetClass == LibERC721LazyMint.ERC721_LAZY_ASSET_CLASS) ||
             (rightAssetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) || 
             (rightAssetType.assetClass == LibERC1155LazyMint.ERC1155_LAZY_ASSET_CLASS) ||
-            (rightAssetType.assetClass == LibAsset.CRYPTO_PUNK)
+            (rightAssetType.assetClass == LibAsset.CRYPTO_PUNKS)
         ) {
           (address leftToken) = abi.decode(leftAssetType.data, (address));
           (address rightToken,) = abi.decode(rightAssetType.data, (address, uint));

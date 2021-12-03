@@ -356,13 +356,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       await proxy.addOperator(testing.address);
       await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
 
-      await testing.setTransferProxy(id("CRYPTO_PUNK"), proxy.address)
+      await testing.setTransferProxy(id("CRYPTO_PUNKS"), proxy.address)
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
       await t1.mint(accounts[2], 106);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
 
-      const left = Order(accounts[1], Asset(id("CRYPTO_PUNK"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("CRYPTO_PUNK"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+      const left = Order(accounts[1], Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+      const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
 
       await testing.checkDoTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right);
 
@@ -399,10 +399,10 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       await proxy.addOperator(testing.address);
       await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[2] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
 
-      await testing.setTransferProxy(id("CRYPTO_PUNK"), proxy.address)
+      await testing.setTransferProxy(id("CRYPTO_PUNKS"), proxy.address)
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);
-      const left = Order(accounts[2], Asset(id("CRYPTO_PUNK"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-    	const right = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(id("CRYPTO_PUNK"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
+      const left = Order(accounts[2], Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+    	const right = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
     	return { left, right }
     }
   })
