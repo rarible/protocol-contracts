@@ -93,7 +93,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       await verifyBalanceChange(accounts[0], 103, () =>
       	verifyBalanceChange(accounts[2], -97, () =>
         	verifyBalanceChange(protocol, -6, () =>
-          	testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right, dataOrderLeft, dataOrderRight,
+          	testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], [103, accounts[0]], left, right, dataOrderLeft, dataOrderRight,
             	{value: 103, from: accounts[0], gasPrice: 0}
             )
           )
@@ -117,7 +117,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC721 to ERC721", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare721_721Orders()
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 1], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 1], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]);
 			assert.equal(await erc721.ownerOf(erc721TokenId0), accounts[1]);
@@ -139,7 +139,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community, orders dataType == V1", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare721_1155Orders(110)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await erc721.balanceOf(accounts[1]), 0);
 			assert.equal(await erc721.balanceOf(accounts[2]), 1);
@@ -168,7 +168,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155 to ERC1155: 2 to 10, 50% 50% for payouts", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare1155_1155Orders();
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [2, 10], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [2, 10], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 98);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
@@ -198,7 +198,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("rounding error Transfer from ERC1155 to ERC1155: 1 to 5, 50% 50% for payouts", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare1155_1155Orders();
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 5], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 5], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 99);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
@@ -215,7 +215,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare1155O_721rders(105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await erc721.balanceOf(accounts[2]), 0);
 			assert.equal(await erc721.balanceOf(accounts[1]), 1);
@@ -240,7 +240,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC20 to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare20_1155Orders(105, 10)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[2]), 97);
@@ -265,7 +265,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare1155_20Orders(10, 105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [7, 100], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [7, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[3]), 97);
 			assert.equal(await t1.balanceOf(accounts[4]), 2);
@@ -290,7 +290,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC721, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare20_721Orders()
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[2]), 97);
@@ -315,7 +315,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC721 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare721_20Orders()
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 97);
 			assert.equal(await t1.balanceOf(accounts[2]), 2);
@@ -340,7 +340,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare2Orders()
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 200], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 200], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[2]), 97);
@@ -384,7 +384,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const dataOrderLeft = await testing.makeOrderData.call(left);
       const dataOrderRight = await testing.makeOrderData.call(right);
 
-      await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right, dataOrderLeft, dataOrderRight);
+      await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
       assert.equal(await t1.balanceOf(accounts[1]), 97); //get 97 because protocol down-fee
       assert.equal(await t1.balanceOf(accounts[2]), 3);// accounts[1] pay 103 because protocol up-fee
@@ -398,7 +398,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       await verifyBalanceChange(accounts[0], 103, () =>
       	verifyBalanceChange(accounts[2], -97, () =>
         	verifyBalanceChange(protocol, -6, () =>
-          	testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right, dataOrderLeft, dataOrderRight,
+          	testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], [103, accounts[0]], left, right, dataOrderLeft, dataOrderRight,
             	{value: 103, from: accounts[0], gasPrice: 0}
             )
           )
@@ -447,7 +447,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const dataOrderLeft = await testing.makeOrderData.call(left);
       const dataOrderRight = await testing.makeOrderData.call(right);
 
-      await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right, dataOrderLeft, dataOrderRight);
+      await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 		  assert.equal(await erc721Test.ownerOf(1), accounts[2]);
 		  assert.equal(await t1.balanceOf(accounts[1]), 67);
@@ -472,7 +472,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const dataOrderLeft = await testing.makeOrderData.call(left);
       const dataOrderRight = await testing.makeOrderData.call(right);
 
-      await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], left, right, dataOrderLeft, dataOrderRight);
+      await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 		  assert.equal(await erc1155Test.balanceOf(accounts[2], 1), 5);
 		  assert.equal(await t1.balanceOf(accounts[1]), 67);
@@ -498,7 +498,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       	  verifyBalanceChange(accounts[5], -20, () =>
       	    verifyBalanceChange(accounts[6], -10, () =>
         	    verifyBalanceChange(protocol, -6, () =>
-          	    testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right, dataOrderLeft, dataOrderRight,
+          	    testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], [103, accounts[1]], left, right, dataOrderLeft, dataOrderRight,
             	    {value: 103, from: accounts[1], gasPrice: 0}
             	  )
             	)
@@ -526,7 +526,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       	  verifyBalanceChange(accounts[5], -20, () =>
       	    verifyBalanceChange(accounts[6], -10, () =>
         	    verifyBalanceChange(protocol, -6, () =>
-          	    testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 5], left, right, dataOrderLeft, dataOrderRight,
+          	    testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 5], [103, accounts[1]], left, right, dataOrderLeft, dataOrderRight,
             	    {value: 103, from: accounts[1], gasPrice: 0}
             	  )
             	)
@@ -544,7 +544,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC721(RoyaltiesV1) to ERC20 , protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare721V1_20Orders(105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [1, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -572,7 +572,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC721(RoyaltiesV2), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare20_721V2Orders(105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -600,7 +600,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155(RoyaltiesV1) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare1155V1_20Orders(8, 105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -628,7 +628,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC1155(RoyaltiesV2), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare20_1155V2Orders(105, 8)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 6], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 6], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -643,7 +643,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare20_1155V2Orders(105, 8, 2000, 3001)
 
 			await expectThrow(
-				testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 6], left, right, dataOrderLeft, dataOrderRight)
+				testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 6], [0, ZERO], left, right, dataOrderLeft, dataOrderRight)
 			);
 		})
 
@@ -669,7 +669,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
         		verifyBalanceChange(accounts[2], -10, () =>
         			verifyBalanceChange(accounts[3], -5, () =>
           			verifyBalanceChange(protocol, -6, () =>
-             			testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], left, right, dataOrderLeft, dataOrderRight,
+             			testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 7], [103, accounts[0]], left, right, dataOrderLeft, dataOrderRight,
               			{value: 103, from: accounts[0], gasPrice: 0}
               		)
         				)
@@ -695,7 +695,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC721(RoyaltiesV1 With Error), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare20_721V1ErOrders(105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [100, 1], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 97);
@@ -722,7 +722,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155(RoyaltiesV2 With Error) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, dataOrderLeft, dataOrderRight } = await prepare1155V2_20ErOrders(12, 105)
 
-			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], left, right, dataOrderLeft, dataOrderRight);
+			await testing.doTransfers(left.makeAsset.assetType, left.takeAsset.assetType, [5, 100], [0, ZERO], left, right, dataOrderLeft, dataOrderRight);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 97);
