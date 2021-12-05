@@ -14,9 +14,10 @@ import "@rarible/libraries/contracts/LibFeeSide.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./TransferExecutor.sol";
+import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
 
 
-contract RaribleTransferManager is TransferExecutor, ITransferManager {
+contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
@@ -34,6 +35,8 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         INftTransferProxy transferProxy,
         IERC20TransferProxy erc20TransferProxy
     ) internal initializer {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
         protocolFee = newProtocolFee;
         defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
@@ -73,7 +76,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
         LibOrderDataV2.DataV2 memory rightOrderData
-    ) override payable external {
+    ) override payable external onlyOperator {
         (uint totalMakeValue, uint totalTakeValue) = doTransfersMain(makeMatch, takeMatch, fill, leftOrder, rightOrder, leftOrderData, rightOrderData);
         deReturnResidue(makeMatch, takeMatch, totalMakeValue, totalTakeValue, ethBack);
     }
