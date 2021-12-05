@@ -30,6 +30,15 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
         _burn(account, id, value);
     }
 
+    function pureBurn(address account, uint256 id, uint256 value) public virtual {
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved"
+        );
+
+        _pureBurn(account, id, value);
+    }
+
     function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
@@ -38,5 +47,6 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
 
         _burnBatch(account, ids, values);
     }
+
     uint256[50] private __gap;
 }

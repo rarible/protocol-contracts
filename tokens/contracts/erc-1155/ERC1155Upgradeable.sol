@@ -24,10 +24,10 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     using AddressUpgradeable for address;
 
     // Mapping from token ID to account balances
-    mapping (uint256 => mapping(address => uint256)) internal _balances;
+    mapping(uint256 => mapping(address => uint256)) internal _balances;
 
     // Mapping from account to operator approvals
-    mapping (address => mapping(address => bool)) private _operatorApprovals;
+    mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;
@@ -106,11 +106,11 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         address[] memory accounts,
         uint256[] memory ids
     )
-        public
-        view
-        virtual
-        override
-        returns (uint256[] memory)
+    public
+    view
+    virtual
+    override
+    returns (uint256[] memory)
     {
         require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
 
@@ -150,9 +150,9 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256 amount,
         bytes memory data
     )
-        public
-        virtual
-        override
+    public
+    virtual
+    override
     {
         require(to != address(0), "ERC1155: transfer to the zero address");
         require(
@@ -182,9 +182,9 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256[] memory amounts,
         bytes memory data
     )
-        public
-        virtual
-        override
+    public
+    virtual
+    override
     {
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         require(to != address(0), "ERC1155: transfer to the zero address");
@@ -287,7 +287,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     }
 
     /**
-     * @dev Destroys `amount` tokens of token type `id` from `account`
+     * @dev Destroys `amount` tokens of token type `id` from `account`, emit event TransferSingle
      *
      * Requirements:
      *
@@ -295,6 +295,19 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
      * - `account` must have at least `amount` tokens of token type `id`.
      */
     function _burn(address account, uint256 id, uint256 amount) internal virtual {
+        _pureBurn(account, id, amount);
+        emit TransferSingle(_msgSender(), account, address(0), id, amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens of token type `id` from `account`
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     * - `account` must have at least `amount` tokens of token type `id`.
+     */
+    function _pureBurn(address account, uint256 id, uint256 amount) internal virtual {
         require(account != address(0), "ERC1155: burn from the zero address");
 
         address operator = _msgSender();
@@ -305,8 +318,6 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
             amount,
             "ERC1155: burn amount exceeds balance"
         );
-
-        emit TransferSingle(operator, account, address(0), id, amount);
     }
 
     /**
@@ -369,9 +380,9 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256[] memory amounts,
         bytes memory data
     )
-        internal
-        virtual
-    { }
+    internal
+    virtual
+    {}
 
     function _doSafeTransferAcceptanceCheck(
         address operator,
@@ -381,7 +392,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256 amount,
         bytes memory data
     )
-        internal
+    internal
     {
         if (to.isContract()) {
             try IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
@@ -404,7 +415,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256[] memory amounts,
         bytes memory data
     )
-        private
+    private
     {
         if (to.isContract()) {
             try IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (bytes4 response) {
@@ -425,5 +436,6 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
 
         return array;
     }
+
     uint256[47] private __gap;
 }

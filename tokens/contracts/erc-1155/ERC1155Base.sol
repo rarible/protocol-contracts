@@ -18,6 +18,35 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }
 
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function burn(address account, uint256 id, uint256 value) public virtual override {
+        uint256 burnMinted = _burnLazy(account, id, value);
+        if (burnMinted > 0) {
+            //token exists, burn Minted
+            ERC1155BurnableUpgradeable.pureBurn(account, id, burnMinted);
+        }
+        emit TransferSingle(_msgSender(), account, address(0), id, value);
+    }
+
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        address operator = _msgSender();
+
+        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+        uint256 burnMinted;
+        for (uint i = 0; i < ids.length; i++) {
+            burnMinted = _burnLazy(account, ids[i], amounts[i]);
+            if (burnMinted > 0) {
+                //token exists, burn Minted
+                ERC1155BurnableUpgradeable.pureBurn(account, ids[i], burnMinted);
+            }
+        }
+        emit TransferBatch(operator, account, address(0), ids, amounts);
+    }
+
     function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
         ERC1155Lazy._mint(account, id, amount, data);
     }
@@ -31,52 +60,27 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         return _tokenURI(id);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
-
-    function burn(address account, uint256 id, uint256 value) public virtual override {
+    function _burnLazy(address account, uint256 id, uint256 value) internal returns (uint256 burnResidue) {
         address creator = address(id >> 96);
         uint supply = ERC1155Lazy._getSupply(id);
         if (creator == _msgSender() && supply == 0) {
-            //token not exists, burn Lazy by creator only
+            //token not exists, burn Lazy by creator
             ERC1155Lazy._setBurned(id, value);
-            return;
+            return 0;
         }
-        uint256 burnMinted = value;
+        burnResidue = value;
         if (creator == _msgSender()) {
             //calculate Lazy value available for burn
             uint256 balanceLazy = supply - ERC1155Lazy._getMinted(id);
             uint256 burnLazy = value;
-            burnMinted = 0;
-            if (value > balanceLazy) {//need to burn more than available
+            burnResidue = 0;
+            if (burnLazy > balanceLazy) {//need to burn more than available
                 burnLazy = balanceLazy;
-                burnMinted = value - burnLazy;
+                burnResidue = value - burnLazy;
             }
-            //token exists, burn Lazy by creator only
+            //token exists, burn Lazy by creator
             ERC1155Lazy._setBurned(id, burnLazy);
         }
-        if (burnMinted > 0) {
-            //token exists, burn Minted
-            ERC1155BurnableUpgradeable.burn(account, id, burnMinted);
-        }
-    }
-
-    function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {
-        require(account != address(0), "ERC1155: burn from the zero address");
-        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
-        require(
-            account == _msgSender() || isApprovedForAll(account, _msgSender()),
-            "ERC1155: caller is not owner nor approved"
-        );
-        address operator = _msgSender();
-
-        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
-
-        for (uint i = 0; i < ids.length; i++) {
-            burn(account, ids[i], amounts[i]);
-        }
-        emit TransferBatch(operator, account, address(0), ids, amounts);
     }
 
     uint256[50] private __gap;
