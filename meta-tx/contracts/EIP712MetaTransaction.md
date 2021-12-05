@@ -22,4 +22,9 @@ Method `getNonce` - return id transaction, for generating uniq signature
 
 Don't forget about method `_msgSender()` - reterns address, who call metaTransaction. Use this method insted of msg.sender.
 
-See tests [here](../test/EIP712MetaTransaction.test.js) to make clear transfer metaTransactions
+If need check, that contract supports metaTransaction, for example use method `areMetaTxSupported` in tests.
+
+Method `areMetaTxSupported` - return `true` if contract supports metaTransaction, else return `false`
+- `addressContract` - contract address;
+
+See tests [here](../test/MetaTransaction.test.js) to make clear transfer metaTransactions
