@@ -10,9 +10,8 @@ import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
 import "../Mint721Validator.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "./ERC721URI.sol";
-import "../access/MinterAccessControl.sol";
 
-abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, ERC721URI, MinterAccessControl {
+abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, ERC721URI {
     using SafeMathUpgradeable for uint;
 
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
@@ -55,7 +54,6 @@ abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal
         require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
         require(minter == sender || isApprovedForAll(minter, sender), "ERC721: transfer caller is not owner nor approved");
-        require(isValidMinter(minter), "ERC721: minter not granted");
 
         bytes32 hash = LibERC721LazyMint.hash(data);
         for (uint i = 0; i < data.creators.length; i++) {

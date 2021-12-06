@@ -4,8 +4,9 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./ERC721BaseMinimal.sol";
+import "../access/MinterAccessControl.sol";
 
-contract ERC721RaribleMinimal is ERC721BaseMinimal {
+contract ERC721RaribleMinimal is ERC721BaseMinimal, MinterAccessControl {
     /// @dev true if collection is private, false if public
     bool isPrivate;
 
@@ -50,7 +51,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal {
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
         if (isPrivate){
-            require(owner() == data.creators[0].account, "minter is not the owner");
+            require(owner() == data.creators[0].account || isValidMinter(data.creators[0].account), "minter not granted or not owner");
         }
         super.mintAndTransfer(data, to);
     }
