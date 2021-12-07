@@ -48,6 +48,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	let erc1155TokenId1 = 54;
 	let erc1155TokenId2 = 55;
 	let royaltiesRegistry;
+	const operator1 = accounts[1];
+	const operator = accounts[0];
 
 	function encDataV1(tuple) {
 		return testing.encode(tuple)
@@ -59,6 +61,9 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address);
+    await testing.addOperator(operator1);
+    await testing.addOperator(operator);
+
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
 		/*ERC721 */
@@ -760,6 +765,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const originLeft1 = accounts[5];
 			const originLeft2 = accounts[6];
 			const originRight = accounts[7];
+			await testing.addOperator(buyer);
 
 			await erc721V1.mint(seller, erc721TokenId1, [[sellerRoyaltiy, 1000]]);
     	await erc721V1.setApprovalForAll(transferProxy.address, true, {from: seller});
@@ -848,6 +854,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const originLeft2 = accounts[6];
 			const originRight = accounts[7];
 
+      await testing.addOperator(buyer);
 			await erc1155V2.mint(seller, erc1155TokenId1, [[sellerRoyaltiy, 1000]], 10);
     	await erc1155V2.setApprovalForAll(transferProxy.address, true, {from: seller});
 
