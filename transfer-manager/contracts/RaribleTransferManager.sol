@@ -12,6 +12,7 @@ import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "@rarible/libraries/contracts/LibFill.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
+import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./TransferExecutor.sol";
 
@@ -65,53 +66,42 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
     }
 
     function doTransfers(
-        LibAsset.AssetType memory makeMatch,
-        LibAsset.AssetType memory takeMatch,
-        LibFill.FillResult memory fill,
-        LibFill.FillEthTransfer memory ethBack,
-        LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        LibAsset.Asset memory makeMatch,
+        LibAsset.Asset memory takeMatch,
+        LibDeal.Data memory left,
+        LibDeal.Data memory right,
+        address leftMaker,
+        address rightMaker,
+        address originalMessageSender
     ) override payable external {
-        (uint totalMakeValue, uint totalTakeValue) = doTransfersMain(makeMatch, takeMatch, fill, leftOrder, rightOrder, leftOrderData, rightOrderData);
-        deReturnResidue(makeMatch, takeMatch, totalMakeValue, totalTakeValue, ethBack);
-    }
-
-    function doTransfersMain(
-        LibAsset.AssetType memory makeMatch,
-        LibAsset.AssetType memory takeMatch,
-        LibFill.FillResult memory fill,
-        LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
-    ) internal returns (uint totalMakeValue, uint totalTakeValue) {
-        LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
-        totalMakeValue = fill.leftValue;
-        totalTakeValue = fill.rightValue;
+        LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetType.assetClass, takeMatch.assetType.assetClass);
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeValue = doTransfersWithFees(fill.leftValue, leftOrder.maker, leftOrderData, rightOrderData, makeMatch, takeMatch, TO_TAKER);
-            transferPayouts(takeMatch, fill.rightValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
+            doTransfersWithFees(makeMatch.value, leftMaker, left, right, makeMatch.assetType, takeMatch.assetType, TO_TAKER);
+            transferPayouts(takeMatch.assetType, takeMatch.value, rightMaker, left.payouts, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeValue = doTransfersWithFees(fill.rightValue, rightOrder.maker, rightOrderData, leftOrderData, takeMatch, makeMatch, TO_MAKER);
-            transferPayouts(makeMatch, fill.leftValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
+            doTransfersWithFees(takeMatch.value, rightMaker, right, left, takeMatch.assetType, makeMatch.assetType, TO_MAKER);
+            transferPayouts(makeMatch.assetType, makeMatch.value, leftMaker, right.payouts, TO_TAKER);
         } else {
-            transferPayouts(makeMatch, fill.leftValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
-            transferPayouts(takeMatch, fill.rightValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
+            transferPayouts(makeMatch.assetType, makeMatch.value, leftMaker, right.payouts, TO_TAKER);
+            transferPayouts(takeMatch.assetType, takeMatch.value, rightMaker, left.payouts, TO_MAKER);
+        }
+        /*Return back eth, if eth more than need*/
+        uint ethBalance = address(this).balance;
+        if (ethBalance > 0) {
+            address(originalMessageSender).transferEth(ethBalance);
         }
     }
 
     function doTransfersWithFees(
         uint amount,
         address from,
-        LibOrderDataV2.DataV2 memory dataCalculate,
-        LibOrderDataV2.DataV2 memory dataNft,
+        LibDeal.Data memory dataCalculate,
+        LibDeal.Data memory dataNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
-    ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
+    ) internal {
+        uint totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
         (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
@@ -213,25 +203,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
         if (restValue > 0) {
             transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
-        }
-    }
-
-    function deReturnResidue(
-        LibAsset.AssetType memory makeMatch,
-        LibAsset.AssetType memory takeMatch,
-        uint totalMakeValue,
-        uint totalTakeValue,
-        LibFill.FillEthTransfer memory ethBack
-    ) internal {
-        uint ethValue = ethBack.value;
-        if ((makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) && (ethValue != 0)) {
-            if (ethValue > totalMakeValue) {
-                address(ethBack.back).transferEth(ethValue.sub(totalMakeValue));
-            }
-        } else if ((takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) && (ethValue != 0)) {
-            if (ethValue > totalTakeValue) {
-                address(ethBack.back).transferEth(ethValue.sub(totalTakeValue));
-            }
         }
     }
 

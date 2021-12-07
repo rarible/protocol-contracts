@@ -8,6 +8,7 @@ import "../../../contracts/ITransferExecutor.sol";
 import "@rarible/exchange-v2/contracts/OrderValidator.sol";
 import "@rarible/libraries/contracts/LibOrderData.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+import "@rarible/libraries/contracts/LibDeal.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
 
@@ -23,6 +24,12 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         LibOrder.Order memory order
     ) external pure returns (LibOrderDataV2.DataV2 memory dataLeft){
         dataLeft = LibOrderData.parse(order);
+    }
+
+    function makeDealData(
+        LibOrder.Order memory order
+    ) external pure returns (LibDeal.Data memory dataLeft){
+        (dataLeft,) = LibOrderData.parseDeal(order);
     }
 
     function __TransferManager_init(
