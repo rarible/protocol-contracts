@@ -770,7 +770,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const left = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(buyer, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -485, async () =>
         verifyBalanceChange(buyer, 515, async () =>
           testing.matchOrders(left, await getSignature(left, seller), right, "0x", { from: buyer, value: 600, gasPrice: 0 })
