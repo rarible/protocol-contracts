@@ -322,6 +322,20 @@ contract("ERC1155Rarible", accounts => {
       );
       await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, 1, {from: whiteListProxy});//mint 1 possible 4+1<=supply==5
     });
+    it("Run burn = 10, mintAndTransfer 1 supply = 10, throw burn+minted > supply,", async () => {
+      let minter = accounts[1];
+      let transferTo = accounts[2];
+
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "/uri";
+      let supply = 10;
+      let mint = 1;
+      let burn = 10;
+      await token.burn(minter, tokenId, burn, {from: minter});
+      await expectThrow(
+        token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, mint, {from: minter})
+      );
+    });
   });
 
   describe("burn after mint ()", () => {
