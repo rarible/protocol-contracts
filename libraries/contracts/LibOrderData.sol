@@ -6,24 +6,7 @@ import "./LibOrder.sol";
 import "./LibDeal.sol";
 
 library LibOrderData {
-    function parse(LibOrder.Order memory order) pure internal returns (LibOrderDataV2.DataV2 memory dataOrder) {
-        if (order.dataType == LibOrderDataV1.V1) {
-            LibOrderDataV1.DataV1 memory dataV1 = LibOrderDataV1.decodeOrderDataV1(order.data);
-            dataOrder.payouts = dataV1.payouts;
-            dataOrder.originFees = dataV1.originFees;
-            dataOrder.isMakeFill = false;
-        } else if (order.dataType == LibOrderDataV2.V2) {
-            dataOrder = LibOrderDataV2.decodeOrderDataV2(order.data);
-        } else if (order.dataType == 0xffffffff) {
-        } else {
-            revert("Unknown Order data type");
-        }
-        if (dataOrder.payouts.length == 0) {
-            dataOrder.payouts = payoutSet(order.maker);
-        }
-    }
-
-    function parseDeal(LibOrder.Order memory order) pure internal returns (LibDeal.Data memory data, bool fillFlg) {
+    function parse(LibOrder.Order memory order) pure internal returns (LibDeal.Data memory data, bool fillFlg) {
         if (order.dataType == LibOrderDataV1.V1) {
             LibOrderDataV1.DataV1 memory dataV1 = LibOrderDataV1.decodeOrderDataV1(order.data);
             data.payouts = dataV1.payouts;

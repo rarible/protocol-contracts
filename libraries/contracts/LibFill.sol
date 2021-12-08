@@ -14,12 +14,6 @@ library LibFill {
         uint rightValue;
     }
 
-    /*need to save msg.value and _msgSender()*/
-    struct FillEthTransfer {
-        uint value;
-        address payable back;
-    }
-
     /**
      * @dev Should return filled values
      * @param leftOrder left order
@@ -50,9 +44,5 @@ library LibFill {
         uint rightTake = LibMath.safeGetPartialAmountFloor(leftTakeValue, rightMakeValue, rightTakeValue);
         require(rightTake <= leftMakeValue, "fillLeft: unable to fill");
         return FillResult(leftMakeValue, leftTakeValue);
-    }
-
-    function fillEthBack(uint value, address payable back) internal pure returns (FillEthTransfer memory) {
-        return FillEthTransfer(value, back);
     }
 }

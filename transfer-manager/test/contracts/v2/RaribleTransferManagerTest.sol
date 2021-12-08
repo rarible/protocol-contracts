@@ -20,16 +20,10 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         return abi.encode(data);
     }
 
-    function makeOrderData(
-        LibOrder.Order memory order
-    ) external pure returns (LibOrderDataV2.DataV2 memory dataLeft){
-        dataLeft = LibOrderData.parse(order);
-    }
-
     function makeDealData(
         LibOrder.Order memory order
     ) external pure returns (LibDeal.Data memory dataLeft){
-        (dataLeft,) = LibOrderData.parseDeal(order);
+        (dataLeft,) = LibOrderData.parse(order);
     }
 
     function __TransferManager_init(

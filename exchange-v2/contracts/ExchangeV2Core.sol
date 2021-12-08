@@ -56,18 +56,13 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
-//        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
-//        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
 
-        (LibDeal.Data memory leftDealData, bool fillLeft) = LibOrderData.parseDeal(orderLeft);
-        (LibDeal.Data memory rightDealData, bool fillRight) = LibOrderData.parseDeal(orderRight);
+        (LibDeal.Data memory leftDealData, bool fillLeft) = LibOrderData.parse(orderLeft);
+        (LibDeal.Data memory rightDealData, bool fillRight) = LibOrderData.parse(orderRight);
 
-//        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, fillLeft, fillRight);
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, LibOrder.hashKey(orderLeft), LibOrder.hashKey(orderRight), fillLeft, fillRight);
 
         runTransfers(makeMatch, takeMatch, newFill, leftDealData, rightDealData, orderLeft.maker, orderRight.maker);
-        //        ITransferManager(raribleTransferManager).doTransfers(makeMatch, takeMatch, newFill, ethFill, orderLeft, orderRight, leftOrderData, rightOrderData);
-//        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
         emit Match(LibOrder.hashKey(orderLeft), LibOrder.hashKey(orderRight), orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
     }
 
@@ -78,7 +73,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibDeal.Data memory leftDealData,
         LibDeal.Data memory rightDealData,
         address leftMaker,
-        address rightMaker) internal {
+        address rightMaker
+    ) internal {
         /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
@@ -102,8 +98,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrder.Order memory orderRight,
         bytes32 leftOrderKeyHash,
         bytes32 rightOrderKeyHash,
-    //        LibOrderDataV2.DataV2 memory leftOrderData,
-    //        LibOrderDataV2.DataV2 memory rightOrderData
         bool leftFill,
         bool rightFill
     ) internal returns (LibFill.FillResult memory) {
