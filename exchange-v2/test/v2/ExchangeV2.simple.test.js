@@ -161,7 +161,7 @@ contract("ExchangeSimpleV2", accounts => {
       await proxy.addOperator(testing.address);
       await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
 
-      await testing.setTransferProxy((CRYPTO_PUNKS), proxy.address)
+      await simpleTransferManager.setTransferProxy((CRYPTO_PUNKS), proxy.address);
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
       await t1.mint(accounts[2], 106);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
