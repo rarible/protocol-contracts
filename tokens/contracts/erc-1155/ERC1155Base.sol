@@ -10,7 +10,6 @@ import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
 
 abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
-    using SafeMathUpgradeable for uint;
     string public name;
     string public symbol;
 
@@ -23,7 +22,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     }
 
     function burn(address account, uint256 id, uint256 value) public virtual override {
-        uint256 leftToBurn = _burnLazy(account, id, value);
+        uint256 leftToBurn = _burnLazy(id, value);
         if (leftToBurn > 0) {
             //token exists, burn Minted
             ERC1155BurnableUpgradeable.pureBurn(account, id, leftToBurn);
@@ -38,7 +37,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
         uint256 leftToBurn;
         for (uint i = 0; i < ids.length; i++) {
-            leftToBurn = _burnLazy(account, ids[i], amounts[i]);
+            leftToBurn = _burnLazy(ids[i], amounts[i]);
             if (leftToBurn > 0) {
                 //token exists, burn Minted
                 ERC1155BurnableUpgradeable.pureBurn(account, ids[i], leftToBurn);
@@ -60,22 +59,21 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         return _tokenURI(id);
     }
 
-    function _burnLazy(address account, uint256 id, uint256 value) internal returns (uint256 leftToBurn) {
-        address creator = address(id >> 96);
-        uint supply = ERC1155Lazy._getSupply(id);
-        uint256 burnLazy = value;
+    function _burnLazy(uint256 id, uint256 value) internal returns (uint256 leftToBurn) {
         leftToBurn = value;
+        address creator = address(id >> 96);
         if (creator == _msgSender()) {
-            leftToBurn = 0;
+            uint256 lazyToBurn = value;
+            uint supply = ERC1155Lazy._getSupply(id);
             if (supply != 0) {
                 //calculate Lazy value available for burn
-                uint256 balanceLazy = supply.sub(ERC1155Lazy._getMinted(id));
-                if (burnLazy > balanceLazy) {//need to burn more than available
-                    burnLazy = balanceLazy;
-                    leftToBurn = value - burnLazy;
+                uint256 lazyBalance = supply - ERC1155Lazy._getMinted(id);
+                if (lazyToBurn > lazyBalance) {//need to burn more than available
+                    lazyToBurn = lazyBalance;
                 }
             }
-            ERC1155Lazy._setBurned(id, burnLazy);
+            ERC1155Lazy._addMinted(id, lazyToBurn);
+            leftToBurn = value - lazyToBurn;
         }
     }
 

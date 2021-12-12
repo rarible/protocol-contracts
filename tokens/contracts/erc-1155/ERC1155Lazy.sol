@@ -133,7 +133,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         return creators[_id];
     }
 
-    function _setBurned(uint256 tokenId, uint amount) internal {
+    function _addMinted(uint256 tokenId, uint amount) internal {
         minted[tokenId] += amount;
     }
 
