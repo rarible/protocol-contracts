@@ -21,15 +21,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         return super.supportsInterface(interfaceId);
     }
 
-    function burn(address account, uint256 id, uint256 value) public virtual override {
-        uint256 leftToBurn = _burnLazy(id, value);
-        if (leftToBurn > 0) {
-            //token exists, burn Minted
-            ERC1155BurnableUpgradeable.pureBurn(account, id, leftToBurn);
-        }
-        emit TransferSingle(_msgSender(), account, address(0), id, value);
-    }
-
     function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         address operator = _msgSender();
@@ -46,6 +37,33 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         emit TransferBatch(operator, account, address(0), ids, amounts);
     }
 
+    function burn(address account, uint256 id, uint256 amount) public virtual override {
+        uint256 leftToBurn = _burnLazy(id, amount);
+        if (leftToBurn > 0) {
+            //token exists, burn Minted
+            ERC1155BurnableUpgradeable.pureBurn(account, id, leftToBurn);
+        }
+        emit TransferSingle(_msgSender(), account, address(0), id, amount);
+    }
+
+    function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn) {
+        leftToBurn = amount;
+        address creator = address(id >> 96);
+        if (creator == _msgSender()) {
+            uint256 lazyToBurn = amount;
+            uint supply = ERC1155Lazy._getSupply(id);
+            if (supply != 0) {
+                //calculate Lazy amount available for burn
+                uint256 lazyBalance = supply - ERC1155Lazy._getMinted(id);
+                if (amount > lazyBalance) {//need to burn more than available
+                    lazyToBurn = lazyBalance;
+                }
+            }
+            ERC1155Lazy._addMinted(id, lazyToBurn);
+            leftToBurn = amount - lazyToBurn;
+        }
+    }
+
     function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
         ERC1155Lazy._mint(account, id, amount, data);
     }
@@ -57,24 +75,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
 
     function uri(uint id) external view override(ERC1155BaseURI, ERC1155Upgradeable) virtual returns (string memory) {
         return _tokenURI(id);
-    }
-
-    function _burnLazy(uint256 id, uint256 value) internal returns (uint256 leftToBurn) {
-        leftToBurn = value;
-        address creator = address(id >> 96);
-        if (creator == _msgSender()) {
-            uint256 lazyToBurn = value;
-            uint supply = ERC1155Lazy._getSupply(id);
-            if (supply != 0) {
-                //calculate Lazy value available for burn
-                uint256 lazyBalance = supply - ERC1155Lazy._getMinted(id);
-                if (lazyToBurn > lazyBalance) {//need to burn more than available
-                    lazyToBurn = lazyBalance;
-                }
-            }
-            ERC1155Lazy._addMinted(id, lazyToBurn);
-            leftToBurn = value - lazyToBurn;
-        }
     }
 
     uint256[50] private __gap;
