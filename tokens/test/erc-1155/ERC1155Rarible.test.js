@@ -576,7 +576,7 @@ contract("ERC1155Rarible", accounts => {
       assert.equal(from, minter);
       assert.equal(to, 0);
       assert.equal(Number(id), Number(tokenId));
-      assert.equal(value, burn);
+      assert.equal(value, 4);//burn = 7 (3 Lazy, 4 minted)
     });
 
     it("Run mintAndTransfer = 5, burn = 500, by minter not possible, throw", async () => {

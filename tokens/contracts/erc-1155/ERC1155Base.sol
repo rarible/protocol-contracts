@@ -12,6 +12,8 @@ import "../HasContractURI.sol";
 abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
     string public name;
     string public symbol;
+    event BurnLazy(address indexed operator, uint256 id, uint256 amount);
+    event BurnLazyBatch(address indexed operator, uint256[] ids, uint256[] amounts);
 
     function isApprovedForAll(address _owner, address _operator) public override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) view returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
@@ -26,31 +28,32 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         address operator = _msgSender();
 
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
-        uint256 leftToBurn;
+        uint256[] memory leftToBurns = new uint256[](ids.length);
+        uint256[] memory lazyToBurns = new uint256[](ids.length);
         for (uint i = 0; i < ids.length; i++) {
-            leftToBurn = _burnLazy(ids[i], amounts[i]);
-            if (leftToBurn > 0) {
-                //token exists, burn Minted
-                ERC1155BurnableUpgradeable.pureBurn(account, ids[i], leftToBurn);
-            }
+            (uint256 leftToBurn, uint256 lazyToBurn)= _burnLazy(ids[i], amounts[i]);
+            leftToBurns[i] = leftToBurn;
+            lazyToBurns[i] = lazyToBurn;
         }
-        emit TransferBatch(operator, account, address(0), ids, amounts);
+        ERC1155BurnableUpgradeable.burnBatch(account, ids, leftToBurns);
+        emit BurnLazyBatch(operator, ids, lazyToBurns);
     }
 
     function burn(address account, uint256 id, uint256 amount) public virtual override {
-        uint256 leftToBurn = _burnLazy(id, amount);
+        (uint256 leftToBurn, uint256 lazyToBurn)= _burnLazy(id, amount);
         if (leftToBurn > 0) {
             //token exists, burn Minted
-            ERC1155BurnableUpgradeable.pureBurn(account, id, leftToBurn);
+            ERC1155BurnableUpgradeable.burn(account, id, leftToBurn);
         }
-        emit TransferSingle(_msgSender(), account, address(0), id, amount);
+        emit BurnLazy(_msgSender(), id, lazyToBurn);
     }
 
-    function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn) {
+    function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
         leftToBurn = amount;
+        lazyToBurn = 0;//TODO need it?
         address creator = address(id >> 96);
         if (creator == _msgSender()) {
-            uint256 lazyToBurn = amount;
+            lazyToBurn = amount;
             uint supply = ERC1155Lazy._getSupply(id);
             if (supply != 0) {
                 //calculate Lazy amount available for burn

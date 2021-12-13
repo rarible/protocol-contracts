@@ -295,19 +295,6 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
      * - `account` must have at least `amount` tokens of token type `id`.
      */
     function _burn(address account, uint256 id, uint256 amount) internal virtual {
-        _pureBurn(account, id, amount);
-        emit TransferSingle(_msgSender(), account, address(0), id, amount);
-    }
-
-    /**
-     * @dev Destroys `amount` tokens of token type `id` from `account`
-     *
-     * Requirements:
-     *
-     * - `account` cannot be the zero address.
-     * - `account` must have at least `amount` tokens of token type `id`.
-     */
-    function _pureBurn(address account, uint256 id, uint256 amount) internal virtual {
         require(account != address(0), "ERC1155: burn from the zero address");
 
         address operator = _msgSender();
@@ -318,6 +305,8 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
             amount,
             "ERC1155: burn amount exceeds balance"
         );
+
+        emit TransferSingle(operator, account, address(0), id, amount);
     }
 
     /**
@@ -343,13 +332,6 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         }
 
         emit TransferBatch(operator, account, address(0), ids, amounts);
-    }
-
-    function _subBalance(address account, uint256 id, uint256 amount) internal {
-        _balances[id][account] = _balances[id][account].sub(
-            amount,
-            "ERC1155: burn amount exceeds balance"
-        );
     }
 
     /**
