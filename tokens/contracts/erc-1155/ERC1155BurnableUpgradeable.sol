@@ -47,6 +47,5 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
 
         _burnBatch(account, ids, values);
     }
-
     uint256[50] private __gap;
 }
