@@ -133,5 +133,17 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         return creators[_id];
     }
 
+    function _addMinted(uint256 tokenId, uint amount) internal {
+        minted[tokenId] += amount;
+    }
+
+    function _getMinted(uint256 tokenId) internal view returns (uint) {
+        return minted[tokenId];
+    }
+
+    function _getSupply(uint256 tokenId) internal view returns (uint) {
+        return supply[tokenId];
+    }
+
     uint256[50] private __gap;
 }
