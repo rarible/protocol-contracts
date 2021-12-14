@@ -41,7 +41,10 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
             //token exists, burn Minted
             ERC1155BurnableUpgradeable.burn(account, id, leftToBurn);
         }
-        emit BurnLazy(_msgSender(), account, id, lazyToBurn);
+        if (lazyToBurn > 0) {
+            emit BurnLazy(_msgSender(), account, id, lazyToBurn);
+        }
+
     }
 
     function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
