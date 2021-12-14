@@ -67,11 +67,65 @@ contract("ERC1155Rarible", accounts => {
       await token.mintAndTransfer([tokenId4, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mintValue, {from: minter})
       assert.equal(await token.balanceOf(transferTo, tokenId4), mintValue);
       //combine minted and not yet minted, try to burnBatch
-      await token.burnBatch(transferTo, [tokenId4, tokenId5], [mintValue, mintValue], {from: transferTo})
+      await token.burnBatch(transferTo, [tokenId4, tokenId5], [mintValue, mintValue], {from: transferTo});
       assert.equal(await token.balanceOf(transferTo, tokenId4), 0);//burn all minted tokenId4, burn all lazy tokenId5
       await expectThrow(  //no lazy tokenId5, throw
         token.mintAndTransfer([tokenId5, tokenURI, supply, creators([minter]), [], [zeroWord]], anotherUser, 1, {from: transferTo})
       );
+    });
+
+    it("BurnBatch two tokens, emit events ok", async () => {
+      let minter = accounts[1];
+      let anotherUser = accounts[6];
+      let transferTo = accounts[2];
+
+      const tokenId4 = minter + "b00000000000000000000004"; //save token creator
+      const tokenId5 = minter + "b00000000000000000000005"; //save token creator
+      const tokenURI = "/uri";
+      let supply = 5;
+      let mintValue = 2;
+      //mint, after do burnBatch
+      await token.mintAndTransfer([tokenId4, tokenURI, supply, creators([minter]), [], [zeroWord]], minter, mintValue, {from: minter})
+//      assert.equal(await token.balanceOf(transferTo, tokenId4), mintValue);
+      let burnResult = await token.burnBatch(minter, [tokenId4, tokenId5], [5, 5], {from: minter});
+
+      let operator;
+      let from;
+      let to;
+      let id;
+      let value;
+//      event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
+      truffleAssert.eventEmitted(burnResult, 'TransferBatch', (ev) => {
+       	operator = ev.operator;
+       	from = ev.from;
+       	to = ev.to;
+       	id = ev.ids;
+       	value = ev.values;
+        return true;
+      });
+      assert.equal(operator, minter);
+      assert.equal(from, minter);
+      assert.equal(to, 0);
+      assert.equal(Number(id[0]), Number(tokenId4));
+      assert.equal(Number(id[1]), Number(tokenId5));
+      assert.equal(value[0], 2);//burn = 5 (3 Lazy, 2 minted)
+      assert.equal(value[1], 0);//burn = 5 (5 Lazy, 0 minted)
+
+//      event BurnLazyBatch(address indexed operator, address indexed account, uint256[] ids, uint256[] amounts);
+      truffleAssert.eventEmitted(burnResult, 'BurnLazyBatch', (ev) => {
+       	operator = ev.operator;
+       	from = ev.account;
+       	id = ev.ids;
+       	value = ev.amounts;
+        return true;
+      });
+      assert.equal(operator, minter);
+      assert.equal(from, minter);
+      assert.equal(to, 0);
+      assert.equal(Number(id[0]), Number(tokenId4));
+      assert.equal(Number(id[1]), Number(tokenId5));
+      assert.equal(value[0], 3);//burn = 5 (3 Lazy, 2 minted)
+      assert.equal(value[1], 5);//burn = 5 (5 Lazy, 0 minted)
     });
 
     it("BurnBatch two tokens, check emit event, ok", async () => {
@@ -181,7 +235,7 @@ contract("ERC1155Rarible", accounts => {
         token.burnBatch(transferTo, [tokenId6], [1], {from: minter})
       );
       assert.equal(await token.balanceOf(transferTo, tokenId4), 2);
-      });
+    });
 
     it("Run mintAndTransfer = 5, burnBatch = 7, by minter, ok", async () => {
       let minter = accounts[1];
@@ -358,6 +412,7 @@ contract("ERC1155Rarible", accounts => {
       await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter});
       assert.equal(await token.balanceOf(transferTo, tokenId), secondMintValue);
     });
+
     it("Run mintAndTransfer = 5, burn = 2, mintAndTransfer by the same minter = 4, throw", async () => {
       let minter = accounts[1];
       let transferTo = accounts[2];
@@ -377,6 +432,7 @@ contract("ERC1155Rarible", accounts => {
         token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
       )
     });
+
     it("Run mintAndTransfer = 5, burn = 5, mintAndTransfer by the same minter = 1, throw", async () => {
       let minter = accounts[1];
       let transferTo = accounts[2];
@@ -396,6 +452,7 @@ contract("ERC1155Rarible", accounts => {
         token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, secondMintValue, {from: minter})
       );
     });
+
     it("Run mintAndTransfer = 5, burn = 4, mintAndTransfer by the same minter = 1, throw", async () => {
       let minter = accounts[1];
       let transferTo = accounts[2];
@@ -416,6 +473,7 @@ contract("ERC1155Rarible", accounts => {
       );
       assert.equal(await token.balanceOf(transferTo, tokenId), secondMintValue);
     });
+
     it("Run mintAndTransfer = 4, burn = 3, mintAndTransfer by the same minter = 1, ok", async () => {
       let minter = accounts[1];
       let transferTo = accounts[2];
@@ -577,6 +635,19 @@ contract("ERC1155Rarible", accounts => {
       assert.equal(to, 0);
       assert.equal(Number(id), Number(tokenId));
       assert.equal(value, 4);//burn = 7 (3 Lazy, 4 minted)
+//      event BurnLazy(address indexed operator, address indexed account, uint256 id, uint256 amount);
+      truffleAssert.eventEmitted(burnResult, 'BurnLazy', (ev) => {
+       	operator = ev.operator;
+       	from = ev.account;
+       	id = ev.id;
+       	value = ev.amount;
+        return true;
+      });
+      assert.equal(operator, minter);
+      assert.equal(from, minter);
+      assert.equal(to, 0);
+      assert.equal(Number(id), Number(tokenId));
+      assert.equal(value, 3);//burn = 7 (3 Lazy, 4 minted)
     });
 
     it("Run mintAndTransfer = 5, burn = 500, by minter not possible, throw", async () => {
