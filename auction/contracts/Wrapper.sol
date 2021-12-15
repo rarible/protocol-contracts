@@ -41,7 +41,7 @@ contract Wrapper is IMarketWrapper{
     }
 
     function isFinalized(uint256 auctionId) external override view returns (bool){
-        return auction.isFinalized(auctionId);
+        return !auction.checkAuctionExistence(auctionId);
     }
 
     function finalize(uint256 auctionId) external override{
