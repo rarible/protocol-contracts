@@ -37,8 +37,8 @@ const e2e = {
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
-  deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
 }
 const polygon_mainnet = {
   communityWallet: "0x0000000000000000000000000000000000000000",
