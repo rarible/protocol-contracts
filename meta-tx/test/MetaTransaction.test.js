@@ -1,5 +1,7 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const MetaTxTest = artifacts.require("MetaTxTest.sol");
+const NoMetaTxTest = artifacts.require("NoMetaTxTest.sol");
+const NoGetNonceTxTest = artifacts.require("NoGetNonceTxTest.sol");
 
 const web3Abi = require('web3-eth-abi');
 const sigUtil = require('eth-sig-util');
@@ -12,6 +14,7 @@ let privateKey = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc
 
 let balanceOfAbi =  require("./contracts/abi/balanceOfAbi.json");
 let sumAbi = require("./contracts/abi/sumAbi.json");
+let getNonceAbi = require("./contracts/abi/getNonceAbi.json");
 let executeMetaTransactionABI = require("./contracts/abi/executeMetaTransactionAbi.json");
 
 const domainType = [{
@@ -78,6 +81,33 @@ const getTransactionData = async (nonce, abi, params) => {
   return {r, s, v, functionSignature};
 }
 
+/* @dev function, example how to check contract support metaTransaction
+  * addressContract - address contract
+  * return true - contract support metaTransaction, false - don`t support
+  */
+async function areMetaTxSupported(addressContract) {
+  let nonce;
+	try {
+	  nonce = await addressContract.getNonce.call(publicKey);
+	} catch {
+    return(false);
+  }
+
+	let {
+    r,
+    s,
+    v,
+    functionSignature
+  } = await getTransactionData(nonce, getNonceAbi, [ZERO_ADDRESS]);
+
+  try {
+    await addressContract.executeMetaTransaction.call(publicKey, functionSignature, r, s, v);
+  } catch {
+    return(false);
+  }
+  return(true);
+}
+
 contract("ERC721MetaTxTokenTestAllien", accounts => {
   let erc721NoMetaTx;
   let metaTxTest;
@@ -120,6 +150,40 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
 
     var newNonce = await metaTxTest.getNonce(publicKey);
     assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+  });
+
+  it("Call known abi-method(getNonce), use metaTx, for check contract support metaTx", async () => {
+  	let nonce = await metaTxTest.getNonce(publicKey);
+  	let {
+      r,
+      s,
+      v,
+      functionSignature
+    } = await getTransactionData(nonce, getNonceAbi, [ZERO_ADDRESS]);
+    let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
+
+    var newNonce = await metaTxTest.getNonce(publicKey);
+    assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+  });
+
+  it("Check contract supports metaTransaction by method areMetaTxSupported, use contract yes MetaTx", async () => {
+    let nonceBefore = await metaTxTest.getNonce(ZERO_ADDRESS);
+  	let result = await areMetaTxSupported(metaTxTest);
+  	assert.equal(result, true);
+  	let nonceAfter = await metaTxTest.getNonce(ZERO_ADDRESS);
+  	assert.equal(Number(nonceBefore), Number(nonceAfter));
+  });
+
+  it("Check contract supports metaTransaction by method areMetaTxSupported, use contract no MetaTx", async () => {
+    let noMetaTxTest = await NoMetaTxTest.new();
+  	let result = await areMetaTxSupported(noMetaTxTest);
+  	assert.equal(result, false);
+  });
+
+  it("Check contract supports metaTransaction by method areMetaTxSupported, use contract no MetaTx, no getNonce()", async () => {
+    let noGetNonceTxTest = await NoGetNonceTxTest.new();
+  	let result = await areMetaTxSupported(noGetNonceTxTest);
+  	assert.equal(result, false);
   });
 
   it("Call known abi-method, check event from method which call as metaTx ", async () => {
@@ -211,59 +275,59 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
         from: owner
     });
     let {
-        r,
-        s,
-        v,
-        functionSignature
+      r,
+      s,
+      v,
+      functionSignature
     } = await getTransactionData(nonce, sumAbi, [3, 9]);
 
     const sendTransactionData = web3Abi.encodeFunctionCall(
-        executeMetaTransactionABI,
-        [publicKey, functionSignature, r, s, v]
+      executeMetaTransactionABI,
+      [publicKey, functionSignature, r, s, v]
     );
 
     await metaTxTest.sendTransaction({
+      value: 0,
+      from: owner,
+      gas: 500000,
+      data: sendTransactionData
+    });
+
+    try {
+      await metaTxTest.sendTransaction({
         value: 0,
         from: owner,
         gas: 500000,
         data: sendTransactionData
-    });
-
-    try {
-        await metaTxTest.sendTransaction({
-            value: 0,
-            from: owner,
-            gas: 500000,
-            data: sendTransactionData
-        });
+      });
     } catch (error) {
-        assert.isTrue(error.message.includes("Signer and signature do not match"), `Wrong failure type`);
+      assert.isTrue(error.message.includes("Signer and signature do not match"), `Wrong failure type`);
     }
   });
 
   it("Should fail when user address is Zero", async () => {
     let nonce = await metaTxTest.getNonce(publicKey, {
-        from: owner
+      from: owner
     });
     let {
-        r,
-        s,
-        v,
-        functionSignature
+      r,
+      s,
+      v,
+      functionSignature
     } = await getTransactionData(nonce, sumAbi, [3, 9]);
 
     const sendTransactionData = web3Abi.encodeFunctionCall(
-        executeMetaTransactionABI,
-        [ZERO_ADDRESS, functionSignature, r, s, v]
+      executeMetaTransactionABI,
+      [ZERO_ADDRESS, functionSignature, r, s, v]
     );
 
     try {
-        await metaTxTest.sendTransaction({
-            value: 0,
-            from: owner,
-            gas: 500000,
-            data: sendTransactionData
-        });
+      await metaTxTest.sendTransaction({
+        value: 0,
+        from: owner,
+        gas: 500000,
+        data: sendTransactionData
+      });
     } catch (error) {
         assert.isTrue(error.message.includes("Signer and signature do not match"), `Wrong failure type`);
     }
@@ -271,27 +335,27 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
 
   it("Should be failed - Signer and Signature do not match", async () => {
     let nonce = await metaTxTest.getNonce(publicKey, {
-        from: owner
+      from: owner
     });
     let {
-        r,
-        s,
-        v,
-        functionSignature
+      r,
+      s,
+      v,
+      functionSignature
     } = await getTransactionData(nonce, sumAbi, [3, 9]);
 
     const sendTransactionData = web3Abi.encodeFunctionCall(
-        executeMetaTransactionABI,
-        [accounts[1], functionSignature, r, s, v]
+      executeMetaTransactionABI,
+      [accounts[1], functionSignature, r, s, v]
     );
 
     try {
-        await metaTxTest.sendTransaction({
-            value: 0,
-            from: owner,
-            gas: 500000,
-            data: sendTransactionData
-        });
+      await metaTxTest.sendTransaction({
+        value: 0,
+        from: owner,
+        gas: 500000,
+        data: sendTransactionData
+      });
     } catch (error) {
         assert.isTrue(error.message.includes("Signer and signature do not match"), `Wrong failure type`);
     }

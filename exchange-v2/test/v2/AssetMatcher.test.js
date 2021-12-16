@@ -6,7 +6,7 @@ const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const tests = require("@daonomic/tests-common");
 const expectThrow = tests.expectThrow;
-const { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNK, COLLECTION, id } = require("../assets");
+const { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNKS, COLLECTION, id } = require("../assets");
 const truffleAssert = require('truffle-assertions');
 
 contract("AssetMatcher", accounts => {
@@ -107,13 +107,13 @@ contract("AssetMatcher", accounts => {
 		});
 	})
 
-  describe("CRYPTO_PUNK", () => {
+  describe("CRYPTO_PUNKS", () => {
     it("Punk Id = 3000 <-> Punk Id = 3000 matches!", async () => {
       const tokenId = 3000;
       const encodedPunk1 = enc(accounts[5], tokenId);
       const encodedPunk2 = enc(accounts[5], tokenId);
-      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNK, encodedPunk1), order.AssetType(CRYPTO_PUNK, encodedPunk2));
-      assert.equal(result[0], CRYPTO_PUNK);
+      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNKS, encodedPunk1), order.AssetType(CRYPTO_PUNKS, encodedPunk2));
+      assert.equal(result[0], CRYPTO_PUNKS);
       assert.equal(result[1], encodedPunk1);
     })
 
@@ -122,7 +122,7 @@ contract("AssetMatcher", accounts => {
       const tokenId2 = 3001;
       const encodedPunk1 = enc(accounts[5], tokenId1);
       const encodedPunk2 = enc(accounts[5], tokenId2);
-      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNK, encodedPunk1), order.AssetType(CRYPTO_PUNK, encodedPunk2));
+      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNKS, encodedPunk1), order.AssetType(CRYPTO_PUNKS, encodedPunk2));
       assert.equal(result[0], 0);
     })
 
@@ -131,7 +131,7 @@ contract("AssetMatcher", accounts => {
       const tokenId2 = 3000;
       const encodedPunk1 = enc(accounts[5], tokenId1);
       const encodedPunk2 = enc(accounts[6], tokenId2);
-      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNK, encodedPunk1), order.AssetType(CRYPTO_PUNK, encodedPunk2));
+      const result = await testing.matchAssetsTest(order.AssetType(CRYPTO_PUNKS, encodedPunk1), order.AssetType(CRYPTO_PUNKS, encodedPunk2));
       assert.equal(result[0], 0);
     })
 

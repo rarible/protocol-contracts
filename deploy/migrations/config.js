@@ -9,6 +9,8 @@ const rinkeby = {
     artblocksAddress: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4"
   },
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0xAf2584A8B198f5d0b360B95d92AEC852F7902e52",
 }
 const mainnet = {
   v2Legacy: ["0x0A093d230ba7845BcA0898851B093B8B19bc1Ae1"],
@@ -20,15 +22,23 @@ const mainnet = {
     artblocksAddress: "0x6C093Fe8bc59e1e0cAe2Ec10F0B717D3D182056B"
   },
   communityWallet: "0x1cf0df2a5a20cd61d68d4489eebbf85b8d39e18a",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
 }
 const ropsten = {
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
+  deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0x6751c1ebdc4ab4e5cb103d5ceb84d26963a3377e",
 }
 const e2e = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
+  deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
+  deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
 }
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
@@ -49,6 +59,8 @@ const def = {
     contractURI: "https://api-e2e.rarible.com/contractMetadata/{address}",
     tokenURIPrefix: "ipfs://",
   },
+  deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
 }
 
 let settings = {
