@@ -11,8 +11,8 @@ abstract contract MinterAccessControl is Initializable, OwnableUpgradeable {
 
     EnumerableSetUpgradeable.AddressSet private _minters;
     
-    event MinterGranted(address indexed account);
-    event MinterRevoked(address indexed account);
+    event MinterAdded(address indexed operator, address indexed minter);
+    event MinterRemoved(address indexed operator, address indexed minter);
 
     function __MinterAccessControl_init() internal initializer {
         __Ownable_init_unchained();
@@ -25,25 +25,25 @@ abstract contract MinterAccessControl is Initializable, OwnableUpgradeable {
     /**
      * @dev Add `_minter` to the list of allowed minters.
      */
-    function grantMinter(address _minter) external onlyOwner {
+    function addMinter(address _minter) external onlyOwner {
         require(!_minters.contains(_minter), 'MinterAccessControl: Already minter');
         _minters.add(_minter);
-        emit MinterGranted(_minter);
+        emit MinterAdded(_msgSender(), _minter);
     }
 
     /**
      * @dev Revoke `_minter` from the list of allowed minters.
      */
-    function revokeMinter(address _minter) external onlyOwner {
+    function removeMinter(address _minter) external onlyOwner {
         require(_minters.contains(_minter), 'MinterAccessControl: Not minter');
         _minters.remove(_minter);
-        emit MinterRevoked(_minter);
+        emit MinterRemoved(_msgSender(), _minter);
     }
 
     /**
      * @dev Returns `true` if `account` has been granted to minters.
      */
-    function isValidMinter(address account) public view returns (bool) {
+    function isMinter(address account) public view returns (bool) {
         return _minters.contains(account);
     }
 

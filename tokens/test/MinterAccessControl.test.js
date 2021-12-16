@@ -3,6 +3,7 @@ const TestingV2 = artifacts.require("MinterAccessControlTestV2.sol");
 
 const { expectThrow } = require('@daonomic/tests-common');
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+const truffleAssert = require('truffle-assertions');
 
 function creators(list) {
   const value = 10000 / list.length
@@ -21,13 +22,13 @@ contract("MinterAccessControl", accounts => {
   it("conserve minter access control after upgrade", async () => {
     const minter = accounts[1];
 
-    await token.grantMinter(minter, {from: tokenOwner})
-    assert.equal(await token.isValidMinter(minter), true);
+    await token.addMinter(minter, {from: tokenOwner})
+    assert.equal(await token.isMinter(minter), true);
     
     // upgrade contract
     const newInstance = await upgradeProxy(token.address, TestingV2);
     assert.equal(await newInstance.version(), 2);
 
-    assert.equal(await newInstance.isValidMinter(minter), true);
+    assert.equal(await newInstance.isMinter(minter), true);
   });
 });

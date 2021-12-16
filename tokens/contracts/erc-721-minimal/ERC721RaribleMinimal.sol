@@ -51,7 +51,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal, MinterAccessControl {
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
         if (isPrivate){
-            require(owner() == data.creators[0].account || isValidMinter(data.creators[0].account), "minter not granted or not owner");
+            require(owner() == data.creators[0].account || isMinter(data.creators[0].account), "not owner or minter");
         }
         super.mintAndTransfer(data, to);
     }

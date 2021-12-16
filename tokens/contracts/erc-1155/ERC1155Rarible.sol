@@ -51,7 +51,7 @@ contract ERC1155Rarible is ERC1155Base, MinterAccessControl {
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override {
         if (isPrivate){
-          require(owner() == data.creators[0].account || isValidMinter(data.creators[0].account), "minter not granted or not owner");
+          require(owner() == data.creators[0].account || isMinter(data.creators[0].account), "not owner or minter");
         }
         super.mintAndTransfer(data, to, _amount);
     }

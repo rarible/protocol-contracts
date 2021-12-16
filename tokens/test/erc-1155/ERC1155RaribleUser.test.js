@@ -190,9 +190,9 @@ contract("ERC1155RaribleUser", accounts => {
       token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter})
     );
 
-    await token.grantMinter(minter, {from: tokenOwner});
-    assert.equal(await token.isValidMinter(minter), true);
-    assert.equal(await token.isValidMinter(transferTo), false);
+    await token.addMinter(minter, {from: tokenOwner});
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(transferTo), false);
 
     await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
@@ -216,9 +216,9 @@ contract("ERC1155RaribleUser", accounts => {
     );
 
     await token.setApprovalForAll(whiteListProxy, true, {from: minter})
-    await token.grantMinter(minter, {from: tokenOwner});
-    assert.equal(await token.isValidMinter(minter), true);
-    assert.equal(await token.isValidMinter(whiteListProxy), false);
+    await token.addMinter(minter, {from: tokenOwner});
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(whiteListProxy), false);
 
     await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
@@ -242,9 +242,9 @@ contract("ERC1155RaribleUser", accounts => {
     );
 
     await token.setApprovalForAll(whiteListProxy, true, {from: minter})
-    await token.grantMinter(minter, {from: tokenOwner});
-    assert.equal(await token.isValidMinter(minter), true);
-    assert.equal(await token.isValidMinter(whiteListProxy), false);
+    await token.addMinter(minter, {from: tokenOwner});
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(whiteListProxy), false);
 
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
