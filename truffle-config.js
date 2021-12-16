@@ -22,9 +22,9 @@ function createNetwork(name) {
 	        const { createProvider: createTrezorProvider } = require("@rarible/trezor-provider")
 	        const provider = createTrezorProvider({ url: json.url, path: json.path, chainId: json.network_id })
 	        provider.send = provider.sendAsync
-	        return estimate(provider, undefined, true)
+	        return provider
 	      } else {
-	        return estimate(createProvider(json.address, json.key, json.url), undefined, true)
+	        return createProvider(json.address, json.key, json.url)
 	      }
       },
       from: json.address,
