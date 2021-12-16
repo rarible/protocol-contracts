@@ -31,4 +31,41 @@ contract("MinterAccessControl", accounts => {
 
     assert.equal(await newInstance.isMinter(minter), true);
   });
+
+  it("should add a minter and emit event", async () => {
+    const minter = accounts[2];
+
+    let operator;
+    let addedMinter;
+    const receipt = await token.addMinter(minter, {from: tokenOwner})
+    truffleAssert.eventEmitted(receipt, 'MinterAdded', (ev) => {
+      operator = ev.operator;
+      addedMinter = ev.minter;
+      return true;
+    });
+    
+    assert.equal(operator, tokenOwner);
+    assert.equal(addedMinter, minter);
+    assert.equal(await token.isMinter(minter), true);
+  })
+
+  it("should remove a minter and emit event", async () => {
+    const minter = accounts[2];
+
+    await token.addMinter(minter, {from: tokenOwner})
+    assert.equal(await token.isMinter(minter), true);
+
+    let operator;
+    let removedMinter;
+    const receipt = await token.removeMinter(minter, {from: tokenOwner})
+    truffleAssert.eventEmitted(receipt, 'MinterRemoved', (ev) => {
+      operator = ev.operator;
+      removedMinter = ev.minter;
+      return true;
+    });
+    
+    assert.equal(operator, tokenOwner);
+    assert.equal(removedMinter, minter);
+    assert.equal(await token.isMinter(minter), false);
+  })
 });
