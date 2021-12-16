@@ -41,7 +41,7 @@ const polygon_mumbai = {
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
 }
 const polygon_mainnet = {
-  communityWallet: "0x0000000000000000000000000000000000000000",
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
 }
