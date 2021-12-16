@@ -16,7 +16,17 @@ function createNetwork(name) {
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
 
     return {
-      provider: () => createProvider(json.address, json.key, json.url),
+      provider: () => {
+        const { estimate } = require("@rarible/estimate-middleware")
+	      if (json.path != null) {
+	        const { createProvider: createTrezorProvider } = require("@rarible/trezor-provider")
+	        const provider = createTrezorProvider({ url: json.url, path: json.path, chainId: json.network_id })
+	        provider.send = provider.sendAsync
+	        return estimate(provider, undefined, true)
+	      } else {
+	        return estimate(createProvider(json.address, json.key, json.url), undefined, true)
+	      }
+      },
       from: json.address,
       gas: 6000000,
       gasPrice: gasPrice + "000000000",
@@ -51,7 +61,8 @@ module.exports = {
     mainnet: createNetwork("mainnet"),
     rinkeby: createNetwork("rinkeby"),
     rinkeby2: createNetwork("rinkeby2"),
-    polygon_mumbai: createNetwork("polygon_mumbai")
+    polygon_mumbai: createNetwork("polygon_mumbai"),
+    polygon_mainnet: createNetwork("polygon_mainnet")
   },
 
   compilers: {
