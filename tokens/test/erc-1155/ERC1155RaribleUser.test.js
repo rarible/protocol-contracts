@@ -195,7 +195,6 @@ contract("ERC1155RaribleUser", accounts => {
     assert.equal(await token.isMinter(transferTo), false);
 
     await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
-		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     assert.equal(await token.balanceOf(minter, tokenId), 0);
   });
@@ -221,7 +220,6 @@ contract("ERC1155RaribleUser", accounts => {
     assert.equal(await token.isMinter(whiteListProxy), false);
 
     await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
-		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     assert.equal(await token.balanceOf(minter, tokenId), 0);
   });
