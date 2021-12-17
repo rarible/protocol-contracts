@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/rariblecom/protocol-contracts/compare/@rarible/lib-broken-line@0.3.0...@rarible/lib-broken-line@0.3.1) (2021-12-17)
+
+**Note:** Version bump only for package @rarible/lib-broken-line
+
+
+
+
+
 # [0.3.0](https://github.com/rariblecom/protocol-contracts/compare/@rarible/lib-broken-line@0.2.1...@rarible/lib-broken-line@0.3.0) (2021-08-12)
 
 
