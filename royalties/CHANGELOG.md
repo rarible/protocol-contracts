@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.4](https://github.com/rariblecom/protocol-contracts/compare/@rarible/royalties@0.7.2...@rarible/royalties@0.7.4) (2021-12-17)
+
+
+### Bug Fixes
+
+* fix comments ([bb285e9](https://github.com/rariblecom/protocol-contracts/commit/bb285e90a543d187057e417334afdd66cf5dd630))
+
+
+
+
+
 ## [0.7.3](https://github.com/rariblecom/protocol-contracts/compare/@rarible/royalties@0.7.2...@rarible/royalties@0.7.3) (2021-12-17)
 
 
