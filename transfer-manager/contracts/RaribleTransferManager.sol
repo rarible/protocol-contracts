@@ -76,22 +76,30 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         address leftMaker,
         address rightMaker,
         address originalMessageSender
-    ) override payable external {
+    ) override payable external onlyOperator {
         LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetType.assetClass, takeMatch.assetType.assetClass);
+        uint totalMakeValue = makeMatch.value;
+        uint totalTakeValue = takeMatch.value;
+
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            doTransfersWithFees(makeMatch.value, leftMaker, left, right, makeMatch.assetType, takeMatch.assetType, TO_TAKER);
+            totalMakeValue = doTransfersWithFees(makeMatch.value, leftMaker, left, right, makeMatch.assetType, takeMatch.assetType, TO_TAKER);
             transferPayouts(takeMatch.assetType, takeMatch.value, rightMaker, left.payouts, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            doTransfersWithFees(takeMatch.value, rightMaker, right, left, takeMatch.assetType, makeMatch.assetType, TO_MAKER);
+            totalTakeValue = doTransfersWithFees(takeMatch.value, rightMaker, right, left, takeMatch.assetType, makeMatch.assetType, TO_MAKER);
             transferPayouts(makeMatch.assetType, makeMatch.value, leftMaker, right.payouts, TO_TAKER);
         } else {
             transferPayouts(makeMatch.assetType, makeMatch.value, leftMaker, right.payouts, TO_TAKER);
             transferPayouts(takeMatch.assetType, takeMatch.value, rightMaker, left.payouts, TO_MAKER);
         }
-        /*Return back eth, if eth more than need*/
-        uint ethBalance = address(this).balance;
-        if (ethBalance > 0) {
-            address(originalMessageSender).transferEth(ethBalance);
+
+        /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
+        if (makeMatch.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(takeMatch.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
+            require(msg.value >= totalMakeValue, "not enough eth");
+            originalMessageSender.transferEth(msg.value.sub(totalMakeValue));
+        } else if (takeMatch.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(msg.value >= totalTakeValue, "not enough eth");
+            originalMessageSender.transferEth(msg.value.sub(totalTakeValue));
         }
     }
 
@@ -103,8 +111,8 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
-    ) internal {
-        uint totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
+    ) internal returns (uint totalAmount) {
+        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
         uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
         (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
@@ -235,7 +243,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     }
 
     /*for transferring eth to contract*/
-    fallback() external payable {}
+    receive() external payable {}
 
     uint256[46] private __gap;
 }

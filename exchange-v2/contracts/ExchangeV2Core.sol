@@ -25,7 +25,13 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
 
-    function setTransferManager(ITransferManager newRaribleTransferManager) external {
+    function __EchangeV2Core_init_unchained(
+        ITransferManager newRaribleTransferManager
+    ) internal initializer {
+        raribleTransferManager = newRaribleTransferManager;
+    }
+
+    function setTransferManager(ITransferManager newRaribleTransferManager) external onlyOwner {
         raribleTransferManager = newRaribleTransferManager;
     }
 
@@ -56,41 +62,32 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
+        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
+        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
 
-        (LibDeal.Data memory leftDealData, bool fillLeft) = LibOrderData.parse(orderLeft);
-        (LibDeal.Data memory rightDealData, bool fillRight) = LibOrderData.parse(orderRight);
+        (LibDeal.Data memory leftDealData,
+        LibDeal.Data memory rightDealData,
+        LibFill.FillResult memory newFill) = prepareData(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
 
-        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, LibOrder.hashKey(orderLeft), LibOrder.hashKey(orderRight), fillLeft, fillRight);
+        ITransferManager(raribleTransferManager).doTransfers{value : msg.value}(
+            LibAsset.Asset(makeMatch, newFill.leftValue),
+            LibAsset.Asset(takeMatch, newFill.rightValue),
+            leftDealData,
+            rightDealData,
+            orderLeft.maker,
+            orderRight.maker,
+            _msgSender()
+        );
 
-        runTransfers(makeMatch, takeMatch, newFill, leftDealData, rightDealData, orderLeft.maker, orderRight.maker);
-        emit Match(LibOrder.hashKey(orderLeft), LibOrder.hashKey(orderRight), orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
+        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
     }
 
-    function runTransfers(
-        LibAsset.AssetType memory makeMatch,
-        LibAsset.AssetType memory takeMatch,
-        LibFill.FillResult memory newFill,
-        LibDeal.Data memory leftDealData,
-        LibDeal.Data memory rightDealData,
-        address leftMaker,
-        address rightMaker
-    ) internal {
-        /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
-        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
-            require(msg.value > 0, "eth == 0");
-            address(raribleTransferManager).transferEth(msg.value);
-        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value > 0, "eth == 0");
-            address(raribleTransferManager).transferEth(msg.value);
-        }
-        LibAsset.Asset memory makeMatchAsset;
-        LibAsset.Asset memory takeMatchAsset;
-        makeMatchAsset.assetType = makeMatch;
-        makeMatchAsset.value = newFill.leftValue;
-        takeMatchAsset.assetType = takeMatch;
-        takeMatchAsset.value = newFill.rightValue;
-        ITransferManager(raribleTransferManager).doTransfers(makeMatchAsset, takeMatchAsset, leftDealData, rightDealData, leftMaker, rightMaker, _msgSender());
+    function prepareData(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight, bytes32 leftOrderKeyHash, bytes32 rightOrderKeyHash) internal returns (LibDeal.Data memory leftDealData, LibDeal.Data memory rightDealData, LibFill.FillResult memory newFill) {
+        bool fillLeft;
+        bool fillRight;
+        (leftDealData, fillLeft) = LibOrderData.parse(orderLeft);
+        (rightDealData, fillRight) = LibOrderData.parse(orderRight);
+        newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, fillLeft, fillRight);
     }
 
     function getFillSetNew(
@@ -145,5 +142,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }

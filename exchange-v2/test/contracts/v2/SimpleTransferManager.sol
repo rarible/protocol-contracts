@@ -37,7 +37,7 @@ contract SimpleTransferManager is TransferExecutor, ITransferManager {
     }
 
     /*for transferring eth to contract*/
-    fallback() external payable {}
+    receive() external payable {}
 
     uint256[50] private __gap;
 }

@@ -9,11 +9,13 @@ import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 
 contract ExchangeMetaV2 is ExchangeV2Core, EmptyGap, EIP712MetaTransaction {
     function __ExchangeV2_init(
+       ITransferManager newRaribleTransferManager
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __OrderValidator_init_unchained();
         __MetaTransaction_init_unchained("ExchangeMetaV2", "1");
+        __EchangeV2Core_init_unchained(newRaribleTransferManager);
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
