@@ -119,4 +119,4 @@ function id(str) {
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id };
