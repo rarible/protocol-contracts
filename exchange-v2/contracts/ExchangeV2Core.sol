@@ -136,8 +136,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
-        deleteFilledOrder(orderLeft, leftOrderKeyHash);
-        deleteFilledOrder(orderRight, rightOrderKeyHash);
+        deleteFilledOrder(orderLeft, leftOrderKeyHash,  leftOrderData);
+        deleteFilledOrder(orderRight, rightOrderKeyHash, rightOrderData);
 
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, matchedAssets.makeMatch, matchedAssets.takeMatch);
     }
@@ -243,12 +243,19 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Checks if order is fully filled, if true then deletes it
-    function deleteFilledOrder(LibOrder.Order memory order, bytes32 hash) internal {
+    function deleteFilledOrder(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal {
         if (!isTheSameAsOnChain(order, hash)) { 
             return;
         }
 
-        uint takeValueLeft = order.takeAsset.value.sub(getOrderFill(order, hash));
+        uint value;
+        if (dataOrder.isMakeFill) {
+            value = order.makeAsset.value;
+        } else {
+            value = order.takeAsset.value;
+        }
+
+        uint takeValueLeft = value.sub(getOrderFill(order, hash));
         if (takeValueLeft == 0) {
             delete onChainOrders[hash];
         }
