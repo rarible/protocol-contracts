@@ -30,6 +30,6 @@ async function setArtBlocksProvider(deployer, network, royaltiesRegistry, settin
   for (const token of settings.tokens) {
     await royaltiesRegistry.setProviderByToken(token, providerArtBlocks.address, { gas: 100000 });
 
-    console.log(`set royalties royaltiesProviderArtBlocks ${await royaltiesRegistry.royaltiesProviders(token)} for token ${token}`)
+    console.log(`set royalties royaltiesProviderArtBlocks ${await royaltiesRegistry.getProvider(token)} for token ${token}`)
   }
 }

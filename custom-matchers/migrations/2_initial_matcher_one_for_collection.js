@@ -42,7 +42,6 @@ function getSettings(network) {
 module.exports = async function (deployer, network) {
 	await deployer.deploy(AssetMatcherCollection, { gas: 1500000 });
 	const assetMatcherCollection = await AssetMatcherCollection.deployed();
-	await assetMatcherCollection.__AssetMatcherCollection_init({ gas: 200000 });
   console.log("punk transfer proxy deployed at", assetMatcherCollection.address)
 
   const settings = getSettings(network)
@@ -55,7 +54,5 @@ module.exports = async function (deployer, network) {
   const ExchangeV2 = await IExchangeV2.at(settings.exchangeV2)
   await ExchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollection.address)
 
-  //setting exchangev2 as operator in asset matcher contract
-  await assetMatcherCollection.addOperator(ExchangeV2.address)
 
 }; 
