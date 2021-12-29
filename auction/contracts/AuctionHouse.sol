@@ -92,7 +92,10 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     function setApproveForTransferProxy(LibAsset.Asset memory _asset) internal {
         if (_asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(_asset.assetType.data, (address));
-            IERC20Upgradeable(token).approve(proxies[LibAsset.ERC20_ASSET_CLASS], _asset.value);
+            IERC20Upgradeable tokenContract = IERC20Upgradeable(token);
+            address erc20Proxy = proxies[LibAsset.ERC20_ASSET_CLASS];
+            uint allowance = tokenContract.allowance(address(this), erc20Proxy);
+            tokenContract.approve(erc20Proxy, allowance + _asset.value);
         } else if (_asset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
             (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
             require(_asset.value == 1, "erc721 value error");
