@@ -109,7 +109,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     }
 
     /// @dev put a bid and return locked assets for the last bid
-    function putBid(uint _auctionId, Bid memory bid) payable public {
+    function putBid(uint _auctionId, Bid memory bid) payable public nonReentrant {
         checkAuctionInProgress(_auctionId);
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
@@ -197,7 +197,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     }
 
     /// @dev finishes, deletes and transfers all assets for an auction if it's ended (it exists, it has at least one bid, now > endTme)
-    function finishAuction(uint _auctionId) external {
+    function finishAuction(uint _auctionId) external nonReentrant {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         require(
             !checkAuctionRangeTime(_auctionId) &&

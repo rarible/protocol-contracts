@@ -9,9 +9,10 @@ import "./TokenToAuction.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 /// @dev contract with 
-abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction {
+abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction, ReentrancyGuardUpgradeable {
     /// @dev auction struct
     struct Auction {
         // asset that is being sold at auction
@@ -59,6 +60,7 @@ abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgr
 
     function __AuctionHouseBase_init() internal initializer {
         __ERC1155Holder_init();
+        __ReentrancyGuard_init;
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
