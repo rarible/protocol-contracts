@@ -312,11 +312,6 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         require(checkAuctionExistence(_auctionId) && checkAuctionRangeTime(_auctionId), "auction is inactive");
     }
 
-    /// @dev returns true if auction doesn't exist or already finished, false otherwise
-    function isFinalized(uint256 _auctionId) public view returns (bool){
-        return auctions[_auctionId].seller == address(0);
-    }
-
     /// @dev returns total amount for a bid (protocol fee and bid origin fees included)
     function getBidTotalAmount(Bid memory bid, uint _protocolFee) internal pure returns(uint){
         return calculateTotalAmount(bid.amount, _protocolFee, LibBidDataV1.getOrigin(bid.data, bid.dataType));
