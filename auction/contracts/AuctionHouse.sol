@@ -15,6 +15,9 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     /// @dev mapping to store data of auctions for auctionId
     mapping(uint => Auction) auctions;
 
+    /// @dev mapping to store eth amount that is ready to be withdrawn (used for faulty eth-bids)
+    mapping(address => uint) readyToWithdraw;
+
     /// @dev latest auctionId
     uint256 private auctionId;          //unic. auction id
 
@@ -162,7 +165,17 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         LibAsset.Asset memory transferAsset;
         if (oldBuyer != address(0x0)) {//return oldAmount to oldBuyer
             transferAsset = LibAsset.Asset(_buyAssetType, oldAmount);
-            transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
+
+            // work around bid asset type = ETH for security purposes
+            // if eth transfer fails we let previous bidder to withdraw it manually
+            if (_buyAssetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+                (bool success,) = oldBuyer.call{ value: oldAmount }("");
+                if (!success) {
+                    readyToWithdraw[oldBuyer] = oldAmount;
+                }
+            } else {
+                transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
+            }
         }
         transferAsset = LibAsset.Asset(_buyAssetType, newAmount);
         if (transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
@@ -326,6 +339,16 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
     function putBidWrapper(uint256 _auctionId) external payable {
       require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
       putBid(_auctionId, Bid(msg.value, "", ""));
+    }
+
+    /// @dev Used to withdraw faulty bids (bids that failed to return after out-bidding)
+    function withdrawFaultyBid(address _to) external returns(bool){
+        address sender = _msgSender();
+        uint amount = readyToWithdraw[sender];
+        require( amount > 0, "nothing to withdraw");
+        readyToWithdraw[sender] = 0;
+        (bool success, ) = _to.call{ value: amount }("");
+        return success;
     }
 
     uint256[50] private ______gap;

@@ -8,6 +8,7 @@ const TestAuctionHouse = artifacts.require("TestAuctionHouse");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry");
 const Wrapper = artifacts.require("Wrapper");
 const PartyBidTest = artifacts.require("PartyBidTest");
+const FaultyBidder = artifacts.require("FaultyBidder");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -706,6 +707,79 @@ contract("AuctionHouse", accounts => {
       assert.equal(await wrapper.auctionIdMatchesToken(auctionId, erc721.address, erc721TokenId1), false, "auctionIdMatchesToken after finilization")
       assert.equal(await wrapper.getCurrentHighestBidder(auctionId), zeroAddress, "getCurrentHighestBidder before after finilization")
       assert.equal(await wrapper.isFinalized(auctionId), true, "isFinalized after finilization")
+    })
+  })
+
+  describe("security", () => {
+    it("faulty eth-bidders should be processed correctly", async () => {
+      const faultyBidder = await FaultyBidder.new();
+      const addressToReturn = accounts[6]
+
+      await testAuctionHouse.setProtocolFee(0)
+
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareETH()
+      let dataV1 = await encDataV1([[], [], 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
+
+      await truffleAssert.fails(
+        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+      await truffleAssert.fails(
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller });
+      //bid initialize
+      let auctionId = 1;
+      let bidDataV1 = await bidEncDataV1([[], []]);
+      let bid = { amount: 100, dataType: V1, data: bidDataV1 };
+      
+      await verifyBalanceChange(buyer, 100, async () =>
+        verifyBalanceChange(testAuctionHouse.address, -100, async () =>
+          faultyBidder.faultyBid(testAuctionHouse.address, auctionId, bid, { from: buyer, value: 100, gasPrice: 0 })
+        )
+      )
+
+      const buyer2 = accounts[5]
+      bid.amount = 150;
+
+      await verifyBalanceChange(buyer2, 150, async () =>
+        verifyBalanceChange(testAuctionHouse.address, -150, async () =>
+          verifyBalanceChange(buyer, 0, async () =>
+            testAuctionHouse.putBid(auctionId, bid, { from: buyer2, value: 150, gasPrice: 0 })
+          )
+        )
+      )
+
+      await truffleAssert.fails(
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+
+      await verifyBalanceChange(addressToReturn, -100, async () =>
+        verifyBalanceChange(testAuctionHouse.address, 100, async () =>
+          verifyBalanceChange(faultyBidder.address, 0, async () =>
+            faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, {from: buyer, gasPrice: 0})
+          )
+        )
+      )
+      
+      await truffleAssert.fails(
+        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+      await truffleAssert.fails(
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+
     })
   })
 

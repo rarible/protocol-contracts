@@ -25,7 +25,4 @@ contract TestAuctionHouse is AuctionHouse {
       emit timeStamp(block.timestamp);
     }
 
-    function getAuction(uint _auctionId) public view returns(Auction memory){
-      return auctions[_auctionId];
-    }
 }
