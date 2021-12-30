@@ -617,7 +617,6 @@ contract("AuctionHouse", accounts => {
 
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 100, "erc20 balance auction");
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address, "erc721 balance auction");
-      assert.equal(await erc20Token.allowance(testAuctionHouse.address, erc20TransferProxy.address), 100, "erc20 allowance auction => erc20transferProxy")
 
       const seller2 = accounts[5]
       const erc721TokenId2 = 555;
@@ -632,7 +631,6 @@ contract("AuctionHouse", accounts => {
 
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 300, "erc20 balance auction");
       assert.equal(await erc721.ownerOf(erc721TokenId2), testAuctionHouse.address, "erc721 balance auction");
-      assert.equal(await erc20Token.allowance(testAuctionHouse.address, erc20TransferProxy.address), 300, "erc20 allowance auction => erc20transferProxy")
 
       await increaseTime(1001);
 
@@ -640,13 +638,11 @@ contract("AuctionHouse", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer, "erc721 balance buyer");
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 200, "erc20 balance auction");
       assert.equal(await erc20Token.balanceOf(seller), 100, "erc20 balance seller");
-      assert.equal(await erc20Token.allowance(testAuctionHouse.address, erc20TransferProxy.address), 200, "erc20 allowance auction => erc20transferProxy")
 
       await testAuctionHouse.finishAuction(auctionId2, { from: accounts[0] });
       assert.equal(await erc721.ownerOf(erc721TokenId2), buyer2, "erc721 balance buyer");
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0, "erc20 balance auction");
       assert.equal(await erc20Token.balanceOf(seller2), 200, "erc20 balance seller");
-      assert.equal(await erc20Token.allowance(testAuctionHouse.address, erc20TransferProxy.address), 0, "erc20 allowance auction => erc20transferProxy")
     })
   })
 
