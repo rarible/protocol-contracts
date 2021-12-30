@@ -1167,20 +1167,49 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 	})
 
   describe("matchOrders, orderType = V2", () => {
+    it("should correctly return ETH, make-side is ETH (onChainOrder) ", async () => {
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const buyer1 = accounts[3];
+
+      await erc1155_v2.mint(seller, erc1155TokenId1, [], 100);
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
+
+      const encDataLeft = await encDataV2([[], [], false]);
+      const encDataRight = await encDataV2([[], [], true]);
+
+      const left = Order(buyer, Asset(ETH, "0x", 10), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const right = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 20), ZERO, Asset(ETH, "0x", 2), 1, 0, 0, ORDER_DATA_V2, encDataRight);
+
+      await  verifyBalanceChange(buyer, 10, async () =>
+        verifyBalanceChange(testing.address, -10, async () =>   //Lock 10 ETH to contract
+			    testing.upsertOrder(left, { from: buyer, value: 300, gasPrice: 0 })
+			  )
+			);
+
+      await verifyBalanceChange(seller, -2, async () => //seller get 2 ETH
+        verifyBalanceChange(buyer, 0, async () =>       //no change buyer balance, because order is OnChain
+          verifyBalanceChange(testing.address, 2, async () => //UnLock 2 ETH from contract to seller
+            testing.matchOrders(left,  "0x", right, await getSignature(right, seller), { from: buyer, value: 200, gasPrice: 0 })
+          )
+        )
+      )
+    })
+
     it("should correctly calculate make-side fill for isMakeFill = true ", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
       const buyer1 = accounts[3];
-  
+
       await erc1155_v2.mint(seller, erc1155TokenId1, [], 200);
       await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
-  
+
       const encDataLeft = await encDataV2([[], [], true]);
       const encDataRight = await encDataV2([[], [], false]);
-  
+
       const left = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(buyer, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -485, async () =>
         verifyBalanceChange(buyer, 515, async () =>
           testing.matchOrders(left, await getSignature(left, seller), right, "0x", { from: buyer, value: 600, gasPrice: 0 })
@@ -1188,15 +1217,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       )
       assert.equal(await erc1155_v2.balanceOf(buyer, erc1155TokenId1), 100);
       assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 100);
-  
+
       const leftOrderHash = await libOrder.hashKey(left);
       const test_hash = await libOrder.hashV2(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), Asset(ETH, "0x", 1000), 1, encDataLeft)
       assert.equal(leftOrderHash, test_hash, "correct hash for V2")
       assert.equal(await testing.fills(leftOrderHash), 100, "left fill make side")
-  
+
       const left1 = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 600), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right1 = Order(buyer1, Asset(ETH, "0x", 300), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -291, async () =>
         verifyBalanceChange(buyer1, 309, async () =>
           testing.matchOrders(left1, await getSignature(left1, seller), right1, "0x", { from: buyer1, value: 600, gasPrice: 0 })
@@ -1206,21 +1235,21 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155_v2.balanceOf(buyer1, erc1155TokenId1), 100);
       assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 0);
     })
-  
+
     it("should correctly calculate take-side fill for isMakeFill = false ", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
       const buyer1 = accounts[3];
-  
+
       await erc1155_v2.mint(seller, erc1155TokenId1, [], 200);
       await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
-  
+
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataRight = await encDataV2([[], [], false]);
-  
+
       const left = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(buyer, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -485, async () =>
         verifyBalanceChange(buyer, 515, async () =>
           testing.matchOrders(left, await getSignature(left, seller), right, "0x", { from: buyer, value: 600, gasPrice: 0 })
@@ -1228,19 +1257,19 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       )
       assert.equal(await erc1155_v2.balanceOf(buyer, erc1155TokenId1), 100);
       assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 100);
-  
+
       const leftOrderHash = await libOrder.hashKey(left);
       assert.equal(await testing.fills(leftOrderHash), 500, "left fill make side")
-  
+
       const left1 = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 2000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right1 = Order(buyer1, Asset(ETH, "0x", 1000), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -970, async () =>
         verifyBalanceChange(buyer1, 1030, async () =>
           testing.matchOrders(left1, await getSignature(left1, seller), right1, "0x", { from: buyer1, value: 1100, gasPrice: 0 })
         )
       )
-  
+
       assert.equal(await erc1155_v2.balanceOf(buyer1, erc1155TokenId1), 100);
       assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 0);
       assert.equal(await testing.fills(leftOrderHash), 1500, "left fill make side 1")
@@ -1250,16 +1279,16 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller = accounts[1];
       const buyer = accounts[2];
       const buyer1 = accounts[3];
-  
+
       await erc1155_v2.mint(seller, erc1155TokenId1, [], 200);
       await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
-  
+
       const encDataLeft = await encDataV2([[[seller, 10000]], [[accounts[5], 1000]], true]);
       const encDataRight = await encDataV2([[], [], false]);
-  
+
       const left = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(buyer, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -435, async () =>
         verifyBalanceChange(buyer, 515, async () =>
           verifyBalanceChange(accounts[5], -50, async () =>
@@ -1269,15 +1298,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       )
       assert.equal(await erc1155_v2.balanceOf(buyer, erc1155TokenId1), 100);
       assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 100);
-  
+
       const leftOrderHash = await libOrder.hashKey(left);
       const test_hash = await libOrder.hashV2(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), Asset(ETH, "0x", 1000), 1, encDataLeft)
       assert.equal(leftOrderHash, test_hash, "correct hash for V2")
       assert.equal(await testing.fills(leftOrderHash), 100, "left fill make side")
-  
+
       const left1 = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 600), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right1 = Order(buyer1, Asset(ETH, "0x", 300), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
-  
+
       await verifyBalanceChange(seller, -261, async () =>
         verifyBalanceChange(buyer1, 309, async () =>
           verifyBalanceChange(accounts[5], -30, async () =>
