@@ -189,7 +189,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-        //Don`t need ETH, but there is ETH msg.value, return it back
+        //Don`t need ETH, but there is ETH in msg.value, return it back
         if (ethRequired == false && msg.value > 0) {
             address(msg.sender).transferEth(msg.value);
         }
