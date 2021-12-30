@@ -65,6 +65,10 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "incorrect duration");
 
+        // check if auction for this token is taking place
+        (address token, uint tokenId) = abi.decode(_sellAsset.assetType.data, (address, uint256));
+        require(getAuctionByToken(token, tokenId) == 0, "auction already taking place");
+
         uint endTime = 0;
         if (aucData.startTime > 0){
             require (aucData.startTime >= block.timestamp, "incorrect start time");
@@ -87,7 +91,7 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);
 
-        setAuctionForToken(_sellAsset, currentAuctionId);
+        setAuctionForToken(token, tokenId, currentAuctionId);
         emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
     }
 

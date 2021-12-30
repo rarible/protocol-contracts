@@ -781,6 +781,30 @@ contract("AuctionHouse", accounts => {
       )
 
     })
+
+    it("numerous erc1155 auctions with same id should be processed correctly", async () => {
+      await testAuctionHouse.setProtocolFee(0)
+
+      const sellAsset = await prepareERC1155Sell()
+      const buyAssetType = await prepareETH()
+
+      let dataV1 = await encDataV1([[], [], 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller });
+
+      const seller2 = accounts[3]
+      const sellAsset2 = await prepareERC1155Sell(seller2, 100, erc1155TokenId1, false)
+
+      await truffleAssert.fails(
+        testAuctionHouse.startAuction(sellAsset2, buyAssetType, 1, 90, V1, dataV1, { from: seller2 }),
+        truffleAssert.ErrorType.REVERT,
+        "auction already taking place"
+      )
+
+      await testAuctionHouse.cancel(1, { from: seller });
+
+      await testAuctionHouse.startAuction(sellAsset2, buyAssetType, 1, 90, V1, dataV1, { from: seller2 })
+    })
   })
 
   function encDataV1(tuple) {
