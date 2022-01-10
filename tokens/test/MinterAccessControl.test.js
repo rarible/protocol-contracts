@@ -27,7 +27,7 @@ contract("MinterAccessControl", accounts => {
     
     // upgrade contract
     const newInstance = await upgradeProxy(token.address, TestingV2);
-    assert.equal(await newInstance.version(), 2);
+    assert.equal(await newInstance.version(), await newInstance.V2());
 
     assert.equal(await newInstance.isMinter(minter), true);
   });
