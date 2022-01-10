@@ -17,8 +17,6 @@ contract("AssetMatcher", accounts => {
 		testing = await AssetMatcherTest.new();
 		await testing.__AssetMatcherTest_init();
 		testMatcher = await CustomCollectionAssetMatcher.new();
-    testMatcher.__AssetMatcherCollection_init();
-    testMatcher.addOperator(testing.address);
 	});
 
 	it("setAssetMatcher works", async () => {

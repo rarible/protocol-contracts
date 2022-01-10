@@ -37,8 +37,13 @@ const e2e = {
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
-  deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+}
+const polygon_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
 }
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
@@ -73,7 +78,8 @@ let settings = {
   "mainnet-fork": mainnet,
   "e2e": e2e,
   "e2e-fork": e2e,
-  "polygon_mumbai": polygon_mumbai
+  "polygon_mumbai": polygon_mumbai,
+  "polygon_mainnet": polygon_mainnet
 };
 
 function getSettings(network) {
@@ -113,4 +119,4 @@ function id(str) {
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id };

@@ -9,6 +9,10 @@ module.exports = async function (deployer, network) {
   const settings = getSettings(network);
   let cryptoPunksMarket;
 
+  if (!settings.deploy_CryptoPunks && settings.address_CryptoPunks === "0x0000000000000000000000000000000000000000") {
+    return;
+  }
+
   if (settings.deploy_CryptoPunks) {
     await deployer.deploy(CryptoPunksMarket, { gas: 4500000 });
     cryptoPunksMarket = await CryptoPunksMarket.deployed();

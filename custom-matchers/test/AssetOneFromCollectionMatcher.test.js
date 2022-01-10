@@ -8,8 +8,6 @@ contract("AssetMatcherCustom", accounts => {
 
   beforeEach(async () => {
     assetMatcherCollection = await AssetMatcherCollection.new();
-    await assetMatcherCollection.__AssetMatcherCollection_init();
-    await assetMatcherCollection.addOperator(operator);
   });
 
   describe("Check match by customMatcher Match one from Collection", () => {

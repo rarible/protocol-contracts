@@ -43,3 +43,11 @@ Users who want to purchase something on Rarible should do the following:
 - approve transfers the same way (if not buying using Ether)
 - form order in the other direction (statement like "I would like to buy precious crypto kitty for 10 ETH")
 - call Exchange.matchOrders with two orders and first order signature. 
+
+### Suggestions
+
+You are welcome to [suggest features](https://github.com/rarible/protocol/discussions) and [report bugs found](https://github.com/rarible/protocol/issues)!
+
+### License
+
+Smart contracts for Rarible protocol are available under the [MIT License](LICENSE.md).
