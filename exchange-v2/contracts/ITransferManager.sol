@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "./LibFill.sol";
+import "./LibFee.sol";
 import "./TransferExecutor.sol";
 import "./LibOrderData.sol";
 
@@ -29,8 +30,9 @@ abstract contract ITransferManager is ITransferExecutor {
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
-        LibOrderData.OrderDataKeyHash memory leftOrderDataKeyHash,
-        LibOrderData.OrderDataKeyHash memory rightOrderDataKeyHash
+        LibOrderDataV2.DataV2 memory leftOrderData,
+        LibOrderDataV2.DataV2 memory rightOrderData,
+        LibFee.MatchFees memory matchFees
     ) internal virtual returns (uint totalMakeValue, uint totalTakeValue);
 
 
@@ -40,7 +42,7 @@ abstract contract ITransferManager is ITransferExecutor {
     ) internal virtual view returns (uint total);
 
     function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) virtual internal view returns(uint);
-    
+
     function getProtocolFee() virtual internal view returns(uint);
     
 }

@@ -10,6 +10,7 @@ import "./AssetMatcher.sol";
 import "./TransferExecutor.sol";
 import "./ITransferManager.sol";
 import "./lib/LibTransfer.sol";
+import "./LibFee.sol";
 
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
     using SafeMathUpgradeable for uint;
@@ -132,9 +133,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
 
-        LibOrderData.OrderDataKeyHash memory leftOrderDataKeyHash = LibOrderData.orderDataKeyHash(leftOrderData, leftOrderKeyHash);
-        LibOrderData.OrderDataKeyHash memory rightOrderDataKeyHash = LibOrderData.orderDataKeyHash(rightOrderData, rightOrderKeyHash);
-        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderDataKeyHash, rightOrderDataKeyHash);
+        LibFee.MatchFees memory matchFees = getMatchFees(orderLeft, orderRight, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);
+        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
         
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
@@ -295,6 +295,30 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             value = order.takeAsset.value;
         }
         return (value > fills[hash]);
+    }
+
+    /// @dev ruturns MatchFees struct with protocol fees of both orders in a match
+    function getMatchFees(
+        LibOrder.Order memory leftOrder,
+        LibOrder.Order memory rightOrder,
+        LibAsset.AssetType memory makeMatch,
+        LibAsset.AssetType memory takeMatch,
+        bytes32 leftKeyHash,
+        bytes32 rightKeyHash
+    ) internal view returns(LibFee.MatchFees memory){
+        LibFee.MatchFees memory result;
+        result.feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
+        uint leftFee = getOrderProtocolFee(leftOrder, leftKeyHash);
+        uint rightFee = getOrderProtocolFee(rightOrder, rightKeyHash);
+        if (result.feeSide == LibFeeSide.FeeSide.MAKE) {
+            result.feeSideProtocolFee = leftFee;
+            result.nftSideProtocolFee = rightFee;
+        } else if (result.feeSide == LibFeeSide.FeeSide.TAKE) {
+            result.feeSideProtocolFee = rightFee;
+            result.nftSideProtocolFee = leftFee;
+        }
+
+        return result;
     }
 
     uint256[48] private __gap;
