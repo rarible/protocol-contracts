@@ -379,11 +379,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
-        }
+				if (onChain == 1) {
+					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
+				} else {
+					assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
+				}
 
 
 				assert.equal(await t1.balanceOf(accounts[1]), 0); //=104 - (100amount + 3byuerFee +1originleft)
@@ -403,11 +403,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 20);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 20);
-        }
+				if (onChain == 1) {
+					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 20);
+				} else {
+					assert.equal(await testing.fills(await libOrder.hashKey(left)), 20);
+				}
 
 				assert.equal(await t1.balanceOf(accounts[1]), 0);
 				assert.equal(await t1.balanceOf(accounts[2]), 10);
@@ -438,11 +438,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
-        }
+				if (onChain == 1) {
+					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
+				} else {
+					assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
+				}
 
 				assert.equal(await t2.balanceOf(accounts[1]), 94);	//=100 - 3sellerFee - 2originRight -1originleft
 				assert.equal(await t2.balanceOf(accounts[2]), 2);		//=105 - (100amount + 3byuerFee )
@@ -473,11 +473,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 7);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 7);
-        }
+				if (onChain == 1) {
+					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 7);
+				} else {
+					assert.equal(await testing.fills(await libOrder.hashKey(left)), 7);
+				}
 
 				assert.equal(await t1.balanceOf(accounts[1]), 10);		//=120 - (100amount + 3byuerFee + 3originLeft + 4originleft)
 				assert.equal(await t1.balanceOf(accounts[2]), 77);			//=100 - 3sellerFee - (10 +5)Royalties - 5originRight
@@ -518,11 +518,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[1] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
-        }
+				if (onChain == 1) {
+					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
+				} else {
+					assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
+				}
 
 				assert.equal(await t1.balanceOf(accounts[1]), 12);		//=120 - (100amount + 3byuerFee +5originRight )
 				assert.equal(await t1.balanceOf(accounts[2]), 75);			//=100 - 3sellerFee - (10 +5)Royalties - (3+4)originLeft
@@ -752,11 +752,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 				const {signature, onChain} = await createOrder(left, accounts[1])
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
-        }
+				if (onChain == 1) {
+					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
+				} else {
+					assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
+				}
 
 				assert.equal(await t1.balanceOf(accounts[1]), 0); //=104 - (100amount + 3byuerFee +1originleft)
 				assert.equal(await t1.balanceOf(accounts[2]), 19);//=(100 - 3sellerFee - 2originRight)*20%
