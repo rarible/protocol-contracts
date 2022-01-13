@@ -29,8 +29,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(leftOrder);
         LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(rightOrder);
         //NB!!! Only NOT onChain hashKey calculate here
-        bytes32 leftOrderKeyHash = LibOrder.hashKey(leftOrder);
-        bytes32 rightOrderKeyHash = LibOrder.hashKey(rightOrder);
+        bytes32 leftOrderKeyHash = LibOrder.hashKey(leftOrder, false);
+        bytes32 rightOrderKeyHash = LibOrder.hashKey(rightOrder, false);
 
         LibOrder.MatchedAssets memory matchedAssets = matchAssets(leftOrder, rightOrder);
         LibFee.MatchFees memory matchFees = getMatchFees(leftOrder, rightOrder, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);

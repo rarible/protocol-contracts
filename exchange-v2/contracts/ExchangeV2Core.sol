@@ -37,7 +37,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     
     /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
-        bytes32 orderKeyHash = LibOrder.hashKeyOnChain(order);
+        bytes32 orderKeyHash = LibOrder.hashKey(order, true);
         LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
 
         //checking if order is correct
@@ -88,7 +88,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
 
-        bytes32 orderKeyHash = LibOrder.hashKeyOnChain(order);
+        bytes32 orderKeyHash = LibOrder.hashKey(order, true);
 
         //if it's an on-chain order
         if (checkOrderExistance(orderKeyHash)) {
@@ -100,7 +100,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             }
             delete onChainOrders[orderKeyHash];
         } else {
-            orderKeyHash = LibOrder.hashKey(order);
+            orderKeyHash = LibOrder.hashKey(order, false);
         }
 
         fills[orderKeyHash] = UINT256_MAX;
@@ -211,11 +211,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view returns(bytes32 hashOrder) {
         LibOrder.validate(order);
 
-        hashOrder = LibOrder.hashKeyOnChain(order);
+        hashOrder = LibOrder.hashKey(order, true);
         //no need to validate signature of an on-chain order
         if (!isTheSameAsOnChain(order, hashOrder)) {
             validate(order, signature);
-            hashOrder = LibOrder.hashKey(order);
+            hashOrder = LibOrder.hashKey(order, false);
         }
     }
 

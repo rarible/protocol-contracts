@@ -15,6 +15,7 @@ library LibOrder {
     );
 
     uint constant ON_CHAIN_ORDER = 0;
+    bytes4 constant DEFAULT_ORDER_TYPE = 0xffffffff;
 
     struct Order {
         address maker;
@@ -43,49 +44,70 @@ library LibOrder {
         } 
     }
 
-    function hashKey(Order memory order) internal pure returns (bytes32) {
-        //order.data is in hash for V2 orders
-        if (order.dataType == LibOrderDataV2.V2){
-            return keccak256(abi.encode(
-                order.maker,
-                LibAsset.hash(order.makeAsset.assetType),
-                LibAsset.hash(order.takeAsset.assetType),
-                order.salt,
-                order.data
-            ));
+    function hashKey(Order memory order, bool onChain) internal pure returns (bytes32) {
+        //order.data is in hash for V1 orders
+        if (order.dataType == LibOrderDataV1.V1 || order.dataType == DEFAULT_ORDER_TYPE){
+            if (onChain){
+                return keccak256(abi.encode(
+                    order.maker,
+                    LibAsset.hash(order.makeAsset.assetType),
+                    LibAsset.hash(order.takeAsset.assetType),
+                    order.salt,
+                    ON_CHAIN_ORDER
+                ));
+            } else {
+                return keccak256(abi.encode(
+                    order.maker,
+                    LibAsset.hash(order.makeAsset.assetType),
+                    LibAsset.hash(order.takeAsset.assetType),
+                    order.salt
+                ));
+            }
         } else {
-            return keccak256(abi.encode(
-                order.maker,
-                LibAsset.hash(order.makeAsset.assetType),
-                LibAsset.hash(order.takeAsset.assetType),
-                order.salt
-            ));
+            if (onChain) {
+                return keccak256(abi.encode(
+                    order.maker,
+                    LibAsset.hash(order.makeAsset.assetType),
+                    LibAsset.hash(order.takeAsset.assetType),
+                    order.salt,
+                    order.data,
+                    ON_CHAIN_ORDER
+                ));
+            } else {
+                return keccak256(abi.encode(
+                    order.maker,
+                    LibAsset.hash(order.makeAsset.assetType),
+                    LibAsset.hash(order.takeAsset.assetType),
+                    order.salt,
+                    order.data
+                ));
+            }
         }
         
     }
 
-    function hashKeyOnChain(Order memory order) internal pure returns (bytes32) {
-        //order.data is in hash for V2 orders
-        if (order.dataType == LibOrderDataV2.V2){
-            return keccak256(abi.encode(
-                order.maker,
-                LibAsset.hash(order.makeAsset.assetType),
-                LibAsset.hash(order.takeAsset.assetType),
-                order.salt,
-                order.data,
-                ON_CHAIN_ORDER
-            ));
-        } else {
-            return keccak256(abi.encode(
-                order.maker,
-                LibAsset.hash(order.makeAsset.assetType),
-                LibAsset.hash(order.takeAsset.assetType),
-                order.salt,
-                ON_CHAIN_ORDER
-            ));
-        }
-
-    }
+//    function hashKeyOnChain(Order memory order) internal pure returns (bytes32) {
+//        //order.data is in hash for V2 orders
+//        if (order.dataType == LibOrderDataV1.V1 || order.dataType == DEFAULT_ORDER_TYPE){
+//            return keccak256(abi.encode(
+//                order.maker,
+//                LibAsset.hash(order.makeAsset.assetType),
+//                LibAsset.hash(order.takeAsset.assetType),
+//                order.salt,
+//                ON_CHAIN_ORDER
+//            ));
+//        } else {
+//            return keccak256(abi.encode(
+//                order.maker,
+//                LibAsset.hash(order.makeAsset.assetType),
+//                LibAsset.hash(order.takeAsset.assetType),
+//                order.salt,
+//                order.data,
+//                ON_CHAIN_ORDER
+//            ));
+//        }
+//
+//    }
 
     function hash(Order memory order) internal pure returns (bytes32) {
         return keccak256(abi.encode(

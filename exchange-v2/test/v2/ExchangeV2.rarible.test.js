@@ -1196,6 +1196,38 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 	})
 
   describe("matchOrders, orderType = V2", () => {
+    it("Filling notOnChain don`t  don`t fill onChain order", async () => {
+      /*This test is about inconsistency when order leftB which is not onChain make fill order leftA - which is onChain
+       * now it`s impossible because we add field isOnChain
+       */
+      const seller = accounts[1];
+      const buyer = accounts[2];
+
+      await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
+
+      const encDataLeftA = await encDataV2([[], [], true]);
+      const encDataLeftB = await encDataV2([[], [], true]);
+      const encDataRight = await encDataV2([[], [], false]);
+
+      const leftA = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeftA);
+      const leftB = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 1000), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeftB);
+      const right = Order(buyer, Asset(ETH, "0x", 1000), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 1000), 1, 0, 0, ORDER_DATA_V2, encDataRight);
+
+      const leftOrderHashA = await libOrder.hashKeyOnChain(leftA);
+      const leftOrderHashB = await libOrder.hashKey(leftB);
+      await assert.notEqual(leftOrderHashA, leftOrderHashB);
+
+      await testing.upsertOrder(leftA, { from: seller, value: 0, gasPrice: 0 });
+
+      await verifyBalanceChange(seller, -970, async () =>
+        verifyBalanceChange(buyer, 1030, async () =>
+          testing.matchOrders(leftB, await getSignature(leftB, seller), right, "0x", { from: buyer, value: 1100, gasPrice: 0 })
+        )
+      )
+      assert.equal(await testing.fills(leftOrderHashA), 0, "leftA fill make side")
+    })
+
     it("should correctly calculate make-side fill for isMakeFill = true ", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
