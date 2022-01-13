@@ -14,6 +14,10 @@ contract LibOrderTest {
         return LibOrder.hashKey(order);
     }
 
+    function hashKeyOnChain(LibOrder.Order calldata order) external pure returns (bytes32) {
+        return LibOrder.hashKeyOnChain(order);
+    }
+
     function validate(LibOrder.Order calldata order) external view {
         LibOrder.validate(order);
     }

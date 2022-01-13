@@ -14,6 +14,8 @@ library LibOrder {
         "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
     );
 
+    uint constant ON_CHAIN_ORDER = 0;
+
     struct Order {
         address maker;
         LibAsset.Asset makeAsset;
@@ -60,6 +62,29 @@ library LibOrder {
             ));
         }
         
+    }
+
+    function hashKeyOnChain(Order memory order) internal pure returns (bytes32) {
+        //order.data is in hash for V2 orders
+        if (order.dataType == LibOrderDataV2.V2){
+            return keccak256(abi.encode(
+                order.maker,
+                LibAsset.hash(order.makeAsset.assetType),
+                LibAsset.hash(order.takeAsset.assetType),
+                order.salt,
+                order.data,
+                ON_CHAIN_ORDER
+            ));
+        } else {
+            return keccak256(abi.encode(
+                order.maker,
+                LibAsset.hash(order.makeAsset.assetType),
+                LibAsset.hash(order.takeAsset.assetType),
+                order.salt,
+                ON_CHAIN_ORDER
+            ));
+        }
+
     }
 
     function hash(Order memory order) internal pure returns (bytes32) {

@@ -71,51 +71,51 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibFill.FillResult memory fill,
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        LibOrderData.OrderDataKeyHash memory leftOrderDataKeyHash,
+        LibOrderData.OrderDataKeyHash memory rightOrderDataKeyHash
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
-        MatchFees memory matchFees = getMatchFees(leftOrder, rightOrder, matchedAssets.makeMatch, matchedAssets.takeMatch);
-        
+        MatchFees memory matchFees = getMatchFees(leftOrder, rightOrder, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderDataKeyHash.keyHash, rightOrderDataKeyHash.keyHash);
+
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;
         if (matchFees.feeSide == LibFeeSide.FeeSide.MAKE) {
             totalMakeValue = doTransfersWithFees(
-                fill.leftValue, 
-                leftOrder.maker, 
-                matchFees, 
-                leftOrderData, 
-                rightOrderData, 
-                matchedAssets.makeMatch, 
-                matchedAssets.takeMatch,  
+                fill.leftValue,
+                leftOrder.maker,
+                matchFees,
+                leftOrderDataKeyHash.orderData,
+                rightOrderDataKeyHash.orderData,
+                matchedAssets.makeMatch,
+                matchedAssets.takeMatch,
                 TO_TAKER
             );
-            transferPayouts(matchedAssets.takeMatch, 
-                fill.rightValue, 
-                rightOrder.maker, 
-                leftOrderData.payouts, 
+            transferPayouts(matchedAssets.takeMatch,
+                fill.rightValue,
+                rightOrder.maker,
+                leftOrderDataKeyHash.orderData.payouts,
                 TO_MAKER
             );
         } else if (matchFees.feeSide == LibFeeSide.FeeSide.TAKE) {
             totalTakeValue = doTransfersWithFees(
-                fill.rightValue, 
-                rightOrder.maker, 
-                matchFees, 
-                rightOrderData, 
-                leftOrderData, 
-                matchedAssets.takeMatch, 
-                matchedAssets.makeMatch, 
+                fill.rightValue,
+                rightOrder.maker,
+                matchFees,
+                rightOrderDataKeyHash.orderData,
+                leftOrderDataKeyHash.orderData,
+                matchedAssets.takeMatch,
+                matchedAssets.makeMatch,
                 TO_MAKER
             );
             transferPayouts(
-                matchedAssets.makeMatch, 
-                fill.leftValue, 
-                leftOrder.maker, 
-                rightOrderData.payouts, 
+                matchedAssets.makeMatch,
+                fill.leftValue,
+                leftOrder.maker,
+                rightOrderDataKeyHash.orderData.payouts,
                 TO_TAKER
             );
         } else {
-            transferPayouts(matchedAssets.makeMatch, fill.leftValue, leftOrder.maker, rightOrderData.payouts, TO_TAKER);
-            transferPayouts(matchedAssets.takeMatch, fill.rightValue, rightOrder.maker, leftOrderData.payouts, TO_MAKER);
+            transferPayouts(matchedAssets.makeMatch, fill.leftValue, leftOrder.maker, rightOrderDataKeyHash.orderData.payouts, TO_TAKER);
+            transferPayouts(matchedAssets.takeMatch, fill.rightValue, rightOrder.maker, leftOrderDataKeyHash.orderData.payouts, TO_MAKER);
         }
     }
 
@@ -261,11 +261,18 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     }
 
     /// @dev ruturns MatchFees struct with protocol fees of both orders in a match
-    function getMatchFees(LibOrder.Order memory leftOrder, LibOrder.Order memory rightOrder, LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) internal view returns(MatchFees memory){
+    function getMatchFees(
+        LibOrder.Order memory leftOrder,
+        LibOrder.Order memory rightOrder,
+        LibAsset.AssetType memory makeMatch,
+        LibAsset.AssetType memory takeMatch,
+        bytes32 leftKeyHash,
+        bytes32 rightKeyHash
+    ) internal view returns(MatchFees memory){
         MatchFees memory result;
         result.feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
-        uint leftFee = getOrderProtocolFee(leftOrder, LibOrder.hashKey(leftOrder));
-        uint rightFee = getOrderProtocolFee(rightOrder, LibOrder.hashKey(rightOrder));
+        uint leftFee = getOrderProtocolFee(leftOrder, leftKeyHash);
+        uint rightFee = getOrderProtocolFee(rightOrder, rightKeyHash);
         if (result.feeSide == LibFeeSide.FeeSide.MAKE) {
             result.feeSideProtocolFee = leftFee;
             result.nftSideProtocolFee = rightFee;

@@ -36,7 +36,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     
     /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
-        bytes32 orderKeyHash = LibOrder.hashKey(order);
+        bytes32 orderKeyHash = LibOrder.hashKeyOnChain(order);
         LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
 
         //checking if order is correct
@@ -87,7 +87,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
 
-        bytes32 orderKeyHash = LibOrder.hashKey(order);
+        bytes32 orderKeyHash = LibOrder.hashKeyOnChain(order);
 
         //if it's an on-chain order
         if (checkOrderExistance(orderKeyHash)) {
@@ -98,6 +98,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, LibOrderData.parse(temp))), address(this), temp.maker, UNLOCK, TO_MAKER);
             }
             delete onChainOrders[orderKeyHash];
+        } else {
+            orderKeyHash = LibOrder.hashKey(order);
         }
 
         fills[orderKeyHash] = UINT256_MAX;
@@ -111,28 +113,28 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrder.Order memory orderRight,
         bytes memory signatureRight
     ) external payable {
-        validateFull(orderLeft, signatureLeft);
-        validateFull(orderRight, signatureRight);
+        bytes32 leftOrderKeyHash = validateFull(orderLeft, signatureLeft);
+        bytes32 rightOrderKeyHash = validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
             require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
         }
         if (orderRight.taker != address(0)) {
             require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
         }
-        matchAndTransfer(orderLeft, orderRight);
+        matchAndTransfer(orderLeft, leftOrderKeyHash, orderRight, rightOrderKeyHash);
     }
 
-    function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
+    function matchAndTransfer(LibOrder.Order memory orderLeft, bytes32 leftOrderKeyHash, LibOrder.Order memory orderRight, bytes32 rightOrderKeyHash) internal {
         LibOrder.MatchedAssets memory matchedAssets = matchAssets(orderLeft, orderRight);
-        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
-        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
 
         LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
         LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
 
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
-        
-        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
+
+        LibOrderData.OrderDataKeyHash memory leftOrderDataKeyHash = LibOrderData.orderDataKeyHash(leftOrderData, leftOrderKeyHash);
+        LibOrderData.OrderDataKeyHash memory rightOrderDataKeyHash = LibOrderData.orderDataKeyHash(rightOrderData, rightOrderKeyHash);
+        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderDataKeyHash, rightOrderDataKeyHash);
         
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
@@ -206,15 +208,15 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         require(matchedAssets.takeMatch.assetClass != 0, "assets don't match");
     }
 
-    function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {
+    function validateFull(LibOrder.Order memory order, bytes memory signature) internal view returns(bytes32 hashOrder) {
         LibOrder.validate(order);
 
+        hashOrder = LibOrder.hashKeyOnChain(order);
         //no need to validate signature of an on-chain order
-        if (isTheSameAsOnChain(order, LibOrder.hashKey(order))) {
-            return;
-        } 
-
-        validate(order, signature);
+        if (!isTheSameAsOnChain(order, hashOrder)) {
+            validate(order, signature);
+            hashOrder = LibOrder.hashKey(order);
+        }
     }
 
     /// @dev Checks order for existance on-chain by orderKeyHash

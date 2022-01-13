@@ -25,7 +25,15 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder
     ) payable external {
-        doTransfers(LibOrder.MatchedAssets(makeMatch, takeMatch), fill, leftOrder, rightOrder, LibOrderData.parse(leftOrder), LibOrderData.parse(rightOrder));
+        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(leftOrder);
+        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(rightOrder);
+        //NB!!! Only NOT onChain hashKey calculate here
+        bytes32 leftOrderKeyHash = LibOrder.hashKey(leftOrder);
+        bytes32 rightOrderKeyHash = LibOrder.hashKey(rightOrder);
+
+        LibOrderData.OrderDataKeyHash memory leftOrderDataKeyHash = LibOrderData.orderDataKeyHash(leftOrderData, leftOrderKeyHash);
+        LibOrderData.OrderDataKeyHash memory rightOrderDataKeyHash = LibOrderData.orderDataKeyHash(rightOrderData, rightOrderKeyHash);
+        doTransfers(LibOrder.MatchedAssets(makeMatch, takeMatch), fill, leftOrder, rightOrder, leftOrderDataKeyHash, rightOrderDataKeyHash);
     }
 
     function __TransferManager_init(
