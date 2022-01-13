@@ -69,7 +69,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibOrderDataV2.DataV2 memory rightOrderData,
         LibFee.MatchFees memory matchFees
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
-
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;
         if (matchFees.feeSide == LibFeeSide.FeeSide.MAKE) {

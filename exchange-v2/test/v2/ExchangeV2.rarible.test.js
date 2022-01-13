@@ -790,11 +790,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 				const {signature, onChain} = await createOrder(left, accounts[1])
 				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
 
-        if (onChain == 1) {
-          assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
-        } else {
-				  assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
-        }
+				if (onChain == 1) {
+				  assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
+				} else {
+			  	assert.equal(await testing.fills(await libOrder.hashKey(left)), 100);
+				}
 
 				assert.equal(await t2.balanceOf(accounts[1]), 47);	//=100 - 3sellerFee - 2originRight -1originleft 50%
 				assert.equal(await t2.balanceOf(accounts[5]), 47);	//=100 - 3sellerFee - 2originRight -1originleft 50%
@@ -1350,7 +1350,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155_v2.balanceOf(buyer1, erc1155TokenId1), 100);
       assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 0);
     })
-
   })
 
 	function encDataV1(tuple) {
@@ -1386,7 +1385,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		)
 
 		const amountToVerify = (finalVerify > 0) ? 0 : finalVerify;
-    const onChain = 1;
+		const onChain = 1;
 		return {signature:"0x", valMatch: valMatch, amountToVerify: amountToVerify, onChain: onChain};
 	}
 
@@ -1405,7 +1404,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		}
 
 		const amountToVerify = (!!verify) ? verify : 0;
-    const onChain = 0;
+		const onChain = 0;
 		return {signature: sig, valMatch: valMatch, amountToVerify: amountToVerify, onChain: onChain};
 	}
 

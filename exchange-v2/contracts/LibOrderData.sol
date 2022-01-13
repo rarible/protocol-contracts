@@ -5,12 +5,6 @@ pragma solidity 0.7.6;
 import "./LibOrder.sol";
 
 library LibOrderData {
-
-    struct OrderDataKeyHash {
-        LibOrderDataV2.DataV2 orderData;
-        bytes32 keyHash;
-    }
-
     function parse(LibOrder.Order memory order) pure internal returns (LibOrderDataV2.DataV2 memory dataOrder) {
         if (order.dataType == LibOrderDataV1.V1) {
             LibOrderDataV1.DataV1 memory dataV1 = LibOrderDataV1.decodeOrderDataV1(order.data);
@@ -33,9 +27,5 @@ library LibOrderData {
         payout[0].account = payable(orderAddress);
         payout[0].value = 10000;
         return payout;
-    }
-
-    function orderDataKeyHash(LibOrderDataV2.DataV2 memory orderData, bytes32 keyHash) internal pure returns (OrderDataKeyHash memory) {
-        return OrderDataKeyHash(orderData, keyHash);
     }
 }
