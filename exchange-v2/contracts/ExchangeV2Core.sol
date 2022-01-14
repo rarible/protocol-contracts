@@ -23,9 +23,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     //on-chain orders
     mapping(bytes32 => OrderAndFee) public onChainOrders;
 
-    //prevent reentrancy
-    bool internal locked;
-
     //struct to hold on-chain order and its protocol fee, fee is updated if order is updated
     struct OrderAndFee {
         LibOrder.Order order;
@@ -38,7 +35,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event UpsertOrder(LibOrder.Order order);
     
     /// @dev Creates new or updates an on-chain order
-    function upsertOrder(LibOrder.Order memory order) external payable noReentrant {
+    function upsertOrder(LibOrder.Order memory order) external payable {
         bytes32 orderKeyHash = LibOrder.hashKey(order);
         LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
 
@@ -55,6 +52,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         if(checkOrderExistance(orderKeyHash) && order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             LibOrder.Order memory oldOrder = onChainOrders[orderKeyHash].order;
             uint oldTotal = getTotalValue(oldOrder, orderKeyHash, LibOrderData.parse(oldOrder));
+            onChainOrders[orderKeyHash].order = order; //to prevent reentrancy
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
 
@@ -62,6 +60,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             uint returnValue = (oldTotal > newTotal) ? oldTotal.sub(newTotal) : 0;
 
             transferLockedAsset(LibAsset.Asset(order.makeAsset.assetType, returnValue), address(this), order.maker, UNLOCK, TO_MAKER);
+        } else {
+            onChainOrders[orderKeyHash].order = order; //to prevent reentrancy
         }
 
         if (order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
@@ -81,12 +81,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
 
         onChainOrders[orderKeyHash].fee = getProtocolFee();
-        onChainOrders[orderKeyHash].order = order;
 
         emit UpsertOrder(order);
     }
 
-    function cancel(LibOrder.Order memory order) external noReentrant {
+    function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
 
@@ -95,12 +94,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         //if it's an on-chain order
         if (checkOrderExistance(orderKeyHash)) {
             LibOrder.Order memory temp = onChainOrders[orderKeyHash].order;
-
+            delete onChainOrders[orderKeyHash]; //to prevent reentrancy
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, LibOrderData.parse(temp))), address(this), temp.maker, UNLOCK, TO_MAKER);
             }
-            delete onChainOrders[orderKeyHash];
         }
 
         fills[orderKeyHash] = UINT256_MAX;
@@ -298,12 +296,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return (value > fills[hash]);
     }
 
-    modifier noReentrant() {
-        require(!locked, "No reentrancy");
-        locked = true;
-        _;
-        locked = false;
-    }
-
-    uint256[47] private __gap;
+    uint256[48] private __gap;
 }
