@@ -13,7 +13,8 @@ abstract contract SimpleTransferManager is ITransferManager {
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        LibOrderDataV2.DataV2 memory rightOrderData,
+        LibFee.MatchFees memory matchFees
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
