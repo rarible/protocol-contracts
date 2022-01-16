@@ -266,7 +266,17 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			assert.equal(await t1.balanceOf(makerRight), 0);
 
 		})
-    });
+    it("should create, upsert fail, salt == 0", async () => {
+      const maker = accounts[2]
+      const salt = 0;
+      const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), salt, 0, 0, "0xffffffff", "0x");
+      const orderHash = await libOrder.hashKey(order);
+
+      await expectThrow(
+        testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 })
+      );
+    })
+  });
 
 	describe("matchOrders", () => {
 		it("eth orders work, expect throw, not enough eth ", async () => {
@@ -1226,6 +1236,65 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         )
       )
       assert.equal(await testing.fills(leftOrderHashA), 0, "leftA fill make side")
+    })
+
+    it("should correctly calculate make-side fill(onChainOrder) for isMakeFill = true ", async () => {
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const buyer1 = accounts[3];
+
+      await erc1155_v2.mint(seller, erc1155TokenId1, [], 100);
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
+
+      const encDataLeft = await encDataV2([[], [], true]);
+      const encDataRight = await encDataV2([[], [], false]);
+
+      const left = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ETH, "0x", 10), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const right = Order(buyer, Asset(ETH, "0x", 2), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 20), 1, 0, 0, ORDER_DATA_V2, encDataRight);
+
+			await testing.upsertOrder(left, { from: seller, value: 300, gasPrice: 0 });
+
+      await verifyBalanceChange(seller, -2, async () =>
+        verifyBalanceChange(buyer, 2, async () =>
+          testing.matchOrders(left, await getSignature(left, seller), right, "0x", { from: buyer, value: 600, gasPrice: 0 })
+        )
+      )
+      assert.equal(await erc1155_v2.balanceOf(buyer, erc1155TokenId1), 20);
+      assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 80);
+
+      const leftOrderHash = await libOrder.hashKey(left);
+      const test_hash = await libOrder.hashV2(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), Asset(ETH, "0x", 10), 1, encDataLeft)
+      assert.equal(leftOrderHash, test_hash, "correct hash for V2")
+      assert.equal(await testing.fills(leftOrderHash), 20, "left fill make side")
+    })
+
+    it("should correctly return ETH, make-side is ETH (onChainOrder) ", async () => {
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const buyer1 = accounts[3];
+
+      await erc1155_v2.mint(seller, erc1155TokenId1, [], 100);
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
+
+      const encDataLeft = await encDataV2([[], [], false]);
+      const encDataRight = await encDataV2([[], [], true]);
+
+      const left = Order(buyer, Asset(ETH, "0x", 10), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const right = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 20), ZERO, Asset(ETH, "0x", 2), 1, 0, 0, ORDER_DATA_V2, encDataRight);
+
+      await  verifyBalanceChange(buyer, 10, async () =>
+        verifyBalanceChange(testing.address, -10, async () =>   //Lock 10 ETH to contract
+			    testing.upsertOrder(left, { from: buyer, value: 300, gasPrice: 0 })
+			  )
+			);
+
+      await verifyBalanceChange(seller, -2, async () => //seller get 2 ETH
+        verifyBalanceChange(buyer, 0, async () =>       //no change buyer balance, because order is OnChain
+          verifyBalanceChange(testing.address, 2, async () => //UnLock 2 ETH from contract to seller
+            testing.matchOrders(left,  "0x", right, await getSignature(right, seller), { from: buyer, value: 200, gasPrice: 0 })
+          )
+        )
+      )
     })
 
     it("should correctly calculate make-side fill for isMakeFill = true ", async () => {

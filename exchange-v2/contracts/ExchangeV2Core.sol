@@ -37,6 +37,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     
     /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
+        require(order.salt != 0, "salt == 0");
         bytes32 orderKeyHash = LibOrder.hashKey(order, true);
         LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
 
@@ -139,8 +140,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
-        deleteFilledOrder(orderLeft, leftOrderKeyHash);
-        deleteFilledOrder(orderRight, rightOrderKeyHash);
+        deleteFilledOrder(orderLeft, leftOrderKeyHash,  leftOrderData);
+        deleteFilledOrder(orderRight, rightOrderKeyHash, rightOrderData);
 
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, matchedAssets.makeMatch, matchedAssets.takeMatch);
     }
@@ -191,6 +192,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             if (msg.value > totalTakeValue) {
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
+        }
+        //Don`t need ETH, but there is ETH in msg.value, return it back
+        if (ethRequired == false && msg.value > 0) {
+            address(msg.sender).transferEth(msg.value);
         }
     }
 
@@ -246,16 +251,24 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Checks if order is fully filled, if true then deletes it
-    function deleteFilledOrder(LibOrder.Order memory order, bytes32 hash) internal {
-        if (!isTheSameAsOnChain(order, hash)) { 
+    function deleteFilledOrder(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal {
+        if (!isTheSameAsOnChain(order, hash)) {
             return;
         }
 
-        uint takeValueLeft = order.takeAsset.value.sub(getOrderFill(order, hash));
+        uint value;
+        if (dataOrder.isMakeFill) {
+            value = order.makeAsset.value;
+        } else {
+            value = order.takeAsset.value;
+        }
+
+        uint takeValueLeft = value.sub(getOrderFill(order, hash));
         if (takeValueLeft == 0) {
             delete onChainOrders[hash];
         }
     }
+
 
     /// @dev Checks if matching such orders requires ether sent with the transaction
     function matchingRequiresEth(
