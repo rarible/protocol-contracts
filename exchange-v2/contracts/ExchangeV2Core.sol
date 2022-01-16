@@ -53,6 +53,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         if(checkOrderExistance(orderKeyHash) && order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             LibOrder.Order memory oldOrder = onChainOrders[orderKeyHash].order;
             uint oldTotal = getTotalValue(oldOrder, orderKeyHash, LibOrderData.parse(oldOrder));
+            onChainOrders[orderKeyHash].order = order; //to prevent reentrancy
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
 
@@ -60,6 +61,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             uint returnValue = (oldTotal > newTotal) ? oldTotal.sub(newTotal) : 0;
 
             transferLockedAsset(LibAsset.Asset(order.makeAsset.assetType, returnValue), address(this), order.maker, UNLOCK, TO_MAKER);
+        } else {
+            onChainOrders[orderKeyHash].order = order; //to prevent reentrancy
         }
 
         if (order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
@@ -79,7 +82,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
 
         onChainOrders[orderKeyHash].fee = getProtocolFee();
-        onChainOrders[orderKeyHash].order = order;
 
         emit UpsertOrder(order);
     }
@@ -93,12 +95,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         //if it's an on-chain order
         if (checkOrderExistance(orderKeyHash)) {
             LibOrder.Order memory temp = onChainOrders[orderKeyHash].order;
-
+            delete onChainOrders[orderKeyHash]; //to prevent reentrancy
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, LibOrderData.parse(temp))), address(this), temp.maker, UNLOCK, TO_MAKER);
             }
-            delete onChainOrders[orderKeyHash];
         } else {
             orderKeyHash = LibOrder.hashKey(order, false);
         }
