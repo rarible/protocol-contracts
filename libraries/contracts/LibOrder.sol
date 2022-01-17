@@ -2,8 +2,8 @@
 
 pragma solidity 0.7.6;
 
-import "./lib/LibMath.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "./LibMath.sol";
 import "./LibOrderDataV2.sol";
 import "./LibOrderDataV1.sol";
 
@@ -13,9 +13,6 @@ library LibOrder {
     bytes32 constant ORDER_TYPEHASH = keccak256(
         "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
     );
-
-    uint constant ON_CHAIN_ORDER = 0;
-    bytes4 constant DEFAULT_ORDER_TYPE = 0xffffffff;
 
     struct Order {
         address maker;
@@ -29,11 +26,6 @@ library LibOrder {
         bytes data;
     }
 
-    struct MatchedAssets {
-        LibAsset.AssetType makeMatch;
-        LibAsset.AssetType takeMatch;
-    }
-
     function calculateRemaining(Order memory order, uint fill, bool isMakeFill) internal pure returns (uint makeValue, uint takeValue) {
         if (isMakeFill){
             makeValue = order.makeAsset.value.sub(fill);
@@ -44,44 +36,23 @@ library LibOrder {
         } 
     }
 
-    function hashKey(Order memory order, bool onChain) internal pure returns (bytes32) {
-        //order.data is in hash for V1 orders
-        if (order.dataType == LibOrderDataV1.V1 || order.dataType == DEFAULT_ORDER_TYPE){
-            if (onChain){
-                return keccak256(abi.encode(
-                    order.maker,
-                    LibAsset.hash(order.makeAsset.assetType),
-                    LibAsset.hash(order.takeAsset.assetType),
-                    order.salt,
-                    ON_CHAIN_ORDER
-                ));
-            } else {
-                return keccak256(abi.encode(
-                    order.maker,
-                    LibAsset.hash(order.makeAsset.assetType),
-                    LibAsset.hash(order.takeAsset.assetType),
-                    order.salt
-                ));
-            }
+    function hashKey(Order memory order) internal pure returns (bytes32) {
+        //order.data is in hash for V2 orders
+        if (order.dataType == LibOrderDataV2.V2){
+            return keccak256(abi.encode(
+                order.maker,
+                LibAsset.hash(order.makeAsset.assetType),
+                LibAsset.hash(order.takeAsset.assetType),
+                order.salt,
+                order.data
+            ));
         } else {
-            if (onChain) {
-                return keccak256(abi.encode(
-                    order.maker,
-                    LibAsset.hash(order.makeAsset.assetType),
-                    LibAsset.hash(order.takeAsset.assetType),
-                    order.salt,
-                    order.data,
-                    ON_CHAIN_ORDER
-                ));
-            } else {
-                return keccak256(abi.encode(
-                    order.maker,
-                    LibAsset.hash(order.makeAsset.assetType),
-                    LibAsset.hash(order.takeAsset.assetType),
-                    order.salt,
-                    order.data
-                ));
-            }
+            return keccak256(abi.encode(
+                order.maker,
+                LibAsset.hash(order.makeAsset.assetType),
+                LibAsset.hash(order.takeAsset.assetType),
+                order.salt
+            ));
         }
         
     }

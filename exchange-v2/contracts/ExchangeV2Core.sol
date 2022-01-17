@@ -137,7 +137,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibFee.MatchFees memory matchFees = getMatchFees(orderLeft, orderRight, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
-        
+
+        ITransferManager(raribleTransferManager).doTransfers{value : msg.value}(
+            LibAsset.Asset(makeMatch, newFill.leftValue),
+            LibAsset.Asset(takeMatch, newFill.rightValue),
+            leftDealData,
+            rightDealData,
+            orderLeft.maker,
+            orderRight.maker,
+            _msgSender()
+        );
+
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
         deleteFilledOrder(orderLeft, leftOrderKeyHash,  leftOrderData);
