@@ -24,7 +24,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
-    uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
     address public defaultFeeReceiver;
@@ -39,7 +38,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     ) internal initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        protocolFee = newProtocolFee;
         defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
         __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
@@ -47,10 +45,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
 
     function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
         royaltiesRegistry = newRoyaltiesRegistry;
-    }
-
-    function setProtocolFee(uint newProtocolFee) external onlyOwner {
-        protocolFee = newProtocolFee;
     }
 
     function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {

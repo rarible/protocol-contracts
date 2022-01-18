@@ -11,12 +11,13 @@ import "@rarible/libraries/contracts/LibFee.sol";
 import "./EmptyGap.sol";
 import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
+import "@rarible/transfer-manager/contracts/ITransferExecutor.sol";
 
 //abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator, ITransferExecutor {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
-
+    uint public protocolFee;
     uint256 private constant UINT256_MAX = 2 ** 256 - 1;
 
     //state of the orders
@@ -37,26 +38,33 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event UpsertOrder(LibOrder.Order order);
 
     function __EchangeV2Core_init_unchained(
-        ITransferManager newRaribleTransferManager
+        ITransferManager newRaribleTransferManager,
+        uint newProtocolFee
     ) internal initializer {
         raribleTransferManager = newRaribleTransferManager;
+        protocolFee = newProtocolFee;
     }
 
     function setTransferManager(ITransferManager newRaribleTransferManager) external onlyOwner {
         raribleTransferManager = newRaribleTransferManager;
     }
 
+    function setProtocolFee(uint newProtocolFee) external onlyOwner {
+        protocolFee = newProtocolFee;
+    }
+
     /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
         require(order.salt != 0, "salt == 0");
         bytes32 orderKeyHash = LibOrder.hashKey(order, true);
-        LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
+//        LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
+        (LibDeal.Data memory dealData, bool makeFill) = LibOrderData.parse(order);
 
         //checking if order is correct
         require(_msgSender() == order.maker, "order.maker must be msg.sender");
-        require(orderNotFilled(order, orderKeyHash, dataNewOrder), "order already filled");
+        require(orderNotFilled(order, orderKeyHash, makeFill), "order already filled");
         
-        uint newTotal = getTotalValue(order, orderKeyHash, dataNewOrder);
+        uint newTotal = getTotalValue(order, orderKeyHash, dealData.originFees, makeFill);
 
         //value of makeAsset that needs to be transfered with tx 
         uint sentValue = newTotal;
@@ -64,7 +72,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         //return locked assets only for ETH_ASSET_CLASS for now
         if(checkOrderExistance(orderKeyHash) && order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             LibOrder.Order memory oldOrder = onChainOrders[orderKeyHash].order;
-            uint oldTotal = getTotalValue(oldOrder, orderKeyHash, LibOrderData.parse(oldOrder));
+            (LibDeal.Data memory dealData, bool makeFill) = LibOrderData.parse(oldOrder);
+            uint oldTotal = getTotalValue(oldOrder, orderKeyHash, dealData.originFees, makeFill);
             onChainOrders[orderKeyHash].order = order; //to prevent reentrancy
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
@@ -110,7 +119,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             delete onChainOrders[orderKeyHash]; //to prevent reentrancy
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, LibOrderData.parse(temp))), address(this), temp.maker, UNLOCK, TO_MAKER);
+                (LibDeal.Data memory dealData, bool makeFill) = LibOrderData.parse(temp);
+                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, dealData.originFees, makeFill)), address(this), temp.maker, UNLOCK, TO_MAKER);
             }
         } else {
             orderKeyHash = LibOrder.hashKey(order, false);
@@ -290,9 +300,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Calculates total make amount of order, including fees and fill
-    function getTotalValue(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal view returns(uint) {
-        (uint remainingMake, ) = LibOrder.calculateRemaining(order, getOrderFill(order, hash), dataOrder.isMakeFill);
-        uint totalAmount = calculateTotalAmount(remainingMake, getOrderProtocolFee(order, hash), dataOrder.originFees);
+    function getTotalValue(LibOrder.Order memory order, bytes32 hash, LibPart.Part[] memory originFees, bool makeFill) internal view returns(uint) {
+        (uint remainingMake, ) = LibOrder.calculateRemaining(order, getOrderFill(order, hash), makeFill);
+        uint totalAmount = calculateTotalAmount(remainingMake, getOrderProtocolFee(order, hash), originFees);
         return totalAmount;
     }
 
@@ -347,9 +357,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return false;
     }
 
-    function orderNotFilled(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal view returns(bool){
+    function orderNotFilled(LibOrder.Order memory order, bytes32 hash, bool isMakeFill) internal view returns(bool){
         uint value;
-        if (dataOrder.isMakeFill) {
+        if (isMakeFill) {
             value = order.makeAsset.value;
         } else { 
             value = order.takeAsset.value;
@@ -381,5 +391,28 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return result;
     }
 
-    uint256[48] private __gap;
+    function calculateTotalAmount(
+        uint amount,
+        uint feeOnTopBp,
+        LibPart.Part[] memory orderOriginFees
+    ) internal pure returns (uint total){
+        total = amount.add(amount.bp(feeOnTopBp));
+        for (uint256 i = 0; i < orderOriginFees.length; i++) {
+            total = total.add(amount.bp(orderOriginFees[i].value));
+        }
+    }
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) internal view returns(uint) {
+        if (isTheSameAsOnChain(order, hash)) {
+            return onChainOrders[hash].fee;
+        } else {
+            return protocolFee;
+        }
+    }
+
+    function getProtocolFee() internal view returns(uint) {
+        return protocolFee;
+    }
+
+    uint256[47] private __gap;
 }
