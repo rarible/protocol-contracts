@@ -3,16 +3,17 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./LibFill.sol";
-import "./LibOrder.sol";
+import "@rarible/libraries/contracts/LibFill.sol";
+import "@rarible/libraries/contracts/LibOrderData.sol";
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
-import "./TransferExecutor.sol";
-import "./ITransferManager.sol";
-import "./lib/LibTransfer.sol";
-import "./LibFee.sol";
+import "@rarible/libraries/contracts/LibFee.sol";
+import "./EmptyGap.sol";
+import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
+import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
+//abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
@@ -20,7 +21,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     //state of the orders
     mapping(bytes32 => uint) public fills; // take-side fills
-
+    ITransferManager public raribleTransferManager;
     //on-chain orders
     mapping(bytes32 => OrderAndFee) public onChainOrders;
 
@@ -34,7 +35,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
     event UpsertOrder(LibOrder.Order order);
-    
+
+    function __EchangeV2Core_init_unchained(
+        ITransferManager newRaribleTransferManager
+    ) internal initializer {
+        raribleTransferManager = newRaribleTransferManager;
+    }
+
+    function setTransferManager(ITransferManager newRaribleTransferManager) external onlyOwner {
+        raribleTransferManager = newRaribleTransferManager;
+    }
+
     /// @dev Creates new or updates an on-chain order
     function upsertOrder(LibOrder.Order memory order) external payable {
         require(order.salt != 0, "salt == 0");
@@ -130,19 +141,25 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function matchAndTransfer(LibOrder.Order memory orderLeft, bytes32 leftOrderKeyHash, LibOrder.Order memory orderRight, bytes32 rightOrderKeyHash) internal {
         LibOrder.MatchedAssets memory matchedAssets = matchAssets(orderLeft, orderRight);
 
-        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
-        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
+//        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
+//        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
+//
+//        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
 
-        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
+        (LibDeal.Data memory leftDealData,
+        LibDeal.Data memory rightDealData,
+        LibFill.FillResult memory newFill,
+        LibFill.IsMakeFill memory makeFill) = prepareData(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
 
         LibFee.MatchFees memory matchFees = getMatchFees(orderLeft, orderRight, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);
-        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
+//        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
 
-        ITransferManager(raribleTransferManager).doTransfers{value : msg.value}(
-            LibAsset.Asset(makeMatch, newFill.leftValue),
-            LibAsset.Asset(takeMatch, newFill.rightValue),
+        (uint totalMakeValue, uint totalTakeValue) = ITransferManager(raribleTransferManager).doTransfers{value : msg.value}(
+            LibAsset.Asset(matchedAssets.makeMatch, newFill.leftValue),
+            LibAsset.Asset(matchedAssets.takeMatch, newFill.rightValue),
             leftDealData,
             rightDealData,
+            matchFees,
             orderLeft.maker,
             orderRight.maker,
             _msgSender()
@@ -150,10 +167,26 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
-        deleteFilledOrder(orderLeft, leftOrderKeyHash,  leftOrderData);
-        deleteFilledOrder(orderRight, rightOrderKeyHash, rightOrderData);
+        deleteFilledOrder(orderLeft, leftOrderKeyHash,  makeFill.leftMake);
+        deleteFilledOrder(orderRight, rightOrderKeyHash, makeFill.rightMake);
 
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, matchedAssets.makeMatch, matchedAssets.takeMatch);
+    }
+
+    function prepareData(
+        LibOrder.Order memory orderLeft,
+        LibOrder.Order memory orderRight,
+        bytes32 leftOrderKeyHash,
+        bytes32 rightOrderKeyHash
+    ) internal returns (
+        LibDeal.Data memory leftDealData,
+        LibDeal.Data memory rightDealData,
+        LibFill.FillResult memory newFill,
+        LibFill.IsMakeFill memory makeFill
+    ) {
+        (leftDealData, makeFill.leftMake) = LibOrderData.parse(orderLeft);
+        (rightDealData, makeFill.rightMake) = LibOrderData.parse(orderRight);
+        newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, makeFill.leftMake, makeFill.rightMake);
     }
 
     function getFillSetNew(
@@ -161,17 +194,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrder.Order memory orderRight,
         bytes32 leftOrderKeyHash,
         bytes32 rightOrderKeyHash,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        bool leftFill,
+        bool rightFill
     ) internal returns (LibFill.FillResult memory) {
         uint leftOrderFill = getOrderFill(orderLeft, leftOrderKeyHash);
         uint rightOrderFill = getOrderFill(orderRight, rightOrderKeyHash);
-        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftOrderData.isMakeFill, rightOrderData.isMakeFill);
+        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftFill, rightFill);
 
         require(newFill.rightValue > 0 && newFill.leftValue > 0, "nothing to fill");
 
         if (orderLeft.salt != 0) {
-            if (leftOrderData.isMakeFill) {
+            if (leftFill) {
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.leftValue);
             } else {
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.rightValue);
@@ -179,7 +212,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
 
         if (orderRight.salt != 0) {
-            if (rightOrderData.isMakeFill) {
+            if (rightFill) {
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.rightValue);
             } else {
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
@@ -261,13 +294,13 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /// @dev Checks if order is fully filled, if true then deletes it
-    function deleteFilledOrder(LibOrder.Order memory order, bytes32 hash, LibOrderDataV2.DataV2 memory dataOrder) internal {
+    function deleteFilledOrder(LibOrder.Order memory order, bytes32 hash, bool makeFill) internal {
         if (!isTheSameAsOnChain(order, hash)) {
             return;
         }
 
         uint value;
-        if (dataOrder.isMakeFill) {
+        if (makeFill) {
             value = order.makeAsset.value;
         } else {
             value = order.takeAsset.value;

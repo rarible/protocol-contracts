@@ -14,6 +14,11 @@ library LibFill {
         uint rightValue;
     }
 
+    struct IsMakeFill {
+        bool leftMake;
+        bool rightMake;
+    }
+
     /**
      * @dev Should return filled values
      * @param leftOrder left order
