@@ -11,6 +11,7 @@ import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "@rarible/libraries/contracts/LibFill.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
+import "@rarible/libraries/contracts/LibFee.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
@@ -73,47 +74,64 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         LibAsset.Asset memory takeMatch,
         LibDeal.Data memory left,
         LibDeal.Data memory right,
-        address leftMaker,
-        address rightMaker,
-        address originalMessageSender
-    ) override payable external onlyOperator {
-        LibFeeSide.FeeSide feeSide = LibFeeSide.getFeeSide(makeMatch.assetType.assetClass, takeMatch.assetType.assetClass);
-        uint totalMakeValue = makeMatch.value;
-        uint totalTakeValue = takeMatch.value;
+        LibFee.TransferAddresses memory addresses,
+        LibFee.MatchFees memory matchFees
+    ) override payable external onlyOperator returns (uint totalMakeValue, uint totalTakeValue) {
+        totalMakeValue = makeMatch.value;
+        totalTakeValue = takeMatch.value;
 
-        if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeValue = doTransfersWithFees(makeMatch.value, leftMaker, left, right, makeMatch.assetType, takeMatch.assetType, TO_TAKER);
-            transferPayouts(takeMatch.assetType, takeMatch.value, rightMaker, left.payouts, TO_MAKER);
-        } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeValue = doTransfersWithFees(takeMatch.value, rightMaker, right, left, takeMatch.assetType, makeMatch.assetType, TO_MAKER);
-            transferPayouts(makeMatch.assetType, makeMatch.value, leftMaker, right.payouts, TO_TAKER);
+        if (matchFees.feeSide == LibFeeSide.FeeSide.MAKE) {
+            totalMakeValue = doTransfersWithFees(
+                makeMatch.value,
+                addresses.leftMaker,
+                matchFees,
+                left,
+                right,
+                makeMatch.assetType,
+                takeMatch.assetType,
+                TO_TAKER
+            );
+            transferPayouts(takeMatch.assetType, takeMatch.value, addresses.rightMaker, left.payouts, TO_MAKER);
+        } else if (matchFees.feeSide == LibFeeSide.FeeSide.TAKE) {
+            totalTakeValue = doTransfersWithFees(
+                takeMatch.value,
+                addresses.rightMaker,
+                matchFees,
+                right,
+                left,
+                takeMatch.assetType,
+                makeMatch.assetType,
+                TO_MAKER
+            );
+            transferPayouts(makeMatch.assetType, makeMatch.value, addresses.leftMaker, right.payouts, TO_TAKER);
         } else {
-            transferPayouts(makeMatch.assetType, makeMatch.value, leftMaker, right.payouts, TO_TAKER);
-            transferPayouts(takeMatch.assetType, takeMatch.value, rightMaker, left.payouts, TO_MAKER);
+            transferPayouts(makeMatch.assetType, makeMatch.value, addresses.leftMaker, right.payouts, TO_TAKER);
+            transferPayouts(takeMatch.assetType, takeMatch.value, addresses.rightMaker, left.payouts, TO_MAKER);
         }
 
         /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
         if (makeMatch.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
             require(msg.value >= totalMakeValue, "not enough eth");
-            originalMessageSender.transferEth(msg.value.sub(totalMakeValue));
+            addresses.originalMessageSender.transferEth(msg.value.sub(totalMakeValue));
         } else if (takeMatch.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
-            originalMessageSender.transferEth(msg.value.sub(totalTakeValue));
+            addresses.originalMessageSender.transferEth(msg.value.sub(totalTakeValue));
         }
     }
 
     function doTransfersWithFees(
         uint amount,
         address from,
+        LibFee.MatchFees memory matchProtocolFee,
         LibDeal.Data memory dataCalculate,
         LibDeal.Data memory dataNft,
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, protocolFee, dataCalculate.originFees);
-        uint rest = transferProtocolFee(totalAmount, amount, from, matchCalculate, transferDirection);
+        totalAmount = calculateTotalAmount(amount, matchProtocolFee.feeSideProtocolFee, dataCalculate.originFees);
+        uint rest = transferProtocolFee(totalAmount, amount, from, matchProtocolFee, matchCalculate, transferDirection);
         rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
         (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
         (rest,) = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
@@ -124,10 +142,11 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         uint totalAmount,
         uint amount,
         address from,
+        LibFee.MatchFees memory matchProtocolFee,
         LibAsset.AssetType memory matchCalculate,
         bytes4 transferDirection
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFee.mul(2));
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, matchProtocolFee.feeSideProtocolFee + matchProtocolFee.nftSideProtocolFee);
         if (fee > 0) {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {

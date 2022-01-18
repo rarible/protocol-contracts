@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
+import "@rarible/libraries/contracts/LibFee.sol";
 
 interface ITransferManager {
     function doTransfers(
@@ -12,8 +13,7 @@ interface ITransferManager {
         LibAsset.Asset memory takeMatch,
         LibDeal.Data memory left,
         LibDeal.Data memory right,
-        address leftMaker,
-        address rightMaker,
-        address originalMessageSender
-    ) payable external;
+        LibFee.TransferAddresses memory addresses,
+        LibFee.MatchFees memory matchFees
+    ) payable external returns (uint totalMakeValue, uint totalTakeValue);
 }

@@ -12,4 +12,10 @@ library LibFee {
         uint nftSideProtocolFee;
         LibFeeSide.FeeSide feeSide;
     }
+
+    struct TransferAddresses {
+        address leftMaker;
+        address rightMaker;
+        address originalMessageSender;
+    }
 }
