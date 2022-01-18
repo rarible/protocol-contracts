@@ -9,11 +9,9 @@ import "@rarible/libraries/contracts/LibFee.sol";
 
 interface ITransferManager {
     function doTransfers(
-        LibAsset.Asset memory makeMatch,
-        LibAsset.Asset memory takeMatch,
-        LibDeal.Data memory left,
-        LibDeal.Data memory right,
-        LibFee.TransferAddresses memory addresses,
-        LibFee.MatchFees memory matchFees
+        LibDeal.DealSide memory left,
+        LibDeal.DealSide memory  right,
+        LibFeeSide.FeeSide feeSide,
+        address initialSender
     ) payable external returns (uint totalMakeValue, uint totalTakeValue);
 }

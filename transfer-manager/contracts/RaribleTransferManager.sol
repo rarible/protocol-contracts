@@ -30,7 +30,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     mapping(address => address) public feeReceivers;
 
     function __RaribleTransferManager_init_unchained(
-        uint newProtocolFee,
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
         INftTransferProxy transferProxy,
@@ -64,83 +63,67 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     }
 
     function doTransfers(
-        LibAsset.Asset memory makeMatch,
-        LibAsset.Asset memory takeMatch,
-        LibDeal.Data memory left,
-        LibDeal.Data memory right,
-        LibFee.TransferAddresses memory addresses,
-        LibFee.MatchFees memory matchFees
-    ) override payable external onlyOperator returns (uint totalMakeValue, uint totalTakeValue) {
-        totalMakeValue = makeMatch.value;
-        totalTakeValue = takeMatch.value;
+        LibDeal.DealSide memory left,
+        LibDeal.DealSide memory  right,
+        LibFeeSide.FeeSide feeSide,
+        address initialSender
+    ) override payable external onlyOperator returns (uint totalLeftValue, uint totalRightValue) {
+        totalLeftValue = left.value;
+        totalRightValue = right.value;
 
-        if (matchFees.feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalMakeValue = doTransfersWithFees(
-                makeMatch.value,
-                addresses.leftMaker,
-                matchFees,
+        if (feeSide == LibFeeSide.FeeSide.MAKE) {
+            totalLeftValue = doTransfersWithFees(
                 left,
                 right,
-                makeMatch.assetType,
-                takeMatch.assetType,
                 TO_TAKER
             );
-            transferPayouts(takeMatch.assetType, takeMatch.value, addresses.rightMaker, left.payouts, TO_MAKER);
-        } else if (matchFees.feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalTakeValue = doTransfersWithFees(
-                takeMatch.value,
-                addresses.rightMaker,
-                matchFees,
+            transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
+        } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
+            totalRightValue = doTransfersWithFees(
                 right,
                 left,
-                takeMatch.assetType,
-                makeMatch.assetType,
                 TO_MAKER
             );
-            transferPayouts(makeMatch.assetType, makeMatch.value, addresses.leftMaker, right.payouts, TO_TAKER);
+            transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
         } else {
-            transferPayouts(makeMatch.assetType, makeMatch.value, addresses.leftMaker, right.payouts, TO_TAKER);
-            transferPayouts(takeMatch.assetType, takeMatch.value, addresses.rightMaker, left.payouts, TO_MAKER);
+            transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
+            transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
         }
 
         /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
-        if (makeMatch.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(takeMatch.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
-            require(msg.value >= totalMakeValue, "not enough eth");
-            addresses.originalMessageSender.transferEth(msg.value.sub(totalMakeValue));
-        } else if (takeMatch.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalTakeValue, "not enough eth");
-            addresses.originalMessageSender.transferEth(msg.value.sub(totalTakeValue));
+        if (left.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(right.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
+            require(msg.value >= totalLeftValue, "not enough eth");
+            initialSender.transferEth(msg.value.sub(totalLeftValue));
+        } else if (right.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(msg.value >= totalRightValue, "not enough eth");
+            initialSender.transferEth(msg.value.sub(totalRightValue));
         }
     }
 
     function doTransfersWithFees(
-        uint amount,
-        address from,
-        LibFee.MatchFees memory matchProtocolFee,
-        LibDeal.Data memory dataCalculate,
-        LibDeal.Data memory dataNft,
-        LibAsset.AssetType memory matchCalculate,
-        LibAsset.AssetType memory matchNft,
+        LibDeal.DealSide memory calculateSide,
+        LibDeal.DealSide memory nftSide,
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(amount, matchProtocolFee.feeSideProtocolFee, dataCalculate.originFees);
-        uint rest = transferProtocolFee(totalAmount, amount, from, matchProtocolFee, matchCalculate, transferDirection);
-        rest = transferRoyalties(matchCalculate, matchNft, rest, amount, from, transferDirection);
-        (rest,) = transferFees(matchCalculate, rest, amount, dataCalculate.originFees, from, transferDirection, ORIGIN);
-        (rest,) = transferFees(matchCalculate, rest, amount, dataNft.originFees, from, transferDirection, ORIGIN);
-        transferPayouts(matchCalculate, rest, from, dataNft.payouts, transferDirection);
+        totalAmount = calculateTotalAmount(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees);
+        uint rest = transferProtocolFee(totalAmount, calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
+        rest = transferRoyalties(calculateSide.assetType, nftSide.assetType, rest, calculateSide.value, calculateSide.sideAddress, transferDirection);
+        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, calculateSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
+        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, nftSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
+        transferPayouts(calculateSide.assetType, rest, calculateSide.sideAddress, nftSide.payouts, transferDirection);
     }
 
     function transferProtocolFee(
         uint totalAmount,
         uint amount,
         address from,
-        LibFee.MatchFees memory matchProtocolFee,
+        uint feeSideProtocolFee,
+        uint nftSideProtocolFee,
         LibAsset.AssetType memory matchCalculate,
         bytes4 transferDirection
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, matchProtocolFee.feeSideProtocolFee + matchProtocolFee.nftSideProtocolFee);
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, feeSideProtocolFee + nftSideProtocolFee);
         if (fee > 0) {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
