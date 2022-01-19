@@ -8,15 +8,18 @@ import "@rarible/libraries/contracts/LibOrderData.sol";
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
 import "@rarible/libraries/contracts/LibFee.sol";
+import "@rarible/libraries/contracts/LibDeal.sol";
 import "./EmptyGap.sol";
 import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
-import "@rarible/transfer-manager/contracts/ITransferExecutor.sol";
+import "@rarible/transfer-manager/contracts/TransferTypesDirections.sol";
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
+import "@rarible/libraries/contracts/BpLibrary.sol";
 
-//abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator, ITransferExecutor {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, EmptyGap2, TransferTypesDirections {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
+    using BpLibrary for uint;
     uint public protocolFee;
     uint256 private constant UINT256_MAX = 2 ** 256 - 1;
 
@@ -57,14 +60,13 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function upsertOrder(LibOrder.Order memory order) external payable {
         require(order.salt != 0, "salt == 0");
         bytes32 orderKeyHash = LibOrder.hashKey(order, true);
-//        LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
-        (LibDeal.Data memory dealData, bool makeFill) = LibOrderData.parse(order);
+        LibOrderDataV2.DataV2 memory dataNewOrder = LibOrderData.parse(order);
 
         //checking if order is correct
         require(_msgSender() == order.maker, "order.maker must be msg.sender");
-        require(orderNotFilled(order, orderKeyHash, makeFill), "order already filled");
+        require(orderNotFilled(order, orderKeyHash, dataNewOrder.isMakeFill), "order already filled");
         
-        uint newTotal = getTotalValue(order, orderKeyHash, dealData.originFees, makeFill);
+        uint newTotal = getTotalValue(order, orderKeyHash, dataNewOrder.originFees, dataNewOrder.isMakeFill);
 
         //value of makeAsset that needs to be transfered with tx 
         uint sentValue = newTotal;
@@ -72,8 +74,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         //return locked assets only for ETH_ASSET_CLASS for now
         if(checkOrderExistance(orderKeyHash) && order.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             LibOrder.Order memory oldOrder = onChainOrders[orderKeyHash].order;
-            (LibDeal.Data memory dealData, bool makeFill) = LibOrderData.parse(oldOrder);
-            uint oldTotal = getTotalValue(oldOrder, orderKeyHash, dealData.originFees, makeFill);
+            LibOrderDataV2.DataV2 memory dataOldOrder = LibOrderData.parse(oldOrder);
+            uint oldTotal = getTotalValue(oldOrder, orderKeyHash, dataOldOrder.originFees, dataOldOrder.isMakeFill);
             onChainOrders[orderKeyHash].order = order; //to prevent reentrancy
 
             sentValue = (newTotal > oldTotal) ? newTotal.sub(oldTotal) : 0;
@@ -119,8 +121,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             delete onChainOrders[orderKeyHash]; //to prevent reentrancy
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-                (LibDeal.Data memory dealData, bool makeFill) = LibOrderData.parse(temp);
-                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, dealData.originFees, makeFill)), address(this), temp.maker, UNLOCK, TO_MAKER);
+                LibOrderDataV2.DataV2 memory dataTmpOrder = LibOrderData.parse(temp);
+                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, dataTmpOrder.originFees, dataTmpOrder.isMakeFill)), address(this), temp.maker, UNLOCK, TO_MAKER);
             }
         } else {
             orderKeyHash = LibOrder.hashKey(order, false);
@@ -151,55 +153,27 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function matchAndTransfer(LibOrder.Order memory orderLeft, bytes32 leftOrderKeyHash, LibOrder.Order memory orderRight, bytes32 rightOrderKeyHash) internal {
         LibOrder.MatchedAssets memory matchedAssets = matchAssets(orderLeft, orderRight);
 
-//        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
-//        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
-//
-//        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
+        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
+        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
 
-        (LibDeal.Data memory leftDealData,
-        LibDeal.Data memory rightDealData,
-        LibFill.FillResult memory newFill,
-        LibFill.IsMakeFill memory makeFill) = prepareData(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
+        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData.isMakeFill, rightOrderData.isMakeFill);
 
         LibFee.MatchFees memory matchFees = getMatchFees(orderLeft, orderRight, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);
 //        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
 
-        //        LibFee.TransferAddresses memory adresses = LibFee.TransferAddresse();
         (uint totalMakeValue, uint totalTakeValue) = ITransferManager(raribleTransferManager).doTransfers{value : msg.value}(
-            LibAsset.Asset(matchedAssets.makeMatch, newFill.leftValue),
-            LibAsset.Asset(matchedAssets.takeMatch, newFill.rightValue),
-            leftDealData,
-            rightDealData,
-//            orderLeft.maker,
-//            orderRight.maker,
-//            _msgSender(),
-//            adresses,
-            LibFee.TransferAddresses(orderLeft.maker, orderRight.maker, _msgSender()),
-            matchFees
+            LibDeal.DealSide(matchedAssets.makeMatch, newFill.leftValue, leftOrderData.payouts, leftOrderData.originFees, orderLeft.maker, matchFees.feeSideProtocolFee),
+            LibDeal.DealSide(matchedAssets.takeMatch, newFill.rightValue, rightOrderData.payouts, rightOrderData.originFees, orderRight.maker, matchFees.nftSideProtocolFee ),
+            matchFees.feeSide,
+            _msgSender()
         );
 
         returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
 
-        deleteFilledOrder(orderLeft, leftOrderKeyHash,  makeFill.leftMake);
-        deleteFilledOrder(orderRight, rightOrderKeyHash, makeFill.rightMake);
+        deleteFilledOrder(orderLeft, leftOrderKeyHash,  leftOrderData.isMakeFill);
+        deleteFilledOrder(orderRight, rightOrderKeyHash, rightOrderData.isMakeFill);
 
         emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, matchedAssets.makeMatch, matchedAssets.takeMatch);
-    }
-
-    function prepareData(
-        LibOrder.Order memory orderLeft,
-        LibOrder.Order memory orderRight,
-        bytes32 leftOrderKeyHash,
-        bytes32 rightOrderKeyHash
-    ) internal returns (
-        LibDeal.Data memory leftDealData,
-        LibDeal.Data memory rightDealData,
-        LibFill.FillResult memory newFill,
-        LibFill.IsMakeFill memory makeFill
-    ) {
-        (leftDealData, makeFill.leftMake) = LibOrderData.parse(orderLeft);
-        (rightDealData, makeFill.rightMake) = LibOrderData.parse(orderRight);
-        newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, makeFill.leftMake, makeFill.rightMake);
     }
 
     function getFillSetNew(
@@ -378,15 +352,18 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     ) internal view returns(LibFee.MatchFees memory){
         LibFee.MatchFees memory result;
         result.feeSide = LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass);
-        uint leftFee = getOrderProtocolFee(leftOrder, leftKeyHash);
-        uint rightFee = getOrderProtocolFee(rightOrder, rightKeyHash);
-        if (result.feeSide == LibFeeSide.FeeSide.MAKE) {
-            result.feeSideProtocolFee = leftFee;
-            result.nftSideProtocolFee = rightFee;
-        } else if (result.feeSide == LibFeeSide.FeeSide.TAKE) {
-            result.feeSideProtocolFee = rightFee;
-            result.nftSideProtocolFee = leftFee;
-        }
+        result.feeSideProtocolFee = getOrderProtocolFee(leftOrder, leftKeyHash);
+        result.nftSideProtocolFee = getOrderProtocolFee(rightOrder, rightKeyHash);
+        //comment because not needed
+//        uint leftFee = getOrderProtocolFee(leftOrder, leftKeyHash);
+//        uint rightFee = getOrderProtocolFee(rightOrder, rightKeyHash);
+//        if (result.feeSide == LibFeeSide.FeeSide.MAKE) {
+//            result.feeSideProtocolFee = leftFee;
+//            result.nftSideProtocolFee = rightFee;
+//        } else if (result.feeSide == LibFeeSide.FeeSide.TAKE) {
+//            result.feeSideProtocolFee = rightFee;
+//            result.nftSideProtocolFee = leftFee;
+//        }
 
         return result;
     }

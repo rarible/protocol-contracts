@@ -14,13 +14,12 @@ import "../../../contracts/OrderValidator.sol";
 contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
 
     function __RaribleTransferManagerTest_init_unchained(
-        uint newProtocolFee,
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
         INftTransferProxy transferProxy,
         IERC20TransferProxy erc20TransferProxy
     )external initializer {
-        __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
         __OrderValidator_init_unchained();
     }
 
