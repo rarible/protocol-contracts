@@ -72,18 +72,10 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         totalRightValue = right.value;
 
         if (feeSide == LibFeeSide.FeeSide.MAKE) {
-            totalLeftValue = doTransfersWithFees(
-                left,
-                right,
-                TO_TAKER
-            );
+            totalLeftValue = doTransfersWithFees(left, right, TO_TAKER);
             transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
         } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
-            totalRightValue = doTransfersWithFees(
-                right,
-                left,
-                TO_MAKER
-            );
+            totalRightValue = doTransfersWithFees(right, left, TO_MAKER);
             transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
         } else {
             transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
