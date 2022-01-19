@@ -19,7 +19,9 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         INftTransferProxy transferProxy,
         IERC20TransferProxy erc20TransferProxy
     )external initializer {
-        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+//        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
     }
 

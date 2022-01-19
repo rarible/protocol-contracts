@@ -23,6 +23,9 @@ contract ExchangeMetaV2 is ExchangeV2Core, EmptyGap, EIP712MetaTransaction {
         return super._msgSender();
     }
 
+    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
+        return transferManager;
+    }
 //    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
 //        if (isTheSameAsOnChain(order, hash)) {
 //            return onChainOrders[hash].fee;

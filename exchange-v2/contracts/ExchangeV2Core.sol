@@ -12,11 +12,12 @@ import "@rarible/libraries/contracts/LibDeal.sol";
 import "./EmptyGap.sol";
 import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
-import "@rarible/transfer-manager/contracts/TransferTypesDirections.sol";
-import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
+//import "@rarible/transfer-manager/contracts/TransferTypesDirections.sol";
+import "@rarible/transfer-manager/contracts/InternalTransferExecutor.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, EmptyGap2, TransferTypesDirections {
+//abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, EmptyGap2, TransferTypesDirections {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator, EmptyGap3, InternalTransferExecutor {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
     using BpLibrary for uint;
@@ -25,9 +26,18 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     //state of the orders
     mapping(bytes32 => uint) public fills; // take-side fills
-    ITransferManager public raribleTransferManager;
+    ITransferManager public transferManager;
     //on-chain orders
     mapping(bytes32 => OrderAndFee) public onChainOrders;
+    //transfer types
+    bytes4 constant LOCK = bytes4(keccak256("LOCK"));
+    bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
+
+    //transfer directions:
+    bytes4 constant TO_LOCK = bytes4(keccak256("TO_LOCK"));
+    bytes4 constant TO_SELLER = bytes4(keccak256("TO_SELLER"));
+    bytes4 constant TO_BIDDER = bytes4(keccak256("TO_BIDDER"));
+    bytes4 constant TO_MAKER = bytes4(keccak256("TO_MAKER"));
 
     //struct to hold on-chain order and its protocol fee, fee is updated if order is updated
     struct OrderAndFee {
@@ -44,12 +54,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         ITransferManager newRaribleTransferManager,
         uint newProtocolFee
     ) internal initializer {
-        raribleTransferManager = newRaribleTransferManager;
+        transferManager = newRaribleTransferManager;
         protocolFee = newProtocolFee;
     }
 
     function setTransferManager(ITransferManager newRaribleTransferManager) external onlyOwner {
-        raribleTransferManager = newRaribleTransferManager;
+        transferManager = newRaribleTransferManager;
     }
 
     function setProtocolFee(uint newProtocolFee) external onlyOwner {
@@ -93,7 +103,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(msg.value >= sentValue, "not enough eth");
 
             if (sentValue > 0) {
-                emit Transfer(LibAsset.Asset(order.makeAsset.assetType, sentValue), order.maker, address(this), TO_LOCK, LOCK);
+//TODO open emit event                emit Transfer(LibAsset.Asset(order.makeAsset.assetType, sentValue), order.maker, address(this), TO_LOCK, LOCK);
             }
 
             //returning "change" ETH if msg.value > sentValue
@@ -161,7 +171,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibFee.MatchFees memory matchFees = getMatchFees(orderLeft, orderRight, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);
 //        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
 
-        (uint totalMakeValue, uint totalTakeValue) = ITransferManager(raribleTransferManager).doTransfers{value : msg.value}(
+        (uint totalMakeValue, uint totalTakeValue) = ITransferManager(transferManager).doTransfers{value : msg.value}(
             LibDeal.DealSide(matchedAssets.makeMatch, newFill.leftValue, leftOrderData.payouts, leftOrderData.originFees, orderLeft.maker, matchFees.feeSideProtocolFee),
             LibDeal.DealSide(matchedAssets.takeMatch, newFill.rightValue, rightOrderData.payouts, rightOrderData.originFees, orderRight.maker, matchFees.nftSideProtocolFee ),
             matchFees.feeSide,

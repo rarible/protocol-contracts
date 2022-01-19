@@ -16,7 +16,11 @@ contract ExchangeV2 is ExchangeV2Core, EmptyGap {
         __OrderValidator_init_unchained();
         __EchangeV2Core_init_unchained(newRaribleTransferManager, newProtocolFee);
     }
-    
+
+    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
+        return transferManager;
+    }
+
 //    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
 //        if (isTheSameAsOnChain(order, hash)) {
 //            return onChainOrders[hash].fee;
