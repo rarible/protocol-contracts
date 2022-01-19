@@ -17,10 +17,8 @@ import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./TransferExecutor.sol";
 import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
-import "./TransferTypesDirections.sol";
 
-
-contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole, TransferTypesDirections {
+contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
