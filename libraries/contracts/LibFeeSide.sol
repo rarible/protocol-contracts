@@ -6,6 +6,7 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 library LibFeeSide {
 
+    //todo this should be changed to LEFT/RIGHT? MAKE/TAKE is only for Orders, where are maker and taker
     enum FeeSide {NONE, MAKE, TAKE}
 
     function getFeeSide(bytes4 make, bytes4 take) internal pure returns (FeeSide) {

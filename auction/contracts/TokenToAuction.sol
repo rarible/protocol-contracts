@@ -14,8 +14,7 @@ contract TokenToAuction {
     }
 
     /// @dev sets auction id for token address and token id
-    function setAuctionForToken(LibAsset.Asset memory asset, uint auctionId) internal {
-        (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
+    function setAuctionForToken(address token, uint tokenId, uint auctionId) internal {
         tokenToAuctionId[token][tokenId] = auctionId;
     }
 

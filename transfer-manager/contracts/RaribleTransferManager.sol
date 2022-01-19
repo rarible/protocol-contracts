@@ -30,17 +30,24 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     address public defaultFeeReceiver;
     mapping(address => address) public feeReceivers;
 
-    function __RaribleTransferManager_init_unchained(
+    function __RaribleTransferManager_init(
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
         INftTransferProxy transferProxy,
         IERC20TransferProxy erc20TransferProxy
-    ) internal initializer {
+    ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
+        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
+    }
+
+    function __RaribleTransferManager_init_unchained(
+        address newDefaultFeeReceiver,
+        IRoyaltiesProvider newRoyaltiesProvider
+    ) internal initializer {
         defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
-        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
     }
 
     function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
@@ -62,6 +69,19 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
         return defaultFeeReceiver;
     }
+
+    function executeTransfer(
+        LibAsset.Asset memory asset,
+        address from,
+        address to,
+        bytes4 transferDirection,
+        bytes4 transferType
+    ) override external onlyOperator {
+        require(asset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "ETH not supported");
+        transfer(asset, from, to, transferDirection, transferType);
+    }
+
+    event Test(LibDeal.DealSide side);
 
     function doTransfers(
         LibDeal.DealSide memory left,
@@ -87,10 +107,16 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         if (left.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(right.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
             require(msg.value >= totalLeftValue, "not enough eth");
-            initialSender.transferEth(msg.value.sub(totalLeftValue));
+            uint256 change = msg.value.sub(totalLeftValue);
+            if (change > 0) {
+                initialSender.transferEth(change);
+            }
         } else if (right.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalRightValue, "not enough eth");
-            initialSender.transferEth(msg.value.sub(totalRightValue));
+            uint256 change = msg.value.sub(totalRightValue);
+            if (change > 0) {
+                initialSender.transferEth(change);
+            }
         }
     }
 
@@ -188,6 +214,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         LibPart.Part[] memory payouts,
         bytes4 transferDirection
     ) internal {
+        require(payouts.length > 0, "transferPayouts: nothing to transfer");
         uint sumBps = 0;
         uint restValue = amount;
         for (uint256 i = 0; i < payouts.length - 1; i++) {
@@ -210,7 +237,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) internal pure returns (uint total){
+    ) override public pure returns (uint total) {
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));

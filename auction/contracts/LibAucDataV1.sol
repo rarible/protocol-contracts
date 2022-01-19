@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/LibOrderDataV2.sol";
+import "@rarible/royalties/contracts/LibPart.sol";
 
 /// @dev library that works with data field of Auction struct
 library LibAucDataV1 {
@@ -27,21 +27,8 @@ library LibAucDataV1 {
     function parse(bytes memory data, bytes4 dataType) internal pure returns (DataV1 memory aucData) {
         if (dataType == V1) {
             aucData = abi.decode(data, (DataV1));
-        }
-    }
-
-    /// @dev returns payouts and originFees from Auction data
-    function getPaymentData(bytes memory data, bytes4 dataType) internal pure returns (LibOrderDataV2.DataV2 memory payment){
-        if (dataType == V1) {
-            DataV1 memory aucData = abi.decode(data, (DataV1));
-            payment = LibOrderDataV2.DataV2(aucData.payouts, aucData.originFees, false);
-        }
-    }
-    
-    /// @dev returns originFees from Auction data
-    function getOrigin(bytes memory data, bytes4 dataType) internal pure returns (LibPart.Part[] memory originFees){
-        if (dataType == V1) {
-            originFees = (abi.decode(data, (DataV1))).originFees;
+        } else {
+            revert("auction data type not supported");
         }
     }
 }

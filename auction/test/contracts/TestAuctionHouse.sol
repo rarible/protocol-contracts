@@ -4,6 +4,7 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "../../contracts/AuctionHouse.sol";
+import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
 
 contract TestAuctionHouse is AuctionHouse {
 
@@ -25,7 +26,4 @@ contract TestAuctionHouse is AuctionHouse {
       emit timeStamp(block.timestamp);
     }
 
-    function getAuction(uint _auctionId) public view returns(Auction memory){
-      return auctions[_auctionId];
-    }
 }

@@ -55,7 +55,7 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        __RaribleTransferManager_init_unchained(newCommunityWallet, newRoyaltiesProvider, _transferProxy, _erc20TransferProxy);
-        __OrderValidator_init_unchained();
+        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newCommunityWallet, newRoyaltiesProvider);
     }
 }

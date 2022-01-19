@@ -5,9 +5,11 @@ const TestERC1155 = artifacts.require("TestERC1155.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestAuctionHouse = artifacts.require("TestAuctionHouse");
+const RaribleTransferManager = artifacts.require("RaribleTransferManager");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry");
 const Wrapper = artifacts.require("Wrapper");
 const PartyBidTest = artifacts.require("PartyBidTest");
+const FaultyBidder = artifacts.require("FaultyBidder");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -23,6 +25,10 @@ contract("AuctionHouse", accounts => {
   let transferProxy;
   let erc20TransferProxy;
   let testAuctionHouse;
+  let erc20Token;
+  let erc721;
+  let erc1155;
+  let transferManager;
 
   const erc721TokenId1 = 53;
   const erc1155TokenId1 = 54;
@@ -39,9 +45,12 @@ contract("AuctionHouse", accounts => {
 
     //royaltiesRegistry
     royaltiesRegistry = await TestRoyaltiesRegistry.new()
+    transferManager = await RaribleTransferManager.new();
+    await transferManager.__RaribleTransferManager_init(protocol, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address);
 
     /*Auction*/
-    testAuctionHouse = await deployProxy(TestAuctionHouse, [transferProxy.address, erc20TransferProxy.address, 300, protocol, royaltiesRegistry.address], { initializer: "__AuctionHouse_init" });
+    testAuctionHouse = await deployProxy(TestAuctionHouse, [transferProxy.address, erc20TransferProxy.address, transferManager.address, 300], { initializer: "__AuctionHouse_init" });
+    await transferManager.addOperator(testAuctionHouse.address);
   });
 
   describe("creation", () => {
@@ -149,8 +158,7 @@ contract("AuctionHouse", accounts => {
       assert.equal((await erc20Token.balanceOf(testAuctionHouse.address)).toString(), "153");
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address);
 
-      await erc20Token.mint(accounts[3], 1000);
-      await erc20Token.approve(erc20TransferProxy.address, 1000, { from: accounts[3] });
+      await prepareERC20(accounts[3], 1000, false)
 
       bid = { amount: 200, dataType: V1, data: bidDataV1 };
       const txBid = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[3] });
@@ -196,9 +204,7 @@ contract("AuctionHouse", accounts => {
       await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 12);
 
-      await erc20Token.mint(accounts[7], 100);
-      await erc20Token.approve(erc20TransferProxy.address, 100, { from: accounts[7] });
-
+      await prepareERC20(accounts[7], 100, false)
       bid = { amount: 20, dataType: V1, data: bidDataV1 };
       const txBuyOut = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[7] });
       truffleAssert.eventEmitted(txBuyOut, 'AuctionFinished', (ev) => {
@@ -295,9 +301,8 @@ contract("AuctionHouse", accounts => {
       let resultPutBid = await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 97);
       assert.equal(await erc20Token.balanceOf(buyer), 3);
-
-      await erc20Token.mint(accounts[4], 1000);
-      await erc20Token.approve(erc20TransferProxy.address, 1000, { from: accounts[4] });
+      
+      await prepareERC20(accounts[4], 1000, false)
       bid = { amount: 100, dataType: V1, data: bidDataV1 };
       let resultPayOutAuction = await testAuctionHouse.buyOut(auctionId, bid, { from: accounts[4] }); //accounts[4] buyOut
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
@@ -601,6 +606,50 @@ contract("AuctionHouse", accounts => {
       assert.equal(await erc20Token.balanceOf(seller), 0);
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
     })
+
+    it("should correctly process case with multiple erc20 auctions", async () => {
+      await testAuctionHouse.setProtocolFee(0)
+
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareERC20(buyer, 1000)
+      let dataV1 = await encDataV1([[], [], 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
+      //bid initialize
+      const auctionId1 = 1;
+      let bidDataV1 = await bidEncDataV1([[], []]);
+      let bid = { amount: 100, dataType: V1, data: bidDataV1 };
+      await testAuctionHouse.putBid(auctionId1, bid, { from: buyer });
+
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 100, "erc20 balance auction");
+      assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address, "erc721 balance auction");
+
+      const seller2 = accounts[5]
+      const erc721TokenId2 = 555;
+      const sellAsset2 = await prepareERC721(seller2, erc721TokenId2, false)
+      const auctionId2 = 2;
+      const buyer2 = accounts[6]
+      const buyAssetType2 = await prepareERC20(buyer2, 1000, false)
+      await testAuctionHouse.startAuction(sellAsset2, buyAssetType2, 1, 9, V1, dataV1, { from: seller2 });
+
+      let bid2 = { amount: 200, dataType: V1, data: bidDataV1 };
+      await testAuctionHouse.putBid(auctionId2, bid2, { from: buyer2 });
+
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 300, "erc20 balance auction");
+      assert.equal(await erc721.ownerOf(erc721TokenId2), testAuctionHouse.address, "erc721 balance auction");
+
+      await increaseTime(1001);
+
+      await testAuctionHouse.finishAuction(auctionId1, { from: accounts[0] });
+      assert.equal(await erc721.ownerOf(erc721TokenId1), buyer, "erc721 balance buyer");
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 200, "erc20 balance auction");
+      assert.equal(await erc20Token.balanceOf(seller), 100, "erc20 balance seller");
+
+      await testAuctionHouse.finishAuction(auctionId2, { from: accounts[0] });
+      assert.equal(await erc721.ownerOf(erc721TokenId2), buyer2, "erc721 balance buyer");
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0, "erc20 balance auction");
+      assert.equal(await erc20Token.balanceOf(seller2), 200, "erc20 balance seller");
+    })
   })
 
   describe("wrapper", () => {
@@ -666,6 +715,103 @@ contract("AuctionHouse", accounts => {
     })
   })
 
+  describe("security", () => {
+    it("faulty eth-bidders should be processed correctly", async () => {
+      const faultyBidder = await FaultyBidder.new();
+      const addressToReturn = accounts[6]
+
+      await testAuctionHouse.setProtocolFee(0)
+
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareETH()
+      let dataV1 = await encDataV1([[], [], 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
+
+      await truffleAssert.fails(
+        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+      await truffleAssert.fails(
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller });
+      //bid initialize
+      let auctionId = 1;
+      let bidDataV1 = await bidEncDataV1([[], []]);
+      let bid = { amount: 100, dataType: V1, data: bidDataV1 };
+      
+      await verifyBalanceChange(buyer, 100, async () =>
+        verifyBalanceChange(testAuctionHouse.address, -100, async () =>
+          faultyBidder.faultyBid(testAuctionHouse.address, auctionId, bid, { from: buyer, value: 100, gasPrice: 0 })
+        )
+      )
+
+      const buyer2 = accounts[5]
+      bid.amount = 150;
+
+      await verifyBalanceChange(buyer2, 150, async () =>
+        verifyBalanceChange(testAuctionHouse.address, -150, async () =>
+          verifyBalanceChange(buyer, 0, async () =>
+            testAuctionHouse.putBid(auctionId, bid, { from: buyer2, value: 150, gasPrice: 0 })
+          )
+        )
+      )
+
+      await truffleAssert.fails(
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+
+      await verifyBalanceChange(addressToReturn, -100, async () =>
+        verifyBalanceChange(testAuctionHouse.address, 100, async () =>
+          verifyBalanceChange(faultyBidder.address, 0, async () =>
+            faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, {from: buyer, gasPrice: 0})
+          )
+        )
+      )
+      
+      await truffleAssert.fails(
+        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+      await truffleAssert.fails(
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, {from: buyer, gasPrice: 0}),
+        truffleAssert.ErrorType.REVERT,
+        "nothing to withdraw"
+      )
+
+    })
+
+    it("numerous erc1155 auctions with same id should be processed correctly", async () => {
+      await testAuctionHouse.setProtocolFee(0)
+
+      const sellAsset = await prepareERC1155Sell()
+      const buyAssetType = await prepareETH()
+
+      let dataV1 = await encDataV1([[], [], 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
+
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller });
+
+      const seller2 = accounts[3]
+      const sellAsset2 = await prepareERC1155Sell(seller2, 100, erc1155TokenId1, false)
+
+      await truffleAssert.fails(
+        testAuctionHouse.startAuction(sellAsset2, buyAssetType, 1, 90, V1, dataV1, { from: seller2 }),
+        truffleAssert.ErrorType.REVERT,
+        "auction already taking place"
+      )
+
+      await testAuctionHouse.cancel(1, { from: seller });
+
+      await testAuctionHouse.startAuction(sellAsset2, buyAssetType, 1, 90, V1, dataV1, { from: seller2 })
+    })
+  })
+
   function encDataV1(tuple) {
     return testAuctionHouse.encode(tuple);
   }
@@ -674,29 +820,37 @@ contract("AuctionHouse", accounts => {
     return testAuctionHouse.encodeBid(tuple);
   }
 
-  async function prepareERC721(user = seller, tokenId = erc721TokenId1) {
-    erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
+  async function prepareERC721(user = seller, tokenId = erc721TokenId1, deployNew = true) {
+    if (!!deployNew) {
+      erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
+    }
     await erc721.mint(user, tokenId);
     await erc721.setApprovalForAll(transferProxy.address, true, { from: user });
     return await Asset(ERC721, enc(erc721.address, tokenId), 1);
   }
 
-  async function prepareERC1155Sell(user = seller, value = 100, tokenId = erc1155TokenId1) {
-    erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+  async function prepareERC1155Sell(user = seller, value = 100, tokenId = erc1155TokenId1, deployNew = true) {
+    if (!!deployNew) {
+      erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+    }
     await erc1155.mint(user, tokenId, value);
     await erc1155.setApprovalForAll(transferProxy.address, true, { from: user });
     return await Asset(ERC1155, enc(erc1155.address, tokenId), value)
   }
 
-  async function prepareERC1155Buy(user = buyer, value = 100, tokenId = erc1155TokenId1) {
-    erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+  async function prepareERC1155Buy(user = buyer, value = 100, tokenId = erc1155TokenId1, deployNew = true) {
+    if (!!deployNew) {
+      erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+    }
     await erc1155.mint(user, tokenId, value);
     await erc1155.setApprovalForAll(transferProxy.address, true, { from: user });
     return await AssetType(ERC1155, enc(erc1155.address, tokenId))
   }
 
-  async function prepareERC20(user = buyer, value = 100) {
-    erc20Token = await TestERC20.new();
+  async function prepareERC20(user = buyer, value = 100, deployNew = true) {
+    if (!!deployNew) {
+      erc20Token = await TestERC20.new();
+    }
     await erc20Token.mint(user, value);
     await erc20Token.approve(erc20TransferProxy.address, value, { from: user });
     return await AssetType(ERC20, enc(erc20Token.address))
