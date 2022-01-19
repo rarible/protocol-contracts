@@ -5,6 +5,7 @@ const TestERC1155 = artifacts.require("TestERC1155.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestAuctionHouse = artifacts.require("TestAuctionHouse");
+const RaribleTransferManager = artifacts.require("RaribleTransferManager");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry");
 const Wrapper = artifacts.require("Wrapper");
 const PartyBidTest = artifacts.require("PartyBidTest");
@@ -27,6 +28,7 @@ contract("AuctionHouse", accounts => {
   let erc20Token;
   let erc721;
   let erc1155;
+  let transferManager;
 
   const erc721TokenId1 = 53;
   const erc1155TokenId1 = 54;
@@ -43,9 +45,12 @@ contract("AuctionHouse", accounts => {
 
     //royaltiesRegistry
     royaltiesRegistry = await TestRoyaltiesRegistry.new()
+    transferManager = await RaribleTransferManager.new();
+    await transferManager.__RaribleTransferManager_init(protocol, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address);
 
     /*Auction*/
-    testAuctionHouse = await deployProxy(TestAuctionHouse, [transferProxy.address, erc20TransferProxy.address, 300, protocol, royaltiesRegistry.address], { initializer: "__AuctionHouse_init" });
+    testAuctionHouse = await deployProxy(TestAuctionHouse, [transferProxy.address, erc20TransferProxy.address, transferManager.address, 300], { initializer: "__AuctionHouse_init" });
+    await transferManager.addOperator(testAuctionHouse.address);
   });
 
   describe("creation", () => {

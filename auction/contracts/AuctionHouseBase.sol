@@ -10,9 +10,20 @@ import "./TokenToAuction.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /// @dev contract with 
-abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction, ReentrancyGuardUpgradeable {
+abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction, ReentrancyGuardUpgradeable {
+
+    //transfer types
+    bytes4 constant LOCK = bytes4(keccak256("LOCK"));
+    bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
+
+    //transfer directions:
+    bytes4 constant TO_LOCK = bytes4(keccak256("TO_LOCK"));
+    bytes4 constant TO_SELLER = bytes4(keccak256("TO_SELLER"));
+    bytes4 constant TO_BIDDER = bytes4(keccak256("TO_BIDDER"));
+
     /// @dev auction struct
     struct Auction {
         // asset that is being sold at auction
@@ -57,14 +68,26 @@ abstract contract AuctionHouseBase is ERC721HolderUpgradeable, ERC1155HolderUpgr
     event AuctionFinished(uint indexed auctionId, Auction auction);
     /// @dev event that emits when auction is canceled
     event AuctionCancelled(uint indexed auctionId);
+    event ProxyChange(bytes4 indexed assetType, address proxy);
 
-    function __AuctionHouseBase_init() internal initializer {
-        __ERC1155Holder_init();
-        __ReentrancyGuard_init;
+    mapping (bytes4 => address) proxies;
+
+    function __AuctionHouseBase_init_unchained(
+        address _transferProxy,
+        address _erc20TransferProxy
+    ) internal initializer {
+        proxies[LibAsset.ERC20_ASSET_CLASS] = _erc20TransferProxy;
+        proxies[LibAsset.ERC721_ASSET_CLASS] = _transferProxy;
+        proxies[LibAsset.ERC1155_ASSET_CLASS] = _transferProxy;
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return this.supportsInterface(interfaceId);
+    }
+
+    function setTransferProxy(bytes4 assetType, address proxy) external onlyOwner {
+        proxies[assetType] = proxy;
+        emit ProxyChange(assetType, proxy);
     }
 
     uint256[50] private ______gap;

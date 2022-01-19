@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/LibOrderDataV2.sol";
+import "@rarible/royalties/contracts/LibPart.sol";
 
 /// @dev library that works with data field of Bid struct
 library LibBidDataV1 {
@@ -22,20 +22,6 @@ library LibBidDataV1 {
         if (dataType == V1) {
             aucData = abi.decode(data, (DataV1));
         }
-    }
-
-    /// @dev returns payouts and originFees from Bid data
-    function getPaymentData(bytes memory data, bytes4 dataType) internal pure returns (LibOrderDataV2.DataV2 memory payment){
-        if (dataType == V1) {
-            DataV1 memory aucData = abi.decode(data, (DataV1));
-            payment = LibOrderDataV2.DataV2(aucData.payouts, aucData.originFees, false);
-        }
-    }
-
-    /// @dev returns originFees from Bid data
-    function getOrigin(bytes memory data, bytes4 dataType) internal pure returns (LibPart.Part[] memory originFees){
-        if (dataType == V1) {
-            originFees = (abi.decode(data, (DataV1))).originFees;
-        }
+        //todo need to revert?
     }
 }
