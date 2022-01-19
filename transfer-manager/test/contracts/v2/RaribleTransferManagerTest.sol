@@ -22,9 +22,30 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
 
     function makeDealData(
         LibOrder.Order memory order
-    ) external pure returns (LibDeal.Data memory dataLeft){
-//    TODO use LibOrderDataV2.DataV2 for rezult    (dataLeft,) = LibOrderData.parse(order);
+    ) external pure returns (LibOrderDataV2.DataV2 memory dataOrder){
+        dataOrder = LibOrderData.parse(order);
     }
+
+    function getDealSide(LibOrder.Order memory order) external returns (LibDeal.DealSide memory dealSide) {
+        LibOrderDataV2.DataV2 memory orderData = LibOrderData.parse(order);
+
+        dealSide = LibDeal.DealSide(
+            order.makeAsset.assetType,
+            order.makeAsset.value,
+            orderData.payouts,
+            orderData.originFees,
+            order.maker,
+            300
+        );
+    }
+
+    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external returns (LibFee.MatchFees memory) {
+        LibFee.MatchFees memory result;
+        result.feeSide = LibFeeSide.getFeeSide(orderLeft.makeAsset.assetType.assetClass, orderRight.makeAsset.assetType.assetClass);
+        return result;
+    }
+
+
 
     function __TransferManager_init(
         INftTransferProxy _transferProxy,
