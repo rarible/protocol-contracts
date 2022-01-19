@@ -68,7 +68,10 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
     event AuctionFinished(uint indexed auctionId, Auction auction);
     /// @dev event that emits when auction is canceled
     event AuctionCancelled(uint indexed auctionId);
+    /// @dev event that's emitted when new transfer proxy is set
     event ProxyChange(bytes4 indexed assetType, address proxy);
+    /// @dev event that's emitted when user can withdraw ETH from the AuctionHouse
+    event AvailableToWithdraw(address indexed owner, uint added, uint total);
 
     mapping (bytes4 => address) proxies;
 

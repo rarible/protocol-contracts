@@ -191,22 +191,18 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             if (_buyAssetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 (bool success,) = oldBuyer.call{ value: oldAmount }("");
                 if (!success) {
-                    //todo here we need to add, not set
-                    readyToWithdraw[oldBuyer] = oldAmount;
+                    uint currentValueToWithdraw = readyToWithdraw[oldBuyer];
+                    uint newValueToWithdraw = oldAmount + currentValueToWithdraw;
+                    readyToWithdraw[oldBuyer] = newValueToWithdraw;
+                    emit AvailableToWithdraw(oldBuyer, oldAmount, newValueToWithdraw);
                 }
             } else {
                 transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
             }
         }
         transferAsset = LibAsset.Asset(_buyAssetType, newAmount);
-        if (transferAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            if (msg.value > newAmount) { //more ETH than need
-                address(newBuyer).transferEth(msg.value - newAmount);
-            }
-        } else {
-            transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
-            setApproveForTransferProxy(transferAsset);
-        }
+        transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
+        setApproveForTransferProxy(transferAsset);
     }
 
     /// @dev returns the minimal amount of the next bid (without fees)
@@ -378,13 +374,12 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev Used to withdraw faulty bids (bids that failed to return after out-bidding)
-    function withdrawFaultyBid(address _to) external returns(bool){
+    function withdrawFaultyBid(address _to) external {
         address sender = _msgSender();
         uint amount = readyToWithdraw[sender];
         require( amount > 0, "nothing to withdraw");
         readyToWithdraw[sender] = 0;
-        (bool success, ) = _to.call{ value: amount }("");
-        return success;
+        _to.transferEth(amount);
     }
 
     function getProtocolFee() internal view returns(uint) {
