@@ -52,11 +52,12 @@ function getSettings(network) {
 
 module.exports = async function (deployer, network) {
     const { communityWallet, erc20TransferProxy, transferProxy, royaltiesRegistry } = getSettings(network);
-
+    /*
     const metaExchangeV2 = await deployProxy(
         ExchangeMetaV2,
         [transferProxy, erc20TransferProxy, 0, communityWallet, royaltiesRegistry],
         { deployer, initializer: '__ExchangeV2_init' }
     );
-    console.log(`deployed exchangeV2 with metaTransactions at ${metaExchangeV2.address}`)   
+    console.log(`deployed exchangeV2 with metaTransactions at ${metaExchangeV2.address}`)  
+    */ 
 };

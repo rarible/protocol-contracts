@@ -3,7 +3,6 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-//import "../../../contracts/LibOrder.sol";
 import "@rarible/libraries/contracts/LibOrderData.sol";
 
 contract LibOrderTest {
@@ -12,11 +11,8 @@ contract LibOrderTest {
     }
 
     function hashKey(LibOrder.Order calldata order) external pure returns (bytes32) {
+//        Only for not OnChain Order, TODO write method for OnChain Order also
         return LibOrder.hashKey(order, false);
-    }
-
-    function hashKeyOnChain(LibOrder.Order calldata order) external pure returns (bytes32) {
-        return LibOrder.hashKey(order, true);
     }
 
     function validate(LibOrder.Order calldata order) external view {

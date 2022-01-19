@@ -4,11 +4,10 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@rarible/lib-asset/contracts/LibAsset.sol";
-import "./LibFill.sol";
-import "./TransferExecutor.sol";
-import "./LibOrderData.sol";
+import "@rarible/royalties/contracts/LibPart.sol";
+import "@rarible/libraries/contracts/LibOrder.sol";
 
-abstract contract ITransferManager is ITransferExecutor {
+abstract contract ITransferExecutor {
     //transfer directions:
     bytes4 constant TO_MAKER = bytes4(keccak256("TO_MAKER"));
     bytes4 constant TO_TAKER = bytes4(keccak256("TO_TAKER"));
@@ -24,12 +23,23 @@ abstract contract ITransferManager is ITransferExecutor {
     bytes4 constant LOCK = bytes4(keccak256("LOCK"));
     bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
 
-    function doTransfers(
-        LibOrder.MatchedAssets memory matchedAssets,
-        LibFill.FillResult memory fill,
-        LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
-    ) internal virtual returns (uint totalMakeValue, uint totalTakeValue);
+    //events
+    event Transfer(LibAsset.Asset asset, address from, address to, bytes4 transferDirection, bytes4 transferType);
+
+    function transfer(
+        LibAsset.Asset memory asset,
+        address from,
+        address to,
+        bytes4 transferDirection,
+        bytes4 transferType
+    ) internal virtual;
+
+//    function calculateTotalAmount(uint amount,
+//        uint feeOnTopBp,
+//        LibPart.Part[] memory orderOriginFees
+//    ) internal virtual view returns (uint total);
+//
+//    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) virtual internal view returns(uint);
+//
+//    function getProtocolFee() virtual internal view returns(uint);
 }

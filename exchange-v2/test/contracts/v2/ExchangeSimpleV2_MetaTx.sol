@@ -22,4 +22,12 @@ contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, SimpleTransferManager, EIP71
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
         return super._msgSender();
     }
+
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
+        return 0;
+    }
+
+    function getProtocolFee() override internal view returns(uint) {
+        return 0;
+    }
 }

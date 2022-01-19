@@ -37,7 +37,7 @@ Logically, whole process can be divided into stages:
 
 #### Order execution
 
-When user signs the order he states the following: 
+When user signs the order (or creates an on-chain order) he states the following: 
 
 I would like to exchange my asset (make), up to make asset value, in return I would like to get take asset, not more than take value. Orders can be filled partly, but in this case rate of the exchange should be the same or should be more profitable for me.
 
@@ -57,10 +57,10 @@ Rounding errors: to calculate fill amounts, mathematical operations are used. Wh
 
 - check start/end date of the orders
 - check if taker of the order is blank or taker = order.taker
-- check if order is signed by its maker or maker of the order is executing the transaction
+- check if order is signed by its maker 
+    - or maker of the order is executing the transaction
+    - or this is an on-chain order
 - if maker of the order is a contract, then ERC-1271 check is performed
-
-TODO: currently, only off-chain orders are supported, this part of the smart contract ca be easily updated to support on-chain order books.
 
 #### Asset matching
 
@@ -128,6 +128,8 @@ If buyer is using ETH, then he must send this calculated amount of ETH with the 
 
 cancel function can be used to cancel order. Such orders won't be matched and error will be thrown. This function is used by order maker to mark orders unfillable. This function can be invoked only by order maker.
 
+If an on-chaon order is being canceled, all it's data is deleted from the mapping.
+
 TODO: there is possibility to change authorization for cancel function - add authorization by signature. Possibly, this will be added in the future.
 
 ##### Contract events
@@ -135,5 +137,16 @@ TODO: there is possibility to change authorization for cancel function - add aut
 ExchangeV2 contract emits these events:
 - Match (when orders are matched)
 - Cancel (when user cancels the order)
+- UpsertOrder (when user creates or updates an on-chain order)
+
+##### On-chain orders
+ExchangeV2 supports on-chain orders
+- on-chain order can be created using upsertOrder function
+- all the data of the created order is written in onChainOrders mapping
+- protocolFee value is set for every on-chain order at creation/update
+- if make side of the order is ETH, it's getting locked in the contract
+- UpsertOrder event is emitted
+- on-chain orders can be upodated using the same upsertOrder function
+- on-chain order is deleted when it's fully filled
 
 TODO: currently, there are no indexed fields in events, because rarible protocol uses internal indexing. Possibly, indexed fields will be added in future.  

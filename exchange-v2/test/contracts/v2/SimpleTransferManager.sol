@@ -13,7 +13,8 @@ abstract contract SimpleTransferManager is ITransferManager {
         LibOrder.Order memory leftOrder,
         LibOrder.Order memory rightOrder,
         LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        LibOrderDataV2.DataV2 memory rightOrderData,
+        LibFee.MatchFees memory matchFees
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
         address leftOrderBeneficiary = leftOrder.maker;
         address rightOrderBeneficiary = rightOrder.maker;
@@ -22,6 +23,14 @@ abstract contract SimpleTransferManager is ITransferManager {
         transfer(LibAsset.Asset(matchedAssets.takeMatch, fill.rightValue), rightOrder.maker, leftOrderBeneficiary, PAYOUT, TO_MAKER);
         totalMakeValue = fill.leftValue;
         totalTakeValue = fill.rightValue;
+    }
+
+    function calculateTotalAmount(
+        uint amount,
+        uint feeOnTopBp,
+        LibPart.Part[] memory orderOriginFees
+    ) internal override pure returns (uint total) {
+        return amount;
     }
     uint256[50] private __gap;
 }

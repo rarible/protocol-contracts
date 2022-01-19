@@ -1,6 +1,6 @@
 ### Features
 
-[RaribleTransferManager](./RaribleTransferManager.sol) is [ITransferManager](./ITransferManager.sol).
+[RaribleTransferManager](RaribleTransferManager.sol) is [ITransferManager](../../exchange-v2/contracts/ITransferManager.sol).
 It's responsible for transferring all Assets. This manager supports different types of fees, also it supports different beneficiaries (specified in Order.data)  
 
 Types of fees supported:
@@ -55,7 +55,7 @@ Then, in this method the following actions are done:
         - origin fees can be added to any order, it's an array of address + value
     - finally, `transferPayouts` is executed as the final action of `doTransfersWithFees`
 
-![Fees](../images/fees.svg)
+![Fees](../../exchange-v2/images/fees.svg)
 
 - `transferPayouts`
     - tranfers assets to payout address

@@ -355,5 +355,13 @@ contract AuctionHouse is AuctionHouseBase, TransferExecutor,  RaribleTransferMan
         return success;
     }
 
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
+        return protocolFee;
+    }
+
+    function getProtocolFee() override internal view returns(uint) {
+        return protocolFee;
+    }
+
     uint256[50] private ______gap;
 }
