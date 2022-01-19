@@ -1,36 +1,47 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.7.6;
+pragma abicoder v2;
 
-import "../../../contracts/ITransferManager.sol";
+import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
-abstract contract SimpleTransferManager is ITransferManager {
-    using SafeMathUpgradeable for uint;
+contract SimpleTransferManager is TransferExecutor, ITransferManager {
+    using LibTransfer for address;
+
+    function __SimpleTransferManager_init(
+    ) external initializer {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+    }
 
     function doTransfers(
-        LibOrder.MatchedAssets memory matchedAssets,
-        LibFill.FillResult memory fill,
-        LibOrder.Order memory leftOrder,
-        LibOrder.Order memory rightOrder,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData,
-        LibFee.MatchFees memory matchFees
-    ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
-        address leftOrderBeneficiary = leftOrder.maker;
-        address rightOrderBeneficiary = rightOrder.maker;
+//        LibAsset.Asset memory makeMatch,
+//        LibAsset.Asset memory takeMatch,
+//        LibDeal.Data memory left,
+//        LibDeal.Data memory right,
+//        address leftMaker,
+//        address rightMaker,
+//        address originalMessageSender
+        LibDeal.DealSide memory left,
+        LibDeal.DealSide memory  right,
+        LibFeeSide.FeeSide feeSide,
+        address initialSender
+    ) override payable external returns (uint totalMakeValue, uint totalTakeValue) {
+        address leftOrderBeneficiary = left.sideAddress;
+        address rightOrderBeneficiary = right.sideAddress;
 
-        transfer(LibAsset.Asset(matchedAssets.makeMatch, fill.leftValue), leftOrder.maker, rightOrderBeneficiary, PAYOUT, TO_TAKER);
-        transfer(LibAsset.Asset(matchedAssets.takeMatch, fill.rightValue), rightOrder.maker, leftOrderBeneficiary, PAYOUT, TO_MAKER);
-        totalMakeValue = fill.leftValue;
-        totalTakeValue = fill.rightValue;
+        transfer(LibAsset.Asset(left.assetType, left.value), left.sideAddress, rightOrderBeneficiary, PAYOUT, TO_TAKER);
+        transfer(LibAsset.Asset(right.assetType, right.value), right.sideAddress, leftOrderBeneficiary, PAYOUT, TO_MAKER);
+
+        uint ethBalance = address(this).balance;
+        if (ethBalance > 0) {
+            address(initialSender).transferEth(ethBalance);
+        }
     }
 
-    function calculateTotalAmount(
-        uint amount,
-        uint feeOnTopBp,
-        LibPart.Part[] memory orderOriginFees
-    ) internal override pure returns (uint total) {
-        return amount;
-    }
+    /*for transferring eth to contract*/
+    receive() external payable {}
+
     uint256[50] private __gap;
 }

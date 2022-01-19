@@ -3,12 +3,13 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../../contracts/RaribleTransferManager.sol";
-import "../../../contracts/ITransferExecutor.sol";
+import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
+import "@rarible/transfer-manager/contracts/ITransferExecutor.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 
-contract RaribleSimpleTest is RaribleTransferManager, TransferExecutor{
+//contract RaribleSimpleTest is RaribleTransferManager, TransferExecutor{
+contract RaribleSimpleTest is RaribleTransferManager {
 
     function getRoyaltiesByAssetTest(LibAsset.AssetType memory matchNft) external returns (LibPart.Part[] memory) {
         return getRoyaltiesByAssetType(matchNft);

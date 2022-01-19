@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../../contracts/TransferExecutor.sol";
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
 contract TransferExecutorTest is Initializable, OwnableUpgradeable, TransferExecutor {
 
