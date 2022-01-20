@@ -12,11 +12,9 @@ import "@rarible/libraries/contracts/LibDeal.sol";
 import "./EmptyGap.sol";
 import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
-//import "@rarible/transfer-manager/contracts/TransferTypesDirections.sol";
 import "@rarible/transfer-manager/contracts/InternalTransferExecutor.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 
-//abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, EmptyGap2, TransferTypesDirections {
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator, EmptyGap3, InternalTransferExecutor {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
@@ -37,7 +35,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     bytes4 constant TO_LOCK = bytes4(keccak256("TO_LOCK"));
     bytes4 constant TO_SELLER = bytes4(keccak256("TO_SELLER"));
     bytes4 constant TO_BIDDER = bytes4(keccak256("TO_BIDDER"));
-    bytes4 constant TO_MAKER = bytes4(keccak256("TO_MAKER"));
 
     //struct to hold on-chain order and its protocol fee, fee is updated if order is updated
     struct OrderAndFee {
@@ -103,7 +100,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(msg.value >= sentValue, "not enough eth");
 
             if (sentValue > 0) {
-//TODO open emit event                emit Transfer(LibAsset.Asset(order.makeAsset.assetType, sentValue), order.maker, address(this), TO_LOCK, LOCK);
+                emit Transfer(LibAsset.Asset(order.makeAsset.assetType, sentValue), order.maker, address(this), TO_LOCK, LOCK);
             }
 
             //returning "change" ETH if msg.value > sentValue
@@ -132,7 +129,15 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             //for now locking only ETH, so returning only locked ETH also
             if (temp.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 LibOrderDataV2.DataV2 memory dataTmpOrder = LibOrderData.parse(temp);
-                transferLockedAsset(LibAsset.Asset(temp.makeAsset.assetType, getTotalValue(temp, orderKeyHash, dataTmpOrder.originFees, dataTmpOrder.isMakeFill)), address(this), temp.maker, UNLOCK, TO_MAKER);
+                transferLockedAsset(
+                    LibAsset.Asset(
+                        temp.makeAsset.assetType,
+                        getTotalValue(temp, orderKeyHash, dataTmpOrder.originFees, dataTmpOrder.isMakeFill)
+                    ),
+                    address(this),
+                    temp.maker,
+                    UNLOCK, TO_MAKER
+                );
             }
         } else {
             orderKeyHash = LibOrder.hashKey(order, false);
@@ -169,16 +174,30 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData.isMakeFill, rightOrderData.isMakeFill);
 
         LibFee.MatchFees memory matchFees = getMatchFees(orderLeft, orderRight, matchedAssets.makeMatch, matchedAssets.takeMatch, leftOrderKeyHash, rightOrderKeyHash);
-//        (uint totalMakeValue, uint totalTakeValue) = doTransfers(matchedAssets, newFill, orderLeft, orderRight, leftOrderData, rightOrderData, matchFees);
 
-        (uint totalMakeValue, uint totalTakeValue) = ITransferManager(transferManager).doTransfers{value : msg.value}(
-            LibDeal.DealSide(matchedAssets.makeMatch, newFill.leftValue, leftOrderData.payouts, leftOrderData.originFees, orderLeft.maker, matchFees.feeSideProtocolFee),
-            LibDeal.DealSide(matchedAssets.takeMatch, newFill.rightValue, rightOrderData.payouts, rightOrderData.originFees, orderRight.maker, matchFees.nftSideProtocolFee ),
-            matchFees.feeSide,
-            _msgSender()
-        );
-
-        returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, totalMakeValue, totalTakeValue);
+        if (onChainRequiresEth(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash)) {
+            ITransferManager(transferManager).doTransfers{value : address(this).balance}(
+                LibDeal.DealSide(matchedAssets.makeMatch, newFill.leftValue, leftOrderData.payouts, leftOrderData.originFees, orderLeft.maker, matchFees.feeSideProtocolFee),
+                LibDeal.DealSide(matchedAssets.takeMatch, newFill.rightValue, rightOrderData.payouts, rightOrderData.originFees, orderRight.maker, matchFees.nftSideProtocolFee ),
+                matchFees.feeSide,
+                address(this)
+            );
+        } else if (offChainRequiresEth(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash)) {
+            ITransferManager(transferManager).doTransfers{value : msg.value}(
+                LibDeal.DealSide(matchedAssets.makeMatch, newFill.leftValue, leftOrderData.payouts, leftOrderData.originFees, orderLeft.maker, matchFees.feeSideProtocolFee),
+                LibDeal.DealSide(matchedAssets.takeMatch, newFill.rightValue, rightOrderData.payouts, rightOrderData.originFees, orderRight.maker, matchFees.nftSideProtocolFee ),
+                matchFees.feeSide,
+                _msgSender()
+            );
+        } else {
+            ITransferManager(transferManager).doTransfers(
+                LibDeal.DealSide(matchedAssets.makeMatch, newFill.leftValue, leftOrderData.payouts, leftOrderData.originFees, orderLeft.maker, matchFees.feeSideProtocolFee),
+                LibDeal.DealSide(matchedAssets.takeMatch, newFill.rightValue, rightOrderData.payouts, rightOrderData.originFees, orderRight.maker, matchFees.nftSideProtocolFee ),
+                matchFees.feeSide,
+                address(0)
+            );
+        }
+        returnChange(matchedAssets, orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
 
         deleteFilledOrder(orderLeft, leftOrderKeyHash,  leftOrderData.isMakeFill);
         deleteFilledOrder(orderRight, rightOrderKeyHash, rightOrderData.isMakeFill);
@@ -218,23 +237,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return newFill;
     }
 
-    function returnChange(LibOrder.MatchedAssets memory matchedAssets, LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight, bytes32 leftOrderKeyHash, bytes32 rightOrderKeyHash, uint totalMakeValue, uint totalTakeValue) internal {
-        bool ethRequired = matchingRequiresEth(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
-
-        if (matchedAssets.makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS && ethRequired) {
-            require(matchedAssets.takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
-            require(msg.value >= totalMakeValue, "not enough eth");
-            if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
-            }
-        } else if (matchedAssets.takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS && ethRequired) {
-            require(msg.value >= totalTakeValue, "not enough eth");
-            if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
-            }
-        }
+    function returnChange(LibOrder.MatchedAssets memory matchedAssets, LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight, bytes32 leftOrderKeyHash, bytes32 rightOrderKeyHash) internal {
+        bool ethRequired = onChainRequiresEth(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash);
         //Don`t need ETH, but there is ETH in msg.value, return it back
-        if (ethRequired == false && msg.value > 0) {
+        if (ethRequired == true && msg.value > 0) {
             address(msg.sender).transferEth(msg.value);
         }
     }
@@ -311,7 +317,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
 
     /// @dev Checks if matching such orders requires ether sent with the transaction
-    function matchingRequiresEth(
+    function offChainRequiresEth(
         LibOrder.Order memory orderLeft, 
         LibOrder.Order memory orderRight,
         bytes32 leftOrderKeyHash,
@@ -326,6 +332,28 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         if (orderRight.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             if (!isTheSameAsOnChain(orderRight, rightOrderKeyHash)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function onChainRequiresEth(
+        LibOrder.Order memory orderLeft,
+        LibOrder.Order memory orderRight,
+        bytes32 leftOrderKeyHash,
+        bytes32 rightOrderKeyHash
+    ) internal view returns(bool) {
+        //ether is required when one of the orders is simultaneously offchain and has makeAsset = ETH
+        if (orderLeft.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            if (isTheSameAsOnChain(orderLeft, leftOrderKeyHash)) {
+                return true;
+            }
+        }
+
+        if (orderRight.makeAsset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            if (isTheSameAsOnChain(orderRight, rightOrderKeyHash)) {
                 return true;
             }
         }

@@ -6,8 +6,9 @@ pragma abicoder v2;
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/exchange-interfaces/contracts/IExternalTransferExecutor.sol";
 import "./lib/LibTransfer.sol";
+import "./TransferExecutorBase.sol";
 
-abstract contract InternalTransferExecutor {
+abstract contract InternalTransferExecutor is TransferExecutorBase {
     using LibTransfer for address;
 
     function getExternalTransferExecutor() internal virtual returns (IExternalTransferExecutor);
