@@ -23,6 +23,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
+        __Context_init_unchained();
+        __Ownable_init_unchained();
     }
 
     function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {
