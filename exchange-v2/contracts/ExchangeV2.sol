@@ -21,12 +21,4 @@ contract ExchangeV2 is ExchangeV2Core, EmptyGap {
         return transferManager;
     }
 
-    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
-        return protocolFee;
-    }
-
-    function getProtocolFee() override internal view returns(uint) {
-        return protocolFee;
-    }
-
 }

@@ -25,11 +25,4 @@ contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, EIP712MetaTransaction {
         return transferManager;
     }
 
-    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
-        return 0;
-    }
-
-    function getProtocolFee() override internal view returns(uint) {
-        return 0;
-    }
 }
