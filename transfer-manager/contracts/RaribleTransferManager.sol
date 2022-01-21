@@ -78,11 +78,9 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         transfer(asset, from, to, transferDirection, transferType);
     }
 
-    event Test(LibDeal.DealSide side);
-
     function doTransfers(
         LibDeal.DealSide memory left,
-        LibDeal.DealSide memory  right,
+        LibDeal.DealSide memory right,
         LibFeeSide.FeeSide feeSide,
         address initialSender
     ) override payable external onlyOperator returns (uint totalLeftValue, uint totalRightValue) {
