@@ -25,20 +25,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     //state of the orders
     mapping(bytes32 => uint) public fills; // take-side fills
     ITransferManager public transferManager;
-    //transfer types
-    bytes4 constant LOCK = bytes4(keccak256("LOCK"));
-    bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
-
-    //transfer directions:
-    bytes4 constant TO_LOCK = bytes4(keccak256("TO_LOCK"));
-    bytes4 constant TO_SELLER = bytes4(keccak256("TO_SELLER"));
-    bytes4 constant TO_BIDDER = bytes4(keccak256("TO_BIDDER"));
-
-    //struct to hold on-chain order and its protocol fee, fee is updated if order is updated
-    struct OrderAndFee {
-        LibOrder.Order order;
-        uint fee;
-    }
 
     //events
     event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
