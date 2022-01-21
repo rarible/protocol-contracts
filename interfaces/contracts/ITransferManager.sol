@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
-import "@rarible/libraries/contracts/LibFee.sol";
+import "@rarible/libraries/contracts/LibFeeSide.sol";
 import "./IExternalTransferExecutor.sol";
 
 interface ITransferManager is IExternalTransferExecutor {

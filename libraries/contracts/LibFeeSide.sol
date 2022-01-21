@@ -6,27 +6,26 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 library LibFeeSide {
 
-    //todo this should be changed to LEFT/RIGHT? MAKE/TAKE is only for Orders, where are maker and taker
-    enum FeeSide {NONE, MAKE, TAKE}
+    enum FeeSide {NONE, LEFT, RIGHT}
 
-    function getFeeSide(bytes4 make, bytes4 take) internal pure returns (FeeSide) {
-        if (make == LibAsset.ETH_ASSET_CLASS) {
-            return FeeSide.MAKE;
+    function getFeeSide(bytes4 leftClass, bytes4 rightClass) internal pure returns (FeeSide) {
+        if (leftClass == LibAsset.ETH_ASSET_CLASS) {
+            return FeeSide.LEFT;
         }
-        if (take == LibAsset.ETH_ASSET_CLASS) {
-            return FeeSide.TAKE;
+        if (rightClass == LibAsset.ETH_ASSET_CLASS) {
+            return FeeSide.RIGHT;
         }
-        if (make == LibAsset.ERC20_ASSET_CLASS) {
-            return FeeSide.MAKE;
+        if (leftClass == LibAsset.ERC20_ASSET_CLASS) {
+            return FeeSide.LEFT;
         }
-        if (take == LibAsset.ERC20_ASSET_CLASS) {
-            return FeeSide.TAKE;
+        if (rightClass == LibAsset.ERC20_ASSET_CLASS) {
+            return FeeSide.RIGHT;
         }
-        if (make == LibAsset.ERC1155_ASSET_CLASS) {
-            return FeeSide.MAKE;
+        if (leftClass == LibAsset.ERC1155_ASSET_CLASS) {
+            return FeeSide.LEFT;
         }
-        if (take == LibAsset.ERC1155_ASSET_CLASS) {
-            return FeeSide.TAKE;
+        if (rightClass == LibAsset.ERC1155_ASSET_CLASS) {
+            return FeeSide.RIGHT;
         }
         return FeeSide.NONE;
     }

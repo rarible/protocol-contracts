@@ -30,12 +30,4 @@ contract RaribleSimpleTest is RaribleTransferManager {
     {
         return abi.encode(address(this), data);
     }
-
-    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
-        return protocolFee;
-    }
-
-    function getProtocolFee() override internal view returns(uint) {
-        return protocolFee;
-    }
 }

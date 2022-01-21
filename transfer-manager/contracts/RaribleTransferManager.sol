@@ -11,7 +11,6 @@ import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "@rarible/libraries/contracts/LibFill.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
-import "@rarible/libraries/contracts/LibFee.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
@@ -90,10 +89,10 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         totalLeftValue = left.value;
         totalRightValue = right.value;
 
-        if (feeSide == LibFeeSide.FeeSide.MAKE) {
+        if (feeSide == LibFeeSide.FeeSide.LEFT) {
             totalLeftValue = doTransfersWithFees(left, right, TO_TAKER);
             transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
-        } else if (feeSide == LibFeeSide.FeeSide.TAKE) {
+        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
             totalRightValue = doTransfersWithFees(right, left, TO_MAKER);
             transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
         } else {

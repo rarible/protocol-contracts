@@ -282,9 +282,9 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             );
             if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
                 uint totalAmount = transferManager.calculateTotalAmount(bid.amount, currentAuction.protocolFee, bidData.originFees);
-                transferManager.doTransfers{ value: totalAmount }(sellSide, buySide, LibFeeSide.FeeSide.TAKE, currentAuction.buyer);
+                transferManager.doTransfers{ value: totalAmount }(sellSide, buySide, LibFeeSide.FeeSide.LEFT, currentAuction.buyer);
             } else {
-                transferManager.doTransfers(sellSide, buySide, LibFeeSide.FeeSide.TAKE, address(0));
+                transferManager.doTransfers(sellSide, buySide, LibFeeSide.FeeSide.LEFT, address(0));
             }
         } else {
             transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft back to seller

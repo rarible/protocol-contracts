@@ -13,8 +13,6 @@ abstract contract InternalTransferExecutor is TransferExecutorBase {
     using LibTransfer for address;
 
     function getExternalTransferExecutor() internal virtual returns (IExternalTransferExecutor);
-    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) virtual internal view returns(uint);
-    function getProtocolFee() virtual internal view returns(uint);
 
     /**
      * @dev execute a transfer
