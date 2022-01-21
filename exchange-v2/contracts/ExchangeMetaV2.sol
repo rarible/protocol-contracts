@@ -28,11 +28,7 @@ contract ExchangeMetaV2 is ExchangeV2Core, EmptyGap, EIP712MetaTransaction {
     }
 
     function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
-        if (isTheSameAsOnChain(order, hash)) {
-            return onChainOrders[hash].fee;
-        } else {
-            return protocolFee;
-        }
+        return protocolFee;
     }
 
     function getProtocolFee() override internal view returns(uint) {

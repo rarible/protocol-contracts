@@ -22,12 +22,14 @@ contract ExchangeSimpleV2 is ExchangeV2Core {
     }
 
     function isTheSameAsOnChainTest(LibOrder.Order memory order, bytes32 hash) external view returns(bool) {
-        return isTheSameAsOnChain(order, hash);
+//        return isTheSameAsOnChain(order, hash);
     }
 
     function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {
+        return protocolFee;
     }
 
     function getProtocolFee() override internal view returns(uint) {
+        return protocolFee;
     }
 }
