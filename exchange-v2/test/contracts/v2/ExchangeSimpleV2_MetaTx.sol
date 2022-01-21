@@ -4,23 +4,25 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "../../../contracts/ExchangeV2Core.sol";
-import "./SimpleTransferManager.sol";
 import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 
-contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, SimpleTransferManager, EIP712MetaTransaction {
+contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, EIP712MetaTransaction {
     function __ExchangeSimpleV2_init(
-        INftTransferProxy _transferProxy,
-        IERC20TransferProxy _erc20TransferProxy
+        ITransferManager newRaribleTransferManager,
+        uint newProtocolFee
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __OrderValidator_init_unchained();
-        __MetaTransaction_init_unchained("ExchangeV2","1");
+        __EchangeV2Core_init_unchained(newRaribleTransferManager, newProtocolFee);        __MetaTransaction_init_unchained("ExchangeV2","1");
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
         return super._msgSender();
+    }
+
+    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
+        return transferManager;
     }
 
     function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) override internal view returns(uint) {

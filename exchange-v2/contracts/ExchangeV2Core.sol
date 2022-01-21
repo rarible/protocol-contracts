@@ -295,7 +295,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     /// @dev Calculates total make amount of order, including fees and fill
     function getTotalValue(LibOrder.Order memory order, bytes32 hash, LibPart.Part[] memory originFees, bool makeFill) internal view returns (uint) {
         (uint remainingMake,) = LibOrder.calculateRemaining(order, getOrderFill(order, hash), makeFill);
-        uint totalAmount = calculateTotalAmount(remainingMake, getOrderProtocolFee(order, hash), originFees);
+        uint totalAmount = transferManager.calculateTotalAmount(remainingMake, getOrderProtocolFee(order, hash), originFees);
         return totalAmount;
     }
 
@@ -409,28 +409,28 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return result;
     }
 
-    function calculateTotalAmount(
-        uint amount,
-        uint feeOnTopBp,
-        LibPart.Part[] memory orderOriginFees
-    ) internal pure returns (uint total){
-        total = amount.add(amount.bp(feeOnTopBp));
-        for (uint256 i = 0; i < orderOriginFees.length; i++) {
-            total = total.add(amount.bp(orderOriginFees[i].value));
-        }
-    }
+//    function calculateTotalAmount(
+//        uint amount,
+//        uint feeOnTopBp,
+//        LibPart.Part[] memory orderOriginFees
+//    ) internal pure returns (uint total){
+//        total = amount.add(amount.bp(feeOnTopBp));
+//        for (uint256 i = 0; i < orderOriginFees.length; i++) {
+//            total = total.add(amount.bp(orderOriginFees[i].value));
+//        }
+//    }
 
-    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) internal view returns (uint) {
-        if (isTheSameAsOnChain(order, hash)) {
-            return onChainOrders[hash].fee;
-        } else {
-            return protocolFee;
-        }
-    }
-
-    function getProtocolFee() internal view returns (uint) {
-        return protocolFee;
-    }
+//    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) internal view returns (uint) {
+//        if (isTheSameAsOnChain(order, hash)) {
+//            return onChainOrders[hash].fee;
+//        } else {
+//            return protocolFee;
+//        }
+//    }
+//
+//    function getProtocolFee() internal view returns (uint) {
+//        return protocolFee;
+//    }
 
     uint256[47] private __gap;
 }

@@ -7,11 +7,14 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/exchange-interfaces/contracts/IExternalTransferExecutor.sol";
 import "./lib/LibTransfer.sol";
 import "./TransferExecutorBase.sol";
+import "@rarible/libraries/contracts/LibOrder.sol";
 
 abstract contract InternalTransferExecutor is TransferExecutorBase {
     using LibTransfer for address;
 
     function getExternalTransferExecutor() internal virtual returns (IExternalTransferExecutor);
+    function getOrderProtocolFee(LibOrder.Order memory order, bytes32 hash) virtual internal view returns(uint);
+    function getProtocolFee() virtual internal view returns(uint);
 
     /**
      * @dev execute a transfer
