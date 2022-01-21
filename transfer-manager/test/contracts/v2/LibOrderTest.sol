@@ -11,8 +11,7 @@ contract LibOrderTest {
     }
 
     function hashKey(LibOrder.Order calldata order) external pure returns (bytes32) {
-//        Only for not OnChain Order, TODO write method for OnChain Order also
-        return LibOrder.hashKey(order, false);
+        return LibOrder.hashKey(order);
     }
 
     function validate(LibOrder.Order calldata order) external view {

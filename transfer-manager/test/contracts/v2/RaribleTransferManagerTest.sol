@@ -9,8 +9,12 @@ import "@rarible/exchange-v2/contracts/OrderValidator.sol";
 import "@rarible/libraries/contracts/LibOrderData.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
+import "@rarible/libraries/contracts/LibFeeSide.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
+    struct ProtocolFeeSide {
+        LibFeeSide.FeeSide feeSide;
+    }
 
     function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {
         return abi.encode(data);
@@ -39,8 +43,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         );
     }
 
-    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external returns (LibFee.MatchFees memory) {
-        LibFee.MatchFees memory result;
+    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external returns (RaribleTransferManagerTest.ProtocolFeeSide memory) {
+        RaribleTransferManagerTest.ProtocolFeeSide memory result;
         result.feeSide = LibFeeSide.getFeeSide(orderLeft.makeAsset.assetType.assetClass, orderRight.makeAsset.assetType.assetClass);
         return result;
     }
