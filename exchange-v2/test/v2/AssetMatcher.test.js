@@ -41,8 +41,6 @@ contract("AssetMatcher", accounts => {
       );
 
       const testMatcher = await CustomCollectionAssetMatcher.new();
-      testMatcher.__AssetMatcherCollection_init();
-      testMatcher.addOperator(testing.address);
       const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
       const result = await testing.matchAssetsTest(order.AssetType(ERC1155, encodedNFT), order.AssetType(COLLECTION, encoded));
 
@@ -69,8 +67,6 @@ contract("AssetMatcher", accounts => {
       );
 
       const testMatcher = await CustomCollectionAssetMatcher.new();
-      testMatcher.__AssetMatcherCollection_init();
-      testMatcher.addOperator(testing.address);
       const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
       const result = await testing.matchAssetsTest(order.AssetType(ERC721, encodedNFT), order.AssetType(COLLECTION, encoded));
 
@@ -88,8 +84,6 @@ contract("AssetMatcher", accounts => {
       );
 
       const testMatcher = await CustomCollectionAssetMatcher.new();
-      testMatcher.__AssetMatcherCollection_init();
-      testMatcher.addOperator(testing.address);
       const setRes = await testing.setAssetMatcher(COLLECTION, testMatcher.address);
       const result = await testing.matchAssetsTest(order.AssetType(ERC20, encodedNFT), order.AssetType(COLLECTION, encoded));
 

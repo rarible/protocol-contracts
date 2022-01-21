@@ -160,8 +160,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
     it("should match orders with ERC721 сollections", async () => {
       const matcher = await AssetMatcherCollectionTest.new();
-      await matcher.__AssetMatcherCollection_init();
-      await matcher.addOperator(testing.address);
 
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
