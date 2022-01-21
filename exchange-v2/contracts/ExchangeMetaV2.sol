@@ -23,8 +23,4 @@ contract ExchangeMetaV2 is ExchangeV2Core, EmptyGap, EIP712MetaTransaction {
         return super._msgSender();
     }
 
-    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
-        return transferManager;
-    }
-
 }

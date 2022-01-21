@@ -714,7 +714,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	})	//Do matchOrders(), orders dataType == V1, MultipleBeneficiary
 
-	describe("Catch emit event Transfer", () => {
+/*	describe("Catch emit event Transfer", () => {
 		it("From ETH(DataV1) to ERC721(DataV1) Protocol, check emit ", async () => {
 			const seller = accounts[1];
 			const sellerRoyaltiy = accounts[4];
@@ -886,7 +886,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
     })
 
-	}) //Catch emit event Transfer
+	}) //Catch emit event Transfer*/
 
 	describe("Exchange with Royalties", () => {
 		it("Royalties by owner, token 721 to ETH", async () => {

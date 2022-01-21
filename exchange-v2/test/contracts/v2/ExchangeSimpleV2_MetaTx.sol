@@ -21,8 +21,4 @@ contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, EIP712MetaTransaction {
         return super._msgSender();
     }
 
-    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
-        return transferManager;
-    }
-
 }

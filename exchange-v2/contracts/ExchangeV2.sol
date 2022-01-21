@@ -17,8 +17,4 @@ contract ExchangeV2 is ExchangeV2Core, EmptyGap {
         __EchangeV2Core_init_unchained(newRaribleTransferManager, newProtocolFee);
     }
 
-    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
-        return transferManager;
-    }
-
 }

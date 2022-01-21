@@ -17,12 +17,4 @@ contract ExchangeSimpleV2 is ExchangeV2Core {
         __EchangeV2Core_init_unchained(newRaribleTransferManager, newProtocolFee);
     }
 
-    function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
-        return transferManager;
-    }
-
-    function isTheSameAsOnChainTest(LibOrder.Order memory order, bytes32 hash) external view returns(bool) {
-//        return isTheSameAsOnChain(order, hash);
-    }
-
 }

@@ -15,7 +15,7 @@ import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransfer
 import "@rarible/transfer-manager/contracts/InternalTransferExecutor.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator, EmptyGap3, InternalTransferExecutor {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, EmptyGap2, OrderValidator, EmptyGap3 {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
     using BpLibrary for uint;
