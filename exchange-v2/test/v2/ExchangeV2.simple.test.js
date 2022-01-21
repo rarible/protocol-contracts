@@ -6,7 +6,9 @@ const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 const CryptoPunksMarket = artifacts.require("CryptoPunksMarket.sol");
-const PunkTransferProxy = artifacts.require("PunkTransferProxyTest.sol")
+const PunkTransferProxy = artifacts.require("PunkTransferProxyTest.sol");
+const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
+const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 
 const { Order, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
@@ -18,15 +20,21 @@ contract("ExchangeSimpleV2", accounts => {
 	let testing;
 	let transferProxy;
 	let erc20TransferProxy;
+	let transferManagerTest;
+	let community = accounts[8];
 	let t1;
 	let t2;
 	let libOrder;
+	const protocolFee = 0;
 
 	const resetState = async () => {
 		libOrder = await LibOrderTest.new();
 		transferProxy = await TransferProxyTest.new();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		testing = await deployProxy(ExchangeSimpleV2, [transferProxy.address, erc20TransferProxy.address], { initializer: "__ExchangeSimpleV2_init" });
+		royaltiesRegistry = await TestRoyaltiesRegistry.new();
+		transferManagerTest = await deployProxy(RaribleTransferManagerTest, [community, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address], { initializer: "__RaribleTransferManagerTest_init_unchained" });
+		testing = await deployProxy(ExchangeSimpleV2, [transferManagerTest.address, protocolFee], { initializer: "__ExchangeSimpleV2_init" });
+		await transferManagerTest.addOperator(testing.address);
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
 	}
@@ -43,30 +51,30 @@ contract("ExchangeSimpleV2", accounts => {
 		assert.equal(await wrapper.getSomething(), 10);
 	})
 
-	describe("on-chain orders", () => {
-		it("isTheSameAsOnChain() works correctly", async () => {
-			const maker = accounts[2]
-			const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-			const orderHash = await libOrder.hashKey(order);
-	
-			const existanceBeforeCreation = await testing.isTheSameAsOnChainTest(order, orderHash);
-			assert.equal(existanceBeforeCreation, false, "existance before creation")
-	
-			const createOrder = async () => testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 });
-			await verifyBalanceChange(maker, 200 , createOrder);
-	
-			const existanceAfterCreation = await testing.isTheSameAsOnChainTest(order, orderHash)
-			assert.equal(existanceAfterCreation, true, "existance after creation")
-	
-			const newOrder = Order(maker, Asset(ETH, "0x", 500), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-			const newOrderHash = await libOrder.hashKey(newOrder);
-			assert.equal(orderHash, newOrderHash, "new order hash")
-	
-			const existanceOfNewOrder = await testing.isTheSameAsOnChainTest(newOrder, orderHash)
-			assert.equal(existanceOfNewOrder, false, "2 orders are different with the same hash")
-	
-		})
-	})
+//	describe("on-chain orders", () => {
+//		it("isTheSameAsOnChain() works correctly", async () => {
+//			const maker = accounts[2]
+//			const order = Order(maker, Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+//			const orderHash = await libOrder.hashKey(order);
+//
+//			const existanceBeforeCreation = await testing.isTheSameAsOnChainTest(order, orderHash);
+//			assert.equal(existanceBeforeCreation, false, "existance before creation")
+//
+//			const createOrder = async () => testing.upsertOrder(order, { from: maker, value: 300, gasPrice: 0 });
+//			await verifyBalanceChange(maker, 200 , createOrder);
+//
+//			const existanceAfterCreation = await testing.isTheSameAsOnChainTest(order, orderHash)
+//			assert.equal(existanceAfterCreation, true, "existance after creation")
+//
+//			const newOrder = Order(maker, Asset(ETH, "0x", 500), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+//			const newOrderHash = await libOrder.hashKey(newOrder);
+//			assert.equal(orderHash, newOrderHash, "new order hash")
+//
+//			const existanceOfNewOrder = await testing.isTheSameAsOnChainTest(newOrder, orderHash)
+//			assert.equal(existanceOfNewOrder, false, "2 orders are different with the same hash")
+//
+//		})
+//	})
 
 
 	describe("matchOrders", () => {
@@ -120,9 +128,9 @@ contract("ExchangeSimpleV2", accounts => {
 
 		it("only owner can change transfer proxy", async () => {
 			await expectThrow(
-				testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[1] })
+				transferManagerTest.setTransferProxy("0x00112233", accounts[2], { from: accounts[1] })
 			)
-			testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[0] });
+			transferManagerTest.setTransferProxy("0x00112233", accounts[2], { from: accounts[0] });
 		})
 
 		it("simplest possible exchange works", async () => {
@@ -201,7 +209,7 @@ contract("ExchangeSimpleV2", accounts => {
       await proxy.addOperator(testing.address);
       await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: accounts[1] }); //accounts[1] - wants to sell punk with punkIndex, min price 0 wei
 
-      await testing.setTransferProxy((CRYPTO_PUNKS), proxy.address)
+      await transferManagerTest.setTransferProxy((CRYPTO_PUNKS), proxy.address)
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
       await t1.mint(accounts[2], 106);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[2] });
@@ -295,30 +303,6 @@ contract("ExchangeSimpleV2", accounts => {
 		return sign(order, signer, testing.address);
 	}
 
-	// creates an on-chain order
-	async function createOnchainOrder(order, orderMaker, verify) {
-		//calculating amount of eth required for matching
-		let valMatch = 0;
-		let valCreate = 0;
-
-		if (order.makeAsset.assetType.assetClass == ETH){
-			valCreate = order.makeAsset.value * 2;
-		}
-		if (order.takeAsset.assetType.assetClass == ETH){
-			valMatch = order.takeAsset.value * 2;
-		}
-
-		const finalVerify = (!!verify) ? verify : 0;
-
-		//creating an on-chain order
-		await verifyBalanceChange(orderMaker, finalVerify, async () =>
-			await testing.upsertOrder(order, { from: orderMaker, value: valCreate, gasPrice: 0 })
-		)
-
-		const amountToVerify = (finalVerify > 0) ? 0 : finalVerify;
-
-		return {signature:"0x", valMatch: valMatch, amountToVerify: amountToVerify};
-	}
 
 	//creates an offchaing order
 	async function createOffchainOrder(order, signer, verify) {
@@ -342,10 +326,6 @@ contract("ExchangeSimpleV2", accounts => {
 	//runs tests both for on-chain and offchain cases
 	async function runTest(fn) {
 		await fn(createOffchainOrder)
-		
-		await resetState();
-		
-		await fn(createOnchainOrder)
 	}
 
 });
