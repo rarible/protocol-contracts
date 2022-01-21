@@ -7,7 +7,7 @@ import "./ExchangeV2Core.sol";
 import "./EmptyGap.sol";
 import "@rarible/meta-tx/contracts/EIP712MetaTransaction.sol";
 
-contract ExchangeMetaV2 is ExchangeV2Core, EmptyGap, EIP712MetaTransaction {
+contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManagerGap, EIP712MetaTransaction {
     function __ExchangeV2_init(
         ITransferManager newRaribleTransferManager,
         uint newProtocolFee

@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "./ExchangeV2Core.sol";
 import "./EmptyGap.sol";
 
-contract ExchangeV2 is ExchangeV2Core, EmptyGap {
+contract ExchangeV2 is ExchangeV2Core, RaribleTransferManagerGap {
     function __ExchangeV2_init(
         ITransferManager newRaribleTransferManager,
         uint newProtocolFee
