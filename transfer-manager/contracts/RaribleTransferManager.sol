@@ -253,8 +253,5 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
     }
 
-    /*for transferring eth to contract*/
-    receive() external payable {}
-
     uint256[46] private __gap;
 }
