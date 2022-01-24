@@ -20,8 +20,11 @@ library LibBidDataV1 {
     /// @dev returns parsed data field of a Bid (so returns DataV1 struct)
     function parse(bytes memory data, bytes4 dataType) internal pure returns (DataV1 memory aucData) {
         if (dataType == V1) {
-            aucData = abi.decode(data, (DataV1));
+            if (data.length > 0){
+                aucData = abi.decode(data, (DataV1));
+            }  
+        } else {
+            revert("wrong bid dataType");
         }
-        //todo need to revert?
     }
 }

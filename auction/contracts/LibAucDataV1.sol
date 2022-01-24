@@ -26,9 +26,11 @@ library LibAucDataV1 {
     /// @dev returns parsed data field of an Auction (so returns DataV1 struct)
     function parse(bytes memory data, bytes4 dataType) internal pure returns (DataV1 memory aucData) {
         if (dataType == V1) {
-            aucData = abi.decode(data, (DataV1));
+            if (data.length > 0){
+                aucData = abi.decode(data, (DataV1));
+            }
         } else {
-            revert("auction data type not supported");
+            revert("wrong auction dataType");
         }
     }
 }

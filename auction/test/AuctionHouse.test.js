@@ -153,8 +153,8 @@ contract("AuctionHouse", accounts => {
       let auctionId = 1;
       let bidFees = [[accounts[6], 1500], [accounts[7], 3500]];
       let bidDataV1 = await bidEncDataV1([[], bidFees]);
-      let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
+      //let bid = { amount: 100, dataType: V1, data: bidDataV1 };
+      await testAuctionHouse.putBid(auctionId, Bid( 100, V1, bidDataV1 ), { from: buyer });
       assert.equal((await erc20Token.balanceOf(testAuctionHouse.address)).toString(), "153");
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address);
 
@@ -164,6 +164,7 @@ contract("AuctionHouse", accounts => {
       const txBid = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[3] });
       let id;
       truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
+        //console.log(ev)
         id = ev.auctionId;
         return true;
       });
@@ -854,6 +855,10 @@ contract("AuctionHouse", accounts => {
     await erc20Token.mint(user, value);
     await erc20Token.approve(erc20TransferProxy.address, value, { from: user });
     return await AssetType(ERC20, enc(erc20Token.address))
+  }
+
+  function Bid(amount, dataType, data) {
+    return {amount, dataType, data}
   }
 
   async function prepareETH() {

@@ -138,52 +138,66 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     /// @dev put a bid and return locked assets for the last bid
     function putBid(uint _auctionId, Bid memory bid) payable public nonReentrant {
-        checkAuctionInProgress(_auctionId);
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
-        if (buyOutVerify(_auctionId, newAmount)) {
+        Auction memory currentAuction = auctions[_auctionId];
+        uint endTime = currentAuction.endTime;
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
+        checkAuctionInProgress(_auctionId, aucData);
+
+        if (buyOutVerify(aucData, newAmount)) {
             _buyOut(_auctionId, bid);
             doTransfers(_auctionId);
             deactivateAuction(_auctionId);
             return;
         }
         
-        Auction memory currentAuction = auctions[_auctionId];
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         uint currentTime = block.timestamp;
         //start action if minimal price is met
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             // set endTime if it's not set
             if (currentAuction.endTime == 0){
                 auctions[_auctionId].endTime = currentTime + aucData.duration;
+                endTime = currentTime + aucData.duration;
             }
-            require(newAmount >= currentAuction.minimalPrice, "bid can't be less than minimal price");
+            require(newAmount >= currentAuction.minimalPrice, "bid too small");
         } else {//there is bid in auction
-            require(currentAuction.buyer != newBuyer, "already have an outstanding bid");
+            require(currentAuction.buyer != newBuyer, "already winning bid");
             uint256 minAmount = getMinimalNextBid(_auctionId);
-            require(newAmount >= minAmount, "bid amount too low");
+            require(newAmount >= minAmount, "bid too low");
         }
         reserveValue(
             currentAuction.buyAsset,
             currentAuction.buyer,
             newBuyer,
-            getBidTotalAmount(currentAuction.lastBid, currentAuction.protocolFee),
-            getBidTotalAmount(bid, currentAuction.protocolFee)
+            currentAuction.lastBid, 
+            currentAuction.protocolFee,
+            bid, 
+            currentAuction.protocolFee
         );
         auctions[_auctionId].lastBid = bid;
         auctions[_auctionId].buyer = newBuyer;
 
         // extends auction time if it about to end
-        if (currentAuction.endTime - currentTime < EXTENSION_DURATION) {
-            auctions[_auctionId].endTime = currentTime + EXTENSION_DURATION;
+        if (endTime - currentTime < EXTENSION_DURATION) {
+            endTime = currentTime + EXTENSION_DURATION;
+            auctions[_auctionId].endTime = endTime;
         }
-        emit BidPlaced(_auctionId, newBuyer, bid, auctions[_auctionId].endTime);
+        emit BidPlaced(_auctionId, newBuyer, bid, endTime);
     }
 
     /// @dev reserves new bid and returns the last one if it exists
-    function reserveValue(LibAsset.AssetType memory _buyAssetType, address oldBuyer, address newBuyer, uint oldAmount, uint newAmount) internal {
+    function reserveValue(
+        LibAsset.AssetType memory _buyAssetType, 
+        address oldBuyer, address newBuyer, 
+        Bid memory oldBid, 
+        uint oldProtocolFee, 
+        Bid memory newBid, 
+        uint newProtocolFee
+    ) internal {
         LibAsset.Asset memory transferAsset;
         if (oldBuyer != address(0x0)) { //return oldAmount to oldBuyer
+            uint oldAmount = getBidTotalAmount(oldBid, oldProtocolFee);
             transferAsset = LibAsset.Asset(_buyAssetType, oldAmount);
 
             // workaround bid asset type = ETH for security purposes
@@ -200,6 +214,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
                 transfer(transferAsset, address(this), oldBuyer, TO_LOCK, UNLOCK);
             }
         }
+        uint newAmount = getBidTotalAmount(newBid, newProtocolFee);
         transferAsset = LibAsset.Asset(_buyAssetType, newAmount);
         transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(transferAsset);
@@ -222,9 +237,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev returns true if newAmount is enough for buyOut
-    function buyOutVerify(uint _auctionId, uint newAmount) internal view returns (bool) {
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
-
+    function buyOutVerify(LibAucDataV1.DataV1 memory aucData, uint newAmount) internal pure returns (bool) {
         if (aucData.buyOutPrice > 0 && aucData.buyOutPrice <= newAmount) {
             return true;
         }
@@ -306,6 +319,19 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         return true;
     }
 
+    function _checkAuctionRangeTime(uint _auctionId, LibAucDataV1.DataV1 memory aucData) public view returns (bool){
+        uint currentTime = block.timestamp;
+        if (aucData.startTime > 0 && aucData.startTime > currentTime) {
+            return false;
+        }
+        uint endTime = auctions[_auctionId].endTime;
+        if (endTime > 0 && endTime < currentTime){
+            return false;
+        }
+
+        return true;
+    }
+
     /// @dev deletes auction after finalizing
     function deactivateAuction(uint _auctionId) internal {
         emit AuctionFinished(_auctionId, auctions[_auctionId]);
@@ -328,9 +354,10 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     // todo will there be a problem if buyer is last bidder?
     /// @dev buyout auction if bid satisfies buyout condition
     function buyOut(uint _auctionId, Bid memory bid) external payable {
-        checkAuctionInProgress(_auctionId);
-
-        require(buyOutVerify(_auctionId, bid.amount), "not enough for buyout auction");
+        Auction storage currentAuction = auctions[_auctionId];
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
+        checkAuctionInProgress(_auctionId, aucData);
+        require(buyOutVerify(aucData, bid.amount), "not enough for buyout");
         _buyOut(_auctionId, bid);
         doTransfers(_auctionId);
         deactivateAuction(_auctionId);
@@ -340,12 +367,15 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     function _buyOut(uint _auctionId, Bid memory bid) internal {
         address payable newBuyer = _msgSender();
         Auction storage currentAuction = auctions[_auctionId];
+        uint curProtocolFee = currentAuction.protocolFee;
         reserveValue(
             currentAuction.buyAsset,
             currentAuction.buyer,
             newBuyer,
-            getBidTotalAmount(currentAuction.lastBid, currentAuction.protocolFee),
-            getBidTotalAmount(bid, currentAuction.protocolFee)
+            currentAuction.lastBid, 
+            curProtocolFee,
+            bid, 
+            curProtocolFee
         );
         currentAuction.lastBid = bid;
         currentAuction.buyer = newBuyer;
@@ -357,8 +387,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev returns true if auction in progress, false otherwise
-    function checkAuctionInProgress(uint _auctionId) internal view{
-        require(checkAuctionExistence(_auctionId) && checkAuctionRangeTime(_auctionId), "auction is inactive");
+    function checkAuctionInProgress(uint _auctionId, LibAucDataV1.DataV1 memory aucData) internal view{
+        require(checkAuctionExistence(_auctionId) && _checkAuctionRangeTime(_auctionId, aucData), "auction is inactive");
     }
 
     /// @dev returns total amount for a bid (protocol fee and bid origin fees included)
@@ -369,8 +399,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     /// @dev function to call from wrapper to put bid
     function putBidWrapper(uint256 _auctionId) external payable {
-      require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
-      putBid(_auctionId, Bid(msg.value, "", ""));
+        require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
+        putBid(_auctionId, Bid(msg.value, LibBidDataV1.V1, ""));
     }
 
     /// @dev Used to withdraw faulty bids (bids that failed to return after out-bidding)
