@@ -5,6 +5,7 @@ const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC721Factory = artifacts.require("ERC721RaribleFactoryC2.sol");
 const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
+const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
 const truffleAssert = require('truffle-assertions');
 
 const { sign } = require("./mint");
@@ -188,7 +189,9 @@ contract("ERC721Rarible", accounts => {
     assert.equal(await token.isApprovedForAll(accounts[1], proxyLazy.address), true);
   });
 
-  it("check Royalties", async () => {
+  it("check Royalties IERC2981", async () => {
+    testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+
     const minter = accounts[1];
     let transferTo = accounts[2];
     let royaltiesBeneficiary1 = accounts[3];
@@ -204,6 +207,11 @@ contract("ERC721Rarible", accounts => {
 
     assert.equal(addressValue[0], royaltiesBeneficiary1, "account");
     assert.equal(addressValue[1], 150000, "value"); //why 15000?: 3 beneficiaries, each have 5%(500) in total 15%(1500), but WEIGHT_PRICE = 1000000, and 15% form this is 150000
+    const royaltiesAddress = addressValue[0];
+    const royaltiesPercent = addressValue[1];
+    let royaltiesPart = await testRoyaltyV2981Calculate.calculateRoyaltiesTest(royaltiesAddress, royaltiesPercent);
+    assert.equal(royaltiesPart[0].account, royaltiesBeneficiary1, "account");
+    assert.equal(royaltiesPart[0].value, 1500, "value");
   });
 
   it("mint and transfer by whitelist proxy", async () => {
