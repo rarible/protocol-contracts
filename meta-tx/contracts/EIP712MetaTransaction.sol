@@ -9,7 +9,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
     using SafeMath for uint256;
 
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
-    bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)");
 
     mapping(address => uint256) private nonces;
     bytes32 internal domainSeparator;
@@ -32,19 +32,19 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
     struct EIP712Domain {
         string name;
         string version;
-        uint256 chainId;
         address verifyingContract;
+        bytes32 salt;
     }
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
 
-    function __MetaTransaction_init_unchained(string memory name, string memory version) internal {
+    function __MetaTransaction_init_unchained(string memory name, string memory version, bytes32 salt) internal {
         domainSeparator = keccak256(abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                bytes32(getChainID()),
-                address(this)
+                address(this),
+                salt
             ));
     }
 
@@ -110,6 +110,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return sender;
     }
 
+//    todo Think: need it?
     function getChainID() internal pure returns (uint256 id) {
         assembly {
             id := chainid()

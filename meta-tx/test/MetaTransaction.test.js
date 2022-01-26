@@ -1,5 +1,6 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const MetaTxTest = artifacts.require("MetaTxTest.sol");
+const MetaTxSaltTest = artifacts.require("MetaTxSaltTest.sol");
 const NoMetaTxTest = artifacts.require("NoMetaTxTest.sol");
 const NoGetNonceTxTest = artifacts.require("NoGetNonceTxTest.sol");
 
@@ -17,6 +18,23 @@ let sumAbi = require("./contracts/abi/sumAbi.json");
 let getNonceAbi = require("./contracts/abi/getNonceAbi.json");
 let executeMetaTransactionABI = require("./contracts/abi/executeMetaTransactionAbi.json");
 
+//const domainType = [{
+//    name: "name",
+//    type: "string"
+//  },
+//  {
+//    name: "version",
+//    type: "string"
+//  },
+//  {
+//    name: "chainId",
+//    type: "uint256"
+//  },
+//  {
+//    name: "verifyingContract",
+//    type: "address"
+//  }
+//];
 const domainType = [{
     name: "name",
     type: "string"
@@ -26,12 +44,12 @@ const domainType = [{
     type: "string"
   },
   {
-    name: "chainId",
-    type: "uint256"
-  },
-  {
     name: "verifyingContract",
     type: "address"
+  },
+  {
+    name: "salt",
+    type: "bytes32"
   }
 ];
 const metaTransactionType = [{
@@ -112,16 +130,25 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   let erc721NoMetaTx;
   let metaTxTest;
   let owner = accounts[0];
+  let salt;
 
   beforeEach(async () => {
-    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "1"], { initializer: '__MetaTxTest_init' });
+    metaTxSaltTest = await MetaTxSaltTest.new();
+    salt = await metaTxSaltTest.getSalt();
+    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "1", salt], { initializer: '__MetaTxTest_init' });
 
+//    domainData = {
+//          name: "MetaTxTest",
+//          version: "1",
+//          verifyingContract: metaTxTest.address,
+//          chainId: 1337
+//        };
     domainData = {
-          name: "MetaTxTest",
-          version: "1",
-          verifyingContract: metaTxTest.address,
-          chainId: 1337
-        };
+      name: "MetaTxTest",
+      version: "1",
+      verifyingContract: metaTxTest.address,
+      salt: salt
+    };
   });
 
   it("Call unknown abi-method, use metaTx, throw ", async () => {
