@@ -195,7 +195,7 @@ contract("ERC721Rarible", accounts => {
   });
 
   it("check Royalties IERC2981, with 3 royaltiesBeneficiary ", async () => {
-    testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
 
     const minter = accounts[1];
     let transferTo = accounts[2];
@@ -220,7 +220,7 @@ contract("ERC721Rarible", accounts => {
   });
 
   it("check Royalties IERC2981, with 3 royaltiesBeneficiary zero fee, throw ", async () => {
-    testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
 
     const minter = accounts[1];
     let transferTo = accounts[2];
@@ -238,7 +238,7 @@ contract("ERC721Rarible", accounts => {
   });
 
   it("check Royalties IERC2981, with only 1 royaltiesBeneficiary ", async () => {
-    testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
 
     const minter = accounts[1];
     let transferTo = accounts[2];
@@ -261,7 +261,7 @@ contract("ERC721Rarible", accounts => {
   });
 
   it("check Royalties IERC2981, with only 0 royaltiesBeneficiary ", async () => {
-    testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
 
     const minter = accounts[1];
     let transferTo = accounts[2];

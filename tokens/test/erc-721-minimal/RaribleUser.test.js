@@ -47,7 +47,7 @@ contract("ERC721RaribleUser minimal", accounts => {
   });
 
   it("check Royalties IERC2981", async () => {
-    testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
     const minter = tokenOwner;
     let transferTo = accounts[2];
     let royaltiesBeneficiary1 = accounts[3];
