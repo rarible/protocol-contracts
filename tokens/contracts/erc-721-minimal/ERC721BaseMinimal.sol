@@ -11,6 +11,8 @@ import "../HasContractURI.sol";
 
 abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
 
+    event BaseUriChanged(string newBaseURI);
+
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal virtual override(ERC721UpgradeableMinimal, ERC721DefaultApprovalMinimal) view returns (bool) {
         return ERC721DefaultApprovalMinimal._isApprovedOrOwner(spender, tokenId);
     }
@@ -33,6 +35,12 @@ abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApproval
 
     function _emitMintEvent(address to, uint tokenId) internal override(ERC721UpgradeableMinimal, ERC721LazyMinimal) virtual {
         return ERC721LazyMinimal._emitMintEvent(to, tokenId);
+    }
+
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
+        super._setBaseURI(newBaseURI);
+
+        emit BaseUriChanged(newBaseURI);
     }
 
     uint256[50] private __gap;

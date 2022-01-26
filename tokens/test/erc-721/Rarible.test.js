@@ -179,6 +179,25 @@ contract("ERC721Rarible", accounts => {
     assert.equal(await token.isApprovedForAll(accounts[1], proxyLazy.address), true);
   });
 
+  it("set new BaseUri, check only owner, check emit event", async () => {
+    let olBaseUri = await token.baseURI();
+    const newBusaUriSet = "https://ipfs.rarible-the-best-in-the-World.com"
+    await expectThrow(
+      token.setBaseURI(newBusaUriSet)//caller is not the owner
+    );
+    let tx = await token.setBaseURI(newBusaUriSet, { from: tokenOwner })//caller is owner
+    let newBaseUri = await token.baseURI();
+    assert.equal(newBaseUri, newBusaUriSet);
+    assert.notEqual(newBaseUri, olBaseUri);
+
+    let newBaseUriFromEvent;
+    truffleAssert.eventEmitted(tx, 'BaseUriChanged', (ev) => {
+     	newBaseUriFromEvent = ev.newBaseURI;
+      return true;
+    });
+    assert.equal(newBaseUri, newBaseUriFromEvent);
+  });
+
   it("mint and transfer by whitelist proxy", async () => {
     const minter = accounts[1];
     let transferTo = accounts[2];

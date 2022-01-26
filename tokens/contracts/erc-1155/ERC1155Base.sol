@@ -15,6 +15,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
 
     event BurnLazy(address indexed operator, address indexed account, uint256 id, uint256 amount);
     event BurnLazyBatch(address indexed operator, address indexed account, uint256[] ids, uint256[] amounts);
+    event BaseUriChanged(string newBaseURI);
 
     function isApprovedForAll(address _owner, address _operator) public override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) view returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
@@ -77,6 +78,12 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
 
     function uri(uint id) external view override(ERC1155BaseURI, ERC1155Upgradeable) virtual returns (string memory) {
         return _tokenURI(id);
+    }
+
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
+        super._setBaseURI(newBaseURI);
+
+        emit BaseUriChanged(newBaseURI);
     }
 
     uint256[50] private __gap;
