@@ -14,8 +14,8 @@ contract("ERC721RaribleUser minimal", accounts => {
   const whiteListProxy = accounts[5];
 
   function fees(list) {
-  	const value = 500;
-  	return list.map(account => ({ account, value }))
+    const value = 500;
+    return list.map(account => ({ account, value }))
   }
 
   beforeEach(async () => {

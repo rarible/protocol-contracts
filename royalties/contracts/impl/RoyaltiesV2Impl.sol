@@ -23,6 +23,11 @@ contract RoyaltiesV2Impl is AbstractRoyalties, RoyaltiesV2, IERC2981 {
     *calculate sum all royalties, but royalties beneficiary will be only one royalties[0].account, according to rules of IERC2981
     */
     function royaltyInfo(uint256 id, uint256 _salePrice) override external view returns (address receiver, uint256 royaltyAmount) {
+        if (royalties[id].length == 0) {
+            receiver = address(0);
+            royaltyAmount = 0;
+            return(receiver, royaltyAmount);
+        }
         LibPart.Part[] memory _royalties = royalties[id];
         receiver = _royalties[0].account;
         uint percent;

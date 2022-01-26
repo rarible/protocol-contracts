@@ -22,8 +22,8 @@ contract("ERC1155RaribleUser", accounts => {
   const whiteListProxy = accounts[5];
 
   function fees(list) {
-  	const value = 500;
-  	return list.map(account => ({ account, value }))
+    const value = 500;
+    return list.map(account => ({ account, value }))
   }
 
   beforeEach(async () => {
@@ -124,7 +124,6 @@ contract("ERC1155RaribleUser", accounts => {
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), minter);
 
     const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, mint, {from: whiteListProxy});
-//               await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
     const addressValue = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
 
     assert.equal(addressValue[0], royaltiesBeneficiary1, "account");
