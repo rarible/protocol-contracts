@@ -110,13 +110,6 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return sender;
     }
 
-//    todo Think: need it?
-    function getChainID() internal pure returns (uint256 id) {
-        assembly {
-            id := chainid()
-        }
-    }
-
     function getSalt(string memory _name, string memory _symbol) internal pure returns (bytes32) {
         return keccak256(abi.encode(
                 keccak256(bytes(_name)),
