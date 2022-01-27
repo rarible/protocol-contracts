@@ -1,6 +1,5 @@
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const MetaTxTest = artifacts.require("MetaTxTest.sol");
-const MetaTxSaltTest = artifacts.require("MetaTxSaltTest.sol");
 const NoMetaTxTest = artifacts.require("NoMetaTxTest.sol");
 const NoGetNonceTxTest = artifacts.require("NoGetNonceTxTest.sol");
 
@@ -18,23 +17,6 @@ let sumAbi = require("./contracts/abi/sumAbi.json");
 let getNonceAbi = require("./contracts/abi/getNonceAbi.json");
 let executeMetaTransactionABI = require("./contracts/abi/executeMetaTransactionAbi.json");
 
-//const domainType = [{
-//    name: "name",
-//    type: "string"
-//  },
-//  {
-//    name: "version",
-//    type: "string"
-//  },
-//  {
-//    name: "chainId",
-//    type: "uint256"
-//  },
-//  {
-//    name: "verifyingContract",
-//    type: "address"
-//  }
-//];
 const domainType = [{
     name: "name",
     type: "string"
@@ -133,16 +115,19 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   let salt;
 
   beforeEach(async () => {
-    metaTxSaltTest = await MetaTxSaltTest.new();
-    salt = await metaTxSaltTest.getSalt();
-    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "1", salt], { initializer: '__MetaTxTest_init' });
+/*
+* For test only use metaTxSaltTest contract with method saltCalculate: salt = await metaTxSaltTest.getSaltWithParams("Rarible", "RARI");
+* salt = '0x17dff1fba43b1d565843261b8d727dfc590c85403188640c3cbea7c810062ca4'; in this case when _name == "MetaTxTest", _symbol == "RARI"
+   function getSaltWithParams(string memory _name, string memory _symbol) external pure returns (bytes32) {
+        return keccak256(abi.encode(
+                keccak256(bytes(_name)),
+                keccak256(bytes(_symbol))
+            ));
+    }
+*/
+    salt = '0x17dff1fba43b1d565843261b8d727dfc590c85403188640c3cbea7c810062ca4';
+    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "RARI", "1", salt], { initializer: '__MetaTxTest_init' });
 
-//    domainData = {
-//          name: "MetaTxTest",
-//          version: "1",
-//          verifyingContract: metaTxTest.address,
-//          chainId: 1337
-//        };
     domainData = {
       name: "MetaTxTest",
       version: "1",

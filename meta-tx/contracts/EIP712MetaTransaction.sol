@@ -117,6 +117,13 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         }
     }
 
+    function getSalt(string memory _name, string memory _symbol) internal pure returns (bytes32) {
+        return keccak256(abi.encode(
+                keccak256(bytes(_name)),
+                keccak256(bytes(_symbol))
+            ));
+    }
+
     function getDomainSeparator() private view returns (bytes32) {
         return domainSeparator;
     }

@@ -15,6 +15,7 @@ let publicKey = "0x726cDa2Ac26CeE89F645e55b78167203cAE5410E";
 let privateKey = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa6";
 let balanceOfAbi =  require("./contracts/balanceOfAbi.json");
 let balanceOf1155Abi =  require("./contracts/balanceOf1155Abi.json");
+
 const domainType = [{
     name: "name",
     type: "string"
@@ -24,14 +25,15 @@ const domainType = [{
     type: "string"
   },
   {
-    name: "chainId",
-    type: "uint256"
-  },
-  {
     name: "verifyingContract",
     type: "address"
+  },
+  {
+    name: "salt",
+    type: "bytes32"
   }
 ];
+
 const metaTransactionType = [{
     name: "nonce",
     type: "uint256"
@@ -88,8 +90,14 @@ contract("ERC721MetaTxTokenTest", accounts => {
   let erc1155WithMetaTx;
   let erc1155UserNoMetaTx;
   let erc1155UserWithMetaTx;
+  let salt;
 
   beforeEach(async () => {
+/*
+* For test only use metaTxSaltTest contract with method saltCalculate: salt = await metaTxSaltTest.getSaltWithParams("Rarible", "RARI");
+* salt = '0xe350b7ecf798c7048db178440e5f945dde419efad7c32fa4e16147ca97a9cc89'; in this case when _name == "Rarible", _symbol == "RARI"
+*/
+    salt = '0xe350b7ecf798c7048db178440e5f945dde419efad7c32fa4e16147ca97a9cc89';
     erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });
     erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleMeta_init' });
 
@@ -106,25 +114,25 @@ contract("ERC721MetaTxTokenTest", accounts => {
           name: "ERC721RaribleMeta",
           version: "1",
           verifyingContract: erc721WithMetaTx.address,
-          chainId: 1337
+          salt: salt
         };
     domainData1155Rarible = {
           name: "ERC1155RaribleMeta",
           version: "1",
           verifyingContract: erc1155WithMetaTx.address,
-          chainId: 1337
+          salt: salt
         };
     domainData721RaribleUser = {
           name: "ERC721RaribleUserMeta",
           version: "1",
           verifyingContract: erc721UserWithMetaTx.address,
-          chainId: 1337
+          salt: salt
         };
     domainData1155RaribleUser = {
           name: "ERC1155RaribleUserMeta",
           version: "1",
           verifyingContract: erc1155UserWithMetaTx.address,
-          chainId: 1337
+          salt: salt
         };
   });
 
