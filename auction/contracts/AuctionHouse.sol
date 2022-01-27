@@ -353,7 +353,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     // todo will there be a problem if buyer is last bidder?
     /// @dev buyout auction if bid satisfies buyout condition
-    function buyOut(uint _auctionId, Bid memory bid) external payable {
+    function buyOut(uint _auctionId, Bid memory bid) external payable nonReentrant {
         Auction storage currentAuction = auctions[_auctionId];
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         checkAuctionInProgress(_auctionId, aucData);
