@@ -27,7 +27,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
 
     /*
      * Domain structure.
-     * Data(information to for making metaTransaction method uniq) about method and contract
+     * Data(information to for making metaTransaction method uniq.) about method and contract
      */
     struct EIP712Domain {
         string name;
@@ -108,13 +108,6 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
             sender = msg.sender;
         }
         return sender;
-    }
-
-//    todo Think: need it?
-    function getChainID() internal pure returns (uint256 id) {
-        assembly {
-            id := chainid()
-        }
     }
 
     function getSalt(string memory _name, string memory _symbol) internal pure returns (bytes32) {

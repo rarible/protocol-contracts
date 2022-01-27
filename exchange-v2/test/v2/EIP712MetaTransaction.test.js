@@ -33,12 +33,12 @@ const domainType = [{
     type: "string"
   },
   {
-    name: "chainId",
-    type: "uint256"
-  },
-  {
     name: "verifyingContract",
     type: "address"
+  },
+  {
+    name: "salt",
+    type: "bytes32"
   }
 ];
 
@@ -100,8 +100,14 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
   let community = account1;
   let left;
   let right;
+  let salt;
 
   before('before', async function () {
+    /*
+    * For test only use metaTxSaltTest contract with method saltCalculate: salt = await metaTxSaltTest.getSaltWithParams("ExchangeV2", "EXCH");
+    * salt = '0xe79abc53a3cf1bb21913107456b175abd68453fef5f423198edf75535e6666fd'; in this case when _name == "ExchangeV2", _symbol == "EXCH"
+    */
+    salt = '0xe79abc53a3cf1bb21913107456b175abd68453fef5f423198edf75535e6666fd';
     transferProxy = await TransferProxyTest.new();
     erc20TransferProxy = await ERC20TransferProxyTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
@@ -114,7 +120,7 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
       name: "ExchangeV2",
       version: "1",
       verifyingContract: testContract.address,
-      chainId: 1337
+      salt: salt
     };
 
     await t1.mint(owner, 100);
