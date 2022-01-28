@@ -18,7 +18,7 @@ contract ERC721RaribleMeta is ERC721RaribleMinimal, EIP712MetaTransaction {
             setApprovalForAll(operators[i], true);
         }
 
-        __MetaTransaction_init_unchained("ERC721RaribleUserMeta", "1", getSalt(_name, _symbol));
+        __MetaTransaction_init_unchained("ERC721RaribleUserMeta", "1");
 
         isPrivate = true;
 
@@ -28,7 +28,7 @@ contract ERC721RaribleMeta is ERC721RaribleMinimal, EIP712MetaTransaction {
     function __ERC721RaribleMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external initializer {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
-        __MetaTransaction_init_unchained("ERC721RaribleMeta", "1", getSalt(_name, _symbol));
+        __MetaTransaction_init_unchained("ERC721RaribleMeta", "1");
 
         isPrivate = false;
 

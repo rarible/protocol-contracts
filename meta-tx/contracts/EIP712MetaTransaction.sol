@@ -38,13 +38,13 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
 
-    function __MetaTransaction_init_unchained(string memory name, string memory version, bytes32 salt) internal {
+    function __MetaTransaction_init_unchained(string memory name, string memory version) internal {
         domainSeparator = keccak256(abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
                 address(this),
-                salt
+                getSalt()
             ));
     }
 
@@ -110,11 +110,14 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return sender;
     }
 
-    function getSalt(string memory _name, string memory _symbol) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
-                keccak256(bytes(_name)),
-                keccak256(bytes(_symbol))
-            ));
+    function getSalt() internal pure returns (bytes32) {
+        return bytes32(getChainID());
+    }
+
+    function getChainID() internal pure returns (uint256 id) {
+        assembly {
+            id := chainid()
+        }
     }
 
     function getDomainSeparator() private view returns (bytes32) {

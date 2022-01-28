@@ -91,13 +91,10 @@ contract("ERC721MetaTxTokenTest", accounts => {
   let erc1155UserNoMetaTx;
   let erc1155UserWithMetaTx;
   let salt;
+  let chainId = 1337;
 
   beforeEach(async () => {
-    /*
-    * For test only use metaTxSaltTest contract with method saltCalculate: salt = await metaTxSaltTest.getSaltWithParams("Rarible", "RARI");
-    * salt = '0xe350b7ecf798c7048db178440e5f945dde419efad7c32fa4e16147ca97a9cc89'; in this case when _name == "Rarible", _symbol == "RARI"
-    */
-    salt = '0xe350b7ecf798c7048db178440e5f945dde419efad7c32fa4e16147ca97a9cc89';
+    salt = '0x' + (chainId).toString(16).padStart(64, '0');
     erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });
     erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleMeta_init' });
 

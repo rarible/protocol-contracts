@@ -113,20 +113,11 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   let metaTxTest;
   let owner = accounts[0];
   let salt;
+  let chainId = 1337;
 
   beforeEach(async () => {
-    /*
-    * For test only use metaTxSaltTest contract with method saltCalculate: salt = await metaTxSaltTest.getSaltWithParams("Rarible", "RARI");
-    * salt = '0x17dff1fba43b1d565843261b8d727dfc590c85403188640c3cbea7c810062ca4'; in this case when _name == "MetaTxTest", _symbol == "RARI"
-    *   function getSaltWithParams(string memory _name, string memory _symbol) external pure returns (bytes32) {
-    *        return keccak256(abi.encode(
-    *                keccak256(bytes(_name)),
-    *                keccak256(bytes(_symbol))
-    *            ));
-    *    }
-    */
-    salt = '0x17dff1fba43b1d565843261b8d727dfc590c85403188640c3cbea7c810062ca4';
-    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "RARI", "1", salt], { initializer: '__MetaTxTest_init' });
+    salt = '0x' + (chainId).toString(16).padStart(64, '0');
+    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "RARI", "1"], { initializer: '__MetaTxTest_init' });
 
     domainData = {
       name: "MetaTxTest",

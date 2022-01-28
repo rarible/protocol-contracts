@@ -101,13 +101,10 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
   let left;
   let right;
   let salt;
+  let chainId = 1337;
 
   before('before', async function () {
-    /*
-    * For test only use metaTxSaltTest contract with method saltCalculate: salt = await metaTxSaltTest.getSaltWithParams("ExchangeV2", "EXCH");
-    * salt = '0xe79abc53a3cf1bb21913107456b175abd68453fef5f423198edf75535e6666fd'; in this case when _name == "ExchangeV2", _symbol == "EXCH"
-    */
-    salt = '0xe79abc53a3cf1bb21913107456b175abd68453fef5f423198edf75535e6666fd';
+    salt = '0x' + (chainId).toString(16).padStart(64, '0');
     transferProxy = await TransferProxyTest.new();
     erc20TransferProxy = await ERC20TransferProxyTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();

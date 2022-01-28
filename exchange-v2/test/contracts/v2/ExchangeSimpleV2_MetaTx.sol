@@ -16,7 +16,7 @@ contract ExchangeSimpleV2_MetaTx is ExchangeV2Core, SimpleTransferManager, EIP71
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __OrderValidator_init_unchained();
-        __MetaTransaction_init_unchained("ExchangeV2","1", getSalt("ExchangeV2", "EXCH"));
+        __MetaTransaction_init_unchained("ExchangeV2", "1");
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {

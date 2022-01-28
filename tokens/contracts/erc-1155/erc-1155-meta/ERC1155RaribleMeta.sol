@@ -17,7 +17,7 @@ contract ERC1155RaribleMeta is ERC1155Rarible, EIP712MetaTransaction {
         for(uint i = 0; i < operators.length; i++) {
             setApprovalForAll(operators[i], true);
         }
-        __MetaTransaction_init_unchained("ERC1155RaribleUserMeta", "1", getSalt(_name, _symbol));
+        __MetaTransaction_init_unchained("ERC1155RaribleUserMeta", "1");
         
         isPrivate = true;
 
@@ -27,7 +27,7 @@ contract ERC1155RaribleMeta is ERC1155Rarible, EIP712MetaTransaction {
     function __ERC1155RaribleMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external initializer {
         __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
-        __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1", getSalt(_name, _symbol));
+        __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
 
         isPrivate = false;
 
