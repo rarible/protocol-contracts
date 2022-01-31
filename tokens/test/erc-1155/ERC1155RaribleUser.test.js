@@ -177,6 +177,78 @@ contract("ERC1155RaribleUser", accounts => {
     await checkCreators(tokenId, [minter]);
   });
 
+  it("mint and transfer with minter access control", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+    let supply = 5;
+    let mint = 2;
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter})
+    );
+
+    await token.addMinter(minter, {from: tokenOwner});
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(transferTo), false);
+
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    assert.equal(await token.balanceOf(minter, tokenId), 0);
+  });
+
+  it("mint and transfer with minter access control and minter signature", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+    let supply = 5;
+    let mint = 2;
+
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: minter})
+    await token.addMinter(minter, {from: tokenOwner});
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(whiteListProxy), false);
+
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+    assert.equal(await token.balanceOf(transferTo, tokenId), mint);
+    assert.equal(await token.balanceOf(minter, tokenId), 0);
+  });
+
+  it("mint and transfer with minter access control and wrong minter signature", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+    let supply = 5;
+    let mint = 2;
+
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], transferTo);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: minter})
+    await token.addMinter(minter, {from: tokenOwner});
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(whiteListProxy), false);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+    );
+  });
+
   async function getSignature(tokenId, tokenURI, supply, creators, fees, account) {
   	return sign(account, tokenId, tokenURI, supply, creators, fees, token.address);
   }

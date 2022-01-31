@@ -4,8 +4,9 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./ERC1155Base.sol";
+import "../access/MinterAccessControl.sol";
 
-contract ERC1155Rarible is ERC1155Base {
+contract ERC1155Rarible is ERC1155Base, MinterAccessControl {
     /// @dev true if collection is private, false if public
     bool isPrivate;
 
@@ -40,6 +41,7 @@ contract ERC1155Rarible is ERC1155Base {
         __ERC1155Burnable_init_unchained();
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC1155Base_init_unchained(_name, _symbol);
+        __MinterAccessControl_init_unchained();
         _setBaseURI(baseURI);
 
         //setting default approver for transferProxies
@@ -49,7 +51,7 @@ contract ERC1155Rarible is ERC1155Base {
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override {
         if (isPrivate){
-          require(owner() == data.creators[0].account, "minter is not the owner");
+          require(owner() == data.creators[0].account || isMinter(data.creators[0].account), "not owner or minter");
         }
         super.mintAndTransfer(data, to, _amount);
     }
