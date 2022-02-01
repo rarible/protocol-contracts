@@ -59,6 +59,10 @@ contract("AuctionHouse", accounts => {
       const buyAssetType = await prepareETH();
 
       let auctionFees = [[accounts[3], 1000]];
+
+      //checking default minimal duration
+      assert.equal(await testAuctionHouse.minimalDuration(), 900, "default minimal duration")
+  
       //trying duration = 899 (slightly less than 15 mins)
       let dataV1 = await encDataV1([[], auctionFees, 899, 0, 100]);
       await truffleAssert.fails(
@@ -87,7 +91,23 @@ contract("AuctionHouse", accounts => {
       });
       assert.equal(auctionId, 1, "cancel event correct")
 
-      dataV1 = await encDataV1([[], auctionFees, 900, 0, 100])
+      // changing duration not from owner results in error
+      await truffleAssert.fails(
+        testAuctionHouse.changeMinimalDuration(0, { from: seller }),
+        truffleAssert.ErrorType.REVERT,
+        "Ownable: caller is not the owner"
+      )
+
+      //changing minimal duration to 0
+      const changeDurationTx = await testAuctionHouse.changeMinimalDuration(0)
+      truffleAssert.eventEmitted(changeDurationTx, 'MinimalDurationChanged', (ev) => {
+        assert.equal(ev.oldValue, 900, "old minimal duration from event")
+        assert.equal(ev.newValue, 0, "new minimal duration from event")
+        return true;
+      });
+      assert.equal(await testAuctionHouse.minimalDuration(), 0, "minimal duration changed to 0")
+
+      dataV1 = await encDataV1([[], auctionFees, 0, 0, 100])
       await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller })
 
     })

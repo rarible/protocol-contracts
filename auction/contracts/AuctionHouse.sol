@@ -16,6 +16,12 @@ import "@rarible/libraries/contracts/LibDeal.sol";
 contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     using LibTransfer for address;
 
+    /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
+    uint256 private constant EXTENSION_DURATION = 15 minutes;
+
+    /// @dev maximum auction duration
+    uint256 private constant MAX_DURATION = 1000 days;
+
     /// @dev mapping to store data of auctions for auctionId
     mapping(uint => Auction) auctions;
 
@@ -25,11 +31,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     /// @dev latest auctionId
     uint256 private auctionId;
 
-    /// @dev minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
-    uint256 private constant EXTENSION_DURATION = 15 minutes;
-
-    /// @dev maximum auction duration
-    uint256 private constant MAX_DURATION = 1000 days;
+    /// @dev minimal auction duration
+    uint256 public minimalDuration;
 
     /// @dev transfer manager for executing the deal
     ITransferManager public transferManager;
@@ -58,6 +61,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         auctionId = 1;
         transferManager = _transferManager;
         protocolFee = _protocolFee;
+        minimalDuration = EXTENSION_DURATION;
     }
 
     /// @dev creates an auction and locks sell asset
@@ -84,7 +88,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         );
 
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
-        require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "incorrect duration");
+        require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
 
         uint endTime = 0;
         if (aucData.startTime > 0){
@@ -429,6 +433,11 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     function getExternalTransferExecutor() internal view override returns (IExternalTransferExecutor) {
         return transferManager;
+    }
+
+    function changeMinimalDuration(uint newValue) external onlyOwner {
+        emit MinimalDurationChanged(minimalDuration, newValue);
+        minimalDuration = newValue;
     }
 
     uint256[50] private ______gap;
