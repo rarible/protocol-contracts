@@ -69,19 +69,22 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         bytes4 dataType,
         bytes memory data
     ) external {
-        // ETH or ERC20 can't be a sell item
+        // only ERC721 or ERC1155 can't be a buy item
         require(
             _sellAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS ||
             _sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS,
-            "incorrect asset class"
+            "incorrect sell asset class"
+        );
+
+        // only ETH or ERC20 can't be a buy item
+        require(
+            _buyAsset.assetClass == LibAsset.ERC20_ASSET_CLASS ||
+            _buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS,
+            "incorrect buy asset class"
         );
 
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= EXTENSION_DURATION && aucData.duration <= MAX_DURATION, "incorrect duration");
-
-        // check if auction for this token is taking place
-        (address token, uint tokenId) = abi.decode(_sellAsset.assetType.data, (address, uint256));
-        require(getAuctionByToken(token, tokenId) == 0, "auction already taking place");
 
         uint endTime = 0;
         if (aucData.startTime > 0){
@@ -105,7 +108,11 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);
 
-        setAuctionForToken(token, tokenId, currentAuctionId);
+        //setting auctionForToken only for erc-721
+        if (_sellAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
+            (address token, uint tokenId) = abi.decode(_sellAsset.assetType.data, (address, uint256));
+            setAuctionForToken(token, tokenId, currentAuctionId);
+        }
         emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
     }
 

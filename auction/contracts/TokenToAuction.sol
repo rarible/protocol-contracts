@@ -5,7 +5,7 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 /// @dev contract to add tokenToAuctionId functionality to auctionHouse
 contract TokenToAuction {
-    /// @dev mapping to store auction ids for token address + token id
+    /// @dev mapping to store auction ids for token address + token id (only stores erc-721 tokens)
     mapping(address => mapping(uint256 => uint256)) private tokenToAuctionId;
 
     /// @dev returns auction id by token address and token id
