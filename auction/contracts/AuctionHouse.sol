@@ -189,9 +189,13 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         auctions[_auctionId].lastBid = bid;
         auctions[_auctionId].buyer = newBuyer;
 
-        // extends auction time if it about to end
-        if (endTime - currentTime < EXTENSION_DURATION) {
-            endTime = currentTime + EXTENSION_DURATION;
+        // auction is extended for EXTENSION_DURATION or minimalDuration if (minimalDuration < EXTENSION_DURATION)
+        uint minDur = minimalDuration;
+        uint extension = (minDur < EXTENSION_DURATION) ? minDur : EXTENSION_DURATION;
+
+        // extends auction time if it's about to end
+        if (endTime - currentTime < extension) {
+            endTime = currentTime + extension;
             auctions[_auctionId].endTime = endTime;
         }
         emit BidPlaced(_auctionId, newBuyer, bid, endTime);
@@ -323,7 +327,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             return false;
         }
         uint endTime = auctions[_auctionId].endTime;
-        if (endTime > 0 && endTime < currentTime){
+        if (endTime > 0 && endTime <= currentTime){
             return false;
         }
 

@@ -465,6 +465,98 @@ contract("AuctionHouse", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer); // after mint owner is testAuctionHouse
     })
 
+    it("should correctly finish auction with 1 bid and past endTime, minimal duration = 10", async () => {
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareERC20()
+
+      await testAuctionHouse.changeMinimalDuration(10)
+
+      let auctionFees = [[accounts[3], 100]];
+      let dataV1 = await encDataV1([[], auctionFees, 0, 0, 18]); //originFees, duration, startTime, buyOutPrice
+
+      await truffleAssert.fails(
+        testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller }),
+        truffleAssert.ErrorType.REVERT,
+        "incorrect duration"
+      )
+
+      dataV1 = await encDataV1([[], auctionFees, 10, 0, 18]);
+      
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
+      assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
+      let auctionId = 1;
+
+      let bidDataV1 = await bidEncDataV1([[], []]);
+      let bid = { amount: 10, dataType: V1, data: bidDataV1 };
+      let txBid = await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
+      
+      let endTime;
+      truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
+        endTime = ev.endTime;
+        return true;
+      });
+      let curTime = await testAuctionHouse.timeNow()
+      assert.equal(curTime.toNumber() + 10, endTime, "correct endTime")
+
+      await prepareERC20(accounts[3], 100, false)
+
+      await increaseTime(5);
+
+      bid = { amount: 15, dataType: V1, data: bidDataV1 };
+      txBid = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[3] });
+      truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
+        endTime = ev.endTime;
+        return true;
+      });
+      curTime = await testAuctionHouse.timeNow()
+      assert.equal(curTime.toNumber() + 10, endTime, "correct endTime")
+
+      await increaseTime(10);
+
+      const txFinish = await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
+      let id;
+      truffleAssert.eventEmitted(txFinish, 'AuctionFinished', (ev) => {
+        id = ev.auctionId;
+        return true;
+      });
+      assert.equal(id, 1, "id from event")
+      assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[3]); // after mint owner is testAuctionHouse
+    })
+
+    it("should correctly finish auction with 1 bid and past endTime, minimal duration = 0", async () => {
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareERC20()
+
+      await testAuctionHouse.changeMinimalDuration(0)
+
+      let auctionFees = [[accounts[3], 100]];
+      let dataV1 = await encDataV1([[], auctionFees, 0, 0, 18]); //originFees, duration, startTime, buyOutPrice
+      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
+      assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
+      let auctionId = 1;
+
+      let bidDataV1 = await bidEncDataV1([[], []]);
+      let bid = { amount: 10, dataType: V1, data: bidDataV1 };
+      const txBid = await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
+      
+      let endTime;
+      truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
+        endTime = ev.endTime;
+        return true;
+      });
+      const curTime = await testAuctionHouse.timeNow()
+      assert.equal(curTime.toNumber(), endTime.toNumber(), "correct endTime")
+
+      const txFinish = await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
+      let id;
+      truffleAssert.eventEmitted(txFinish, 'AuctionFinished', (ev) => {
+        id = ev.auctionId;
+        return true;
+      });
+      assert.equal(id, 1, "id from event")
+      assert.equal(await erc721.ownerOf(erc721TokenId1), buyer); // after mint owner is testAuctionHouse
+    })
+
     it("721<->20", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20()
