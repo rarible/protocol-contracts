@@ -91,11 +91,13 @@ module.exports = async function (deployer, network) {
 
   // setting auction as operator in transferProxy
   const TransferProxyContract = await OperatorRole.at(transferProxy);
-  await TransferProxyContract.addOperator(auction.address)
+  //not needed in normal migration
+  await TransferProxyContract.addOperator(raribleTransferManager)
 
   // setting auction as operator in erc20 transferProxy
   const ERC20TransferProxyContract = await OperatorRole.at(erc20TransferProxy);
-  await ERC20TransferProxyContract.addOperator(auction.address) 
+  //not needed in normal migration
+  await ERC20TransferProxyContract.addOperator(raribleTransferManager) 
   
   //deploying wrapper
   await deployer.deploy(Wrapper, auction.address);
