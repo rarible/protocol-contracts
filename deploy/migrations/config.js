@@ -35,6 +35,11 @@ const e2e = {
   deploy_CryptoPunks: true,
   address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
 }
+const dev = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+}
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
   deploy_CryptoPunks: false,
@@ -79,7 +84,8 @@ let settings = {
   "e2e": e2e,
   "e2e-fork": e2e,
   "polygon_mumbai": polygon_mumbai,
-  "polygon_mainnet": polygon_mainnet
+  "polygon_mainnet": polygon_mainnet,
+  "dev": dev
 };
 
 function getSettings(network) {
