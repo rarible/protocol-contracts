@@ -26,12 +26,12 @@ const domainType = [{
     type: "string"
   },
   {
-    name: "chainId",
-    type: "uint256"
-  },
-  {
     name: "verifyingContract",
     type: "address"
+  },
+  {
+    name: "salt",
+    type: "bytes32"
   }
 ];
 const metaTransactionType = [{
@@ -112,16 +112,19 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   let erc721NoMetaTx;
   let metaTxTest;
   let owner = accounts[0];
+  let salt;
+  let chainId = 1337;
 
   beforeEach(async () => {
-    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "1"], { initializer: '__MetaTxTest_init' });
+    salt = '0x' + (chainId).toString(16).padStart(64, '0');
+    metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "RARI", "1"], { initializer: '__MetaTxTest_init' });
 
     domainData = {
-          name: "MetaTxTest",
-          version: "1",
-          verifyingContract: metaTxTest.address,
-          chainId: 1337
-        };
+      name: "MetaTxTest",
+      version: "1",
+      verifyingContract: metaTxTest.address,
+      salt: salt
+    };
   });
 
   it("Call unknown abi-method, use metaTx, throw ", async () => {

@@ -28,6 +28,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
         return interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
         || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
+        || interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES
         || interfaceId == _INTERFACE_ID_ERC165
         || interfaceId == _INTERFACE_ID_ERC1155
         || interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI;

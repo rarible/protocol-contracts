@@ -3,6 +3,7 @@ const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC1155RaribleUserFactoryC2 = artifacts.require("ERC1155RaribleFactoryC2.sol");
 const truffleAssert = require('truffle-assertions');
+const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require("./mint");
@@ -19,6 +20,11 @@ contract("ERC1155RaribleUser", accounts => {
 
   const name = 'FreeMintable';
   const whiteListProxy = accounts[5];
+
+  function fees(list) {
+    const value = 500;
+    return list.map(account => ({ account, value }))
+  }
 
   beforeEach(async () => {
     token = await Testing.new();
@@ -97,6 +103,36 @@ contract("ERC1155RaribleUser", accounts => {
   it("check for ERC1155 interfaces", async () => {
   	assert.equal(await token.supportsInterface("0xd9b67a26"), true);
   	assert.equal(await token.supportsInterface("0x0e89341c"), true);
+  });
+  it("check for support IERC2981 interface", async () => {
+  	assert.equal(await token.supportsInterface("0x2a55205a"), true);
+  });
+
+  it("check Royalties IERC2981", async () => {
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    const minter = tokenOwner;
+    let transferTo = accounts[2];
+    let royaltiesBeneficiary1 = accounts[3];
+    let royaltiesBeneficiary2 = accounts[4];
+    let royaltiesBeneficiary3 = accounts[6];
+    const WEIGHT_PRICE = 1000000;
+    let supply = 5;
+    let mint = 2;
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+    const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), minter);
+
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, mint, {from: whiteListProxy});
+    const addressValue = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
+
+    assert.equal(addressValue[0], royaltiesBeneficiary1, "account");
+    assert.equal(addressValue[1], 150000, "value"); //why 15000?: 3 beneficiaries, each have 5%(500) in total 15%(1500), but WEIGHT_PRICE = 1000000, and 15% form this is 150000
+    const royaltiesAddress = addressValue[0];
+    const royaltiesPercent = addressValue[1];
+    let royaltiesPart = await testRoyaltyV2981Calculate.calculateRoyaltiesTest(royaltiesAddress, royaltiesPercent);
+    assert.equal(royaltiesPart[0].account, royaltiesBeneficiary1, "account");
+    assert.equal(royaltiesPart[0].value, 1500, "value");
   });
 
   it("set new BaseUri, check only owner, check emit event", async () => {
