@@ -29,6 +29,7 @@ abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal
     function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
         return interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
         || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
+        || interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES
         || interfaceId == _INTERFACE_ID_ERC165
         || interfaceId == _INTERFACE_ID_ERC721
         || interfaceId == _INTERFACE_ID_ERC721_METADATA
