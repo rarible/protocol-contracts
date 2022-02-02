@@ -96,16 +96,16 @@ contract("ERC721MetaTxTokenTest", accounts => {
   beforeEach(async () => {
     salt = '0x' + (chainId).toString(16).padStart(64, '0');
     erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });
-    erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleMeta_init' });
+    erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });
 
     erc721UserNoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleUser_init' });
-    erc721UserWithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleUserMeta_init' });
+    erc721UserWithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721RaribleUser_init' });
 
     erc1155NoMetaTx = await deployProxy(ERC1155NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155Rarible_init' });
-    erc1155WithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleMeta_init' });
+    erc1155WithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155Rarible_init' });
 
     erc1155UserNoMetaTx = await deployProxy(ERC1155NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleUser_init' });
-    erc1155UserWithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleUserMeta_init' });
+    erc1155UserWithMetaTx = await deployProxy(ERC1155MetaTx, ["Rarible", "RARI", "ipfs:/", "", [], ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC1155RaribleUser_init' });
 
     domainData721Rarible = {
           name: "ERC721RaribleMeta",
