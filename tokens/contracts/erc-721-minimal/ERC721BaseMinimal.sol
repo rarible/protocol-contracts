@@ -8,8 +8,9 @@ import "./ERC721BurnableUpgradeableMinimal.sol";
 import "./ERC721DefaultApprovalMinimal.sol";
 import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
+import "../access/MinterAccessControl.sol";
 
-abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
+abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI, MinterAccessControl {
 
     event BaseUriChanged(string newBaseURI);
 
@@ -43,5 +44,6 @@ abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApproval
         emit BaseUriChanged(newBaseURI);
     }
 
-    uint256[50] private __gap;
+    // changed from 50 to 40 from adding inheritance MinterAccessControl, 1 variable + 9 gap there
+    uint256[40] private __gap;
 }

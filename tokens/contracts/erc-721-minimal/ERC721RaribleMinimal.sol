@@ -12,7 +12,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal {
     event CreateERC721Rarible(address owner, string name, string symbol);
     event CreateERC721RaribleUser(address owner, string name, string symbol);
 
-    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external initializer {
+    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external virtual initializer {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         for(uint i = 0; i < operators.length; i++) {
@@ -23,7 +23,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal {
         emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
     }
 
-    function __ERC721Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external initializer {
+    function __ERC721Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external virtual initializer {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         isPrivate = false;
@@ -39,6 +39,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal {
         __Ownable_init_unchained();
         __ERC721Burnable_init_unchained();
         __Mint721Validator_init_unchained();
+        __MinterAccessControl_init_unchained();
         __HasContractURI_init_unchained(contractURI);
         __ERC721_init_unchained(_name, _symbol);
 
@@ -49,7 +50,7 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal {
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
         if (isPrivate){
-            require(owner() == data.creators[0].account, "minter is not the owner");
+            require(owner() == data.creators[0].account || isMinter(data.creators[0].account), "not owner or minter");
         }
         super.mintAndTransfer(data, to);
     }

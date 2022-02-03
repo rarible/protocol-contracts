@@ -49,7 +49,7 @@ module.exports = async function (deployer, network) {
   const transferProxy = settings.transferProxy;
   const erc721LazyMintTransferProxy = settings.erc721LazyMintTransferProxy;
 
-  const erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", transferProxy, erc721LazyMintTransferProxy], { deployer, initializer: '__ERC721RaribleMeta_init' });
+  const erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", transferProxy, erc721LazyMintTransferProxy], { deployer, initializer: '__ERC721Rarible_init' });
   console.log(erc721WithMetaTx.address, "erc721 meta")
 };
 
