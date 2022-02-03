@@ -40,13 +40,16 @@ contract("ERC721Rarible", accounts => {
     return list.map(account => ({ account, value }))
   }
 
-  beforeEach(async () => {
-    token = await Testing.new();
+  before(async () => {
     proxyLazy = await ERC721LazyMintTransferProxy.new();
     transferProxy = await TransferProxyTest.new();
+    erc1271 = await ERC1271.new();
+  })
+
+  beforeEach(async () => {
+    token = await Testing.new();
     await token.__ERC721Rarible_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", whiteListProxy, proxyLazy.address);
     await token.transferOwnership(tokenOwner);
-    erc1271 = await ERC1271.new();
   });
 
   describe("Burn before ERC721Rarible ()", () => {

@@ -26,7 +26,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     }
 
     function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {
-        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(ids.length == amounts.length, "ids != amounts");
         uint256[] memory leftToBurns = new uint256[](ids.length);
         uint256[] memory lazyToBurns = new uint256[](ids.length);
         for (uint i = 0; i < ids.length; i++) {
