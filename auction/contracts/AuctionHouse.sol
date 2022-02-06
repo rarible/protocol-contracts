@@ -15,6 +15,7 @@ import "@rarible/libraries/contracts/LibDeal.sol";
 /// @dev contract to create and interact with auctions
 contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     using LibTransfer for address;
+    using SafeMathUpgradeable for uint;
 
     /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
     uint256 private constant EXTENSION_DURATION = 15 minutes;
@@ -93,7 +94,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         uint endTime = 0;
         if (aucData.startTime > 0){
             require (aucData.startTime >= block.timestamp, "incorrect start time");
-            endTime = aucData.startTime + aucData.duration;
+            endTime = aucData.startTime.add(aucData.duration);
         }
         uint currentAuctionId = getNextAndIncrementAuctionId();
         auctions[currentAuctionId] = Auction(
@@ -168,8 +169,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             // set endTime if it's not set
             if (currentAuction.endTime == 0){
-                auctions[_auctionId].endTime = currentTime + aucData.duration;
-                endTime = currentTime + aucData.duration;
+                auctions[_auctionId].endTime = currentTime.add(aucData.duration);
+                endTime = currentTime.add(aucData.duration);
             }
             require(newAmount >= currentAuction.minimalPrice, "bid too small");
         } else {//there is bid in auction
@@ -194,8 +195,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         uint extension = (minDur < EXTENSION_DURATION) ? minDur : EXTENSION_DURATION;
 
         // extends auction time if it's about to end
-        if (endTime - currentTime < extension) {
-            endTime = currentTime + extension;
+        if (endTime.sub(currentTime) < extension) {
+            endTime = currentTime.add(extension);
             auctions[_auctionId].endTime = endTime;
         }
         emit BidPlaced(_auctionId, newBuyer, bid, endTime);
@@ -221,7 +222,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
                 (bool success,) = oldBuyer.call{ value: oldAmount }("");
                 if (!success) {
                     uint currentValueToWithdraw = readyToWithdraw[oldBuyer];
-                    uint newValueToWithdraw = oldAmount + currentValueToWithdraw;
+                    uint newValueToWithdraw = oldAmount.add(currentValueToWithdraw);
                     readyToWithdraw[oldBuyer] = newValueToWithdraw;
                     emit AvailableToWithdraw(oldBuyer, oldAmount, newValueToWithdraw);
                 }
@@ -242,7 +243,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
         } else {
-            minBid = currentAuction.lastBid.amount + currentAuction.minimalStep;
+            minBid = currentAuction.lastBid.amount.add(currentAuction.minimalStep);
         }
     }
 
