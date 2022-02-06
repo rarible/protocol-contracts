@@ -356,7 +356,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev cancels existing auction without bid
-    function cancel(uint _auctionId) external {
+    function cancel(uint _auctionId) external nonReentrant {
         require(checkAuctionExistence(_auctionId), "there is no auction with this id");
         Auction storage currentAuction = auctions[_auctionId];
         address seller = currentAuction.seller;
