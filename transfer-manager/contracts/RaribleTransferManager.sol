@@ -253,5 +253,9 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
     }
 
+    function getProxy(bytes4 _type) override external view returns(address) {
+        return proxies[_type];
+    }
+
     uint256[46] private __gap;
 }

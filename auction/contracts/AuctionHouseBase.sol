@@ -72,25 +72,16 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
     event ProxyChange(bytes4 indexed assetType, address proxy);
     /// @dev event that's emitted when user can withdraw ETH from the AuctionHouse
     event AvailableToWithdraw(address indexed owner, uint added, uint total);
+    /// @dev event that's emitted when minimal auction duration changes
+    event MinimalDurationChanged(uint oldValue, uint newValue);
+    /// @dev event that's emitted when protocolFee changes
+    event ProtocolFeeChanged(uint oldValue, uint newValue);
 
-    mapping (bytes4 => address) proxies;
-
-    function __AuctionHouseBase_init_unchained(
-        address _transferProxy,
-        address _erc20TransferProxy
-    ) internal initializer {
-        proxies[LibAsset.ERC20_ASSET_CLASS] = _erc20TransferProxy;
-        proxies[LibAsset.ERC721_ASSET_CLASS] = _transferProxy;
-        proxies[LibAsset.ERC1155_ASSET_CLASS] = _transferProxy;
+    function __AuctionHouseBase_init_unchained() internal initializer {
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return this.supportsInterface(interfaceId);
-    }
-
-    function setTransferProxy(bytes4 assetType, address proxy) external onlyOwner {
-        proxies[assetType] = proxy;
-        emit ProxyChange(assetType, proxy);
     }
 
     uint256[50] private ______gap;

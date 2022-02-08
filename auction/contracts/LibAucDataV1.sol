@@ -11,8 +11,6 @@ library LibAucDataV1 {
 
     /// @dev struct of Auction data field, version 1
     struct DataV1 {
-        // auction payouts, shows how highest bid is going to be distributed
-        LibPart.Part[] payouts;
         // auction originFees
         LibPart.Part[] originFees;
         // auction duration
