@@ -49,7 +49,7 @@ contract("AuctionHouse", accounts => {
     await transferManager.__RaribleTransferManager_init(protocol, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address);
 
     /*Auction*/
-    testAuctionHouse = await deployProxy(TestAuctionHouse, [transferProxy.address, erc20TransferProxy.address, transferManager.address, 300], { initializer: "__AuctionHouse_init" });
+    testAuctionHouse = await deployProxy(TestAuctionHouse, [transferManager.address, 300], { initializer: "__AuctionHouse_init" });
     await transferManager.addOperator(testAuctionHouse.address);
   });
 

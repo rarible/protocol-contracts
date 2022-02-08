@@ -81,7 +81,7 @@ module.exports = async function (deployer, network) {
 
   const auction = await deployProxy(
     AuctionHouse,
-    [transferProxy, erc20TransferProxy, raribleTransferManager, 0],
+    [raribleTransferManager, 0],
     { deployer, initializer: '__AuctionHouse_init' }
   );
   console.log(`deployed auction at ${auction.address}`)

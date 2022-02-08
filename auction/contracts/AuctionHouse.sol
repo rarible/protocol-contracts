@@ -42,8 +42,6 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     uint256 public protocolFee;
 
     function __AuctionHouse_init(
-        address _transferProxy,
-        address _erc20TransferProxy,
         ITransferManager _transferManager,
         uint _protocolFee
     ) external initializer {
@@ -51,7 +49,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         __Ownable_init_unchained();
         __ERC1155Receiver_init_unchained();
         __ReentrancyGuard_init_unchained();
-        __AuctionHouseBase_init_unchained(_transferProxy, _erc20TransferProxy);
+        __AuctionHouseBase_init_unchained();
         __AuctionHouse_init_unchained(_transferManager, _protocolFee);
     }
 
@@ -126,7 +124,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         if (_asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
             (address token) = abi.decode(_asset.assetType.data, (address));
             IERC20Upgradeable tokenContract = IERC20Upgradeable(token);
-            address erc20Proxy = proxies[LibAsset.ERC20_ASSET_CLASS];
+            address erc20Proxy = transferManager.getProxy(LibAsset.ERC20_ASSET_CLASS);
             // if allownance for this token is less that 2^100 then set max_uint
             if (tokenContract.allowance(address(this), erc20Proxy) < 2 ** 100) {
                 tokenContract.approve(erc20Proxy, 2 ** 256 - 1);
@@ -135,11 +133,11 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
             require(_asset.value == 1, "erc721 value error");
             //todo check if approved already?
-            IERC721Upgradeable(token).setApprovalForAll(proxies[LibAsset.ERC721_ASSET_CLASS], true);
+            IERC721Upgradeable(token).setApprovalForAll(transferManager.getProxy(LibAsset.ERC721_ASSET_CLASS), true);
         } else if (_asset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
             (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
             //todo check if approved already?
-            IERC1155Upgradeable(token).setApprovalForAll(proxies[LibAsset.ERC1155_ASSET_CLASS], true);
+            IERC1155Upgradeable(token).setApprovalForAll(transferManager.getProxy(LibAsset.ERC1155_ASSET_CLASS), true);
         }
     }
 
