@@ -83,6 +83,7 @@ contract("AuctionHouse", accounts => {
       dataV1 = await encDataV1([[], auctionFees, 86400000, 0, 100])
       await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller })
       const txCancel = await testAuctionHouse.cancel(1, { from: seller });
+      console.log("txCancel", txCancel.receipt.gasUsed)
 
       let auctionId;
       truffleAssert.eventEmitted(txCancel, 'AuctionCancelled', (ev) => {
@@ -182,6 +183,8 @@ contract("AuctionHouse", accounts => {
 
       bid = { amount: 200, dataType: V1, data: bidDataV1 };
       const txBid = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[3] });
+      console.log("txBid", txBid.receipt.gasUsed)
+
       let id;
       truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
         //console.log(ev)
@@ -208,6 +211,7 @@ contract("AuctionHouse", accounts => {
 
       const txStart = await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 9, V1, dataV1, { from: seller });
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
+      console.log("txStart", txStart.receipt.gasUsed)
 
       let id;
       truffleAssert.eventEmitted(txStart, 'AuctionCreated', (ev) => {
@@ -228,6 +232,8 @@ contract("AuctionHouse", accounts => {
       await prepareERC20(accounts[7], 100, false)
       bid = { amount: 20, dataType: V1, data: bidDataV1 };
       const txBuyOut = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[7] });
+      console.log("txBuyOut", txBuyOut.receipt.gasUsed)
+
       truffleAssert.eventEmitted(txBuyOut, 'AuctionFinished', (ev) => {
         id = ev.auctionId;
         return true;
@@ -456,6 +462,8 @@ contract("AuctionHouse", accounts => {
       await increaseTime(901); //increase ~18 min
 
       const txFinish = await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
+      console.log("txFinish", txFinish.receipt.gasUsed)
+
       let id;
       truffleAssert.eventEmitted(txFinish, 'AuctionFinished', (ev) => {
         id = ev.auctionId;
