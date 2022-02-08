@@ -33,12 +33,12 @@ const domainType = [{
     type: "string"
   },
   {
-    name: "chainId",
-    type: "uint256"
-  },
-  {
     name: "verifyingContract",
     type: "address"
+  },
+  {
+    name: "salt",
+    type: "bytes32"
   }
 ];
 
@@ -102,8 +102,11 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
 
   let left;
   let right;
+  let salt;
+  let chainId = 1337;
 
   before('before', async function () {
+    salt = '0x' + (chainId).toString(16).padStart(64, '0');
     transferProxy = await TransferProxyTest.new();
     erc20TransferProxy = await ERC20TransferProxyTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
@@ -116,7 +119,7 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
       name: "ExchangeMetaV2",
       version: "1",
       verifyingContract: testContract.address,
-      chainId: 1337
+      salt: salt
     };
 
     await t1.mint(owner, 100);

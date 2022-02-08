@@ -6,8 +6,11 @@ pragma abicoder v2;
 import "../../contracts/EIP712MetaTransaction.sol";
 
 contract MetaTxTest is EIP712MetaTransaction {
+
     event SimpleEventSum(uint result);
-    function __MetaTxTest_init(string memory _name, string memory _version) external initializer {
+
+    function __MetaTxTest_init(string memory _name, string memory _symbol, string memory _version) external initializer {
+
         __MetaTransaction_init_unchained(_name, _version);
     }
 

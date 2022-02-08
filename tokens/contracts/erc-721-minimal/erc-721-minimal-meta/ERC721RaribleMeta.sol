@@ -11,7 +11,7 @@ contract ERC721RaribleMeta is ERC721RaribleMinimal, EIP712MetaTransaction {
     event CreateERC721RaribleMeta(address owner, string name, string symbol);
     event CreateERC721RaribleUserMeta(address owner, string name, string symbol);
 
-    function __ERC721RaribleUserMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external initializer {
+    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external override initializer {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         for(uint i = 0; i < operators.length; i++) {
@@ -25,7 +25,7 @@ contract ERC721RaribleMeta is ERC721RaribleMinimal, EIP712MetaTransaction {
         emit CreateERC721RaribleUserMeta(_msgSender(), _name, _symbol);
     }
 
-    function __ERC721RaribleMeta_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external initializer {
+    function __ERC721Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external override initializer {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
         __MetaTransaction_init_unchained("ERC721RaribleMeta", "1");

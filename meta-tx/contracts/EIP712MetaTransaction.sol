@@ -9,7 +9,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
     using SafeMath for uint256;
 
     bytes32 private constant META_TRANSACTION_TYPEHASH = keccak256(bytes("MetaTransaction(uint256 nonce,address from,bytes functionSignature)"));
-    bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 internal constant EIP712_DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)");
 
     mapping(address => uint256) private nonces;
     bytes32 internal domainSeparator;
@@ -27,13 +27,13 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
 
     /*
      * Domain structure.
-     * Data(information to for making metaTransaction method uniq) about method and contract
+     * Data(information to for making metaTransaction method uniq.) about method and contract
      */
     struct EIP712Domain {
         string name;
         string version;
-        uint256 chainId;
         address verifyingContract;
+        bytes32 salt;
     }
 
     event MetaTransactionExecuted(address userAddress, address payable relayerAddress, bytes functionSignature);
@@ -43,8 +43,8 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
                 EIP712_DOMAIN_TYPEHASH,
                 keccak256(bytes(name)),
                 keccak256(bytes(version)),
-                bytes32(getChainID()),
-                address(this)
+                address(this),
+                getSalt()
             ));
     }
 
@@ -110,6 +110,10 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return sender;
     }
 
+    function getSalt() internal pure returns (bytes32) {
+        return bytes32(getChainID());
+    }
+
     function getChainID() internal pure returns (uint256 id) {
         assembly {
             id := chainid()
@@ -131,4 +135,27 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return keccak256(abi.encodePacked("\x19\x01", getDomainSeparator(), messageHash));
     }
 
+    /**
+         * @dev verifies the call result and bubbles up revert reason for failed calls
+         *
+         * @param success : outcome of forwarded call
+         * @param returndata : returned data from the frowarded call
+         * @param errorMessage : fallback error message to show
+         */
+    function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure {
+        if (!success) {
+            // Look for revert reason and bubble it up if present
+            if (returndata.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+
+                // solhint-disable-next-line no-inline-assembly
+                assembly {
+                    let returndata_size := mload(returndata)
+                    revert(add(32, returndata), returndata_size)
+                }
+            } else {
+                revert(errorMessage);
+            }
+        }
+    }
 }

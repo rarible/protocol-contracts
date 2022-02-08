@@ -28,7 +28,7 @@ function createNetwork(name) {
 	      }
       },
       from: json.address,
-      gas: 6000000,
+      gas: 1000000,
       gasPrice: gasPrice + "000000000",
       network_id: json.network_id,
       skipDryRun: true,
@@ -62,7 +62,8 @@ module.exports = {
     rinkeby: createNetwork("rinkeby"),
     rinkeby2: createNetwork("rinkeby2"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
-    polygon_mainnet: createNetwork("polygon_mainnet")
+    polygon_mainnet: createNetwork("polygon_mainnet"),
+    dev: createNetwork("dev")
   },
 
   compilers: {

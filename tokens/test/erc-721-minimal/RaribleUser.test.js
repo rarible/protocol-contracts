@@ -1,4 +1,5 @@
 const Testing = artifacts.require("ERC721RaribleMinimal.sol");
+const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require('./mint');
@@ -11,6 +12,11 @@ contract("ERC721RaribleUser minimal", accounts => {
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const whiteListProxy = accounts[5];
+
+  function fees(list) {
+    const value = 500;
+    return list.map(account => ({ account, value }))
+  }
 
   beforeEach(async () => {
     token = await Testing.new();
@@ -34,6 +40,34 @@ contract("ERC721RaribleUser minimal", accounts => {
   	assert.equal(await token.supportsInterface("0x80ac58cd"), true);
   	assert.equal(await token.supportsInterface("0x5b5e139f"), true);
   	assert.equal(await token.supportsInterface("0x780e9d63"), true);
+  });
+
+  it("check for support IERC2981 interface", async () => {
+  	assert.equal(await token.supportsInterface("0x2a55205a"), true);
+  });
+
+  it("check Royalties IERC2981", async () => {
+    let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
+    const minter = tokenOwner;
+    let transferTo = accounts[2];
+    let royaltiesBeneficiary1 = accounts[3];
+    let royaltiesBeneficiary2 = accounts[4];
+    let royaltiesBeneficiary3 = accounts[6];
+    const WEIGHT_PRICE = 1000000;
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), minter);
+
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, {from: whiteListProxy});
+    const addressValue = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
+
+    assert.equal(addressValue[0], royaltiesBeneficiary1, "account");
+    assert.equal(addressValue[1], 150000, "value"); //why 15000?: 3 beneficiaries, each have 5%(500) in total 15%(1500), but WEIGHT_PRICE = 1000000, and 15% form this is 150000
+    const royaltiesAddress = addressValue[0];
+    const royaltiesPercent = addressValue[1];
+    let royaltiesPart = await testRoyaltyV2981Calculate.calculateRoyaltiesTest(royaltiesAddress, royaltiesPercent);
+    assert.equal(royaltiesPart[0].account, royaltiesBeneficiary1, "account");
+    assert.equal(royaltiesPart[0].value, 1500, "value");
   });
 
   it("mint and transfer by whitelist proxy. minter is tokenOwner", async () => {
@@ -121,6 +155,70 @@ contract("ERC721RaribleUser minimal", accounts => {
     const tokenURI = "//uri";
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
+    );
+  });
+
+  it("mint and transfer with minter access control", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
+    );
+
+    await token.addMinter(minter, {from: tokenOwner})
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(transferTo), false);
+
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter})
+    assert.equal(await token.ownerOf(tokenId), transferTo);
+  });
+
+  it("mint and transfer with minter access control and minter signature", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), [], minter);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: minter})
+    await token.addMinter(minter, {from: tokenOwner})
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(whiteListProxy), false);
+
+    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: whiteListProxy})
+    assert.equal(await token.ownerOf(tokenId), transferTo);
+  });
+
+  it("mint and transfer with minter access control and wrong minter signature", async () => {
+    const minter = accounts[1];
+    let transferTo = accounts[2];
+
+    const tokenId = minter + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    const signature = await getSignature(tokenId, tokenURI, creators([minter]), [], transferTo);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: minter})
+    await token.addMinter(minter, {from: tokenOwner})
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(whiteListProxy), false);
+
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [signature]], transferTo, {from: whiteListProxy})
     );
   });
 
