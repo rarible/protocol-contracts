@@ -277,34 +277,25 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) { //bid exists
-            Bid memory bid = currentAuction.lastBid;
+            
+            //form seller side data
             LibAucDataV1.DataV1 memory auctionData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-            if (auctionData.payouts.length == 0){
-                LibPart.Part[] memory payout = new LibPart.Part[](1);
-                payout[0].account = payable(seller);
-                payout[0].value = 10000;
-                auctionData.payouts = payout;
-            }
             LibDeal.DealSide memory sellSide = LibDeal.DealSide(
                 currentAuction.sellAsset.assetType,
                 currentAuction.sellAsset.value,
-                auctionData.payouts,
+                generatePayouts(seller),
                 auctionData.originFees,
                 address(this),
                 currentAuction.protocolFee
             );
 
+            //form bidder side data
+            Bid memory bid = currentAuction.lastBid;
             LibBidDataV1.DataV1 memory bidData = LibBidDataV1.parse(bid.data, bid.dataType);
-            if (bidData.payouts.length == 0){
-                LibPart.Part[] memory payout = new LibPart.Part[](1);
-                payout[0].account = payable(buyer);
-                payout[0].value = 10000;
-                bidData.payouts = payout;
-            }
             LibDeal.DealSide memory buySide = LibDeal.DealSide(
                 currentAuction.buyAsset,
                 bid.amount,
-                bidData.payouts,
+                generatePayouts(buyer),
                 bidData.originFees,
                 address(this),
                 currentAuction.protocolFee
@@ -426,6 +417,13 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         require( amount > 0, "nothing to withdraw");
         readyToWithdraw[sender] = 0;
         _to.transferEth(amount);
+    }
+
+    function generatePayouts(address _to) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory payout = new LibPart.Part[](1);
+        payout[0].account = payable(_to);
+        payout[0].value = 10000;
+        return payout;
     }
 
     function getProtocolFee() internal view returns(uint) {

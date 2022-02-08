@@ -11,8 +11,6 @@ library LibBidDataV1 {
 
     /// @dev struct of Bid data field, version 1
     struct DataV1 {
-        // auction payouts, shows how sell item is going to be distributed if the bid wins
-        LibPart.Part[] payouts;
         // auction originFees
         LibPart.Part[] originFees;
     }
