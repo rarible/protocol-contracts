@@ -429,6 +429,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     function setProtocolFee(uint256 _protocolFee) external onlyOwner {
+        emit ProtocolFeeChanged(protocolFee, _protocolFee);
         protocolFee = _protocolFee;
     }
 

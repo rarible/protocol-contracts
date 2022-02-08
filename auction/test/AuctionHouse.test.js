@@ -220,7 +220,13 @@ contract("AuctionHouse", accounts => {
       });
       assert.equal(id, 1, "id from event")
 
-      await testAuctionHouse.setProtocolFee(2000)
+      const setProtocolFeeTx = await testAuctionHouse.setProtocolFee(2000)
+      truffleAssert.eventEmitted(setProtocolFeeTx, 'ProtocolFeeChanged', (ev) => {
+        assert.equal(ev.oldValue, 300, "old protocolFee from event")
+        assert.equal(ev.newValue, 2000, "new protocolFee from event")
+        return true;
+      });
+
       //bid initialize
       let auctionId = 1;
       let bidFees = [[accounts[6], 2000]];

@@ -74,6 +74,8 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
     event AvailableToWithdraw(address indexed owner, uint added, uint total);
     /// @dev event that's emitted when minimal auction duration changes
     event MinimalDurationChanged(uint oldValue, uint newValue);
+    /// @dev event that's emitted when protocolFee changes
+    event ProtocolFeeChanged(uint oldValue, uint newValue);
 
     function __AuctionHouseBase_init_unchained() internal initializer {
     }
