@@ -15,6 +15,12 @@ library LibFeeSide {
         if (rightClass == LibAsset.ETH_ASSET_CLASS) {
             return FeeSide.RIGHT;
         }
+        if (leftClass == LibAsset.WETH_UNWRAP) {
+            return FeeSide.LEFT;
+        }
+        if (rightClass == LibAsset.WETH_UNWRAP) {
+            return FeeSide.RIGHT;
+        }
         if (leftClass == LibAsset.ERC20_ASSET_CLASS) {
             return FeeSide.LEFT;
         }

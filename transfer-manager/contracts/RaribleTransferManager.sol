@@ -15,6 +15,7 @@ import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./TransferExecutor.sol";
+import "./IWETH.sol";
 import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
 
 contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole {
@@ -86,6 +87,9 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     ) override payable external onlyOperator returns (uint totalLeftValue, uint totalRightValue) {
         totalLeftValue = left.value;
         totalRightValue = right.value;
+        /*fix assetClass, need for send back change when one side is ETH_ASSET_CLASS*/
+        bytes4 leftAssetClass = left.assetType.assetClass;
+        bytes4 rightAssetClass = right.assetType.assetClass;
 
         if (feeSide == LibFeeSide.FeeSide.LEFT) {
             totalLeftValue = doTransfersWithFees(left, right, TO_TAKER);
@@ -99,14 +103,14 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
 
         /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
-        if (left.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(right.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
+        if (leftAssetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(rightAssetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
             require(msg.value >= totalLeftValue, "not enough eth");
             uint256 change = msg.value.sub(totalLeftValue);
             if (change > 0) {
                 initialSender.transferEth(change);
             }
-        } else if (right.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+        } else if (rightAssetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalRightValue, "not enough eth");
             uint256 change = msg.value.sub(totalRightValue);
             if (change > 0) {
@@ -121,11 +125,28 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         bytes4 transferDirection
     ) internal returns (uint totalAmount) {
         totalAmount = calculateTotalAmount(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees);
+        LibDeal.DealSide memory newPaymentSide = unwrapWETH(calculateSide, totalAmount, transferDirection);
         uint rest = transferProtocolFee(totalAmount, calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
         rest = transferRoyalties(calculateSide.assetType, nftSide.assetType, rest, calculateSide.value, calculateSide.sideAddress, transferDirection);
         (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, calculateSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
         (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, nftSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
         transferPayouts(calculateSide.assetType, rest, calculateSide.sideAddress, nftSide.payouts, transferDirection);
+    }
+
+    function unwrapWETH(LibDeal.DealSide memory paymentSide, uint totalAmount, bytes4 transferDirection) internal returns (LibDeal.DealSide memory) {
+        if (paymentSide.assetType.assetClass != LibAsset.WETH_UNWRAP) {
+            return paymentSide;
+        }
+        /*for transfer WETH to RaribleTransferManager contract use ERC20TransferProxy*/
+        LibAsset.AssetType memory transferWETH = paymentSide.assetType;
+        transferWETH.assetClass = LibAsset.ERC20_ASSET_CLASS;
+        transfer(LibAsset.Asset(transferWETH, totalAmount), paymentSide.sideAddress, address(this), transferDirection, PROTOCOL);
+        (address token) = abi.decode(transferWETH.data, (address));
+        /*withdraw ETH to RaribleTransferManager contract*/
+        IWETH(token).withdraw(totalAmount);
+        LibDeal.DealSide memory newPaymentSide = paymentSide;
+        newPaymentSide.assetType.assetClass = LibAsset.ETH_ASSET_CLASS;
+        return newPaymentSide;
     }
 
     function transferProtocolFee(
@@ -252,6 +273,8 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
             realFee = value;
         }
     }
+
+    receive() external payable {}
 
     uint256[46] private __gap;
 }
