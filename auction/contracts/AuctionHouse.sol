@@ -95,11 +95,12 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             endTime = aucData.startTime.add(aucData.duration);
         }
         uint currentAuctionId = getNextAndIncrementAuctionId();
-        auctions[currentAuctionId] = Auction(
+        address payable sender = _msgSender();
+        Auction memory auc = Auction(
             _sellAsset,
             _buyAsset,
             Bid(0, "", ""),
-            _msgSender(),
+            sender,
             payable(address(0)),
             endTime,
             minimalStep,
@@ -108,7 +109,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             dataType,
             data
         );
-        transfer(_sellAsset, _msgSender(), address(this), TO_LOCK, LOCK);
+        auctions[currentAuctionId] = auc;
+        transfer(_sellAsset, sender, address(this), TO_LOCK, LOCK);
         setApproveForTransferProxy(_sellAsset);
 
         //setting auctionForToken only for erc-721
@@ -116,7 +118,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             (address token, uint tokenId) = abi.decode(_sellAsset.assetType.data, (address, uint256));
             setAuctionForToken(token, tokenId, currentAuctionId);
         }
-        emit AuctionCreated(currentAuctionId, auctions[currentAuctionId]);
+        emit AuctionCreated(currentAuctionId, auc);
     }
 
     /// @dev sets approval for transfer proxy to transfer sell asset from this contract
@@ -153,12 +155,12 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         Auction memory currentAuction = auctions[_auctionId];
         uint endTime = currentAuction.endTime;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        checkAuctionInProgress(_auctionId, aucData);
+        checkAuctionInProgress(currentAuction, aucData);
 
         if (buyOutVerify(aucData, newAmount)) {
-            _buyOut(_auctionId, bid);
-            doTransfers(_auctionId);
-            deactivateAuction(_auctionId);
+            currentAuction = _buyOut(currentAuction, _auctionId, bid);
+            doTransfers(currentAuction);
+            deactivateAuction(_auctionId, currentAuction);
             return;
         }
         
@@ -167,13 +169,15 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             // set endTime if it's not set
             if (currentAuction.endTime == 0){
-                auctions[_auctionId].endTime = currentTime.add(aucData.duration);
                 endTime = currentTime.add(aucData.duration);
+                auctions[_auctionId].endTime = endTime;
+                currentAuction.endTime = endTime;
+                
             }
             require(newAmount >= currentAuction.minimalPrice, "bid too small");
         } else {//there is bid in auction
             require(currentAuction.buyer != newBuyer, "already winning bid");
-            uint256 minAmount = getMinimalNextBid(_auctionId);
+            uint256 minAmount = _getMinimalNextBid(currentAuction);
             require(newAmount >= minAmount, "bid too low");
         }
         reserveValue(
@@ -235,9 +239,17 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev returns the minimal amount of the next bid (without fees)
-    function getMinimalNextBid(uint _auctionId) public view returns (uint minBid){
-        Auction storage currentAuction = auctions[_auctionId];
+    function getMinimalNextBid(uint _auctionId) external view returns (uint minBid){
+        Auction memory currentAuction = auctions[_auctionId];
+        if (currentAuction.buyer == address(0x0)) {
+            minBid = currentAuction.minimalPrice;
+        } else {
+            minBid = currentAuction.lastBid.amount.add(currentAuction.minimalStep);
+        }
+    }
 
+    /// @dev returns the minimal amount of the next bid (without fees)
+    function _getMinimalNextBid(Auction memory currentAuction) internal pure returns (uint minBid){
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
         } else {
@@ -246,8 +258,13 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev returns true if auction exists, false otherwise
-    function checkAuctionExistence(uint _auctionId) public view returns (bool){
+    function checkAuctionExistence(uint _auctionId) external view returns (bool){
         return auctions[_auctionId].seller != address(0);
+    }
+
+    /// @dev returns true if auction exists, false otherwise
+    function _checkAuctionExistence(Auction memory currentAuction) internal pure returns (bool){
+        return currentAuction.seller != address(0);
     }
 
     /// @dev returns true if newAmount is enough for buyOut
@@ -260,18 +277,19 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     /// @dev finishes, deletes and transfers all assets for an auction if it's ended (it exists, it has at least one bid, now > endTme)
     function finishAuction(uint _auctionId) external nonReentrant {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
+        Auction memory currentAuction = auctions[_auctionId];
+        require(_checkAuctionExistence(currentAuction), "there is no auction with this id");
+        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         require(
-            !checkAuctionRangeTime(_auctionId) &&
-            auctions[_auctionId].buyer != address(0),
+            !_checkAuctionRangeTime(currentAuction, aucData) &&
+            currentAuction.buyer != address(0),
             "only ended auction with bid can be finished");
-        doTransfers(_auctionId);
-        deactivateAuction(_auctionId);
+        doTransfers(currentAuction);
+        deactivateAuction(_auctionId, currentAuction);
     }
 
     /// @dev transfers auction assets (sellAsset to buyer, buyAsset to seller)
-    function doTransfers(uint _auctionId) internal {
-        Auction memory currentAuction = auctions[_auctionId];
+    function doTransfers(Auction memory currentAuction) internal {
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
         if (buyer != address(0x0)) { //bid exists
@@ -310,7 +328,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
-    function checkAuctionRangeTime(uint _auctionId) public view returns (bool){
+    function checkAuctionRangeTime(uint _auctionId) external view returns (bool){
         uint currentTime = block.timestamp;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
         if (aucData.startTime > 0 && aucData.startTime > currentTime) {
@@ -324,13 +342,13 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         return true;
     }
 
-    function _checkAuctionRangeTime(uint _auctionId, LibAucDataV1.DataV1 memory aucData) public view returns (bool){
+    function _checkAuctionRangeTime(Auction memory currentAuction, LibAucDataV1.DataV1 memory aucData) internal view returns (bool){
         uint currentTime = block.timestamp;
         if (aucData.startTime > 0 && aucData.startTime > currentTime) {
             return false;
         }
-        uint endTime = auctions[_auctionId].endTime;
-        if (endTime > 0 && endTime < currentTime){
+        uint endTime = currentAuction.endTime;
+        if (endTime > 0 && endTime <= currentTime){
             return false;
         }
 
@@ -338,40 +356,41 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev deletes auction after finalizing
-    function deactivateAuction(uint _auctionId) internal {
-        emit AuctionFinished(_auctionId, auctions[_auctionId]);
-        deleteAuctionForToken(auctions[_auctionId].sellAsset);
+    function deactivateAuction(uint _auctionId, Auction memory currentAuction) internal {
+        emit AuctionFinished(_auctionId, currentAuction);
+        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
+            deleteAuctionForToken(currentAuction.sellAsset);
+        }
         delete auctions[_auctionId];
     }
 
     /// @dev cancels existing auction without bid
     function cancel(uint _auctionId) external nonReentrant {
-        require(checkAuctionExistence(_auctionId), "there is no auction with this id");
-        Auction storage currentAuction = auctions[_auctionId];
+        Auction memory currentAuction = auctions[_auctionId];
+        require(_checkAuctionExistence(currentAuction), "there is no auction with this id");
         address seller = currentAuction.seller;
         require(seller == _msgSender(), "auction owner not detected");
         require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
-        deactivateAuction(_auctionId);
+        deactivateAuction(_auctionId, currentAuction);
         emit AuctionCancelled(_auctionId);
     }
 
     // todo will there be a problem if buyer is last bidder?
     /// @dev buyout auction if bid satisfies buyout condition
     function buyOut(uint _auctionId, Bid memory bid) external payable nonReentrant {
-        Auction storage currentAuction = auctions[_auctionId];
+        Auction memory currentAuction = auctions[_auctionId];
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        checkAuctionInProgress(_auctionId, aucData);
+        checkAuctionInProgress(currentAuction, aucData);
         require(buyOutVerify(aucData, bid.amount), "not enough for buyout");
-        _buyOut(_auctionId, bid);
-        doTransfers(_auctionId);
-        deactivateAuction(_auctionId);
+        currentAuction = _buyOut(currentAuction, _auctionId, bid);
+        doTransfers(currentAuction);
+        deactivateAuction(_auctionId, currentAuction);
     }
 
     /// @dev makes buyout bid the current bid
-    function _buyOut(uint _auctionId, Bid memory bid) internal {
+    function _buyOut(Auction memory currentAuction, uint _auctionId, Bid memory bid) internal returns(Auction memory changedAuction){
         address payable newBuyer = _msgSender();
-        Auction storage currentAuction = auctions[_auctionId];
         uint curProtocolFee = currentAuction.protocolFee;
         reserveValue(
             currentAuction.buyAsset,
@@ -382,8 +401,12 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             bid, 
             curProtocolFee
         );
-        currentAuction.lastBid = bid;
-        currentAuction.buyer = newBuyer;
+        changedAuction = currentAuction;
+        
+        changedAuction.lastBid = bid;
+        changedAuction.buyer = newBuyer;
+        auctions[_auctionId].lastBid = bid;
+        auctions[_auctionId].buyer = newBuyer;
     }
 
     /// @dev returns current highest bidder for an auction
@@ -392,8 +415,8 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     }
 
     /// @dev returns true if auction in progress, false otherwise
-    function checkAuctionInProgress(uint _auctionId, LibAucDataV1.DataV1 memory aucData) internal view{
-        require(checkAuctionExistence(_auctionId) && _checkAuctionRangeTime(_auctionId, aucData), "auction is inactive");
+    function checkAuctionInProgress(Auction memory currentAuction, LibAucDataV1.DataV1 memory aucData) internal view{
+        require(_checkAuctionExistence(currentAuction) && _checkAuctionRangeTime(currentAuction, aucData), "auction is inactive");
     }
 
     /// @dev returns total amount for a bid (protocol fee and bid origin fees included)
