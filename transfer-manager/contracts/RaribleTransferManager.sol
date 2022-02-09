@@ -15,7 +15,7 @@ import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "./TransferExecutor.sol";
-import "./IWETH.sol";
+import "@rarible/exchange-interfaces/contracts/IWETH.sol";
 import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
 
 contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole {

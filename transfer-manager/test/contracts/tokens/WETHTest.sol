@@ -2,13 +2,13 @@
 
 pragma solidity ^0.7.6;
 
-import "../../../contracts/IWETH.sol";
+import "@rarible/exchange-interfaces/contracts/IWETH.sol";
 /*Test Wrapped Ether contract
 *https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2#code
 */
 
 contract WETHTest is IWETH {
-    string public name     = "Wrapped Ether";
+    string public override name     = "Wrapped Ether";
     string public symbol   = "WETH";
     uint8  public decimals = 18;
 
