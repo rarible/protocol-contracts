@@ -30,7 +30,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     mapping(address => uint) readyToWithdraw;
 
     /// @dev latest auctionId
-    uint256 private auctionId;
+    uint256 public auctionId;
 
     /// @dev minimal auction duration
     uint256 public minimalDuration;
@@ -300,7 +300,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
                 currentAuction.sellAsset.assetType,
                 currentAuction.sellAsset.value,
                 generatePayouts(seller),
-                auctionData.originFees,
+                generateOriginFees(auctionData.originFee),
                 address(this),
                 currentAuction.protocolFee
             );
@@ -312,12 +312,12 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
                 currentAuction.buyAsset,
                 bid.amount,
                 generatePayouts(buyer),
-                bidData.originFees,
+                generateOriginFees(bidData.originFee),
                 address(this),
                 currentAuction.protocolFee
             );
             if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
-                uint totalAmount = transferManager.calculateTotalAmount(bid.amount, currentAuction.protocolFee, bidData.originFees);
+                uint totalAmount = transferManager.calculateTotalAmount(bid.amount, currentAuction.protocolFee, generateOriginFees(bidData.originFee));
                 transferManager.doTransfers{ value: totalAmount }(sellSide, buySide, LibFeeSide.FeeSide.RIGHT, currentAuction.buyer);
             } else {
                 transferManager.doTransfers(sellSide, buySide, LibFeeSide.FeeSide.RIGHT, address(0));
@@ -422,7 +422,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     /// @dev returns total amount for a bid (protocol fee and bid origin fees included)
     function getBidTotalAmount(Bid memory bid, uint _protocolFee) internal view returns(uint) {
         LibBidDataV1.DataV1 memory data = LibBidDataV1.parse(bid.data, bid.dataType);
-        return transferManager.calculateTotalAmount(bid.amount, _protocolFee, data.originFees);
+        return transferManager.calculateTotalAmount(bid.amount, _protocolFee, generateOriginFees(data.originFee));
     }
 
     /// @dev function to call from wrapper to put bid
@@ -445,6 +445,16 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         payout[0].account = payable(_to);
         payout[0].value = 10000;
         return payout;
+    }
+
+    function generateOriginFees(LibPart.Part memory fee) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory originFees;
+        if (fee.account == address(0)) {
+            return originFees;
+        }
+        originFees = new LibPart.Part[](1);
+        originFees[0] = fee;
+        return originFees;
     }
 
     function getProtocolFee() internal view returns(uint) {

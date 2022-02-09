@@ -12,7 +12,7 @@ library LibAucDataV1 {
     /// @dev struct of Auction data field, version 1
     struct DataV1 {
         // auction originFees
-        LibPart.Part[] originFees;
+        LibPart.Part originFee;
         // auction duration
         uint duration;
         // auction startTime

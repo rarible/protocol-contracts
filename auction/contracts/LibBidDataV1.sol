@@ -12,7 +12,7 @@ library LibBidDataV1 {
     /// @dev struct of Bid data field, version 1
     struct DataV1 {
         // auction originFees
-        LibPart.Part[] originFees;
+        LibPart.Part originFee;
     }
 
     /// @dev returns parsed data field of a Bid (so returns DataV1 struct)
