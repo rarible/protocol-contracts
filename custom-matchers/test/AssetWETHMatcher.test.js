@@ -20,6 +20,13 @@ contract("AssetMatcherWETHCustom", accounts => {
       assert.equal(result[1], encoded);
     });
 
+    it("Collection WETH_UNWRAP <-> ERC20  matches!", async () => {
+      const encoded = enc(wETHTest.address);
+      const result = await assetMatcherWETH.matchAssets(order.AssetType(WETH_UNWRAP, "0x"), order.AssetType(ERC20, encoded));
+      assert.equal(result[0], WETH_UNWRAP);
+      assert.equal(result[1], encoded);
+    });
+
     it("Collection ERC20 <-> WETH_UNWRAP, ERC20 token name not equal `Wrapped Ether`, don`t matches!", async () => {
       const encoded = enc(wETHTest.address);
       await wETHTest.setName("12345");
@@ -33,13 +40,11 @@ contract("AssetMatcherWETHCustom", accounts => {
       assert.equal(result[0], 0);
     });
 
-//    it("Collection COLLECTION <-> ERC1155 (another collection) don`t match!", async () => {
-//      const tokenId = 3000;
-//      const encoded = enc(accounts[5]);
-//      const encodedNFT = enc(accounts[6], tokenId);
-//      const result = await assetMatcherCollection.matchAssets(order.AssetType(COLLECTION, encoded), order.AssetType(ERC1155, encodedNFT), {from: operator});
-//      assert.equal(result[0], 0);
-//    });
+    it("Collection WETH_UNWRAP <-> WETH_UNWRAP, token is not WETH, don`t matches!", async () => {
+      const encoded = enc(wETHTest.address);
+      const result = await assetMatcherWETH.matchAssets(order.AssetType(WETH_UNWRAP, "0x"), order.AssetType(WETH_UNWRAP, "0x"));
+      assert.equal(result[0], 0);
+    });
 
   })
 });

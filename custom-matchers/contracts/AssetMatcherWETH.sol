@@ -13,22 +13,31 @@ contract AssetMatcherWETH is IAssetMatcher {
 
     bytes constant EMPTY = "";
     string constant nameWETH = "Wrapped Ether";
-    string constant symbolWETH = "WETH";
 
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) public view override returns (LibAsset.AssetType memory) {
+        bytes4 resultAssetClass;
+        bytes memory resultData;
         if (
-            (rightAssetType.assetClass == LibAsset.WETH_UNWRAP) &&
-            (leftAssetType.assetClass == LibAsset.ERC20_ASSET_CLASS)
+            (leftAssetType.assetClass == LibAsset.ERC20_ASSET_CLASS) &&
+            (rightAssetType.assetClass == LibAsset.WETH_UNWRAP)
         ) {
-            (address leftToken) = abi.decode(leftAssetType.data, (address));
-            try IWETH(leftToken).name() returns (string memory name) {
-                if (keccak256(bytes(name)) == keccak256(bytes(nameWETH))) {
-                    return LibAsset.AssetType(rightAssetType.assetClass, leftAssetType.data);
-                }
-            } catch {
-                LibAsset.AssetType(0, EMPTY);
-            }
+            resultAssetClass = rightAssetType.assetClass;
+            resultData = leftAssetType.data;
+        } else if (
+            (leftAssetType.assetClass == LibAsset.WETH_UNWRAP) &&
+            (rightAssetType.assetClass == LibAsset.ERC20_ASSET_CLASS)
+        ) {
+            resultAssetClass = leftAssetType.assetClass;
+            resultData = rightAssetType.data;
+        } else {
+            return LibAsset.AssetType(0, EMPTY);
         }
+        (address token) = abi.decode(resultData, (address));
+        try IWETH(token).name() returns (string memory name) {
+            if (keccak256(bytes(name)) == keccak256(bytes(nameWETH))) {
+                return LibAsset.AssetType(resultAssetClass, resultData);
+            }
+        } catch {}
         return LibAsset.AssetType(0, EMPTY);
     }
 }
