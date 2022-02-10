@@ -146,7 +146,8 @@ contract("AuctionHouse", accounts => {
       assert.equal((await testAuctionHouse.getAuctionByToken(erc721.address, tokenIdNew)).toString(), auctionId1.toString(), "getAuctionByToken works");
 
     })
-
+    
+    /*
     it("should not create auction to sell ERC20 or ETH", async () => {
       const buyAssetType = await prepareETH()
       let fees = OriginFee();
@@ -159,6 +160,7 @@ contract("AuctionHouse", accounts => {
         testAuctionHouse.startAuction(Asset(ETH, "0x", 100), buyAssetType, 1, 1, V1, dataV1, { from: seller })
       );
     })
+    */
 
   });
 
@@ -595,20 +597,6 @@ contract("AuctionHouse", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer); // after mint owner is testAuctionHouse
     })
 
-    it("721<->1155 doesn't work, only ETH or ERC-20 as bids are valid", async () => {
-      const sellAsset = await prepareERC721()
-      const buyAssetType = await prepareERC1155Buy(buyer, 200)
-      let auctionFees = OriginFee(accounts[6], 1000);
-
-      let dataV1 = await encDataV1([ auctionFees, 1000, 0, 180]); //originFees, duration, startTime, buyOutPrice
-
-      await truffleAssert.fails(
-        testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller }),
-        truffleAssert.ErrorType.REVERT,
-        "incorrect buy asset class"
-      )
-    })
-
     it("721<->ETH", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareETH()
@@ -639,36 +627,6 @@ contract("AuctionHouse", accounts => {
         )
       )
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer);
-    })
-
-    it("1155<->20", async () => {
-      const sellAsset = await prepareERC1155Sell()
-      const buyAssetType = await prepareERC20(buyer, 1000)
-      let auctionFees = OriginFee();
-
-      let dataV1 = await encDataV1([ auctionFees, 1000, 0, 180]); //originFees, duration, startTime, buyOutPrice
-
-      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 100, V1, dataV1, { from: seller });
-      assert.equal(await erc1155.balanceOf(testAuctionHouse.address, erc1155TokenId1), 100);
-      //bid initialize
-      let auctionId = 1;
-      let bidFees = OriginFee(accounts[6], 3000);
-      let bidDataV1 = await bidEncDataV1([ bidFees]);
-      let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
-      assert.equal(await erc1155.balanceOf(testAuctionHouse.address, erc1155TokenId1), 100);
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 133);
-      assert.equal(await erc20Token.balanceOf(buyer), 867);
-      await increaseTime(1075);
-      await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
-      assert.equal(await erc1155.balanceOf(testAuctionHouse.address, erc1155TokenId1), 0);
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
-      assert.equal(await erc1155.balanceOf(buyer, erc1155TokenId1), 100);
-
-      assert.equal(await erc20Token.balanceOf(protocol), 6);
-      assert.equal(await erc20Token.balanceOf(seller), 97);
-      assert.equal(await erc20Token.balanceOf(accounts[6]), 30);
-
     })
 
     it("No bid , after cancel auction return 721", async () => {
@@ -898,24 +856,6 @@ contract("AuctionHouse", accounts => {
 
     })
 
-    it("numerous erc1155 auctions with same id should be processed correctly, getAuctionByToken doesn't work for erc-1155", async () => {
-      await testAuctionHouse.setProtocolFee(0)
-
-      const sellAsset = await prepareERC1155Sell()
-      const buyAssetType = await prepareETH()
-
-      let dataV1 = await encDataV1([ OriginFee(), 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
-
-      await testAuctionHouse.startAuction(sellAsset, buyAssetType, 1, 90, V1, dataV1, { from: seller });
-      assert.equal((await testAuctionHouse.getAuctionByToken(erc1155.address, erc1155TokenId1)).toString(), "0", "getAuctionByToken doesn't work for 1155");
- 
-      const seller2 = accounts[3]
-      const sellAsset2 = await prepareERC1155Sell(seller2, 100, erc1155TokenId1, false)
-
-      await testAuctionHouse.startAuction(sellAsset2, buyAssetType, 1, 90, V1, dataV1, { from: seller2 })
-      assert.equal((await testAuctionHouse.getAuctionByToken(erc1155.address, erc1155TokenId1)).toString(), "0", "getAuctionByToken doesn't work for 1155");
-
-    })
   })
 
   function encDataV1(tuple) {
@@ -936,7 +876,7 @@ contract("AuctionHouse", accounts => {
     }
     await erc721.mint(user, tokenId);
     await erc721.setApprovalForAll(transferProxy.address, true, { from: user });
-    return await Asset(ERC721, enc(erc721.address, tokenId), 1);
+    return SellAsset(erc721.address, tokenId);
   }
 
   async function prepareERC1155Sell(user = seller, value = 100, tokenId = erc1155TokenId1, deployNew = true) {
@@ -963,15 +903,19 @@ contract("AuctionHouse", accounts => {
     }
     await erc20Token.mint(user, value);
     await erc20Token.approve(erc20TransferProxy.address, value, { from: user });
-    return await AssetType(ERC20, enc(erc20Token.address))
+    return erc20Token.address;
   }
 
   function Bid(amount, dataType, data) {
     return {amount, dataType, data}
   }
 
+  function SellAsset(token, tokenId) {
+    return {token, tokenId}
+  }
+
   async function prepareETH() {
-    return await AssetType(ETH, "0x");
+    return zeroAddress;
   }
 
   async function timeNow() {

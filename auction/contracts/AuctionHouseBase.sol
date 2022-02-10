@@ -27,9 +27,9 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
     /// @dev auction struct
     struct Auction {
         // asset that is being sold at auction
-        LibAsset.Asset sellAsset;
+        SellAsset sellAsset;
         // asset type that bids are taken in
-        LibAsset.AssetType buyAsset;
+        address buyAsset;
         // information about the current highest bid
         Bid lastBid;
         // seller address
@@ -48,6 +48,11 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
         bytes4 dataType;
         // field to store additional information for Auction, can be seen in "LibAucDataV1.sol"
         bytes data;
+    }
+
+    struct SellAsset {
+        address token;
+        uint tokenId;
     }
 
     /// @dev bid struct

@@ -19,8 +19,7 @@ contract TokenToAuction {
     }
 
     /// @dev deletes auctionId from tokenToAuctionId
-    function deleteAuctionForToken(LibAsset.Asset memory asset) internal {
-        (address token, uint tokenId) = abi.decode(asset.assetType.data, (address, uint256));
+    function deleteAuctionForToken(address token, uint tokenId) internal {
         delete tokenToAuctionId[token][tokenId];
     }
     

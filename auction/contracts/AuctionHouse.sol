@@ -65,26 +65,14 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     /// @dev creates an auction and locks sell asset
     function startAuction(
-        LibAsset.Asset memory _sellAsset,
-        LibAsset.AssetType memory _buyAsset,
+        SellAsset memory _sellAsset,
+        address _buyAsset,
         uint minimalStep,
         uint minimalPrice,
         bytes4 dataType,
         bytes memory data
     ) external {
-        // only ERC721 or ERC1155 can't be a buy item
-        require(
-            _sellAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS ||
-            _sellAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS,
-            "incorrect sell asset class"
-        );
-
-        // only ETH or ERC20 can't be a buy item
-        require(
-            _buyAsset.assetClass == LibAsset.ERC20_ASSET_CLASS ||
-            _buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS,
-            "incorrect buy asset class"
-        );
+        //todo: check if token contract supports ERC721 interface?
 
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
@@ -110,36 +98,32 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             data
         );
         auctions[currentAuctionId] = auc;
-        transfer(_sellAsset, sender, address(this), TO_LOCK, LOCK);
-        setApproveForTransferProxy(_sellAsset);
+        transfer(LibAsset.Asset(prepareSellAssetType(_sellAsset), 1), sender, address(this), TO_LOCK, LOCK);
+        setApproveERC721(_sellAsset.token);
 
-        //setting auctionForToken only for erc-721
-        if (_sellAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
-            (address token, uint tokenId) = abi.decode(_sellAsset.assetType.data, (address, uint256));
-            setAuctionForToken(token, tokenId, currentAuctionId);
-        }
+        setAuctionForToken(_sellAsset.token, _sellAsset.tokenId, currentAuctionId);
+        
         emit AuctionCreated(currentAuctionId, auc);
     }
 
-    /// @dev sets approval for transfer proxy to transfer sell asset from this contract
-    function setApproveForTransferProxy(LibAsset.Asset memory _asset) internal {
-        if (_asset.assetType.assetClass == LibAsset.ERC20_ASSET_CLASS) {
-            (address token) = abi.decode(_asset.assetType.data, (address));
-            IERC20Upgradeable tokenContract = IERC20Upgradeable(token);
-            address erc20Proxy = transferManager.getProxy(LibAsset.ERC20_ASSET_CLASS);
-            // if allownance for this token is less that 2^100 then set max_uint
-            if (tokenContract.allowance(address(this), erc20Proxy) < 2 ** 100) {
-                tokenContract.approve(erc20Proxy, 2 ** 256 - 1);
-            }
-        } else if (_asset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
-            (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
-            require(_asset.value == 1, "erc721 value error");
-            //todo check if approved already?
-            IERC721Upgradeable(token).setApprovalForAll(transferManager.getProxy(LibAsset.ERC721_ASSET_CLASS), true);
-        } else if (_asset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
-            (address token,) = abi.decode(_asset.assetType.data, (address, uint256));
-            //todo check if approved already?
-            IERC1155Upgradeable(token).setApprovalForAll(transferManager.getProxy(LibAsset.ERC1155_ASSET_CLASS), true);
+    function setApproveERC721(address token) internal {
+        address proxy = transferManager.getProxy(LibAsset.ERC721_ASSET_CLASS);
+        IERC721Upgradeable tokenContract = IERC721Upgradeable(token);
+        if (!tokenContract.isApprovedForAll(address(this), proxy)) {
+            tokenContract.setApprovalForAll(proxy, true);
+        }
+    }
+
+    function setApproveERC20(address token) internal {
+        //do nothing if buyAsset = eth
+        if (token == address(0)) {
+            return;
+        }
+        IERC20Upgradeable tokenContract = IERC20Upgradeable(token);
+        address erc20Proxy = transferManager.getProxy(LibAsset.ERC20_ASSET_CLASS);
+        // if allownance for this token is less that 2^100 then set max_uint
+        if (tokenContract.allowance(address(this), erc20Proxy) < 2 ** 100) {
+            tokenContract.approve(erc20Proxy, 2 ** 256 - 1);
         }
     }
 
@@ -206,7 +190,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     /// @dev reserves new bid and returns the last one if it exists
     function reserveValue(
-        LibAsset.AssetType memory _buyAssetType, 
+        address _buyAsset, 
         address oldBuyer, address newBuyer, 
         Bid memory oldBid, 
         uint oldProtocolFee, 
@@ -214,8 +198,10 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         uint newProtocolFee
     ) internal {
         LibAsset.Asset memory transferAsset;
+        LibAsset.AssetType memory _buyAssetType = prepareBuyAssetType(_buyAsset);
         if (oldBuyer != address(0x0)) { //return oldAmount to oldBuyer
             uint oldAmount = getBidTotalAmount(oldBid, oldProtocolFee);
+            
             transferAsset = LibAsset.Asset(_buyAssetType, oldAmount);
 
             // workaround bid asset type = ETH for security purposes
@@ -235,7 +221,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         uint newAmount = getBidTotalAmount(newBid, newProtocolFee);
         transferAsset = LibAsset.Asset(_buyAssetType, newAmount);
         transfer(transferAsset, newBuyer, address(this), TO_LOCK, LOCK);
-        setApproveForTransferProxy(transferAsset);
+        setApproveERC20(_buyAsset);
     }
 
     /// @dev returns the minimal amount of the next bid (without fees)
@@ -292,13 +278,14 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     function doTransfers(Auction memory currentAuction) internal {
         address seller = currentAuction.seller;
         address buyer = currentAuction.buyer;
+        LibAsset.Asset memory sellAsset = LibAsset.Asset(prepareSellAssetType(currentAuction.sellAsset), 1);
         if (buyer != address(0x0)) { //bid exists
             
             //form seller side data
             LibAucDataV1.DataV1 memory auctionData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
             LibDeal.DealSide memory sellSide = LibDeal.DealSide(
-                currentAuction.sellAsset.assetType,
-                currentAuction.sellAsset.value,
+                sellAsset.assetType,
+                sellAsset.value,
                 generatePayouts(seller),
                 generateOriginFees(auctionData.originFee),
                 address(this),
@@ -309,21 +296,21 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
             Bid memory bid = currentAuction.lastBid;
             LibBidDataV1.DataV1 memory bidData = LibBidDataV1.parse(bid.data, bid.dataType);
             LibDeal.DealSide memory buySide = LibDeal.DealSide(
-                currentAuction.buyAsset,
+                prepareBuyAssetType(currentAuction.buyAsset),
                 bid.amount,
                 generatePayouts(buyer),
                 generateOriginFees(bidData.originFee),
                 address(this),
                 currentAuction.protocolFee
             );
-            if (currentAuction.buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            if (currentAuction.buyAsset == address(0)) {
                 uint totalAmount = transferManager.calculateTotalAmount(bid.amount, currentAuction.protocolFee, generateOriginFees(bidData.originFee));
                 transferManager.doTransfers{ value: totalAmount }(sellSide, buySide, LibFeeSide.FeeSide.RIGHT, currentAuction.buyer);
             } else {
                 transferManager.doTransfers(sellSide, buySide, LibFeeSide.FeeSide.RIGHT, address(0));
             }
         } else {
-            transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft back to seller
+            transfer(sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft back to seller
         }
     }
 
@@ -358,9 +345,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     /// @dev deletes auction after finalizing
     function deactivateAuction(uint _auctionId, Auction memory currentAuction) internal {
         emit AuctionFinished(_auctionId, currentAuction);
-        if (currentAuction.sellAsset.assetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
-            deleteAuctionForToken(currentAuction.sellAsset);
-        }
+        deleteAuctionForToken(currentAuction.sellAsset.token, currentAuction.sellAsset.tokenId);
         delete auctions[_auctionId];
     }
 
@@ -371,7 +356,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
         address seller = currentAuction.seller;
         require(seller == _msgSender(), "auction owner not detected");
         require(currentAuction.buyer == address(0), "can't cancel auction with bid");
-        transfer(currentAuction.sellAsset, address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
+        transfer(LibAsset.Asset(prepareSellAssetType(currentAuction.sellAsset), 1), address(this), seller, TO_SELLER, UNLOCK); //nft transfer back to seller
         deactivateAuction(_auctionId, currentAuction);
         emit AuctionCancelled(_auctionId);
     }
@@ -427,7 +412,7 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
 
     /// @dev function to call from wrapper to put bid
     function putBidWrapper(uint256 _auctionId) external payable {
-        require(auctions[_auctionId].buyAsset.assetClass == LibAsset.ETH_ASSET_CLASS, "only ETH bids allowed");
+        require(auctions[_auctionId].buyAsset == address(0), "only ETH bids allowed");
         putBid(_auctionId, Bid(msg.value, LibBidDataV1.V1, ""));
     }
 
@@ -473,6 +458,17 @@ contract AuctionHouse is AuctionHouseBase, InternalTransferExecutor {
     function changeMinimalDuration(uint newValue) external onlyOwner {
         emit MinimalDurationChanged(minimalDuration, newValue);
         minimalDuration = newValue;
+    }
+
+    function prepareBuyAssetType(address _token) internal pure returns(LibAsset.AssetType memory) {
+        if (_token == address(0)){
+            return LibAsset.AssetType(LibAsset.ETH_ASSET_CLASS, "");
+        }
+        return LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, abi.encode(_token));
+    }
+
+    function prepareSellAssetType(SellAsset memory _sellAsset) internal pure returns(LibAsset.AssetType memory) {
+        return LibAsset.AssetType(LibAsset.ERC721_ASSET_CLASS, abi.encode(_sellAsset.token, _sellAsset.tokenId));
     }
 
     uint256[50] private ______gap;
