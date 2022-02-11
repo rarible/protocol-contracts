@@ -9,22 +9,22 @@ import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
+import "@rarible/libraries/contracts/LibDeal.sol";
+import "@rarible/libraries/contracts/LibOrderData.sol";
 import "../../../contracts/OrderValidator.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
-
-    function __RaribleTransferManagerTest_init_unchained(
+    function __RaribleTransferManagerTest_init(
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
         INftTransferProxy transferProxy,
         IERC20TransferProxy erc20TransferProxy
     )external initializer {
-//        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __Context_init_unchained();
+        __Ownable_init_unchained();
         __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
-        __Context_init_unchained();
-        __Ownable_init_unchained();
     }
 
     function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {

@@ -2,13 +2,13 @@
 
 pragma solidity ^0.7.6;
 
-import "@rarible/exchange-interfaces/contracts/IWETH.sol";
+//import "@rarible/exchange-interfaces/contracts/IWETH.sol";
 /*Test Wrapped Ether contract
 *https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2#code
 */
 
-contract WETHTest is IWETH {
-    string public override name     = "Wrapped Ether";
+contract WETH9 {
+    string public name     = "Wrapped Ether";
     string public symbol   = "WETH";
     uint8  public decimals = 18;
 
@@ -20,29 +20,26 @@ contract WETHTest is IWETH {
     mapping (address => uint)                       public  balanceOf;
     mapping (address => mapping (address => uint))  public  allowance;
 
-    receive() external payable {
+    fallback() external payable {
         deposit();
     }
-
     function deposit() public payable {
         balanceOf[msg.sender] += msg.value;
-        emit Deposit(msg.sender, msg.value);
+        Deposit(msg.sender, msg.value);
     }
-
-    function withdraw(uint wad) public override {
-        require(balanceOf[msg.sender] >= wad, "balance less than need");
+    function withdraw(uint wad) public {
+        require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
         msg.sender.transfer(wad);
-        emit Withdrawal(msg.sender, wad);
+        Withdrawal(msg.sender, wad);
     }
-
-     function totalSupply() public view returns (uint) {
+    function totalSupply() public view returns (uint) {
         return address(this).balance;
     }
 
     function approve(address guy, uint wad) public returns (bool) {
         allowance[msg.sender][guy] = wad;
-        emit Approval(msg.sender, guy, wad);
+        Approval(msg.sender, guy, wad);
         return true;
     }
 
@@ -50,18 +47,21 @@ contract WETHTest is IWETH {
         return transferFrom(msg.sender, dst, wad);
     }
 
-    function transferFrom(address src, address dst, uint wad) public returns (bool){
-        require(balanceOf[src] >= wad, "less, than need");
+    function transferFrom(address src, address dst, uint wad)
+    public
+    returns (bool)
+    {
+        require(balanceOf[src] >= wad);
 
         if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
-            require(allowance[src][msg.sender] >= wad, "wrong allowance");
+            require(allowance[src][msg.sender] >= wad);
             allowance[src][msg.sender] -= wad;
         }
 
         balanceOf[src] -= wad;
         balanceOf[dst] += wad;
 
-        emit Transfer(src, dst, wad);
+        Transfer(src, dst, wad);
 
         return true;
     }
