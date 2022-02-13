@@ -14,11 +14,11 @@ library LibAucDataV1 {
         // auction originFees
         LibPart.Part originFee;
         // auction duration
-        uint duration;
+        uint128 duration;
         // auction startTime
-        uint startTime;
+        uint128 startTime;
         // auction buyout price
-        uint buyOutPrice;
+        uint128 buyOutPrice;
     }
 
     /// @dev returns parsed data field of an Auction (so returns DataV1 struct)

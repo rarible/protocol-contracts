@@ -59,7 +59,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         feeReceivers[token] = wallet;
     }
 
-    function getFeeReceiver(address token) internal view returns (address) {
+    function getFeeReceiver(address token) public view override returns (address) {
         address wallet = feeReceivers[token];
         if (wallet != address(0)) {
             return wallet;
@@ -251,6 +251,10 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
             newValue = 0;
             realFee = value;
         }
+    }
+
+    function getRoyalties(address token, uint tokenId) external override returns(LibPart.Part[] memory) {
+        return royaltiesRegistry.getRoyalties(token, tokenId); 
     }
 
     function getProxy(bytes4 _type) override external view returns(address) {

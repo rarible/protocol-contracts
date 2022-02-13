@@ -15,15 +15,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 /// @dev contract with 
 abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction, ReentrancyGuardUpgradeable {
 
-    //transfer types
-    bytes4 constant LOCK = bytes4(keccak256("LOCK"));
-    bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
-
-    //transfer directions:
-    bytes4 constant TO_LOCK = bytes4(keccak256("TO_LOCK"));
-    bytes4 constant TO_SELLER = bytes4(keccak256("TO_SELLER"));
-    bytes4 constant TO_BIDDER = bytes4(keccak256("TO_BIDDER"));
-
     /// @dev auction struct
     struct Auction {
         // asset that is being sold at auction
@@ -37,13 +28,13 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
         // buyer address
         address payable buyer;
         // the time when auction ends
-        uint endTime;
+        uint128 endTime;
         // the minimal amount of the first bid
-        uint minimalStep;
+        uint128 minimalStep;
         // the minimal step between bids
-        uint minimalPrice;
+        uint128 minimalPrice;
         // protocolFee at the time of the purchase
-        uint protocolFee;
+        uint128 protocolFee;
         // version of Auction to correctly decode data field
         bytes4 dataType;
         // field to store additional information for Auction, can be seen in "LibAucDataV1.sol"
