@@ -119,20 +119,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
     }
 
-//    function doTransfersWithFees(
-//        LibDeal.DealSide memory calculateSide,
-//        LibDeal.DealSide memory nftSide,
-//        bytes4 transferDirection
-//    ) internal returns (uint totalAmount) {
-//        totalAmount = calculateTotalAmount(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees);
-//        LibDeal.DealSide memory newPaymentSide = unwrapWETH(calculateSide, totalAmount, transferDirection);
-//        uint rest = transferProtocolFee(totalAmount, calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
-//        rest = transferRoyalties(calculateSide.assetType, nftSide.assetType, rest, calculateSide.value, calculateSide.sideAddress, transferDirection);
-//        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, calculateSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
-//        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, nftSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
-//        transferPayouts(calculateSide.assetType, rest, calculateSide.sideAddress, nftSide.payouts, transferDirection);
-//    }
-
     function doTransfersWithFees(
         LibDeal.DealSide memory calculateSide,
         LibDeal.DealSide memory nftSide,
