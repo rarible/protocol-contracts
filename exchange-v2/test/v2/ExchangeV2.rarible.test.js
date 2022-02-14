@@ -60,6 +60,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     /*ETH*/
     await transferManagerTest.setFeeReceiver(eth, protocol);
     await transferManagerTest.setFeeReceiver(t1.address, protocol);
+    await transferManagerTest.setFeeReceiver(t1.address, protocol);
  		/*ERC721 */
  		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 		/*ERC1155V2*/
@@ -69,6 +70,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
  		erc721V1 = await ERC721_V1.new("Rarible", "RARI", "https://ipfs.rarible.com");
     await erc721V1.initialize();
     tokenWETH9 = await WETH9.new();
+    await transferManagerTest.setFeeReceiver(tokenWETH9.address, protocol);
     assetMatcherWETHTest = await AssetMatcherWETHTest.new();
 	}
 	beforeEach(resetState);
@@ -102,25 +104,25 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let sigLeft = await getSignature(left, accounts[1]);
       let sigRight = await getSignature(right, accounts[2]);
-      let tx = await testing.matchOrders(left, sigLeft, right, sigRight);
-      console.log("Used ERC721<->WETH_UNWRAP for matchOrders (protocol fee, origin, royalties, payouts), estimate Gas: ", tx.receipt.gasUsed);
-//      await verifyBalanceChange(accounts[2], 0, async () =>
-//      	verifyBalanceChange(accounts[1], -75, async () =>
-//      	  verifyBalanceChange(accounts[5], -75, async () =>
-//      	    verifyBalanceChange(accounts[3], -6, async () =>
-//      	      verifyBalanceChange(accounts[4], -8, async () =>
-//      	        verifyBalanceChange(accounts[6], -20, async () =>
-//      	          verifyBalanceChange(accounts[7], -10, async () =>
-//      		          verifyBalanceChange(protocol, -12, () =>
-//      			          testing.matchOrders(left, sigLeft, right, sigRight)
-//      			        )
-//      			      )
-//      			    )
-//      			  )
-//      			)
-//      		)
-//      	)
-//      )
+//      let tx = await testing.matchOrders(left, sigLeft, right, sigRight);
+//      console.log("Used ERC721<->WETH_UNWRAP for matchOrders (protocol fee, origin, royalties, payouts), estimate Gas: ", tx.receipt.gasUsed);
+      await verifyBalanceChange(accounts[2], 0, async () =>
+      	verifyBalanceChange(accounts[1], -75, async () =>
+      	  verifyBalanceChange(accounts[5], -75, async () =>
+      	    verifyBalanceChange(accounts[3], -6, async () =>
+      	      verifyBalanceChange(accounts[4], -8, async () =>
+      	        verifyBalanceChange(accounts[6], -20, async () =>
+      	          verifyBalanceChange(accounts[7], -10, async () =>
+      		          verifyBalanceChange(protocol, -12, () =>
+      			          testing.matchOrders(left, sigLeft, right, sigRight)
+      			        )
+      			      )
+      			    )
+      			  )
+      			)
+      		)
+      	)
+      )
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
     })
@@ -136,7 +138,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let encDataLeft = await encDataV1([ [[accounts[1], 5000], [accounts[5], 5000]], addrOriginLeft ]);
       await royaltiesRegistry.setRoyaltiesByToken(erc721.address, [[accounts[6], 1000], [accounts[7], 500]]); //set royalties by token
 
-//      const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(WETH_UNWRAP, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
       const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(tokenWETH9.address), 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
       const right = Order(accounts[2], Asset(ERC20, enc(tokenWETH9.address), 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 
@@ -144,23 +145,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let sigRight = await getSignature(right, accounts[2]);
       let tx = await testing.matchOrders(left, sigLeft, right, sigRight);
       console.log("Used ERC721<->ERC20(WETH) for matchOrders (protocol fee, origin, royalties, payouts), estimate Gas: ", tx.receipt.gasUsed);
-//      await verifyBalanceChange(accounts[2], 0, async () =>
-//      	verifyBalanceChange(accounts[1], -75, async () =>
-//      	  verifyBalanceChange(accounts[5], -75, async () =>
-//      	    verifyBalanceChange(accounts[3], -6, async () =>
-//      	      verifyBalanceChange(accounts[4], -8, async () =>
-//      	        verifyBalanceChange(accounts[6], -20, async () =>
-//      	          verifyBalanceChange(accounts[7], -10, async () =>
-//      		          verifyBalanceChange(protocol, -12, () =>
-//      			          testing.matchOrders(left, sigLeft, right, sigRight)
-//      			        )
-//      			      )
-//      			    )
-//      			  )
-//      			)
-//      		)
-//      	)
-//      )
+
+      assert.equal(await tokenWETH9.balanceOf(accounts[1]), 75);//payouts
+      assert.equal(await tokenWETH9.balanceOf(accounts[5]), 75); //payouts
+      assert.equal(await tokenWETH9.balanceOf(accounts[3]), 6); //origins
+      assert.equal(await tokenWETH9.balanceOf(accounts[4]), 8); //origins
+      assert.equal(await tokenWETH9.balanceOf(accounts[6]), 20); //royalties
+      assert.equal(await tokenWETH9.balanceOf(accounts[7]), 10); //royalties
+      assert.equal(await tokenWETH9.balanceOf(protocol), 12);
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
     })
@@ -177,15 +169,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let sigLeft = await getSignature(left, accounts[1]);
       let sigRight = await getSignature(right, accounts[2]);
-      let tx = await testing.matchOrders(left, sigLeft, right, sigRight);
-      console.log("Used ERC721<->WETH_UNWRAP for matchOrders (protocol fee), estimate Gas: ", tx.receipt.gasUsed);
-//      await verifyBalanceChange(accounts[2], 0, async () =>
-//      	verifyBalanceChange(accounts[1], -194, async () =>
-//      		verifyBalanceChange(protocol, -12, () =>
-//      			testing.matchOrders(left, sigLeft, right, sigRight)
-//      		)
-//      	)
-//      )
+//      let tx = await testing.matchOrders(left, sigLeft, right, sigRight);
+//      console.log("Used ERC721<->WETH_UNWRAP for matchOrders (protocol fee), estimate Gas: ", tx.receipt.gasUsed);
+      await verifyBalanceChange(accounts[2], 0, async () =>
+      	verifyBalanceChange(accounts[1], -194, async () =>
+      		verifyBalanceChange(protocol, -12, () =>
+      			testing.matchOrders(left, sigLeft, right, sigRight)
+      		)
+      	)
+      )
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
     })
@@ -203,13 +195,9 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let sigRight = await getSignature(right, accounts[2]);
       let tx = await testing.matchOrders(left, sigLeft, right, sigRight);
       console.log("Used ERC721<->ERC20 (WETH) for matchOrders(protocol fee), estimate Gas: ", tx.receipt.gasUsed);
-//      await verifyBalanceChange(accounts[2], 0, async () =>
-//      	verifyBalanceChange(accounts[1], -194, async () =>
-//      		verifyBalanceChange(protocol, -12, () =>
-//      			testing.matchOrders(left, sigLeft, right, sigRight)
-//      		)
-//      	)
-//      )
+
+      assert.equal(await tokenWETH9.balanceOf(accounts[1]), 194);
+      assert.equal(await tokenWETH9.balanceOf(protocol), 12);
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
     })
