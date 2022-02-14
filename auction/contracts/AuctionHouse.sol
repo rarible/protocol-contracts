@@ -103,7 +103,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         );
         setAuctionForToken(_sellAsset.token, _sellAsset.tokenId, currentAuctionId);
         
-        emit AuctionCreated(currentAuctionId, auc);
+        emit AuctionCreated(currentAuctionId, endTime);
     }
 
     /// @dev increments auctionId and returns new value
@@ -180,7 +180,7 @@ contract AuctionHouse is AuctionTransferExecutor {
             endTime = currentTime + extension;
             auctions[_auctionId].endTime = endTime;
         }
-        emit BidPlaced(_auctionId, newBuyer, bid, endTime);
+        emit BidPlaced(_auctionId, endTime);
     }
 
     /// @dev reserves new bid and returns the last one if it exists
@@ -387,7 +387,7 @@ contract AuctionHouse is AuctionTransferExecutor {
 
     /// @dev deletes auction after finalizing
     function deactivateAuction(uint _auctionId, Auction memory currentAuction) internal {
-        emit AuctionFinished(_auctionId, currentAuction);
+        emit AuctionFinished(_auctionId);
         deleteAuctionForToken(currentAuction.sellAsset.token, currentAuction.sellAsset.tokenId);
         delete auctions[_auctionId];
     }
@@ -480,6 +480,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         );
         
         deactivateAuction(_auctionId, currentAuction);
+        emit AuctionBuyOut(auctionId);
     }
 
     /// @dev returns current highest bidder for an auction
@@ -507,27 +508,6 @@ contract AuctionHouse is AuctionTransferExecutor {
         _to.transferEth(amount);
     }
 
-    function generatePayouts(address _to) internal pure returns(LibPart.Part[] memory) {
-        LibPart.Part[] memory payout = new LibPart.Part[](1);
-        payout[0].account = payable(_to);
-        payout[0].value = 10000;
-        return payout;
-    }
-
-    function generateOriginFees(LibPart.Part memory fee) internal pure returns(LibPart.Part[] memory) {
-        LibPart.Part[] memory originFees;
-        if (fee.account == address(0)) {
-            return originFees;
-        }
-        originFees = new LibPart.Part[](1);
-        originFees[0] = fee;
-        return originFees;
-    }
-
-    function getProtocolFee() internal view returns(uint) {
-        return protocolFee;
-    }
-
     function setProtocolFee(uint128 _protocolFee) external onlyOwner {
         emit ProtocolFeeChanged(protocolFee, _protocolFee);
         protocolFee = _protocolFee;
@@ -536,17 +516,6 @@ contract AuctionHouse is AuctionTransferExecutor {
     function changeMinimalDuration(uint128 newValue) external onlyOwner {
         emit MinimalDurationChanged(minimalDuration, newValue);
         minimalDuration = newValue;
-    }
-
-    function prepareBuyAssetType(address _token) internal pure returns(LibAsset.AssetType memory) {
-        if (_token == address(0)){
-            return LibAsset.AssetType(LibAsset.ETH_ASSET_CLASS, "");
-        }
-        return LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, abi.encode(_token));
-    }
-
-    function prepareSellAssetType(SellAsset memory _sellAsset) internal pure returns(LibAsset.AssetType memory) {
-        return LibAsset.AssetType(LibAsset.ERC721_ASSET_CLASS, abi.encode(_sellAsset.token, _sellAsset.tokenId));
     }
 
     function _returnBid(
