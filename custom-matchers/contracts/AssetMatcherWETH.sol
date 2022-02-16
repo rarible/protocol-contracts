@@ -12,32 +12,27 @@ import "@rarible/exchange-interfaces/contracts/IWETH.sol";
 contract AssetMatcherWETH is IAssetMatcher {
 
     bytes constant EMPTY = "";
-    string constant nameWETH = "Wrapped Ether";
 
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) public view override returns (LibAsset.AssetType memory) {
         bytes4 resultAssetClass;
-        bytes memory resultData;
         if (
             (leftAssetType.assetClass == LibAsset.ERC20_ASSET_CLASS) &&
             (rightAssetType.assetClass == LibAsset.WETH_UNWRAP)
         ) {
             resultAssetClass = rightAssetType.assetClass;
-            resultData = leftAssetType.data;
         } else if (
             (leftAssetType.assetClass == LibAsset.WETH_UNWRAP) &&
             (rightAssetType.assetClass == LibAsset.ERC20_ASSET_CLASS)
         ) {
             resultAssetClass = leftAssetType.assetClass;
-            resultData = rightAssetType.data;
         } else {
             return LibAsset.AssetType(0, EMPTY);
         }
-        (address token) = abi.decode(resultData, (address));
-        try IWETH(token).name() returns (string memory name) {
-            if (keccak256(bytes(name)) == keccak256(bytes(nameWETH))) {
-                return LibAsset.AssetType(resultAssetClass, resultData);
-            }
-        } catch {}
+        (address tokenLeft) = abi.decode(leftAssetType.data, (address));
+        (address tokenRight) = abi.decode(rightAssetType.data, (address));
+        if (tokenLeft == tokenRight) {
+            return LibAsset.AssetType(resultAssetClass, leftAssetType.data);
+        }
         return LibAsset.AssetType(0, EMPTY);
     }
 }

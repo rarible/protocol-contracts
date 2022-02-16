@@ -8,7 +8,7 @@ import "@rarible/exchange-interfaces/contracts/IWETH.sol";
 */
 
 contract WETHTest is IWETH {
-    string public override name     = "Wrapped Ether";
+    string public name     = "Wrapped Ether";
     string public symbol   = "WETH";
     uint8  public decimals = 18;
 

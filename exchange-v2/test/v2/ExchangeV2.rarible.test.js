@@ -99,7 +99,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let encDataLeft = await encDataV1([ [[accounts[1], 5000], [accounts[5], 5000]], addrOriginLeft ]);
       await royaltiesRegistry.setRoyaltiesByToken(erc721.address, [[accounts[6], 1000], [accounts[7], 500]]); //set royalties by token
 
-      const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(WETH_UNWRAP, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+      const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(WETH_UNWRAP, enc(tokenWETH9.address), 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
       const right = Order(accounts[2], Asset(ERC20, enc(tokenWETH9.address), 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 
       let sigLeft = await getSignature(left, accounts[1]);
@@ -164,7 +164,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       await tokenWETH9.approve(erc20TransferProxy.address, 1000, {from: accounts[2]});
       await testing.setAssetMatcher(WETH_UNWRAP, assetMatcherWETHTest.address);
 
-      const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(WETH_UNWRAP, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+      const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(WETH_UNWRAP, enc(tokenWETH9.address), 200), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(ERC20, enc(tokenWETH9.address), 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 
       let sigLeft = await getSignature(left, accounts[1]);
@@ -181,6 +181,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
     })
+
     it("matchOrders ERC721<-> ERC20 (WETH) only protocol fee ", async () => {
       await erc721.mint(accounts[1], erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});

@@ -8,22 +8,14 @@ import "@rarible/exchange-interfaces/contracts/IWETH.sol";
 */
 
 contract WETHTest is IWETH {
-    string public override name     = "Wrapped Ether";
+    string public name     = "Wrapped Ether";
     string public symbol   = "WETH";
     uint8  public decimals = 18;
 
-    event  Approval(address indexed src, address indexed guy, uint wad);
-    event  Transfer(address indexed src, address indexed dst, uint wad);
-    event  Deposit(address indexed dst, uint wad);
     event  Withdrawal(address indexed src, uint wad);
 
     mapping (address => uint)                       public  balanceOf;
     mapping (address => mapping (address => uint))  public  allowance;
-
-    /*method for test only*/
-    function setName(string memory newName) external {
-        name = newName;
-    }
 
     function withdraw(uint wad) public override {
         require(balanceOf[msg.sender] >= wad, "balance less than need");
@@ -31,5 +23,4 @@ contract WETHTest is IWETH {
         msg.sender.transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
-
 }
