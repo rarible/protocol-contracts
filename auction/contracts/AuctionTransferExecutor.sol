@@ -59,9 +59,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         address token,
         address from,
         address to,
-        address proxy,
-        bytes4 transferDirection,
-        bytes4 transferType
+        address proxy
     ) internal {
         //bid in eth
         if (token == address(0)) {
@@ -70,9 +68,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
                 TransferData(value, 0, LibAsset.ETH_ASSET_CLASS, token),
                 from,
                 to,
-                proxy,
-                transferDirection,
-                transferType
+                proxy
             ); 
         } else {
             //bid in ERC20
@@ -80,9 +76,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
                 TransferData(value, 0, LibAsset.ERC20_ASSET_CLASS, token),
                 from,
                 to,
-                proxy,
-                transferDirection,
-                transferType
+                proxy
             );
         }
     }
@@ -90,17 +84,13 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
     function transferNFT(
         SellAsset memory sellAsset,
         address from,
-        address to,
-        bytes4 transferDirection,
-        bytes4 transferType
+        address to
     ) internal {
         transfer(
             TransferData(1, sellAsset.tokenId, LibAsset.ERC721_ASSET_CLASS, sellAsset.token),
             from,
             to,
-            transferManager.getProxy(LibAsset.ERC721_ASSET_CLASS),
-            transferDirection,
-            transferType
+            transferManager.getProxy(LibAsset.ERC721_ASSET_CLASS)
         );
     }
 
@@ -128,9 +118,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
                 token,
                 from,
                 originFee.account,
-                proxy,
-                TO_SELLER,
-                ORIGIN
+                proxy
             );
         }
         return newRestValue;
@@ -154,9 +142,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
             token,
             from,
             feeReceiver,
-            proxy,
-            TO_SELLER,
-            PROTOCOL
+            proxy
         );
         return rest;
     }
@@ -185,9 +171,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
                 token,
                 from,
                 royalties[i].account,
-                proxy,
-                TO_SELLER,
-                ROYALTY
+                proxy
             );
         }
         require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
@@ -198,9 +182,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         TransferData memory transferData,
         address from,
         address to,
-        address proxy,
-        bytes4 transferDirection,
-        bytes4 transferType
+        address proxy
     ) internal {
         if (transferData.assetClass == LibAsset.ERC721_ASSET_CLASS) {
             //not using transfer proxy when transfering from this contract
@@ -220,9 +202,9 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
             if (to != address(this)) {
                 to.transferEth(transferData.value);
             }
+        } else if (transferData.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            //todo: case for erc1155
         }
-
-        emit Transfer(transferData, from, to, transferDirection, transferType);
     }
 
     function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {

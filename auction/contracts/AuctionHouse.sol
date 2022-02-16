@@ -97,9 +97,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         transferNFT(
             _sellAsset,
             sender,
-            address(this),
-            TO_LOCK,
-            LOCK
+            address(this)
         );
         setAuctionForToken(_sellAsset.token, _sellAsset.tokenId, currentAuctionId);
         
@@ -208,9 +206,7 @@ contract AuctionHouse is AuctionTransferExecutor {
             buyAsset,
             newBuyer,
             address(this),
-            proxy,
-            TO_LOCK,
-            LOCK
+            proxy
         );
     }
 
@@ -342,18 +338,14 @@ contract AuctionHouse is AuctionTransferExecutor {
             buyAsset,
             from,
             seller,
-            proxy,
-            TO_SELLER,
-            PAYOUT
+            proxy
         );
 
         //transfer nft to buyer
         transferNFT(
             sellAsset,
             address(this),
-            buyer,
-            TO_BIDDER,
-            PAYOUT
+            buyer
         );
     }
 
@@ -402,9 +394,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         transferNFT(
             currentAuction.sellAsset,
             address(this),
-            seller,
-            TO_SELLER,
-            UNLOCK
+            seller
         );
         deactivateAuction(_auctionId, currentAuction);
         emit AuctionCancelled(_auctionId);
@@ -544,9 +534,7 @@ contract AuctionHouse is AuctionTransferExecutor {
                 buyAsset,
                 address(this),
                 oldBuyer,
-                proxy,
-                TO_BIDDER,
-                UNLOCK
+                proxy
             );
         }
     }
