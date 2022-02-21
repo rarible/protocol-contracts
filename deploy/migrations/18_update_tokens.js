@@ -4,21 +4,34 @@ const adminJson = require("@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json
 const ProxyAdmin = contract(adminJson)
 ProxyAdmin.setProvider(web3.currentProvider)
 
-const { getProxyImplementation } = require("./config.js")
+const { getProxyImplementation, getSettings } = require("./config.js")
 
 const ERC1155RaribleBeacon = artifacts.require('ERC1155RaribleBeacon');
 const ERC1155Rarible = artifacts.require('ERC1155Rarible');
+const ERC1155RaribleMeta = artifacts.require('ERC1155RaribleMeta');
 
 const ERC721RaribleMinimalBeacon = artifacts.require('ERC721RaribleMinimalBeacon');
 const ERC721RaribleMinimal = artifacts.require('ERC721RaribleMinimal');
+const ERC721RaribleMeta = artifacts.require('ERC721RaribleMeta');
 
 module.exports = async function (deployer, network) {
+  const { meta_support } = getSettings(network);
+
+  let erc1155toDeploy;
+  let erc721toDeploy;
+  if (!!meta_support) {
+    erc1155toDeploy = ERC1155RaribleMeta;
+    erc721toDeploy = ERC721RaribleMeta;
+  } else {
+    erc1155toDeploy = ERC1155Rarible;
+    erc721toDeploy = ERC721RaribleMinimal;
+  }
 
   //upgrade 1155 proxy
-  const erc1155Proxy = await ERC1155Rarible.deployed();
-  await upgradeProxy(erc1155Proxy.address, ERC1155Rarible, { deployer });
+  const erc1155Proxy = await erc1155toDeploy.deployed();
+  await upgradeProxy(erc1155Proxy.address, erc1155toDeploy, { deployer });
 
-  const erc1155 = await getProxyImplementation(ERC1155Rarible, network, ProxyAdmin)
+  const erc1155 = await getProxyImplementation(erc1155toDeploy, network, ProxyAdmin)
 
   //upgrading 1155 beacon
   const beacon1155 = await ERC1155RaribleBeacon.deployed();
@@ -28,10 +41,10 @@ module.exports = async function (deployer, network) {
 
 
   //upgrade 721 proxy
-  const erc721Proxy = await ERC721RaribleMinimal.deployed();
-  await upgradeProxy(erc721Proxy.address, ERC721RaribleMinimal, { deployer });
+  const erc721Proxy = await erc721toDeploy.deployed();
+  await upgradeProxy(erc721Proxy.address, erc721toDeploy, { deployer });
 
-  const erc721 = await getProxyImplementation(ERC721RaribleMinimal, network, ProxyAdmin)
+  const erc721 = await getProxyImplementation(erc721toDeploy, network, ProxyAdmin)
 
   //upgrading 721 beacon
   const beacon721 = await ERC721RaribleMinimalBeacon.deployed();
