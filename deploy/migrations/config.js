@@ -50,6 +50,12 @@ const polygon_mainnet = {
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
 }
+const polygon_dev = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: true,
+  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  meta_support: true
+}
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   deploy_legacy: true,
@@ -86,7 +92,8 @@ let settings = {
   "e2e-fork": e2e,
   "polygon_mumbai": polygon_mumbai,
   "polygon_mainnet": polygon_mainnet,
-  "dev": dev
+  "dev": dev,
+  "polygon_dev": polygon_dev
 };
 
 function getSettings(network) {
@@ -104,6 +111,14 @@ async function getProxyImplementation(proxy, network, ProxyAdmin) {
 
   if (network === "e2e") {
     network = "unknown-17"
+  }
+
+  if (network === "dev") {
+    network = "unknown-100500"
+  }
+
+  if (network === "polygon_dev") {
+    network = "unknown-300501"
   }
 
   let json;
