@@ -25,6 +25,7 @@ module.exports = async function (deployer, network) {
   const erc721LazyMintTransferProxy = (await ERC721LazyMintTransferProxy.deployed());
   const royaltiesRegistry = (await RoyaltiesRegistry.deployed()).address;
 
+/*
   //deploy exchangeV2 meta
   const exchangeV2 = await deployProxy(
     ExchangeMetaV2,
@@ -39,6 +40,7 @@ module.exports = async function (deployer, network) {
   await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address);
   const matcher = await AssetMatcherCollection.deployed();
   await exchangeV2.setAssetMatcher(id("COLLECTION"), matcher.address);
+*/
 
   //deploy ERC721 meta
   const erc721Proxy = await deployProxy(ERC721RaribleMeta, ["Rarible", "RARI", "ipfs:/", "", transferProxy.address, erc721LazyMintTransferProxy.address], { deployer, initializer: '__ERC721Rarible_init' });

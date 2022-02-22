@@ -9,8 +9,8 @@ import "../../IsPrivateCollection.sol";
 import "../../access/MinterAccessControl.sol";
 
 contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAccessControl, EIP712MetaTransaction {
-    event CreateERC721RaribleMeta(address owner, string name, string symbol);
-    event CreateERC721RaribleUserMeta(address owner, string name, string symbol);
+    event CreateERC721Rarible(address owner, string name, string symbol);
+    event CreateERC721RaribleUser(address owner, string name, string symbol);
 
     function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
@@ -23,7 +23,7 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
 
         isPrivate = true;
 
-        emit CreateERC721RaribleUserMeta(_msgSender(), _name, _symbol);
+        emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
     }
 
     function __ERC721Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external {
@@ -33,7 +33,7 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
 
         isPrivate = false;
 
-        emit CreateERC721RaribleMeta(_msgSender(), _name, _symbol);
+        emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
