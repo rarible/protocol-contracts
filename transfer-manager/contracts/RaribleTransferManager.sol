@@ -6,67 +6,37 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
-import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 import "@rarible/libraries/contracts/LibFill.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
-import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
-import "./TransferExecutor.sol";
 import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
+
+import "./TransferExecutor.sol";
 
 contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
-    IRoyaltiesProvider public royaltiesRegistry;
-
-    address public defaultFeeReceiver;
-    mapping(address => address) public feeReceivers;
-
     function __RaribleTransferManager_init(
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
-        INftTransferProxy transferProxy,
-        IERC20TransferProxy erc20TransferProxy
+        address transferProxy,
+        address erc20TransferProxy
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
+        __TransferExecutor_init_unchained();
+        __RaribleTransferManager_init_unchained();
+        __TransferManagerCore_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
     }
 
-    function __RaribleTransferManager_init_unchained(
-        address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider
-    ) internal initializer {
-        defaultFeeReceiver = newDefaultFeeReceiver;
-        royaltiesRegistry = newRoyaltiesProvider;
+    function __RaribleTransferManager_init_unchained() internal initializer {
     }
-
-    function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
-        royaltiesRegistry = newRoyaltiesRegistry;
-    }
-
-    function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {
-        defaultFeeReceiver = newDefaultFeeReceiver;
-    }
-
-    function setFeeReceiver(address token, address wallet) external onlyOwner {
-        feeReceivers[token] = wallet;
-    }
-
-    function getFeeReceiver(address token) public view override returns (address) {
-        address wallet = feeReceivers[token];
-        if (wallet != address(0)) {
-            return wallet;
-        }
-        return defaultFeeReceiver;
-    }
-
+    
     function executeTransfer(
         LibAsset.Asset memory asset,
         address from,
@@ -237,28 +207,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
         }
-    }
-
-    function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {
-        return subFee(value, total.bp(feeInBp));
-    }
-
-    function subFee(uint value, uint fee) internal pure returns (uint newValue, uint realFee) {
-        if (value > fee) {
-            newValue = value.sub(fee);
-            realFee = fee;
-        } else {
-            newValue = 0;
-            realFee = value;
-        }
-    }
-
-    function getRoyalties(address token, uint tokenId) external override returns(LibPart.Part[] memory) {
-        return royaltiesRegistry.getRoyalties(token, tokenId); 
-    }
-
-    function getProxy(bytes4 _type) override external view returns(address) {
-        return proxies[_type];
     }
 
     uint256[46] private __gap;

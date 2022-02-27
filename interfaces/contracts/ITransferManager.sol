@@ -21,10 +21,4 @@ interface ITransferManager is IExternalTransferExecutor {
         LibFeeSide.FeeSide feeSide,
         address initialSender
     ) payable external returns (uint totalMakeValue, uint totalTakeValue);
-
-    function getProxy(bytes4 key) external view returns(address);
-
-    function getFeeReceiver(address token) external view returns(address);
-
-    function getRoyalties(address token, uint tokenId) external returns(LibPart.Part[] memory);
 }

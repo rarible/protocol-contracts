@@ -30,8 +30,6 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
         // the time when auction ends
         uint128 endTime;
         // the minimal amount of the first bid
-        uint128 minimalStep;
-        // the minimal step between bids
         uint128 minimalPrice;
         // protocolFee at the time of the purchase
         uint128 protocolFee;
@@ -67,8 +65,6 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
     /// @dev event that emits when auction is bought out
     event AuctionBuyOut(uint indexed auctionId);
 
-    /// @dev event that's emitted when new transfer proxy is set
-    event ProxyChange(bytes4 indexed assetType, address proxy);
     /// @dev event that's emitted when user can withdraw ETH from the AuctionHouse
     event AvailableToWithdraw(address indexed owner, uint added, uint total);
     /// @dev event that's emitted when minimal auction duration changes

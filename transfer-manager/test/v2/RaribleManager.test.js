@@ -62,7 +62,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
-		await testing.__TransferManager_init(transferProxy.address, erc20TransferProxy.address, community, royaltiesRegistry.address);
+		await testing.__RaribleTransferManager_init(community, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address);
     await testing.addOperator(operator1);
     await testing.addOperator(operator);
 

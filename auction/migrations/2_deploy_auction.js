@@ -4,7 +4,6 @@ const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 const AuctionHouse = artifacts.require('AuctionHouse');
 const Wrapper = artifacts.require('Wrapper');
 const OperatorRole = artifacts.require('OperatorRole');
-const RaribleTransferManager = artifacts.require("RaribleTransferManager");
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 

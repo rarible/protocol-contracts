@@ -15,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 contract AuctionHouse is AuctionTransferExecutor {
     using LibTransfer for address;
     using SafeMathUpgradeable for uint128;
+    using BpLibrary for uint;
 
     /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
     uint128 private constant EXTENSION_DURATION = 15 minutes;
@@ -37,32 +38,40 @@ contract AuctionHouse is AuctionTransferExecutor {
     /// @dev current protocol fee
     uint128 public protocolFee;
 
+    uint128 public minimalStepBasePoint;
+
     function __AuctionHouse_init(
-        ITransferManager _transferManager,
-        uint128 _protocolFee
+        address newDefaultFeeReceiver,
+        IRoyaltiesProvider newRoyaltiesProvider,
+        address transferProxy,
+        address erc20TransferProxy,
+        uint128 _protocolFee,
+        uint128 _minimalStepBasePoint
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __ERC1155Receiver_init_unchained();
         __ReentrancyGuard_init_unchained();
         __AuctionHouseBase_init_unchained();
-        __AuctionHouse_init_unchained(_protocolFee);
-        __AuctionTransferExecutor_init_unchained(_transferManager);
+        __AuctionTransferExecutor_init_unchained();
+        __TransferManagerCore_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __AuctionHouse_init_unchained(_protocolFee, _minimalStepBasePoint);
     }
 
     function __AuctionHouse_init_unchained(
-        uint128 _protocolFee
+        uint128 _protocolFee,
+        uint128 _minimalStepBasePoint
     ) internal initializer {
         auctionId = 1;
         protocolFee = _protocolFee;
         minimalDuration = EXTENSION_DURATION;
+        minimalStepBasePoint = _minimalStepBasePoint;
     }
 
     /// @dev creates an auction and locks sell asset
     function startAuction(
         SellAsset memory _sellAsset,
         address _buyAsset,
-        uint128 minimalStep,
         uint128 minimalPrice,
         bytes4 dataType,
         bytes memory data
@@ -75,7 +84,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         uint128 endTime = 0;
         if (aucData.startTime > 0){
             require (aucData.startTime >= block.timestamp, "incorrect start time");
-            endTime = aucData.startTime + aucData.duration;
+            endTime = uint128(aucData.startTime + aucData.duration);
         }
 
         uint currentAuctionId = getNextAndIncrementAuctionId();
@@ -87,7 +96,6 @@ contract AuctionHouse is AuctionTransferExecutor {
             sender,
             payable(address(0)),
             endTime,
-            minimalStep,
             minimalPrice,
             protocolFee,
             dataType,
@@ -116,7 +124,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         Auction memory currentAuction = auctions[_auctionId];
         uint128 endTime = currentAuction.endTime;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        LibPart.Part memory bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
+        uint bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
         uint totalAmount = calculateTotalAmount(
             bid.amount, 
             currentAuction.protocolFee, 
@@ -144,7 +152,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             // set endTime if it's not set
             if (currentAuction.endTime == 0){
-                endTime = currentTime + aucData.duration;
+                endTime = uint128(currentTime + aucData.duration);
                 auctions[_auctionId].endTime = endTime;
                 currentAuction.endTime = endTime;
                 
@@ -213,19 +221,15 @@ contract AuctionHouse is AuctionTransferExecutor {
     /// @dev returns the minimal amount of the next bid (without fees)
     function getMinimalNextBid(uint _auctionId) external view returns (uint minBid){
         Auction memory currentAuction = auctions[_auctionId];
-        if (currentAuction.buyer == address(0x0)) {
-            minBid = currentAuction.minimalPrice;
-        } else {
-            minBid = currentAuction.lastBid.amount + (currentAuction.minimalStep);
-        }
+        return _getMinimalNextBid(currentAuction);
     }
 
     /// @dev returns the minimal amount of the next bid (without fees)
-    function _getMinimalNextBid(Auction memory currentAuction) internal pure returns (uint minBid){
+    function _getMinimalNextBid(Auction memory currentAuction) internal view returns (uint minBid){
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
         } else {
-            minBid = currentAuction.lastBid.amount + (currentAuction.minimalStep);
+            minBid = currentAuction.lastBid.amount + currentAuction.lastBid.amount.bp(minimalStepBasePoint);
         }
     }
 
@@ -257,7 +261,7 @@ contract AuctionHouse is AuctionTransferExecutor {
             currentAuction.buyer != address(0),
             "only ended auction with bid can be finished"
         );
-        LibPart.Part memory bidOriginFee = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType).originFee;
+        uint bidOriginFee = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType).originFee;
         uint totalAmount = calculateTotalAmount(
             currentAuction.lastBid.amount, 
             currentAuction.protocolFee, 
@@ -277,76 +281,6 @@ contract AuctionHouse is AuctionTransferExecutor {
             totalAmount
         );
         deactivateAuction(_auctionId, currentAuction);
-    }
-
-    function doTransfers(
-        SellAsset memory sellAsset,
-        address buyAsset,
-        Bid memory bid, 
-        address from,
-        address buyer,
-        address seller,
-        uint128 curProtocolFee,
-        LibPart.Part memory aucOriginFee,
-        address proxy,
-        LibPart.Part memory bidOriginFee,
-        uint amount
-    ) internal {
-        //protocolFee
-        amount = transferProtocolFee(
-            amount,
-            bid.amount,
-            curProtocolFee,
-            from,
-            buyAsset,
-            proxy
-        );
-
-        //royalties
-        amount = transferRoyalties(
-            sellAsset,
-            amount,
-            bid.amount,
-            from,
-            proxy,
-            buyAsset
-        );
-
-        //originFeeBid
-        amount = transferOriginFee(
-            amount,
-            bid.amount,
-            buyAsset,
-            from,
-            proxy,
-            bidOriginFee
-        );
-
-        //originFeeAuc
-        amount = transferOriginFee(
-            amount,
-            bid.amount,
-            buyAsset,
-            from,
-            proxy,
-            aucOriginFee
-        );
-
-        //transfer bid payouts (what's left of it afer fees) to seller
-        transferBid(
-            amount,
-            buyAsset,
-            from,
-            seller,
-            proxy
-        );
-
-        //transfer nft to buyer
-        transferNFT(
-            sellAsset,
-            address(this),
-            buyer
-        );
     }
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
@@ -407,7 +341,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         checkAuctionInProgress(currentAuction, aucData);
         require(buyOutVerify(aucData, bid.amount), "not enough for buyout");
-        LibPart.Part memory bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
+        uint bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
         uint totalAmount = calculateTotalAmount(
             bid.amount, 
             currentAuction.protocolFee, 
@@ -433,7 +367,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         Bid memory bid,
         LibAucDataV1.DataV1 memory aucData,
         uint _auctionId,
-        LibPart.Part memory newBidOriginFee,
+        uint newBidOriginFee,
         uint newTotalAmount,
         address sender
     ) internal {
@@ -542,7 +476,7 @@ contract AuctionHouse is AuctionTransferExecutor {
     function _getProxy(address buyAsset) internal view returns(address){
         address proxy;
         if (buyAsset != address(0)){
-            proxy = transferManager.getProxy(LibAsset.ERC20_ASSET_CLASS);
+            proxy = proxies[LibAsset.ERC20_ASSET_CLASS];
         }
         return proxy;
     }

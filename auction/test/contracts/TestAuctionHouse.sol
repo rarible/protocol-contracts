@@ -26,4 +26,8 @@ contract TestAuctionHouse is AuctionHouse {
       emit timeStamp(block.timestamp);
     }
 
+    function encodeOriginFeeIntoUint(address account, uint96 value) external pure returns(uint){
+        return (uint(value) << 160) + uint(account);
+    }
+
 }

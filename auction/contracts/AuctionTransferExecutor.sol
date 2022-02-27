@@ -3,52 +3,94 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
+import "@rarible/transfer-manager/contracts/TransferManagerCore.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
-import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
+import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+
+import "./AuctionHouseBase.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./AuctionHouseBase.sol";
-
-abstract contract AuctionTransferExecutor is AuctionHouseBase {
+abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCore {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-    struct TransferData {
-        uint value;
-        uint tokenId;
-        bytes4 assetClass;
-        address token;
+    function __AuctionTransferExecutor_init_unchained() internal {
     }
 
-    //transfer directions:
-    bytes4 constant TO_LOCK = bytes4(keccak256("TO_LOCK"));
-    bytes4 constant TO_SELLER = bytes4(keccak256("TO_SELLER"));
-    bytes4 constant TO_BIDDER = bytes4(keccak256("TO_BIDDER"));
+    function doTransfers(
+        SellAsset memory sellAsset,
+        address buyAsset,
+        Bid memory bid, 
+        address from,
+        address buyer,
+        address seller,
+        uint128 curProtocolFee,
+        uint aucOriginFee,
+        address proxy,
+        uint bidOriginFee,
+        uint amount
+    ) internal {
+        //protocolFee
+        amount = transferProtocolFee(
+            amount,
+            bid.amount,
+            curProtocolFee,
+            from,
+            buyAsset,
+            proxy
+        );
 
-    //transfer types:
-    bytes4 constant LOCK = bytes4(keccak256("LOCK"));
-    bytes4 constant UNLOCK = bytes4(keccak256("UNLOCK"));
-    bytes4 constant PROTOCOL = bytes4(keccak256("PROTOCOL"));
-    bytes4 constant ROYALTY = bytes4(keccak256("ROYALTY"));
-    bytes4 constant ORIGIN = bytes4(keccak256("ORIGIN"));
-    bytes4 constant PAYOUT = bytes4(keccak256("PAYOUT"));
+        //royalties
+        amount = transferRoyalties(
+            sellAsset,
+            amount,
+            bid.amount,
+            from,
+            proxy,
+            buyAsset
+        );
 
+        //originFeeBid
+        amount = transferOriginFee(
+            amount,
+            bid.amount,
+            buyAsset,
+            from,
+            proxy,
+            bidOriginFee
+        );
 
-    /// @dev transfer manager for executing the deal
-    ITransferManager public transferManager;
+        //originFeeAuc
+        amount = transferOriginFee(
+            amount,
+            bid.amount,
+            buyAsset,
+            from,
+            proxy,
+            aucOriginFee
+        );
 
-    //events
-    event Transfer(TransferData data, address from, address to, bytes4 transferDirection, bytes4 transferType);
+        //transfer bid payouts (what's left of it afer fees) to seller
+        transferBid(
+            amount,
+            buyAsset,
+            from,
+            seller,
+            proxy
+        );
 
-    function __AuctionTransferExecutor_init_unchained(ITransferManager _transferManager) internal {
-        transferManager = _transferManager;
+        //transfer nft to buyer
+        transferNFT(
+            sellAsset,
+            address(this),
+            buyer
+        );
     }
 
     /**
@@ -65,7 +107,10 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         if (token == address(0)) {
             //no need to transfer
             transfer(
-                TransferData(value, 0, LibAsset.ETH_ASSET_CLASS, token),
+                value, 
+                0, 
+                LibAsset.ETH_ASSET_CLASS, 
+                token,
                 from,
                 to,
                 proxy
@@ -73,7 +118,10 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         } else {
             //bid in ERC20
             transfer(
-                TransferData(value, 0, LibAsset.ERC20_ASSET_CLASS, token),
+                value, 
+                0, 
+                LibAsset.ERC20_ASSET_CLASS, 
+                token,
                 from,
                 to,
                 proxy
@@ -87,20 +135,24 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         address to
     ) internal {
         transfer(
-            TransferData(1, sellAsset.tokenId, LibAsset.ERC721_ASSET_CLASS, sellAsset.token),
+            1, 
+            sellAsset.tokenId, 
+            LibAsset.ERC721_ASSET_CLASS, 
+            sellAsset.token,
             from,
             to,
-            transferManager.getProxy(LibAsset.ERC721_ASSET_CLASS)
+            proxies[LibAsset.ERC721_ASSET_CLASS]
         );
     }
 
     function calculateTotalAmount(
         uint amount,
         uint protocolFee,
-        LibPart.Part memory originFee
+        uint originFee
     ) internal pure returns(uint total) {
+        (, uint96 originFeeValue) = parseFeeData(originFee);
         total = amount.add(amount.bp(protocolFee));
-        total = total.add(amount.bp(originFee.value));
+        total = total.add(amount.bp(originFeeValue));
     }
 
     function transferOriginFee(
@@ -109,15 +161,16 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         address token,
         address from,
         address proxy,
-        LibPart.Part memory originFee
+        uint originFee
     ) internal returns(uint amountLeft) {
-        (uint newRestValue, uint feeValue) = subFeeInBp(rest, amount, originFee.value);
+        (address originFeeAccount, uint96 originFeeValue) = parseFeeData(originFee);
+        (uint newRestValue, uint feeValue) = subFeeInBp(rest, amount, originFeeValue);
         if (feeValue > 0) {
             transferBid(
                 feeValue,
                 token,
                 from,
-                originFee.account,
+                originFeeAccount,
                 proxy
             );
         }
@@ -135,7 +188,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         if (protocolFee == 0) {
             return totalAmount;
         }
-        address feeReceiver = transferManager.getFeeReceiver(token);
+        address feeReceiver = getFeeReceiver(token);
         (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFee * 2);
         transferBid(
             fee,
@@ -155,7 +208,8 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
         address proxy,
         address token
     ) internal returns(uint amountLeft) {
-        LibPart.Part[] memory royalties = transferManager.getRoyalties(sellAsset.token, sellAsset.tokenId);
+        //todo: get rid of libPart later?
+        LibPart.Part[] memory royalties = royaltiesRegistry.getRoyalties(sellAsset.token, sellAsset.tokenId);
         if(royalties.length == 0) {
             return rest;
         }
@@ -179,45 +233,34 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase {
     }
 
     function transfer(
-        TransferData memory transferData,
+        uint value,
+        uint tokenId,
+        bytes4 assetClass,
+        address token,
         address from,
         address to,
         address proxy
     ) internal {
-        if (transferData.assetClass == LibAsset.ERC721_ASSET_CLASS) {
+        if (assetClass == LibAsset.ERC721_ASSET_CLASS) {
             //not using transfer proxy when transfering from this contract
             if (from == address(this)){
-                IERC721(transferData.token).safeTransferFrom(address(this), to, transferData.tokenId);
+                IERC721(token).safeTransferFrom(address(this), to, tokenId);
             } else {
-                INftTransferProxy(proxy).erc721safeTransferFrom(IERC721Upgradeable(transferData.token), from, to, transferData.tokenId);
+                INftTransferProxy(proxy).erc721safeTransferFrom(IERC721Upgradeable(token), from, to, tokenId);
             }
-        } else if (transferData.assetClass == LibAsset.ERC20_ASSET_CLASS) {
+        } else if (assetClass == LibAsset.ERC20_ASSET_CLASS) {
             //not using transfer proxy when transfering from this contract
             if (from == address(this)){
-                IERC20(transferData.token).transfer(to, transferData.value);
+                IERC20(token).transfer(to, value);
             } else {
-                IERC20TransferProxy(proxy).erc20safeTransferFrom(IERC20Upgradeable(transferData.token), from, to, transferData.value);
+                IERC20TransferProxy(proxy).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, value);
             }
-        } else if (transferData.assetClass == LibAsset.ETH_ASSET_CLASS) {
+        } else if (assetClass == LibAsset.ETH_ASSET_CLASS) {
             if (to != address(this)) {
-                to.transferEth(transferData.value);
+                to.transferEth(value);
             }
-        } else if (transferData.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+        } else if (assetClass == LibAsset.ERC1155_ASSET_CLASS) {
             //todo: case for erc1155
-        }
-    }
-
-    function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {
-        return subFee(value, total.bp(feeInBp));
-    }
-
-    function subFee(uint value, uint fee) internal pure returns (uint newValue, uint realFee) {
-        if (value > fee) {
-            newValue = value.sub(fee);
-            realFee = fee;
-        } else {
-            newValue = 0;
-            realFee = value;
         }
     }
 }

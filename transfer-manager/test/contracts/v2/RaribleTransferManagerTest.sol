@@ -49,17 +49,4 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         return result;
     }
 
-
-
-    function __TransferManager_init(
-        INftTransferProxy _transferProxy,
-        IERC20TransferProxy _erc20TransferProxy,
-        address newCommunityWallet,
-        IRoyaltiesProvider newRoyaltiesProvider
-    ) external initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-        __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newCommunityWallet, newRoyaltiesProvider);
-    }
 }

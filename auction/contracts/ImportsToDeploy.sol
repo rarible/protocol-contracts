@@ -2,6 +2,6 @@
 
 pragma solidity 0.7.6;
 
-import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
+import "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol";
 import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
 
