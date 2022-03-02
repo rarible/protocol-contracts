@@ -3,118 +3,84 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./AuctionTransferExecutor.sol";
+import "../AuctionTransferExecutor.sol";
+import "./AuctionHouseStruct1155.sol";
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
-import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
-import "@rarible/libraries/contracts/LibDeal.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 
 /// @dev contract to create and interact with auctions
-contract AuctionHouse is AuctionTransferExecutor {
+contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, AuctionHouseStruct1155 {
     using LibTransfer for address;
-    using SafeMathUpgradeable for uint128;
     using BpLibrary for uint;
 
-    /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
-    uint128 private constant EXTENSION_DURATION = 15 minutes;
-
-    /// @dev maximum auction duration
-    uint128 private constant MAX_DURATION = 1000 days;
-
-    /// @dev mapping to store data of auctions for auctionId
-    mapping(uint => Auction) auctions;
-
-    /// @dev mapping to store eth amount that is ready to be withdrawn (used for faulty eth-bids)
-    mapping(address => uint) readyToWithdraw;
-
-    /// @dev latest auctionId
-    uint256 public auctionId;
-
-    /// @dev minimal auction duration
-    uint128 public minimalDuration;
-
-    /// @dev current protocol fee
-    uint128 public protocolFee;
-
-    uint128 public minimalStepBasePoint;
-
-    function __AuctionHouse_init(
+    function __AuctionHouse1155_init(
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
         address transferProxy,
         address erc20TransferProxy,
-        uint128 _protocolFee,
+        uint64 _protocolFee,
         uint128 _minimalStepBasePoint
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __ERC1155Receiver_init_unchained();
         __ReentrancyGuard_init_unchained();
-        __AuctionHouseBase_init_unchained();
+        __AuctionHouseBase_init_unchained(_protocolFee, _minimalStepBasePoint);
         __AuctionTransferExecutor_init_unchained();
         __TransferManagerCore_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
-        __AuctionHouse_init_unchained(_protocolFee, _minimalStepBasePoint);
+        __AuctionHouse1155_init_unchained();
     }
 
-    function __AuctionHouse_init_unchained(
-        uint128 _protocolFee,
-        uint128 _minimalStepBasePoint
-    ) internal initializer {
-        auctionId = 1;
-        protocolFee = _protocolFee;
-        minimalDuration = EXTENSION_DURATION;
-        minimalStepBasePoint = _minimalStepBasePoint;
+    function __AuctionHouse1155_init_unchained() internal initializer {  
     }
 
     /// @dev creates an auction and locks sell asset
     function startAuction(
-        SellAsset memory _sellAsset,
+        address _sellToken,
+        uint96 _sellTokenValue,
+        uint _sellTokenId,
         address _buyAsset,
-        uint128 minimalPrice,
+        uint96 minimalPrice,
         bytes4 dataType,
         bytes memory data
     ) external {
-        //todo: check if token contract supports ERC721 interface?
+        //todo: check if token contract supports ERC1155 interface?
 
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
+        require(_sellTokenValue > 0, "incorrect _sellTokenValue");
 
-        uint128 endTime = 0;
+        uint96 endTime = 0;
         if (aucData.startTime > 0){
             require (aucData.startTime >= block.timestamp, "incorrect start time");
-            endTime = uint128(aucData.startTime + aucData.duration);
+            endTime = uint96(aucData.startTime + aucData.duration);
         }
 
         uint currentAuctionId = getNextAndIncrementAuctionId();
         address payable sender = _msgSender();
         Auction memory auc = Auction(
-            _sellAsset,
+            _sellToken,
+            _sellTokenValue,
+            _sellTokenId,
             _buyAsset,
+            endTime,
             Bid(0, "", ""),
             sender,
-            payable(address(0)),
-            endTime,
             minimalPrice,
+            payable(address(0)),
             protocolFee,
             dataType,
             data
         );
         auctions[currentAuctionId] = auc;
         transferNFT(
-            _sellAsset,
+            SellAsset(_sellToken, _sellTokenId, _sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
             sender,
             address(this)
         );
-        setAuctionForToken(_sellAsset.token, _sellAsset.tokenId, currentAuctionId);
         
         emit AuctionCreated(currentAuctionId, endTime);
-    }
-
-    /// @dev increments auctionId and returns new value
-    function getNextAndIncrementAuctionId() internal returns (uint256) {
-        return auctionId++;
     }
 
     /// @dev put a bid and return locked assets for the last bid
@@ -122,7 +88,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         address payable newBuyer = _msgSender();
         uint newAmount = bid.amount;
         Auction memory currentAuction = auctions[_auctionId];
-        uint128 endTime = currentAuction.endTime;
+        uint96 endTime = currentAuction.endTime;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         uint bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
         uint totalAmount = calculateTotalAmount(
@@ -147,12 +113,12 @@ contract AuctionHouse is AuctionTransferExecutor {
             return;
         }
         
-        uint128 currentTime = uint128(block.timestamp);
+        uint96 currentTime = uint96(block.timestamp);
         //start action if minimal price is met
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             // set endTime if it's not set
             if (currentAuction.endTime == 0){
-                endTime = uint128(currentTime + aucData.duration);
+                endTime = uint96(currentTime + aucData.duration);
                 auctions[_auctionId].endTime = endTime;
                 currentAuction.endTime = endTime;
                 
@@ -178,11 +144,11 @@ contract AuctionHouse is AuctionTransferExecutor {
         auctions[_auctionId].buyer = newBuyer;
 
         // auction is extended for EXTENSION_DURATION or minimalDuration if (minimalDuration < EXTENSION_DURATION)
-        uint128 minDur = minimalDuration;
-        uint128 extension = (minDur < EXTENSION_DURATION) ? minDur : EXTENSION_DURATION;
+        uint96 minDur = minimalDuration;
+        uint96 extension = (minDur < EXTENSION_DURATION) ? minDur : EXTENSION_DURATION;
 
         // extends auction time if it's about to end
-        if (endTime.sub(currentTime) < extension) {
+        if (endTime - currentTime < extension) {
             endTime = currentTime + extension;
             auctions[_auctionId].endTime = endTime;
         }
@@ -257,7 +223,7 @@ contract AuctionHouse is AuctionTransferExecutor {
         require(_checkAuctionExistence(currentAuction), "there is no auction with this id");
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         require(
-            !_checkAuctionRangeTime(currentAuction, aucData) &&
+            !_checkAuctionRangeTime(currentAuction.endTime, aucData.startTime) &&
             currentAuction.buyer != address(0),
             "only ended auction with bid can be finished"
         );
@@ -268,9 +234,9 @@ contract AuctionHouse is AuctionTransferExecutor {
             bidOriginFee
         );
         doTransfers(
-            currentAuction.sellAsset,
+            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , currentAuction.sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
             currentAuction.buyAsset,
-            currentAuction.lastBid,
+            currentAuction.lastBid.amount,
             address(this),
             currentAuction.buyer,
             currentAuction.seller,
@@ -280,7 +246,7 @@ contract AuctionHouse is AuctionTransferExecutor {
             bidOriginFee,
             totalAmount
         );
-        deactivateAuction(_auctionId, currentAuction);
+        deactivateAuction(_auctionId);
     }
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
@@ -298,12 +264,11 @@ contract AuctionHouse is AuctionTransferExecutor {
         return true;
     }
 
-    function _checkAuctionRangeTime(Auction memory currentAuction, LibAucDataV1.DataV1 memory aucData) internal view returns (bool){
+    function _checkAuctionRangeTime(uint endTime, uint startTime) internal view returns (bool){
         uint currentTime = block.timestamp;
-        if (aucData.startTime > 0 && aucData.startTime > currentTime) {
+        if (startTime > 0 && startTime > currentTime) {
             return false;
         }
-        uint endTime = currentAuction.endTime;
         if (endTime > 0 && endTime <= currentTime){
             return false;
         }
@@ -312,9 +277,8 @@ contract AuctionHouse is AuctionTransferExecutor {
     }
 
     /// @dev deletes auction after finalizing
-    function deactivateAuction(uint _auctionId, Auction memory currentAuction) internal {
+    function deactivateAuction(uint _auctionId) internal {
         emit AuctionFinished(_auctionId);
-        deleteAuctionForToken(currentAuction.sellAsset.token, currentAuction.sellAsset.tokenId);
         delete auctions[_auctionId];
     }
 
@@ -326,11 +290,11 @@ contract AuctionHouse is AuctionTransferExecutor {
         require(seller == _msgSender(), "auction owner not detected");
         require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transferNFT(
-            currentAuction.sellAsset,
+            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , currentAuction.sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
             address(this),
             seller
         );
-        deactivateAuction(_auctionId, currentAuction);
+        deactivateAuction(_auctionId);
         emit AuctionCancelled(_auctionId);
     }
 
@@ -390,9 +354,9 @@ contract AuctionHouse is AuctionTransferExecutor {
             from = sender;
         }
         doTransfers(
-            currentAuction.sellAsset,
+            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , currentAuction.sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
             currentAuction.buyAsset,
-            bid,
+            bid.amount,
             from,
             sender,
             currentAuction.seller,
@@ -403,7 +367,7 @@ contract AuctionHouse is AuctionTransferExecutor {
             newTotalAmount
         );
         
-        deactivateAuction(_auctionId, currentAuction);
+        deactivateAuction(_auctionId);
         emit AuctionBuyOut(auctionId);
     }
 
@@ -414,7 +378,7 @@ contract AuctionHouse is AuctionTransferExecutor {
 
     /// @dev returns true if auction in progress, false otherwise
     function checkAuctionInProgress(Auction memory currentAuction, LibAucDataV1.DataV1 memory aucData) internal view{
-        require(_checkAuctionExistence(currentAuction) && _checkAuctionRangeTime(currentAuction, aucData), "auction is inactive");
+        require(_checkAuctionExistence(currentAuction) && _checkAuctionRangeTime(currentAuction.endTime, aucData.startTime), "auction is inactive");
     }
 
     /// @dev function to call from wrapper to put bid
@@ -430,16 +394,6 @@ contract AuctionHouse is AuctionTransferExecutor {
         require( amount > 0, "nothing to withdraw");
         readyToWithdraw[sender] = 0;
         _to.transferEth(amount);
-    }
-
-    function setProtocolFee(uint128 _protocolFee) external onlyOwner {
-        emit ProtocolFeeChanged(protocolFee, _protocolFee);
-        protocolFee = _protocolFee;
-    }
-
-    function changeMinimalDuration(uint128 newValue) external onlyOwner {
-        emit MinimalDurationChanged(minimalDuration, newValue);
-        minimalDuration = newValue;
     }
 
     function _returnBid(
@@ -491,5 +445,8 @@ contract AuctionHouse is AuctionTransferExecutor {
         }
     }
 
-    uint256[50] private ______gap;
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return this.supportsInterface(interfaceId);
+    }
+
 }

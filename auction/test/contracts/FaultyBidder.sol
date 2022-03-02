@@ -3,16 +3,16 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../contracts/AuctionHouse.sol";
+import "../../contracts/721/AuctionHouse721.sol";
 
 contract FaultyBidder {
 
-    function faultyBid(address _auction, uint _auctionId, AuctionHouse.Bid memory bid) external payable {
-        AuctionHouse(_auction).putBid{value: msg.value}(_auctionId, bid);
+    function faultyBid(address _auction, uint _auctionId, AuctionHouse721.Bid memory bid) external payable {
+        AuctionHouse721(_auction).putBid{value: msg.value}(_auctionId, bid);
     }
 
     function withdrawFaultyBid(address _auction, address _to) external {
-        AuctionHouse(_auction).withdrawFaultyBid(_to);
+        AuctionHouse721(_auction).withdrawFaultyBid(_to);
     }
 
     receive() external payable {

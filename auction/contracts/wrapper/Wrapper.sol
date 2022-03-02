@@ -2,14 +2,14 @@
 pragma solidity 0.7.6;
 
 import "./IMarketWrapper.sol";
-import "./AuctionHouse.sol";
+import "../721/AuctionHouse721.sol";
 
 contract Wrapper is IMarketWrapper{
 
-    AuctionHouse internal immutable auction;
+    AuctionHouse721 internal immutable auction;
 
     constructor(address _auction) {
-        auction = AuctionHouse(_auction);
+        auction = AuctionHouse721(_auction);
     }
 
     function auctionIdMatchesToken(

@@ -3,56 +3,34 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./LibAucDataV1.sol";
-import "./LibBidDataV1.sol";
-import "./TokenToAuction.sol";
+import "./libs/LibAucDataV1.sol";
+import "./libs/LibBidDataV1.sol";
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-/// @dev contract with 
-abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeable, ERC1155HolderUpgradeable, TokenToAuction, ReentrancyGuardUpgradeable {
+abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable {
 
-    /// @dev auction struct
-    struct Auction {
-        // asset that is being sold at auction
-        SellAsset sellAsset;
-        // asset type that bids are taken in
-        address buyAsset;
-        // information about the current highest bid
-        Bid lastBid;
-        // seller address
-        address payable seller;
-        // buyer address
-        address payable buyer;
-        // the time when auction ends
-        uint128 endTime;
-        // the minimal amount of the first bid
-        uint128 minimalPrice;
-        // protocolFee at the time of the purchase
-        uint128 protocolFee;
-        // version of Auction to correctly decode data field
-        bytes4 dataType;
-        // field to store additional information for Auction, can be seen in "LibAucDataV1.sol"
-        bytes data;
-    }
+    /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
+    uint96 internal constant EXTENSION_DURATION = 15 minutes;
 
-    struct SellAsset {
-        address token;
-        uint tokenId;
-    }
+    /// @dev maximum auction duration
+    uint128 internal constant MAX_DURATION = 1000 days;
 
-    /// @dev bid struct
-    struct Bid {
-        // the amount 
-        uint amount;
-        // version of Bid to correctly decode data field
-        bytes4 dataType;
-        // field to store additional information for Bid, can be seen in "LibBidDataV1.sol"
-        bytes data;
-    }
+    /// @dev mapping to store eth amount that is ready to be withdrawn (used for faulty eth-bids)
+    mapping(address => uint) readyToWithdraw;
+
+    /// @dev latest auctionId
+    uint256 public auctionId;
+
+    /// @dev minimal auction duration
+    uint96 public minimalDuration;
+
+    /// @dev current protocol fee
+    uint64 public protocolFee;
+
+    /// @dev minimal bid increase in base points
+    uint128 public minimalStepBasePoint;
 
     /// @dev event that emits when auction is created
     event AuctionCreated(uint indexed auctionId, uint128 endTime);
@@ -72,11 +50,36 @@ abstract contract AuctionHouseBase is OwnableUpgradeable, ERC721HolderUpgradeabl
     /// @dev event that's emitted when protocolFee changes
     event ProtocolFeeChanged(uint oldValue, uint newValue);
 
-    function __AuctionHouseBase_init_unchained() internal initializer {
+    event MinimalStepChanged(uint oldValue, uint newValue);
+
+    function __AuctionHouseBase_init_unchained(
+        uint64 _protocolFee,
+        uint128 _minimalStepBasePoint
+    ) internal initializer {
+        auctionId = 1;
+        protocolFee = _protocolFee;
+        minimalDuration = EXTENSION_DURATION;
+        minimalStepBasePoint = _minimalStepBasePoint;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return this.supportsInterface(interfaceId);
+    /// @dev increments auctionId and returns new value
+    function getNextAndIncrementAuctionId() internal returns (uint256) {
+        return auctionId++;
+    }
+
+    function setProtocolFee(uint64 _protocolFee) external onlyOwner {
+        emit ProtocolFeeChanged(protocolFee, _protocolFee);
+        protocolFee = _protocolFee;
+    }
+
+    function changeMinimalDuration(uint96 newValue) external onlyOwner {
+        emit MinimalDurationChanged(minimalDuration, newValue);
+        minimalDuration = newValue;
+    }
+
+    function changeMinimalStep(uint128 newValue) external onlyOwner {
+        emit MinimalStepChanged(minimalStepBasePoint, newValue);
+        minimalStepBasePoint = newValue;
     }
 
     uint256[50] private ______gap;

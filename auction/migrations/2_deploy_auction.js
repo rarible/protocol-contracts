@@ -1,7 +1,7 @@
 
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
-const AuctionHouse = artifacts.require('AuctionHouse');
+const AuctionHouse721 = artifacts.require('AuctionHouse721');
 const Wrapper = artifacts.require('Wrapper');
 const OperatorRole = artifacts.require('OperatorRole');
 
@@ -79,7 +79,7 @@ module.exports = async function (deployer, network) {
   }
 
   const auction = await deployProxy(
-    AuctionHouse,
+    AuctionHouse721,
     [raribleTransferManager, 0],
     { deployer, initializer: '__AuctionHouse_init' }
   );

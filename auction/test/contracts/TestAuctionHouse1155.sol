@@ -3,10 +3,9 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../contracts/AuctionHouse.sol";
-import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
+import "../../contracts/1155/AuctionHouse1155.sol";
 
-contract TestAuctionHouse is AuctionHouse {
+contract TestAuctionHouse1155 is AuctionHouse1155 {
 
     event timeStamp(uint time);
     function timeNow() external view returns(uint) {

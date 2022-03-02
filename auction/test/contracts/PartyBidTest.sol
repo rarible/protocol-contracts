@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-import "../../contracts/IMarketWrapper.sol";
+import "../../contracts/wrapper/IMarketWrapper.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
 
 contract PartyBidTest is ERC721HolderUpgradeable{

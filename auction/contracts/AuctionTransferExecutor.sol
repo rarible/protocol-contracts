@@ -8,10 +8,10 @@ import "@rarible/lib-asset/contracts/LibAsset.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
-import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 
 import "./AuctionHouseBase.sol";
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -20,13 +20,20 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
+    struct SellAsset {
+        address token;
+        uint tokenId;
+        uint value;
+        bytes4 assetClass;
+    }
+
     function __AuctionTransferExecutor_init_unchained() internal {
     }
 
     function doTransfers(
         SellAsset memory sellAsset,
         address buyAsset,
-        Bid memory bid, 
+        uint bidAmount, 
         address from,
         address buyer,
         address seller,
@@ -39,7 +46,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
         //protocolFee
         amount = transferProtocolFee(
             amount,
-            bid.amount,
+            bidAmount,
             curProtocolFee,
             from,
             buyAsset,
@@ -50,7 +57,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
         amount = transferRoyalties(
             sellAsset,
             amount,
-            bid.amount,
+            bidAmount,
             from,
             proxy,
             buyAsset
@@ -59,7 +66,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
         //originFeeBid
         amount = transferOriginFee(
             amount,
-            bid.amount,
+            bidAmount,
             buyAsset,
             from,
             proxy,
@@ -69,7 +76,7 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
         //originFeeAuc
         amount = transferOriginFee(
             amount,
-            bid.amount,
+            bidAmount,
             buyAsset,
             from,
             proxy,
@@ -103,30 +110,23 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
         address to,
         address proxy
     ) internal {
-        //bid in eth
+        bytes4 assetClass;
         if (token == address(0)) {
-            //no need to transfer
-            transfer(
-                value, 
-                0, 
-                LibAsset.ETH_ASSET_CLASS, 
-                token,
-                from,
-                to,
-                proxy
-            ); 
+            //bid in eth
+            assetClass = LibAsset.ETH_ASSET_CLASS;
         } else {
             //bid in ERC20
-            transfer(
-                value, 
-                0, 
-                LibAsset.ERC20_ASSET_CLASS, 
-                token,
-                from,
-                to,
-                proxy
-            );
+            assetClass = LibAsset.ERC20_ASSET_CLASS;
         }
+        transfer(
+            value, 
+            0, 
+            assetClass, 
+            token,
+            from,
+            to,
+            proxy
+        );
     }
 
     function transferNFT(
@@ -135,13 +135,13 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
         address to
     ) internal {
         transfer(
-            1, 
+            sellAsset.value, 
             sellAsset.tokenId, 
-            LibAsset.ERC721_ASSET_CLASS, 
+            sellAsset.assetClass, 
             sellAsset.token,
             from,
             to,
-            proxies[LibAsset.ERC721_ASSET_CLASS]
+            proxies[sellAsset.assetClass]
         );
     }
 
@@ -255,12 +255,17 @@ abstract contract AuctionTransferExecutor is AuctionHouseBase, TransferManagerCo
             } else {
                 IERC20TransferProxy(proxy).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, value);
             }
+        } else if (assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            //not using transfer proxy when transfering from this contract
+            if (from == address(this)){
+                IERC1155Upgradeable(token).safeTransferFrom(address(this), to, tokenId, value, "");
+            } else {
+                INftTransferProxy(proxy).erc1155safeTransferFrom(IERC1155Upgradeable(token), from, to, tokenId, value, "");  
+            }
         } else if (assetClass == LibAsset.ETH_ASSET_CLASS) {
             if (to != address(this)) {
                 to.transferEth(value);
             }
-        } else if (assetClass == LibAsset.ERC1155_ASSET_CLASS) {
-            //todo: case for erc1155
         }
     }
 }
