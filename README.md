@@ -31,7 +31,7 @@ Smart contracts are constructed in the way to be upgradeable, orders have versio
 
 Users should do these steps to successfully trade on Rarible:
 
-- approve transfers for their assets to Exchange contracts (e.g.: call approveForAll for ERC-721, approve for ERC-20) - amount of money needed for trade is price + fee on top of that. learn more at exchange contracts readme
+- approve transfers for their assets to Exchange contracts (e.g.: call approveForAll for ERC-721, approve for ERC-20) - amount of money needed for trade is price + fee on top of that. Learn more at exchange contracts [README](https://github.com/rarible/protocol-contracts/tree/master/exchange-v2)
 - sign trading order via preferred wallet (order is like a statement "I would like to sell my precious crypto kitty for 10 ETH")
 - save this order and signature to the database using Rarible protocol API (in future, storing orders on-chain will be supported too)
 
