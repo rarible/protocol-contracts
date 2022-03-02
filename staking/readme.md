@@ -6,13 +6,13 @@ This contract locks ERC-20 tokens and issues back staked tokens. These staked to
 
 User locks tokens on `start` moment, amount of locked tokens is `bias`. In `cliff` period amount of locked tokens doesn't change, then it starts to decline linearly. 
 
-Staked balance behaves pretty the same way, but initial `bias` is multiplied by `value k` calculated using `Stake` parameters (slope, cliff, bias etc.)
+Staked balance behaves pretty much the same way, but initial `bias` is multiplied by `value k` calculated using `Stake` parameters (slope, cliff, bias etc.)
 
 This contract is based on [LibBrokenLine](../broken-line/readme.md).
 
 ### Features
 
-###Functions supported for every user:
+### Functions supported for every user:
  - **stake** - create new `Stake`. Initial bias of the `Stake` depends on locked token amount and other parameters of the `Stake` (cliff, period etc.)
  - **restake** - change parameters of the `Stake`. It's possible to extend period and increase locked amount
  - **withdraw** - withdraw unlocked ERC-20 tokens (if something is unlocked already)
