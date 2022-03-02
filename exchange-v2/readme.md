@@ -60,7 +60,7 @@ Rounding errors: to calculate fill amounts, mathematical operations are used. Wh
 - check if order is signed by its maker or maker of the order is executing the transaction
 - if maker of the order is a contract, then ERC-1271 check is performed
 
-TODO: currently, only off-chain orders are supported, this part of the smart contract ca be easily updated to support on-chain order books.
+TODO: currently, only off-chain orders are supported, this part of the smart contract can be easily updated to support on-chain order books.
 
 #### Asset matching
 
