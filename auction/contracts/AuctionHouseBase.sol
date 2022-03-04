@@ -33,15 +33,15 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     uint128 public minimalStepBasePoint;
 
     /// @dev event that emits when auction is created
-    event AuctionCreated(uint indexed auctionId, uint128 endTime);
+    event AuctionCreated(uint indexed auctionId, address buyer, uint128 endTime);
     /// @dev event that emits when bid is placed
-    event BidPlaced(uint indexed auctionId, uint endTime);
+    event BidPlaced(uint indexed auctionId, address buyer, uint endTime);
     /// @dev event that emits when auction is finished
     event AuctionFinished(uint indexed auctionId);
     /// @dev event that emits when auction is canceled
     event AuctionCancelled(uint indexed auctionId);
     /// @dev event that emits when auction is bought out
-    event AuctionBuyOut(uint indexed auctionId);
+    event AuctionBuyOut(uint indexed auctionId, address buyer);
 
     /// @dev event that's emitted when user can withdraw ETH from the AuctionHouse
     event AvailableToWithdraw(address indexed owner, uint added, uint total);

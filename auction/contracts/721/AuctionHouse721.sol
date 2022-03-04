@@ -79,7 +79,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         );
         setAuctionForToken(_sellToken, _sellTokenId, currentAuctionId);
         
-        emit AuctionCreated(currentAuctionId, endTime);
+        emit AuctionCreated(currentAuctionId, sender, endTime);
     }
 
     /// @dev put a bid and return locked assets for the last bid
@@ -151,7 +151,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
             endTime = currentTime + extension;
             auctions[_auctionId].endTime = endTime;
         }
-        emit BidPlaced(_auctionId, endTime);
+        emit BidPlaced(_auctionId, newBuyer, endTime);
     }
 
     /// @dev reserves new bid and returns the last one if it exists
@@ -368,7 +368,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         );
         
         deactivateAuction(_auctionId, currentAuction);
-        emit AuctionBuyOut(auctionId);
+        emit AuctionBuyOut(auctionId, sender);
     }
 
     /// @dev returns current highest bidder for an auction

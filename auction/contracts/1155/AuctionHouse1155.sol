@@ -80,7 +80,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
             address(this)
         );
         
-        emit AuctionCreated(currentAuctionId, endTime);
+        emit AuctionCreated(currentAuctionId, sender, endTime);
     }
 
     /// @dev put a bid and return locked assets for the last bid
@@ -152,7 +152,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
             endTime = currentTime + extension;
             auctions[_auctionId].endTime = endTime;
         }
-        emit BidPlaced(_auctionId, endTime);
+        emit BidPlaced(_auctionId, newBuyer, endTime);
     }
 
     /// @dev reserves new bid and returns the last one if it exists
@@ -368,7 +368,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         );
         
         deactivateAuction(_auctionId);
-        emit AuctionBuyOut(auctionId);
+        emit AuctionBuyOut(auctionId, sender);
     }
 
     /// @dev returns current highest bidder for an auction
