@@ -3,14 +3,14 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../AuctionTransferExecutor.sol";
 import "./AuctionHouseStruct1155.sol";
+import "../AuctionHouseBase.sol";
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 
 /// @dev contract to create and interact with auctions
-contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, AuctionHouseStruct1155 {
+contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, AuctionHouseBase {
     using LibTransfer for address;
     using BpLibrary for uint;
 
@@ -27,8 +27,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         __ERC1155Receiver_init_unchained();
         __ReentrancyGuard_init_unchained();
         __AuctionHouseBase_init_unchained(_protocolFee, _minimalStepBasePoint);
-        __AuctionTransferExecutor_init_unchained();
-        __TransferManagerCore_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __RaribleTransferManager_init(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
         __AuctionHouse1155_init_unchained();
     }
 
@@ -46,7 +45,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         bytes memory data
     ) external {
         //todo: check if token contract supports ERC1155 interface?
-
+    
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
         require(_sellTokenValue > 0, "incorrect _sellTokenValue");
@@ -74,8 +73,12 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
             data
         );
         auctions[currentAuctionId] = auc;
+
         transferNFT(
-            SellAsset(_sellToken, _sellTokenId, _sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
+            _sellToken, 
+            _sellTokenId, 
+            _sellTokenValue, 
+            LibAsset.ERC1155_ASSET_CLASS,
             sender,
             address(this)
         );
@@ -94,7 +97,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         uint totalAmount = calculateTotalAmount(
             bid.amount, 
             currentAuction.protocolFee, 
-            bidOriginFee
+            getOriginFee(bidOriginFee)
         );
         if (currentAuction.buyAsset == address(0)) {
             checkEthReturnChange(totalAmount, newBuyer);
@@ -107,7 +110,6 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
                 aucData,
                 _auctionId,
                 bidOriginFee,
-                totalAmount,
                 newBuyer
             );
             return;
@@ -228,23 +230,32 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
             "only ended auction with bid can be finished"
         );
         uint bidOriginFee = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType).originFee;
-        uint totalAmount = calculateTotalAmount(
-            currentAuction.lastBid.amount, 
-            currentAuction.protocolFee, 
-            bidOriginFee
-        );
+
         doTransfers(
-            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , currentAuction.sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
-            currentAuction.buyAsset,
-            currentAuction.lastBid.amount,
-            address(this),
-            currentAuction.buyer,
-            currentAuction.seller,
-            currentAuction.protocolFee,
-            aucData.originFee,
-            _getProxy(currentAuction.buyAsset),
-            bidOriginFee,
-            totalAmount
+            LibDeal.DealSide(
+                getSellAsset(
+                    currentAuction.sellToken, 
+                    currentAuction.sellTokenId,
+                    currentAuction.sellTokenValue,
+                    LibAsset.ERC1155_ASSET_CLASS
+                ),
+                getPayouts(currentAuction.seller),
+                getOriginFee(aucData.originFee),
+                proxies[LibAsset.ERC1155_ASSET_CLASS],
+                address(this)
+            ), 
+            LibDeal.DealSide(
+                getBuyAsset(
+                    currentAuction.buyAsset,
+                    currentAuction.lastBid.amount
+                ),
+                getPayouts(currentAuction.buyer),
+                getOriginFee(bidOriginFee),
+                _getProxy(currentAuction.buyAsset),
+                address(this)
+            ), 
+            LibFeeSide.FeeSide.RIGHT, 
+            currentAuction.protocolFee
         );
         deactivateAuction(_auctionId);
     }
@@ -290,7 +301,10 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         require(seller == _msgSender(), "auction owner not detected");
         require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transferNFT(
-            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , currentAuction.sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
+            currentAuction.sellToken, 
+            currentAuction.sellTokenId, 
+            currentAuction.sellTokenValue, 
+            LibAsset.ERC1155_ASSET_CLASS,
             address(this),
             seller
         );
@@ -309,7 +323,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         uint totalAmount = calculateTotalAmount(
             bid.amount, 
             currentAuction.protocolFee, 
-            bidOriginFee
+            getOriginFee(bidOriginFee)
         );
         address sender = _msgSender();
         if (currentAuction.buyAsset == address(0)) {
@@ -321,7 +335,6 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
             aucData,
             _auctionId,
             bidOriginFee,
-            totalAmount,
             sender
         );
     }
@@ -332,7 +345,6 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         LibAucDataV1.DataV1 memory aucData,
         uint _auctionId,
         uint newBidOriginFee,
-        uint newTotalAmount,
         address sender
     ) internal {
         address proxy = _getProxy(currentAuction.buyAsset);
@@ -354,17 +366,30 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
             from = sender;
         }
         doTransfers(
-            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , currentAuction.sellTokenValue, LibAsset.ERC1155_ASSET_CLASS),
-            currentAuction.buyAsset,
-            bid.amount,
-            from,
-            sender,
-            currentAuction.seller,
-            currentAuction.protocolFee,
-            aucData.originFee,
-            proxy,
-            newBidOriginFee,
-            newTotalAmount
+            LibDeal.DealSide(
+                getSellAsset(
+                    currentAuction.sellToken, 
+                    currentAuction.sellTokenId,
+                    currentAuction.sellTokenValue,
+                    LibAsset.ERC1155_ASSET_CLASS
+                ),
+                getPayouts(currentAuction.seller),
+                getOriginFee(aucData.originFee),
+                proxies[LibAsset.ERC1155_ASSET_CLASS],
+                address(this)
+            ), 
+            LibDeal.DealSide(
+                getBuyAsset(
+                    currentAuction.buyAsset,
+                    bid.amount
+                ),
+                getPayouts(sender),
+                getOriginFee(newBidOriginFee),
+                proxy,
+                from
+            ), 
+            LibFeeSide.FeeSide.RIGHT, 
+            currentAuction.protocolFee
         );
         
         deactivateAuction(_auctionId);
@@ -407,7 +432,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionTransferExecutor, 
         if (oldBuyer == address(0)) {
             return;
         }
-        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee);
+        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, getOriginFee(LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee));
         if (buyAsset == address(0)) {
             (bool success,) = oldBuyer.call{ value: oldTotalAmount }("");
             if (!success) {

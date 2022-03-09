@@ -62,9 +62,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
-		await testing.__RaribleTransferManager_init(community, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address);
-    await testing.addOperator(operator1);
-    await testing.addOperator(operator);
+		await testing.init____(community, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address);
 
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
@@ -93,7 +91,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		erc1155V2_Error = await ERC1155_V2_Error.new("https://ipfs.rarible.com");
 	});
 
-	describe("Check doTransfers()", () => {
+	describe("Check doTransfersExternal()", () => {
 
 		it("Transfer from ETH to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepareETH_1155Orders(10);
@@ -101,8 +99,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       await verifyBalanceChange(accounts[0], 103, () =>
       	verifyBalanceChange(accounts[2], -97, () =>
         	verifyBalanceChange(protocol, -6, () =>
-            testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender,
-          	  {value: 300, from: ethSender, gasPrice: 0}
+            testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
+          	  {value: 103, from: ethSender, gasPrice: 0}
           	)
           )
         )
@@ -126,7 +124,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC721 to ERC721", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare721_721Orders()
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 			assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]);
 			assert.equal(await erc721.ownerOf(erc721TokenId0), accounts[1]);
 		})
@@ -149,7 +147,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community, orders dataType == V1", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare721_1155Orders(110)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await erc721.balanceOf(accounts[1]), 0);
 			assert.equal(await erc721.balanceOf(accounts[2]), 1);
@@ -179,7 +177,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155 to ERC1155: 2 to 10, 50% 50% for payouts", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare1155_1155Orders(2, 10);
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 98);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
@@ -212,7 +210,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const ethSender = ZERO;
 //      left.makeAsset.value = 1;
 //      left.takeAsset.value = 5;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 99);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
@@ -229,7 +227,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare1155O_721rders(105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await erc721.balanceOf(accounts[2]), 0);
 			assert.equal(await erc721.balanceOf(accounts[1]), 1);
@@ -255,7 +253,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC20 to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare20_1155Orders(105, 10)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[2]), 97);
@@ -281,7 +279,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare1155_20Orders(10, 105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[3]), 97);
 			assert.equal(await t1.balanceOf(accounts[4]), 2);
@@ -307,7 +305,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC721, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare20_721Orders()
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[2]), 97);
@@ -333,7 +331,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC721 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare721_20Orders()
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 97);
 			assert.equal(await t1.balanceOf(accounts[2]), 2);
@@ -359,7 +357,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare2Orders()
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[2]), 97);
@@ -406,7 +404,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const matchFees = await testing.getFeeSide.call(left, right);
 
       const ethSender = accounts[0];
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
       assert.equal(await t1.balanceOf(accounts[1]), 97); //get 97 because protocol down-fee
       assert.equal(await t1.balanceOf(accounts[2]), 3);// accounts[1] pay 103 because protocol up-fee
@@ -420,7 +418,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       await verifyBalanceChange(accounts[0], 103, () =>
       	verifyBalanceChange(accounts[2], -97, () =>
         	verifyBalanceChange(protocol, -6, () =>
-        	  testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender,
+        	  testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
             	{value: 103, from: ethSender, gasPrice: 0}
             )
           )
@@ -471,7 +469,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const rightSide = await testing.getDealSide.call(right);
       const matchFees = await testing.getFeeSide.call(left, right);
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 		  assert.equal(await erc721Test.ownerOf(1), accounts[2]);
 		  assert.equal(await t1.balanceOf(accounts[1]), 67);
@@ -497,7 +495,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const rightSide = await testing.getDealSide.call(right);
       const matchFees = await testing.getFeeSide.call(left, right);
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 		  assert.equal(await erc1155Test.balanceOf(accounts[2], 1), 5);
 		  assert.equal(await t1.balanceOf(accounts[1]), 67);
@@ -525,7 +523,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       	  verifyBalanceChange(accounts[5], -20, () =>
       	    verifyBalanceChange(accounts[6], -10, () =>
         	    verifyBalanceChange(protocol, -6, () =>
-        	      testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender,
+        	      testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
             	    {value: 103, from: ethSender, gasPrice: 0}
             	  )
             	)
@@ -555,7 +553,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       	  verifyBalanceChange(accounts[5], -20, () =>
       	    verifyBalanceChange(accounts[6], -10, () =>
         	    verifyBalanceChange(protocol, -6, () =>
-        	      testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender,
+        	      testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
             	    {value: 103, from: ethSender, gasPrice: 0}
             	  )
             	)
@@ -568,12 +566,12 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 	})
 
-  describe("Check doTransfers() with Royalties fees", () => {
+  describe("Check doTransfersExternal() with Royalties fees", () => {
 
 		it("Transfer from ERC721(RoyaltiesV1) to ERC20 , protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare721V1_20Orders(105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -602,7 +600,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC721(RoyaltiesV2), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare20_721V2Orders(105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -631,7 +629,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155(RoyaltiesV1) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare1155V1_20Orders(8, 105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -660,7 +658,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC1155(RoyaltiesV2), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare20_1155V2Orders(105, 8)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 82);
@@ -675,7 +673,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare20_1155V2Orders(105, 8, 2000, 3001)
       const ethSender = ZERO;
 			await expectThrow(
-        testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender)
+        testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300)
 			);
 		})
 
@@ -702,7 +700,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
         		verifyBalanceChange(accounts[2], -10, () =>
         			verifyBalanceChange(accounts[3], -5, () =>
           			verifyBalanceChange(protocol, -6, () =>
-          			  testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender,
+          			  testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
               			{value: 103, from: ethSender, gasPrice: 0}
               		)
         				)
@@ -729,7 +727,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC20 to ERC721(RoyaltiesV1 With Error), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare20_721V1ErOrders(105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 97);
@@ -757,7 +755,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		it("Transfer from ERC1155(RoyaltiesV2 With Error) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
 			const { left, right, leftSide, rightSide, matchFees } = await prepare1155V2_20ErOrders(12, 105)
       const ethSender = ZERO;
-      await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, ethSender);
+      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
 
 			assert.equal(await t1.balanceOf(accounts[1]), 2);
 			assert.equal(await t1.balanceOf(accounts[0]), 97);
@@ -783,185 +781,4 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		}
 	})
 
-	describe("Catch emit event Transfer", () => {
-		it("From ETH(DataV1) to ERC721(DataV1) Protocol, check emit ", async () => {
-			const seller = accounts[1];
-			const sellerRoyaltiy = accounts[4];
-			const seller2 = accounts[3];
-			const buyer = accounts[2];
-			const originLeft1 = accounts[5];
-			const originLeft2 = accounts[6];
-			const originRight = accounts[7];
-			await testing.addOperator(buyer);
-
-			await erc721V1.mint(seller, erc721TokenId1, [[sellerRoyaltiy, 1000]]);
-    	await erc721V1.setApprovalForAll(transferProxy.address, true, {from: seller});
-
-			let addrOriginLeft = [[originLeft1, 500], [originLeft2, 600]];
- 			let addrOriginRight = [[originRight, 700]];
- 			let encDataLeft = await encDataV1([ [[buyer, 10000]], addrOriginLeft ]);
- 			let encDataRight = await encDataV1([ [[seller, 5000], [seller2, 5000]], addrOriginRight ]);
-
-			const left = Order(buyer, Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
-    	const right = Order(seller, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-      let tx = await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, buyer,
-               {value: 300, from: buyer, gasPrice: 0});
-			let errorCounter = 0
-//			eventEmitted  - run by amount transfer, for fix err. need all transfers failed
-			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-				let result = false;
-				switch (ev.to){
-					case protocol:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PROTOCOL)) {
-							console.log("Error in protocol check:");
-							errorCounter++;
-						}
-					break
-					case seller:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case sellerRoyaltiy:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ROYALTY) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case seller2:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller2 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft1:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft1 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft2:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft2 check:");
-							errorCounter++;
-						}
-					break
-					case originRight:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originRight check:");
-							errorCounter++;
-						}
-					break
-					case buyer:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ){
-							console.log("Error in buyer check:");
-							errorCounter++;
-						}
-					break
-				}
-				if (errorCounter > 0) {
-					result = false;
-				} else {
-					result = true;
-				}
-				return result;
-    	}, "Transfer shuold be emietted with correct parameters ");
-			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
-    })
-
-		it("From ERC1155(DataV2) to ETH(DataV1) Protocol, check emit ", async () => {
-			const seller = accounts[1];
-			const sellerRoyaltiy = accounts[4];
-			const seller2 = accounts[3];
-			const buyer = accounts[2];
-			const originLeft1 = accounts[5];
-			const originLeft2 = accounts[6];
-			const originRight = accounts[7];
-
-      await testing.addOperator(buyer);
-			await erc1155V2.mint(seller, erc1155TokenId1, [[sellerRoyaltiy, 1000]], 10);
-    	await erc1155V2.setApprovalForAll(transferProxy.address, true, {from: seller});
-
-			let addrOriginLeft = [[originLeft1, 500], [originLeft2, 600]];
- 			let addrOriginRight = [[originRight, 700]];
- 			let encDataLeft = await encDataV1([ [[seller, 5000], [seller2, 5000]] , addrOriginLeft ]);
- 			let encDataRight = await encDataV1([ [[buyer, 10000]], addrOriginRight ]);
-
-			const left = Order(seller, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 5), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
-			const right = Order(buyer, Asset(ETH, "0x", 200), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 5), 1, 0, 0, ORDER_DATA_V1, encDataRight);
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-      let tx = await testing.doTransfers(leftSide, rightSide, matchFees.feeSide, buyer,
-               {value: 300, from: buyer, gasPrice: 0});
-
-			let errorCounter = 0
-//			eventEmitted  - срабатывает по нескольким transfer, для фиксации ошибки нужно чтоб все трансферы завалились
-			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-				let result = false;
-				switch (ev.to){
-					case protocol:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PROTOCOL)) {
-							console.log("Error in protocol check:");
-							errorCounter++;
-						}
-					break
-					case seller:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case sellerRoyaltiy:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ROYALTY) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case seller2:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller2 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft1:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft1 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft2:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft2 check:");
-							errorCounter++;
-						}
-					break
-					case originRight:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originRight check:");
-							errorCounter++;
-						}
-					break
-					case buyer:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ){
-							console.log("Error in buyer check:");
-							errorCounter++;
-						}
-					break
-				}
-				if (errorCounter > 0) {
-					result = false;
-				} else {
-					result = true;
-				}
-				return result;
-    	}, "Transfer shuold be emietted with correct parameters ");
-			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
-    })
-
-	}) //Catch emit event Transfer
 });

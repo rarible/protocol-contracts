@@ -4,7 +4,6 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "../../../contracts/RaribleTransferManager.sol";
-import "../../../contracts/ITransferExecutor.sol";
 import "@rarible/exchange-v2/contracts/OrderValidator.sol";
 import "@rarible/libraries/contracts/LibOrderData.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
@@ -24,29 +23,47 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         return abi.encode(data);
     }
 
+    function init____(
+        address newDefaultFeeReceiver,
+        IRoyaltiesProvider newRoyaltiesProvider,
+        address transferProxy,
+        address erc20TransferProxy
+    ) external initializer {
+        __RaribleTransferManager_init(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+    }
+
+
     function makeDealData(
         LibOrder.Order memory order
     ) external pure returns (LibOrderDataV2.DataV2 memory dataOrder){
         dataOrder = LibOrderData.parse(order);
     }
 
-    function getDealSide(LibOrder.Order memory order) external returns (LibDeal.DealSide memory dealSide) {
+    function getDealSide(LibOrder.Order memory order) external view returns (LibDeal.DealSide memory dealSide) {
         LibOrderDataV2.DataV2 memory orderData = LibOrderData.parse(order);
 
         dealSide = LibDeal.DealSide(
-            order.makeAsset.assetType,
-            order.makeAsset.value,
+            order.makeAsset,
             orderData.payouts,
             orderData.originFees,
-            order.maker,
-            300
+            proxies[order.makeAsset.assetType.assetClass],
+            order.maker
         );
     }
 
-    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external returns (RaribleTransferManagerTest.ProtocolFeeSide memory) {
+    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external pure returns (RaribleTransferManagerTest.ProtocolFeeSide memory) {
         RaribleTransferManagerTest.ProtocolFeeSide memory result;
         result.feeSide = LibFeeSide.getFeeSide(orderLeft.makeAsset.assetType.assetClass, orderRight.makeAsset.assetType.assetClass);
         return result;
+    }
+
+    function doTransfersExternal(
+        LibDeal.DealSide memory left,
+        LibDeal.DealSide memory right,
+        LibFeeSide.FeeSide feeSide,
+        uint _protocolFee
+    ) external payable returns (uint totalLeftValue, uint totalRightValue) {
+        return doTransfers(left, right, feeSide, _protocolFee);
     }
 
 }

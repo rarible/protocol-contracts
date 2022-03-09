@@ -5,17 +5,17 @@ pragma abicoder v2;
 
 import "@rarible/libraries/contracts/LibFill.sol";
 import "@rarible/libraries/contracts/LibOrderData.sol";
+
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
 import "./EmptyGap.sol";
 import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
-import {ITransferManager} from "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
-import "@rarible/transfer-manager/contracts/InternalTransferExecutor.sol";
+import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutorGap, OrderValidator {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, RaribleTransferManager, OrderValidator {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
     using BpLibrary for uint;
@@ -24,7 +24,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     //state of the orders
     mapping(bytes32 => uint) public fills;
-    ITransferManager public transferManager;
     uint public protocolFee;
 
     //events
@@ -32,15 +31,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
 
     function __EchangeV2Core_init_unchained(
-        ITransferManager newRaribleTransferManager,
         uint newProtocolFee
     ) internal initializer {
-        transferManager = newRaribleTransferManager;
         protocolFee = newProtocolFee;
-    }
-
-    function setTransferManager(ITransferManager newRaribleTransferManager) external onlyOwner {
-        transferManager = newRaribleTransferManager;
     }
 
     function setProtocolFee(uint newProtocolFee) external onlyOwner {
@@ -70,6 +63,21 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
         }
         matchAndTransfer(orderLeft, orderRight);
+        /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
+        if (left.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(right.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
+            require(msg.value >= totalLeftValue, "not enough eth");
+            uint256 change = msg.value.sub(totalLeftValue);
+            if (change > 0) {
+                initialSender.transferEth(change);
+            }
+        } else if (right.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(msg.value >= totalRightValue, "not enough eth");
+            uint256 change = msg.value.sub(totalRightValue);
+            if (change > 0) {
+                initialSender.transferEth(change);
+            }
+        }
     }
 
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {

@@ -75,7 +75,13 @@ contract("AuctionHouse721", accounts => {
       dataV1 = await encDataV1([ auctionFees, 86400000, 0, 100])
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller })
       const txCancel = await testAuctionHouse.cancel(1, { from: seller });
-      console.log("txCancel", txCancel.receipt.gasUsed)
+      console.log("txCancel topic", txCancel.receipt.gasUsed)
+
+      const AuctionCancelled = await testAuctionHouse.getPastEvents("AuctionCancelled", {
+        fromBlock: txCancel.receipt.blockNumber,
+        toBlock: txCancel.receipt.blockNumber
+      });
+      console.log("AuctionCancelled", AuctionCancelled[0].raw.topics)
 
       let auctionId;
       truffleAssert.eventEmitted(txCancel, 'AuctionCancelled', (ev) => {
@@ -178,6 +184,11 @@ contract("AuctionHouse721", accounts => {
       bid = { amount: 200, dataType: V1, data: bidDataV1 };
       const txBid = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[3] });
       console.log("txBid", txBid.receipt.gasUsed)
+      const BidPlaced = await testAuctionHouse.getPastEvents("BidPlaced", {
+        fromBlock: txBid.receipt.blockNumber,
+        toBlock: txBid.receipt.blockNumber
+      });
+      console.log("BidPlaced topic", BidPlaced[0].raw.topics)
 
       let id;
       truffleAssert.eventEmitted(txBid, 'BidPlaced', (ev) => {
@@ -207,6 +218,12 @@ contract("AuctionHouse721", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
       console.log("txStart", txStart.receipt.gasUsed)
 
+      const AuctionCreated = await testAuctionHouse.getPastEvents("AuctionCreated", {
+        fromBlock: txStart.receipt.blockNumber,
+        toBlock: txStart.receipt.blockNumber
+      });
+      console.log("AuctionCreated topic", AuctionCreated[0].raw.topics)
+
       let id;
       truffleAssert.eventEmitted(txStart, 'AuctionCreated', (ev) => {
         id = ev.auctionId;
@@ -233,6 +250,12 @@ contract("AuctionHouse721", accounts => {
       bid = { amount: 20, dataType: V1, data: bidDataV1 };
       const txBuyOut = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[7] });
       console.log("txBuyOut", txBuyOut.receipt.gasUsed)
+
+      const AuctionBuyOut = await testAuctionHouse.getPastEvents("AuctionBuyOut", {
+        fromBlock: txBuyOut.receipt.blockNumber,
+        toBlock: txBuyOut.receipt.blockNumber
+      });
+      console.log("AuctionBuyOut topic", AuctionBuyOut[0].raw.topics)
 
       truffleAssert.eventEmitted(txBuyOut, 'AuctionFinished', (ev) => {
         id = ev.auctionId;
@@ -457,6 +480,12 @@ contract("AuctionHouse721", accounts => {
 
       const txFinish = await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
       console.log("txFinish", txFinish.receipt.gasUsed)
+
+      const AuctionFinished = await testAuctionHouse.getPastEvents("AuctionFinished", {
+        fromBlock: txFinish.receipt.blockNumber,
+        toBlock: txFinish.receipt.blockNumber
+      });
+      console.log("AuctionFinished topic", AuctionFinished[0].raw.topics)
 
       let id;
       truffleAssert.eventEmitted(txFinish, 'AuctionFinished', (ev) => {

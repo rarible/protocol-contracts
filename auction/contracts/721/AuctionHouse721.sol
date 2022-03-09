@@ -3,15 +3,15 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../AuctionTransferExecutor.sol";
 import "./AuctionHouseStruct721.sol";
 import "../wrapper/TokenToAuction.sol";
+import "../AuctionHouseBase.sol";
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
 
 /// @dev contract to create and interact with auctions
-contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTransferExecutor, AuctionHouseStruct721 {
+contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHouseStruct721, AuctionHouseBase {
     using LibTransfer for address;
     using BpLibrary for uint;
 
@@ -28,8 +28,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         __ERC721Holder_init_unchained();
         __ReentrancyGuard_init_unchained();
         __AuctionHouseBase_init_unchained(_protocolFee, _minimalStepBasePoint);
-        __AuctionTransferExecutor_init_unchained();
-        __TransferManagerCore_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __RaribleTransferManager_init(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
         __AuctionHouse721_init_unchained();
     }
 
@@ -73,7 +72,10 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         );
         auctions[currentAuctionId] = auc;
         transferNFT(
-            SellAsset(_sellToken, _sellTokenId, 1, LibAsset.ERC721_ASSET_CLASS),
+            _sellToken, 
+            _sellTokenId, 
+            1, 
+            LibAsset.ERC721_ASSET_CLASS,
             sender,
             address(this)
         );
@@ -93,7 +95,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         uint totalAmount = calculateTotalAmount(
             bid.amount, 
             currentAuction.protocolFee, 
-            bidOriginFee
+            getOriginFee(bidOriginFee)
         );
         if (currentAuction.buyAsset == address(0)) {
             checkEthReturnChange(totalAmount, newBuyer);
@@ -227,25 +229,34 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
             "only ended auction with bid can be finished"
         );
         uint bidOriginFee = LibBidDataV1.parse(currentAuction.lastBid.data, currentAuction.lastBid.dataType).originFee;
-        uint totalAmount = calculateTotalAmount(
-            currentAuction.lastBid.amount, 
-            currentAuction.protocolFee, 
-            bidOriginFee
-        );
+
         doTransfers(
-            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , 1, LibAsset.ERC721_ASSET_CLASS),
-            currentAuction.buyAsset,
-            currentAuction.lastBid.amount,
-            address(this),
-            currentAuction.buyer,
-            currentAuction.seller,
-            currentAuction.protocolFee,
-            aucData.originFee,
-            _getProxy(currentAuction.buyAsset),
-            bidOriginFee,
-            totalAmount
+            LibDeal.DealSide(
+                getSellAsset(
+                    currentAuction.sellToken, 
+                    currentAuction.sellTokenId,
+                    1,
+                    LibAsset.ERC721_ASSET_CLASS
+                ),
+                getPayouts(currentAuction.seller),
+                getOriginFee(aucData.originFee),
+                proxies[LibAsset.ERC721_ASSET_CLASS],
+                address(this)
+            ), 
+            LibDeal.DealSide(
+                getBuyAsset(
+                    currentAuction.buyAsset,
+                    currentAuction.lastBid.amount
+                ),
+                getPayouts(currentAuction.buyer),
+                getOriginFee(bidOriginFee),
+                _getProxy(currentAuction.buyAsset),
+                address(this)
+            ), 
+            LibFeeSide.FeeSide.RIGHT, 
+            currentAuction.protocolFee
         );
-        deactivateAuction(_auctionId, currentAuction);
+        deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);
     }
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
@@ -276,9 +287,9 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
     }
 
     /// @dev deletes auction after finalizing
-    function deactivateAuction(uint _auctionId, Auction memory currentAuction) internal {
+    function deactivateAuction(uint _auctionId, address token, uint tokenId) internal {
         emit AuctionFinished(_auctionId);
-        deleteAuctionForToken(currentAuction.sellToken, currentAuction.sellTokenId);
+        deleteAuctionForToken(token, tokenId);
         delete auctions[_auctionId];
     }
 
@@ -290,11 +301,14 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         require(seller == _msgSender(), "auction owner not detected");
         require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transferNFT(
-            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , 1, LibAsset.ERC721_ASSET_CLASS),
+            currentAuction.sellToken, 
+            currentAuction.sellTokenId, 
+            1, 
+            LibAsset.ERC721_ASSET_CLASS,
             address(this),
             seller
         );
-        deactivateAuction(_auctionId, currentAuction);
+        deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);
         emit AuctionCancelled(_auctionId);
     }
 
@@ -309,7 +323,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         uint totalAmount = calculateTotalAmount(
             bid.amount, 
             currentAuction.protocolFee, 
-            bidOriginFee
+            getOriginFee(bidOriginFee)
         );
         address sender = _msgSender();
         if (currentAuction.buyAsset == address(0)) {
@@ -353,21 +367,35 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
             // if buyAsset = ERC20
             from = sender;
         }
+
         doTransfers(
-            SellAsset(currentAuction.sellToken, currentAuction.sellTokenId , 1, LibAsset.ERC721_ASSET_CLASS),
-            currentAuction.buyAsset,
-            bid.amount,
-            from,
-            sender,
-            currentAuction.seller,
-            currentAuction.protocolFee,
-            aucData.originFee,
-            proxy,
-            newBidOriginFee,
-            newTotalAmount
+            LibDeal.DealSide(
+                getSellAsset(
+                    currentAuction.sellToken, 
+                    currentAuction.sellTokenId,
+                    1,
+                    LibAsset.ERC721_ASSET_CLASS
+                ),
+                getPayouts(currentAuction.seller),
+                getOriginFee(aucData.originFee),
+                proxies[LibAsset.ERC721_ASSET_CLASS],
+                address(this)
+            ), 
+            LibDeal.DealSide(
+                getBuyAsset(
+                    currentAuction.buyAsset,
+                    bid.amount
+                ),
+                getPayouts(sender),
+                getOriginFee(newBidOriginFee),
+                proxy,
+                from
+            ), 
+            LibFeeSide.FeeSide.RIGHT, 
+            currentAuction.protocolFee
         );
-        
-        deactivateAuction(_auctionId, currentAuction);
+
+        deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);
         emit AuctionBuyOut(auctionId, sender);
     }
 
@@ -407,7 +435,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
         if (oldBuyer == address(0)) {
             return;
         }
-        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee);
+        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, getOriginFee(LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee));
         if (buyAsset == address(0)) {
             (bool success,) = oldBuyer.call{ value: oldTotalAmount }("");
             if (!success) {
@@ -439,7 +467,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionTran
     function checkEthReturnChange(uint totalAmount, address buyer) internal {
         uint msgValue = msg.value;
         require(msgValue >= totalAmount, "not enough ETH");
-        uint256 change = msg.value - totalAmount;
+        uint256 change = msgValue - totalAmount;
         if (change > 0) {
             buyer.transferEth(change);
         }

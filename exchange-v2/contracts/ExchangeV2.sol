@@ -15,6 +15,6 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManagerGap {
         __Ownable_init_unchained();
         __OrderValidator_init_unchained();
         __EchangeV2Core_init_unchained(newRaribleTransferManager, newProtocolFee);
+        __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
     }
-
 }

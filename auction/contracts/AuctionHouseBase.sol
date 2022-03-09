@@ -6,10 +6,12 @@ pragma abicoder v2;
 import "./libs/LibAucDataV1.sol";
 import "./libs/LibBidDataV1.sol";
 
+import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
+
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable {
+abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable, RaribleTransferManager {
 
     /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
     uint96 internal constant EXTENSION_DURATION = 15 minutes;
@@ -80,6 +82,76 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     function changeMinimalStep(uint128 newValue) external onlyOwner {
         emit MinimalStepChanged(minimalStepBasePoint, newValue);
         minimalStepBasePoint = newValue;
+    }
+
+    function transferNFT (
+        address token,
+        uint tokenId,
+        uint value,
+        bytes4 assetClass,
+        address from,
+        address to
+    ) internal {
+        transfer(
+            getSellAsset(
+                token,
+                tokenId,
+                value,
+                assetClass
+            ),
+            from,
+            to,
+            proxies[assetClass]
+        );
+    }
+
+    function transferBid(
+        uint value,
+        address token,
+        address from,
+        address to,
+        address proxy
+    ) internal {
+        transfer(
+            getBuyAsset(
+                token,
+                value
+            ),
+            from,
+            to,
+            proxy
+        );
+    }
+
+    function getSellAsset(address token, uint tokenId, uint value, bytes4 assetClass) internal pure returns(LibAsset.Asset memory asset) {
+        asset.value = value;
+        asset.assetType.assetClass = assetClass;
+        asset.assetType.data = abi.encode(token, tokenId);
+    }
+
+    function getBuyAsset(address token, uint value) internal pure returns(LibAsset.Asset memory asset) {
+        asset.value = value;
+
+        if (token == address(0)){
+            asset.assetType.assetClass = LibAsset.ETH_ASSET_CLASS;
+        } else {
+            asset.assetType.assetClass = LibAsset.ERC20_ASSET_CLASS;
+            asset.assetType.data = abi.encode(token);
+        }
+    }
+
+    function getPayouts(address maker) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory payout = new LibPart.Part[](1);
+        payout[0].account = payable(maker);
+        payout[0].value = 10000;
+        return payout;
+    }
+
+    function getOriginFee(uint data) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory originFee = new LibPart.Part[](1);
+        originFee[0].account = payable(address(data));
+        originFee[0].value = uint96(data >> 160);
+        return originFee;
     }
 
     uint256[50] private ______gap;

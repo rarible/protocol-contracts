@@ -29,8 +29,8 @@ contract SimpleTransferManager is TransferExecutor, ITransferManager, OperatorRo
         address leftOrderBeneficiary = left.sideAddress;
         address rightOrderBeneficiary = right.sideAddress;
 
-        transfer(LibAsset.Asset(left.assetType, left.value), left.sideAddress, rightOrderBeneficiary, PAYOUT, TO_TAKER);
-        transfer(LibAsset.Asset(right.assetType, right.value), right.sideAddress, leftOrderBeneficiary, PAYOUT, TO_MAKER);
+        transfer(LibAsset.Asset(left.assetType, left.value), left.sideAddress, rightOrderBeneficiary);
+        transfer(LibAsset.Asset(right.assetType, right.value), right.sideAddress, leftOrderBeneficiary);
 
         uint ethBalance = address(this).balance;
         if (ethBalance > 0) {
@@ -47,17 +47,6 @@ contract SimpleTransferManager is TransferExecutor, ITransferManager, OperatorRo
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
         }
-    }
-
-    function executeTransfer(
-        LibAsset.Asset memory asset,
-        address from,
-        address to,
-        bytes4 transferDirection,
-        bytes4 transferType
-    ) override external onlyOperator {
-        require(asset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "ETH not supported");
-        transfer(asset, from, to, transferDirection, transferType);
     }
 
     /*for transferring eth to contract*/
