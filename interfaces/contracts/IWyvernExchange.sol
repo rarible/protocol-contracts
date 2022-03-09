@@ -19,4 +19,22 @@ interface IWyvernExchange {
     external
     payable;
 
+    enum Side {
+        Buy,
+        Sell
+    }
+
+    enum SaleKind {
+        FixedPrice,
+        DutchAuction
+    }
+
+    function calculateFinalPrice(
+        Side side,
+        SaleKind saleKind,
+        uint256 basePrice,
+        uint256 extra,
+        uint256 listingTime,
+        uint256 expirationTime
+    ) external view returns (uint256);
 }

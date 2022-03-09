@@ -196,5 +196,10 @@ contract("WyvernExchangeProxy", accounts => {
     	return { addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata};
     }
 
+    it("Detect price", async () => {
+      const price = await wyvernExchangeProxy.calculateFinalPrice.call(1, 0, 100, 0,0,0);
+      assert.equal(price, 103);
+    });
+
   })
 });

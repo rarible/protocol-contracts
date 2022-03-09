@@ -8,6 +8,7 @@ import "@rarible/libraries/contracts/LibFeeCalculate.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract WyvernExchangeProxy is OwnableUpgradeable {
+    using SafeMathUpgradeable for uint;
 
     IWyvernExchange public wyvernExchange;
     address payable public protocolFeeReceiverETH;
@@ -58,19 +59,32 @@ contract WyvernExchangeProxy is OwnableUpgradeable {
         bytes32[5] memory rssMetadata)
     external payable {
         calculateAndTransferFee (addrs[10], addrs[13], addrs[1], uints[13], uints[4]);
-        //todo unkomment because this is main function
-//        wyvernExchange.atomicMatch_(
-//            addrs,
-//            uints,
-//            feeMethodsSidesKindsHowToCalls,
-//            calldataBuy,
-//            calldataSell,
-//            replacementPatternBuy,
-//            replacementPatternSell,
-//            staticExtradataBuy,
-//            staticExtradataSell,
-//            vs,
-//            rssMetadata);
+        //todo uncomment because this is main function
+        wyvernExchange.atomicMatch_(
+            addrs,
+            uints,
+            feeMethodsSidesKindsHowToCalls,
+            calldataBuy,
+            calldataSell,
+            replacementPatternBuy,
+            replacementPatternSell,
+            staticExtradataBuy,
+            staticExtradataSell,
+            vs,
+            rssMetadata);
+    }
+
+    function calculateFinalPrice(IWyvernExchange.Side _side, IWyvernExchange.SaleKind _saleKind, uint256 _basePrice, uint256 _extra, uint256 _listingTime, uint256 _expirationTime) external returns (uint) {
+        uint price = wyvernExchange.calculateFinalPrice(
+            _side,
+            _saleKind,
+            _basePrice,
+            _extra,
+            _listingTime,
+            _expirationTime
+        );
+        (, uint256 feeValue) = LibFeeCalculate.subFeeInBp(_basePrice, _basePrice, protocolFee);
+        return _basePrice.add(feeValue);
     }
 
     function calculateAndTransferFee(address sellTakerRelayerFee, address sellPaymentToken, address buyMaker, uint sellBasePrice, uint buyBasePrice) internal {
