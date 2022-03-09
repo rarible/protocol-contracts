@@ -9,7 +9,7 @@ contract TransferExecutorTest is Initializable, OwnableUpgradeable, TransferExec
 
     function __TransferExecutorTest_init(address _transferProxy, address _erc20TransferProxy) external initializer {
         __Ownable_init_unchained();
-        __TransferExecutorCore_init_unchained(address(0), IRoyaltiesProvider(address(0)), _transferProxy, _erc20TransferProxy);
+        __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
     }
 
     function transferTest(LibAsset.Asset calldata asset, address from, address to) payable external {

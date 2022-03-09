@@ -10,18 +10,19 @@ import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
 import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
 import "../../../contracts/OrderValidator.sol";
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
-contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
+contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator, TransferExecutor {
 
     function __RaribleTransferManagerTest_init_unchained(
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
-        INftTransferProxy transferProxy,
-        IERC20TransferProxy erc20TransferProxy
+        uint newProtocolFee,
+        address transferProxy,
+        address erc20TransferProxy
     )external initializer {
-//        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
         __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
+        __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
         __Context_init_unchained();
         __Ownable_init_unchained();

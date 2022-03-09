@@ -10,7 +10,10 @@ import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
 
-contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
+
+
+contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
     struct ProtocolFeeSide {
         LibFeeSide.FeeSide feeSide;
     }
@@ -24,12 +27,17 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
     }
 
     function init____(
-        address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider,
-        address transferProxy,
-        address erc20TransferProxy
+        address _transferProxy,
+        address _erc20TransferProxy,
+        uint newProtocolFee,
+        address newCommunityWallet,
+        IRoyaltiesProvider newRoyaltiesProvider
     ) external initializer {
-        __RaribleTransferManager_init(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+        __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newProtocolFee, newCommunityWallet, newRoyaltiesProvider);
+        __OrderValidator_init_unchained();
     }
 
 

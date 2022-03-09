@@ -17,17 +17,18 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
     function __AuctionHouse1155_init(
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
-        address transferProxy,
-        address erc20TransferProxy,
-        uint64 _protocolFee,
+        address _transferProxy,
+        address _erc20TransferProxy,
+        uint64 newProtocolFee,
         uint128 _minimalStepBasePoint
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __ERC1155Receiver_init_unchained();
         __ReentrancyGuard_init_unchained();
-        __AuctionHouseBase_init_unchained(_protocolFee, _minimalStepBasePoint);
-        __RaribleTransferManager_init(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        __AuctionHouseBase_init_unchained(_minimalStepBasePoint);
+        __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
+        __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);        
         __AuctionHouse1155_init_unchained();
     }
 
@@ -68,7 +69,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
             sender,
             minimalPrice,
             payable(address(0)),
-            protocolFee,
+            uint64(protocolFee),
             dataType,
             data
         );

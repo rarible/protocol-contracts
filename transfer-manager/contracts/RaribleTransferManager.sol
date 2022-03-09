@@ -3,35 +3,63 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
-import "@rarible/libraries/contracts/LibFill.sol";
-import "@rarible/libraries/contracts/LibFeeSide.sol";
-import "@rarible/libraries/contracts/LibDeal.sol";
+
+import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+
+import "@rarible/libraries/contracts/BpLibrary.sol";
+
 import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 
-import "./TransferExecutor.sol";
-
-contract RaribleTransferManager is TransferExecutor, ITransferManager {
+abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
-    using LibTransfer for address;
 
-    function __RaribleTransferManager_init(
+    uint public protocolFee;
+    IRoyaltiesProvider public royaltiesRegistry;
+
+    address public defaultFeeReceiver;
+    mapping(address => address) public feeReceivers;
+
+    /// @dev event that's emitted when protocolFee changes
+    event ProtocolFeeChanged(uint oldValue, uint newValue);
+
+    function __RaribleTransferManager_init_unchained(
+        uint newProtocolFee,
         address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider,
-        address transferProxy,
-        address erc20TransferProxy
+        IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-        __TransferExecutor_init_unchained();
-        __RaribleTransferManager_init_unchained();
-        __TransferExecutorCore_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider, transferProxy, erc20TransferProxy);
+        protocolFee = newProtocolFee;
+        defaultFeeReceiver = newDefaultFeeReceiver;
+        royaltiesRegistry = newRoyaltiesProvider;
     }
 
-    function __RaribleTransferManager_init_unchained() internal initializer {
+    function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
+        royaltiesRegistry = newRoyaltiesRegistry;
+    }
+
+    function setProtocolFee(uint64 _protocolFee) external onlyOwner {
+        emit ProtocolFeeChanged(protocolFee, _protocolFee);
+        protocolFee = _protocolFee;
+    }
+
+    function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {
+        defaultFeeReceiver = newDefaultFeeReceiver;
+    }
+
+    function setFeeReceiver(address token, address wallet) external onlyOwner {
+        feeReceivers[token] = wallet;
+    }
+
+    function getFeeReceiver(address token) internal view returns (address) {
+        address wallet = feeReceivers[token];
+        if (wallet != address(0)) {
+            return wallet;
+        }
+        return defaultFeeReceiver;
     }
 
     function doTransfers(
@@ -171,11 +199,29 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager {
         uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) override internal pure returns (uint total) {
+    ) internal pure returns (uint total) {
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
         }
+    }
+
+    function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {
+        return subFee(value, total.bp(feeInBp));
+    }
+
+    function subFee(uint value, uint fee) internal pure returns (uint newValue, uint realFee) {
+        if (value > fee) {
+            newValue = value.sub(fee);
+            realFee = fee;
+        } else {
+            newValue = 0;
+            realFee = value;
+        }
+    }
+
+    function parseFeeData(uint data) internal pure returns(address, uint96) {
+        return (address(data), uint96(data >> 160));
     }
 
     uint256[46] private __gap;

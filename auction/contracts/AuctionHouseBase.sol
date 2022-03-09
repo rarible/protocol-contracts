@@ -7,11 +7,12 @@ import "./libs/LibAucDataV1.sol";
 import "./libs/LibBidDataV1.sol";
 
 import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable, RaribleTransferManager {
+abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable, RaribleTransferManager, TransferExecutor {
 
     /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
     uint96 internal constant EXTENSION_DURATION = 15 minutes;
@@ -27,9 +28,6 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
 
     /// @dev minimal auction duration
     uint96 public minimalDuration;
-
-    /// @dev current protocol fee
-    uint64 public protocolFee;
 
     /// @dev minimal bid increase in base points
     uint128 public minimalStepBasePoint;
@@ -49,17 +47,13 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     event AvailableToWithdraw(address indexed owner, uint added, uint total);
     /// @dev event that's emitted when minimal auction duration changes
     event MinimalDurationChanged(uint oldValue, uint newValue);
-    /// @dev event that's emitted when protocolFee changes
-    event ProtocolFeeChanged(uint oldValue, uint newValue);
 
     event MinimalStepChanged(uint oldValue, uint newValue);
 
     function __AuctionHouseBase_init_unchained(
-        uint64 _protocolFee,
         uint128 _minimalStepBasePoint
     ) internal initializer {
         auctionId = 1;
-        protocolFee = _protocolFee;
         minimalDuration = EXTENSION_DURATION;
         minimalStepBasePoint = _minimalStepBasePoint;
     }
@@ -67,11 +61,6 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     /// @dev increments auctionId and returns new value
     function getNextAndIncrementAuctionId() internal returns (uint256) {
         return auctionId++;
-    }
-
-    function setProtocolFee(uint64 _protocolFee) external onlyOwner {
-        emit ProtocolFeeChanged(protocolFee, _protocolFee);
-        protocolFee = _protocolFee;
     }
 
     function changeMinimalDuration(uint96 newValue) external onlyOwner {
