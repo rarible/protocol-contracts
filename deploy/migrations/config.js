@@ -34,11 +34,13 @@ const e2e = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   deploy_CryptoPunks: true,
   address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_WETH: true
 }
 const dev = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
   address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_WETH: true
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
@@ -54,7 +56,8 @@ const polygon_dev = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
   address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
-  meta_support: true
+  meta_support: true,
+  deploy_WETH: true
 }
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
@@ -77,7 +80,8 @@ const def = {
   },
   deploy_CryptoPunks: true,
   address_ownerTestCryptoPunks: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-  meta_support: false
+  meta_support: false,
+  deploy_WETH: true
 }
 
 let settings = {
