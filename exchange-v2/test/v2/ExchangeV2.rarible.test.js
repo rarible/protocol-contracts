@@ -167,7 +167,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       await testing.setAssetMatcher(COLLECTION, matcher.address);
 
-      await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]), {value: 300});
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]), {value: 300});
+      console.log("ETH <=> COLLECTION:", tx.receipt.gasUsed);
 
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
@@ -181,7 +182,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				const {signature, onChain} = await createOrder(left, accounts[1])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC20:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
@@ -240,7 +242,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				const {signature, onChain} = await createOrder(left, accounts[1])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC721:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
@@ -275,7 +278,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 				const { left, right } = await prepare20DV1_1155V2Orders()
 				const {signature, onChain} = await createOrder(left, accounts[1])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC1155:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 7);
@@ -320,7 +324,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 				const { left, right } = await prepare1155V1_20DV1Orders()
 				const {signature, onChain} = await createOrder(left, accounts[2])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[1] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[1] });
+        console.log("ERC1155 V1 <=> ERC20 V1:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
@@ -554,7 +559,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await runTest(async createOrder => {
 				const { left, right } = await prepare2Orders()
 				const {signature, onChain} = await createOrder(left, accounts[1])
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC20 PAYOUTS:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);

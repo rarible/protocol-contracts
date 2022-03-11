@@ -25,15 +25,15 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     mapping(bytes32 => uint) public fills;
 
     //events
-    event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
-    event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
+    event Cancel(bytes32 hash);
+    event Match(uint newLeftFill, uint newRightFill);
 
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
         bytes32 orderKeyHash = LibOrder.hashKey(order);
         fills[orderKeyHash] = UINT256_MAX;
-        emit Cancel(orderKeyHash, order.maker, order.makeAsset.assetType, order.takeAsset.assetType);
+        emit Cancel(orderKeyHash);
     }
 
     function matchOrders(
@@ -106,7 +106,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
+        emit Match(newFill.rightValue, newFill.leftValue);
     }
 
     function getFillSetNew(

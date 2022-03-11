@@ -7,6 +7,7 @@ const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
+const LibOrderTest = artifacts.require("LibOrderTest.sol");
 
 const web3Abi = require('web3-eth-abi');
 const sigUtil = require('eth-sig-util');
@@ -148,30 +149,18 @@ contract("EIP712MetaTransaction", function ([_, owner, account1]) {
         v,
         functionSignature
       } = await getTransactionData(nonce, cancelAbi, [left]);
-//        Way №1 call transaction
-//      let sendTransactionData = web3Abi.encodeFunctionCall(
-//        executeMetaTransactionABI,
-//        [publicKey, functionSignature, r, s, v]
-//      );
-//
-//        await testContract.sendTransaction({
-//            value: 0,
-//            from: owner,
-//            gas: 500000,
-//            data: sendTransactionData
-//        });
-//        Way №2 call transaction
+  
       let resultExecMataTx  = await testContract.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: owner});
-      let orderMakerAddress;
+      let hash;
       truffleAssert.eventEmitted(resultExecMataTx, 'Cancel', (ev) => {
-       	orderMakerAddress = ev.maker;
+       	hash = ev.hash;
         return true;
       });
-      //console.log("orderMakerAddress:"+orderMakerAddress); //TEST only, no need
+      const libOrder = await LibOrderTest.new();
+
       var newNonce = await testContract.getNonce(publicKey);
       assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
-      assert.equal(orderMakerAddress, publicKey);
-      //NB! check orderMakerAddress == _msgSender() inside method with cancelAbi, so _msgSender() - also correct
+      assert.equal(hash, await libOrder.hashKey(left));
     });
 
   });
