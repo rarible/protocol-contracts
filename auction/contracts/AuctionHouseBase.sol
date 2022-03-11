@@ -33,7 +33,7 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     uint128 public minimalStepBasePoint;
 
     /// @dev event that emits when auction is created
-    event AuctionCreated(uint indexed auctionId, address buyer, uint128 endTime);
+    event AuctionCreated(uint indexed auctionId, address seller, uint128 endTime);
     /// @dev event that emits when bid is placed
     event BidPlaced(uint indexed auctionId, address buyer, uint endTime);
     /// @dev event that emits when auction is finished
