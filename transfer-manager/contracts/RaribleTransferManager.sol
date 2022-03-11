@@ -97,7 +97,6 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
             transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
             transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
         }
-
         /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
         if (left.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(right.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
@@ -115,17 +114,42 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
     }
 
+//    function doTransfersWithFees(
+//        LibDeal.DealSide memory calculateSide,
+//        LibDeal.DealSide memory nftSide,
+//        bytes4 transferDirection
+//    ) public returns (uint totalAmount) {
+//        totalAmount = calculateTotalAmount(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees);
+//        uint rest = transferProtocolFee(totalAmount, calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
+//        rest = transferRoyalties(calculateSide.assetType, nftSide.assetType, rest, calculateSide.value, calculateSide.sideAddress, transferDirection);
+//        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, calculateSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
+//        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, nftSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
+//        transferPayouts(calculateSide.assetType, rest, calculateSide.sideAddress, nftSide.payouts, transferDirection);
+//    }
+
     function doTransfersWithFees(
         LibDeal.DealSide memory calculateSide,
         LibDeal.DealSide memory nftSide,
         bytes4 transferDirection
-    ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees);
-        uint rest = transferProtocolFee(totalAmount, calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
-        rest = transferRoyalties(calculateSide.assetType, nftSide.assetType, rest, calculateSide.value, calculateSide.sideAddress, transferDirection);
-        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, calculateSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
-        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, nftSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
-        transferPayouts(calculateSide.assetType, rest, calculateSide.sideAddress, nftSide.payouts, transferDirection);
+    ) public returns (uint) {
+        (uint totalAmount,
+        uint sumOriginsPayment,
+        uint sumOriginsNFT,
+        address[] memory originsAccounts,
+        uint[] memory originsValues
+        ) = calculateTotalAmountWithOrigins(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees, nftSide.originFees);
+        (address[] memory royaltiesAccounts, uint[] memory royaltiesValues) = calculateRoyaltiestWithPayouts(
+            calculateSide.value,
+            sumOriginsNFT,
+            calculateSide.protocolFee,
+            getRoyaltiesByAssetType(nftSide.assetType), //royalties
+            nftSide.payouts);//payouts
+
+        transferProtocolFee2(calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
+        transferFeesValues(calculateSide.assetType, royaltiesAccounts, royaltiesValues, calculateSide.sideAddress, transferDirection, PAYOUT);
+        transferFeesValues(calculateSide.assetType, originsAccounts, originsValues, calculateSide.sideAddress, transferDirection, ORIGIN);
+        return totalAmount;
+
     }
 
     function transferProtocolFee(
@@ -149,6 +173,27 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
             transfer(LibAsset.Asset(matchCalculate, fee), from, getFeeReceiver(tokenAddress), transferDirection, PROTOCOL);
         }
         return rest;
+    }
+
+    function transferProtocolFee2(
+        uint amount,
+        address from,
+        uint feeSideProtocolFee,
+        uint nftSideProtocolFee,
+        LibAsset.AssetType memory matchCalculate,
+        bytes4 transferDirection
+    ) internal {
+        (uint fee) = amount.bp(feeSideProtocolFee + nftSideProtocolFee);
+        if (fee > 0) {
+            address tokenAddress = address(0);
+            if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
+                tokenAddress = abi.decode(matchCalculate.data, (address));
+            } else if (matchCalculate.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+                uint tokenId;
+                (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
+            }
+            transfer(LibAsset.Asset(matchCalculate, fee), from, getFeeReceiver(tokenAddress), transferDirection, PROTOCOL);
+        }
     }
 
     function transferRoyalties(
@@ -202,6 +247,21 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
     }
 
+    function transferFeesValues(
+        LibAsset.AssetType memory matchCalculate,
+        address[] memory accounts,
+        uint[] memory values,
+        address from,
+        bytes4 transferDirection,
+        bytes4 transferType
+    ) internal {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            if (values[i] > 0) {
+                transfer(LibAsset.Asset(matchCalculate, values[i]), from, accounts[i], transferDirection, transferType);
+            }
+        }
+    }
+
     function transferPayouts(
         LibAsset.AssetType memory matchCalculate,
         uint amount,
@@ -236,6 +296,94 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
+        }
+    }
+
+    /*
+    *amount - this is order price
+    *feeOnTopBp - number of percent from top
+    */
+    function calculateTotalAmountWithOrigins(
+        uint amount,
+        uint feeOnTopBp,
+        LibPart.Part[] memory baseFee, //originPaymentSide
+        LibPart.Part[] memory matchFee  //originNFTSide
+    ) internal pure returns (uint total, uint sumBaseFee, uint sumMatchFee, address[] memory combineResultAccounts, uint[] memory combineResultValues) {
+        combineResultAccounts = new address[](baseFee.length + matchFee.length);
+        combineResultValues = new uint[](baseFee.length + matchFee.length);
+        total = amount.add(amount.bp(feeOnTopBp)); //total add ProtocolFee
+        uint value;
+        for (uint96 iR = 0; iR < baseFee.length; iR++) {
+            value = amount.bp(baseFee[iR].value);
+            total = total.add(value);    //total add originPaymentSide
+            combineResultAccounts[iR] = baseFee[iR].account;
+            combineResultValues[iR] = value;
+            sumBaseFee = sumBaseFee.add(value); //calculate originPaymentSide
+        }
+        uint256 i = baseFee.length;
+        for (uint96 i2 = 0; i2 < matchFee.length; i2++) {
+            value = amount.bp(matchFee[i2].value);
+            sumMatchFee = sumMatchFee.add(value); //calculate originNFTSide
+            for (uint96 iR = 0; iR < baseFee.length; iR++) {
+                if (combineResultAccounts[iR] == matchFee[i2].account ) {
+                    combineResultValues[iR] += value;
+                    break;
+                }
+                if (iR == baseFee.length - 1) {
+                    combineResultAccounts[iR] = matchFee[i2].account;
+                    combineResultValues[i] = value;
+                    i ++;
+                }
+            }
+        }
+    }
+    /*
+
+    */
+    function calculateRoyaltiestWithPayouts(
+        uint amount,
+        uint originsNFTSIde,
+        uint protocolFeeNFTSidePercents,
+        LibPart.Part[] memory baseFee, //royalties
+        LibPart.Part[] memory matchFee //payouts
+    ) internal pure returns (address[] memory combineResultAccounts, uint[] memory combineResultValues) {
+        if ((baseFee.length == 0) && (matchFee.length > 0)) {
+            combineResultAccounts = new address[](matchFee.length);
+            combineResultValues = new uint[](matchFee.length);
+            amount = amount - amount.bp(protocolFeeNFTSidePercents) - originsNFTSIde;
+            for (uint96 iR = 0; iR < matchFee.length; iR++) {
+                combineResultAccounts[iR] = matchFee[iR].account;
+                combineResultValues[iR] = amount.bp(matchFee[iR].value);
+            }
+            return(combineResultAccounts, combineResultValues);
+        }
+
+        combineResultAccounts = new address[](baseFee.length + matchFee.length);
+        combineResultValues = new uint[](baseFee.length + matchFee.length);
+        uint sumBaseFee;
+        for (uint96 iR = 0; iR < baseFee.length; iR++) {
+            combineResultAccounts[iR] = baseFee[iR].account;
+            combineResultValues[iR] = amount.bp(baseFee[iR].value);
+            sumBaseFee = sumBaseFee.add(amount.bp(baseFee[iR].value)); //calculate royalties in money
+            //todo need to check sum royalties <=5000 (50%)
+        }
+        uint sumFee = (sumBaseFee.add(originsNFTSIde)).add(amount.bp(protocolFeeNFTSidePercents));
+        if (amount > sumFee){ //todo add(ProtocolFeeNFTSide)
+            uint256 i = baseFee.length;
+            uint rest = amount - sumFee;
+            for (uint96 i2 = 0; i2 < matchFee.length; i2++) {
+                for (uint96 iR = 0; iR < baseFee.length; iR++) {
+                    if (combineResultAccounts[iR] == matchFee[i2].account ) {
+                        combineResultValues[iR] += rest.bp(matchFee[i2].value);
+                        break;
+                    }
+                    if (iR == baseFee.length - 1) {
+                        combineResultAccounts[i] = matchFee[i2].account;
+                        combineResultValues[i] = rest.bp(matchFee[i2].value);
+                        i ++;
+                    }
+                }
+            }
         }
     }
 
