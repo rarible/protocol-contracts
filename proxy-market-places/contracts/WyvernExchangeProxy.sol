@@ -58,9 +58,10 @@ contract WyvernExchangeProxy is OwnableUpgradeable {
         uint8[2] memory vs,
         bytes32[5] memory rssMetadata)
     external payable {
-        calculateAndTransferFee (addrs[10], addrs[13], addrs[1], uints[13], uints[4]);
+        uint feeValue = calculateAndTransferFee (addrs[10], addrs[13], addrs[1], uints[13], uints[4]);
         //todo uncomment because this is main function
-        wyvernExchange.atomicMatch_(
+        wyvernExchange.atomicMatch_{value: msg.value.sub(feeValue)}(
+//        wyvernExchange.atomicMatch_(
             addrs,
             uints,
             feeMethodsSidesKindsHowToCalls,
@@ -87,7 +88,7 @@ contract WyvernExchangeProxy is OwnableUpgradeable {
         return _basePrice.add(feeValue);
     }
 
-    function calculateAndTransferFee(address sellTakerRelayerFee, address sellPaymentToken, address buyMaker, uint sellBasePrice, uint buyBasePrice) internal {
+    function calculateAndTransferFee(address sellTakerRelayerFee, address sellPaymentToken, address buyMaker, uint sellBasePrice, uint buyBasePrice) internal returns(uint) {
         uint sellPrice;
         if (sellTakerRelayerFee != address(0)) {
             sellPrice = sellBasePrice;
@@ -97,9 +98,12 @@ contract WyvernExchangeProxy is OwnableUpgradeable {
         (, uint feeValue) = LibFeeCalculate.subFeeInBp(sellPrice, sellPrice, protocolFee);
         if (feeValue > 0 && sellPaymentToken == address(0)) {
             protocolFeeReceiverETH.transfer(feeValue);
-        }
-        if (feeValue > 0 && sellPaymentToken != address(0)) {
+        } else if (feeValue > 0 && sellPaymentToken != address(0)) {
             IERC20Upgradeable(sellPaymentToken).transferFrom(buyMaker, protocolFeeReceiverERC20, feeValue);
         }
+        return feeValue;
+    }
+    receive () external payable {
+
     }
 }
