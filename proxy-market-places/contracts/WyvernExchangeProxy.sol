@@ -59,9 +59,11 @@ contract WyvernExchangeProxy is OwnableUpgradeable {
         bytes32[5] memory rssMetadata)
     external payable {
         uint feeValue = calculateAndTransferFee (addrs[10], addrs[13], addrs[1], uints[13], uints[4]);
-        //todo uncomment because this is main function
-        wyvernExchange.atomicMatch_{value: msg.value.sub(feeValue)}(
-//        wyvernExchange.atomicMatch_(
+        uint rest;
+        if (msg.value != 0) {   //Fee in ETH
+            rest = msg.value.sub(feeValue);
+        }
+        wyvernExchange.atomicMatch_{ value: rest }(
             addrs,
             uints,
             feeMethodsSidesKindsHowToCalls,

@@ -651,6 +651,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         address to,
         uint256 amount
     ) internal {
+//        revert("SKS_02_02");
         if (amount > 0) {
             require(
                 tokenTransferProxy.transferFrom(token, from, to, amount),
@@ -1140,9 +1141,10 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
 //        revert("SKS_02");
         /* If paying using a token (not Ether), transfer tokens. This is done prior to fee payments to that a seller will have tokens before being charged fees. */
         if (price > 0 && sell.paymentToken != address(0)) {
+//            revert(string(abi.encodePacked("emit price: ", uint2str(price))));
             transferTokens(sell.paymentToken, buy.maker, sell.maker, price);
         }
-
+//        revert("SKS_02_01");
         /* Amount that will be received by seller (for Ether). */
         uint256 receiveAmount = price;
 
@@ -1181,12 +1183,15 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
 //                        revert("SKS_05");
 //                        sell.feeRecipient.transfer(makerRelayerFee);
                     } else {
+//                        revert("SKS_03_06");
+//                        revert(string(abi.encodePacked("emit makerRelayerFee: ", uint2str(makerRelayerFee))));
                         transferTokens(
                             sell.paymentToken,
                             sell.maker,
                             sell.feeRecipient,
                             makerRelayerFee
                         );
+//                        revert("SKS_03_07");
                     }
                 }
 
@@ -2402,8 +2407,10 @@ contract TokenTransferProxy {
         address to,
         uint256 amount
     ) public returns (bool) {
-        require(registry.contracts(msg.sender));
+//        require(registry.contracts(msg.sender));
+//        revert("SKS_02_03");
         return ERC20(token).transferFrom(from, to, amount);
+//        revert("SKS_02_03");
     }
 }
 
