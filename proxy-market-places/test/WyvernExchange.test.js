@@ -46,7 +46,10 @@ contract("WyvernExchangeProxy", accounts => {
 //      tx = await wyvernExchangeProxy.atomicMatch_(addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata,
 //        {value: 103, from: accounts[0], gasPrice: 0}
 //      );
-//
+//      tx = await wyvernExchangeWithBulkCancellations.atomicMatch_(addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata,
+//        {value: 103, from: accounts[0], gasPrice: 0}
+//      );
+
 //      console.log("Gas used wyvernExchange for ETH:",tx.receipt.gasUsed);
     });
     async function prepareWywernNFT_ETH(_feeRecipient) {
@@ -122,18 +125,20 @@ contract("WyvernExchangeProxy", accounts => {
       let sellMaker = accounts[6];
       let sellFeeRecipient = accounts[7];
       await testERC20.mint(buyMaker, 200);
-//      await testERC20.mint(sellMaker, 1);
       await testERC20.approve(wyvernExchangeProxy.address, 10000000, { from: buyMaker });
       await testERC20.approve(tokenTransferProxy.address, 10000000, { from: buyMaker });
       await testERC20.approve(tokenTransferProxy.address, 10000000, { from: sellMaker });
 
       const{addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata} = await prepareWywernNFT_ERC20(buyMaker, sellMaker, sellFeeRecipient);
-//      console.log("uints", uints[13]);
       await wyvernExchangeProxy.atomicMatch_(addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata);
       assert.equal(await testERC20.balanceOf(buyMaker), 97);
       assert.equal(await testERC20.balanceOf(sellMaker), 88);
       assert.equal(await testERC20.balanceOf(sellFeeRecipient), 12);
       assert.equal(await testERC20.balanceOf(feeProtocolRecieverERC20), 3);
+
+//      const tx = await wyvernExchangeProxy.atomicMatch_(addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata);
+//      const tx = await wyvernExchangeWithBulkCancellations.atomicMatch_(addrs, uints, feeMethodsSidesKindsHowToCalls, calldataBuy, calldataSell, replacementPatternBuy, replacementPatternSell, staticExtradataBuy, staticExtradataSell, vs, rssMetadata);
+//      console.log("Gas used wyvernExchange for ERC20:", tx.receipt.gasUsed);
     });
     async function prepareWywernNFT_ERC20(_buyMaker, _sellMaker, _sellFeeRecipient) {
     	const addrs = [
