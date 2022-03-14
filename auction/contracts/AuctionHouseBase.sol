@@ -5,12 +5,14 @@ pragma abicoder v2;
 
 import "./libs/LibAucDataV1.sol";
 import "./libs/LibBidDataV1.sol";
+import "./libs/SafeMathUpgradeable96.sol";
 
 import "@rarible/transfer-manager/contracts/RaribleTransferManager.sol";
 import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable, RaribleTransferManager, TransferExecutor {
 
@@ -30,7 +32,7 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     uint96 public minimalDuration;
 
     /// @dev minimal bid increase in base points
-    uint128 public minimalStepBasePoint;
+    uint96 public minimalStepBasePoint;
 
     /// @dev event that emits when auction is created
     event AuctionCreated(uint indexed auctionId, address seller, uint128 endTime);
@@ -51,7 +53,7 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     event MinimalStepChanged(uint oldValue, uint newValue);
 
     function __AuctionHouseBase_init_unchained(
-        uint128 _minimalStepBasePoint
+        uint96 _minimalStepBasePoint
     ) internal initializer {
         auctionId = 1;
         minimalDuration = EXTENSION_DURATION;
@@ -68,7 +70,7 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
         minimalDuration = newValue;
     }
 
-    function changeMinimalStep(uint128 newValue) external onlyOwner {
+    function changeMinimalStep(uint96 newValue) external onlyOwner {
         emit MinimalStepChanged(minimalStepBasePoint, newValue);
         minimalStepBasePoint = newValue;
     }

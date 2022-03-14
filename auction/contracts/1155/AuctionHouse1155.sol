@@ -6,13 +6,14 @@ pragma abicoder v2;
 import "./AuctionHouseStruct1155.sol";
 import "../AuctionHouseBase.sol";
 
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 
 /// @dev contract to create and interact with auctions
 contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, AuctionHouseBase {
     using LibTransfer for address;
     using BpLibrary for uint;
+    using SafeMathUpgradeable96 for uint96;
+    using SafeMathUpgradeable for uint;
 
     function __AuctionHouse1155_init(
         address newDefaultFeeReceiver,
@@ -20,7 +21,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
         address _transferProxy,
         address _erc20TransferProxy,
         uint64 newProtocolFee,
-        uint128 _minimalStepBasePoint
+        uint96 _minimalStepBasePoint
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
@@ -54,7 +55,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
         uint96 endTime = 0;
         if (aucData.startTime > 0){
             require (aucData.startTime >= block.timestamp, "incorrect start time");
-            endTime = uint96(aucData.startTime + aucData.duration);
+            endTime = aucData.startTime.add(aucData.duration);
         }
 
         uint currentAuctionId = getNextAndIncrementAuctionId();
@@ -121,7 +122,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
         if (currentAuction.buyer == address(0x0)) {//no bid at all
             // set endTime if it's not set
             if (currentAuction.endTime == 0){
-                endTime = uint96(currentTime + aucData.duration);
+                endTime = currentTime.add(aucData.duration);
                 auctions[_auctionId].endTime = endTime;
                 currentAuction.endTime = endTime;
                 
@@ -151,8 +152,8 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
         uint96 extension = (minDur < EXTENSION_DURATION) ? minDur : EXTENSION_DURATION;
 
         // extends auction time if it's about to end
-        if (endTime - currentTime < extension) {
-            endTime = currentTime + extension;
+        if (endTime.sub(currentTime) < extension) {
+            endTime = currentTime.add(extension);
             auctions[_auctionId].endTime = endTime;
         }
         emit BidPlaced(_auctionId, newBuyer, endTime);
@@ -198,7 +199,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
         if (currentAuction.buyer == address(0x0)) {
             minBid = currentAuction.minimalPrice;
         } else {
-            minBid = currentAuction.lastBid.amount + currentAuction.lastBid.amount.bp(minimalStepBasePoint);
+            minBid = currentAuction.lastBid.amount.add(currentAuction.lastBid.amount.bp(minimalStepBasePoint));
         }
     }
 
@@ -438,7 +439,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
             (bool success,) = oldBuyer.call{ value: oldTotalAmount }("");
             if (!success) {
                 uint currentValueToWithdraw = readyToWithdraw[oldBuyer];
-                uint newValueToWithdraw = oldTotalAmount + (currentValueToWithdraw);
+                uint newValueToWithdraw = oldTotalAmount.add(currentValueToWithdraw);
                 readyToWithdraw[oldBuyer] = newValueToWithdraw;
                 emit AvailableToWithdraw(oldBuyer, oldTotalAmount, newValueToWithdraw);
             }
@@ -465,7 +466,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseStruct1155, A
     function checkEthReturnChange(uint totalAmount, address buyer) internal {
         uint msgValue = msg.value;
         require(msgValue >= totalAmount, "not enough ETH");
-        uint256 change = msg.value - totalAmount;
+        uint256 change = msg.value.sub(totalAmount);
         if (change > 0) {
             buyer.transferEth(change);
         }
