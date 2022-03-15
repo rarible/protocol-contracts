@@ -90,9 +90,20 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     ) internal returns (uint totalAmount) {
         totalAmount = calculateTotalAmount(calculateSide.asset.value, _protocolFee, calculateSide.originFees);
         uint rest = transferProtocolFee(totalAmount, calculateSide.asset.value, calculateSide.from, _protocolFee, _protocolFee, calculateSide.asset.assetType, calculateSide.proxy);
-        rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
-        (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, calculateSide.originFees, calculateSide.from, calculateSide.proxy);
-        (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, nftSide.originFees, calculateSide.from, calculateSide.proxy);
+
+        rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
+        if (
+            calculateSide.originFees.length  == 1 &&
+            nftSide.originFees.length  == 1 &&
+            nftSide.originFees[0].account == calculateSide.originFees[0].account
+        ) { 
+            LibPart.Part[] memory origin = new  LibPart.Part[](1);
+            origin[0] = nftSide.originFees[0];
+            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, origin, calculateSide.from, calculateSide.proxy);
+        } else {
+            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, calculateSide.originFees, calculateSide.from, calculateSide.proxy);
+            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, nftSide.originFees, calculateSide.from, calculateSide.proxy);
+        }
         transferPayouts(calculateSide.asset.assetType, rest, calculateSide.from, nftSide.payouts, calculateSide.proxy);
     }
 
@@ -122,13 +133,21 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     function transferRoyalties(
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
+        LibPart.Part[] memory payouts,
         uint rest,
         uint amount,
         address from,
         address proxy
     ) internal returns (uint) {
-        LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft);
-
+        LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft); 
+        if (
+            fees.length == 1 &&
+            payouts.length == 1 &&
+            fees[0].account == payouts[0].account
+        ) {
+            require(fees[0].value <= 5000, "Royalties are too high (>50%)");
+            return rest;
+        }
         (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, proxy);
         require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
         return result;

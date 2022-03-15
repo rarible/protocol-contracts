@@ -72,6 +72,90 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			const tx = await testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 300 });
 			console.log("ERC20<->eth two offChain orders, with Separate RTM logic gas:", tx.receipt.gasUsed);
 		})
+    it("same origin, not same royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[5], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[6], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("same origin, no royalties:", tx.receipt.gasUsed);
+			
+		})
+
+    it("same origin, yes royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[5], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[2], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("same origin, yes royalties:", tx.receipt.gasUsed);
+			
+		})
+
+    it("not same origin, yes royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[6], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[2], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("not same origin, yes royalties:", tx.receipt.gasUsed);
+			
+		})
+
+    it("not same origin, not same royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[6], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("not same origin, yes royalties:", tx.receipt.gasUsed);
+			
+		})
+
   });
 
 	describe("matchOrders", () => {
