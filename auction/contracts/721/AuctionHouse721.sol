@@ -3,16 +3,13 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./AuctionHouseStruct721.sol";
+import "./AuctionHouseBase721.sol";
 import "../wrapper/TokenToAuction.sol";
-import "../AuctionHouseBase.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
 
 /// @dev contract to create and interact with auctions
-contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHouseStruct721, AuctionHouseBase {
-    using LibTransfer for address;
-    using BpLibrary for uint;
+contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHouseBase721 {
     using SafeMathUpgradeable96 for uint96;
     using SafeMathUpgradeable for uint;
 
@@ -51,19 +48,13 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
 
-        uint96 endTime = 0;
-        if (aucData.startTime > 0){
-            require (aucData.startTime >= block.timestamp, "incorrect start time");
-            endTime = aucData.startTime.add(aucData.duration);
-        }
-
         uint currentAuctionId = getNextAndIncrementAuctionId();
         address payable sender = _msgSender();
         Auction memory auc = Auction(
             _sellToken,
             _sellTokenId,
             _buyAsset,
-            endTime,
+            0,
             Bid(0, "", ""),
             sender,
             minimalPrice,
@@ -83,7 +74,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         );
         setAuctionForToken(_sellToken, _sellTokenId, currentAuctionId);
         
-        emit AuctionCreated(currentAuctionId, sender, endTime);
+        emit AuctionCreated(currentAuctionId, sender);
     }
 
     /// @dev put a bid and return locked assets for the last bid
@@ -102,7 +93,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         if (currentAuction.buyAsset == address(0)) {
             checkEthReturnChange(totalAmount, newBuyer);
         }
-        checkAuctionInProgress(currentAuction, aucData);
+        checkAuctionInProgress(currentAuction.seller, currentAuction.endTime, aucData.startTime);
         if (buyOutVerify(aucData, newAmount)) {
             _buyOut(
                 currentAuction,
@@ -110,7 +101,6 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 aucData,
                 _auctionId,
                 bidOriginFee,
-                totalAmount,
                 newBuyer
             );
             return;
@@ -119,17 +109,13 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         uint96 currentTime = uint96(block.timestamp);
         //start action if minimal price is met
         if (currentAuction.buyer == address(0x0)) {//no bid at all
-            // set endTime if it's not set
-            if (currentAuction.endTime == 0){
-                endTime = currentTime.add(aucData.duration);
-                auctions[_auctionId].endTime = endTime;
-                currentAuction.endTime = endTime;
-                
-            }
+            // set endTime
+            endTime = currentTime.add(aucData.duration);
+            auctions[_auctionId].endTime = endTime;
             require(newAmount >= currentAuction.minimalPrice, "bid too small");
         } else {//there is bid in auction
             require(currentAuction.buyer != newBuyer, "already winning bid");
-            uint256 minAmount = _getMinimalNextBid(currentAuction);
+            uint256 minAmount = _getMinimalNextBid(currentAuction.buyer, currentAuction.minimalPrice, currentAuction.lastBid.amount);
             require(newAmount >= minAmount, "bid too low");
         }
 
@@ -158,72 +144,21 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         emit BidPlaced(_auctionId, newBuyer, endTime);
     }
 
-    /// @dev reserves new bid and returns the last one if it exists
-    function reserveBid(
-        address buyAsset,
-        uint128 curProtocolFee,
-        address oldBuyer,
-        address newBuyer,
-        Bid memory oldBid,
-        address proxy,
-        uint newTotalAmount
-    ) internal {
-        // return old bid if theres any
-        _returnBid(
-            oldBid,
-            buyAsset,
-            oldBuyer,
-            curProtocolFee,
-            proxy
-        );
-        
-        //lock new bid
-        transferBid(
-            newTotalAmount,
-            buyAsset,
-            newBuyer,
-            address(this),
-            proxy
-        );
-    }
-
     /// @dev returns the minimal amount of the next bid (without fees)
     function getMinimalNextBid(uint _auctionId) external view returns (uint minBid){
         Auction memory currentAuction = auctions[_auctionId];
-        return _getMinimalNextBid(currentAuction);
-    }
-
-    /// @dev returns the minimal amount of the next bid (without fees)
-    function _getMinimalNextBid(Auction memory currentAuction) internal view returns (uint minBid){
-        if (currentAuction.buyer == address(0x0)) {
-            minBid = currentAuction.minimalPrice;
-        } else {
-            minBid = currentAuction.lastBid.amount.add(currentAuction.lastBid.amount.bp(minimalStepBasePoint));
-        }
+        return _getMinimalNextBid(currentAuction.buyer, currentAuction.minimalPrice, currentAuction.lastBid.amount);
     }
 
     /// @dev returns true if auction exists, false otherwise
     function checkAuctionExistence(uint _auctionId) external view returns (bool){
-        return auctions[_auctionId].seller != address(0);
-    }
-
-    /// @dev returns true if auction exists, false otherwise
-    function _checkAuctionExistence(Auction memory currentAuction) internal pure returns (bool){
-        return currentAuction.seller != address(0);
-    }
-
-    /// @dev returns true if newAmount is enough for buyOut
-    function buyOutVerify(LibAucDataV1.DataV1 memory aucData, uint newAmount) internal pure returns (bool) {
-        if (aucData.buyOutPrice > 0 && aucData.buyOutPrice <= newAmount) {
-            return true;
-        }
-        return false;
+        return _checkAuctionExistence(auctions[_auctionId].seller);
     }
 
     /// @dev finishes, deletes and transfers all assets for an auction if it's ended (it exists, it has at least one bid, now > endTme)
     function finishAuction(uint _auctionId) external nonReentrant {
         Auction memory currentAuction = auctions[_auctionId];
-        require(_checkAuctionExistence(currentAuction), "there is no auction with this id");
+        require(_checkAuctionExistence(currentAuction.seller), "there is no auction with this id");
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         require(
             !_checkAuctionRangeTime(currentAuction.endTime, aucData.startTime) &&
@@ -263,29 +198,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
 
     /// @dev returns true if auction started and hasn't finished yet, false otherwise
     function checkAuctionRangeTime(uint _auctionId) external view returns (bool){
-        uint currentTime = block.timestamp;
-        LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType);
-        if (aucData.startTime > 0 && aucData.startTime > currentTime) {
-            return false;
-        }
-        uint endTime = auctions[_auctionId].endTime;
-        if (endTime > 0 && endTime <= currentTime){
-            return false;
-        }
-
-        return true;
-    }
-
-    function _checkAuctionRangeTime(uint endTime, uint startTime) internal view returns (bool){
-        uint currentTime = block.timestamp;
-        if (startTime > 0 && startTime > currentTime) {
-            return false;
-        }
-        if (endTime > 0 && endTime <= currentTime){
-            return false;
-        }
-
-        return true;
+        return _checkAuctionRangeTime(auctions[_auctionId].endTime, LibAucDataV1.parse(auctions[_auctionId].data, auctions[_auctionId].dataType).startTime);
     }
 
     /// @dev deletes auction after finalizing
@@ -298,8 +211,8 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
     /// @dev cancels existing auction without bid
     function cancel(uint _auctionId) external nonReentrant {
         Auction memory currentAuction = auctions[_auctionId];
-        require(_checkAuctionExistence(currentAuction), "there is no auction with this id");
         address seller = currentAuction.seller;
+        require(_checkAuctionExistence(seller), "there is no auction with this id");
         require(seller == _msgSender(), "auction owner not detected");
         require(currentAuction.buyer == address(0), "can't cancel auction with bid");
         transferNFT(
@@ -319,7 +232,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
     function buyOut(uint _auctionId, Bid memory bid) external payable nonReentrant {
         Auction memory currentAuction = auctions[_auctionId];
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
-        checkAuctionInProgress(currentAuction, aucData);
+        checkAuctionInProgress(currentAuction.seller, currentAuction.endTime, aucData.startTime);
         require(buyOutVerify(aucData, bid.amount), "not enough for buyout");
         uint bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
         uint totalAmount = calculateTotalAmount(
@@ -337,7 +250,6 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
             aucData,
             _auctionId,
             bidOriginFee,
-            totalAmount,
             sender
         );
     }
@@ -348,7 +260,6 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         LibAucDataV1.DataV1 memory aucData,
         uint _auctionId,
         uint newBidOriginFee,
-        uint newTotalAmount,
         address sender
     ) internal {
         address proxy = _getProxy(currentAuction.buyAsset);
@@ -406,73 +317,10 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         return auctions[_auctionId].buyer;
     }
 
-    /// @dev returns true if auction in progress, false otherwise
-    function checkAuctionInProgress(Auction memory currentAuction, LibAucDataV1.DataV1 memory aucData) internal view{
-        require(_checkAuctionExistence(currentAuction) && _checkAuctionRangeTime(currentAuction.endTime, aucData.startTime), "auction is inactive");
-    }
-
     /// @dev function to call from wrapper to put bid
     function putBidWrapper(uint256 _auctionId) external payable {
         require(auctions[_auctionId].buyAsset == address(0), "only ETH bids allowed");
         putBid(_auctionId, Bid(msg.value, LibBidDataV1.V1, ""));
-    }
-
-    /// @dev Used to withdraw faulty bids (bids that failed to return after out-bidding)
-    function withdrawFaultyBid(address _to) external {
-        address sender = _msgSender();
-        uint amount = readyToWithdraw[sender];
-        require( amount > 0, "nothing to withdraw");
-        readyToWithdraw[sender] = 0;
-        _to.transferEth(amount);
-    }
-
-    function _returnBid(
-        Bid memory oldBid,
-        address buyAsset,
-        address oldBuyer,
-        uint128 curProtocolFee,
-        address proxy
-    ) internal {
-        // nothing to return
-        if (oldBuyer == address(0)) {
-            return;
-        }
-        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, getOriginFee(LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee));
-        if (buyAsset == address(0)) {
-            (bool success,) = oldBuyer.call{ value: oldTotalAmount }("");
-            if (!success) {
-                uint currentValueToWithdraw = readyToWithdraw[oldBuyer];
-                uint newValueToWithdraw = oldTotalAmount.add(currentValueToWithdraw);
-                readyToWithdraw[oldBuyer] = newValueToWithdraw;
-                emit AvailableToWithdraw(oldBuyer, oldTotalAmount, newValueToWithdraw);
-            }
-        } else {
-            transferBid(
-                oldTotalAmount,
-                buyAsset,
-                address(this),
-                oldBuyer,
-                proxy
-            );
-        }
-    }
-
-    function _getProxy(address buyAsset) internal view returns(address){
-        address proxy;
-        if (buyAsset != address(0)){
-            proxy = proxies[LibAsset.ERC20_ASSET_CLASS];
-        }
-        return proxy;
-    }
-
-    /// @dev check that msg.value more than bid amount with fees and return change
-    function checkEthReturnChange(uint totalAmount, address buyer) internal {
-        uint msgValue = msg.value;
-        require(msgValue >= totalAmount, "not enough ETH");
-        uint256 change = msgValue.sub(totalAmount);
-        if (change > 0) {
-            buyer.transferEth(change);
-        }
     }
 
 }

@@ -15,6 +15,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable, RaribleTransferManager, TransferExecutor {
+    using LibTransfer for address;
+    using SafeMathUpgradeable for uint;
+    using BpLibrary for uint;
 
     /// @dev default minimal auction duration and also the time for that auction is extended when it's about to end (endTime - now < EXTENSION_DURATION)
     uint96 internal constant EXTENSION_DURATION = 15 minutes;
@@ -34,8 +37,18 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     /// @dev minimal bid increase in base points
     uint96 public minimalStepBasePoint;
 
+    /// @dev bid struct
+    struct Bid {
+        // the amount 
+        uint amount;
+        // version of Bid to correctly decode data field
+        bytes4 dataType;
+        // field to store additional information for Bid, can be seen in "LibBidDataV1.sol"
+        bytes data;
+    }
+
     /// @dev event that emits when auction is created
-    event AuctionCreated(uint indexed auctionId, address seller, uint128 endTime);
+    event AuctionCreated(uint indexed auctionId, address seller);
     /// @dev event that emits when bid is placed
     event BidPlaced(uint indexed auctionId, address buyer, uint endTime);
     /// @dev event that emits when auction is finished
@@ -143,6 +156,132 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
         originFee[0].account = payable(address(data));
         originFee[0].value = uint96(data >> 160);
         return originFee;
+    }
+
+    function _checkAuctionRangeTime(uint endTime, uint startTime) internal view returns (bool){
+        uint currentTime = block.timestamp;
+        if (startTime > 0 && startTime > currentTime) {
+            return false;
+        }
+        if (endTime > 0 && endTime <= currentTime){
+            return false;
+        }
+
+        return true;
+    }
+
+    /// @dev returns true if newAmount is enough for buyOut
+    function buyOutVerify(LibAucDataV1.DataV1 memory aucData, uint newAmount) internal pure returns (bool) {
+        if (aucData.buyOutPrice > 0 && aucData.buyOutPrice <= newAmount) {
+            return true;
+        }
+        return false;
+    }
+
+    /// @dev returns true if auction exists, false otherwise
+    function _checkAuctionExistence(address seller) internal pure returns (bool){
+        return seller != address(0);
+    }
+
+    /// @dev Used to withdraw faulty bids (bids that failed to return after out-bidding)
+    function withdrawFaultyBid(address _to) external {
+        address sender = _msgSender();
+        uint amount = readyToWithdraw[sender];
+        require( amount > 0, "nothing to withdraw");
+        readyToWithdraw[sender] = 0;
+        _to.transferEth(amount);
+    }
+
+    function _returnBid(
+        Bid memory oldBid,
+        address buyAsset,
+        address oldBuyer,
+        uint128 curProtocolFee,
+        address proxy
+    ) internal {
+        // nothing to return
+        if (oldBuyer == address(0)) {
+            return;
+        }
+        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, getOriginFee(LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee));
+        if (buyAsset == address(0)) {
+            (bool success,) = oldBuyer.call{ value: oldTotalAmount }("");
+            if (!success) {
+                uint currentValueToWithdraw = readyToWithdraw[oldBuyer];
+                uint newValueToWithdraw = oldTotalAmount.add(currentValueToWithdraw);
+                readyToWithdraw[oldBuyer] = newValueToWithdraw;
+                emit AvailableToWithdraw(oldBuyer, oldTotalAmount, newValueToWithdraw);
+            }
+        } else {
+            transferBid(
+                oldTotalAmount,
+                buyAsset,
+                address(this),
+                oldBuyer,
+                proxy
+            );
+        }
+    }
+
+    function _getProxy(address buyAsset) internal view returns(address){
+        address proxy;
+        if (buyAsset != address(0)){
+            proxy = proxies[LibAsset.ERC20_ASSET_CLASS];
+        }
+        return proxy;
+    }
+
+    /// @dev check that msg.value more than bid amount with fees and return change
+    function checkEthReturnChange(uint totalAmount, address buyer) internal {
+        uint msgValue = msg.value;
+        require(msgValue >= totalAmount, "not enough ETH");
+        uint256 change = msgValue.sub(totalAmount);
+        if (change > 0) {
+            buyer.transferEth(change);
+        }
+    }
+
+    /// @dev returns true if auction in progress, false otherwise
+    function checkAuctionInProgress(address seller, uint endTime, uint startTime) internal view{
+        require(_checkAuctionExistence(seller) && _checkAuctionRangeTime(endTime, startTime), "auction is inactive");
+    }
+
+    /// @dev reserves new bid and returns the last one if it exists
+    function reserveBid(
+        address buyAsset,
+        uint128 curProtocolFee,
+        address oldBuyer,
+        address newBuyer,
+        Bid memory oldBid,
+        address proxy,
+        uint newTotalAmount
+    ) internal {
+        // return old bid if theres any
+        _returnBid(
+            oldBid,
+            buyAsset,
+            oldBuyer,
+            curProtocolFee,
+            proxy
+        );
+        
+        //lock new bid
+        transferBid(
+            newTotalAmount,
+            buyAsset,
+            newBuyer,
+            address(this),
+            proxy
+        );
+    }
+
+    /// @dev returns the minimal amount of the next bid (without fees)
+    function _getMinimalNextBid(address buyer, uint96 minimalPrice, uint amount) internal view returns (uint minBid){
+        if (buyer == address(0x0)) {
+            minBid = minimalPrice;
+        } else {
+            minBid = amount.add(amount.bp(minimalStepBasePoint));
+        }
     }
 
     uint256[50] private ______gap;

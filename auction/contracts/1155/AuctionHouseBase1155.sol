@@ -2,7 +2,9 @@
 
 pragma solidity 0.7.6;
 
-abstract contract AuctionHouseStruct1155  {
+import "../AuctionHouseBase.sol";
+
+abstract contract AuctionHouseBase1155 is AuctionHouseBase  {
 
     /// @dev mapping to store data of auctions for auctionId
     mapping(uint => Auction) auctions;
@@ -33,13 +35,4 @@ abstract contract AuctionHouseStruct1155  {
         bytes data;
     }
 
-    /// @dev bid struct
-    struct Bid {
-        // the amount 
-        uint amount;
-        // version of Bid to correctly decode data field
-        bytes4 dataType;
-        // field to store additional information for Bid, can be seen in "LibBidDataV1.sol"
-        bytes data;
-    }
 }
