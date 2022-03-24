@@ -47,6 +47,7 @@
     - `V3` orders' fees work differently from all previous orders types
     - `prtocolFee` is used and taken from seller side
     - `originFees` are taken from seller side only.
+    - sum of `prtocolFee` + buy-order `originFees` + sell-order `originFees` should not be bigger than `maxFeesBasePoint`
     - example:
       - `prtocolFee` is 3%
       - sell order is `1 ERC721` => `100 ETH`
