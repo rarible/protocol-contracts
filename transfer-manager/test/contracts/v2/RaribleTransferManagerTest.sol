@@ -40,16 +40,7 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         __OrderValidator_init_unchained();
     }
 
-
-    function makeDealData(
-        LibOrder.Order memory order
-    ) external pure returns (LibOrderDataV2.DataV2 memory dataOrder){
-        dataOrder = LibOrderData.parse(order);
-    }
-
-    function getDealSide(LibOrder.Order memory order) external view returns (LibDeal.DealSide memory dealSide) {
-        LibOrderDataV2.DataV2 memory orderData = LibOrderData.parse(order);
-
+    function getDealSide(LibOrder.Order memory order, LibOrderData.GenericOrderData memory orderData) internal view returns (LibDeal.DealSide memory dealSide) {
         dealSide = LibDeal.DealSide(
             order.makeAsset,
             orderData.payouts,
@@ -59,19 +50,94 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor,
         );
     }
 
-    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external pure returns (RaribleTransferManagerTest.ProtocolFeeSide memory) {
-        RaribleTransferManagerTest.ProtocolFeeSide memory result;
-        result.feeSide = LibFeeSide.getFeeSide(orderLeft.makeAsset.assetType.assetClass, orderRight.makeAsset.assetType.assetClass);
-        return result;
+    function getMaxFee(
+        bytes4 dataTypeLeft, 
+        bytes4 dataTypeRight, 
+        LibOrderData.GenericOrderData memory leftOrderData, 
+        LibOrderData.GenericOrderData memory rightOrderData,
+        LibFeeSide.FeeSide feeSide,
+        uint _protocolFee
+    ) internal pure returns(uint) { 
+        if (
+            dataTypeLeft != LibOrderDataV3.V3_SELL && 
+            dataTypeRight != LibOrderDataV3.V3_SELL &&
+            dataTypeLeft != LibOrderDataV3.V3_BUY && 
+            dataTypeRight != LibOrderDataV3.V3_BUY 
+        ){
+            return 0;
+        }
+
+        uint matchFees = _protocolFee + leftOrderData.originFees[0].value + rightOrderData.originFees[0].value;
+        uint maxFee;
+        if (feeSide == LibFeeSide.FeeSide.LEFT) {
+            maxFee = rightOrderData.maxFeesBasePoint;
+            require(
+                dataTypeLeft == LibOrderDataV3.V3_BUY && 
+                dataTypeRight == LibOrderDataV3.V3_SELL &&
+                matchFees <= maxFee,
+                "wrong V3 type1"
+            );
+        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
+            maxFee = leftOrderData.maxFeesBasePoint;
+            require(
+                dataTypeRight == LibOrderDataV3.V3_BUY && 
+                dataTypeLeft == LibOrderDataV3.V3_SELL &&
+                matchFees <= maxFee,
+                "wrong V3 type1"
+            );
+        } else {
+            return 0;
+        }
+        require(maxFee > 0 && maxFee >= _protocolFee && maxFee <= 1000, "wrong maxFee");
+        return maxFee;
+    }
+
+    function getDealData(
+        bytes4 makeMatchAssetClass,
+        bytes4 takeMatchAssetClass,
+        bytes4 leftDataType,
+        bytes4 rightDataType,
+        LibOrderData.GenericOrderData memory leftOrderData,
+        LibOrderData.GenericOrderData memory rightOrderData
+    ) internal view returns(LibDeal.DealData memory dealData) {
+        dealData.protocolFee = getProtocolFeeConditional(makeMatchAssetClass);
+        dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
+        dealData.maxFeesBasePoint = getMaxFee(
+            leftDataType,
+            rightDataType,
+            leftOrderData,
+            rightOrderData,
+            dealData.feeSide,
+            dealData.protocolFee
+        );
+    }
+
+    function getProtocolFeeConditional(bytes4 leftDataType) internal view returns(uint) {
+        if (leftDataType == LibOrderDataV3.V3_SELL || leftDataType == LibOrderDataV3.V3_BUY) {
+            return protocolFee;
+        }
+        return 0;
     }
 
     function doTransfersExternal(
-        LibDeal.DealSide memory left,
-        LibDeal.DealSide memory right,
-        LibFeeSide.FeeSide feeSide,
-        uint _protocolFee
+        LibOrder.Order memory left,
+        LibOrder.Order memory right
     ) external payable returns (uint totalLeftValue, uint totalRightValue) {
-        return doTransfers(left, right, feeSide, _protocolFee);
+        LibOrderData.GenericOrderData memory leftData = LibOrderData.parse(left);
+        LibOrderData.GenericOrderData memory rightData = LibOrderData.parse(right);
+
+        return doTransfers(
+            getDealSide(left, leftData), 
+            getDealSide(right, rightData), 
+            getDealData(
+                left.makeAsset.assetType.assetClass,
+                right.makeAsset.assetType.assetClass,
+                left.dataType,
+                right.dataType,
+                leftData,
+                rightData
+            )
+        );
     }
 
 }

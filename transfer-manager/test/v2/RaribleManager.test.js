@@ -62,7 +62,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		testing = await RaribleTransferManagerTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
-		await testing.init____(transferProxy.address, erc20TransferProxy.address, 300, community, royaltiesRegistry.address );
+		await testing.init____(transferProxy.address, erc20TransferProxy.address, protocolCommission, community, royaltiesRegistry.address );
 
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
@@ -94,13 +94,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 	describe("Check doTransfersExternal()", () => {
 
 		it("Transfer from ETH to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepareETH_1155Orders(10);
+			const { left, right} = await prepareETH_1155Orders(10);
       const ethSender = accounts[0];
-      await verifyBalanceChange(accounts[0], 103, () =>
-      	verifyBalanceChange(accounts[2], -97, () =>
-        	verifyBalanceChange(protocol, -6, () =>
-            testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
-          	  {value: 103, from: ethSender, gasPrice: 0}
+      await verifyBalanceChange(accounts[0], 100, () =>
+      	verifyBalanceChange(accounts[2], -100, () =>
+        	verifyBalanceChange(protocol, 0, () =>
+            testing.doTransfersExternal(left, right,
+          	  {value: 100, from: ethSender, gasPrice: 0}
           	)
           )
         )
@@ -115,16 +115,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+			return { left, right};
 		}
 
     it("Transfer from ERC721 to ERC721", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare721_721Orders()
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare721_721Orders()
+      
+      await testing.doTransfersExternal(left, right);
 			assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[2]);
 			assert.equal(await erc721.ownerOf(erc721TokenId0), accounts[1]);
 		})
@@ -137,23 +134,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			let data = await encDataV1([ [], []]);
 			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId0), 1), 1, 0, 0, ORDER_DATA_V1, data);
 			const right = Order(accounts[2], Asset(ERC721, enc(erc721.address, erc721TokenId0), 1), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, data);
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+			return { left, right};
 
 		}
 
     it("Transfer from ERC721 to ERC1155, (buyerFee3%, sallerFee3% = 6%) of ERC1155 transfer to community, orders dataType == V1", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare721_1155Orders(110)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare721_1155Orders(110)
+      
+      await testing.doTransfersExternal(left, right);
 
 			assert.equal(await erc721.balanceOf(accounts[1]), 0);
 			assert.equal(await erc721.balanceOf(accounts[2]), 1);
-			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 93);
-			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 1);
-			assert.equal(await erc1155.balanceOf(community, erc1155TokenId1), 6);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 96);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 4);
+			assert.equal(await erc1155.balanceOf(community, erc1155TokenId1), 0);
 		})
 
 		async function prepare721_1155Orders(t2Amount = 105) {
@@ -168,16 +162,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight]);
 			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataRight);
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+			return { left, right};
 		}
 
 		it("Transfer from ERC1155 to ERC1155: 2 to 10, 50% 50% for payouts", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare1155_1155Orders(2, 10);
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare1155_1155Orders(2, 10);
+      
+      await testing.doTransfersExternal(left, right);
 
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 98);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
@@ -199,18 +190,16 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			let encDataRight = await encDataV1([ [[accounts[4], 5000], [accounts[6], 5000]], []]);
 			const left = Order(accounts[1], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), t1Amount), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), t2Amount), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), t2Amount), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), t1Amount), 1, 0, 0, ORDER_DATA_V1, encDataRight);
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
 		}
 
 		it("rounding error Transfer from ERC1155 to ERC1155: 1 to 5, 50% 50% for payouts", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare1155_1155Orders(1, 5);
-      const ethSender = ZERO;
+			const { left, right} = await prepare1155_1155Orders(1, 5);
+      
 //      left.makeAsset.value = 1;
 //      left.takeAsset.value = 5;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+      await testing.doTransfersExternal(left, right);
 
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 99);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 0);
@@ -225,15 +214,15 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 		});
 
     it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare1155O_721rders(105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare1155O_721rders(105)
+      
+      await testing.doTransfersExternal(left, right);
 
 			assert.equal(await erc721.balanceOf(accounts[2]), 0);
 			assert.equal(await erc721.balanceOf(accounts[1]), 1);
-			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 97);
-			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 2);
-			assert.equal(await erc1155.balanceOf(protocol, erc1155TokenId1), 6);
+			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 100);
+			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 5);
+			assert.equal(await erc1155.balanceOf(protocol, erc1155TokenId1), 0);
 		})
 
 		async function prepare1155O_721rders(t2Amount = 105) {
@@ -244,22 +233,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await testing.setFeeReceiver(erc1155.address, protocol);
 			const left = Order(accounts[1], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right =Order(accounts[2], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
 		}
 
     it("Transfer from ERC20 to ERC1155, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare20_1155Orders(105, 10)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare20_1155Orders(105, 10)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[2]), 97);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[2]), 100);
 			assert.equal(await erc1155.balanceOf(accounts[1], erc1155TokenId1), 7);
 			assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 3);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare20_1155Orders(t1Amount = 105, t2Amount = 10) {
@@ -270,22 +257,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
 		}
 
 		it("Transfer from ERC1155 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare1155_20Orders(10, 105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare1155_20Orders(10, 105)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[3]), 97);
-			assert.equal(await t1.balanceOf(accounts[4]), 2);
+			assert.equal(await t1.balanceOf(accounts[3]), 100);
+			assert.equal(await t1.balanceOf(accounts[4]), 5);
 			assert.equal(await erc1155.balanceOf(accounts[3], erc1155TokenId2), 3);
 			assert.equal(await erc1155.balanceOf(accounts[4], erc1155TokenId2), 7);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare1155_20Orders(t1Amount = 10, t2Amount = 105) {
@@ -296,22 +281,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[3], Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[4], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 7), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
 		}
 
 		it("Transfer from ERC20 to ERC721, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare20_721Orders()
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare20_721Orders()
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[2]), 97);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[2]), 100);
 			assert.equal(await erc721.balanceOf(accounts[1]), 1);
 			assert.equal(await erc721.balanceOf(accounts[2]), 0);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare20_721Orders(t1Amount = 105) {
@@ -322,22 +305,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[2], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
 		}
 
 		it("Transfer from ERC721 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare721_20Orders()
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare721_20Orders()
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 97);
-			assert.equal(await t1.balanceOf(accounts[2]), 2);
+			assert.equal(await t1.balanceOf(accounts[1]), 100);
+			assert.equal(await t1.balanceOf(accounts[2]), 5);
 			assert.equal(await erc721.balanceOf(accounts[1]), 0);
 			assert.equal(await erc721.balanceOf(accounts[2]), 1);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare721_20Orders(t1Amount = 105) {
@@ -348,22 +329,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[1], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
 		}
 
 		it("Transfer from ERC20 to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare2Orders()
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare2Orders()
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[2]), 97);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[2]), 100);
 			assert.equal(await t2.balanceOf(accounts[1]), 200);
 			assert.equal(await t2.balanceOf(accounts[2]), 20);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
     async function prepare2Orders(t1Amount = 105, t2Amount = 220) {
     	await t1.mint(accounts[1], t1Amount);
@@ -373,10 +352,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
       const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC20, enc(t2.address), 200), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(ERC20, enc(t2.address), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees };
+      
+			return { left, right};
     }
 	})
 
@@ -399,27 +376,25 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
       const left = Order(accounts[1], Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
+      
 
       const ethSender = accounts[0];
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+      await testing.doTransfersExternal(left, right);
 
-      assert.equal(await t1.balanceOf(accounts[1]), 97); //get 97 because protocol down-fee
-      assert.equal(await t1.balanceOf(accounts[2]), 3);// accounts[1] pay 103 because protocol up-fee
+      assert.equal(await t1.balanceOf(accounts[1]), 100); //get 97 because protocol down-fee
+      assert.equal(await t1.balanceOf(accounts[2]), 6);// accounts[1] pay 103 because protocol up-fee
       assert.equal(await cryptoPunksMarket.balanceOf(accounts[1]), 0);//accounts[1] - not owner now
       assert.equal(await cryptoPunksMarket.balanceOf(accounts[2]), 1);//punk owner - accounts[2]
     })
 
     it("Transfer from Crypto-punk to ETH, protocol fee 6% ", async () => {
-    	const { left, right, leftSide, rightSide, matchFees } = await prepareETH_PunkOrders()
+    	const { left, right} = await prepareETH_PunkOrders()
       const ethSender = accounts[0];
-      await verifyBalanceChange(accounts[0], 103, () =>
-      	verifyBalanceChange(accounts[2], -97, () =>
-        	verifyBalanceChange(protocol, -6, () =>
-        	  testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
-            	{value: 103, from: ethSender, gasPrice: 0}
+      await verifyBalanceChange(accounts[0], 100, () =>
+      	verifyBalanceChange(accounts[2], -100, () =>
+        	verifyBalanceChange(protocol, 0, () =>
+        	  testing.doTransfersExternal(left, right,
+            	{value: 100, from: ethSender, gasPrice: 0}
             )
           )
         )
@@ -443,10 +418,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);
       const left = Order(accounts[2], Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
     	const right = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(id("CRYPTO_PUNKS"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-      return { left, right, leftSide, rightSide, matchFees };
+      
+      return { left, right};
     }
   })
 
@@ -465,15 +438,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 		  const left = Order(accounts[1], Asset(id("ERC721_LAZY"), encodedMintData, 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 		  const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("ERC721_LAZY"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+      
+      
+      await testing.doTransfersExternal(left, right);
 
 		  assert.equal(await erc721Test.ownerOf(1), accounts[2]);
-		  assert.equal(await t1.balanceOf(accounts[1]), 67);
-		  assert.equal(await t1.balanceOf(accounts[2]), 3);
+		  assert.equal(await t1.balanceOf(accounts[1]), 70);
+		  assert.equal(await t1.balanceOf(accounts[2]), 6);
 		  assert.equal(await t1.balanceOf(accounts[5]), 20);
 		  assert.equal(await t1.balanceOf(accounts[6]), 10);
 		})
@@ -491,15 +462,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 		  const left = Order(accounts[1], Asset(id("ERC1155_LAZY"), encodedMintData, 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 		  const right = Order(accounts[2], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(id("ERC1155_LAZY"), encodedMintData, 5), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+      
+      
+      await testing.doTransfersExternal(left, right);
 
 		  assert.equal(await erc1155Test.balanceOf(accounts[2], 1), 5);
-		  assert.equal(await t1.balanceOf(accounts[1]), 67);
-		  assert.equal(await t1.balanceOf(accounts[2]), 3);
+		  assert.equal(await t1.balanceOf(accounts[1]), 70);
+		  assert.equal(await t1.balanceOf(accounts[2]), 6);
 		  assert.equal(await t1.balanceOf(accounts[5]), 20);
 		  assert.equal(await t1.balanceOf(accounts[6]), 10);
 		})
@@ -514,17 +483,15 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
       const left = Order(accounts[1], Asset(ETH, "0x", 100), ZERO, Asset(id("ERC721_LAZY"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
 		  const right = Order(accounts[2], Asset(id("ERC721_LAZY"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
+      
       const ethSender = accounts[1];
-      await verifyBalanceChange(accounts[1], 103, () =>
-      	verifyBalanceChange(accounts[2], -67, () =>
+      await verifyBalanceChange(accounts[1], 100, () =>
+      	verifyBalanceChange(accounts[2], -70, () =>
       	  verifyBalanceChange(accounts[5], -20, () =>
       	    verifyBalanceChange(accounts[6], -10, () =>
-        	    verifyBalanceChange(protocol, -6, () =>
-        	      testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
-            	    {value: 103, from: ethSender, gasPrice: 0}
+        	    verifyBalanceChange(protocol, 0, () =>
+        	      testing.doTransfersExternal(left, right,
+            	    {value: 100, from: ethSender, gasPrice: 0}
             	  )
             	)
             )
@@ -544,17 +511,15 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
       const left = Order(accounts[1], Asset(ETH, "0x", 100), ZERO, Asset(id("ERC1155_LAZY"), encodedMintData, 5), 1, 0, 0, "0xffffffff", "0x");
 		  const right = Order(accounts[2], Asset(id("ERC1155_LAZY"), encodedMintData, 5), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
+      
       const ethSender = accounts[1];
-      await verifyBalanceChange(accounts[1], 103, () =>
-      	verifyBalanceChange(accounts[2], -67, () =>
+      await verifyBalanceChange(accounts[1], 100, () =>
+      	verifyBalanceChange(accounts[2], -70, () =>
       	  verifyBalanceChange(accounts[5], -20, () =>
       	    verifyBalanceChange(accounts[6], -10, () =>
-        	    verifyBalanceChange(protocol, -6, () =>
-        	      testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
-            	    {value: 103, from: ethSender, gasPrice: 0}
+        	    verifyBalanceChange(protocol, 0, () =>
+        	      testing.doTransfersExternal(left, right,
+            	    {value: 100, from: ethSender, gasPrice: 0}
             	  )
             	)
             )
@@ -569,17 +534,17 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
   describe("Check doTransfersExternal() with Royalties fees", () => {
 
 		it("Transfer from ERC721(RoyaltiesV1) to ERC20 , protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare721V1_20Orders(105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare721V1_20Orders(105)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 82);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[0]), 85);
 			assert.equal(await t1.balanceOf(accounts[2]), 10);
 			assert.equal(await t1.balanceOf(accounts[3]), 5);
 			assert.equal(await erc721V1.balanceOf(accounts[1]), 1);
 			assert.equal(await erc721V1.balanceOf(accounts[0]), 0);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare721V1_20Orders(t1Amount = 105) {
@@ -591,24 +556,22 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await royaltiesRegistry.setRoyaltiesByToken(erc721V1.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[0], Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 
 		it("Transfer from ERC20 to ERC721(RoyaltiesV2), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare20_721V2Orders(105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare20_721V2Orders(105)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 82);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[0]), 85);
 			assert.equal(await t1.balanceOf(accounts[2]), 10);
 			assert.equal(await t1.balanceOf(accounts[3]), 5);
 			assert.equal(await erc721V2.balanceOf(accounts[1]), 1);
 			assert.equal(await erc721V2.balanceOf(accounts[0]), 0);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare20_721V2Orders(t1Amount = 105) {
@@ -620,24 +583,22 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await royaltiesRegistry.setRoyaltiesByToken(erc721V2.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V2.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[0], Asset(ERC721, enc(erc721V2.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 
 		it("Transfer from ERC1155(RoyaltiesV1) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare1155V1_20Orders(8, 105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare1155V1_20Orders(8, 105)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 82);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[0]), 85);
 			assert.equal(await t1.balanceOf(accounts[2]), 10);
 			assert.equal(await t1.balanceOf(accounts[3]), 5);
 			assert.equal(await erc1155V1.balanceOf(accounts[1], erc1155TokenId1), 5);
 			assert.equal(await erc1155V1.balanceOf(accounts[0], erc1155TokenId1), 3);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare1155V1_20Orders(t1Amount = 10, t2Amount = 105) {
@@ -649,31 +610,29 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await royaltiesRegistry.setRoyaltiesByToken(erc1155V1.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[0], Asset(ERC1155, enc(erc1155V1.address, erc1155TokenId1), 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155V1.address, erc1155TokenId1), 5), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 
 		it("Transfer from ERC20 to ERC1155(RoyaltiesV2), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare20_1155V2Orders(105, 8)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare20_1155V2Orders(105, 8)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 82);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[0]), 85);
 			assert.equal(await t1.balanceOf(accounts[2]), 10);
 			assert.equal(await t1.balanceOf(accounts[3]), 5);
 			assert.equal(await erc1155V2.balanceOf(accounts[1], erc1155TokenId1), 6);
 			assert.equal(await erc1155V2.balanceOf(accounts[0], erc1155TokenId1), 2);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		it("Transfer from ERC20 to ERC1155(RoyaltiesV2), royalties are too high", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare20_1155V2Orders(105, 8, 2000, 3001)
-      const ethSender = ZERO;
+			const { left, right} = await prepare20_1155V2Orders(105, 8, 2000, 3001)
+      
 			await expectThrow(
-        testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300)
+        testing.doTransfersExternal(left, right)
 			);
 		})
 
@@ -686,22 +645,20 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await royaltiesRegistry.setRoyaltiesByToken(erc1155V2.address, [[accounts[2], account2Royalty], [accounts[3], account3Royalty]]); //set royalties by token
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 6), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[0], Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 6), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 
 		it("Transfer from ETH to ERC1155V2, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepareETH_1155V2Orders(10)
+			const { left, right} = await prepareETH_1155V2Orders(10)
       const ethSender = accounts[0];
-      	await verifyBalanceChange(accounts[0], 103, () =>
-        	verifyBalanceChange(accounts[1], -82, () =>
+      	await verifyBalanceChange(accounts[0], 100, () =>
+        	verifyBalanceChange(accounts[1], -85, () =>
         		verifyBalanceChange(accounts[2], -10, () =>
         			verifyBalanceChange(accounts[3], -5, () =>
-          			verifyBalanceChange(protocol, -6, () =>
-          			  testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300,
-              			{value: 103, from: ethSender, gasPrice: 0}
+          			verifyBalanceChange(protocol, 0, () =>
+          			  testing.doTransfersExternal(left, right,
+              			{value: 100, from: ethSender, gasPrice: 0}
               		)
         				)
         			)
@@ -718,24 +675,22 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 			await royaltiesRegistry.setRoyaltiesByToken(erc1155V2.address, [[accounts[2], 1000], [accounts[3], 500]]); //set royalties by token
 			const left = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 7), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 
 		it("Transfer from ERC20 to ERC721(RoyaltiesV1 With Error), protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare20_721V1ErOrders(105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare20_721V1ErOrders(105)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 97);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[0]), 100);
 			assert.equal(await t1.balanceOf(accounts[2]), 0);
 			assert.equal(await t1.balanceOf(accounts[3]), 0);
 			assert.equal(await erc721V1_Error.balanceOf(accounts[1]), 1);
 			assert.equal(await erc721V1_Error.balanceOf(accounts[0]), 0);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare20_721V1ErOrders(t1Amount = 105) {
@@ -746,24 +701,22 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC721, enc(erc721V1_Error.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[0], Asset(ERC721, enc(erc721V1_Error.address, erc721TokenId1), 1), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 
 		it("Transfer from ERC1155(RoyaltiesV2 With Error) to ERC20, protocol fee 6% (buyerFee3%, sallerFee3%)", async () => {
-			const { left, right, leftSide, rightSide, matchFees } = await prepare1155V2_20ErOrders(12, 105)
-      const ethSender = ZERO;
-      await testing.doTransfersExternal(leftSide, rightSide, matchFees.feeSide, 300);
+			const { left, right} = await prepare1155V2_20ErOrders(12, 105)
+      
+      await testing.doTransfersExternal(left, right);
 
-			assert.equal(await t1.balanceOf(accounts[1]), 2);
-			assert.equal(await t1.balanceOf(accounts[0]), 97);
+			assert.equal(await t1.balanceOf(accounts[1]), 5);
+			assert.equal(await t1.balanceOf(accounts[0]), 100);
 			assert.equal(await t1.balanceOf(accounts[2]), 0);
 			assert.equal(await t1.balanceOf(accounts[3]), 0);
 			assert.equal(await erc1155V2_Error.balanceOf(accounts[1], erc1155TokenId1), 5);
 			assert.equal(await erc1155V2_Error.balanceOf(accounts[0], erc1155TokenId1), 7);
-			assert.equal(await t1.balanceOf(protocol), 6);
+			assert.equal(await t1.balanceOf(protocol), 0);
 		})
 
 		async function prepare1155V2_20ErOrders(t1Amount = 12, t2Amount = 105) {
@@ -774,10 +727,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
 			const left = Order(accounts[0], Asset(ERC1155, enc(erc1155V2_Error.address, erc1155TokenId1), 5), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
 			const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155V2_Error.address, erc1155TokenId1), 5), 1, 0, 0, "0xffffffff", "0x");
-      const leftSide = await testing.getDealSide.call(left);
-      const rightSide = await testing.getDealSide.call(right);
-      const matchFees = await testing.getFeeSide.call(left, right);
-			return { left, right, leftSide, rightSide, matchFees }
+      
+			return { left, right}
 		}
 	})
 

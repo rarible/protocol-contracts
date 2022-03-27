@@ -4,6 +4,7 @@ pragma solidity 0.7.6;
 
 import "./LibMath.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "./LibOrderDataV3.sol";
 import "./LibOrderDataV2.sol";
 import "./LibOrderDataV1.sol";
 
@@ -46,7 +47,7 @@ library LibOrder {
 
     function hashKey(Order memory order) internal pure returns (bytes32) {
         //order.data is in hash for V2 orders
-        if (order.dataType == LibOrderDataV2.V2){
+        if (order.dataType == LibOrderDataV2.V2 || order.dataType == LibOrderDataV3.V3_SELL || order.dataType == LibOrderDataV3.V3_BUY){
             return keccak256(abi.encode(
                     order.maker,
                     LibAsset.hash(order.makeAsset.assetType),
