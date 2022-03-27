@@ -45,8 +45,10 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
     ) external {
         //todo: check if token contract supports ERC721 interface?
 
+        uint _protocolFee = protocolFee;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
+        require(getValueFromData(aucData.originFee) + _protocolFee <= MAX_FEE_BASE_POINT, "wrong fees");
 
         uint currentAuctionId = getNextAndIncrementAuctionId();
         address payable sender = _msgSender();
@@ -59,7 +61,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
             sender,
             minimalPrice,
             payable(address(0)),
-            uint64(protocolFee),
+            uint64(_protocolFee),
             dataType,
             data
         );
@@ -85,13 +87,10 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         uint96 endTime = currentAuction.endTime;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         uint bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
-        uint totalAmount = calculateTotalAmount(
-            bid.amount, 
-            currentAuction.protocolFee, 
-            getOriginFee(bidOriginFee)
-        );
+        require(getValueFromData(aucData.originFee) + getValueFromData(bidOriginFee) + currentAuction.protocolFee <= MAX_FEE_BASE_POINT, "wrong fees");
+
         if (currentAuction.buyAsset == address(0)) {
-            checkEthReturnChange(totalAmount, newBuyer);
+            checkEthReturnChange(bid.amount, newBuyer);
         }
         checkAuctionInProgress(currentAuction.seller, currentAuction.endTime, aucData.startTime);
         if (buyOutVerify(aucData, newAmount)) {
@@ -122,12 +121,11 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         address proxy = _getProxy(currentAuction.buyAsset);
         reserveBid(
             currentAuction.buyAsset,
-            currentAuction.protocolFee,
             currentAuction.buyer,
             newBuyer,
             currentAuction.lastBid,
             proxy,
-            totalAmount
+            bid.amount
         );
         auctions[_auctionId].lastBid = bid;
         auctions[_auctionId].buyer = newBuyer;
@@ -190,8 +188,11 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 _getProxy(currentAuction.buyAsset),
                 address(this)
             ), 
-            LibFeeSide.FeeSide.RIGHT, 
-            currentAuction.protocolFee
+            LibDeal.DealData(
+                currentAuction.protocolFee,
+                MAX_FEE_BASE_POINT,
+                LibFeeSide.FeeSide.RIGHT
+            )
         );
         deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);
     }
@@ -233,16 +234,14 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
         Auction memory currentAuction = auctions[_auctionId];
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(currentAuction.data, currentAuction.dataType);
         checkAuctionInProgress(currentAuction.seller, currentAuction.endTime, aucData.startTime);
-        require(buyOutVerify(aucData, bid.amount), "not enough for buyout");
         uint bidOriginFee = LibBidDataV1.parse(bid.data, bid.dataType).originFee;
-        uint totalAmount = calculateTotalAmount(
-            bid.amount, 
-            currentAuction.protocolFee, 
-            getOriginFee(bidOriginFee)
-        );
+
+        require(buyOutVerify(aucData, bid.amount), "not enough for buyout");
+        require(getValueFromData(aucData.originFee) + getValueFromData(bidOriginFee) + currentAuction.protocolFee <= MAX_FEE_BASE_POINT, "wrong fees");
+        
         address sender = _msgSender();
         if (currentAuction.buyAsset == address(0)) {
-            checkEthReturnChange(totalAmount, sender);
+            checkEthReturnChange(bid.amount, sender);
         }
         _buyOut(
             currentAuction,
@@ -268,7 +267,6 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
             currentAuction.lastBid,
             currentAuction.buyAsset,
             currentAuction.buyer,
-            currentAuction.protocolFee,
             proxy
         );
 
@@ -304,8 +302,11 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 proxy,
                 from
             ), 
-            LibFeeSide.FeeSide.RIGHT, 
-            currentAuction.protocolFee
+            LibDeal.DealData(
+                currentAuction.protocolFee,
+                MAX_FEE_BASE_POINT,
+                LibFeeSide.FeeSide.RIGHT
+            )
         );
 
         deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);

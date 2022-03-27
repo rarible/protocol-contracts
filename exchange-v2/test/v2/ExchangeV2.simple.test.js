@@ -7,7 +7,6 @@ const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 const CryptoPunksMarket = artifacts.require("CryptoPunksMarket.sol");
 const PunkTransferProxy = artifacts.require("PunkTransferProxyTest.sol");
-const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
 
 const { Order, Asset, sign } = require("../order");

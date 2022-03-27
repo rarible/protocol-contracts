@@ -50,7 +50,7 @@ contract("AuctionHouse721", accounts => {
       const sellAsset = await prepareERC721();
       const buyAssetType = await prepareETH();
 
-      let auctionFees = await OriginFee(accounts[3], 1000);
+      let auctionFees = await OriginFee(accounts[3], 100);
 
       //checking default minimal duration
       assert.equal(await testAuctionHouse.minimalDuration(), 900, "default minimal duration")
@@ -115,7 +115,7 @@ contract("AuctionHouse721", accounts => {
       const sellAsset = await prepareERC721();
       const buyAssetType = await prepareETH();
 
-      let auctionFees = await OriginFee(accounts[3], 1000);
+      let auctionFees = await OriginFee(accounts[3], 700);
       let dataV1 = await encDataV1([ auctionFees, 1000, 0, 100]); //originFees, duration, startTime, buyOutPrice
 
       let resultStartAuction = await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller });
@@ -145,6 +145,7 @@ contract("AuctionHouse721", accounts => {
 
     })
     
+    //todo: do we need such tests?
     /*
     it("should not create auction to sell ERC20 or ETH", async () => {
       const buyAssetType = await prepareETH()
@@ -172,11 +173,11 @@ contract("AuctionHouse721", accounts => {
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller });
       //bid initialize
       let auctionId = 1;
-      let bidFees = await OriginFee(accounts[6], 5000);
+      let bidFees = await OriginFee(accounts[6], 200);
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       //let bid = { amount: 100, dataType: V1, data: bidDataV1 };
       await testAuctionHouse.putBid(auctionId, Bid( 100, V1, bidDataV1 ), { from: buyer });
-      assert.equal((await erc20Token.balanceOf(testAuctionHouse.address)).toString(), "153");
+      assert.equal((await erc20Token.balanceOf(testAuctionHouse.address)).toString(), "100");
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address);
 
       await prepareERC20(accounts[3], 1000, false)
@@ -198,9 +199,9 @@ contract("AuctionHouse721", accounts => {
       });
       assert.equal(id, 1, "id from event")
 
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 306);
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 200);
       assert.equal(await erc20Token.balanceOf(buyer), 1000);
-      assert.equal(await erc20Token.balanceOf(accounts[3]), 694);
+      assert.equal(await erc20Token.balanceOf(accounts[3]), 800);
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address);
 
     })
@@ -211,7 +212,7 @@ contract("AuctionHouse721", accounts => {
 
       assert.equal(await erc721.ownerOf(erc721TokenId1), seller); // after mint owner is testAuctionHouse
 
-      let auctionFees = await OriginFee(accounts[3], 100);
+      let auctionFees = await OriginFee();
       let dataV1 = await encDataV1([ auctionFees, 1000, 0, 18]); //originFees, duration, startTime, buyOutPrice
 
       const txStart = await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller });
@@ -231,23 +232,23 @@ contract("AuctionHouse721", accounts => {
       });
       assert.equal(id, 1, "id from event")
 
-      const setProtocolFeeTx = await testAuctionHouse.setProtocolFee(2000)
+      const setProtocolFeeTx = await testAuctionHouse.setProtocolFee(500)
       truffleAssert.eventEmitted(setProtocolFeeTx, 'ProtocolFeeChanged', (ev) => {
         assert.equal(ev.oldValue, 300, "old protocolFee from event")
-        assert.equal(ev.newValue, 2000, "new protocolFee from event")
+        assert.equal(ev.newValue, 500, "new protocolFee from event")
         return true;
       });
 
       //bid initialize
       let auctionId = 1;
-      let bidFees = await OriginFee(accounts[6], 2000);
+      let bidFees = await OriginFee(accounts[6], 400);
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       let bid = { amount: 10, dataType: V1, data: bidDataV1 };
       await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 12);
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 10);
 
       await prepareERC20(accounts[7], 100, false)
-      bid = { amount: 20, dataType: V1, data: bidDataV1 };
+      bid = { amount: 100, dataType: V1, data: bidDataV1 };
       const txBuyOut = await testAuctionHouse.putBid(auctionId, bid, { from: accounts[7] });
       console.log("txBuyOut", txBuyOut.receipt.gasUsed)
 
@@ -264,20 +265,21 @@ contract("AuctionHouse721", accounts => {
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
       assert.equal(await erc20Token.balanceOf(buyer), 100);
       assert.equal(await erc20Token.balanceOf(accounts[6]), 4);
-      assert.equal(await erc20Token.balanceOf(accounts[7]), 76);
-      assert.equal(await erc20Token.balanceOf(seller), 19);
-      assert.equal(await erc20Token.balanceOf(protocol), 1);
+      assert.equal(await erc20Token.balanceOf(accounts[7]), 0);
+      assert.equal(await erc20Token.balanceOf(seller), 93);
+      assert.equal(await erc20Token.balanceOf(protocol), 3);
       assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[7]);
 
       await erc721.setApprovalForAll(transferProxy.address, true, { from: accounts[7] });
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: accounts[7] });
+      await erc20Token.approve(erc20TransferProxy.address, 100, { from: buyer });
       await testAuctionHouse.putBid(2, bid, { from: buyer });
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer);
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
-      assert.equal(await erc20Token.balanceOf(buyer), 72);
-      assert.equal(await erc20Token.balanceOf(accounts[7]), 92);
+      assert.equal(await erc20Token.balanceOf(buyer), 0);
+      assert.equal(await erc20Token.balanceOf(accounts[7]), 91);
       assert.equal(await erc20Token.balanceOf(accounts[6]), 8);
-      assert.equal(await erc20Token.balanceOf(protocol), 9);
+      assert.equal(await erc20Token.balanceOf(protocol), 8);
     })
 
     it("should create auction:721<->ETH, buyout with value = 100", async () => {
@@ -298,10 +300,10 @@ contract("AuctionHouse721", accounts => {
       let bidFees = await OriginFee();
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await verifyBalanceChange(buyer, 103, async () =>
+      await verifyBalanceChange(buyer, 100, async () =>
         verifyBalanceChange(testAuctionHouse.address, 0, async () =>
           verifyBalanceChange(seller, -87, async () =>
-            verifyBalanceChange(protocol, -6, async () =>
+            verifyBalanceChange(protocol, -3, async () =>
               verifyBalanceChange(community, -10, async () =>
                 testAuctionHouse.putBid(auctionId, bid, { from: buyer, value: 200, gasPrice: 0 })
               )
@@ -317,7 +319,7 @@ contract("AuctionHouse721", accounts => {
     it("No bid: 721<->20, buyOut works, good!", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20(buyer, 200)
-      let auctionFees = await OriginFee(accounts[3], 1000);
+      let auctionFees = await OriginFee(accounts[3], 700);
 
       let dataV1 = await encDataV1([ auctionFees, 1000, 0, 100]); //originFees, duration, startTime, buyOutPrice
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller });
@@ -329,16 +331,16 @@ contract("AuctionHouse721", accounts => {
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
       await testAuctionHouse.buyOut(auctionId, bid, { from: buyer });
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer); // after payOut owner is mr. payOut
-      assert.equal(await erc20Token.balanceOf(seller), 87);
-      assert.equal(await erc20Token.balanceOf(accounts[3]), 10);
-      assert.equal(await erc20Token.balanceOf(protocol), 6);
+      assert.equal(await erc20Token.balanceOf(seller), 90);
+      assert.equal(await erc20Token.balanceOf(accounts[3]), 7);
+      assert.equal(await erc20Token.balanceOf(protocol), 3);
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
     })
 
     it("Put bid:721<->20, buyOut works, good! ", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20()
-      let auctionFees = await OriginFee(accounts[3], 1000);
+      let auctionFees = await OriginFee(accounts[3], 700);
       let dataV1 = await encDataV1([ auctionFees, 1000, 0, 100]); //originFees, duration, startTime, buyOutPrice
 
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller });
@@ -349,18 +351,18 @@ contract("AuctionHouse721", accounts => {
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       let bid = { amount: 95, dataType: V1, data: bidDataV1 };
       let resultPutBid = await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 97);
-      assert.equal(await erc20Token.balanceOf(buyer), 3);
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 95);
+      assert.equal(await erc20Token.balanceOf(buyer), 5);
       
       await prepareERC20(accounts[4], 1000, false)
       bid = { amount: 100, dataType: V1, data: bidDataV1 };
       let resultPayOutAuction = await testAuctionHouse.buyOut(auctionId, bid, { from: accounts[4] }); //accounts[4] buyOut
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
-      assert.equal(await erc20Token.balanceOf(seller), 87);  //NFTAuctionInitiator get buyOut value - fee protocol - fee
-      assert.equal(await erc20Token.balanceOf(accounts[3]), 10);  //to fee
-      assert.equal(await erc20Token.balanceOf(protocol), 6);  //to protocol
+      assert.equal(await erc20Token.balanceOf(seller), 90);  //NFTAuctionInitiator get buyOut value - fee protocol - fee
+      assert.equal(await erc20Token.balanceOf(accounts[3]), 7);  //to fee
+      assert.equal(await erc20Token.balanceOf(protocol), 3);  //to protocol
       assert.equal(await erc20Token.balanceOf(buyer), 100); //first pitBidder, return all ERC20
-      assert.equal(await erc20Token.balanceOf(accounts[4]), 897);
+      assert.equal(await erc20Token.balanceOf(accounts[4]), 900);
       assert.equal(await erc721.ownerOf(erc721TokenId1), accounts[4]); // after mint owner is accounts[4]
       //
     })
@@ -368,7 +370,7 @@ contract("AuctionHouse721", accounts => {
     it("No bid:721<->ETH, payOut works, good!", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareETH()
-      let auctionFees = await OriginFee(accounts[3], 1000);
+      let auctionFees = await OriginFee(accounts[3], 700);
       let dataV1 = await encDataV1([ auctionFees, 1000, 0, 100]); //originFees, duration, startTime, buyOutPrice
 
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller });
@@ -377,10 +379,10 @@ contract("AuctionHouse721", accounts => {
       let bidFees = await OriginFee();
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await verifyBalanceChange(buyer, 103, async () =>
-        verifyBalanceChange(seller, -87, async () =>
-          verifyBalanceChange(accounts[3], -10, async () =>
-            verifyBalanceChange(protocol, -6, async () =>
+      await verifyBalanceChange(buyer, 100, async () =>
+        verifyBalanceChange(seller, -90, async () =>
+          verifyBalanceChange(accounts[3], -7, async () =>
+            verifyBalanceChange(protocol, -3, async () =>
               testAuctionHouse.buyOut(auctionId, bid, { from: buyer, value: 200, gasPrice: 0 })
             )
           )
@@ -592,30 +594,32 @@ contract("AuctionHouse721", accounts => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20()
       let auctionFees = await OriginFee();
-      let dataV1 = await encDataV1([ auctionFees, 1000, 0, 18]); //originFees, duration, startTime, buyOutPrice
+      let dataV1 = await encDataV1([ auctionFees, 1000, 0, 180]); //originFees, duration, startTime, buyOutPrice
 
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller });
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
       //bid initialize
       let auctionId = 1;
-      let bidFees = await OriginFee(accounts[6], 4000);
+      let bidFees = await OriginFee(accounts[6], 600);
       let bidDataV1 = await bidEncDataV1([ bidFees]);
 
-      let bid = { amount: 10, dataType: V1, data: bidDataV1 };
+      let bid = { amount: 100, dataType: V1, data: bidDataV1 };
       await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 14);
-      assert.equal(await erc20Token.balanceOf(buyer), 86);
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 100);
+      assert.equal(await erc20Token.balanceOf(buyer), 0);
       await increaseTime(1075); //increase ~18 min
       await testAuctionHouse.finishAuction(auctionId, { from: accounts[0] });
       assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 0);
-      assert.equal(await erc20Token.balanceOf(seller), 10);
+      assert.equal(await erc20Token.balanceOf(seller), 91);
+      assert.equal(await erc20Token.balanceOf(protocol), 3);
+      assert.equal(await erc20Token.balanceOf(accounts[6]), 6);
       assert.equal(await erc721.ownerOf(erc721TokenId1), buyer); // after mint owner is testAuctionHouse
     })
 
     it("721<->ETH", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareETH()
-      let auctionFees = await OriginFee(accounts[6], 3000);
+      let auctionFees = await OriginFee(accounts[6], 300);
 
       let dataV1 = await encDataV1([ auctionFees, 1000, 0, 180]); //originFees, duration, startTime, buyOutPrice
 
@@ -626,16 +630,16 @@ contract("AuctionHouse721", accounts => {
       let bidFees = await OriginFee();
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await verifyBalanceChange(buyer, 103, async () =>
-        verifyBalanceChange(testAuctionHouse.address, -103, async () =>
+      await verifyBalanceChange(buyer, 100, async () =>
+        verifyBalanceChange(testAuctionHouse.address, -100, async () =>
           testAuctionHouse.putBid(auctionId, bid, { from: buyer, value: 150, gasPrice: 0 })
         )
       )
       await increaseTime(1075);
-      await verifyBalanceChange(testAuctionHouse.address, 103, async () =>
-        verifyBalanceChange(seller, -67, async () =>
-          verifyBalanceChange(accounts[6], -30, async () =>
-            verifyBalanceChange(protocol, -6, async () =>
+      await verifyBalanceChange(testAuctionHouse.address, 100, async () =>
+        verifyBalanceChange(seller, -94, async () =>
+          verifyBalanceChange(accounts[6], -3, async () =>
+            verifyBalanceChange(protocol, -3, async () =>
               testAuctionHouse.finishAuction(auctionId, { from: accounts[0] })
             )
           )
@@ -673,12 +677,12 @@ contract("AuctionHouse721", accounts => {
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
       //bid initialize
       let auctionId = 1;
-      let bidFees = await OriginFee(accounts[6], 4000);
+      let bidFees = await OriginFee(accounts[6], 200);
       let bidDataV1 = await bidEncDataV1([ bidFees]);
       let bid = { amount: 10, dataType: V1, data: bidDataV1 };
       await testAuctionHouse.putBid(auctionId, bid, { from: buyer });
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 14);
-      assert.equal(await erc20Token.balanceOf(buyer), 86);
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 10);
+      assert.equal(await erc20Token.balanceOf(buyer), 90);
 
       await truffleAssert.fails(
         testAuctionHouse.cancel(auctionId, { from: seller }),
@@ -686,7 +690,7 @@ contract("AuctionHouse721", accounts => {
         "can't cancel auction with bid"
       )
 
-      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 14);
+      assert.equal(await erc20Token.balanceOf(testAuctionHouse.address), 10);
       assert.equal(await erc20Token.balanceOf(seller), 0);
       assert.equal(await erc721.ownerOf(erc721TokenId1), testAuctionHouse.address); // after mint owner is testAuctionHouse
     })
@@ -867,6 +871,59 @@ contract("AuctionHouse721", accounts => {
         "nothing to withdraw"
       )
 
+    })
+
+    it("MAX_FEE_BASE_POINT works correctly, auctions/bids with bigger fees can't be created", async () => {
+      const sellAsset = await prepareERC721()
+      const buyAssetType = await prepareERC20(buyer, 1000)
+
+      //trying to create auction with 10% + 3% fees
+      let dataV1 = await encDataV1([ await OriginFee(accounts[5], 1000), 1000, 0, 101]); //originFees, duration, startTime, buyOutPrice
+      await truffleAssert.fails(
+        testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller }),
+        truffleAssert.ErrorType.REVERT,
+        "wrong fees"
+      )
+
+      //trying to create auction with 8% + 3% fees
+      dataV1 = await encDataV1([ await OriginFee(accounts[5], 800), 1000, 0, 101]); //originFees, duration, startTime, buyOutPrice
+      await truffleAssert.fails(
+        testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller }),
+        truffleAssert.ErrorType.REVERT,
+        "wrong fees"
+      )
+
+      await testAuctionHouse.setProtocolFee(0) 
+
+      // creating auction with 8% + 0% fees works
+      await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller });
+
+      const auctionId1 = 1;
+      // putting bid with 8% auc fees and 3% bid fees doesn't work
+      let bid = { amount: 100, dataType: V1, data: (await bidEncDataV1([ await OriginFee(accounts[6], 300)])) };
+      await truffleAssert.fails(
+        testAuctionHouse.putBid(auctionId1, bid, { from: buyer }),
+        truffleAssert.ErrorType.REVERT,
+        "wrong fees"
+      )
+
+      // putting bid with 8% auc fees and 2% bid fees works
+      bid = { amount: 100, dataType: V1, data: (await bidEncDataV1([ await OriginFee(accounts[6], 200)])) };
+      await testAuctionHouse.putBid(auctionId1, bid, { from: buyer });
+
+      // buyout with 8% + 3% fees doesn't work
+      bid = { amount: 120, dataType: V1, data: (await bidEncDataV1([ await OriginFee(accounts[6], 300)])) };
+      await truffleAssert.fails(
+        testAuctionHouse.buyOut(auctionId1, bid, { from: buyer }),
+        truffleAssert.ErrorType.REVERT,
+        "wrong fees"
+      )
+
+      // buyOut with 8% auc fees and 2% bid fees works
+      bid = { amount: 120, dataType: V1, data: (await bidEncDataV1([ await OriginFee(accounts[6], 200)])) };
+      await testAuctionHouse.buyOut(auctionId1, bid, { from: buyer });
+
+      assert.equal(await erc721.ownerOf(erc721TokenId1), buyer, "nft went to buyer");
     })
 
   })
