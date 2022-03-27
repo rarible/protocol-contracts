@@ -60,19 +60,44 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
 
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
-        if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
+        ethRestBack(makeMatch.assetClass, takeMatch.assetClass, totalMakeValue, totalTakeValue);
+        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
+    }
+
+    /*In this method orderRight is a payable Order always */
+    function matchAndTransferBulk(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal returns (uint) {
+        (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
+        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
+        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
+
+        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
+        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
+
+        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
+
+        (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
+        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
+
+        if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+            return totalTakeValue;
+        } else {
+            return 0;
+        }
+    }
+
+    function ethRestBack(bytes4 makeMatchAssetClass, bytes4 takeMatchAssetClass, uint totalMakeValue, uint totalTakeValue) internal {
+        if (makeMatchAssetClass == LibAsset.ETH_ASSET_CLASS) {
+            require(takeMatchAssetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
             if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
+                address(_msgSender()).transferEth(msg.value.sub(totalMakeValue));
             }
-        } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
+        } else if (takeMatchAssetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
+                address(_msgSender()).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
     }
 
     function getFillSetNew(
