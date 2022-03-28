@@ -4,10 +4,20 @@ const ERC1155LazyMintTransferProxy = artifacts.require('ERC1155LazyMintTransferP
 const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 
-const { ERC721_LAZY, ERC1155_LAZY } = require("./config.js")
+const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
-module.exports = async function (deployer) {
-  const exchangeV2 = (await ExchangeV2.deployed());
+const { ERC721_LAZY, ERC1155_LAZY, getSettings } = require("./config.js")
+
+module.exports = async function (deployer, network) {
+
+  const { meta_support } = getSettings(network);
+
+  let exchangeV2;
+  if (!!meta_support) {
+    exchangeV2 = await ExchangeMetaV2.deployed();
+  } else {
+    exchangeV2 = await ExchangeV2.deployed();
+  }
 
   //add exchangeV2 as operator to proxies
   const transferProxy = await TransferProxy.deployed();

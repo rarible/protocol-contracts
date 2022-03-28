@@ -2,14 +2,12 @@
 
 pragma solidity >=0.6.0 <0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract MinterAccessControl is Initializable, OwnableUpgradeable {
+abstract contract MinterAccessControl is OwnableUpgradeable {
     mapping(address => bool) private _minters;
     
-    event MinterAdded(address indexed operator, address indexed minter);
-    event MinterRemoved(address indexed operator, address indexed minter);
+    event MinterStatusChanged(address indexed minter, bool indexed status);
 
     function __MinterAccessControl_init() internal initializer {
         __Ownable_init_unchained();
@@ -23,18 +21,16 @@ abstract contract MinterAccessControl is Initializable, OwnableUpgradeable {
      * @dev Add `_minter` to the list of allowed minters.
      */
     function addMinter(address _minter) external onlyOwner {
-        require(!_minters[_minter], 'Already minter');
         _minters[_minter] = true;
-        emit MinterAdded(_msgSender(), _minter);
+        emit MinterStatusChanged(_minter, true);
     }
 
     /**
      * @dev Revoke `_minter` from the list of allowed minters.
      */
     function removeMinter(address _minter) external onlyOwner {
-        require(_minters[_minter], 'Not minter');
         _minters[_minter] = false;
-        emit MinterRemoved(_msgSender(), _minter);
+        emit MinterStatusChanged(_minter, false);
     }
 
     /**
@@ -44,5 +40,5 @@ abstract contract MinterAccessControl is Initializable, OwnableUpgradeable {
         return _minters[account];
     }
 
-    uint256[9] private __gap;
+    uint256[50] private __gap;
 }
