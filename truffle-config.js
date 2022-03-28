@@ -64,6 +64,7 @@ module.exports = {
     rinkeby2: createNetwork("rinkeby2"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
+    polygon_dev: createNetwork("polygon_dev"),
     dev: createNetwork("dev")
   },
 

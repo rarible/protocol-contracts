@@ -40,13 +40,16 @@ contract("ERC721Rarible", accounts => {
     return list.map(account => ({ account, value }))
   }
 
-  beforeEach(async () => {
-    token = await Testing.new();
+  before(async () => {
     proxyLazy = await ERC721LazyMintTransferProxy.new();
     transferProxy = await TransferProxyTest.new();
+    erc1271 = await ERC1271.new();
+  })
+
+  beforeEach(async () => {
+    token = await Testing.new();
     await token.__ERC721Rarible_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", whiteListProxy, proxyLazy.address);
     await token.transferOwnership(tokenOwner);
-    erc1271 = await ERC1271.new();
   });
 
   describe("Burn before ERC721Rarible ()", () => {
@@ -194,6 +197,25 @@ contract("ERC721Rarible", accounts => {
     assert.equal(await token.isApprovedForAll(accounts[1], proxyLazy.address), true);
   });
 
+  it("set new BaseUri, check only owner, check emit event", async () => {
+    let olBaseUri = await token.baseURI();
+    const newBusaUriSet = "https://ipfs.rarible-the-best-in-the-World.com"
+    await expectThrow(
+      token.setBaseURI(newBusaUriSet)//caller is not the owner
+    );
+    let tx = await token.setBaseURI(newBusaUriSet, { from: tokenOwner })//caller is owner
+    let newBaseUri = await token.baseURI();
+    assert.equal(newBaseUri, newBusaUriSet);
+    assert.notEqual(newBaseUri, olBaseUri);
+
+    let newBaseUriFromEvent;
+    truffleAssert.eventEmitted(tx, 'BaseUriChanged', (ev) => {
+     	newBaseUriFromEvent = ev.newBaseURI;
+      return true;
+    });
+    assert.equal(newBaseUri, newBaseUriFromEvent);
+  });
+  
   it("check Royalties IERC2981, with 3 royaltiesBeneficiary ", async () => {
     let testRoyaltyV2981Calculate = await TestRoyaltyV2981Calculate.new();
 

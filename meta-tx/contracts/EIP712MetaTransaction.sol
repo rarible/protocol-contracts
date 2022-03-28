@@ -61,7 +61,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
     function executeMetaTransaction(address userAddress,
         bytes memory functionSignature, bytes32 sigR, bytes32 sigS, uint8 sigV) public payable returns (bytes memory) {
         bytes4 destinationFunctionSig = convertBytesToBytes4(functionSignature);
-        require(destinationFunctionSig != msg.sig, "functionSignature can not be of executeMetaTransaction method");
+        require(destinationFunctionSig != msg.sig, "Wrong functionSignature");
         MetaTransaction memory metaTx = MetaTransaction({
         nonce : nonces[userAddress],
         from : userAddress,
