@@ -1,6 +1,7 @@
 const CryptoPunksMarket = artifacts.require('CryptoPunksMarket');
 const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 const ExchangeV2 = artifacts.require('ExchangeV2');
+const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
 const { getSettings } = require("./config.js")
 const { CRYPTO_PUNKS } = require("@rarible/exchange-v2/test/assets.js");
@@ -26,7 +27,12 @@ module.exports = async function (deployer, network) {
   console.log("deployed punkTransferProxy: ", punkTransferProxy.address);
   await punkTransferProxy.__OperatorRole_init({ gas: 200000 });
 
-  const exchangeV2 = await ExchangeV2.deployed();
+  let exchangeV2;
+  if (!!settings.meta_support) {
+    exchangeV2 = await ExchangeMetaV2.deployed();
+  } else {
+    exchangeV2 = await ExchangeV2.deployed();
+  }
 
   await punkTransferProxy.addOperator(exchangeV2.address);
 

@@ -3,6 +3,7 @@ const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.s
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require('./mint');
+const truffleAssert = require('truffle-assertions');
 
 contract("ERC721RaribleUser minimal", accounts => {
 
@@ -42,6 +43,25 @@ contract("ERC721RaribleUser minimal", accounts => {
   	assert.equal(await token.supportsInterface("0x780e9d63"), true);
   });
 
+  it("set new BaseUri, check only owner, check emit event", async () => {
+    let olBaseUri = await token.baseURI();
+    const newBusaUriSet = "https://ipfs.rarible-the-best-in-the-World.com"
+    await expectThrow(
+      token.setBaseURI(newBusaUriSet)//caller is not the owner
+    );
+    let tx = await token.setBaseURI(newBusaUriSet, { from: tokenOwner })//caller is owner
+    let newBaseUri = await token.baseURI();
+    assert.equal(newBaseUri, newBusaUriSet);
+    assert.notEqual(newBaseUri, olBaseUri);
+
+    let newBaseUriFromEvent;
+    truffleAssert.eventEmitted(tx, 'BaseUriChanged', (ev) => {
+     	newBaseUriFromEvent = ev.newBaseURI;
+      return true;
+    });
+    assert.equal(newBaseUri, newBaseUriFromEvent);
+  });
+  
   it("check for support IERC2981 interface", async () => {
   	assert.equal(await token.supportsInterface("0x2a55205a"), true);
   });

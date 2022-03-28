@@ -62,6 +62,8 @@ Rounding errors: to calculate fill amounts, mathematical operations are used. Wh
     - or this is an on-chain order
 - if maker of the order is a contract, then ERC-1271 check is performed
 
+TODO: currently, only off-chain orders are supported, this part of the smart contract can be easily updated to support on-chain order books.
+
 #### Asset matching
 
 Purpose of this is to validate that **make asset** of the **left** order matches **take asset** from the **right** order and vice versa.

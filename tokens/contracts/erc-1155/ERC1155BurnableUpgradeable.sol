@@ -4,7 +4,6 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "./ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
-import "../access/MinterAccessControl.sol";
 
 /**
  * @dev Extension of {ERC1155} that allows token holders to destroy both their
@@ -12,7 +11,7 @@ import "../access/MinterAccessControl.sol";
  *
  * _Available since v3.1._
  */
-abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeable, MinterAccessControl {
+abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeable {
     function __ERC1155Burnable_init() internal initializer {
         __Context_init_unchained();
         __ERC165_init_unchained();
@@ -39,6 +38,5 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
         _burnBatch(account, ids, values);
     }
     
-    // changed from 50 to 40 from adding inheritance MinterAccessControl, 1 variable + 9 gap there
-    uint256[40] private __gap;
+    uint256[50] private __gap;
 }
