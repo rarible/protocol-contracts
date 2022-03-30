@@ -28,14 +28,12 @@
 - `"V3"` two types of `V3` orders. 
   - `"V3_BUY"`
     - fields
-      - `LibPart.Part[] payouts`, works the same as in `V1` orders
-      - `uint originFee`, instead of array there can only be 1 originFee, and address + amount is encoded into uint, not using `LibPart.Part` struct
-      - `bool isMakeFill`, works the same as in `V2` orders
+      - `uint[] payouts`, works the same as in `V1` orders, but address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
+      - `uint originFee`, instead of array there can only be 1 originFee, and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
   - `"V3_SELL"`
     - fields
-      - `LibPart.Part[] payouts`, works the same as in `V1` orders
-      - `uint originFee`, instead of array there can only be 1 originFee, and address + amount is encoded into uint, not using `LibPart.Part` struct
-      - `bool isMakeFill`, works the same as in `V2` orders
+      - `uint[] payouts`, works the same as in `V1` orders, but address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
+      - `uint originFee`, instead of array there can only be 1 originFee, and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
       - `uint maxFeesBasePoint`
         - maximum amount of fees that can be taken from payment (e.g. 10%)
         - chosen by seller, that's why it's only present in `V3_SELL` orders
@@ -43,6 +41,9 @@
         - `maxFeesBasePoint` should be more than `protocolFee`
         - `maxFeesBasePoint` should not be bigger than `10%`
   - `V3` orders can only be matched if buy-order is `V3_BUY` and the sell-order is `V3_SELL`
+  - `V3` orders don't have `isMakeFill` field
+    - `V3_SELL` orders' fills are always calculated from make side (as if `isMakeFill` = true)
+    - `V3_BUY` orders' fills are always calculated from take side (as if `isMakeFill` = false)
   - fees logic
     - `V3` orders' fees work differently from all previous orders types
     - `prtocolFee` is used and taken from seller side

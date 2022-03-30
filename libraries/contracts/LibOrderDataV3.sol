@@ -10,16 +10,14 @@ library LibOrderDataV3 {
     bytes4 constant public V3_BUY = bytes4(keccak256("V3_BUY"));
 
     struct DataV3_SELL {
-        LibPart.Part[] payouts;
+        uint[] payouts;
         uint originFee;
-        bool isMakeFill;
         uint maxFeesBasePoint;
     }
 
     struct DataV3_BUY {
-        LibPart.Part[] payouts;
+        uint[] payouts;
         uint originFee;
-        bool isMakeFill;
     }
 
     function decodeOrderDataV3_SELL(bytes memory data) internal pure returns (DataV3_SELL memory orderData) {

@@ -83,8 +83,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			let addrOriginLeft = await OriginFee(accounts[6], 300);
 			let addrOriginRight = await OriginFee(accounts[5], 300);
 
-			let encDataLeft = await encDataV3_BUY([ [[accounts[1], 10000]], addrOriginLeft, false ]);
-			let encDataRight = await encDataV3_SELL([ [[accounts[2], 10000]], addrOriginRight, false, 1000 ]);
+			let encDataLeft = await encDataV3_BUY([ await Payouts([[accounts[1], 10000]]), addrOriginLeft ]);
+			let encDataRight = await encDataV3_SELL([ await Payouts([[accounts[2], 10000]]), addrOriginRight, 1000 ]);
 
 			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
@@ -1077,18 +1077,18 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
 			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-			let encDataLeft = await encDataV3_BUY([ [[buyer, 10000]], await OriginFee(originBuyer, 300), false ]);
-			let encDataRight = await encDataV3_SELL([ [[seller, 5000], [secondPayoutSeller, 5000]], await OriginFee(originSeller, 400), false, 1000 ]);
+			let encDataLeft = await encDataV3_BUY([ await Payouts([[buyer, 10000]]), await OriginFee(originBuyer, 300) ]);
+			let encDataRight = await encDataV3_SELL([ await Payouts([[seller, 5000], [secondPayoutSeller, 5000]]), await OriginFee(originSeller, 400), 1000 ]);
 
 			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[creator, 1000]]); //set royalties by token
 
-			const left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
-			const right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+			const left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 200), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+			const right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
       await testing.matchOrders(left, await getSignature(left, buyer), right, "0x", { from: seller });
 
-      assert.equal(await erc1155_v2.balanceOf(buyer, erc1155TokenId1), 100);
-      assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 900);
+      assert.equal(await erc1155_v2.balanceOf(buyer, erc1155TokenId1), 200);
+      assert.equal(await erc1155_v2.balanceOf(seller, erc1155TokenId1), 800);
 
       // 3% to protocol
       assert.equal(await t1.balanceOf(protocol), 3);
@@ -1102,6 +1102,12 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await t1.balanceOf(seller), 40);
       // 50% of what's left (80) to secondPayoutSeller (payouts 50-50)
       assert.equal(await t1.balanceOf(secondPayoutSeller), 40);
+
+      //checking fills
+      // sell-order has make-side fills
+      assert.equal(await testing.fills(await libOrder.hashKey(right)), 200);
+      //buy-order has take-side fills
+      assert.equal(await testing.fills(await libOrder.hashKey(left)), 200);
     })
 
     it("should not match when there's a problem with orders' types ", async () => {
@@ -1111,8 +1117,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
 			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-			let encDataLeft = await encDataV3_BUY([ [[buyer, 10000]], await OriginFee(originBuyer, 300), false ]);
-			let encDataRight = await encDataV3_SELL([ [[seller, 5000], [secondPayoutSeller, 5000]], await OriginFee(originSeller, 400), false, 1000 ]);
+			let encDataLeft = await encDataV3_BUY([ await Payouts([[buyer, 10000]]), await OriginFee(originBuyer, 300) ]);
+			let encDataRight = await encDataV3_SELL([ await Payouts([[seller, 5000], [secondPayoutSeller, 5000]]), await OriginFee(originSeller, 400), 1000 ]);
 
 			let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
 			let right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
@@ -1175,8 +1181,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
 			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-			let encDataLeft = await encDataV3_BUY([ [[buyer, 10000]], await OriginFee(originBuyer, 300), false ]);
-			let encDataRight = await encDataV3_SELL([ [[seller, 5000], [secondPayoutSeller, 5000]], await OriginFee(originSeller, 400), false, 1000 ]);
+			let encDataLeft = await encDataV3_BUY([ await Payouts([[buyer, 10000]]), await OriginFee(originBuyer, 300) ]);
+			let encDataRight = await encDataV3_SELL([ await Payouts([[seller, 5000], [secondPayoutSeller, 5000]]), await OriginFee(originSeller, 400), 1000 ]);
 
 			let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
 			let right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -1189,7 +1195,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       // change protocol fee 5 => 3 and buyer origin fee 3 => 4, so resulting fee is 11%
       await testing.setProtocolFee(300)
-      changeOrderData(left, await encDataV3_BUY([ [[buyer, 10000]], await OriginFee(originBuyer, 400), false ]))
+      changeOrderData(left, await encDataV3_BUY([ await Payouts([[buyer, 10000]]), await OriginFee(originBuyer, 400) ]))
       await expectThrow(
         testing.matchOrders(left, await getSignature(left, buyer), right, "0x", { from: seller })
       );
@@ -1207,8 +1213,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
 			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-			let encDataLeft = await encDataV3_BUY([ [[buyer, 10000]], await OriginFee(), false ]);
-			let encDataRight = await encDataV3_SELL([ [[seller, 5000], [secondPayoutSeller, 5000]], await OriginFee(), false, 200 ]);
+			let encDataLeft = await encDataV3_BUY([ await Payouts([[buyer, 10000]]), await OriginFee() ]);
+			let encDataRight = await encDataV3_SELL([ await Payouts([[seller, 5000], [secondPayoutSeller, 5000]]), await OriginFee(), 200 ]);
 
 			let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
 			let right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -1220,13 +1226,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       //maxFee = 0 is wrong even if protocolFee = 0
       await testing.setProtocolFee(0)
-      changeOrderData(right, await encDataV3_SELL([ [[seller, 5000], [secondPayoutSeller, 5000]], await OriginFee(), false, 0 ]))
+      changeOrderData(right, await encDataV3_SELL([ await Payouts([[seller, 5000], [secondPayoutSeller, 5000]]), await OriginFee(), 0 ]))
       await expectThrow(
         testing.matchOrders(left, await getSignature(left, buyer), right, "0x", { from: seller })
       );
 
       //setting maxFee at 1% works
-      changeOrderData(right, await encDataV3_SELL([ [[seller, 5000], [secondPayoutSeller, 5000]], await OriginFee(), false, 100 ]))
+      changeOrderData(right, await encDataV3_SELL([ await Payouts([[seller, 5000], [secondPayoutSeller, 5000]]), await OriginFee(), 100 ]))
       await testing.matchOrders(left, await getSignature(left, buyer), right, "0x", { from: seller })
 
     })
@@ -1259,6 +1265,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
   async function OriginFee(account = zeroAddress, value = 0){
     return await transferManagerTest.encodeOriginFeeIntoUint(account, value);
+  }
+
+  async function Payouts(arr = []){
+    let result = [];
+    for (const element of arr) {
+      result.push(await transferManagerTest.encodeOriginFeeIntoUint(element[0], element[1]))
+    }
+    return result;
   }
 
 	async function getSignature(order, signer) {
