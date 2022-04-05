@@ -98,7 +98,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             nftSide.originFees[0].account == calculateSide.originFees[0].account
         ) { 
             LibPart.Part[] memory origin = new  LibPart.Part[](1);
-            origin[0] = nftSide.originFees[0];
+            origin[0].account = nftSide.originFees[0].account;
+            origin[0].value = nftSide.originFees[0].value + calculateSide.originFees[0].value;
             (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, origin, calculateSide.from, calculateSide.proxy);
         } else {
             (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, calculateSide.originFees, calculateSide.from, calculateSide.proxy);
