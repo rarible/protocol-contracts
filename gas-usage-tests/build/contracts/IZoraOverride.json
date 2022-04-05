@@ -1,0 +1,1736 @@
+{
+  "contractName": "IZoraOverride",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "media",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "convertBidShares",
+      "outputs": [
+        {
+          "internalType": "address payable[]",
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.10+commit.fc410830\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"media\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"convertBidShares\",\"outputs\":[{\"internalType\":\"address payable[]\",\"name\":\"\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"convertBidShares(address,uint256)\":{\"details\":\"Convert bid share configuration of a Zora Media token into an array of receivers and bps values      Does not support prevOwner and sell-on amounts as that is specific to Zora marketplace implementation      and requires updates on the Zora Media and Marketplace to update the sell-on amounts/previous owner values.      An off-Zora marketplace sale will break the sell-on functionality.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"notice\":\"Interface for a Zora media override\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"@manifoldxyz/royalty-registry-solidity/contracts/specs/IZoraOverride.sol\":\"IZoraOverride\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@manifoldxyz/royalty-registry-solidity/contracts/specs/IZoraOverride.sol\":{\"keccak256\":\"0x44ceeff92022d1105b35464584e863a5b0391c0d7caa8d1dcce661bff5773d6b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://99fb0e0dfd8690ffd3b709af7352948f5e91385f6e2531244966460e282d61e6\",\"dweb:/ipfs/QmRJmgdMv2Uikm5SWhafg1bSSCntBv47xzCRbcomTwGqkr\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.8.0;\n\n/**\n * Paired down version of the Zora Market interface\n */\ninterface IZoraMarket {\n    struct ZoraDecimal {\n        uint256 value;\n    }\n\n    struct ZoraBidShares {\n        // % of sale value that goes to the _previous_ owner of the nft\n        ZoraDecimal prevOwner;\n        // % of sale value that goes to the original creator of the nft\n        ZoraDecimal creator;\n        // % of sale value that goes to the seller (current owner) of the nft\n        ZoraDecimal owner;\n    }\n\n    function bidSharesForToken(uint256 tokenId) external view returns (ZoraBidShares memory);\n}\n\n/**\n * Paired down version of the Zora Media interface\n */\ninterface IZoraMedia {\n\n    /**\n     * Auto-generated accessors of public variables\n     */\n    function marketContract() external view returns(address);\n    function previousTokenOwners(uint256 tokenId) external view returns(address);\n    function tokenCreators(uint256 tokenId) external view returns(address);\n\n    /**\n     * ERC721 function\n     */\n    function ownerOf(uint256 tokenId) external view returns (address owner);\n}\n\n/**\n * Interface for a Zora media override\n */\ninterface IZoraOverride {\n\n    /**\n     * @dev Convert bid share configuration of a Zora Media token into an array of receivers and bps values\n     *      Does not support prevOwner and sell-on amounts as that is specific to Zora marketplace implementation\n     *      and requires updates on the Zora Media and Marketplace to update the sell-on amounts/previous owner values.\n     *      An off-Zora marketplace sale will break the sell-on functionality.\n     */\n    function convertBidShares(address media, uint256 tokenId) external view returns (address payable[] memory, uint256[] memory);\n\n}\n",
+  "sourcePath": "@manifoldxyz/royalty-registry-solidity/contracts/specs/IZoraOverride.sol",
+  "ast": {
+    "absolutePath": "@manifoldxyz/royalty-registry-solidity/contracts/specs/IZoraOverride.sol",
+    "exportedSymbols": {
+      "IZoraMarket": [
+        1548
+      ],
+      "IZoraMedia": [
+        1578
+      ],
+      "IZoraOverride": [
+        1594
+      ]
+    },
+    "id": 1595,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1525,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:10"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IZoraMarket",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 1526,
+          "nodeType": "StructuredDocumentation",
+          "src": "58:59:10",
+          "text": " Paired down version of the Zora Market interface"
+        },
+        "fullyImplemented": false,
+        "id": 1548,
+        "linearizedBaseContracts": [
+          1548
+        ],
+        "name": "IZoraMarket",
+        "nameLocation": "128:11:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "IZoraMarket.ZoraDecimal",
+            "id": 1529,
+            "members": [
+              {
+                "constant": false,
+                "id": 1528,
+                "mutability": "mutable",
+                "name": "value",
+                "nameLocation": "183:5:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1529,
+                "src": "175:13:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 1527,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "175:7:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "ZoraDecimal",
+            "nameLocation": "153:11:10",
+            "nodeType": "StructDefinition",
+            "scope": 1548,
+            "src": "146:49:10",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "IZoraMarket.ZoraBidShares",
+            "id": 1539,
+            "members": [
+              {
+                "constant": false,
+                "id": 1532,
+                "mutability": "mutable",
+                "name": "prevOwner",
+                "nameLocation": "316:9:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1539,
+                "src": "304:21:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                  "typeString": "struct IZoraMarket.ZoraDecimal"
+                },
+                "typeName": {
+                  "id": 1531,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 1530,
+                    "name": "ZoraDecimal",
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 1529,
+                    "src": "304:11:10"
+                  },
+                  "referencedDeclaration": 1529,
+                  "src": "304:11:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                    "typeString": "struct IZoraMarket.ZoraDecimal"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1535,
+                "mutability": "mutable",
+                "name": "creator",
+                "nameLocation": "419:7:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1539,
+                "src": "407:19:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                  "typeString": "struct IZoraMarket.ZoraDecimal"
+                },
+                "typeName": {
+                  "id": 1534,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 1533,
+                    "name": "ZoraDecimal",
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 1529,
+                    "src": "407:11:10"
+                  },
+                  "referencedDeclaration": 1529,
+                  "src": "407:11:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                    "typeString": "struct IZoraMarket.ZoraDecimal"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1538,
+                "mutability": "mutable",
+                "name": "owner",
+                "nameLocation": "526:5:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1539,
+                "src": "514:17:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                  "typeString": "struct IZoraMarket.ZoraDecimal"
+                },
+                "typeName": {
+                  "id": 1537,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 1536,
+                    "name": "ZoraDecimal",
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 1529,
+                    "src": "514:11:10"
+                  },
+                  "referencedDeclaration": 1529,
+                  "src": "514:11:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                    "typeString": "struct IZoraMarket.ZoraDecimal"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "ZoraBidShares",
+            "nameLocation": "208:13:10",
+            "nodeType": "StructDefinition",
+            "scope": 1548,
+            "src": "201:337:10",
+            "visibility": "public"
+          },
+          {
+            "functionSelector": "f9ce0582",
+            "id": 1547,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "bidSharesForToken",
+            "nameLocation": "553:17:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1542,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1541,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "579:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1547,
+                  "src": "571:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1540,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "571:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "570:17:10"
+            },
+            "returnParameters": {
+              "id": 1546,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1545,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1547,
+                  "src": "611:20:10",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraBidShares_$1539_memory_ptr",
+                    "typeString": "struct IZoraMarket.ZoraBidShares"
+                  },
+                  "typeName": {
+                    "id": 1544,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 1543,
+                      "name": "ZoraBidShares",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 1539,
+                      "src": "611:13:10"
+                    },
+                    "referencedDeclaration": 1539,
+                    "src": "611:13:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_ZoraBidShares_$1539_storage_ptr",
+                      "typeString": "struct IZoraMarket.ZoraBidShares"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "610:22:10"
+            },
+            "scope": 1548,
+            "src": "544:89:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1595,
+        "src": "118:517:10",
+        "usedErrors": []
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IZoraMedia",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 1549,
+          "nodeType": "StructuredDocumentation",
+          "src": "637:58:10",
+          "text": " Paired down version of the Zora Media interface"
+        },
+        "fullyImplemented": false,
+        "id": 1578,
+        "linearizedBaseContracts": [
+          1578
+        ],
+        "name": "IZoraMedia",
+        "nameLocation": "706:10:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 1550,
+              "nodeType": "StructuredDocumentation",
+              "src": "724:63:10",
+              "text": " Auto-generated accessors of public variables"
+            },
+            "functionSelector": "a1794bcd",
+            "id": 1555,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "marketContract",
+            "nameLocation": "801:14:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1551,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "815:2:10"
+            },
+            "returnParameters": {
+              "id": 1554,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1553,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1555,
+                  "src": "840:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1552,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "840:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "839:9:10"
+            },
+            "scope": 1578,
+            "src": "792:57:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "9d8e7260",
+            "id": 1562,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "previousTokenOwners",
+            "nameLocation": "863:19:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1558,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1557,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "891:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1562,
+                  "src": "883:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1556,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "883:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "882:17:10"
+            },
+            "returnParameters": {
+              "id": 1561,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1560,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1562,
+                  "src": "922:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1559,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "922:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "921:9:10"
+            },
+            "scope": 1578,
+            "src": "854:77:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "e0fd045f",
+            "id": 1569,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "tokenCreators",
+            "nameLocation": "945:13:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1565,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1564,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "967:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1569,
+                  "src": "959:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1563,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "959:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "958:17:10"
+            },
+            "returnParameters": {
+              "id": 1568,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1567,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1569,
+                  "src": "998:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1566,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "998:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "997:9:10"
+            },
+            "scope": 1578,
+            "src": "936:71:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 1570,
+              "nodeType": "StructuredDocumentation",
+              "src": "1013:34:10",
+              "text": " ERC721 function"
+            },
+            "functionSelector": "6352211e",
+            "id": 1577,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "ownerOf",
+            "nameLocation": "1061:7:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1573,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1572,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "1077:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1577,
+                  "src": "1069:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1571,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1069:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1068:17:10"
+            },
+            "returnParameters": {
+              "id": 1576,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1575,
+                  "mutability": "mutable",
+                  "name": "owner",
+                  "nameLocation": "1117:5:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1577,
+                  "src": "1109:13:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1574,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1109:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1108:15:10"
+            },
+            "scope": 1578,
+            "src": "1052:72:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1595,
+        "src": "696:430:10",
+        "usedErrors": []
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IZoraOverride",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 1579,
+          "nodeType": "StructuredDocumentation",
+          "src": "1128:46:10",
+          "text": " Interface for a Zora media override"
+        },
+        "fullyImplemented": false,
+        "id": 1594,
+        "linearizedBaseContracts": [
+          1594
+        ],
+        "name": "IZoraOverride",
+        "nameLocation": "1185:13:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 1580,
+              "nodeType": "StructuredDocumentation",
+              "src": "1206:432:10",
+              "text": " @dev Convert bid share configuration of a Zora Media token into an array of receivers and bps values\n      Does not support prevOwner and sell-on amounts as that is specific to Zora marketplace implementation\n      and requires updates on the Zora Media and Marketplace to update the sell-on amounts/previous owner values.\n      An off-Zora marketplace sale will break the sell-on functionality."
+            },
+            "functionSelector": "f6622074",
+            "id": 1593,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "convertBidShares",
+            "nameLocation": "1652:16:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1585,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1582,
+                  "mutability": "mutable",
+                  "name": "media",
+                  "nameLocation": "1677:5:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1669:13:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1581,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1669:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1584,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "1692:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1684:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1583,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1684:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1668:32:10"
+            },
+            "returnParameters": {
+              "id": 1592,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1588,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1724:24:10",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_payable_$dyn_memory_ptr",
+                    "typeString": "address payable[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1586,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1724:15:10",
+                      "stateMutability": "payable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address_payable",
+                        "typeString": "address payable"
+                      }
+                    },
+                    "id": 1587,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1724:17:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_payable_$dyn_storage_ptr",
+                      "typeString": "address payable[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1591,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1750:16:10",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_memory_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1589,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1750:7:10",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 1590,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1750:9:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1723:44:10"
+            },
+            "scope": 1594,
+            "src": "1643:125:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1595,
+        "src": "1175:596:10",
+        "usedErrors": []
+      }
+    ],
+    "src": "33:1739:10"
+  },
+  "legacyAST": {
+    "absolutePath": "@manifoldxyz/royalty-registry-solidity/contracts/specs/IZoraOverride.sol",
+    "exportedSymbols": {
+      "IZoraMarket": [
+        1548
+      ],
+      "IZoraMedia": [
+        1578
+      ],
+      "IZoraOverride": [
+        1594
+      ]
+    },
+    "id": 1595,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1525,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:10"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IZoraMarket",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 1526,
+          "nodeType": "StructuredDocumentation",
+          "src": "58:59:10",
+          "text": " Paired down version of the Zora Market interface"
+        },
+        "fullyImplemented": false,
+        "id": 1548,
+        "linearizedBaseContracts": [
+          1548
+        ],
+        "name": "IZoraMarket",
+        "nameLocation": "128:11:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "IZoraMarket.ZoraDecimal",
+            "id": 1529,
+            "members": [
+              {
+                "constant": false,
+                "id": 1528,
+                "mutability": "mutable",
+                "name": "value",
+                "nameLocation": "183:5:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1529,
+                "src": "175:13:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 1527,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "175:7:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "ZoraDecimal",
+            "nameLocation": "153:11:10",
+            "nodeType": "StructDefinition",
+            "scope": 1548,
+            "src": "146:49:10",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "IZoraMarket.ZoraBidShares",
+            "id": 1539,
+            "members": [
+              {
+                "constant": false,
+                "id": 1532,
+                "mutability": "mutable",
+                "name": "prevOwner",
+                "nameLocation": "316:9:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1539,
+                "src": "304:21:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                  "typeString": "struct IZoraMarket.ZoraDecimal"
+                },
+                "typeName": {
+                  "id": 1531,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 1530,
+                    "name": "ZoraDecimal",
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 1529,
+                    "src": "304:11:10"
+                  },
+                  "referencedDeclaration": 1529,
+                  "src": "304:11:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                    "typeString": "struct IZoraMarket.ZoraDecimal"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1535,
+                "mutability": "mutable",
+                "name": "creator",
+                "nameLocation": "419:7:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1539,
+                "src": "407:19:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                  "typeString": "struct IZoraMarket.ZoraDecimal"
+                },
+                "typeName": {
+                  "id": 1534,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 1533,
+                    "name": "ZoraDecimal",
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 1529,
+                    "src": "407:11:10"
+                  },
+                  "referencedDeclaration": 1529,
+                  "src": "407:11:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                    "typeString": "struct IZoraMarket.ZoraDecimal"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1538,
+                "mutability": "mutable",
+                "name": "owner",
+                "nameLocation": "526:5:10",
+                "nodeType": "VariableDeclaration",
+                "scope": 1539,
+                "src": "514:17:10",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                  "typeString": "struct IZoraMarket.ZoraDecimal"
+                },
+                "typeName": {
+                  "id": 1537,
+                  "nodeType": "UserDefinedTypeName",
+                  "pathNode": {
+                    "id": 1536,
+                    "name": "ZoraDecimal",
+                    "nodeType": "IdentifierPath",
+                    "referencedDeclaration": 1529,
+                    "src": "514:11:10"
+                  },
+                  "referencedDeclaration": 1529,
+                  "src": "514:11:10",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraDecimal_$1529_storage_ptr",
+                    "typeString": "struct IZoraMarket.ZoraDecimal"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "ZoraBidShares",
+            "nameLocation": "208:13:10",
+            "nodeType": "StructDefinition",
+            "scope": 1548,
+            "src": "201:337:10",
+            "visibility": "public"
+          },
+          {
+            "functionSelector": "f9ce0582",
+            "id": 1547,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "bidSharesForToken",
+            "nameLocation": "553:17:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1542,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1541,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "579:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1547,
+                  "src": "571:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1540,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "571:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "570:17:10"
+            },
+            "returnParameters": {
+              "id": 1546,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1545,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1547,
+                  "src": "611:20:10",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_ZoraBidShares_$1539_memory_ptr",
+                    "typeString": "struct IZoraMarket.ZoraBidShares"
+                  },
+                  "typeName": {
+                    "id": 1544,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 1543,
+                      "name": "ZoraBidShares",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 1539,
+                      "src": "611:13:10"
+                    },
+                    "referencedDeclaration": 1539,
+                    "src": "611:13:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_ZoraBidShares_$1539_storage_ptr",
+                      "typeString": "struct IZoraMarket.ZoraBidShares"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "610:22:10"
+            },
+            "scope": 1548,
+            "src": "544:89:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1595,
+        "src": "118:517:10",
+        "usedErrors": []
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IZoraMedia",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 1549,
+          "nodeType": "StructuredDocumentation",
+          "src": "637:58:10",
+          "text": " Paired down version of the Zora Media interface"
+        },
+        "fullyImplemented": false,
+        "id": 1578,
+        "linearizedBaseContracts": [
+          1578
+        ],
+        "name": "IZoraMedia",
+        "nameLocation": "706:10:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 1550,
+              "nodeType": "StructuredDocumentation",
+              "src": "724:63:10",
+              "text": " Auto-generated accessors of public variables"
+            },
+            "functionSelector": "a1794bcd",
+            "id": 1555,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "marketContract",
+            "nameLocation": "801:14:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1551,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "815:2:10"
+            },
+            "returnParameters": {
+              "id": 1554,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1553,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1555,
+                  "src": "840:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1552,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "840:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "839:9:10"
+            },
+            "scope": 1578,
+            "src": "792:57:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "9d8e7260",
+            "id": 1562,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "previousTokenOwners",
+            "nameLocation": "863:19:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1558,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1557,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "891:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1562,
+                  "src": "883:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1556,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "883:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "882:17:10"
+            },
+            "returnParameters": {
+              "id": 1561,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1560,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1562,
+                  "src": "922:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1559,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "922:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "921:9:10"
+            },
+            "scope": 1578,
+            "src": "854:77:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "e0fd045f",
+            "id": 1569,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "tokenCreators",
+            "nameLocation": "945:13:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1565,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1564,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "967:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1569,
+                  "src": "959:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1563,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "959:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "958:17:10"
+            },
+            "returnParameters": {
+              "id": 1568,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1567,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1569,
+                  "src": "998:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1566,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "998:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "997:9:10"
+            },
+            "scope": 1578,
+            "src": "936:71:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 1570,
+              "nodeType": "StructuredDocumentation",
+              "src": "1013:34:10",
+              "text": " ERC721 function"
+            },
+            "functionSelector": "6352211e",
+            "id": 1577,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "ownerOf",
+            "nameLocation": "1061:7:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1573,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1572,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "1077:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1577,
+                  "src": "1069:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1571,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1069:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1068:17:10"
+            },
+            "returnParameters": {
+              "id": 1576,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1575,
+                  "mutability": "mutable",
+                  "name": "owner",
+                  "nameLocation": "1117:5:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1577,
+                  "src": "1109:13:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1574,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1109:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1108:15:10"
+            },
+            "scope": 1578,
+            "src": "1052:72:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1595,
+        "src": "696:430:10",
+        "usedErrors": []
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IZoraOverride",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "documentation": {
+          "id": 1579,
+          "nodeType": "StructuredDocumentation",
+          "src": "1128:46:10",
+          "text": " Interface for a Zora media override"
+        },
+        "fullyImplemented": false,
+        "id": 1594,
+        "linearizedBaseContracts": [
+          1594
+        ],
+        "name": "IZoraOverride",
+        "nameLocation": "1185:13:10",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 1580,
+              "nodeType": "StructuredDocumentation",
+              "src": "1206:432:10",
+              "text": " @dev Convert bid share configuration of a Zora Media token into an array of receivers and bps values\n      Does not support prevOwner and sell-on amounts as that is specific to Zora marketplace implementation\n      and requires updates on the Zora Media and Marketplace to update the sell-on amounts/previous owner values.\n      An off-Zora marketplace sale will break the sell-on functionality."
+            },
+            "functionSelector": "f6622074",
+            "id": 1593,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "convertBidShares",
+            "nameLocation": "1652:16:10",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1585,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1582,
+                  "mutability": "mutable",
+                  "name": "media",
+                  "nameLocation": "1677:5:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1669:13:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1581,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1669:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1584,
+                  "mutability": "mutable",
+                  "name": "tokenId",
+                  "nameLocation": "1692:7:10",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1684:15:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1583,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "1684:7:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1668:32:10"
+            },
+            "returnParameters": {
+              "id": 1592,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1588,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1724:24:10",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_payable_$dyn_memory_ptr",
+                    "typeString": "address payable[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1586,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1724:15:10",
+                      "stateMutability": "payable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address_payable",
+                        "typeString": "address payable"
+                      }
+                    },
+                    "id": 1587,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1724:17:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_payable_$dyn_storage_ptr",
+                      "typeString": "address payable[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1591,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1593,
+                  "src": "1750:16:10",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_memory_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 1589,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "1750:7:10",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 1590,
+                    "nodeType": "ArrayTypeName",
+                    "src": "1750:9:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "1723:44:10"
+            },
+            "scope": 1594,
+            "src": "1643:125:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1595,
+        "src": "1175:596:10",
+        "usedErrors": []
+      }
+    ],
+    "src": "33:1739:10"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.10+commit.fc410830.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2022-04-04T14:37:20.010Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "convertBidShares(address,uint256)": {
+        "details": "Convert bid share configuration of a Zora Media token into an array of receivers and bps values      Does not support prevOwner and sell-on amounts as that is specific to Zora marketplace implementation      and requires updates on the Zora Media and Marketplace to update the sell-on amounts/previous owner values.      An off-Zora marketplace sale will break the sell-on functionality."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "notice": "Interface for a Zora media override",
+    "version": 1
+  }
+}
