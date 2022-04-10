@@ -77,15 +77,21 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
     }
 
     function matchWyvernExchangeBulk(WyvernOrder[] memory orders) external payable {
+        uint ethAmount = msg.value;
         for(uint i = 0; i < orders.length; i ++) {
-            matchWyvernExchange(orders[i]);
+            matchWyvernExchange(orders[i], ethAmount);
+            ethAmount = address(this).balance;
+        }
+        if (ethAmount > 0) {
+            _msgSender().transfer(ethAmount);
         }
     }
 
     /*
     */
     function matchWyvernExchange(
-        WyvernOrder memory order
+        WyvernOrder memory order,
+        uint ethAmount
     ) internal {
         WyvernOrders memory wyvernOrders;
         wyvernOrders.addrs = addrsField(order._addrs);
@@ -114,7 +120,7 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
         wyvernOrders.rssMetadata[3] = order._rssMetadata[1];
         wyvernOrders.rssMetadata[4] = order._rssMetadata[1];  //todo think about it
         //revert(string(abi.encodePacked("emit msg.value: ", uint2str(msg.value))));
-        wyvernExchange.atomicMatch_{ value: msg.value }(
+        wyvernExchange.atomicMatch_{ value: ethAmount }(
             wyvernOrders.addrs,
             wyvernOrders.uints,
             wyvernOrders.feeMethodsSidesKindsHowToCalls,
@@ -128,12 +134,12 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
             wyvernOrders.rssMetadata);
 //        revert("sks_00154");
           //TODO transfer  NFT to Buyer we don`t need it
+//    address(this).balance
     }
 
     function matchWyvernExchangeParametersTest(
         WyvernOrder memory order
     ) external returns (WyvernOrders memory wyvernOrders) {
-//        WyvernOrders memory wyvernOrders;
         wyvernOrders.addrs = addrsField(order._addrs);
 
         wyvernOrders.uints = uintsField(order._uints);
@@ -141,10 +147,8 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
         wyvernOrders.feeMethodsSidesKindsHowToCalls = feeMethodsSidesKindsHowToCallsField(order._feeMethodsSidesKindsHowToCalls); //TODO Check IT is it right?
 
         wyvernOrders.calldataBuy = buyCalldata(order._calldataSell, _msgSender()); //TODO set buyer
-//        wyvernOrders.calldataBuy = buyCalldata(order._calldataSell, address(this)); //TODO tets only
         wyvernOrders.calldataSell = order._calldataSell;
 
-//        revert(string(abi.encodePacked("emit tmp addr: ", toString(msg.sender))));
         wyvernOrders.replacementPatternBuy = buyMask(order._replacementPatternSell);
         wyvernOrders.replacementPatternSell = order._replacementPatternSell;
 
