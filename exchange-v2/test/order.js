@@ -16,6 +16,32 @@ function OrderOpenSeaSell(_addrs, _uints, _feeMethodsSidesKindsHowToCalls, _call
 	return { _addrs, _uints, _feeMethodsSidesKindsHowToCalls, _calldataSell, _replacementPatternSell, _staticExtradataSell, _vs, _rssMetadata };
 }
 
+function OrdersOpenSea(
+  addrs,
+  uints,
+  feeMethodsSidesKindsHowToCalls,
+  calldataBuy,
+  calldataSell,
+  replacementPatternBuy,
+  replacementPatternSell,
+  staticExtradataBuy,
+  staticExtradataSell,
+  vs,
+  rssMetadata) {
+	return {
+	  addrs,
+	  uints,
+	  feeMethodsSidesKindsHowToCalls,
+	  calldataBuy,
+	  calldataSell,
+	  replacementPatternBuy,
+	  replacementPatternSell,
+	  staticExtradataBuy,
+	  staticExtradataSell,
+	  vs,
+	  rssMetadata };
+}
+
 const Types = {
 	AssetType: [
 		{name: 'assetClass', type: 'bytes4'},
@@ -49,4 +75,4 @@ async function sign(order, account, verifyingContract) {
 	return (await EIP712.signTypedData(web3, account, data)).sig;
 }
 
-module.exports = { AssetType, Asset, Order, OrderOpenSeaSell, sign }
+module.exports = { AssetType, Asset, Order, OrderOpenSeaSell, OrdersOpenSea, sign }

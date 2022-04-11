@@ -14,7 +14,7 @@ const WyvernTokenTransferProxy = artifacts.require("WyvernTokenTransferProxy");
 const MerkleValidator = artifacts.require("MerkleValidator");
 const WyvernProxyRegistry = artifacts.require("WyvernProxyRegistry");
 
-const { Order, OrderOpenSeaSell, Asset, sign } = require("../order");
+const { Order, OrderOpenSeaSell, OrdersOpenSea, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
@@ -52,25 +52,125 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
-		//Wyvern
-//    const wyvernProtocolFeeAddress = accounts[9];
-//    proxyRegistry = await ProxyRegistry.new();
-//    tokenTransferProxy = await TokenTransferProxy.new();
-//    wyvernExchangeWithBulkCancellations = await WyvernExchangeWithBulkCancellations.new(proxyRegistry.address, tokenTransferProxy.address, ZERO_ADDRESS, wyvernProtocolFeeAddress);
-
-//		testing = await deployProxy(ExchangeBulkV2, [transferProxy.address, erc20TransferProxy.address, wyvernExchangeWithBulkCancellations.address, 300, community, royaltiesRegistry.address], { initializer: "__ExchangeBulkV2_init" });
-//		testing = await ExchangeBulkV2.new();
-//		await testing.__ExchangeBulkV2_init(transferProxy.address, erc20TransferProxy.address, wyvernExchangeWithBulkCancellations.address, 300, community, royaltiesRegistry.address);
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
-    /*ETH*/
-//    await testing.setFeeReceiver(eth, protocol);
-//    await testing.setFeeReceiver(t1.address, protocol);
  		/*ERC721 */
  		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
  		testERC721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 
 	});
+  async function getOpenSeaMatchDataMerkleValidator(
+    exchange,
+    bulk,
+    buyer,
+    seller,
+    merkleValidatorAddr,
+    protocol,
+    basePrice,
+    tokenId,
+    token,
+    paymentToken
+    ) {
+
+    const addrs = [
+      exchange, // exchange buy
+      bulk, // maker buy, contract bulk
+      seller, // taker buy
+      "0x0000000000000000000000000000000000000000", // feeRecipient buy
+      merkleValidatorAddr, // target buy (MerkleValidator)
+      "0x0000000000000000000000000000000000000000", // staticTarget buy
+      paymentToken, // paymentToken buy (ETH)
+
+      exchange, // exchange sell
+      seller, // maker sell
+      "0x0000000000000000000000000000000000000000", // taker sell
+      protocol, // feeRecipient sell (originFee )
+      merkleValidatorAddr, // target sell (MerkleValidator)
+      "0x0000000000000000000000000000000000000000", // staticTarget sell
+      paymentToken // paymentToken sell (ETH)
+    ];
+
+    const now = Math.floor(Date.now() / 1000);
+    const listingTime = now - 60*60;
+    const expirationTime = now + 60*60;
+
+    const uints = [
+      "1000", //makerRelayerFee buy (originFee)
+      "0", // takerRelayerFee buy
+      "0", // makerProtocolFee buy
+      "0", // takerProtocolFee buy
+      basePrice, // basePrice buy
+      "0", // extra buy
+      listingTime, // listingTime buy
+      expirationTime, // expirationTime buy
+      "0", // salt buy
+
+      "1000", //makerRelayerFee sell (originFee)
+      "0", // takerRelayerFee sell
+      "0", // makerProtocolFee sell
+      "0", // takerProtocolFee sell
+      basePrice, // basePrice sell
+      "0", // extra sell
+      listingTime, // listingTime sell
+      expirationTime, // expirationTime sell
+      "0", // salt sell
+    ];
+
+    const feeMethodsSidesKindsHowToCalls = [
+      1, // FeeMethod{ ProtocolFee, SplitFee }) buy
+      0, // SaleKindInterface.Side({ Buy, Sell }) buy
+      0, // SaleKindInterface.SaleKind({ FixedPrice, DutchAuction }) buy
+      1, // AuthenticatedProxy.HowToCall({ Call, DelegateCall } buy
+
+      1, // FeeMethod({ ProtocolFee, SplitFee }) sell
+      1, // SaleKindInterface.Side({ Buy, Sell } sell
+      0, // SaleKindInterface.SaleKind({ FixedPrice, DutchAuction } sell
+      1  // AuthenticatedProxy.HowToCall({ Call, DelegateCall } sell
+    ];
+
+    const zeroWord = "0000000000000000000000000000000000000000000000000000000000000000";
+
+    // constant tokenId !!!
+    const hexTokenId = tokenId;
+
+    const merklePart = "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000";
+    const methodSigPart = "0xfb16a595";
+
+    const calldataBuy = methodSigPart + zeroWord + addrToBytes32No0x(buyer) + addrToBytes32No0x(token) + hexTokenId + merklePart;
+    const calldataSell = methodSigPart + addrToBytes32No0x(seller) + zeroWord + addrToBytes32No0x(token) + hexTokenId + merklePart;
+
+    const replacementPatternBuy =  "0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+    const replacementPatternSell = "0x000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+
+    const staticExtradataBuy = "0x";
+    const staticExtradataSell = "0x";
+
+    const vs = [
+      27, // sig v buy
+      27 // sig v sell
+    ];
+    const rssMetadata = [
+      "0x" + zeroWord, // sig r buy
+      "0x" + zeroWord, // sig s buy
+      "0x" + zeroWord, // sig r sell
+      "0x" + zeroWord, // sig s sell
+      "0x" + zeroWord  // metadata
+    ];
+
+    return [
+      addrs,
+      uints,
+      feeMethodsSidesKindsHowToCalls,
+      calldataBuy,
+      calldataSell,
+      replacementPatternBuy,
+      replacementPatternSell,
+      staticExtradataBuy,
+      staticExtradataSell,
+      vs,
+      rssMetadata
+    ];
+  }
 
   async function getOpenSeaSellOrder(
     exchange,
@@ -151,7 +251,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	describe("matchOrders OpenSea Bulk", () => {
 
-		it("Test Bulk2 Wyvern (num orders = 1) enough and more gas with ERC721<->ETH ", async () => {
+		it("Test matchWyvernExchangeBulk Wyvern (num orders = 1) enough and more gas with ERC721<->ETH ", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -233,7 +333,108 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //      console.log("Bulk2 Wyvern orders, ERC721<->ETH (num = 1), Gas consumption :", tx.receipt.gasUsed);
     })
 
-		it("Test Bulk2 Wyvern (num orders = 3)  more gas with ERC721<->ETH ", async () => {
+		it("Test matchWyvernExchangeBulk2 Wyvern (num orders = 1) ortders are ready ERC721<->ETH ", async () => {
+      const wyvernProtocolFeeAddress = accounts[9];
+		  const buyer = accounts[2];
+		  const seller1 = accounts[1];
+		  const seller2 = accounts[3];
+		  const seller3 = accounts[4];
+		  const feeRecipienter = accounts[5];
+      /*Wyvern*/
+      const wyvernProxyRegistry = await WyvernProxyRegistry.new();
+      await wyvernProxyRegistry.registerProxy( {from: seller1} );
+      await wyvernProxyRegistry.registerProxy( {from: seller2} );
+      await wyvernProxyRegistry.registerProxy( {from: seller3} );
+
+      const tokenTransferProxy = await WyvernTokenTransferProxy.new(wyvernProxyRegistry.address);
+
+      const openSea = await WyvernExchangeWithBulkCancellations.new(wyvernProxyRegistry.address, tokenTransferProxy.address, ZERO_ADDRESS, wyvernProtocolFeeAddress, {gas: 6000000});
+      await wyvernProxyRegistry.endGrantAuthentication(openSea.address);
+
+      const merkleValidator = await MerkleValidator.new();
+
+      let erc721TokenIdLocal = 5;
+		  await erc721.mint(seller1, erc721TokenIdLocal);
+		  await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller1), true, {from: seller1});
+
+      let erc721TokenIdLocal2 = 6;
+		  await erc721.mint(seller2, erc721TokenIdLocal2);
+		  await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller2), true, {from: seller2});
+
+      let erc721TokenIdLocal3 = 7;
+		  await erc721.mint(seller3, erc721TokenIdLocal3);
+		  await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
+
+		  testing = await ExchangeBulkV2.new();
+		  await testing.__ExchangeBulkV2_init(transferProxy.address, erc20TransferProxy.address, openSea.address, 300, community, royaltiesRegistry.address);
+      await testing.setFeeReceiver(eth, protocol);
+      await testing.setFeeReceiver(t1.address, protocol);
+
+
+      const matchData = (await getOpenSeaMatchDataMerkleValidator(
+        openSea.address,
+        testing.address,
+        buyer,
+        seller1,
+        merkleValidator.address,
+        feeRecipienter,
+        "100",
+        "0000000000000000000000000000000000000000000000000000000000000005",
+        erc721.address,
+        zeroAddress
+      ))
+
+		  const left1 = OrdersOpenSea(...matchData);
+//		  console.log("order:", left1);
+
+      /*enough ETH for transfer*/
+//    	await verifyBalanceChange(buyer, 100, async () =>
+//    		verifyBalanceChange(seller1, -90, async () =>
+//    			verifyBalanceChange(feeRecipienter, -10, () =>
+//    			  testing.matchWyvernExchangeBulk2([left1], { from: buyer, value: 100, gasPrice: 0 })
+//    			)
+//    		)
+//    	);
+
+
+//      let tx = await testing.matchWyvernExchangeBulk2([left1], { from: buyer, value: 200, gasPrice: 0 });
+//      console.log("Bulk2 Wyvern orders, ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
+//      assert.equal(await erc721.balanceOf(buyer), 1); //transfer all
+
+      const matchData2 = (await getOpenSeaMatchDataMerkleValidator(
+        openSea.address,
+        testing.address,
+        buyer,
+        seller2,
+        merkleValidator.address,
+        feeRecipienter,
+        "100",
+        "0000000000000000000000000000000000000000000000000000000000000006",
+        erc721.address,
+        zeroAddress
+      ))
+
+		  const left2 = OrdersOpenSea(...matchData2);
+      const matchData3 = (await getOpenSeaMatchDataMerkleValidator(
+        openSea.address,
+        testing.address,
+        buyer,
+        seller3,
+        merkleValidator.address,
+        feeRecipienter,
+        "100",
+        "0000000000000000000000000000000000000000000000000000000000000007",
+        erc721.address,
+        zeroAddress
+      ))
+
+		  const left3 = OrdersOpenSea(...matchData3);
+      let tx = await testing.matchWyvernExchangeBulk2([left1, left2, left3], { from: buyer, value: 400, gasPrice: 0 });
+      console.log("Bulk2 Wyvern orders, ERC721<->ETH (num = 3), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
+      assert.equal(await erc721.balanceOf(buyer), 3); //transfer all
+    })
+
+		it("Test matchWyvernExchangeBulk Wyvern (num orders = 3)  more gas with ERC721<->ETH ", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -331,7 +532,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
 
 	describe("matchOrders Rarible Bulk", () => {
-		it("Test Bulk2 (num = 3) with ERC721<->ETH ", async () => {
+		it("Test matchOrders (num = 3) with ERC721<->ETH ", async () => {
 		  const buyer = accounts[2];
 		  await testERC721.mint(accounts[1], erc721TokenId1);
 		  await testERC721.setApprovalForAll(transferProxy.address, true, {from: accounts[1]});
@@ -370,7 +571,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     	assert.equal(await testERC721.balanceOf(accounts[2]), 3); //transfer all
     })
 
-		it("Test Bulk2 (num = 3) with ERC721<->ERC20", async () => {
+		it("Test matchOrders (num = 3) with ERC721<->ERC20", async () => {
 
       const buyer = accounts[2];
       testing = await ExchangeBulkV2.new();

@@ -76,10 +76,34 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
         }
     }
 
+    /*Buy order is generate inside*/
     function matchWyvernExchangeBulk(WyvernOrder[] memory orders) external payable {
         uint ethAmount = msg.value;
         for(uint i = 0; i < orders.length; i ++) {
             matchWyvernExchange(orders[i], ethAmount);
+            ethAmount = address(this).balance;
+        }
+        if (ethAmount > 0) {
+            _msgSender().transfer(ethAmount);
+        }
+    }
+
+    /*Buy order is generate outside*/
+    function matchWyvernExchangeBulk2(WyvernOrders[] memory orders) external payable {
+        uint ethAmount = msg.value;
+        for(uint i = 0; i < orders.length; i ++) {
+            wyvernExchange.atomicMatch_{ value: ethAmount }(
+                orders[i].addrs,
+                orders[i].uints,
+                orders[i].feeMethodsSidesKindsHowToCalls,
+                orders[i].calldataBuy,
+                orders[i].calldataSell,
+                orders[i].replacementPatternBuy,
+                orders[i].replacementPatternSell,
+                orders[i].staticExtradataBuy,
+                orders[i].staticExtradataSell,
+                orders[i].vs,
+                orders[i].rssMetadata);
             ethAmount = address(this).balance;
         }
         if (ethAmount > 0) {
