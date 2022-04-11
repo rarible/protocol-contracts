@@ -100,10 +100,8 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
 
         wyvernOrders.feeMethodsSidesKindsHowToCalls = feeMethodsSidesKindsHowToCallsField(order._feeMethodsSidesKindsHowToCalls); //TODO Check IT is it right?
 
-        wyvernOrders.calldataBuy = buyCalldata(order._calldataSell, _msgSender()); //TODO set buyer
-//        wyvernOrders.calldataBuy = buyCalldata(order._calldataSell, address(this)); //TODO tets only
+        wyvernOrders.calldataBuy = buyCalldata(order._calldataSell, _msgSender()); //set buyer
         wyvernOrders.calldataSell = order._calldataSell;
-//        revert(string(abi.encodePacked("emit tmp addr: ", toString(msg.sender))));
 
         wyvernOrders.replacementPatternBuy = buyMask(order._replacementPatternSell);
         wyvernOrders.replacementPatternSell = order._replacementPatternSell;
@@ -119,7 +117,7 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
         wyvernOrders.rssMetadata[2] = order._rssMetadata[0];
         wyvernOrders.rssMetadata[3] = order._rssMetadata[1];
         wyvernOrders.rssMetadata[4] = order._rssMetadata[1];  //todo think about it
-        //revert(string(abi.encodePacked("emit msg.value: ", uint2str(msg.value))));
+
         wyvernExchange.atomicMatch_{ value: ethAmount }(
             wyvernOrders.addrs,
             wyvernOrders.uints,
@@ -132,43 +130,10 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
             order._staticExtradataSell,
             wyvernOrders.vs,
             wyvernOrders.rssMetadata);
-//        revert("sks_00154");
-          //TODO transfer  NFT to Buyer we don`t need it
-//    address(this).balance
     }
 
-    function matchWyvernExchangeParametersTest(
-        WyvernOrder memory order
-    ) external returns (WyvernOrders memory wyvernOrders) {
-        wyvernOrders.addrs = addrsField(order._addrs);
-
-        wyvernOrders.uints = uintsField(order._uints);
-
-        wyvernOrders.feeMethodsSidesKindsHowToCalls = feeMethodsSidesKindsHowToCallsField(order._feeMethodsSidesKindsHowToCalls); //TODO Check IT is it right?
-
-        wyvernOrders.calldataBuy = buyCalldata(order._calldataSell, _msgSender()); //TODO set buyer
-        wyvernOrders.calldataSell = order._calldataSell;
-
-        wyvernOrders.replacementPatternBuy = buyMask(order._replacementPatternSell);
-        wyvernOrders.replacementPatternSell = order._replacementPatternSell;
-
-        wyvernOrders.staticExtradataBuy = order._staticExtradataSell; //TODO Check IT is it right?
-        wyvernOrders.staticExtradataSell = order._staticExtradataSell;
-
-        wyvernOrders.vs[0] = order._vs[0];
-        wyvernOrders.vs[1] = order._vs[0];
-
-        wyvernOrders.rssMetadata[0] = order._rssMetadata[0];
-        wyvernOrders.rssMetadata[1] = order._rssMetadata[1];
-        wyvernOrders.rssMetadata[2] = order._rssMetadata[0];
-        wyvernOrders.rssMetadata[3] = order._rssMetadata[1];
-        wyvernOrders.rssMetadata[4] = order._rssMetadata[1];  //todo think about it
-        return wyvernOrders;
-    }
 
     function addrsField(address[7] memory addrs) internal returns (address[14] memory newAddrs){
-//        address tmp = address(this);
-//        revert(string(abi.encodePacked("emit tmp addr: ", toString(tmp))));
         newAddrs[0] = addrs[0];//exchange
         newAddrs[1] = address(this); //_msgSender();//maker
         newAddrs[2] = addrs[1];//taker
@@ -179,41 +144,9 @@ contract ExchangeBulkV2 is ExchangeV2Core, RaribleTransferManager {
         for (uint8 i = 7; i < 14; i ++) {
             newAddrs[i] = addrs[i - 7];
         }
-//        revert(string(abi.encodePacked("emit seller addr: ", toString(newAddrs[8]))));
         return newAddrs;
     }
 
-    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
-        if (_i == 0) {
-            return "0";
-        }
-        uint j = _i;
-        uint len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        uint k = len - 1;
-        while (_i != 0) {
-            bstr[k--] = byte(uint8(48 + _i % 10));
-            _i /= 10;
-        }
-        return string(bstr);
-    }
-
-    function toString(address _addr) internal pure returns (string memory) {
-        bytes32 value = bytes32(uint256(_addr));
-        bytes memory alphabet = "0123456789abcdef";
-        bytes memory str = new bytes(42);
-        str[0] = '0';
-        str[1] = 'x';
-        for (uint256 i = 0; i < 20; i++) {
-            str[2+i*2] = alphabet[uint8(value[i + 12] >> 4)];
-            str[3+i*2] = alphabet[uint8(value[i + 12] & 0x0f)];
-        }
-        return string(str);
-    }
     function uintsField(uint[9] memory uints) internal returns (uint[18] memory newUints){
         for (uint8 i = 9; i < 18; i ++) {
             newUints[i] = uints[i - 9];
