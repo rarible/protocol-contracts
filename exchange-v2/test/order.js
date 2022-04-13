@@ -42,6 +42,10 @@ function OrdersOpenSea(
 	  rssMetadata };
 }
 
+function TradeData(marketWyvern, amount, tradeData) {return {marketWyvern, amount, tradeData};};
+
+function RaribleBuy(orderLeft, signatureLeft, orderRight, signatureRight) {return{orderLeft, signatureLeft, orderRight, signatureRight};}
+
 const Types = {
 	AssetType: [
 		{name: 'assetClass', type: 'bytes4'},
@@ -75,4 +79,4 @@ async function sign(order, account, verifyingContract) {
 	return (await EIP712.signTypedData(web3, account, data)).sig;
 }
 
-module.exports = { AssetType, Asset, Order, OrderOpenSeaSell, OrdersOpenSea, sign }
+module.exports = { AssetType, Asset, Order, OrderOpenSeaSell, OrdersOpenSea, TradeData, RaribleBuy, sign }

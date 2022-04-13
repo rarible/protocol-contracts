@@ -7,4 +7,5 @@ truffle test \
         ./test/contracts/v2/ERC20TransferProxyTest.sol \
         ./test/contracts/v2/TransferProxyTest.sol \
         ./test/contracts/v2/TestRoyaltiesRegistry.sol \
+        ./test/contracts/v2/ExchangeBulkV2Test.sol \
         --compile-all
