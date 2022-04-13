@@ -32,12 +32,13 @@ contract ExchangeBulkV2 is OwnableUpgradeable {
 
     function bulkTransfer(TradeDetails[] memory tradeDetails) external payable {
         for (uint i = 0; i < tradeDetails.length; i++) {
-            bool success;
+            address proxy;
             if (tradeDetails[i].marketWyvern == true) {
-                (success,) = address(wyvernExchange).call{value : tradeDetails[i].amount}(tradeDetails[i].tradeData);
+                proxy = address(wyvernExchange);
             } else {
-                (success,) = address(exchangeV2).call{value : tradeDetails[i].amount}(tradeDetails[i].tradeData);
+                proxy = address(exchangeV2);
             }
+            (bool success,) = proxy.call{value : tradeDetails[i].amount}(tradeDetails[i].tradeData);
             // check if the call passed successfully
             _checkCallResult(success);
         }
