@@ -12,11 +12,7 @@ function Order(maker, makeAsset, taker, takeAsset, salt, start, end, dataType, d
 	return { maker, makeAsset, taker, takeAsset, salt, start, end, dataType, data };
 }
 
-function OrderOpenSeaSell(_addrs, _uints, _feeMethodsSidesKindsHowToCalls, _calldataSell, _replacementPatternSell, _staticExtradataSell, _vs, _rssMetadata) {
-	return { _addrs, _uints, _feeMethodsSidesKindsHowToCalls, _calldataSell, _replacementPatternSell, _staticExtradataSell, _vs, _rssMetadata };
-}
-
-function OrdersOpenSea(
+function OpenSeaOrdersInput(
   addrs,
   uints,
   feeMethodsSidesKindsHowToCalls,
@@ -43,8 +39,6 @@ function OrdersOpenSea(
 }
 
 function TradeData(marketWyvern, amount, tradeData) {return {marketWyvern, amount, tradeData};};
-
-function RaribleBuy(orderLeft, signatureLeft, orderRight, signatureRight) {return{orderLeft, signatureLeft, orderRight, signatureRight};}
 
 const Types = {
 	AssetType: [
@@ -79,4 +73,4 @@ async function sign(order, account, verifyingContract) {
 	return (await EIP712.signTypedData(web3, account, data)).sig;
 }
 
-module.exports = { AssetType, Asset, Order, OrderOpenSeaSell, OrdersOpenSea, TradeData, RaribleBuy, sign }
+module.exports = { AssetType, Asset, Order, OpenSeaOrdersInput, TradeData, sign }

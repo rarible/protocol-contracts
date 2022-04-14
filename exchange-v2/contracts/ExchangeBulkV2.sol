@@ -32,15 +32,13 @@ contract ExchangeBulkV2 is OwnableUpgradeable {
 
     function bulkTransfer(TradeDetails[] memory tradeDetails) external payable {
         for (uint i = 0; i < tradeDetails.length; i++) {
-            address proxy;
             if (tradeDetails[i].marketWyvern == true) {
-                proxy = address(wyvernExchange);
+                (bool success,) = address(wyvernExchange).call{value : tradeDetails[i].amount}(tradeDetails[i].tradeData);
+                _checkCallResult(success);
             } else {
-                proxy = address(exchangeV2);
+                (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(tradeDetails[i].tradeData, (LibOrder.Order, bytes));
+                matchExchangeV2(sellOrder, sellOrderSignature, tradeDetails[i].amount);
             }
-            (bool success,) = proxy.call{value : tradeDetails[i].amount}(tradeDetails[i].tradeData);
-            // check if the call passed successfully
-            _checkCallResult(success);
         }
         uint ethAmount = address(this).balance;
         if (ethAmount > 0) {
@@ -64,6 +62,31 @@ contract ExchangeBulkV2 is OwnableUpgradeable {
 
     function setExchange(IExchangeV2 _exchangeV2) external onlyOwner {
         exchangeV2 = _exchangeV2;
+    }
+
+    /*Transfer by ExchangeV2 sellOrder is in input, buyOrder is generated inside method */
+    function matchExchangeV2(
+        LibOrder.Order memory sellOrder,
+        bytes memory sellOrderSignature,
+        uint amount
+    ) internal {
+        LibOrder.Order memory buyerOrder;
+        buyerOrder.maker = address(this);
+        buyerOrder.makeAsset = sellOrder.takeAsset;
+        buyerOrder.takeAsset = sellOrder.makeAsset;
+
+        /*set buyer in payout*/
+        LibPart.Part[] memory payout = new LibPart.Part[](1);
+        payout[0].account = _msgSender();
+        payout[0].value = 10000;
+        LibOrderDataV2.DataV2 memory data;
+        data.payouts = payout;
+        buyerOrder.data = abi.encode(data);
+        buyerOrder.dataType = bytes4(keccak256("V2"));
+
+        bytes memory buyOrderSignature; //empty signature is enough for buyerOrder
+
+        IExchangeV2(exchangeV2).matchOrders{value : amount }(sellOrder, sellOrderSignature, buyerOrder, buyOrderSignature);
     }
 
     receive() external payable {}

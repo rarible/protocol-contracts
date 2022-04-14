@@ -38,7 +38,7 @@ contract ExchangeBulkV2Test {
         _data = abi.encodeWithSelector(IWyvernExchange.atomicMatch_.selector, _openSeaBuy.addrs, _openSeaBuy.uints, _openSeaBuy.feeMethodsSidesKindsHowToCalls, _openSeaBuy.calldataBuy, _openSeaBuy.calldataSell, _openSeaBuy.replacementPatternBuy, _openSeaBuy.replacementPatternSell, _openSeaBuy.staticExtradataBuy, _openSeaBuy.staticExtradataSell, _openSeaBuy.vs, _openSeaBuy.rssMetadata);
     }
 
-    function getDataExchangeV2MatchOrders(RaribleBuy memory _raribleBuy /*LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight, bytes memory signatureRight*/) external pure returns(bytes memory _data) {
-        _data = abi.encodeWithSelector(IExchangeV2.matchOrders.selector, _raribleBuy.orderLeft, _raribleBuy.signatureLeft, _raribleBuy.orderRight, _raribleBuy.signatureRight);
+    function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft) external pure returns(bytes memory _data) {
+        _data = abi.encode(orderLeft, signatureLeft);
     }
 }

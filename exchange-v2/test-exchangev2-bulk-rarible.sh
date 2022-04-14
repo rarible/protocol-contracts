@@ -8,4 +8,5 @@ truffle test \
         ./test/contracts/v2/TransferProxyTest.sol \
         ./test/contracts/v2/TestRoyaltiesRegistry.sol \
         ./test/contracts/v2/ExchangeBulkV2Test.sol \
+        ./test/contracts/v2/RaribleTransferManagerTest.sol \
         --compile-all
