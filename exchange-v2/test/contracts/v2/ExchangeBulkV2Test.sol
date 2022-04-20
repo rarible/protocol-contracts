@@ -89,6 +89,10 @@ contract ExchangeBulkV2Test {
         _data = abi.encodeWithSelector(IMatchERC1155.matchERC1155UsingCriteria.selector, from, to, token, tokenId, amount);
     }
 
+    function encodeOriginFeeIntoUint(address account, uint96 value) external pure returns(uint){
+        return (uint(value) << 160) + uint(account);
+    }
+
     function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft) external pure returns(bytes memory _data) {
         _data = abi.encode(orderLeft, signatureLeft);
     }

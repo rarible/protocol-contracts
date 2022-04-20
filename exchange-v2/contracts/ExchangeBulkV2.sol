@@ -7,9 +7,14 @@ import "./lib/LibTransfer.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@rarible/exchange-interfaces/contracts/IWyvernExchange.sol";
 import "@rarible/exchange-interfaces/contracts/IExchangeV2.sol";
+import "@rarible/royalties/contracts/LibPart.sol";
+import "./lib/BpLibrary.sol";
 
 contract ExchangeBulkV2 is OwnableUpgradeable {
     using LibTransfer for address;
+    using BpLibrary for uint;
+    using SafeMathUpgradeable for uint;
+
 
     IWyvernExchange public wyvernExchange;
     IExchangeV2 public exchangeV2;
@@ -30,16 +35,56 @@ contract ExchangeBulkV2 is OwnableUpgradeable {
         exchangeV2 = _exchangeV2;
     }
 
-    function bulkTransfer(TradeDetails[] memory tradeDetails) external payable {
+    function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
+        wyvernExchange = _wyvernExchange;
+    }
+
+    function setExchange(IExchangeV2 _exchangeV2) external onlyOwner {
+        exchangeV2 = _exchangeV2;
+    }
+
+    function singleTransfer(TradeDetails memory tradeDetails, uint[] memory fees) external payable {
+        uint amount = address(this).balance;
+        tradeDetailsTransfer(tradeDetails);
+
+        feesTransfer(amount, fees);
+
+        changeTransfer();
+    }
+
+    function bulkTransfer(TradeDetails[] memory tradeDetails, uint[] memory fees) external payable {
+        uint amount = address(this).balance;
         for (uint i = 0; i < tradeDetails.length; i++) {
-            if (tradeDetails[i].marketWyvern == true) {
-                (bool success,) = address(wyvernExchange).call{value : tradeDetails[i].amount}(tradeDetails[i].tradeData);
-                _checkCallResult(success);
-            } else {
-                (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(tradeDetails[i].tradeData, (LibOrder.Order, bytes));
-                matchExchangeV2(sellOrder, sellOrderSignature, tradeDetails[i].amount);
+            tradeDetailsTransfer(tradeDetails[i]);
+        }
+
+        feesTransfer(amount, fees);
+
+        changeTransfer();
+    }
+
+    function tradeDetailsTransfer(TradeDetails memory tradeDetails) internal {
+        uint paymentAmount = tradeDetails.amount;
+        if (tradeDetails.marketWyvern == true) {
+            (bool success,) = address(wyvernExchange).call{value : paymentAmount}(tradeDetails.tradeData);
+            _checkCallResult(success);
+        } else {
+            (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(tradeDetails.tradeData, (LibOrder.Order, bytes));
+            matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount);
+        }
+    }
+
+    function feesTransfer(uint amount, uint[] memory fees) internal {
+        uint spend = amount.sub(address(this).balance);
+        for (uint i = 0; i < fees.length; i++) {
+            uint feeValue = spend.bp(uint(fees[i] >> 160));
+            if (feeValue > 0) {
+                LibTransfer.transferEth(address(fees[i]), feeValue);
             }
         }
+    }
+
+    function changeTransfer() internal {
         uint ethAmount = address(this).balance;
         if (ethAmount > 0) {
             address(_msgSender()).transferEth(ethAmount);
@@ -54,14 +99,6 @@ contract ExchangeBulkV2 is OwnableUpgradeable {
                 revert(0, returndatasize())
             }
         }
-    }
-
-    function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
-        wyvernExchange = _wyvernExchange;
-    }
-
-    function setExchange(IExchangeV2 _exchangeV2) external onlyOwner {
-        exchangeV2 = _exchangeV2;
     }
 
     /*Transfer by ExchangeV2 sellOrder is in input, buyOrder is generated inside method */
