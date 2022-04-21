@@ -38,7 +38,7 @@ function OpenSeaOrdersInput(
 	  rssMetadata };
 }
 
-function TradeData(marketWyvern, amount, tradeData) {return {marketWyvern, amount, tradeData};};
+function TradeData(marketId, amount, tradeData) {return {marketId, amount, tradeData};};
 
 const Types = {
 	AssetType: [

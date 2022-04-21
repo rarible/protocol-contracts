@@ -20,8 +20,13 @@ contract ExchangeWrapper is OwnableUpgradeable {
     IWyvernExchange public wyvernExchange;
     IExchangeV2 public exchangeV2;
 
+    enum Markets {
+        ExchangeV2,
+        WyvernExchange
+    }
+
     struct TradeDetails {
-        bool marketWyvern; //if true - market is IWyvernExchange, else IExchangeV2
+        Markets marketId; //if 1 - market is IWyvernExchange, 0 - market is IExchangeV2
         uint256 amount;
         bytes tradeData;
     }
@@ -66,10 +71,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function tradeDetailsTransfer(TradeDetails memory tradeDetails) internal {
         uint paymentAmount = tradeDetails.amount;
-        if (tradeDetails.marketWyvern == true) {
+        if (tradeDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(tradeDetails.tradeData);
             _checkCallResult(success);
-        } else {
+        } else if (tradeDetails.marketId == Markets.ExchangeV2) {
             (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(tradeDetails.tradeData, (LibOrder.Order, bytes));
             matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount);
         }
