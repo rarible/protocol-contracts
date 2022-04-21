@@ -124,7 +124,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(openSea.address, exchangeV2.address);
+		  await bulkExchange.__ExchangeWrapper_init(openSea.address, exchangeV2.address);
 
       let feesUPDetect = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
       let feesUP = [feesUPDetect];
@@ -241,7 +241,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(openSea.address, exchangeV2.address);
+		  await bulkExchange.__ExchangeWrapper_init(openSea.address, exchangeV2.address);
 
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
@@ -344,7 +344,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(openSea.address, exchangeV2.address);
+		  await bulkExchange.__ExchangeWrapper_init(openSea.address, exchangeV2.address);
 
       let feesUPDetect = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
       let feesUP = [feesUPDetect];
@@ -446,7 +446,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(ZERO_ADDRESS/*openSea.address*/, exchangeV2.address); //don`t need openSea.address, process only exchaneV2 orders
+		  await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS/*openSea.address*/, exchangeV2.address); //don`t need openSea.address, process only exchaneV2 orders
 
       /*NB!!! set buyer in payouts*/
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]); //encDataV2(payouts, originFees, isMakeFill)
@@ -511,7 +511,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(ZERO_ADDRESS/*openSea.address*/, exchangeV2.address); //dont need openSea.address, process only exchaneV2 orders
+		  await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS/*openSea.address*/, exchangeV2.address); //dont need openSea.address, process only exchaneV2 orders
 
       /*NB!!! set buyer in payouts*/
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]); //encDataV2(payouts, originFees, isMakeFill)
@@ -594,7 +594,7 @@ describe("matchOrders Wywern single transfer", () => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(openSea.address, exchangeV2.address);
+		  await bulkExchange.__ExchangeWrapper_init(openSea.address, exchangeV2.address);
 
       /*for first order*/
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
@@ -698,7 +698,7 @@ describe("matchOrders Wywern single transfer", () => {
       await exchangeV2.setFeeReceiver(t1.address, protocol);
 
 		  bulkExchange = await ExchangeBulkV2.new();
-		  await bulkExchange.__ExchangeBulkV2_init(openSea.address, exchangeV2.address);
+		  await bulkExchange.__ExchangeWrapper_init(openSea.address, exchangeV2.address);
 
       let feesUPFirst = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
       let feesUP = [feesUPFirst];

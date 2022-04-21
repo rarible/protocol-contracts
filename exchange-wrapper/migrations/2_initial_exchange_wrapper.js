@@ -49,6 +49,6 @@ module.exports = async function (deployer, network) {
 
 	await deployer.deploy(ExchangeWrapper, { gas: 1500000 });
 	const exchangeWrapper = await ExchangeWrapper.deployed();
-	await exchangeWrapper.__ExchangeBulkV2_init(settings.wyvernExchange, settings.exchangeV2, { gas: 200000 });
+	await exchangeWrapper.__ExchangeWrapper_init(settings.wyvernExchange, settings.exchangeV2, { gas: 200000 });
 	console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
 };

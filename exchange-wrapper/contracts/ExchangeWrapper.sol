@@ -31,7 +31,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
         bytes tradeData;
     }
 
-    function __ExchangeBulkV2_init(
+    function __ExchangeWrapper_init(
         IWyvernExchange _wyvernExchange,
         IExchangeV2 _exchangeV2
     ) external initializer {
