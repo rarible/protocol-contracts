@@ -19,7 +19,7 @@ const MerkleValidator = artifacts.require("MerkleValidator");
 const WyvernProxyRegistry = artifacts.require("WyvernProxyRegistry");
 
 const truffleAssert = require('truffle-assertions');
-const { Order, OpenSeaOrdersInput, TradeData, Asset, sign } = require("../order");
+const { Order, OpenSeaOrdersInput, PurchaseData, Asset, sign } = require("../order");
 const EIP712 = require("../EIP712");
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../assets");
@@ -27,24 +27,23 @@ const InputDataDecoder = require('ethereum-input-data-decoder');
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
-	let bulkExchange;
-	let exchangeV2;
-	let exchangeBulkV2Test;
-	let transferProxy;
-	let erc20TransferProxy;
-	let royaltiesRegistry;
-	let raribleTransferManagerTest;
-	let t1;
-	let protocol = accounts[9];
-	let community = accounts[8];
-	const eth = "0x0000000000000000000000000000000000000000";
+  let bulkExchange;
+  let exchangeV2;
+  let exchangeBulkV2Test;
+  let transferProxy;
+  let erc20TransferProxy;
+  let royaltiesRegistry;
+  let raribleTransferManagerTest;
+  let t1;
+  let protocol = accounts[9];
+  let community = accounts[8];
+  const eth = "0x0000000000000000000000000000000000000000";
   let erc721TokenId1 = 55;
   let erc721TokenId2 = 56;
   let erc721TokenId3 = 57;
   let erc1155TokenId1 = 55;
   let erc1155TokenId2 = 56;
   let erc1155TokenId3 = 57;
-
   let wyvernExchangeWithBulkCancellations;
   let proxyRegistry;
   let tokenTransferProxy;
@@ -52,41 +51,39 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let testERC721;
   let testERC1155;
   /*OpenSeaOrders*/
-  const feeMethodsSidesKindsHowToCallsMask = [
-    1, // FeeMethod{ ProtocolFee, SplitFee }) buy
-    0, // SaleKindInterface.Side({ Buy, Sell }) buy
-    0, // SaleKindInterface.SaleKind({ FixedPrice, DutchAuction }) buy
-    1, // AuthenticatedProxy.HowToCall({ Call, DelegateCall } buy
-
-    1, // FeeMethod({ ProtocolFee, SplitFee }) sell
-    1, // SaleKindInterface.Side({ Buy, Sell } sell
-    0, // SaleKindInterface.SaleKind({ FixedPrice, DutchAuction } sell
-    1  // AuthenticatedProxy.HowToCall({ Call, DelegateCall } sell
-  ];
+  const feeMethodsSidesKindsHowToCallsMask = [1, 0, 0, 1, 1, 1, 0, 1];
+  /* FeeMethod{ ProtocolFee, SplitFee }) buy
+   SaleKindInterface.Side({ Buy, Sell }) buy
+   SaleKindInterface.SaleKind({ FixedPrice, DutchAuction }) buy
+   AuthenticatedProxy.HowToCall({ Call, DelegateCall } buy
+   FeeMethod({ ProtocolFee, SplitFee }) sell
+   SaleKindInterface.Side({ Buy, Sell } sell
+   SaleKindInterface.SaleKind({ FixedPrice, DutchAuction } sell
+   AuthenticatedProxy.HowToCall({ Call, DelegateCall } sell
+  */
 
   before(async () => {
     raribleTransferManagerTest = await RaribleTransferManagerTest.new();
   })
 
-	beforeEach(async () => {
-		transferProxy = await TransferProxyTest.new();
-		erc20TransferProxy = await ERC20TransferProxyTest.new();
-		royaltiesRegistry = await TestRoyaltiesRegistry.new();
-    /*ERC20 */
-		t1 = await TestERC20.new();
- 		/*ERC721 */
- 		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
- 		testERC721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
-		/*ERC1155*/
-		testERC1155 = await TestERC1155.new("https://ipfs.rarible.com");
-
- 		/*generating orders*/
+  beforeEach(async () => {
+  	transferProxy = await TransferProxyTest.new();
+  	erc20TransferProxy = await ERC20TransferProxyTest.new();
+  	royaltiesRegistry = await TestRoyaltiesRegistry.new();
+     /*ERC20 */
+  	t1 = await TestERC20.new();
+  	/*ERC721 */
+  	erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
+  	testERC721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
+  	/*ERC1155*/
+  	testERC1155 = await TestERC1155.new("https://ipfs.rarible.com");
+  	/*generating orders*/
     exchangeBulkV2Test = await ExchangeBulkV2Test.new();
-	});
+  });
 
 	describe("matchOrders Wywern Bulk", () => {
 
-		it("Test bulkTransfer Wyvern (num orders = 3) orders are ready, ERC721<->ETH", async () => {
+		it("Test bulkPurchase Wyvern (num orders = 3) orders are ready, ERC721<->ETH", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -145,11 +142,11 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const buySellOrders1 = OpenSeaOrdersInput(...matchData);
       let dataForWyvernCall1 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders1);
-      const tradeData1 = TradeData(1, 100, dataForWyvernCall1);
+      const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 //		  const left1 = OpenSeaOrdersInput(...matchData);
 //		  console.log("order:", left1);
 
-      /*enough ETH for transfer*/
+      /*enough ETH for purchase*/
 //    	await verifyBalanceChange(buyer, 100, async () =>
 //    		verifyBalanceChange(seller1, -90, async () =>
 //    			verifyBalanceChange(feeRecipienter, -10, () =>
@@ -162,7 +159,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //      let tx = await bulkExchange._tradeExperiment(dataForWyvernCall, { from: buyer, value: 100, gasPrice: 0 });
 //      let tx = await bulkExchange.bulkWyvernTransfer([tradeData1], { from: buyer, value: 100, gasPrice: 0 });
 //      console.log("Bulk2 Wyvern orders, by _tradeExperiment ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
-//      assert.equal(await erc721.balanceOf(buyer), 1); //transfer all
+//      assert.equal(await erc721.balanceOf(buyer), 1); //purchase all
 
       const matchData2 = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -179,7 +176,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       ))
 		  const buySellOrders2 = OpenSeaOrdersInput(...matchData2);
       let dataForWyvernCall2 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders2);
-      const tradeData2 = TradeData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount
+      const tradeData2 = PurchaseData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount
 
       const matchData3 = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -196,14 +193,14 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       ))
 		  const buySellOrders3 = OpenSeaOrdersInput(...matchData3);
       let dataForWyvernCall3 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders3);
-      const tradeData3 = TradeData(1, 100, dataForWyvernCall3);
+      const tradeData3 = PurchaseData(1, 100, dataForWyvernCall3);
 
-      let tx = await bulkExchange.bulkTransfer([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
       console.log("Bulk2 Wyvern orders, ERC721<->ETH (num = 3), by tradeData, Gas consumption :", tx.receipt.gasUsed);
-      assert.equal(await erc721.balanceOf(buyer), 3); //transfer all
+      assert.equal(await erc721.balanceOf(buyer), 3);
     })
 
-		it("Test bulkTransfer with one UP fee, Wyvern (num orders = 1) orders are ready, ERC721<->ETH", async () => {
+		it("Test bulkPurchase with one UP fee, Wyvern (num orders = 1) orders are ready, ERC721<->ETH", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -260,7 +257,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const buySellOrders1 = OpenSeaOrdersInput(...matchData);
       let dataForWyvernCall1 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders1);
-      const tradeData1 = TradeData(1, 100, dataForWyvernCall1);
+      const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 //		  const left1 = OpenSeaOrdersInput(...matchData);
 //		  console.log("order:", left1);
       let feesUPFirst = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
@@ -268,21 +265,21 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //      let feesUP = [feesUPFirst, feesUPSecond];
       let feesUP = [feesUPFirst];
 
-      /*enough ETH for transfer*/
+      /*enough ETH for purchase*/
 //    	await verifyBalanceChange(buyer, 115, async () =>
 //    		verifyBalanceChange(seller1, -90, async () =>
 //    			verifyBalanceChange(feeRecipienter, -10, () =>
 //      			verifyBalanceChange(feeRecipienterUP, -15, () =>
-//      			  bulkExchange.bulkTransfer2([tradeData1], feesUP, { from: buyer, value: 400, gasPrice: 0 })
+//      			  bulkExchange.bulkPurchase2([tradeData1], feesUP, { from: buyer, value: 400, gasPrice: 0 })
 //      			)
 //    			)
 //    		)
 //    	);
 
 
-      let tx = await bulkExchange.bulkTransfer([tradeData1], feesUP, { from: buyer, value: 400, gasPrice: 0 });
-      console.log("First buy Wyvern orders, by bulkTransfer2 ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
-      assert.equal(await erc721.balanceOf(buyer), 1); //transfer all
+      let tx = await bulkExchange.bulkPurchase([tradeData1], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      console.log("First buy Wyvern orders, by bulkPurchase2 ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
+      assert.equal(await erc721.balanceOf(buyer), 1);
 
       const matchData2 = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -299,14 +296,14 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       ))
 		  const buySellOrders2 = OpenSeaOrdersInput(...matchData2);
       let dataForWyvernCall2 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders2);
-      const tradeData2 = TradeData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount
+      const tradeData2 = PurchaseData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount
 
-      tx = await bulkExchange.bulkTransfer([tradeData2], feesUP, { from: buyer, value: 400, gasPrice: 0 });
-      console.log("Second buy Wyvern orders, by bulkTransfer ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
-      assert.equal(await erc721.balanceOf(buyer), 2); //transfer all
+      tx = await bulkExchange.bulkPurchase([tradeData2], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      console.log("Second buy Wyvern orders, by bulkPurchase ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
+      assert.equal(await erc721.balanceOf(buyer), 2);
     })
 
-		it("Test bulkTransfer Wyvern (num orders = 3) orders are ready, ERC1155<->ETH", async () => {
+		it("Test bulkPurchase Wyvern (num orders = 3) orders are ready, ERC1155<->ETH", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -366,13 +363,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const buySellOrders1 = OpenSeaOrdersInput(...matchData);
       let dataForWyvernCall1 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders1);
-      const tradeData1 = TradeData(1, 100, dataForWyvernCall1);
+      const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 
-      /*enough ETH for transfer*/
+      /*enough ETH for purchase*/
 //    	await verifyBalanceChange(buyer, 100, async () =>
 //    		verifyBalanceChange(seller1, -90, async () =>
 //    			verifyBalanceChange(feeRecipienter, -10, () =>
-//    			  bulkExchange.bulkTransfer([tradeData1], { from: buyer, value: 400, gasPrice: 0 })
+//    			  bulkExchange.bulkPurchase([tradeData1], { from: buyer, value: 400, gasPrice: 0 })
 //    			)
 //    		)
 //    	);
@@ -394,7 +391,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       ))
 		  const buySellOrders2 = OpenSeaOrdersInput(...matchData2);
       let dataForWyvernCall2 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders2);
-      const tradeData2 = TradeData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount for 10
+      const tradeData2 = PurchaseData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount for 10
 
       const matchData3 = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -412,9 +409,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       ))
 		  const buySellOrders3 = OpenSeaOrdersInput(...matchData3);
       let dataForWyvernCall3 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders3);
-      const tradeData3 = TradeData(1, 100, dataForWyvernCall3);
+      const tradeData3 = PurchaseData(1, 100, dataForWyvernCall3);
 
-      let tx = await bulkExchange.bulkTransfer([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
 
       console.log("Bulk2 Wyvern orders, ERC1155<->ETH (num = 3), by tradeData, Gas consumption :", tx.receipt.gasUsed);
       assert.equal(await testERC1155.balanceOf(seller1, erc1155TokenIdLocal1), 2);
@@ -428,7 +425,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
 	describe("matchOrders Rarible Bulk", () => {
 
-		it("Test bulkTransfer ExchangeV2 (num orders = 3) orders are ready, ERC721<->ETH", async () => {
+		it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC721<->ETH", async () => {
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
 		  const seller2 = accounts[3];
@@ -449,15 +446,16 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 		  await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS/*openSea.address*/, exchangeV2.address); //don`t need openSea.address, process only exchaneV2 orders
 
       /*NB!!! set buyer in payouts*/
-      const encDataRight = await encDataV2([[[buyer, 10000]], [], false]); //encDataV2(payouts, originFees, isMakeFill)
+//      const encDataRight = await encDataV2([[[buyer, 10000]], [], false]); //encDataV2(payouts, originFees, isMakeFill)
       const encDataLeft = await encDataV2([[], [], false]);
+      const encDataLeftV1 = await encDataV1([ [], [] ]);
 
-//		  const left1 = Order(seller1, Asset(ERC721, enc(testERC721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
-//		  const left2 = Order(seller2, Asset(ERC721, enc(testERC721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
-//		  const left3 = Order(seller3, Asset(ERC721, enc(testERC721.address, erc721TokenId3), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
-		  const left1 = Order(seller1, Asset(ERC721, enc(testERC721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-		  const left2 = Order(seller2, Asset(ERC721, enc(testERC721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
-		  const left3 = Order(seller3, Asset(ERC721, enc(testERC721.address, erc721TokenId3), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+		  const left1 = Order(seller1, Asset(ERC721, enc(testERC721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+		  const left2 = Order(seller2, Asset(ERC721, enc(testERC721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+		  const left3 = Order(seller3, Asset(ERC721, enc(testERC721.address, erc721TokenId3), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V1, encDataLeftV1);
+//		  const left1 = Order(seller1, Asset(ERC721, enc(testERC721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+//		  const left2 = Order(seller2, Asset(ERC721, enc(testERC721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
+//		  const left3 = Order(seller3, Asset(ERC721, enc(testERC721.address, erc721TokenId3), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 
       let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
 		  let signatureLeft2 = await getSignature(left2, seller2, exchangeV2.address);
@@ -466,13 +464,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //      let signatureRight = "0x";
 
       let dataForExchCall1 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left1, signatureLeft1);
-      const tradeData1 = TradeData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall2 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left2, signatureLeft2);
-      const tradeData2 = TradeData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData2 = PurchaseData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall3 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left3, signatureLeft3);
-      const tradeData3 = TradeData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData3 = PurchaseData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let feesUPDetect = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
       let feesUP = [feesUPDetect];
@@ -487,13 +485,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //    			)
 //    		)
 //    	);
-      const tx = await bulkExchange.bulkTransfer([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
-    	console.log("Bulk, by bulkTransfer ERC721<->ETH (num = 3), Gas consumption :",tx.receipt.gasUsed);
+      const tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+    	console.log("Bulk, by bulkPurchase ERC721<->ETH (num = 3), Gas consumption :",tx.receipt.gasUsed);
     	assert.equal(await testERC721.balanceOf(seller1), 0);
-    	assert.equal(await testERC721.balanceOf(accounts[2]), 3); //transfer all
+    	assert.equal(await testERC721.balanceOf(accounts[2]), 3);
     })
 
-		it("Test bulkTransfer ExchangeV2 (num orders = 3) orders are ready, ERC1155<->ETH", async () => {
+		it("Test bulkPurchase ExchangeV2 (num orders = 3) orders are ready, ERC1155<->ETH", async () => {
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
 		  const seller2 = accounts[3];
@@ -531,13 +529,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //      let signatureRight = "0x";
 
       let dataForExchCall1 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left1, signatureLeft1);
-      const tradeData1 = TradeData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall2 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left2, signatureLeft2);
-      const tradeData2 = TradeData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData2 = PurchaseData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall3 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left3, signatureLeft3);
-      const tradeData3 = TradeData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData3 = PurchaseData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let feesUPDetect = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
       let feesUP = [feesUPDetect];
@@ -546,23 +544,23 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 //    		  verifyBalanceChange(seller2, -100, async () =>
 //    		    verifyBalanceChange(seller3, -100, async () =>
 //    			    verifyBalanceChange(protocol, -0, () =>
-//    				    bulkExchange.bulkTransfer([left1, left2, left3], [signatureLeft1, signatureLeft2, signatureLeft3], { from: buyer, value: 400, gasPrice: 0 })
+//    				    bulkExchange.bulkPurchase([left1, left2, left3], [signatureLeft1, signatureLeft2, signatureLeft3], { from: buyer, value: 400, gasPrice: 0 })
 //    				  )
 //    				)
 //    			)
 //    		)
 //    	);
-      const tx = await bulkExchange.bulkTransfer([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
-    	console.log("Bulk, by bulkTransfer ERC1155<->ETH (num = 3), Gas consumption :", tx.receipt.gasUsed);
+      const tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+    	console.log("Bulk, by bulkPurchase ERC1155<->ETH (num = 3), Gas consumption :", tx.receipt.gasUsed);
     	assert.equal(await testERC1155.balanceOf(seller1, erc1155TokenId1), 2);
-    	assert.equal(await testERC1155.balanceOf(buyer, erc1155TokenId1), 8); //transfer all
+    	assert.equal(await testERC1155.balanceOf(buyer, erc1155TokenId1), 8);
     })
 
   });
 
-describe("matchOrders Wywern single transfer", () => {
+  describe("matchOrders Wywern single purchase", () => {
 
-		it("Test bulkTransfer Wyvern (num orders = 3) orders are ready, ERC721<->ETH", async () => {
+		it("Test bulkPurchase Wyvern (num orders = 3) orders are ready, ERC721<->ETH", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -612,7 +610,7 @@ describe("matchOrders Wywern single transfer", () => {
       ))
       const buySellOrders1 = OpenSeaOrdersInput(...matchData);
       let dataForWyvernCall1 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders1);
-      const tradeData1 = TradeData(1, 100, dataForWyvernCall1);
+      const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 
       /*for second order*/
       const matchData2 = (await getOpenSeaMatchDataMerkleValidator(
@@ -630,37 +628,37 @@ describe("matchOrders Wywern single transfer", () => {
       ))
 		  const buySellOrders2 = OpenSeaOrdersInput(...matchData2);
       let dataForWyvernCall2 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders2);
-      const tradeData2 = TradeData(1, 100, dataForWyvernCall2);
+      const tradeData2 = PurchaseData(1, 100, dataForWyvernCall2);
 
       let feesUPFirst = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
       let feesUP = [feesUPFirst];
 
-      /*enough ETH for transfer*/
+      /*enough ETH for purchase*/
 //    	await verifyBalanceChange(buyer, 115, async () =>
 ////OR    		verifyBalanceChange(seller1, -90, async () =>
 //    		verifyBalanceChange(seller2, -90, async () =>
 //    			verifyBalanceChange(feeRecipienter, -10, () =>
 //    			  verifyBalanceChange(feeRecipienterUP, -15, () =>
-////OR    			    bulkExchange.singleTransferWithFee(1, dataForWyvernCall1, feesUP, { from: buyer, value: 400, gasPrice: 0 })
-//    			    bulkExchange.singleTransferWithFeeAndAmount(1, dataForWyvernCall2, 100, feesUP, { from: buyer, value: 400, gasPrice: 0 })
+////OR    			    bulkExchange.singlePurchaseWithFee(1, dataForWyvernCall1, feesUP, { from: buyer, value: 400, gasPrice: 0 })
+//    			    bulkExchange.singlePurchaseWithFeeAndAmount(1, dataForWyvernCall2, 100, feesUP, { from: buyer, value: 400, gasPrice: 0 })
 //    			  )
 //    			)
 //    		)
 //    	);
 
 
-      let tx = await bulkExchange.singleTransfer(tradeData1, feesUP, { from: buyer, value: 400, gasPrice: 0 });
-      console.log("Single for Wyvern orders, by singleTransfer WithFee1 ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
-      assert.equal(await erc721.balanceOf(buyer), 1); //transfer all
+      let tx = await bulkExchange.singlePurchase(tradeData1, feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      console.log("Single for Wyvern orders, by singlePurchase WithFee1 ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
+      assert.equal(await erc721.balanceOf(buyer), 1);
 
 
-      tx = await bulkExchange.singleTransfer(tradeData2, feesUP, { from: buyer, value: 400, gasPrice: 0 });
-//OR      tx = await bulkExchange.singleTransferWithFeeAndAmount(1, dataForWyvernCall2, 200, feesUP, { from: buyer, value: 400, gasPrice: 0 });
-      console.log("Single for Wyvern orders, by singleTransfer WithFee1 ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
-      assert.equal(await erc721.balanceOf(buyer), 2); //transfer all
+      tx = await bulkExchange.singlePurchase(tradeData2, feesUP, { from: buyer, value: 400, gasPrice: 0 });
+//OR      tx = await bulkExchange.singlePurchaseWithFeeAndAmount(1, dataForWyvernCall2, 200, feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      console.log("Single for Wyvern orders, by singlePurchase WithFee1 ERC721<->ETH (num = 1), ortders are ready, Gas consumption :", tx.receipt.gasUsed);
+      assert.equal(await erc721.balanceOf(buyer), 2);
     })
 
-		it("Test bulkTransfer Wyvern (num orders = 3) orders are ready, ERC1155<->ETH", async () => {
+		it("Test bulkPurchase Wyvern (num orders = 3) orders are ready, ERC1155<->ETH", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
 		  const buyer = accounts[2];
 		  const seller1 = accounts[1];
@@ -720,13 +718,13 @@ describe("matchOrders Wywern single transfer", () => {
 
       const buySellOrders1 = OpenSeaOrdersInput(...matchData);
       let dataForWyvernCall1 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders1);
-      const tradeData1 = TradeData(1, 100, dataForWyvernCall1);
+      const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 
-      /*enough ETH for transfer*/
+      /*enough ETH for purchase*/
 //    	await verifyBalanceChange(buyer, 100, async () =>
 //    		verifyBalanceChange(seller1, -90, async () =>
 //    			verifyBalanceChange(feeRecipienter, -10, () =>
-//    			  bulkExchange.bulkTransfer([tradeData1], { from: buyer, value: 400, gasPrice: 0 })
+//    			  bulkExchange.bulkPurchase([tradeData1], { from: buyer, value: 400, gasPrice: 0 })
 //    			)
 //    		)
 //    	);
@@ -748,7 +746,7 @@ describe("matchOrders Wywern single transfer", () => {
       ))
 		  const buySellOrders2 = OpenSeaOrdersInput(...matchData2);
       let dataForWyvernCall2 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders2);
-      const tradeData2 = TradeData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount for 10
+      const tradeData2 = PurchaseData(1, 100, dataForWyvernCall2); //1 is Wyvern orders, 100 is amount for 10
 
       const matchData3 = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -766,9 +764,9 @@ describe("matchOrders Wywern single transfer", () => {
       ))
 		  const buySellOrders3 = OpenSeaOrdersInput(...matchData3);
       let dataForWyvernCall3 = await exchangeBulkV2Test.getDataWyvernAtomicMatch(buySellOrders3);
-      const tradeData3 = TradeData(1, 100, dataForWyvernCall3);
+      const tradeData3 = PurchaseData(1, 100, dataForWyvernCall3);
 
-      let tx = await bulkExchange.bulkTransfer([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
 
       console.log("Bulk2 Wyvern orders, ERC1155<->ETH (num = 3), by tradeData, Gas consumption :", tx.receipt.gasUsed);
       assert.equal(await testERC1155.balanceOf(seller1, erc1155TokenIdLocal1), 2);
@@ -782,6 +780,10 @@ describe("matchOrders Wywern single transfer", () => {
 
 	function encDataV2(tuple) {
     return raribleTransferManagerTest.encodeV2(tuple);
+  }
+
+  function encDataV1(tuple) {
+  	return raribleTransferManagerTest.encode(tuple)
   }
 
   async function getOpenSeaMatchDataMerkleValidator(

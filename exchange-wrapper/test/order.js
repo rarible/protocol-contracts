@@ -38,7 +38,7 @@ function OpenSeaOrdersInput(
 	  rssMetadata };
 }
 
-function TradeData(marketId, amount, tradeData) {return {marketId, amount, tradeData};};
+function PurchaseData(marketId, amount, data) {return {marketId, amount, data};};
 
 const Types = {
 	AssetType: [
@@ -73,4 +73,4 @@ async function sign(order, account, verifyingContract) {
 	return (await EIP712.signTypedData(web3, account, data)).sig;
 }
 
-module.exports = { AssetType, Asset, Order, OpenSeaOrdersInput, TradeData, sign }
+module.exports = { AssetType, Asset, Order, OpenSeaOrdersInput, PurchaseData, sign }

@@ -25,10 +25,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
         WyvernExchange
     }
 
-    struct TradeDetails {
-        Markets marketId; //if 1 - market is IWyvernExchange, 0 - market is IExchangeV2
+    struct PurchaseDetails {
+        Markets marketId;
         uint256 amount;
-        bytes tradeData;
+        bytes data;
     }
 
     function __ExchangeWrapper_init(
@@ -49,41 +49,39 @@ contract ExchangeWrapper is OwnableUpgradeable {
         exchangeV2 = _exchangeV2;
     }
 
-    function singleTransfer(TradeDetails memory tradeDetails, uint[] memory fees) external payable {
-        uint amount = address(this).balance;
-        tradeDetailsTransfer(tradeDetails);
+    function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
+        dataTransfer(purchaseDetails);
 
-        feesTransfer(amount, fees);
+        feesTransfer(msg.value, fees);
 
         changeTransfer();
     }
 
-    function bulkTransfer(TradeDetails[] memory tradeDetails, uint[] memory fees) external payable {
-        uint amount = address(this).balance;
-        for (uint i = 0; i < tradeDetails.length; i++) {
-            tradeDetailsTransfer(tradeDetails[i]);
+    function bulkPurchase(PurchaseDetails[] memory purchaseDetails, uint[] memory fees) external payable {
+        for (uint i = 0; i < purchaseDetails.length; i++) {
+            dataTransfer(purchaseDetails[i]);
         }
 
-        feesTransfer(amount, fees);
+        feesTransfer(msg.value, fees);
 
         changeTransfer();
     }
 
-    function tradeDetailsTransfer(TradeDetails memory tradeDetails) internal {
-        uint paymentAmount = tradeDetails.amount;
-        if (tradeDetails.marketId == Markets.WyvernExchange) {
-            (bool success,) = address(wyvernExchange).call{value : paymentAmount}(tradeDetails.tradeData);
+    function dataTransfer(PurchaseDetails memory purchaseDetails) internal {
+        uint paymentAmount = purchaseDetails.amount;
+        if (purchaseDetails.marketId == Markets.WyvernExchange) {
+            (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
             _checkCallResult(success);
-        } else if (tradeDetails.marketId == Markets.ExchangeV2) {
-            (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(tradeDetails.tradeData, (LibOrder.Order, bytes));
+        } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
+            (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes));
             matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount);
         }
     }
 
     function feesTransfer(uint amount, uint[] memory fees) internal {
-        uint spend = amount.sub(address(this).balance);
+        uint spent = amount.sub(address(this).balance);
         for (uint i = 0; i < fees.length; i++) {
-            uint feeValue = spend.bp(uint(fees[i] >> 160));
+            uint feeValue = spent.bp(uint(fees[i] >> 160));
             if (feeValue > 0) {
                 LibTransfer.transferEth(address(fees[i]), feeValue);
             }
