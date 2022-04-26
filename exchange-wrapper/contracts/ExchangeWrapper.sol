@@ -71,7 +71,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
         uint paymentAmount = purchaseDetails.amount;
         if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
-            _checkCallResult(success);
+            require(success, "transfer failed");
         } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
             (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes));
             matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount);
@@ -94,16 +94,6 @@ contract ExchangeWrapper is OwnableUpgradeable {
         uint ethAmount = address(this).balance;
         if (ethAmount > 0) {
             address(_msgSender()).transferEth(ethAmount);
-        }
-    }
-
-    function _checkCallResult(bool _success) internal pure {
-        if (!_success) {
-            // Copy revert reason from call
-            assembly {
-                returndatacopy(0, 0, returndatasize())
-                revert(0, returndatasize())
-            }
         }
     }
 

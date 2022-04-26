@@ -43,6 +43,25 @@ interface IMatchERC1155{
     ) external returns (bool);
 }
 
+/*Interface with error*/
+interface IWyvernExchangeError {
+    /*method is not exist in WyvernBulkExchange contract*/
+    function atomicMatchError_(
+        address[14] memory addrs,
+        uint[18] memory uints,
+        uint8[8] memory feeMethodsSidesKindsHowToCalls,
+        bytes memory calldataBuy,
+        bytes memory calldataSell,
+        bytes memory replacementPatternBuy,
+        bytes memory replacementPatternSell,
+        bytes memory staticExtradataBuy,
+        bytes memory staticExtradataSell,
+        uint8[2] memory vs,
+        bytes32[5] memory rssMetadata)
+    external
+    payable;
+}
+
 contract ExchangeBulkV2Test {
 
     struct WyvernOrders {
@@ -68,6 +87,10 @@ contract ExchangeBulkV2Test {
 
     function getDataWyvernAtomicMatch(WyvernOrders memory _openSeaBuy) external pure returns(bytes memory _data) {
         _data = abi.encodeWithSelector(IWyvernExchange.atomicMatch_.selector, _openSeaBuy.addrs, _openSeaBuy.uints, _openSeaBuy.feeMethodsSidesKindsHowToCalls, _openSeaBuy.calldataBuy, _openSeaBuy.calldataSell, _openSeaBuy.replacementPatternBuy, _openSeaBuy.replacementPatternSell, _openSeaBuy.staticExtradataBuy, _openSeaBuy.staticExtradataSell, _openSeaBuy.vs, _openSeaBuy.rssMetadata);
+    }
+
+    function getDataWyvernAtomicMatchWithError(WyvernOrders memory _openSeaBuy) external pure returns(bytes memory _data) {
+        _data = abi.encodeWithSelector(IWyvernExchangeError.atomicMatchError_.selector, _openSeaBuy.addrs, _openSeaBuy.uints, _openSeaBuy.feeMethodsSidesKindsHowToCalls, _openSeaBuy.calldataBuy, _openSeaBuy.calldataSell, _openSeaBuy.replacementPatternBuy, _openSeaBuy.replacementPatternSell, _openSeaBuy.staticExtradataBuy, _openSeaBuy.staticExtradataSell, _openSeaBuy.vs, _openSeaBuy.rssMetadata);
     }
 
     function getDataERC721UsingCriteria(
