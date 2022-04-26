@@ -50,7 +50,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
     }
 
     function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
-        dataTransfer(purchaseDetails);
+        purchase(purchaseDetails);
 
         feesTransfer(msg.value, fees);
 
@@ -59,7 +59,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function bulkPurchase(PurchaseDetails[] memory purchaseDetails, uint[] memory fees) external payable {
         for (uint i = 0; i < purchaseDetails.length; i++) {
-            dataTransfer(purchaseDetails[i]);
+            purchase(purchaseDetails[i]);
         }
 
         feesTransfer(msg.value, fees);
@@ -67,7 +67,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
         changeTransfer();
     }
 
-    function dataTransfer(PurchaseDetails memory purchaseDetails) internal {
+    function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
         if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
@@ -75,6 +75,8 @@ contract ExchangeWrapper is OwnableUpgradeable {
         } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
             (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes));
             matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount);
+        } else {
+            revert("Unknown purchase details");
         }
     }
 
