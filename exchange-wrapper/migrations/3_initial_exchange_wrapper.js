@@ -5,7 +5,7 @@ const ExchangeWrapper = artifacts.require('ExchangeWrapper');
 //TODO set real addresses
 const rinkeby = {
   exchangeV2:     "0xd4a57a3bD3657D0d46B4C5bAC12b3F156B9B886b",
-  wyvernExchange: "0x0000000000000000000000000000000000000000"
+  wyvernExchange: "0xdD54D660178B28f6033a953b0E55073cFA7e3744"
 }
 const mainnet = {
   exchangeV2: "0x9757F2d2b135150BBeb65308D4a91804107cd8D6",
