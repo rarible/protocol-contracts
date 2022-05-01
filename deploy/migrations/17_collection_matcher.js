@@ -1,5 +1,3 @@
-const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
-
 const AssetMatcherCollection = artifacts.require('AssetMatcherCollection');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
@@ -13,12 +11,15 @@ module.exports = async function (deployer, network) {
   console.log("asset matcher for collections deployed at", matcher.address)
 
   // set it in ExchangeV2
-  const { meta_support } = getSettings(network);
-  let exchangeV2;
-  if (!!meta_support) {
-    exchangeV2 = await ExchangeMetaV2.deployed();
-  } else {
-    exchangeV2 = await ExchangeV2.deployed();
+  const settings = getSettings(network);
+  if (!!settings.deploy_meta) {
+    const exchangeV2 = await ExchangeMetaV2.deployed();
+    await exchangeV2.setAssetMatcher(id("COLLECTION"), matcher.address);
+  } 
+  
+  if (!!settings.deploy_non_meta) {
+    const exchangeV2 = await ExchangeV2.deployed();
+    await exchangeV2.setAssetMatcher(id("COLLECTION"), matcher.address);
   }
-  await exchangeV2.setAssetMatcher(id("COLLECTION"), matcher.address);
+  
 };

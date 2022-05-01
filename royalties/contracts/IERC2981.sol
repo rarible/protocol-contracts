@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.2 <0.8.0;
-import "./LibPart.sol";
+import "@rarible/lib-part/contracts/LibPart.sol";
 ///
 /// @dev Interface for the NFT Royalty Standard
 ///

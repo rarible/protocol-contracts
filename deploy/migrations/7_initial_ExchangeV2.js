@@ -10,16 +10,20 @@ const TransferProxy = artifacts.require('TransferProxy');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
 module.exports = async function (deployer, network) {
-  const { communityWallet, meta_support } = getSettings(network);
+  const { communityWallet, deploy_meta, deploy_non_meta } = getSettings(network);
 
-  let exchangeV2toDeploy;
   //deploying ExchangeV2 with meta support if needed
-  if (!!meta_support) {
-    exchangeV2toDeploy = ExchangeMetaV2;
-  } else {
-    exchangeV2toDeploy = ExchangeV2;
+  if (!!deploy_meta) {
+    await deployExchange(ExchangeMetaV2, communityWallet, deployer);
+  } 
+  
+  if (!!deploy_non_meta){
+    await deployExchange(ExchangeV2, communityWallet, deployer);
   }
 
+};
+
+async function deployExchange(exchangeV2toDeploy, communityWallet, deployer) {
   const transferProxy = (await TransferProxy.deployed()).address;
   const erc20TransferProxy = (await ERC20TransferProxy.deployed()).address;
   const royaltiesRegistry = (await RoyaltiesRegistry.deployed()).address;
@@ -30,4 +34,4 @@ module.exports = async function (deployer, network) {
     { deployer, initializer: '__ExchangeV2_init' }
   );
   console.log("deployed exchangeV2 at", exchangeV2.address)
-};
+}

@@ -1,6 +1,5 @@
 const Testing = artifacts.require("ERC1155Rarible.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
-const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC1155RaribleUserFactoryC2 = artifacts.require("ERC1155RaribleFactoryC2.sol");
 const truffleAssert = require('truffle-assertions');
 const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");

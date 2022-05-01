@@ -4,8 +4,9 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@rarible/lib-broken-line/contracts/LibBrokenLine.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "./lib-broken-line/LibBrokenLine.sol";
 
 contract StakingBase is OwnableUpgradeable {
 

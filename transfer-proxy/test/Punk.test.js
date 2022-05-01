@@ -1,9 +1,9 @@
 const CryptoPunksMarket = artifacts.require("CryptoPunksMarket.sol");
 const PunkTransferProxy = artifacts.require("PunkTransferProxy.sol")
 
-const { Asset } = require("../order");
+const { Asset } = require("../../scripts/order.js");
 const { expectThrow } = require("@daonomic/tests-common");
-const { id, enc } = require("../assets");
+const { id, enc } = require("../../scripts/assets.js");
 const truffleAssert = require('truffle-assertions');
 
 /*Proxy  buy punk, sfter Proxy transfer punk to buyer */

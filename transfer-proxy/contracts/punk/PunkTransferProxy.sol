@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/ICryptoPunksMarket.sol";
-import "../roles/OperatorRole.sol";
+import "@rarible/role-operator/contracts/OperatorRole.sol";
 
 contract PunkTransferProxy is OperatorRole, ITransferProxy {
 

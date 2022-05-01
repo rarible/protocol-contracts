@@ -2,7 +2,7 @@
 
 pragma solidity >=0.6.2 <0.8.0;
 
-import "../LibPart.sol";
+import "@rarible/lib-part/contracts/LibPart.sol";
 
 abstract contract AbstractRoyalties {
     mapping (uint256 => LibPart.Part[]) internal royalties;

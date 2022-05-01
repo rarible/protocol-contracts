@@ -3,9 +3,9 @@ const ERC1155LazyMintTest = artifacts.require("ERC1155LazyMintTest.sol");
 const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxy.sol")
 const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxy.sol")
 
-const { Asset } = require("../order");
+const { Asset } = require("../../scripts/order.js");
 const { expectThrow } = require("@daonomic/tests-common");
-const { id } = require("../assets");
+const { id } = require("../../scripts/assets.js");
 
 contract("Exchange with LazyMint proxies", accounts => {
   let erc721Test;

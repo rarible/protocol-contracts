@@ -17,7 +17,7 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 	let erc721TokenId1 = 51;
 	let erc721TokenId2 = 52;
 
-	beforeEach(async () => {
+	before(async () => {
 		royaltiesRegistry = await RoyaltiesRegistry.new();
     await royaltiesRegistry.__RoyaltiesRegistry_init();
 		royaltiesRegistryTest = await RoyaltiesRegistryTest.new();

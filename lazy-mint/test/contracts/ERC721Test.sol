@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "../../contracts/erc-721/LibERC721LazyMint.sol";
 import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
-import "@rarible/libraries/contracts/LibSignature.sol";
+import "@rarible/lib-signature/contracts/LibSignature.sol";
 
 contract ERC721Test is EIP712Upgradeable {
     using LibSignature for bytes32;

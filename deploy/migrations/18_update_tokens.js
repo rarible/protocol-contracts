@@ -4,29 +4,32 @@ const adminJson = require("@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json
 const ProxyAdmin = contract(adminJson)
 ProxyAdmin.setProvider(web3.currentProvider)
 
-const { getProxyImplementation, getSettings } = require("./config.js")
+const { getProxyImplementation, getSettings, updateImplementation } = require("./config.js")
 
 const ERC1155RaribleBeacon = artifacts.require('ERC1155RaribleBeacon');
 const ERC1155Rarible = artifacts.require('ERC1155Rarible');
 const ERC1155RaribleMeta = artifacts.require('ERC1155RaribleMeta');
+const ERC1155RaribleBeaconMeta = artifacts.require('ERC1155RaribleBeaconMeta');
 
 const ERC721RaribleMinimalBeacon = artifacts.require('ERC721RaribleMinimalBeacon');
 const ERC721RaribleMinimal = artifacts.require('ERC721RaribleMinimal');
 const ERC721RaribleMeta = artifacts.require('ERC721RaribleMeta');
+const ERC721RaribleMinimalBeaconMeta = artifacts.require('ERC721RaribleMinimalBeaconMeta');
 
 module.exports = async function (deployer, network) {
-  const { meta_support } = getSettings(network);
+  const { deploy_meta, deploy_non_meta } = getSettings(network);
 
-  let erc1155toDeploy;
-  let erc721toDeploy;
-  if (!!meta_support) {
-    erc1155toDeploy = ERC1155RaribleMeta;
-    erc721toDeploy = ERC721RaribleMeta;
-  } else {
-    erc1155toDeploy = ERC1155Rarible;
-    erc721toDeploy = ERC721RaribleMinimal;
+  if (!!deploy_meta) {
+    await deployTokens(ERC1155RaribleMeta, ERC1155RaribleBeaconMeta, ERC721RaribleMeta, ERC721RaribleMinimalBeaconMeta, deployer, network);
+  } 
+  
+  if (!!deploy_non_meta){
+    await deployTokens(ERC1155Rarible, ERC1155RaribleBeacon, ERC721RaribleMinimal, ERC721RaribleMinimalBeacon, deployer, network);
   }
 
+};
+
+async function deployTokens(erc1155toDeploy, erc1155Beacon, erc721toDeploy, erc721Beacon, deployer, network) {
   //upgrade 1155 proxy
   const erc1155Proxy = await erc1155toDeploy.deployed();
   await upgradeProxy(erc1155Proxy.address, erc1155toDeploy, { deployer });
@@ -34,11 +37,8 @@ module.exports = async function (deployer, network) {
   const erc1155 = await getProxyImplementation(erc1155toDeploy, network, ProxyAdmin)
 
   //upgrading 1155 beacon
-  const beacon1155 = await ERC1155RaribleBeacon.deployed();
-  console.log(`old impl 1155 = ${await beacon1155.implementation()}`)
-  await beacon1155.upgradeTo(erc1155)
-  console.log(`new impl 1155 = ${await beacon1155.implementation()}`)
-
+  const beacon1155 = await erc1155Beacon.deployed();
+  await updateImplementation(beacon1155, erc1155)
 
   //upgrade 721 proxy
   const erc721Proxy = await erc721toDeploy.deployed();
@@ -47,9 +47,6 @@ module.exports = async function (deployer, network) {
   const erc721 = await getProxyImplementation(erc721toDeploy, network, ProxyAdmin)
 
   //upgrading 721 beacon
-  const beacon721 = await ERC721RaribleMinimalBeacon.deployed();
-  console.log(`old impl 721 = ${await beacon721.implementation()}`)
-  await beacon721.upgradeTo(erc721)
-  console.log(`new impl 721 = ${await beacon721.implementation()}`)
-
-};
+  const beacon721 = await erc721Beacon.deployed();
+  await updateImplementation(beacon721, erc721)
+}

@@ -23,11 +23,14 @@ contract("ERC1155Rarible", accounts => {
   const name = 'FreeMintable';
   const ZERO = "0x0000000000000000000000000000000000000000";
 
+  before(async () => {
+    proxyLazy = await ERC1155LazyMintTransferProxy.new();
+    erc1271 = await ERC1271.new();
+  });
+
   beforeEach(async () => {
     token = await Testing.new();
-    proxyLazy = await ERC1155LazyMintTransferProxy.new();
     await token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, proxyLazy.address, {from: tokenOwner});
-    erc1271 = await ERC1271.new();
   });
 
   describe("burnBatch  ()", () => {

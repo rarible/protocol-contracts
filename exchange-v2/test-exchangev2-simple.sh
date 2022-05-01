@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 truffle test \
-        ./test/v2/ExchangeV2.simple.test.js \
-        ./test/contracts/tokens/TestERC20.sol \
-        ./test/contracts/v2/ERC20TransferProxyTest.sol \
-        ./test/contracts/v2/ExchangeSimpleV2_1.sol \
-        ./test/contracts/v2/TransferProxyTest.sol \
-        ./test/contracts/v2/PunkTransferProxyTest.sol \
-        ./test/contracts/v2/TestRoyaltiesRegistry.sol \
-        ./test/contracts/v2/RaribleTransferManagerTest.sol \
-        ./test/contracts/v2/TestRoyaltiesRegistry.sol \
-        ./test/contracts/v2/LibOrderTest.sol \
+        ./test/ExchangeV2.simple.test.js \
+        ./test/contracts/ExchangeSimpleV2.sol \
+        ./test/contracts/ExchangeSimpleV2_1.sol \
+        ./test/contracts/TestERC20.sol \
+        ./test/contracts/TransferProxyTest.sol \
+        ./test/contracts/ERC20TransferProxyTest.sol \
+        ./test/contracts/LibOrderTest.sol \
         --compile-all

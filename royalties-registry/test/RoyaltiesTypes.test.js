@@ -9,7 +9,7 @@ const TestERC721 = artifacts.require("TestERC721.sol");
 
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
-const { expectThrow, verifyBalanceChange, assertEq } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 
 contract("RoyaltiesRegistry, royalties types test", accounts => {
 

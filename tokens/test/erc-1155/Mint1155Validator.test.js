@@ -10,7 +10,7 @@ contract("Mint1155Validator", accounts => {
 	let erc1271;
 	let fees;
 
-	beforeEach(async () => {
+	before(async () => {
 		testing = await Mint1155ValidatorTest.new();
 		await testing.__Mint1155ValidatorTest_init();
 		erc1271 = await TestERC1271.new();

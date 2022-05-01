@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "./LibERC721LazyMint.sol";
-import "@rarible/royalties/contracts/LibPart.sol";
+import "@rarible/lib-part/contracts/LibPart.sol";
 
 interface IERC721LazyMint is IERC721Upgradeable {
 

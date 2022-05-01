@@ -4,7 +4,7 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "@rarible/tokens-minimal/contracts/erc-721/ERC721UpgradeableMinimal.sol";
+import "./ERC721UpgradeableMinimal.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../LibURI.sol";
 
