@@ -3,52 +3,47 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
-import "@rarible/lib-asset/contracts/LibAsset.sol";
-import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
-import "@rarible/libraries/contracts/LibFill.sol";
-import "@rarible/libraries/contracts/LibFeeSide.sol";
-import "@rarible/libraries/contracts/BpLibrary.sol";
-import "@rarible/libraries/contracts/LibDeal.sol";
-import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
-import "./TransferExecutor.sol";
-import "@rarible/transfer-proxy/contracts/roles/OperatorRole.sol";
 
-contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorRole {
+import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+
+import "@rarible/libraries/contracts/BpLibrary.sol";
+
+import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
+
+abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
-    using LibTransfer for address;
 
+    uint public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
     address public defaultFeeReceiver;
     mapping(address => address) public feeReceivers;
 
-    function __RaribleTransferManager_init(
-        address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider,
-        INftTransferProxy transferProxy,
-        IERC20TransferProxy erc20TransferProxy
-    ) external initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-        __TransferExecutor_init_unchained(transferProxy, erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newDefaultFeeReceiver, newRoyaltiesProvider);
-    }
+    /// @dev event that's emitted when protocolFee changes
+    event ProtocolFeeChanged(uint oldValue, uint newValue);
 
     function __RaribleTransferManager_init_unchained(
+        uint newProtocolFee,
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
+        protocolFee = newProtocolFee;
         defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
     }
 
     function setRoyaltiesRegistry(IRoyaltiesProvider newRoyaltiesRegistry) external onlyOwner {
         royaltiesRegistry = newRoyaltiesRegistry;
+    }
+
+    function setProtocolFee(uint64 _protocolFee) external onlyOwner {
+        emit ProtocolFeeChanged(protocolFee, _protocolFee);
+        protocolFee = _protocolFee;
     }
 
     function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {
@@ -67,65 +62,50 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         return defaultFeeReceiver;
     }
 
-    function executeTransfer(
-        LibAsset.Asset memory asset,
-        address from,
-        address to,
-        bytes4 transferDirection,
-        bytes4 transferType
-    ) override external onlyOperator {
-        require(asset.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "ETH not supported");
-        transfer(asset, from, to, transferDirection, transferType);
-    }
-
     function doTransfers(
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,
         LibFeeSide.FeeSide feeSide,
-        address initialSender
-    ) override payable external onlyOperator returns (uint totalLeftValue, uint totalRightValue) {
-        totalLeftValue = left.value;
-        totalRightValue = right.value;
+        uint _protocolFee
+    ) override internal returns (uint totalLeftValue, uint totalRightValue) {
+        totalLeftValue = left.asset.value;
+        totalRightValue = right.asset.value;
 
         if (feeSide == LibFeeSide.FeeSide.LEFT) {
-            totalLeftValue = doTransfersWithFees(left, right, TO_TAKER);
-            transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
+            totalLeftValue = doTransfersWithFees(left, right, _protocolFee);
+            transferPayouts(right.asset.assetType, right.asset.value, right.from, left.payouts, right.proxy);
         } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
-            totalRightValue = doTransfersWithFees(right, left, TO_MAKER);
-            transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
+            totalRightValue = doTransfersWithFees(right, left, _protocolFee);
+            transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
         } else {
-            transferPayouts(left.assetType, left.value, left.sideAddress, right.payouts, TO_TAKER);
-            transferPayouts(right.assetType, right.value, right.sideAddress, left.payouts, TO_MAKER);
-        }
-
-        /*if on of assetClass == ETH, need to transfer ETH to RaribleTransferManager contract before run method doTransfers*/
-        if (left.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(right.assetType.assetClass != LibAsset.ETH_ASSET_CLASS, "try transfer eth<->eth");
-            require(msg.value >= totalLeftValue, "not enough eth");
-            uint256 change = msg.value.sub(totalLeftValue);
-            if (change > 0) {
-                initialSender.transferEth(change);
-            }
-        } else if (right.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
-            require(msg.value >= totalRightValue, "not enough eth");
-            uint256 change = msg.value.sub(totalRightValue);
-            if (change > 0) {
-                initialSender.transferEth(change);
-            }
+            transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
+            transferPayouts(right.asset.assetType, right.asset.value, right.from, left.payouts, right.proxy);
         }
     }
 
     function doTransfersWithFees(
         LibDeal.DealSide memory calculateSide,
         LibDeal.DealSide memory nftSide,
-        bytes4 transferDirection
+        uint _protocolFee
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(calculateSide.value, calculateSide.protocolFee, calculateSide.originFees);
-        uint rest = transferProtocolFee(totalAmount, calculateSide.value, calculateSide.sideAddress, calculateSide.protocolFee, nftSide.protocolFee, calculateSide.assetType, transferDirection);
-        rest = transferRoyalties(calculateSide.assetType, nftSide.assetType, rest, calculateSide.value, calculateSide.sideAddress, transferDirection);
-        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, calculateSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
-        (rest,) = transferFees(calculateSide.assetType, rest, calculateSide.value, nftSide.originFees, calculateSide.sideAddress, transferDirection, ORIGIN);
-        transferPayouts(calculateSide.assetType, rest, calculateSide.sideAddress, nftSide.payouts, transferDirection);
+        totalAmount = calculateTotalAmount(calculateSide.asset.value, _protocolFee, calculateSide.originFees);
+        uint rest = transferProtocolFee(totalAmount, calculateSide.asset.value, calculateSide.from, _protocolFee, _protocolFee, calculateSide.asset.assetType, calculateSide.proxy);
+
+        rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
+        if (
+            calculateSide.originFees.length  == 1 &&
+            nftSide.originFees.length  == 1 &&
+            nftSide.originFees[0].account == calculateSide.originFees[0].account
+        ) { 
+            LibPart.Part[] memory origin = new  LibPart.Part[](1);
+            origin[0].account = nftSide.originFees[0].account;
+            origin[0].value = nftSide.originFees[0].value + calculateSide.originFees[0].value;
+            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, origin, calculateSide.from, calculateSide.proxy);
+        } else {
+            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, calculateSide.originFees, calculateSide.from, calculateSide.proxy);
+            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, nftSide.originFees, calculateSide.from, calculateSide.proxy);
+        }
+        transferPayouts(calculateSide.asset.assetType, rest, calculateSide.from, nftSide.payouts, calculateSide.proxy);
     }
 
     function transferProtocolFee(
@@ -135,7 +115,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         uint feeSideProtocolFee,
         uint nftSideProtocolFee,
         LibAsset.AssetType memory matchCalculate,
-        bytes4 transferDirection
+        address proxy
     ) internal returns (uint) {
         (uint rest, uint fee) = subFeeInBp(totalAmount, amount, feeSideProtocolFee + nftSideProtocolFee);
         if (fee > 0) {
@@ -146,7 +126,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
                 uint tokenId;
                 (tokenAddress, tokenId) = abi.decode(matchCalculate.data, (address, uint));
             }
-            transfer(LibAsset.Asset(matchCalculate, fee), from, getFeeReceiver(tokenAddress), transferDirection, PROTOCOL);
+            transfer(LibAsset.Asset(matchCalculate, fee), from, getFeeReceiver(tokenAddress), proxy);
         }
         return rest;
     }
@@ -154,14 +134,22 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
     function transferRoyalties(
         LibAsset.AssetType memory matchCalculate,
         LibAsset.AssetType memory matchNft,
+        LibPart.Part[] memory payouts,
         uint rest,
         uint amount,
         address from,
-        bytes4 transferDirection
+        address proxy
     ) internal returns (uint) {
-        LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft);
-
-        (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, transferDirection, ROYALTY);
+        LibPart.Part[] memory fees = getRoyaltiesByAssetType(matchNft); 
+        if (
+            fees.length == 1 &&
+            payouts.length == 1 &&
+            fees[0].account == payouts[0].account
+        ) {
+            require(fees[0].value <= 5000, "Royalties are too high (>50%)");
+            return rest;
+        }
+        (uint result, uint totalRoyalties) = transferFees(matchCalculate, rest, amount, fees, from, proxy);
         require(totalRoyalties <= 5000, "Royalties are too high (>50%)");
         return result;
     }
@@ -187,8 +175,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         uint amount,
         LibPart.Part[] memory fees,
         address from,
-        bytes4 transferDirection,
-        bytes4 transferType
+        address proxy
     ) internal returns (uint restValue, uint totalFees) {
         totalFees = 0;
         restValue = rest;
@@ -197,7 +184,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
             (uint newRestValue, uint feeValue) = subFeeInBp(restValue, amount, fees[i].value);
             restValue = newRestValue;
             if (feeValue > 0) {
-                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, transferDirection, transferType);
+                transfer(LibAsset.Asset(matchCalculate, feeValue), from, fees[i].account, proxy);
             }
         }
     }
@@ -207,7 +194,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         uint amount,
         address from,
         LibPart.Part[] memory payouts,
-        bytes4 transferDirection
+        address proxy
     ) internal {
         require(payouts.length > 0, "transferPayouts: nothing to transfer");
         uint sumBps = 0;
@@ -217,14 +204,14 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
             sumBps = sumBps.add(payouts[i].value);
             if (currentAmount > 0) {
                 restValue = restValue.sub(currentAmount);
-                transfer(LibAsset.Asset(matchCalculate, currentAmount), from, payouts[i].account, transferDirection, PAYOUT);
+                transfer(LibAsset.Asset(matchCalculate, currentAmount), from, payouts[i].account, proxy);
             }
         }
         LibPart.Part memory lastPayout = payouts[payouts.length - 1];
         sumBps = sumBps.add(lastPayout.value);
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
         if (restValue > 0) {
-            transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
+            transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, proxy);
         }
     }
 
@@ -232,7 +219,7 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         uint amount,
         uint feeOnTopBp,
         LibPart.Part[] memory orderOriginFees
-    ) override public pure returns (uint total) {
+    ) internal pure returns (uint total) {
         total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
@@ -253,8 +240,8 @@ contract RaribleTransferManager is TransferExecutor, ITransferManager, OperatorR
         }
     }
 
-    function getProxy(bytes4 _type) override external view returns(address) {
-        return proxies[_type];
+    function parseFeeData(uint data) internal pure returns(address, uint96) {
+        return (address(data), uint96(data >> 160));
     }
 
     uint256[46] private __gap;

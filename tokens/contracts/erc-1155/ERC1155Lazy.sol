@@ -17,7 +17,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
     bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
 
-    mapping(uint256 => LibPart.Part[]) public creators;
+    mapping(uint256 => LibPart.Part[]) private creators;
     mapping(uint => uint) private supply;
     mapping(uint => uint) private minted;
 

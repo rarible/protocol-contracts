@@ -43,15 +43,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 		transferProxy = await TransferProxyTest.new();
 		erc20TransferProxy = await ERC20TransferProxyTest.new();
 		royaltiesRegistry = await TestRoyaltiesRegistry.new();
-		transferManagerTest = await deployProxy(RaribleTransferManagerTest, [community, royaltiesRegistry.address, transferProxy.address, erc20TransferProxy.address], { initializer: "__RaribleTransferManagerTest_init_unchained" });
-		testing = await deployProxy(ExchangeV2, [transferManagerTest.address, protocolFee], { initializer: "__ExchangeV2_init" });
-		await transferManagerTest.addOperator(testing.address);
-
+		testing = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, protocolFee, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
+		transferManagerTest = await RaribleTransferManagerTest.new();
 		t1 = await TestERC20.new();
 		t2 = await TestERC20.new();
     /*ETH*/
-    await transferManagerTest.setFeeReceiver(eth, protocol);
-    await transferManagerTest.setFeeReceiver(t1.address, protocol);
+    await testing.setFeeReceiver(eth, protocol);
+    await testing.setFeeReceiver(t1.address, protocol);
  		/*ERC721 */
  		erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
 		/*ERC1155V2*/
@@ -74,6 +72,90 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			const tx = await testing.matchOrders(left, "0x", right, await getSignature(right, accounts[1]), { from: accounts[2], value: 300 });
 			console.log("ERC20<->eth two offChain orders, with Separate RTM logic gas:", tx.receipt.gasUsed);
 		})
+    it("same origin, not same royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[5], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[6], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("same origin, no royalties:", tx.receipt.gasUsed);
+			
+		})
+
+    it("same origin, yes royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[5], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[2], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("same origin, yes royalties:", tx.receipt.gasUsed);
+			
+		})
+
+    it("not same origin, yes royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[6], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[2], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("not same origin, yes royalties:", tx.receipt.gasUsed);
+			
+		})
+
+    it("not same origin, not same royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await  erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await  erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+			let addrOriginLeft = [[accounts[6], 500]];
+			let addrOriginRight = [[accounts[5], 500]];
+
+			let encDataLeft = await encDataV1([ [[accounts[1], 10000]], addrOriginLeft ]);
+			let encDataRight = await encDataV1([ [[accounts[2], 10000]], addrOriginRight ]);
+
+			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V1, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("not same origin, yes royalties:", tx.receipt.gasUsed);
+			
+		})
+
   });
 
 	describe("matchOrders", () => {
@@ -169,7 +251,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       await testing.setAssetMatcher(COLLECTION, matcher.address);
 
-      await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]), {value: 300});
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, await getSignature(right, accounts[2]), {value: 300});
+      console.log("ETH <=> COLLECTION:", tx.receipt.gasUsed);
 
       assert.equal(await erc721.balanceOf(accounts[1]), 0);
       assert.equal(await erc721.balanceOf(accounts[2]), 1);
@@ -183,7 +266,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				const {signature, onChain} = await createOrder(left, accounts[1])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC20:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
@@ -242,7 +326,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
 				const {signature, onChain} = await createOrder(left, accounts[1])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC721:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
@@ -277,7 +362,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 				const { left, right } = await prepare20DV1_1155V2Orders()
 				const {signature, onChain} = await createOrder(left, accounts[1])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC1155:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 7);
@@ -322,7 +408,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 				const { left, right } = await prepare1155V1_20DV1Orders()
 				const {signature, onChain} = await createOrder(left, accounts[2])
 
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[1] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[1] });
+        console.log("ERC1155 V1 <=> ERC20 V1:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 100);
@@ -556,7 +643,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			await runTest(async createOrder => {
 				const { left, right } = await prepare2Orders()
 				const {signature, onChain} = await createOrder(left, accounts[1])
-				await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+				const tx = await testing.matchOrders(left, signature, right, "0x", { from: accounts[2] });
+        console.log("ERC20 <=> ERC20 PAYOUTS:", tx.receipt.gasUsed);
 
 				if (onChain == 1) {
 					assert.equal(await testing.fills(await libOrder.hashKeyOnChain(left)), 200);
@@ -713,180 +801,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     })
 
 	})	//Do matchOrders(), orders dataType == V1, MultipleBeneficiary
-
-/*	describe("Catch emit event Transfer", () => {
-		it("From ETH(DataV1) to ERC721(DataV1) Protocol, check emit ", async () => {
-			const seller = accounts[1];
-			const sellerRoyaltiy = accounts[4];
-			const seller2 = accounts[3];
-			const buyer = accounts[2];
-			const originLeft1 = accounts[5];
-			const originLeft2 = accounts[6];
-			const originRight = accounts[7];
-
-			await erc721V1.mint(seller, erc721TokenId1, [[sellerRoyaltiy, 1000]]);
-    		await erc721V1.setApprovalForAll(transferProxy.address, true, {from: seller});
-
-			let addrOriginLeft = [[originLeft1, 500], [originLeft2, 600]];
- 			let addrOriginRight = [[originRight, 700]];
- 			let encDataLeft = await encDataV1([ [[buyer, 10000]], addrOriginLeft ]);
- 			let encDataRight = await encDataV1([ [[seller, 5000], [seller2, 5000]], addrOriginRight ]);
-
-			const left = Order(buyer, Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
-			const right = Order(seller, Asset(ERC721, enc(erc721V1.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataRight);
-			let signatureRight = await getSignature(right, seller);
-			let tx = await testing.matchOrders(left, "0x", right, signatureRight, { from: buyer, value: 300, gasPrice: 0 });
-			let errorCounter = 0
-//			eventEmitted  - срабатывает по нескольким transfer, для фиксации ошибки нужно чтоб все трансферы завалились
-			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-				let result = false;
-				switch (ev.to){
-					case protocol:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PROTOCOL)) {
-							console.log("Error in protocol check:");
-							errorCounter++;
-						}
-					break
-					case seller:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case sellerRoyaltiy:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ROYALTY) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case seller2:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller2 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft1:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft1 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft2:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft2 check:");
-							errorCounter++;
-						}
-					break
-					case originRight:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originRight check:");
-							errorCounter++;
-						}
-					break
-					case buyer:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ){
-							console.log("Error in buyer check:");
-							errorCounter++;
-						}
-					break
-				}
-				if (errorCounter > 0) {
-					result = false;
-				} else {
-					result = true;
-				}
-				return result;
-    	}, "Transfer shuold be emietted with correct parameters ");
-			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
-    })
-
-		it("From ERC1155(DataV2) to ETH(DataV1) Protocol, check emit ", async () => {
-			const seller = accounts[1];
-			const sellerRoyaltiy = accounts[4];
-			const seller2 = accounts[3];
-			const buyer = accounts[2];
-			const originLeft1 = accounts[5];
-			const originLeft2 = accounts[6];
-			const originRight = accounts[7];
-
-			await erc1155_v2.mint(seller, erc1155TokenId1, [[sellerRoyaltiy, 1000]], 10);
-    	await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
-
-			let addrOriginLeft = [[originLeft1, 500], [originLeft2, 600]];
- 			let addrOriginRight = [[originRight, 700]];
- 			let encDataLeft = await encDataV1([ [[seller, 5000], [seller2, 5000]] , addrOriginLeft ]);
- 			let encDataRight = await encDataV1([ [[buyer, 10000]], addrOriginRight ]);
-
-			const left = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 5), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
-			const right = Order(buyer, Asset(ETH, "0x", 200), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 5), 1, 0, 0, ORDER_DATA_V1, encDataRight);
-
-    	let signatureRight = await getSignature(right, buyer);
-    	let tx = await testing.matchOrders(left, "0x", right, signatureRight, { from: seller, value: 300, gasPrice: 0 });
-			let errorCounter = 0
-//			eventEmitted  - срабатывает по нескольким transfer, для фиксации ошибки нужно чтоб все трансферы завалились
-			truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-				let result = false;
-				switch (ev.to){
-					case protocol:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PROTOCOL)) {
-							console.log("Error in protocol check:");
-							errorCounter++;
-						}
-					break
-					case seller:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case sellerRoyaltiy:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ROYALTY) ) {
-							console.log("Error in seller check:");
-							errorCounter++;
-						}
-					break
-					case seller2:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != PAYOUT) ) {
-							console.log("Error in seller2 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft1:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft1 check:");
-							errorCounter++;
-						}
-					break
-					case originLeft2:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originLeft2 check:");
-							errorCounter++;
-						}
-					break
-					case originRight:
-						if ((ev.transferDirection != TO_MAKER) && (ev.transferType != ORIGIN) ) {
-							console.log("Error in originRight check:");
-							errorCounter++;
-						}
-					break
-					case buyer:
-						if ((ev.transferDirection != TO_TAKER) && (ev.transferType != PAYOUT) ){
-							console.log("Error in buyer check:");
-							errorCounter++;
-						}
-					break
-				}
-				if (errorCounter > 0) {
-					result = false;
-				} else {
-					result = true;
-				}
-				return result;
-    	}, "Transfer shuold be emietted with correct parameters ");
-			assert.equal(errorCounter, 0); //фиксируем наличие ошибок тут
-    })
-
-	}) //Catch emit event Transfer*/
 
 	describe("Exchange with Royalties", () => {
 		it("Royalties by owner, token 721 to ETH", async () => {

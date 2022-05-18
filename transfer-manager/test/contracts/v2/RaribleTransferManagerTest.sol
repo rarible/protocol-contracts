@@ -4,14 +4,16 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "../../../contracts/RaribleTransferManager.sol";
-import "../../../contracts/ITransferExecutor.sol";
 import "@rarible/exchange-v2/contracts/OrderValidator.sol";
 import "@rarible/libraries/contracts/LibOrderData.sol";
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "@rarible/libraries/contracts/LibDeal.sol";
 import "@rarible/libraries/contracts/LibFeeSide.sol";
 
-contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
+
+
+contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor, OrderValidator {
     struct ProtocolFeeSide {
         LibFeeSide.FeeSide feeSide;
     }
@@ -24,42 +26,52 @@ contract RaribleTransferManagerTest is RaribleTransferManager, OrderValidator {
         return abi.encode(data);
     }
 
-    function makeDealData(
-        LibOrder.Order memory order
-    ) external pure returns (LibOrderDataV2.DataV2 memory dataOrder){
-        dataOrder = LibOrderData.parse(order);
-    }
-
-    function getDealSide(LibOrder.Order memory order) external returns (LibDeal.DealSide memory dealSide) {
-        LibOrderDataV2.DataV2 memory orderData = LibOrderData.parse(order);
-
-        dealSide = LibDeal.DealSide(
-            order.makeAsset.assetType,
-            order.makeAsset.value,
-            orderData.payouts,
-            orderData.originFees,
-            order.maker,
-            300
-        );
-    }
-
-    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external returns (RaribleTransferManagerTest.ProtocolFeeSide memory) {
-        RaribleTransferManagerTest.ProtocolFeeSide memory result;
-        result.feeSide = LibFeeSide.getFeeSide(orderLeft.makeAsset.assetType.assetClass, orderRight.makeAsset.assetType.assetClass);
-        return result;
-    }
-
-
-
-    function __TransferManager_init(
-        INftTransferProxy _transferProxy,
-        IERC20TransferProxy _erc20TransferProxy,
+    function init____(
+        address _transferProxy,
+        address _erc20TransferProxy,
+        uint newProtocolFee,
         address newCommunityWallet,
         IRoyaltiesProvider newRoyaltiesProvider
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
-        __RaribleTransferManager_init_unchained(newCommunityWallet, newRoyaltiesProvider);
+        __RaribleTransferManager_init_unchained(newProtocolFee, newCommunityWallet, newRoyaltiesProvider);
+        __OrderValidator_init_unchained();
     }
+
+
+    function makeDealData(
+        LibOrder.Order memory order
+    ) external pure returns (LibOrderDataV2.DataV2 memory dataOrder){
+        dataOrder = LibOrderData.parse(order);
+    }
+
+    function getDealSide(LibOrder.Order memory order) external view returns (LibDeal.DealSide memory dealSide) {
+        LibOrderDataV2.DataV2 memory orderData = LibOrderData.parse(order);
+
+        dealSide = LibDeal.DealSide(
+            order.makeAsset,
+            orderData.payouts,
+            orderData.originFees,
+            proxies[order.makeAsset.assetType.assetClass],
+            order.maker
+        );
+    }
+
+    function getFeeSide(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) external pure returns (RaribleTransferManagerTest.ProtocolFeeSide memory) {
+        RaribleTransferManagerTest.ProtocolFeeSide memory result;
+        result.feeSide = LibFeeSide.getFeeSide(orderLeft.makeAsset.assetType.assetClass, orderRight.makeAsset.assetType.assetClass);
+        return result;
+    }
+
+    function doTransfersExternal(
+        LibDeal.DealSide memory left,
+        LibDeal.DealSide memory right,
+        LibFeeSide.FeeSide feeSide,
+        uint _protocolFee
+    ) external payable returns (uint totalLeftValue, uint totalRightValue) {
+        return doTransfers(left, right, feeSide, _protocolFee);
+    }
+
 }

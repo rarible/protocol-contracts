@@ -28,7 +28,7 @@ function createNetwork(name) {
 	      }
       },
       from: json.address,
-      gas: 1000000,
+      gas: 2000000,
       gasPrice: gasPrice + "000000000",
       network_id: json.network_id,
       skipDryRun: true,
@@ -51,7 +51,8 @@ module.exports = {
   },
 
 	plugins: [
-    'truffle-plugin-verify'
+    'truffle-plugin-verify',
+    'truffle-contract-size'
   ],
 
   networks: {
@@ -63,6 +64,7 @@ module.exports = {
     rinkeby2: createNetwork("rinkeby2"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
+    polygon_dev: createNetwork("polygon_dev"),
     dev: createNetwork("dev")
   },
 
