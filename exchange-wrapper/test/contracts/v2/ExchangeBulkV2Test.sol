@@ -116,7 +116,7 @@ contract ExchangeBulkV2Test {
         return (uint(value) << 160) + uint(account);
     }
 
-    function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft) external pure returns(bytes memory _data) {
-        _data = abi.encode(orderLeft, signatureLeft);
+    function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, uint purchaseAmount) external pure returns(bytes memory _data) {
+        _data = abi.encode(orderLeft, signatureLeft, purchaseAmount);
     }
 }

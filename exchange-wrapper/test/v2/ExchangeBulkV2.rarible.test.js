@@ -341,13 +341,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
       /*NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker*/
 
-      let dataForExchCall1 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left1, signatureLeft1);
+      let dataForExchCall1 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left1, signatureLeft1, 1);
       const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall2 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left2, signatureLeft2);
+      let dataForExchCall2 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left2, signatureLeft2, 1);
       const tradeData2 = PurchaseData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall3 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left3, signatureLeft3);
+      let dataForExchCall3 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left3, signatureLeft3, 1);
       const tradeData3 = PurchaseData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let feesUPDetect = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
@@ -369,6 +369,71 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await testERC721.balanceOf(seller2), 0);
       assert.equal(await testERC721.balanceOf(seller3), 0);
       assert.equal(await testERC721.balanceOf(accounts[2]), 3);
+    })
+
+    it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC1155<->ETH", async () => {
+      const buyer = accounts[2];
+      const seller1 = accounts[1];
+      const seller2 = accounts[3];
+      const seller3 = accounts[4];
+      const feeRecipienterUP = accounts[6];
+      await testERC1155.mint(seller1, erc1155TokenId1, 10);
+      await testERC1155.setApprovalForAll(transferProxy.address, true, {from: seller1});
+      await testERC1155.mint(seller2, erc1155TokenId2, 10);
+      await testERC1155.setApprovalForAll(transferProxy.address, true, {from: seller2});
+      await testERC1155.mint(seller3, erc1155TokenId3, 10);
+      await testERC1155.setApprovalForAll(transferProxy.address, true, {from: seller3});
+
+      exchangeV2 = await deployProxy(ExchangeV2, [transferProxy.address, erc20TransferProxy.address, 0, community, royaltiesRegistry.address], { initializer: "__ExchangeV2_init" });
+      await exchangeV2.setFeeReceiver(eth, protocol);
+      await exchangeV2.setFeeReceiver(t1.address, protocol);
+
+      bulkExchange = await ExchangeBulkV2.new();
+      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS/*openSea.address*/, exchangeV2.address); //don`t need openSea.address, process only exchaneV2 orders
+
+      /*NB!!! set buyer in payouts*/
+      const encDataLeft = await encDataV2([[], [], false]);
+      const encDataLeftV1 = await encDataV1([ [], [] ]);
+
+      const left1 = Order(seller1, Asset(ERC1155, enc(testERC1155.address, erc1155TokenId1), 10), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const left2 = Order(seller2, Asset(ERC1155, enc(testERC1155.address, erc1155TokenId2), 10), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const left3 = Order(seller3, Asset(ERC1155, enc(testERC1155.address, erc1155TokenId3), 10), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V1, encDataLeftV1);
+
+      let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
+      let signatureLeft2 = await getSignature(left2, seller2, exchangeV2.address);
+      let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
+      /*NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker*/
+
+      let dataForExchCall1 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left1, signatureLeft1, 6);
+      const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+
+      let dataForExchCall2 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left2, signatureLeft2, 8);
+      const tradeData2 = PurchaseData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+
+      let dataForExchCall3 = await exchangeBulkV2Test.getDataExchangeV2SellOrders(left3, signatureLeft3, 10);
+      const tradeData3 = PurchaseData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+
+      let feesUPDetect = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
+      let feesUP = [feesUPDetect];
+    	await verifyBalanceChange(buyer, 276, async () =>
+    		verifyBalanceChange(seller1, -60, async () =>
+    		  verifyBalanceChange(seller2, -80, async () =>
+    		    verifyBalanceChange(seller3, -100, async () =>
+    			    verifyBalanceChange(feeRecipienterUP, -36, () =>
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 })
+    				  )
+    				)
+    			)
+    		)
+    	);
+//      const tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
+//      console.log("Bulk, by bulkPurchase ERC721<->ETH (num = 3), Gas consumption :",tx.receipt.gasUsed);
+      assert.equal(await testERC1155.balanceOf(seller1, erc1155TokenId1), 4);
+      assert.equal(await testERC1155.balanceOf(seller2, erc1155TokenId2), 2);
+      assert.equal(await testERC1155.balanceOf(seller3, erc1155TokenId3), 0);
+      assert.equal(await testERC1155.balanceOf(accounts[2], erc1155TokenId1), 6);
+      assert.equal(await testERC1155.balanceOf(accounts[2], erc1155TokenId2), 8);
+      assert.equal(await testERC1155.balanceOf(accounts[2], erc1155TokenId3), 10);
     })
 
   });

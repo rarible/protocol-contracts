@@ -71,10 +71,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
         uint paymentAmount = purchaseDetails.amount;
         if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
-            require(success, "transfer failed");
+            require(success, "Purchase failed");
         } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
-            (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes));
-            matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount);
+            (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature, uint purchaseAmount) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes, uint));
+            matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount, purchaseAmount);
         } else {
             revert("Unknown purchase details");
         }
@@ -101,12 +101,18 @@ contract ExchangeWrapper is OwnableUpgradeable {
     function matchExchangeV2(
         LibOrder.Order memory sellOrder,
         bytes memory sellOrderSignature,
-        uint amount
+        uint paymentAmount,
+        uint purchaseAmount
     ) internal {
         LibOrder.Order memory buyerOrder;
         buyerOrder.maker = address(this);
         buyerOrder.makeAsset = sellOrder.takeAsset;
-        buyerOrder.takeAsset = sellOrder.makeAsset;
+        buyerOrder.takeAsset.assetType = sellOrder.makeAsset.assetType;
+        if (buyerOrder.takeAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
+            buyerOrder.takeAsset.value = purchaseAmount; //for ERC1155 set the exact amount for purchase
+        } else {
+            buyerOrder.takeAsset.value = sellOrder.makeAsset.value; // (for ERC721 is always == 1)
+        }
 
         /*set buyer in payout*/
         LibPart.Part[] memory payout = new LibPart.Part[](1);
@@ -119,7 +125,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
         bytes memory buyOrderSignature; //empty signature is enough for buyerOrder
 
-        IExchangeV2(exchangeV2).matchOrders{value : amount }(sellOrder, sellOrderSignature, buyerOrder, buyOrderSignature);
+        IExchangeV2(exchangeV2).matchOrders{value : paymentAmount }(sellOrder, sellOrderSignature, buyerOrder, buyOrderSignature);
     }
 
     receive() external payable {}
