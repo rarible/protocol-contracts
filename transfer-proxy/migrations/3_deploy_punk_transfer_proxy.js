@@ -13,7 +13,7 @@ const ropsten = {
 	exchangeV2: "0x33Aef288C093Bf7b36fBe15c3190e616a993b0AD",
 }
 const e2e = {
-	exchangeV2: "",
+	exchangeV2: "0x551E4009116d489e3C5a98405A9c4B601D250B58",
 }
 const def = {
 	exchangeV2: "",

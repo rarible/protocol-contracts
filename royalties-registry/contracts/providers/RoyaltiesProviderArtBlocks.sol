@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
 import "./RoyaltyArtBlocks.sol";
-import "@rarible/exchange-v2/contracts/lib/BpLibrary.sol";
+import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {

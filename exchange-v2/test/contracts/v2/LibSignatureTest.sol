@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 import "@rarible/libraries/contracts/LibSignature.sol";
-import "../../../contracts/LibOrder.sol";
+import "@rarible/libraries/contracts/LibOrder.sol";
 import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
 contract LibSignatureTest is EIP712Upgradeable {

@@ -3,7 +3,8 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../../contracts/LibOrder.sol";
+//import "../../../contracts/LibOrder.sol";
+import "@rarible/libraries/contracts/LibOrderData.sol";
 
 contract LibOrderTest {
     function calculateRemaining(LibOrder.Order calldata order, uint fill, bool isMakeFill) external pure returns (uint makeAmount, uint takeAmount) {
@@ -11,6 +12,10 @@ contract LibOrderTest {
     }
 
     function hashKey(LibOrder.Order calldata order) external pure returns (bytes32) {
+        return LibOrder.hashKey(order);
+    }
+
+    function hashKeyOnChain(LibOrder.Order calldata order) external pure returns (bytes32) {
         return LibOrder.hashKey(order);
     }
 

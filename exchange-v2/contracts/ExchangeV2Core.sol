@@ -3,13 +3,17 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "./LibFill.sol";
-import "./LibOrder.sol";
+import "@rarible/libraries/contracts/LibFill.sol";
+import "@rarible/libraries/contracts/LibOrderData.sol";
+import "@rarible/libraries/contracts/LibDeal.sol";
+import "@rarible/libraries/contracts/LibFeeSide.sol";
+import "@rarible/libraries/contracts/BpLibrary.sol";
+
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
-import "./TransferExecutor.sol";
-import "./ITransferManager.sol";
-import "./lib/LibTransfer.sol";
+
+import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
+import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
 
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
     using SafeMathUpgradeable for uint;
@@ -21,15 +25,15 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     mapping(bytes32 => uint) public fills;
 
     //events
-    event Cancel(bytes32 hash, address maker, LibAsset.AssetType makeAssetType, LibAsset.AssetType takeAssetType);
-    event Match(bytes32 leftHash, bytes32 rightHash, address leftMaker, address rightMaker, uint newLeftFill, uint newRightFill, LibAsset.AssetType leftAsset, LibAsset.AssetType rightAsset);
+    event Cancel(bytes32 hash);
+    event Match(uint newLeftFill, uint newRightFill);
 
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
         bytes32 orderKeyHash = LibOrder.hashKey(order);
         fills[orderKeyHash] = UINT256_MAX;
-        emit Cancel(orderKeyHash, order.maker, order.makeAsset.assetType, order.takeAsset.assetType);
+        emit Cancel(orderKeyHash);
     }
 
     function matchOrders(
@@ -57,9 +61,39 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
         LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
 
-        LibFill.FillResult memory newFill = getFillSetNew(orderLeft, orderRight, leftOrderKeyHash, rightOrderKeyHash, leftOrderData, rightOrderData);
+        LibFill.FillResult memory newFill = getFillSetNew(
+            orderLeft, 
+            orderRight, 
+            leftOrderKeyHash, 
+            rightOrderKeyHash, 
+            leftOrderData.isMakeFill, 
+            rightOrderData.isMakeFill
+        );
 
-        (uint totalMakeValue, uint totalTakeValue) = doTransfers(makeMatch, takeMatch, newFill, orderLeft, orderRight, leftOrderData, rightOrderData);
+        (uint totalMakeValue, uint totalTakeValue) = doTransfers(
+            LibDeal.DealSide(
+                LibAsset.Asset( 
+                    makeMatch,
+                    newFill.leftValue
+                ),
+                leftOrderData.payouts,
+                leftOrderData.originFees,
+                proxies[orderLeft.makeAsset.assetType.assetClass],
+                orderLeft.maker
+            ), 
+            LibDeal.DealSide(
+                LibAsset.Asset( 
+                    takeMatch,
+                    newFill.rightValue
+                ),
+                rightOrderData.payouts,
+                rightOrderData.originFees,
+                proxies[orderRight.makeAsset.assetType.assetClass],
+                orderRight.maker
+            ), 
+            LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass), 
+            getProtocolFee()
+        );
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
@@ -72,7 +106,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-        emit Match(leftOrderKeyHash, rightOrderKeyHash, orderLeft.maker, orderRight.maker, newFill.rightValue, newFill.leftValue, makeMatch, takeMatch);
+        emit Match(newFill.rightValue, newFill.leftValue);
     }
 
     function getFillSetNew(
@@ -80,17 +114,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrder.Order memory orderRight,
         bytes32 leftOrderKeyHash,
         bytes32 rightOrderKeyHash,
-        LibOrderDataV2.DataV2 memory leftOrderData,
-        LibOrderDataV2.DataV2 memory rightOrderData
+        bool leftMakeFill,
+        bool rightMakeFill
     ) internal returns (LibFill.FillResult memory) {
-        uint leftOrderFill = getOrderFill(orderLeft, leftOrderKeyHash);
-        uint rightOrderFill = getOrderFill(orderRight, rightOrderKeyHash);
-        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftOrderData.isMakeFill, rightOrderData.isMakeFill);
+        uint leftOrderFill = getOrderFill(orderLeft.salt, leftOrderKeyHash);
+        uint rightOrderFill = getOrderFill(orderRight.salt, rightOrderKeyHash);
+        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftMakeFill, rightMakeFill);
 
         require(newFill.rightValue > 0 && newFill.leftValue > 0, "nothing to fill");
 
         if (orderLeft.salt != 0) {
-            if (leftOrderData.isMakeFill) {
+            if (leftMakeFill) {
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.leftValue);
             } else {
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.rightValue);
@@ -98,7 +132,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
 
         if (orderRight.salt != 0) {
-            if (rightOrderData.isMakeFill) {
+            if (rightMakeFill) {
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.rightValue);
             } else {
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
@@ -107,8 +141,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return newFill;
     }
 
-    function getOrderFill(LibOrder.Order memory order, bytes32 hash) internal view returns (uint fill) {
-        if (order.salt == 0) {
+    function getOrderFill(uint salt, bytes32 hash) internal view returns (uint fill) {
+        if (salt == 0) {
             fill = 0;
         } else {
             fill = fills[hash];
@@ -127,5 +161,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
-    uint256[49] private __gap;
+    function getProtocolFee() internal virtual view returns(uint);
+
+    uint256[47] private __gap;
 }

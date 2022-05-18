@@ -7,5 +7,7 @@ truffle test \
         ./test/contracts/v2/TransferProxyTest.sol \
         ./test/contracts/v2/PunkTransferProxyTest.sol \
         ./test/contracts/v2/TestRoyaltiesRegistry.sol \
+        ./test/contracts/v2/RaribleTransferManagerTest.sol \
+        ./test/contracts/v2/TestRoyaltiesRegistry.sol \
         ./test/contracts/v2/LibOrderTest.sol \
         --compile-all
