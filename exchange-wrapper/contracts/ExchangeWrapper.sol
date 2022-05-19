@@ -111,7 +111,7 @@ contract ExchangeWrapper is OwnableUpgradeable {
         if (buyerOrder.takeAsset.assetType.assetClass == LibAsset.ERC1155_ASSET_CLASS) {
             buyerOrder.takeAsset.value = purchaseAmount; //for ERC1155 set the exact amount for purchase
         } else {
-            buyerOrder.takeAsset.value = sellOrder.makeAsset.value; // (for ERC721 is always == 1)
+            buyerOrder.takeAsset.value = sellOrder.makeAsset.value; // for ERC721 is always == 1
         }
 
         /*set buyer in payout*/
