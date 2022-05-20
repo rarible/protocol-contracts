@@ -523,8 +523,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     			)
     		)
     	);
-//      const tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
-//      console.log("Bulk, by bulkPurchase ERC721<->ETH (num = 3), Gas consumption :",tx.receipt.gasUsed);
       assert.equal(await testERC1155.balanceOf(seller1, erc1155TokenId1), 4);
       assert.equal(await testERC1155.balanceOf(seller2, erc1155TokenId2), 2);
       assert.equal(await testERC1155.balanceOf(seller3, erc1155TokenId3), 0);
