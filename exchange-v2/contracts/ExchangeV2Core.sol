@@ -25,6 +25,31 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Cancel(bytes32 hash);
     event Match(uint newLeftFill, uint newRightFill);
 
+    /*All buy parameters need for create buyOrder and sellOrder*/
+    struct DirectBuy {
+        address seller;
+        address token;
+        bytes4 assetType;
+        uint tokenId;
+        uint tokenAmount;
+        uint price;
+        uint salt;
+        bytes signature;
+    }
+
+    /*All accept bid parameters need for create buyOrder and sellOrder*/
+    struct DirectAcceptBid {
+        address buyer;
+        address tokenPayment;
+        address tokenNft;
+        bytes4 assetType;
+        uint tokenId;
+        uint amount;
+        uint price;
+        uint salt;
+        bytes signature;
+    }
+
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
@@ -32,6 +57,52 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         fills[orderKeyHash] = UINT256_MAX;
         emit Cancel(orderKeyHash);
     }
+
+    function directBuy(
+        DirectBuy memory direct,
+        LibOrderDataV3.DataV3_SELL memory sellData,
+        LibOrderDataV3.DataV3_BUY memory buyData
+    ) external payable {
+        bytes memory nftAssetData = abi.encode(direct.token, direct.tokenId);
+        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.tokenAmount);
+        LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ETH_ASSET_CLASS, ""), direct.price);
+
+        LibOrder.Order memory orderLeft = LibOrder.Order(direct.seller, nft, address(0), payment, direct.salt, 0, 0, LibOrderDataV3.V3_SELL, sellData);
+        LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, payment, address(0), nft, 0, 0, 0, LibOrderDataV3.V3_BUY, buyData);
+        validateFull(orderLeft, direct.signature);
+        validateFull(orderRight, "");
+        if (orderLeft.taker != address(0)) {
+            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
+        }
+        if (orderRight.taker != address(0)) {
+            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
+        }
+        matchAndTransfer(orderLeft, orderRight);
+    }
+
+    function directAcceptBid(
+        DirectAcceptBid memory direct,
+        LibOrderDataV3.DataV3_BUY memory buyData,
+        LibOrderDataV3.DataV3_SELL memory sellData
+    ) external payable {
+        bytes memory paymentAssetData = abi.encode(direct.tokenPayment);
+        bytes memory nftAssetData = abi.encode(direct.tokenNft, direct.tokenId);
+        LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, paymentAssetData), direct.price);
+        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.amount);
+
+        LibOrder.Order memory orderLeft = LibOrder.Order(direct.buyer, payment, address(0), nft, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, buyData);
+        LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, sellData);
+        validateFull(orderLeft, direct.signature);
+        validateFull(orderRight, "");
+        if (orderLeft.taker != address(0)) {
+            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
+        }
+        if (orderRight.taker != address(0)) {
+            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
+        }
+        matchAndTransfer(orderLeft, orderRight);
+    }
+
 
     function matchOrders(
         LibOrder.Order memory orderLeft,
