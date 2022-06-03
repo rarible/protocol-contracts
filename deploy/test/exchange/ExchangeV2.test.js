@@ -75,7 +75,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const signature = await getSignature(left, makerLeft);
 
       var directBuyParams  = {seller: makerLeft, token: erc721.address, assetType: ERC721, tokenId: erc721TokenId1, tokenAmount: nftAmount, price: price, salt: salt, signature: signature};
-      const tx = await exchangeV2.directBuy(directBuyParams, encDataLeft, encDataRight, { from: makerRight, value:200 });
+      const tx = await exchangeV2.directPurchase(directBuyParams, encDataLeft, encDataRight, { from: makerRight, value:200 });
       console.log("direct buy NFT<->ETH, not same origin, not same royalties V3:", tx.receipt.gasUsed);
     })
 
