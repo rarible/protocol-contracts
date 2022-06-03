@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 import "./libraries/LibFill.sol";
 import "./libraries/LibOrderData.sol";
+import "./libraries/LibDirectPurchase.sol";
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
 
@@ -25,31 +26,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     event Cancel(bytes32 hash);
     event Match(uint newLeftFill, uint newRightFill);
 
-    /*All buy parameters need for create buyOrder and sellOrder*/
-    struct DirectBuy {
-        address seller;
-        address token;
-        bytes4 assetType;
-        uint tokenId;
-        uint tokenAmount;
-        uint price;
-        uint salt;
-        bytes signature;
-    }
-
-    /*All accept bid parameters need for create buyOrder and sellOrder*/
-    struct DirectAcceptBid {
-        address buyer;
-        address tokenPayment;
-        address tokenNft;
-        bytes4 assetType;
-        uint tokenId;
-        uint amount;
-        uint price;
-        uint salt;
-        bytes signature;
-    }
-
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
         require(order.salt != 0, "0 salt can't be used");
@@ -58,10 +34,16 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         emit Cancel(orderKeyHash);
     }
 
-    function directBuy(
-        DirectBuy memory direct,
-        LibOrderDataV3.DataV3_SELL memory sellData,
-        LibOrderDataV3.DataV3_BUY memory buyData
+    /**
+     * @dev function, generate sellOrder and buyOrder from parameters and call validateAndMatch() for purchase transaction
+     * @param direct struct with parameters for buy operation
+     * @param sellData data type V3_SELLV for left order
+     * @param buyData data type 3_BUY for right order
+     */
+    function directPurchase(
+        LibDirectPurchase.Purchase memory direct,
+        bytes memory sellData,
+        bytes memory buyData
     ) external payable {
         bytes memory nftAssetData = abi.encode(direct.token, direct.tokenId);
         LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.tokenAmount);
@@ -69,30 +51,38 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.seller, nft, address(0), payment, direct.salt, 0, 0, LibOrderDataV3.V3_SELL, sellData);
         LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, payment, address(0), nft, 0, 0, 0, LibOrderDataV3.V3_BUY, buyData);
-        validateFull(orderLeft, direct.signature);
-        validateFull(orderRight, "");
-        if (orderLeft.taker != address(0)) {
-            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
-        }
-        if (orderRight.taker != address(0)) {
-            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
-        }
-        matchAndTransfer(orderLeft, orderRight);
+        validateAndMatch(orderLeft, direct.signature, orderRight);
     }
 
+    /**
+     * @dev function, generate sellOrder and buyOrder from parameters and call validateAndMatch() for accept bid transaction
+     * @param direct struct with parameters for accept bid operation
+     * @param sellData data type V3_BUY for left order
+     * @param buyData data type V3_SELL for left order
+     */
     function directAcceptBid(
-        DirectAcceptBid memory direct,
-        LibOrderDataV3.DataV3_BUY memory buyData,
-        LibOrderDataV3.DataV3_SELL memory sellData
+        LibDirectPurchase.AcceptBid memory direct,
+        bytes memory buyData,
+        bytes memory sellData
     ) external payable {
         bytes memory paymentAssetData = abi.encode(direct.tokenPayment);
         bytes memory nftAssetData = abi.encode(direct.tokenNft, direct.tokenId);
         LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, paymentAssetData), direct.price);
-        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.amount);
+        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.tokenAmount);
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.buyer, payment, address(0), nft, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, buyData);
         LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, sellData);
-        validateFull(orderLeft, direct.signature);
+        validateAndMatch(orderLeft, direct.signature, orderRight);
+    }
+
+    /**
+      * @dev function, validate orders and call matchAndTransfer()
+      * @param orderLeft left order
+      * @param signatureLeft order left signature
+      * @param orderRight right order
+      */
+    function validateAndMatch(LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight) internal {
+        validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, "");
         if (orderLeft.taker != address(0)) {
             require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
@@ -102,7 +92,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
         matchAndTransfer(orderLeft, orderRight);
     }
-
 
     function matchOrders(
         LibOrder.Order memory orderLeft,
