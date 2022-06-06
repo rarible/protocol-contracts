@@ -150,7 +150,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             
             require(
                 dataTypeLeft == LibOrderDataV3.V3_BUY && 
-                dataTypeRight == LibOrderDataV3.V3_SELL,
+                    dataTypeRight == LibOrderDataV3.V3_SELL ||
+                    dataTypeRight == LibOrderDataV3.V3_SELL_ROYALTIES,
                 "wrong V3 type1"
             );
             
@@ -158,7 +159,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             maxFee = leftOrderData.maxFeesBasePoint;
             require(
                 dataTypeRight == LibOrderDataV3.V3_BUY && 
-                dataTypeLeft == LibOrderDataV3.V3_SELL,
+                    dataTypeLeft == LibOrderDataV3.V3_SELL ||
+                    dataTypeRight == LibOrderDataV3.V3_SELL_ROYALTIES,
                 "wrong V3 type2"
             );
         } else {
@@ -184,6 +186,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     ) internal view returns(LibDeal.DealData memory dealData) {
         dealData.protocolFee = getProtocolFeeConditional(leftDataType);
         dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
+        dealData.royalties = (leftDataType == LibOrderDataV3.V3_SELL_ROYALTIES) ? leftOrderData.royalties : rightOrderData.royalties;
         dealData.maxFeesBasePoint = getMaxFee(
             leftDataType,
             rightDataType,

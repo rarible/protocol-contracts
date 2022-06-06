@@ -17,6 +17,10 @@ contract RaribleTransferManagerTest{
         return abi.encode(data);
     }
 
+    function encDataV3_SELL_ROYALTIES(LibOrderDataV3.DataV3_SELL_ROYALTIES memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
+
     function encodeV3_SELL(LibOrderDataV3.DataV3_SELL memory data) pure external returns (bytes memory) {
         return abi.encode(data);
     }

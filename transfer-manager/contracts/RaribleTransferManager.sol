@@ -79,10 +79,10 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalRightValue = right.asset.value;
 
         if (dealData.feeSide == LibFeeSide.FeeSide.LEFT) {
-            totalLeftValue = doTransfersWithFees(left, right, dealData.protocolFee, dealData.maxFeesBasePoint);
+            totalLeftValue = doTransfersWithFees(left, right, dealData.protocolFee, dealData.maxFeesBasePoint, dealData.royalties);
             transferPayouts(right.asset.assetType, right.asset.value, right.from, left.payouts, right.proxy);
         } else if (dealData.feeSide == LibFeeSide.FeeSide.RIGHT) {
-            totalRightValue = doTransfersWithFees(right, left, dealData.protocolFee, dealData.maxFeesBasePoint);
+            totalRightValue = doTransfersWithFees(right, left, dealData.protocolFee, dealData.maxFeesBasePoint, dealData.royalties);
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
         } else {
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
@@ -102,18 +102,27 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibDeal.DealSide memory calculateSide,
         LibDeal.DealSide memory nftSide,
         uint _protocolFee,
-        uint maxFeesBasePoint
+        uint maxFeesBasePoint,
+        LibPart.Part memory royalties
     ) internal returns (uint totalAmount) {
         totalAmount = calculateTotalAmount(calculateSide.asset.value, _protocolFee, calculateSide.originFees, maxFeesBasePoint);
         uint rest = transferProtocolFee(totalAmount, calculateSide.asset.value, calculateSide.from, _protocolFee, calculateSide.asset.assetType, calculateSide.proxy);
 
-        rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
+        if (royalties.value > 0) {
+            LibPart.Part[] memory royaltiesArray = new LibPart.Part[](1);
+            royaltiesArray[0].account = royalties.account;
+            royaltiesArray[0].value = royalties.value;
+            (rest, ) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, royaltiesArray, calculateSide.from, calculateSide.proxy);
+            require(royalties.value <= 5000, "Royalties are too high (>50%)");
+        } else {
+            rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
+        }
         if (
             calculateSide.originFees.length  == 1 &&
             nftSide.originFees.length  == 1 &&
             nftSide.originFees[0].account == calculateSide.originFees[0].account
         ) { 
-            LibPart.Part[] memory origin = new  LibPart.Part[](1);
+            LibPart.Part[] memory origin = new LibPart.Part[](1);
             origin[0].account = nftSide.originFees[0].account;
             origin[0].value = nftSide.originFees[0].value + calculateSide.originFees[0].value;
             (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, origin, calculateSide.from, calculateSide.proxy);

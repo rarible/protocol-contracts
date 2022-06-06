@@ -11,6 +11,7 @@ library LibOrderData {
         LibPart.Part[] originFees;
         bool isMakeFill;
         uint maxFeesBasePoint;
+        LibPart.Part royalties;
     } 
 
     function parse(LibOrder.Order memory order) pure internal returns (GenericOrderData memory dataOrder) {
@@ -34,6 +35,13 @@ library LibOrderData {
             dataOrder.payouts = parsePayouts(data.payouts);
             dataOrder.originFees = parseOriginFeeData(data.originFee);
             dataOrder.isMakeFill = false;
+        } else if (order.dataType == LibOrderDataV3.V3_SELL_ROYALTIES) {
+            LibOrderDataV3.DataV3_SELL_ROYALTIES memory data = LibOrderDataV3.decodeOrderDataV3_SELL_ROYALTIES(order.data);
+            dataOrder.payouts = parsePayouts(data.payouts);
+            dataOrder.originFees = parseOriginFeeData(data.originFee);
+            dataOrder.isMakeFill = true;
+            dataOrder.maxFeesBasePoint = data.maxFeesBasePoint;
+            dataOrder.royalties = parseRoyalties(data.royalties);
         } else if (order.dataType == 0xffffffff) {
         } else {
             revert("Unknown Order data type");
@@ -50,14 +58,14 @@ library LibOrderData {
         return payout;
     }
 
-    function parseOriginFeeData(uint data) internal pure returns(LibPart.Part[] memory) {
+    function parseOriginFeeData(uint data) internal pure returns (LibPart.Part[] memory) {
         LibPart.Part[] memory originFee = new LibPart.Part[](1);
         originFee[0].account = payable(address(data));
         originFee[0].value = uint96(data >> 160);
         return originFee;
     }
 
-    function parsePayouts(uint[] memory data) internal pure returns(LibPart.Part[] memory) {
+    function parsePayouts(uint[] memory data) internal pure returns (LibPart.Part[] memory) {
         uint len = data.length;
         LibPart.Part[] memory payouts = new LibPart.Part[](len);
 
@@ -66,6 +74,11 @@ library LibOrderData {
             payouts[i].value = uint96(data[i] >> 160);
         }
         return payouts;
+    }
+
+    function parseRoyalties (uint data) internal pure returns (LibPart.Part memory royalties) {
+        royalties.account = payable(address(data));
+        royalties.value = uint96(data >> 160);
     }
 
 }

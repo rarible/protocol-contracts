@@ -19,6 +19,7 @@ library LibDeal {
     struct DealData {
         uint protocolFee;
         uint maxFeesBasePoint;
+        LibPart.Part royalties;
         LibFeeSide.FeeSide feeSide;
     }
 }

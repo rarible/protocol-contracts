@@ -87,12 +87,40 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 			let encDataRight = await encDataV3_SELL([ await Payouts([[accounts[2], 10000]]), addrOriginRight, 1000 ]);
 
 			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
+      
 			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
 			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
       const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
       console.log("not same origin, not same royalties V3:", tx.receipt.gasUsed);
-			
+
+      assert.equal(await t1.balanceOf(accounts[7]), 10, "royalties");
+		})
+
+    it("not same origin, not same royalties V3 royalties", async () => {
+      await t1.mint(accounts[1], 1000);
+			await erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+
+      const ORDER_DATA_V3_SELL_ROYALTIES = id("V3_SELL_ROYALTIES");
+
+			let addrOriginLeft = await OriginFee(accounts[6], 300);
+			let addrOriginRight = await OriginFee(accounts[5], 300);
+
+			let encDataLeft = await encDataV3_BUY([ await Payouts([[accounts[1], 10000]]), addrOriginLeft ]);
+
+      const royalties = await OriginFee(accounts[7], 1000);
+			let encDataRight = await encDataV3_SELL_ROYALTIES([ await Payouts([[accounts[2], 10000]]), addrOriginRight, 1000, royalties]);
+
+			//await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
+			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL_ROYALTIES, encDataRight);
+
+      const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
+      console.log("not same origin, not same royalties V3 royalties:", tx.receipt.gasUsed);
+
+      assert.equal(await t1.balanceOf(accounts[7]), 10, "royalties");
 		})
 
     it("same origin, not same royalties", async () => {
@@ -1261,6 +1289,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
   function encDataV3_SELL(tuple) {
     return transferManagerTest.encodeV3_SELL(tuple);
+  }
+
+  function encDataV3_SELL_ROYALTIES(tuple) {
+    return transferManagerTest.encDataV3_SELL_ROYALTIES(tuple);
   }
 
   async function OriginFee(account = zeroAddress, value = 0){
