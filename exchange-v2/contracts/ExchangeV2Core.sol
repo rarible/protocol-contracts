@@ -53,20 +53,21 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         matchAndTransfer(orderLeft, orderRight);
     }
 
+    /**
+        @notice matches valid orders and transfers their assets
+        @param orderLeft the left order of the match
+        @param orderRight the right order of the match
+    */
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
-        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
-        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
 
-        LibOrderDataV2.DataV2 memory leftOrderData = LibOrderData.parse(orderLeft);
-        LibOrderDataV2.DataV2 memory rightOrderData = LibOrderData.parse(orderRight);
+        LibOrderData.GenericOrderData memory leftOrderData = LibOrderData.parse(orderLeft);
+        LibOrderData.GenericOrderData memory rightOrderData = LibOrderData.parse(orderRight);
 
         LibFill.FillResult memory newFill = getFillSetNew(
             orderLeft, 
-            orderRight, 
-            leftOrderKeyHash, 
-            rightOrderKeyHash, 
-            leftOrderData.isMakeFill, 
+            orderRight,
+            leftOrderData.isMakeFill,
             rightOrderData.isMakeFill
         );
 
@@ -78,7 +79,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 ),
                 leftOrderData.payouts,
                 leftOrderData.originFees,
-                proxies[orderLeft.makeAsset.assetType.assetClass],
+                proxies[makeMatch.assetClass],
                 orderLeft.maker
             ), 
             LibDeal.DealSide(
@@ -88,11 +89,17 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 ),
                 rightOrderData.payouts,
                 rightOrderData.originFees,
-                proxies[orderRight.makeAsset.assetType.assetClass],
+                proxies[takeMatch.assetClass],
                 orderRight.maker
-            ), 
-            LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass), 
-            getProtocolFee()
+            ),
+            getDealData(
+                makeMatch.assetClass,
+                takeMatch.assetClass,
+                orderLeft.dataType,
+                orderRight.dataType,
+                leftOrderData,
+                rightOrderData
+            )
         );
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
@@ -109,14 +116,100 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         emit Match(newFill.rightValue, newFill.leftValue);
     }
 
+    /**
+        @notice determines the max amount of fees for the match
+        @param dataTypeLeft data type of the left order
+        @param dataTypeRight data type of the right order
+        @param leftOrderData data of the left order
+        @param rightOrderData data of the right order
+        @param feeSide fee side of the match
+        @param _protocolFee protocol fee of the match
+        @return max fee amount in base points
+    */
+    function getMaxFee(
+        bytes4 dataTypeLeft, 
+        bytes4 dataTypeRight, 
+        LibOrderData.GenericOrderData memory leftOrderData, 
+        LibOrderData.GenericOrderData memory rightOrderData,
+        LibFeeSide.FeeSide feeSide,
+        uint _protocolFee
+    ) internal pure returns(uint) { 
+        if (
+            dataTypeLeft != LibOrderDataV3.V3_SELL && 
+            dataTypeRight != LibOrderDataV3.V3_SELL &&
+            dataTypeLeft != LibOrderDataV3.V3_BUY && 
+            dataTypeRight != LibOrderDataV3.V3_BUY 
+        ){
+            return 0;
+        }
+        
+        uint matchFees = _protocolFee + leftOrderData.originFees[0].value + rightOrderData.originFees[0].value;
+        uint maxFee;
+        if (feeSide == LibFeeSide.FeeSide.LEFT) {
+            maxFee = rightOrderData.maxFeesBasePoint;
+            
+            require(
+                dataTypeLeft == LibOrderDataV3.V3_BUY && 
+                dataTypeRight == LibOrderDataV3.V3_SELL,
+                "wrong V3 type1"
+            );
+            
+        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
+            maxFee = leftOrderData.maxFeesBasePoint;
+            require(
+                dataTypeRight == LibOrderDataV3.V3_BUY && 
+                dataTypeLeft == LibOrderDataV3.V3_SELL,
+                "wrong V3 type2"
+            );
+        } else {
+            return 0;
+        }
+        require(
+            maxFee > 0 && 
+            maxFee >= _protocolFee && 
+            maxFee >= matchFees &&
+            maxFee <= 1000, 
+            "wrong maxFee"
+        );
+        return maxFee;
+    }
+
+    function getDealData(
+        bytes4 makeMatchAssetClass,
+        bytes4 takeMatchAssetClass,
+        bytes4 leftDataType,
+        bytes4 rightDataType,
+        LibOrderData.GenericOrderData memory leftOrderData,
+        LibOrderData.GenericOrderData memory rightOrderData
+    ) internal view returns(LibDeal.DealData memory dealData) {
+        dealData.protocolFee = getProtocolFeeConditional(leftDataType);
+        dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
+        dealData.maxFeesBasePoint = getMaxFee(
+            leftDataType,
+            rightDataType,
+            leftOrderData,
+            rightOrderData,
+            dealData.feeSide,
+            dealData.protocolFee
+        );
+    }
+
+    /**
+        @notice calculates fills for the matched orders and set them in "fills" mapping
+        @param orderLeft left order of the match
+        @param orderRight right order of the match
+        @param leftMakeFill true if the left orders uses make-side fills, false otherwise
+        @param rightMakeFill true if the right orders uses make-side fills, false otherwise
+        @return returns change in orders' fills by the match 
+    */
     function getFillSetNew(
         LibOrder.Order memory orderLeft,
         LibOrder.Order memory orderRight,
-        bytes32 leftOrderKeyHash,
-        bytes32 rightOrderKeyHash,
         bool leftMakeFill,
         bool rightMakeFill
     ) internal returns (LibFill.FillResult memory) {
+        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
+        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
         uint leftOrderFill = getOrderFill(orderLeft.salt, leftOrderKeyHash);
         uint rightOrderFill = getOrderFill(orderRight.salt, rightOrderKeyHash);
         LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftMakeFill, rightMakeFill);
@@ -162,6 +255,18 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     function getProtocolFee() internal virtual view returns(uint);
+
+    /**
+        @notice returns protocol Fee for V3 or upper orders, 0 for V2 and earlier ordrs
+        @param leftDataType type of the left order in a match
+        @return protocol fee
+    */
+    function getProtocolFeeConditional(bytes4 leftDataType) internal view returns(uint) {
+        if (leftDataType == LibOrderDataV3.V3_SELL || leftDataType == LibOrderDataV3.V3_BUY) {
+            return getProtocolFee();
+        }
+        return 0;
+    }
 
     uint256[47] private __gap;
 }

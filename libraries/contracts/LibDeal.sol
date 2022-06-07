@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/royalties/contracts/LibPart.sol";
 import "@rarible/lib-asset/contracts/LibAsset.sol";
+import "@rarible/libraries/contracts/LibFeeSide.sol";
 
 library LibDeal {
     struct DealSide {
@@ -13,5 +14,11 @@ library LibDeal {
         LibPart.Part[] originFees;
         address proxy;
         address from;
+    }
+
+    struct DealData {
+        uint protocolFee;
+        uint maxFeesBasePoint;
+        LibFeeSide.FeeSide feeSide;
     }
 }

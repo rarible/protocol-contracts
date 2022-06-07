@@ -25,6 +25,9 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     /// @dev maximum auction duration
     uint128 internal constant MAX_DURATION = 1000 days;
 
+    /// @dev maximum fee base point
+    uint internal constant MAX_FEE_BASE_POINT = 1000;
+
     /// @dev mapping to store eth amount that is ready to be withdrawn (used for faulty eth-bids)
     mapping(address => uint) readyToWithdraw;
 
@@ -154,7 +157,7 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     function getOriginFee(uint data) internal pure returns(LibPart.Part[] memory) {
         LibPart.Part[] memory originFee = new LibPart.Part[](1);
         originFee[0].account = payable(address(data));
-        originFee[0].value = uint96(data >> 160);
+        originFee[0].value = uint96(getValueFromData(data));
         return originFee;
     }
 
@@ -196,25 +199,23 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
         Bid memory oldBid,
         address buyAsset,
         address oldBuyer,
-        uint128 curProtocolFee,
         address proxy
     ) internal {
         // nothing to return
         if (oldBuyer == address(0)) {
             return;
         }
-        uint oldTotalAmount = calculateTotalAmount(oldBid.amount, curProtocolFee, getOriginFee(LibBidDataV1.parse(oldBid.data, oldBid.dataType).originFee));
         if (buyAsset == address(0)) {
-            (bool success,) = oldBuyer.call{ value: oldTotalAmount }("");
+            (bool success,) = oldBuyer.call{ value: oldBid.amount }("");
             if (!success) {
                 uint currentValueToWithdraw = readyToWithdraw[oldBuyer];
-                uint newValueToWithdraw = oldTotalAmount.add(currentValueToWithdraw);
+                uint newValueToWithdraw = oldBid.amount.add(currentValueToWithdraw);
                 readyToWithdraw[oldBuyer] = newValueToWithdraw;
-                emit AvailableToWithdraw(oldBuyer, oldTotalAmount, newValueToWithdraw);
+                emit AvailableToWithdraw(oldBuyer, oldBid.amount, newValueToWithdraw);
             }
         } else {
             transferBid(
-                oldTotalAmount,
+                oldBid.amount,
                 buyAsset,
                 address(this),
                 oldBuyer,
@@ -249,7 +250,6 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
     /// @dev reserves new bid and returns the last one if it exists
     function reserveBid(
         address buyAsset,
-        uint128 curProtocolFee,
         address oldBuyer,
         address newBuyer,
         Bid memory oldBid,
@@ -261,7 +261,6 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
             oldBid,
             buyAsset,
             oldBuyer,
-            curProtocolFee,
             proxy
         );
         
@@ -282,6 +281,10 @@ abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgrad
         } else {
             minBid = amount.add(amount.bp(minimalStepBasePoint));
         }
+    }
+
+    function getValueFromData(uint data) internal pure returns(uint) {
+        return (data >> 160);
     }
 
     uint256[50] private ______gap;

@@ -62,20 +62,27 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         return defaultFeeReceiver;
     }
 
+    /**
+        @notice executes transfers for 2 matched orders
+        @param left DealSide from the left order (see LibDeal.sol)
+        @param right DealSide from the right order (see LibDeal.sol)
+        @param dealData DealData of the match (see LibDeal.sol)
+        @return totalLeftValue - total amount for the left order
+        @return totalRightValue - total amout for the right order
+    */
     function doTransfers(
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,
-        LibFeeSide.FeeSide feeSide,
-        uint _protocolFee
+        LibDeal.DealData memory dealData
     ) override internal returns (uint totalLeftValue, uint totalRightValue) {
         totalLeftValue = left.asset.value;
         totalRightValue = right.asset.value;
 
-        if (feeSide == LibFeeSide.FeeSide.LEFT) {
-            totalLeftValue = doTransfersWithFees(left, right, _protocolFee);
+        if (dealData.feeSide == LibFeeSide.FeeSide.LEFT) {
+            totalLeftValue = doTransfersWithFees(left, right, dealData.protocolFee, dealData.maxFeesBasePoint);
             transferPayouts(right.asset.assetType, right.asset.value, right.from, left.payouts, right.proxy);
-        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
-            totalRightValue = doTransfersWithFees(right, left, _protocolFee);
+        } else if (dealData.feeSide == LibFeeSide.FeeSide.RIGHT) {
+            totalRightValue = doTransfersWithFees(right, left, dealData.protocolFee, dealData.maxFeesBasePoint);
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
         } else {
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
@@ -83,13 +90,22 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
+    /**
+        @notice executes the fee-side transfers (payment + fees)
+        @param calculateSide DealSide of the fee-side order
+        @param nftSide  DealSide of the nft-side order
+        @param _protocolFee protocol fee for the match (always 0 for V2 and earlier orders)
+        @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
+        @return totalAmount of fee-side asset
+    */
     function doTransfersWithFees(
         LibDeal.DealSide memory calculateSide,
         LibDeal.DealSide memory nftSide,
-        uint _protocolFee
+        uint _protocolFee,
+        uint maxFeesBasePoint
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(calculateSide.asset.value, _protocolFee, calculateSide.originFees);
-        uint rest = transferProtocolFee(totalAmount, calculateSide.asset.value, calculateSide.from, _protocolFee, _protocolFee, calculateSide.asset.assetType, calculateSide.proxy);
+        totalAmount = calculateTotalAmount(calculateSide.asset.value, _protocolFee, calculateSide.originFees, maxFeesBasePoint);
+        uint rest = transferProtocolFee(totalAmount, calculateSide.asset.value, calculateSide.from, _protocolFee, calculateSide.asset.assetType, calculateSide.proxy);
 
         rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
         if (
@@ -112,12 +128,11 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint totalAmount,
         uint amount,
         address from,
-        uint feeSideProtocolFee,
-        uint nftSideProtocolFee,
+        uint _protocolFee,
         LibAsset.AssetType memory matchCalculate,
         address proxy
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, feeSideProtocolFee + nftSideProtocolFee);
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, _protocolFee);
         if (fee > 0) {
             address tokenAddress = address(0);
             if (matchCalculate.assetClass == LibAsset.ERC20_ASSET_CLASS) {
@@ -214,16 +229,29 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, proxy);
         }
     }
-
+    
+    /**
+        @notice calculates total amount of fee-side asset that is going to be used in match
+        @param amount fee-side order value
+        @param feeOnTopBp protocolFee (it adds on top of the amount for the orders of )
+        @param orderOriginFees fee-side order's origin fee (it adds on top of the amount)
+        @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
+        @return total amount of fee-side asset
+    */
     function calculateTotalAmount(
         uint amount,
         uint feeOnTopBp,
-        LibPart.Part[] memory orderOriginFees
-    ) internal pure returns (uint total) {
-        total = amount.add(amount.bp(feeOnTopBp));
+        LibPart.Part[] memory orderOriginFees,
+        uint maxFeesBasePoint
+    ) internal pure returns (uint) {
+        if (maxFeesBasePoint > 0) {
+            return amount;
+        }
+        uint total = amount.add(amount.bp(feeOnTopBp));
         for (uint256 i = 0; i < orderOriginFees.length; i++) {
             total = total.add(amount.bp(orderOriginFees[i].value));
         }
+        return total;
     }
 
     function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {
@@ -238,10 +266,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             newValue = 0;
             realFee = value;
         }
-    }
-
-    function parseFeeData(uint data) internal pure returns(address, uint96) {
-        return (address(data), uint96(data >> 160));
     }
 
     uint256[46] private __gap;
