@@ -51,7 +51,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.seller, nft, address(0), payment, direct.salt, 0, 0, LibOrderDataV3.V3_SELL, sellData);
         LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, payment, address(0), nft, 0, 0, 0, LibOrderDataV3.V3_BUY, buyData);
-        validateAndMatch(orderLeft, direct.signature, orderRight);
+        validateOrders(orderLeft, direct.signature, orderRight, "");
+        matchAndTransfer(orderLeft, orderRight);
     }
 
     /**
@@ -72,24 +73,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.buyer, payment, address(0), nft, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, buyData);
         LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, sellData);
-        validateAndMatch(orderLeft, direct.signature, orderRight);
-    }
-
-    /**
-      * @dev function, validate orders and call matchAndTransfer()
-      * @param orderLeft left order
-      * @param signatureLeft order left signature
-      * @param orderRight right order
-      */
-    function validateAndMatch(LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight) internal {
-        validateFull(orderLeft, signatureLeft);
-        validateFull(orderRight, "");
-        if (orderLeft.taker != address(0)) {
-            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
-        }
-        if (orderRight.taker != address(0)) {
-            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
-        }
+        validateOrders(orderLeft, direct.signature, orderRight, "");
         matchAndTransfer(orderLeft, orderRight);
     }
 
@@ -99,6 +83,18 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrder.Order memory orderRight,
         bytes memory signatureRight
     ) external payable {
+        validateOrders(orderLeft, signatureLeft, orderRight, signatureRight);
+        matchAndTransfer(orderLeft, orderRight);
+    }
+
+    /**
+      * @dev function, validate orders
+      * @param orderLeft left order
+      * @param signatureLeft order left signature
+      * @param orderRight right order
+      * @param signatureRight order right signature
+      */
+    function validateOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight, bytes memory signatureRight) internal {
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
@@ -107,7 +103,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         if (orderRight.taker != address(0)) {
             require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
         }
-        matchAndTransfer(orderLeft, orderRight);
     }
 
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
