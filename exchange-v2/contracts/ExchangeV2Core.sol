@@ -41,9 +41,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
      * @param buyData data type 3_BUY for right order
      */
     function directPurchase(
-        LibDirectPurchase.Purchase memory direct,
-        bytes memory sellData,
-        bytes memory buyData
+        LibDirectPurchase.Purchase calldata direct,
+        bytes calldata sellData,
+        bytes calldata buyData
     ) external payable {
         bytes memory nftAssetData = abi.encode(direct.token, direct.tokenId);
         LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.tokenAmount);
@@ -62,9 +62,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
      * @param buyData data type V3_SELL for left order
      */
     function directAcceptBid(
-        LibDirectPurchase.AcceptBid memory direct,
-        bytes memory buyData,
-        bytes memory sellData
+        LibDirectPurchase.AcceptBid calldata direct,
+        bytes calldata buyData,
+        bytes calldata sellData
     ) external payable {
         bytes memory paymentAssetData = abi.encode(direct.tokenPayment);
         bytes memory nftAssetData = abi.encode(direct.tokenNft, direct.tokenId);
