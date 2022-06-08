@@ -66,10 +66,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes calldata buyData,
         bytes calldata sellData
     ) external payable {
-        bytes memory paymentAssetData = abi.encode(direct.tokenPayment);
-        bytes memory nftAssetData = abi.encode(direct.tokenNft, direct.tokenId);
-        LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, paymentAssetData), direct.price);
-        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, nftAssetData), direct.tokenAmount);
+        bytes memory data = abi.encode(direct.tokenPayment);
+        LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, data), direct.price);
+        data = abi.encode(direct.tokenNft, direct.tokenId);
+        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, data), direct.tokenAmount);
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.buyer, payment, address(0), nft, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, buyData);
         LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, sellData);
