@@ -26,7 +26,7 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 
 	describe("RoyaltiesRegistry token supports IERC2981:", () => {
 
-    it("Get royalties by token, use RoyaltiesRegistryTest (event)", async () => {
+    it("Get 10% royalties by token, use RoyaltiesRegistryTest (event) ", async () => {
       const getRoyalties = accounts[1];
       const tokenId = getRoyalties + "b00000000000000000000001";
       const ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
@@ -43,7 +43,49 @@ contract("RoyaltiesRegistry, test methods", accounts => {
       assert.equal(royalties.length, 1);
     })
 
-    it("Get royalties by token, use RoyaltiesRegistry (call)", async () => {
+    it("Get different % 2981 royalties by token", async () => {
+      const getRoyalties = accounts[1];
+      const tokenId = getRoyalties + "b00000000000000000000001";
+      const ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
+      await ERC721_V2981.initialize();
+      
+      // royalties 4.2%
+      await ERC721_V2981.setRoyalties(420);
+      let part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
+      let royalties;
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+        royalties = ev.royalties;
+        return true;
+      });
+      assert.equal(royalties[0].value, 420);
+      assert.equal(royalties[0].account, getRoyalties);
+      assert.equal(royalties.length, 1);
+
+      // royalties 0.01%
+      await ERC721_V2981.setRoyalties(1);
+      part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+        royalties = ev.royalties;
+        return true;
+      });
+      assert.equal(royalties[0].value, 1);
+      assert.equal(royalties[0].account, getRoyalties);
+      assert.equal(royalties.length, 1);
+
+      //royalties 50%
+      await ERC721_V2981.setRoyalties(5000);
+      part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
+      truffleAssert.eventEmitted(part, 'getRoyaltiesTest', (ev) => {
+        royalties = ev.royalties;
+        return true;
+      });
+      assert.equal(royalties[0].value, 5000);
+      assert.equal(royalties[0].account, getRoyalties);
+      assert.equal(royalties.length, 1);
+
+    })
+
+    it("Get 10% royalties by token, use RoyaltiesRegistry (call)", async () => {
       const getRoyalties = accounts[1];
       const tokenId = getRoyalties + "b00000000000000000000001";
       const ERC721_V2981 = await TestERC721WithRoyaltiesV2981.new("Rarible", "RARI", "https://ipfs.rarible.com");
