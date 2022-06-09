@@ -1246,15 +1246,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       await t1.mint(buyer, 1000);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: buyer });
 
-			await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
-			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
+      await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
 
-			let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(originBuyer, 100), await LibPartToUint(originBuyer2, 200) ]);
-			let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(originSeller, 300), await LibPartToUint(originSeller2, 400), 1000 ]);
-      
-			let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
-			let right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
-      
+      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 100), await LibPartToUint(originBuyer2, 200)]);
+      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 300), await LibPartToUint(originSeller2, 400), 1000]);
+
+      let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+      let right = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+
       await testing.setProtocolFee(0);
 
       await testing.matchOrders(left, await getSignature(left, buyer), right, "0x", { from: seller })
@@ -1278,15 +1278,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       await t1.mint(buyer, 1000);
       await t1.approve(erc20TransferProxy.address, 10000000, { from: buyer });
 
-			await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
-			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: seller});
+      await erc1155_v2.mint(seller, erc1155TokenId1, [], 1000);
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: seller });
 
-			let encDataLeft = await encDataV3_BUY([ 0, 0, await LibPartToUint(originBuyer2, 200) ]);
-			let encDataRight = await encDataV3_SELL([ 0, 0, await LibPartToUint(originSeller2, 400), 1000 ]);
-      
-			let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
-			let right = Order(seller, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
-      
+      let encDataLeft = await encDataV3_BUY([0, 0, await LibPartToUint(originBuyer2, 200)]);
+      let encDataRight = await encDataV3_SELL([0, 0, await LibPartToUint(originSeller2, 400), 1000]);
+
+      let left = Order(buyer, Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+      let right = Order(seller, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+
       await testing.setProtocolFee(0);
 
       await testing.matchOrders(left, await getSignature(left, buyer), right, "0x", { from: seller })
