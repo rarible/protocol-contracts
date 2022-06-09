@@ -76,27 +76,27 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
     it("not same origin, not same royalties V3", async () => {
       await t1.mint(accounts[1], 1000);
-			await erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
-			await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
-			await erc1155_v2.setApprovalForAll(transferProxy.address, true, {from: accounts[2]});
+      await erc1155_v2.mint(accounts[2], erc1155TokenId1, [], 1000);
+      await t1.approve(erc20TransferProxy.address, 10000000, { from: accounts[1] });
+      await erc1155_v2.setApprovalForAll(transferProxy.address, true, { from: accounts[2] });
 
-			let addrOriginLeft = await LibPartToUint(accounts[6], 300);
-			let addrOriginRight = await LibPartToUint(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-			let encDataLeft = await encDataV3_BUY([ 0, addrOriginLeft, 0 ]);
-			let encDataRight = await encDataV3_SELL([ 0, addrOriginRight, 0, 1000 ]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
 
       // setting protocol fee to 0 to check gas difference with V2 orders 
       await testing.setProtocolFee(0);
 
-			await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
-			const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
-			const right = Order(accounts[2], Asset(ERC1155, enc( erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+      await royaltiesRegistry.setRoyaltiesByToken(erc1155_v2.address, [[accounts[7], 1000]]); //set royalties by token
+      const left = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+      const right = Order(accounts[2], Asset(ERC1155, enc(erc1155_v2.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
       const tx = await testing.matchOrders(left, await getSignature(left, accounts[1]), right, "0x", { from: accounts[2] });
       console.log("not same origin, not same royalties (no protocol Fee) V3:", tx.receipt.gasUsed);
-			
-		})
+
+    })
 
     it("same origin, not same royalties", async () => {
       await t1.mint(accounts[1], 1000);
