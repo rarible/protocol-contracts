@@ -26,13 +26,13 @@ library LibOrderData {
         } else if (order.dataType == LibOrderDataV3.V3_SELL) {
             LibOrderDataV3.DataV3_SELL memory data = LibOrderDataV3.decodeOrderDataV3_SELL(order.data);
             dataOrder.payouts = parsePayouts(data.payouts);
-            dataOrder.originFees = parseOriginFeeData(data.originFee);
+            dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
             dataOrder.isMakeFill = true;
             dataOrder.maxFeesBasePoint = data.maxFeesBasePoint;
         } else if (order.dataType == LibOrderDataV3.V3_BUY) {
             LibOrderDataV3.DataV3_BUY memory data = LibOrderDataV3.decodeOrderDataV3_BUY(order.data);
             dataOrder.payouts = parsePayouts(data.payouts);
-            dataOrder.originFees = parseOriginFeeData(data.originFee);
+            dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
             dataOrder.isMakeFill = false;
         } else if (order.dataType == 0xffffffff) {
         } else {
@@ -50,21 +50,45 @@ library LibOrderData {
         return payout;
     }
 
-    function parseOriginFeeData(uint data) internal pure returns(LibPart.Part[] memory) {
-        LibPart.Part[] memory originFee = new LibPart.Part[](1);
-        originFee[0].account = payable(address(data));
-        originFee[0].value = uint96(data >> 160);
+    function parseOriginFeeData(uint dataFirst, uint dataSecond) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory originFee;
+
+        if (dataFirst > 0 && dataSecond > 0){
+            originFee = new LibPart.Part[](2);
+
+            originFee[0].account = payable(address(dataFirst));
+            originFee[0].value = uint96(dataFirst >> 160);
+
+            originFee[1].account = payable(address(dataSecond));
+            originFee[1].value = uint96(dataSecond >> 160);
+        }
+
+        if (dataFirst > 0 && dataSecond == 0) {
+            originFee = new LibPart.Part[](1);
+
+            originFee[0].account = payable(address(dataFirst));
+            originFee[0].value = uint96(dataFirst >> 160);
+        }
+
+        if (dataFirst == 0 && dataSecond > 0) {
+            originFee = new LibPart.Part[](1);
+
+            originFee[0].account = payable(address(dataSecond));
+            originFee[0].value = uint96(dataSecond >> 160);
+        }
+
         return originFee;
     }
 
-    function parsePayouts(uint[] memory data) internal pure returns(LibPart.Part[] memory) {
-        uint len = data.length;
-        LibPart.Part[] memory payouts = new LibPart.Part[](len);
+    function parsePayouts(uint data) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory payouts;
 
-        for (uint i; i < data.length; i++) {
-            payouts[i].account = payable(address(data[i]));
-            payouts[i].value = uint96(data[i] >> 160);
+        if (data > 0) {
+            payouts = new LibPart.Part[](1);
+            payouts[0].account = payable(address(data));
+            payouts[0].value = uint96(data >> 160);
         }
+
         return payouts;
     }
 
