@@ -37,7 +37,7 @@ struct PurchaseDetails {
 * `amount` – cost in WEI
 * `data` – orders data for transfer
 
-For OpenSea orders `tradeData` field encoded as shown in the [example](../test/contracts/v2/ExchangeBulkV2Test.sol) of the `getDataWyvernAtomicMatch` method. It is important that for OpenSea orders it is necessary to form a sell order. You don't need to sign it. You need to set `order.maker` ==  `ExchangeBulkV2.address` in the sale order, and set the buyer's address in the `calldataBuy` field.
+For OpenSea orders `tradeData` field encoded as shown in the [example](../test/contracts/v2/ExchangeBulkV2Test.sol) of the `getDataWyvernAtomicMatch` method. It is important that for OpenSea orders it is necessary to form a sell order. You don't need to sign it. You need to set `order.maker` ==  `ExchangeWrapper.address` in the sale order, and set the buyer's address in the `calldataBuy` field.
 
 For Rarible orders `tradeData` field encoded as shown in the [example](../test/contracts/v2/ExchangeBulkV2Test.sol) of the `getDataExchangeV2SellOrders` method. It is important that it is not necessary to form a sell order for Rarible orders, it will be formed inside the `bulkTransfer` method.
 
