@@ -56,25 +56,20 @@ library LibOrderData {
         if (dataFirst > 0 && dataSecond > 0){
             originFee = new LibPart.Part[](2);
 
-            originFee[0].account = payable(address(dataFirst));
-            originFee[0].value = uint96(dataFirst >> 160);
-
-            originFee[1].account = payable(address(dataSecond));
-            originFee[1].value = uint96(dataSecond >> 160);
+            originFee[0] = uintToLibPart(dataFirst);
+            originFee[1] = uintToLibPart(dataSecond);
         }
 
         if (dataFirst > 0 && dataSecond == 0) {
             originFee = new LibPart.Part[](1);
 
-            originFee[0].account = payable(address(dataFirst));
-            originFee[0].value = uint96(dataFirst >> 160);
+            originFee[0] = uintToLibPart(dataFirst);
         }
 
         if (dataFirst == 0 && dataSecond > 0) {
             originFee = new LibPart.Part[](1);
 
-            originFee[0].account = payable(address(dataSecond));
-            originFee[0].value = uint96(dataSecond >> 160);
+            originFee[0] = uintToLibPart(dataSecond);
         }
 
         return originFee;
@@ -85,11 +80,22 @@ library LibOrderData {
 
         if (data > 0) {
             payouts = new LibPart.Part[](1);
-            payouts[0].account = payable(address(data));
-            payouts[0].value = uint96(data >> 160);
+            payouts[0] = uintToLibPart(data);
         }
 
         return payouts;
+    }
+
+    /**
+        @notice converts uint to LibPart.Part
+        @param data address and value encoded in uint (first 12 bytes )
+        @return result LibPart.Part 
+     */
+    function uintToLibPart(uint data) internal pure returns(LibPart.Part memory result) {
+        if (data > 0){
+            result.account = payable(address(data));
+            result.value = uint96(data >> 160);
+        }
     }
 
 }
