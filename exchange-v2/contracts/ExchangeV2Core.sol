@@ -50,7 +50,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ETH_ASSET_CLASS, ""), direct.price);
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.seller, nft, address(0), payment, direct.salt, 0, 0, LibOrderDataV3.V3_SELL, sellData);
-        LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, payment, address(0), nft, 0, 0, 0, LibOrderDataV3.V3_BUY, buyData);
+        LibOrder.Order memory orderRight = LibOrder.Order(_msgSender(), payment, address(0), nft, 0, 0, 0, LibOrderDataV3.V3_BUY, buyData);
         validateOrders(orderLeft, direct.signature, orderRight, "");
         matchAndTransfer(orderLeft, orderRight);
     }
@@ -72,7 +72,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.assetType, data), direct.tokenAmount);
 
         LibOrder.Order memory orderLeft = LibOrder.Order(direct.buyer, payment, address(0), nft, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, buyData);
-        LibOrder.Order memory orderRight = LibOrder.Order(msg.sender, nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, sellData);
+        LibOrder.Order memory orderRight = LibOrder.Order(_msgSender(), nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, sellData);
         validateOrders(orderLeft, direct.signature, orderRight, "");
         matchAndTransfer(orderLeft, orderRight);
     }
@@ -152,12 +152,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
             if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
+                address(_msgSender()).transferEth(msg.value.sub(totalMakeValue));
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
+                address(_msgSender()).transferEth(msg.value.sub(totalTakeValue));
             }
         }
         emit Match(newFill.rightValue, newFill.leftValue);
