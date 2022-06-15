@@ -314,7 +314,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
     }
 
     /// @dev returns current highest bidder for an auction
-    function getCurrentBuyer(uint _auctionId) public view returns(address) {
+    function getCurrentBuyer(uint _auctionId) external view returns(address) {
         return auctions[_auctionId].buyer;
     }
 
