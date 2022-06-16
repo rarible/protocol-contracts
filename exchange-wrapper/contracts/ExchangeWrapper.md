@@ -37,11 +37,11 @@ struct PurchaseDetails {
 * `amount` – cost in WEI
 * `data` – orders data for transfer
 
-For OpenSea orders `tradeData` field encoded as shown in the [example](../test/contracts/v2/ExchangeBulkV2Test.sol) of the `getDataWyvernAtomicMatch` method. It is important that for OpenSea orders it is necessary to form a sell order. You don't need to sign it. You need to set `order.maker` ==  `ExchangeWrapper.address` in the sale order, and set the buyer's address in the `calldataBuy` field.
+For OpenSea orders `tradeData` field encoded as shown in the [example](../test/contracts/v2/ExchangeBulkV2Test.sol) of the `getDataWyvernAtomicMatch` method. It is important that for OpenSea orders it is necessary to form a sell order. You don't need to sign it, because field `order.maker` ==  `ExchangeWrapper.address` in the sale order (maker == msg.sender), and set the buyer's address in the `calldataBuy` field.
 
 For Rarible orders `tradeData` field encoded as shown in the [example](../test/contracts/v2/ExchangeBulkV2Test.sol) of the `getDataExchangeV2SellOrders` method. It is important that it is not necessary to form a sell order for Rarible orders, it will be formed inside the `bulkTransfer` method.
 
-In the `singlePurchase` and `bulkPurchase` methods, the `uint` array is passed – this is the commission's array. Each element of the array contains the commission value and the address to. The first 12 bytes is the commission value. Provided 100 is 1%, 10000 is 100%. The next 20 bytes is the address to whom to transfer the commission.
+In the `singlePurchase` and `bulkPurchase` methods, the `uint` array is passed – this is the commission's array. Each element of the array contains the commission value and the address, which are encoded in uint. The first 12 bytes is the commission value. Provided 100 is 1%, 10000 is 100%. The next 20 bytes is the address to whom to transfer the commission.
 
 It is allowed to transfer mixed orders of Rarible and OpenSea encapsulated in the structure of the `PurchaseDetails` to the `bulkPurchase` method.
 
