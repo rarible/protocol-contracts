@@ -3,8 +3,8 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
-import "@rarible/exchange-v2/contracts/lib/BpLibrary.sol";
+import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
+import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@rarible/exchange-interfaces/contracts/IWyvernExchange.sol";
 import "@rarible/exchange-interfaces/contracts/IExchangeV2.sol";
