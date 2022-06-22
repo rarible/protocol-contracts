@@ -143,7 +143,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return 0;
         }
         
-        uint matchFees = getSumFess(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
+        uint matchFees = getSumFees(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
         uint maxFee;
         if (feeSide == LibFeeSide.FeeSide.LEFT) {
             maxFee = rightOrderData.maxFeesBasePoint;
@@ -164,8 +164,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return 0;
         }
         require(
-            maxFee > 0 && 
-            maxFee >= _protocolFee && 
+            maxFee > 0 &&
             maxFee >= matchFees &&
             maxFee <= 1000, 
             "wrong maxFee"
@@ -201,7 +200,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         @param originRight origin fees of the right order
         @return sum of all fees for the match (protcolFee + leftOrder.originFees + rightOrder.originFees)
      */
-    function getSumFess(uint _protocolFee, LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
+    function getSumFees(uint _protocolFee, LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
         //start from protocol fee
         uint result = _protocolFee;
 
