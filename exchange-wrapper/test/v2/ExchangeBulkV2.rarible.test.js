@@ -125,7 +125,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const tx = await seaport.fulfillBasicOrder(basicOrder, {value: "12000000000000000000"})
       console.log("SEAPORT: ETH <=> ERC721", tx.receipt.gasUsed)
-
+      //todo check balances ok?
     })
 
 //    it("seaport ERC-20", async () => {

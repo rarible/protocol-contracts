@@ -7,6 +7,7 @@ import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import "@rarible/libraries/contracts/BpLibrary.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@rarible/exchange-interfaces/contracts/IWyvernExchange.sol";
+import "@rarible/exchange-interfaces/contracts/ISeaPort.sol";
 import "@rarible/exchange-interfaces/contracts/IExchangeV2.sol";
 import "@rarible/royalties/contracts/LibPart.sol";
 
@@ -19,10 +20,12 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     IWyvernExchange public wyvernExchange;
     IExchangeV2 public exchangeV2;
+    ISeaPort public seaPort;
 
     enum Markets {
         ExchangeV2,
-        WyvernExchange
+        WyvernExchange,
+        BasicSP
     }
 
     struct PurchaseDetails {
@@ -33,12 +36,14 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function __ExchangeWrapper_init(
         IWyvernExchange _wyvernExchange,
-        IExchangeV2 _exchangeV2
+        IExchangeV2 _exchangeV2,
+        ISeaPort _seaPort
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         wyvernExchange = _wyvernExchange;
         exchangeV2 = _exchangeV2;
+        seaPort = _seaPort;
     }
 
     function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
@@ -47,6 +52,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function setExchange(IExchangeV2 _exchangeV2) external onlyOwner {
         exchangeV2 = _exchangeV2;
+    }
+
+    function setSeaPort(ISeaPort _seaPort) external OnlyOwner {
+        seaPort = _seaPort;
     }
 
     function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
@@ -69,7 +78,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
-        if (purchaseDetails.marketId == Markets.WyvernExchange) {
+        if (purchaseDetails.marketId == Markets.BasicSP) {
+            (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
+            require(success, "Purchase failed");
+        } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
             require(success, "Purchase failed");
         } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
