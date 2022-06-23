@@ -3,19 +3,17 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/lib/LibTransfer.sol";
-import "@rarible/exchange-v2/contracts/lib/BpLibrary.sol";
+import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
+import "@rarible/lib-bp/contracts/BpLibrary.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@rarible/exchange-interfaces/contracts/IWyvernExchange.sol";
-import "@rarible/exchange-interfaces/contracts/IExchangeV2.sol";
-import "@rarible/royalties/contracts/LibPart.sol";
-
+import "./interfaces/IWyvernExchange.sol";
+import "./interfaces/IExchangeV2.sol";
+import "@rarible/lib-part/contracts/LibPart.sol";
 
 contract ExchangeWrapper is OwnableUpgradeable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
-
 
     IWyvernExchange public wyvernExchange;
     IExchangeV2 public exchangeV2;

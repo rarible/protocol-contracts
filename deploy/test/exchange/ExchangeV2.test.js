@@ -972,13 +972,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       //buy-order has take-side fills
       assert.equal(await exchangeV2.fills(await helper.hashKey(left)), 200);
     })
-
+      
     it("should not match when there's a problem with orders' types ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
-      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
@@ -1214,15 +1214,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   }
 
   async function LibPartToUint(account = zeroAddress, value = 0) {
-    return await helper.encodeLibPartToUintIntoUint(account, value);
-  }
-
-  async function Payouts(arr = []) {
-    let result = [];
-    for (const element of arr) {
-      result.push(await helper.encodeLibPartToUintIntoUint(element[0], element[1]))
-    }
-    return result;
+    return await helper.encodeOriginFeeIntoUint(account, value);
   }
 
   async function prepareERC20(user, value = 1000) {

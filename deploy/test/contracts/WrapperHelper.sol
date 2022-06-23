@@ -3,10 +3,11 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "@rarible/exchange-interfaces/contracts/IWyvernExchange.sol";
-import "@rarible/exchange-interfaces/contracts/IExchangeV2.sol";
+import {IERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import {IERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import {IWyvernExchange} from "../../contracts/ExchangeWrapperImport.sol";
+import {IExchangeV2} from "../../contracts/ExchangeWrapperImport.sol";
+import {LibOrder} from "../../contracts/ExchangeWrapperImport.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -62,7 +63,7 @@ interface IWyvernExchangeError {
     payable;
 }
 
-contract ExchangeBulkV2Test {
+contract WrapperHelper {
 
     struct WyvernOrders {
         address[14] addrs;

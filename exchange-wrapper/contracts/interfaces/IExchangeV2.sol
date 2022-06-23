@@ -3,7 +3,7 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/LibOrder.sol";
+import "@rarible/exchange-v2/contracts/libraries/LibOrder.sol";
 
 interface IExchangeV2 {
     function matchOrders(
