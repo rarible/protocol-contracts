@@ -17,8 +17,8 @@ library LibRoyalties2981 {
         if (amount == 0) {
             return result;
         }
-        uint256 percent = (amount * 100 / _WEIGHT_VALUE) * 100;
-        require(percent < 10000, "Royalties 2981, than 100%");
+        uint256 percent = amount * 10000 / _WEIGHT_VALUE;
+        require(percent < 10000, "Royalties 2981 exceeds 100%");
         result = new LibPart.Part[](1);
         result[0].account = payable(to);
         result[0].value = uint96(percent);

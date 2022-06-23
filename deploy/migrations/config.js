@@ -128,7 +128,7 @@ async function getProxyImplementation(proxy, network, ProxyAdmin) {
   }
 
   if (network === "dev") {
-    network = "unknown-100500"
+    network = "unknown-300500"
   }
 
   if (network === "polygon_dev") {
@@ -140,6 +140,7 @@ async function getProxyImplementation(proxy, network, ProxyAdmin) {
     json = require(`../.openzeppelin/${network}.json`)
   } catch (e) {
     const tconfig = require('../truffle-config.js')
+    console.log(tconfig)
     const network_id = tconfig.networks[network].network_id;
     json = require(`../.openzeppelin/unknown-${network_id}.json`)
   }

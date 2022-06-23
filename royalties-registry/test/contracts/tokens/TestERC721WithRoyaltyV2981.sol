@@ -13,5 +13,6 @@ contract TestERC721WithRoyaltyV2981 is Initializable, Royalties2981TestImpl, ERC
     function initialize() public initializer {
         _registerInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES);
         __Ownable_init_unchained();
+        setRoyalties(1000);
     }
 }

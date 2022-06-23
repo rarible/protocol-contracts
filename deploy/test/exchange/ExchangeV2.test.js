@@ -71,18 +71,21 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerLeft, 1000)
       const erc1155 = await prepareERC1155(makerRight, 1000, erc1155TokenId1, [[accounts[7], 1000]])
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([await Payouts([[makerLeft, 10000]]), addrOriginLeft]);
-      let encDataRight = await encDataV3_SELL([await Payouts([[makerRight, 10000]]), addrOriginRight, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+
+      // setting protocol fee to 0 to check gas difference with V2 orders 
+      await exchangeV2.setProtocolFee(0);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
       const tx = await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight });
-      console.log("not same origin, not same royalties V3:", tx.receipt.gasUsed);
 
+      console.log("not same origin, not same royalties (no protocol Fee) V3:", tx.receipt.gasUsed);
     })
 
     it("same origin, not same royalties", async () => {
@@ -885,7 +888,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await exchangeV2.fills(leftOrderHash), 1500, "left fill make side 1")
     })
 
-    it("should correctly calculate make-side fill for isMakeFill = true and originFees ", async () => {
+    it("should correctly calculate make-side fill for isMakeFill = true and LibPartToUints ", async () => {
       const buyer1 = accounts[3];
 
       const erc1155 = await prepareERC1155(makerLeft, 200)
@@ -932,13 +935,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     const originSeller = accounts[4]
     const creator = accounts[5]
     const secondPayoutSeller = accounts[6]
+    const originBuyer2 = accounts[6]
+    const originSeller2 = accounts[7]
 
     it("should correctly pay to everyone envloved in a match ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), await OriginFee(originBuyer, 300)]);
-      let encDataRight = await encDataV3_SELL([await Payouts([[makerLeft, 5000], [secondPayoutSeller, 5000]]), await OriginFee(originSeller, 400), 1000]);
+      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
+      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
 
       await royaltiesRegistry.setRoyaltiesByToken(erc1155.address, [[creator, 1000]]); //set royalties by token
 
@@ -958,10 +963,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc20.balanceOf(originSeller), 4);
       // 10% to creator as royalties, 80 left
       assert.equal(await erc20.balanceOf(creator), 10);
-      // 50% of what's left (80) to makerLeft (payouts 50-50)
-      assert.equal(await erc20.balanceOf(makerLeft), 40);
-      // 50% of what's left (80) to secondPayoutSeller (payouts 50-50)
-      assert.equal(await erc20.balanceOf(secondPayoutSeller), 40);
+      // 100% of what's left (80) to makerLeft
+      assert.equal(await erc20.balanceOf(makerLeft), 80);
 
       //checking fills
       // sell-order has make-side fills
@@ -974,8 +977,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), await OriginFee(originBuyer, 300)]);
-      let encDataRight = await encDataV3_SELL([await Payouts([[makerLeft, 5000], [secondPayoutSeller, 5000]]), await OriginFee(originSeller, 400), 1000]);
+      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
+      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
@@ -988,6 +991,9 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       )
 
       // wrong => sell order has no type (buy order is correct)
+      changeOrderData(left, encDataLeft);
+      changeOrderData(right, encDataRight);
+
       changeOrderType(right, ORDER_DATA_V3_BUY);
       changeOrderType(left, "0xffffffff");
       await expectThrow(
@@ -1035,8 +1041,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_SELL([await Payouts([[makerLeft, 5000], [secondPayoutSeller, 5000]]), await OriginFee(originSeller, 400), 1000]);
-      let encDataRight = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), await OriginFee(originBuyer, 300)]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
@@ -1049,7 +1055,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       // change protocol fee 5 => 3 and makerRight origin fee 3 => 4, so resulting fee is 11%
       await exchangeV2.setProtocolFee(300)
-      changeOrderData(right, await encDataV3_BUY([await Payouts([[makerRight, 10000]]), await OriginFee(originBuyer, 400)]))
+      changeOrderData(right, await encDataV3_BUY([0, await LibPartToUint(originBuyer, 400), 0]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
@@ -1064,8 +1070,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_SELL([await Payouts([[makerLeft, 5000], [secondPayoutSeller, 5000]]), await OriginFee(), 200]);
-      let encDataRight = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), await OriginFee()]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(), 0, 200]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(), 0]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
@@ -1077,14 +1083,68 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       //maxFee = 0 is wrong even if protocolFee = 0
       await exchangeV2.setProtocolFee(0)
-      changeOrderData(left, await encDataV3_SELL([await Payouts([[makerLeft, 5000], [secondPayoutSeller, 5000]]), await OriginFee(), 0]))
+      changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 0]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
       //setting maxFee at 1% works
-      changeOrderData(left, await encDataV3_SELL([await Payouts([[makerLeft, 5000], [secondPayoutSeller, 5000]]), await OriginFee(), 100]))
+      changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 100]))
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
+
+    })
+
+    it("should work with 2 origin Fees", async () => {
+      const erc20 = await prepareERC20(makerLeft, 1000)
+      const erc1155 = await prepareERC1155(makerRight, 1000)
+
+      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 100), await LibPartToUint(originBuyer2, 200)]);
+      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 300), await LibPartToUint(originSeller2, 400), 1000]);
+
+      let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+      let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+
+      await exchangeV2.setProtocolFee(0);
+
+      await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
+
+      // 0% to protocol
+      assert.equal(await erc20.balanceOf(protocol), 0);
+      // 1% to originBuyer
+      assert.equal(await erc20.balanceOf(originBuyer), 1);
+      // 2% to originBuyer2
+      assert.equal(await erc20.balanceOf(originBuyer2), 2);
+      // 3% to originSeller
+      assert.equal(await erc20.balanceOf(originSeller), 3);
+      // 4% to originSeller2
+      assert.equal(await erc20.balanceOf(originSeller2), 4);
+      // 100% of what's left to makerRight
+      assert.equal(await erc20.balanceOf(makerRight), 90);
+
+    })
+
+    it("should work when using only second origin", async () => {
+      const erc20 = await prepareERC20(makerLeft, 1000)
+      const erc1155 = await prepareERC1155(makerRight, 1000)
+
+      let encDataLeft = await encDataV3_BUY([0, 0, await LibPartToUint(originBuyer2, 200)]);
+      let encDataRight = await encDataV3_SELL([0, 0, await LibPartToUint(originSeller2, 400), 1000]);
+
+      let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+      let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+
+      await exchangeV2.setProtocolFee(0);
+
+      await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
+
+      // 0% to protocol
+      assert.equal(await erc20.balanceOf(protocol), 0);
+      // 2% to originBuyer2
+      assert.equal(await erc20.balanceOf(originBuyer2), 2);
+      // 4% to originSeller2
+      assert.equal(await erc20.balanceOf(originSeller2), 4);
+      // 100% of what's left to makerRight
+      assert.equal(await erc20.balanceOf(makerRight), 94);
 
     })
 
@@ -1153,14 +1213,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     return helper.encodeV3_SELL(tuple);
   }
 
-  async function OriginFee(account = zeroAddress, value = 0) {
-    return await helper.encodeOriginFeeIntoUint(account, value);
+  async function LibPartToUint(account = zeroAddress, value = 0) {
+    return await helper.encodeLibPartToUintIntoUint(account, value);
   }
 
   async function Payouts(arr = []) {
     let result = [];
     for (const element of arr) {
-      result.push(await helper.encodeOriginFeeIntoUint(element[0], element[1]))
+      result.push(await helper.encodeLibPartToUintIntoUint(element[0], element[1]))
     }
     return result;
   }

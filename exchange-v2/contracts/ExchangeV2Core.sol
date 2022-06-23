@@ -50,6 +50,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         matchAndTransfer(orderLeft, orderRight);
     }
 
+    /**
+        @notice matches valid orders and transfers their assets
+        @param orderLeft the left order of the match
+        @param orderRight the right order of the match
+    */
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
 
@@ -108,6 +113,16 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         emit Match(newFill.rightValue, newFill.leftValue);
     }
 
+    /**
+        @notice determines the max amount of fees for the match
+        @param dataTypeLeft data type of the left order
+        @param dataTypeRight data type of the right order
+        @param leftOrderData data of the left order
+        @param rightOrderData data of the right order
+        @param feeSide fee side of the match
+        @param _protocolFee protocol fee of the match
+        @return max fee amount in base points
+    */
     function getMaxFee(
         bytes4 dataTypeLeft, 
         bytes4 dataTypeRight, 
@@ -125,11 +140,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return 0;
         }
         
-        uint matchFees = _protocolFee + leftOrderData.originFees[0].value + rightOrderData.originFees[0].value;
+        uint matchFees = getSumFees(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
         uint maxFee;
         if (feeSide == LibFeeSide.FeeSide.LEFT) {
             maxFee = rightOrderData.maxFeesBasePoint;
-            
             require(
                 dataTypeLeft == LibOrderDataV3.V3_BUY && 
                 dataTypeRight == LibOrderDataV3.V3_SELL,
@@ -147,12 +161,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return 0;
         }
         require(
-            maxFee > 0 && 
-            maxFee >= _protocolFee && 
+            maxFee > 0 &&
             maxFee >= matchFees &&
             maxFee <= 1000, 
             "wrong maxFee"
         );
+        
         return maxFee;
     }
 
@@ -176,6 +190,38 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         );
     }
 
+    /**
+        @notice calculates amount of fees for the match
+        @param _protocolFee protocolFee of the match
+        @param originLeft origin fees of the left order
+        @param originRight origin fees of the right order
+        @return sum of all fees for the match (protcolFee + leftOrder.originFees + rightOrder.originFees)
+     */
+    function getSumFees(uint _protocolFee, LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
+        //start from protocol fee
+        uint result = _protocolFee;
+
+        //adding left origin fees
+        for (uint i; i < originLeft.length; i ++) {
+            result = result + originLeft[i].value;
+        }
+
+        //adding right protocol fees
+        for (uint i; i < originRight.length; i ++) {
+            result = result + originRight[i].value;
+        }
+
+        return result;
+    }
+
+    /**
+        @notice calculates fills for the matched orders and set them in "fills" mapping
+        @param orderLeft left order of the match
+        @param orderRight right order of the match
+        @param leftMakeFill true if the left orders uses make-side fills, false otherwise
+        @param rightMakeFill true if the right orders uses make-side fills, false otherwise
+        @return returns change in orders' fills by the match 
+    */
     function getFillSetNew(
         LibOrder.Order memory orderLeft,
         LibOrder.Order memory orderRight,
@@ -230,6 +276,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     function getProtocolFee() internal virtual view returns(uint);
 
+    /**
+        @notice returns protocol Fee for V3 or upper orders, 0 for V2 and earlier ordrs
+        @param leftDataType type of the left order in a match
+        @return protocol fee
+    */
     function getProtocolFeeConditional(bytes4 leftDataType) internal view returns(uint) {
         if (leftDataType == LibOrderDataV3.V3_SELL || leftDataType == LibOrderDataV3.V3_BUY) {
             return getProtocolFee();
