@@ -9,7 +9,6 @@ import "@rarible/exchange-interfaces/contracts/IWyvernExchange.sol";
 import "@rarible/exchange-interfaces/contracts/IExchangeV2.sol";
 import "@rarible/exchange-interfaces/contracts/ISeaPort.sol";
 import "@rarible/exchange-wrapper/contracts/libraries/LibSeaPort.sol";
-import "../../../contracts/libraries/LibSeaPort.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -88,31 +87,26 @@ contract ExchangeBulkV2Test {
         bytes signatureRight;
     }
 
-    function getDataWyvernAtomicMatch(WyvernOrders memory _openSeaBuy) external pure returns(bytes memory _data) {
-        _data = abi.encodeWithSelector(IWyvernExchange.atomicMatch_.selector, _openSeaBuy.addrs, _openSeaBuy.uints, _openSeaBuy.feeMethodsSidesKindsHowToCalls, _openSeaBuy.calldataBuy, _openSeaBuy.calldataSell, _openSeaBuy.replacementPatternBuy, _openSeaBuy.replacementPatternSell, _openSeaBuy.staticExtradataBuy, _openSeaBuy.staticExtradataSell, _openSeaBuy.vs, _openSeaBuy.rssMetadata);
+    function getDataWyvernAtomicMatch(WyvernOrders memory _openSeaBuy) external pure returns (bytes memory _data) {
+        _data = abi.encodeWithSelector(
+            IWyvernExchange.atomicMatch_.selector,
+            _openSeaBuy.addrs,
+            _openSeaBuy.uints,
+            _openSeaBuy.feeMethodsSidesKindsHowToCalls,
+            _openSeaBuy.calldataBuy,
+            _openSeaBuy.calldataSell,
+            _openSeaBuy.replacementPatternBuy,
+            _openSeaBuy.replacementPatternSell,
+            _openSeaBuy.staticExtradataBuy,
+            _openSeaBuy.staticExtradataSell,
+            _openSeaBuy.vs,
+            _openSeaBuy.rssMetadata);
     }
 
-    function getDataFulfillBasicOrder(LibSeaPort.BasicOrderParameters memory _seaPortBuy) external pure returns(bytes memory _data) {
+    function getDataFulfillBasicOrder(LibSeaPort.BasicOrderParameters calldata _seaPortBasic) external pure returns (bytes memory _data) {
         _data = abi.encodeWithSelector(
             ISeaPort.fulfillBasicOrder.selector,
-            _seaPortBuy.considerationToken,
-            _seaPortBuy.considerationIdentifier,
-            _seaPortBuy.considerationAmount,
-            _seaPortBuy.offerer,
-            _seaPortBuy.zone,
-            _seaPortBuy.offerToken,
-            _seaPortBuy.offerIdentifier,
-            _seaPortBuy.offerAmount,
-            _seaPortBuy.basicOrderType,
-            _seaPortBuy.startTime,
-            _seaPortBuy.endTime,
-            _seaPortBuy.zoneHash,
-            _seaPortBuy.salt,
-            _seaPortBuy.offererConduitKey,
-            _seaPortBuy.fulfillerConduitKey,
-            _seaPortBuy.totalOriginalAdditionalRecipients,
-            _seaPortBuy.additionalRecipients,
-            _seaPortBuy.signature
+            _seaPortBasic
         );
     }
 
@@ -145,5 +139,9 @@ contract ExchangeBulkV2Test {
 
     function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, uint purchaseAmount) external pure returns(bytes memory _data) {
         _data = abi.encode(orderLeft, signatureLeft, purchaseAmount);
+    }
+
+    function getDataSeaPortBasic(LibSeaPort.BasicOrderParameters calldata seaPortBasic, bytes4 typeNft) external pure returns(bytes memory _data) {
+        _data = abi.encode(seaPortBasic, typeNft);
     }
 }

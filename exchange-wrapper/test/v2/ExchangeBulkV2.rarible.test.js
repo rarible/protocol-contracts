@@ -54,8 +54,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let testERC20;
   let testERC721;
   let testERC1155;
-  const seller = accounts[1];
-  const tokenId  = 12345;
+  let seller = accounts[1];
+  const zoneAddr = accounts[2];
+  const tokenId = 12345;
   /*OpenSeaOrders*/
   const feeMethodsSidesKindsHowToCallsMask = [1, 0, 0, 1, 1, 1, 0, 1];
   /* FeeMethod{ ProtocolFee, SplitFee }) buy
@@ -88,25 +89,27 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   });
 
   describe("singlePurchase Seaport order", () => {
-    it("seaport ETH", async () => {
+    it("seaport ERC721<->ETH", async () => {
 
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
-
+//      const buyerLocal1 = 0x6ef1ff55b97d3FfDD8E2C125874296587907C0fc;
+      const buyerLocal1 = accounts[2];
       const token = await TestERC721.new();
       await token.mint(seller, tokenId)
       await token.setApprovalForAll(seaport.address, true, {from: seller})
 
       const basicOrder = {
         offerer: seller,
-        zone: '0x89cEC4f36A0DDFb65Ca35b4Ec6021E8a0772B39d',
+//        zone: '0x89cEC4f36A0DDFb65Ca35b4Ec6021E8a0772B39d',
+        zone: zoneAddr,
         basicOrderType: 0,
         offerToken: token.address,
         offerIdentifier: '0x3039',
         offerAmount: '0x01',
         considerationToken: '0x0000000000000000000000000000000000000000',
         considerationIdentifier: '0x00',
-        considerationAmount: '0x8ac7230489e80000',
+        considerationAmount: 1000,
         startTime: 0,
         endTime: '0xff00000000000000000000000000',
         zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
@@ -117,16 +120,83 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
         fulfillerConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
         additionalRecipients: [
           {
-            amount: '0x0de0b6b3a7640000',
+            amount: 100,
             recipient: '0x6ef1ff55b97d3FfDD8E2C125874296587907C0fc'
           }
         ]
       }
-
-      const tx = await seaport.fulfillBasicOrder(basicOrder, {value: "12000000000000000000"})
+      let ownerNFT = await token.ownerOf(tokenId);
+      console.log("owner before is:", ownerNFT);
+      //todo ask to ? why problem with accounts[] when set to recipient here
+      const tx = await seaport.fulfillBasicOrder(basicOrder, {from: buyerLocal1, value: 2000})
       console.log("SEAPORT: ETH <=> ERC721", tx.receipt.gasUsed)
       //todo check balances ok?
+      assert.equal(await token.balanceOf(seller), 0);
+      assert.equal(await token.balanceOf(buyerLocal1), 1);
+      //todo should know how set buyer
+//      let ownerNFT = await erc721.ownerOf.call(tokenId);
+      ownerNFT = await token.ownerOf(tokenId);
+      console.log("owner after is:", ownerNFT);
     })
+
+    it("seaport wrapper ERC721<->ETH", async () => {
+
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+
+      bulkExchange = await ExchangeBulkV2.new();
+      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS);
+      await bulkExchange.setSeaPort(seaport.address);
+
+      const buyerLocal1 = accounts[2];
+      const token = await TestERC721.new();
+      await token.mint(seller, tokenId)
+      await token.setApprovalForAll(seaport.address, true, {from: seller})
+
+      const basicOrder = {
+        offerer: seller,
+        zone: zoneAddr,
+        basicOrderType: 0,
+        offerToken: token.address,
+        offerIdentifier: '0x3039',
+        offerAmount: '0x01',
+        considerationToken: '0x0000000000000000000000000000000000000000',
+        considerationIdentifier: '0x00',
+        considerationAmount: '1000',
+        startTime: 0,
+        endTime: '0xff00000000000000000000000000',
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885',
+        totalOriginalAdditionalRecipients: '0x01',
+        signature: '0x41651a6ed862341d20819a3c8a326b43c3fbc8f8dd9a0cde3b292c61665e8ed46592c083bb29f6f9dc68df824d02bbc9bc752b68081c95866d7d654659b3580f1b',
+        offererConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        fulfillerConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        additionalRecipients: [
+          {
+            amount: '100',
+            recipient: '0x6ef1ff55b97d3FfDD8E2C125874296587907C0fc'
+          }
+        ]
+      }
+//      let dataForSeaport = await exchangeBulkV2Test.getDataFulfillBasicOrder(basicOrder);
+      let dataForSeaport = await exchangeBulkV2Test.getDataSeaPortBasic(basicOrder, ERC721);
+//      console.log("show dataForSeaport:", dataForSeaport);
+      const tradeDataSeaPort = PurchaseData(2, 1100, dataForSeaport);
+//      let feesUPFirst = await exchangeBulkV2Test.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
+      let feesUP = [];
+
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
+      console.log("SEAPORT by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
+      //todo check balances ok?
+      assert.equal(await token.balanceOf(seller), 0);
+      assert.equal(await token.balanceOf(buyerLocal1), 1);
+//      assert.equal(await token.balanceOf(bulkExchange.address), 1);
+      //todo should know how set buyer
+//      let ownerNFT = await erc721.ownerOf.call(tokenId);
+//      ownerNFT = await token.ownerOf(tokenId);
+//      console.log("owner after is:", ownerNFT);
+    })
+
 
 //    it("seaport ERC-20", async () => {
 //
