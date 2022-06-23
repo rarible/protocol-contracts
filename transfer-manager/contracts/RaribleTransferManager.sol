@@ -62,6 +62,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         return defaultFeeReceiver;
     }
 
+    /**
+        @notice executes transfers for 2 matched orders
+        @param left DealSide from the left order (see LibDeal.sol)
+        @param right DealSide from the right order (see LibDeal.sol)
+        @param dealData DealData of the match (see LibDeal.sol)
+        @return totalLeftValue - total amount for the left order
+        @return totalRightValue - total amout for the right order
+    */
     function doTransfers(
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,
@@ -82,6 +90,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         }
     }
 
+    /**
+        @notice executes the fee-side transfers (payment + fees)
+        @param calculateSide DealSide of the fee-side order
+        @param nftSide  DealSide of the nft-side order
+        @param _protocolFee protocol fee for the match (always 0 for V2 and earlier orders)
+        @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
+        @return totalAmount of fee-side asset
+    */
     function doTransfersWithFees(
         LibDeal.DealSide memory calculateSide,
         LibDeal.DealSide memory nftSide,
@@ -213,7 +229,15 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, proxy);
         }
     }
-
+    
+    /**
+        @notice calculates total amount of fee-side asset that is going to be used in match
+        @param amount fee-side order value
+        @param feeOnTopBp protocolFee (it adds on top of the amount for the orders of )
+        @param orderOriginFees fee-side order's origin fee (it adds on top of the amount)
+        @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
+        @return total amount of fee-side asset
+    */
     function calculateTotalAmount(
         uint amount,
         uint feeOnTopBp,

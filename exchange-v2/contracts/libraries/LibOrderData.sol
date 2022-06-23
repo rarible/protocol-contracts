@@ -26,13 +26,13 @@ library LibOrderData {
         } else if (order.dataType == LibOrderDataV3.V3_SELL) {
             LibOrderDataV3.DataV3_SELL memory data = LibOrderDataV3.decodeOrderDataV3_SELL(order.data);
             dataOrder.payouts = parsePayouts(data.payouts);
-            dataOrder.originFees = parseOriginFeeData(data.originFee);
+            dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
             dataOrder.isMakeFill = true;
             dataOrder.maxFeesBasePoint = data.maxFeesBasePoint;
         } else if (order.dataType == LibOrderDataV3.V3_BUY) {
             LibOrderDataV3.DataV3_BUY memory data = LibOrderDataV3.decodeOrderDataV3_BUY(order.data);
             dataOrder.payouts = parsePayouts(data.payouts);
-            dataOrder.originFees = parseOriginFeeData(data.originFee);
+            dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
             dataOrder.isMakeFill = false;
         } else if (order.dataType == 0xffffffff) {
         } else {
@@ -50,22 +50,52 @@ library LibOrderData {
         return payout;
     }
 
-    function parseOriginFeeData(uint data) internal pure returns(LibPart.Part[] memory) {
-        LibPart.Part[] memory originFee = new LibPart.Part[](1);
-        originFee[0].account = payable(address(data));
-        originFee[0].value = uint96(data >> 160);
+    function parseOriginFeeData(uint dataFirst, uint dataSecond) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory originFee;
+
+        if (dataFirst > 0 && dataSecond > 0){
+            originFee = new LibPart.Part[](2);
+
+            originFee[0] = uintToLibPart(dataFirst);
+            originFee[1] = uintToLibPart(dataSecond);
+        }
+
+        if (dataFirst > 0 && dataSecond == 0) {
+            originFee = new LibPart.Part[](1);
+
+            originFee[0] = uintToLibPart(dataFirst);
+        }
+
+        if (dataFirst == 0 && dataSecond > 0) {
+            originFee = new LibPart.Part[](1);
+
+            originFee[0] = uintToLibPart(dataSecond);
+        }
+
         return originFee;
     }
 
-    function parsePayouts(uint[] memory data) internal pure returns(LibPart.Part[] memory) {
-        uint len = data.length;
-        LibPart.Part[] memory payouts = new LibPart.Part[](len);
+    function parsePayouts(uint data) internal pure returns(LibPart.Part[] memory) {
+        LibPart.Part[] memory payouts;
 
-        for (uint i; i < data.length; i++) {
-            payouts[i].account = payable(address(data[i]));
-            payouts[i].value = uint96(data[i] >> 160);
+        if (data > 0) {
+            payouts = new LibPart.Part[](1);
+            payouts[0] = uintToLibPart(data);
         }
+
         return payouts;
+    }
+
+    /**
+        @notice converts uint to LibPart.Part
+        @param data address and value encoded in uint (first 12 bytes )
+        @return result LibPart.Part 
+     */
+    function uintToLibPart(uint data) internal pure returns(LibPart.Part memory result) {
+        if (data > 0){
+            result.account = payable(address(data));
+            result.value = uint96(data >> 160);
+        }
     }
 
 }
