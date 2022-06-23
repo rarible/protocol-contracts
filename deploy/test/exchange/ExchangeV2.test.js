@@ -65,11 +65,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const nftAmount = 1
       const erc721 = await prepareERC721(makerLeft);
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([await Payouts([[makerLeft, 10000]]), addrOriginRight, 1000]);
-      let encDataRight = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), addrOriginLeft]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
 
       const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -86,11 +86,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerLeft, 1000);
       const erc721 = await prepareERC721(makerRight);
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([await Payouts([[makerLeft, 10000]]), addrOriginLeft]);
-      let encDataRight = await encDataV3_SELL([await Payouts([[makerRight, 10000]]), addrOriginRight, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -108,11 +108,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const nftAmount = 1
       const erc721 = await prepareERC721(makerLeft, erc721TokenId1, [[accounts[7], 100]]); //with royalties
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([await Payouts([[makerLeft, 10000]]), addrOriginRight, 1000]);
-      let encDataRight = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), addrOriginLeft]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
 
       const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -144,11 +144,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const nftAmount = 7
       const erc1155 = await prepareERC1155(makerLeft, 10, erc1155TokenId1, [[accounts[7], 100]]);
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([await Payouts([[makerLeft, 10000]]), addrOriginRight, 1000]);
-      let encDataRight = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), addrOriginLeft]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
 
       const left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -181,11 +181,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerLeft, 1000);
       const erc721 = await prepareERC721(makerRight, erc721TokenId1, [[accounts[7], 100]]); //with royalties
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([await Payouts([[makerLeft, 10000]]), addrOriginLeft]);
-      let encDataRight = await encDataV3_SELL([await Payouts([[makerRight, 10000]]), addrOriginRight, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -211,11 +211,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerLeft, 1000);
       const erc1155 = await prepareERC1155(makerRight, 10, erc1155TokenId1, [[accounts[7], 100]]);//with royalties
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([await Payouts([[makerLeft, 10000]]), addrOriginLeft]);
-      let encDataRight = await encDataV3_SELL([await Payouts([[makerRight, 10000]]), addrOriginRight, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -272,11 +272,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const nftAmount = 1
       const erc721 = await prepareERC721(makerLeft);
 
-      let addrOriginLeft = await OriginFee(accounts[6], 300);
-      let addrOriginRight = await OriginFee(accounts[5], 300);
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([await Payouts([[makerLeft, 10000]]), addrOriginRight, 1000]);
-      let encDataRight = await encDataV3_BUY([await Payouts([[makerRight, 10000]]), addrOriginLeft]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
 
       const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const right = Order(makerRight, Asset(ETH, "0x", price), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 0, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
