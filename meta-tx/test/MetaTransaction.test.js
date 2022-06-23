@@ -1,4 +1,4 @@
-const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 const MetaTxTest = artifacts.require("MetaTxTest.sol");
 const NoMetaTxTest = artifacts.require("NoMetaTxTest.sol");
 const NoGetNonceTxTest = artifacts.require("NoGetNonceTxTest.sol");
@@ -115,7 +115,7 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
   let salt;
   let chainId = 1337;
 
-  beforeEach(async () => {
+  before(async () => {
     salt = '0x' + (chainId).toString(16).padStart(64, '0');
     metaTxTest = await deployProxy(MetaTxTest, ["MetaTxTest", "RARI", "1"], { initializer: '__MetaTxTest_init' });
 
@@ -166,7 +166,7 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
     let resultExecMataTx = await metaTxTest.executeMetaTransaction(publicKey, functionSignature, r, s, v, {from: accounts[0]})
 
     var newNonce = await metaTxTest.getNonce(publicKey);
-    assert.isTrue(newNonce.toNumber() == nonce + 1, "Nonce not incremented");
+    assert.equal(newNonce.toNumber(), nonce.toNumber() + 1, "Nonce not incremented");
   });
 
   it("Check contract supports metaTransaction by method areMetaTxSupported, use contract yes MetaTx", async () => {
@@ -269,7 +269,7 @@ contract("ERC721MetaTxTokenTestAllien", accounts => {
         data: sendTransactionData
       });
     } catch (error) {
-      assert.isTrue(error.message.includes("functionSignature can not be of executeMetaTransaction method"), `Wrong failure type`);
+      assert.isTrue(error.message.includes("Wrong functionSignature"), `Wrong failure type`);
     }
   });
 

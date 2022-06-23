@@ -1,14 +1,8 @@
 const TestingV1 = artifacts.require("MinterAccessControlTestV1.sol");
 const TestingV2 = artifacts.require("MinterAccessControlTestV2.sol");
 
-const { expectThrow } = require('@daonomic/tests-common');
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const truffleAssert = require('truffle-assertions');
-
-function creators(list) {
-  const value = 10000 / list.length
-  return list.map(account => ({ account, value }))
-}
 
 contract("MinterAccessControl", accounts => {
   let token;

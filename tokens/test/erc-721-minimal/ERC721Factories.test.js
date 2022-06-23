@@ -1,5 +1,4 @@
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
-const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC721RaribleMinimal = artifacts.require("ERC721RaribleMinimal.sol");
 const ERC721RaribleFactoryC2 = artifacts.require("ERC721RaribleFactoryC2.sol");
 
@@ -14,7 +13,7 @@ contract("Test factories minimal", accounts => {
   const salt = 3;
 
   let factory;
-  beforeEach(async () => {
+  before(async () => {
 		const impl = await ERC721RaribleMinimal.new();
 		const beacon = await UpgradeableBeacon.new(impl.address);
 		factory = await ERC721RaribleFactoryC2.new(beacon.address, zeroAddress, zeroAddress);

@@ -6,7 +6,7 @@ ProxyAdmin.setProvider(web3.currentProvider)
 
 const ERC721RaribleBeacon = artifacts.require('ERC721RaribleBeacon');
 
-const { getProxyImplementation } = require("./config.js")
+const { getProxyImplementation, updateImplementation } = require("./config.js")
 
 const ERC721Rarible = artifacts.require('ERC721Rarible');
 
@@ -18,8 +18,6 @@ module.exports = async function (deployer, network) {
   const erc721 = await getProxyImplementation(ERC721Rarible, network, ProxyAdmin)
 
   const beacon721 = await ERC721RaribleBeacon.deployed();
-  console.log(`old impl 721 = ${await beacon721.implementation()}`)
-  await beacon721.upgradeTo(erc721)
-  console.log(`new impl 721 = ${await beacon721.implementation()}`);
 
+  await updateImplementation(beacon721, erc721)
 };

@@ -4,8 +4,8 @@ pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
 
-import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
-import "@rarible/royalties/contracts/LibPart.sol";
+import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
+import "@rarible/lib-part/contracts/LibPart.sol";
 
 contract RoyaltiesProviderTest is IRoyaltiesProvider {
 

@@ -1,7 +1,6 @@
 const Testing = artifacts.require("ERC721Rarible.sol");
 const ERC1271 = artifacts.require("TestERC1271.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
-const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC721Factory = artifacts.require("ERC721RaribleFactoryC2.sol");
 const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");

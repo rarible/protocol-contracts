@@ -11,6 +11,7 @@ const rinkeby = {
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0xAf2584A8B198f5d0b360B95d92AEC852F7902e52",
+  deploy_non_meta: true,
 }
 const mainnet = {
   v2Legacy: ["0x0A093d230ba7845BcA0898851B093B8B19bc1Ae1"],
@@ -24,39 +25,41 @@ const mainnet = {
   communityWallet: "0x1cf0df2a5a20cd61d68d4489eebbf85b8d39e18a",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
+  deploy_non_meta: true,
 }
 const ropsten = {
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
   deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0x6751c1ebdc4ab4e5cb103d5ceb84d26963a3377e",
+  deploy_non_meta: true,
 }
 const e2e = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
-  deploy_WETH: true
+  deploy_WETH: true,
+  deploy_non_meta: true,
 }
 const dev = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
-  deploy_WETH: true
+  deploy_WETH: true,
+  deploy_non_meta: true,
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: true,
 }
 const polygon_mainnet = {
   communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: true,
 }
 const polygon_dev = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
-  meta_support: true,
+  deploy_meta: true,
   deploy_WETH: true
 }
 const def = {
@@ -79,9 +82,15 @@ const def = {
     tokenURIPrefix: "ipfs://",
   },
   deploy_CryptoPunks: true,
-  address_ownerTestCryptoPunks: "0xf17f52151EbEF6C7334FAD080c5704D77216b732",
-  meta_support: false,
+  deploy_meta: true,
+  deploy_non_meta: true,
   deploy_WETH: true
+}
+const goerli = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: true,
+  deploy_meta: false,
+  deploy_non_meta: true,
 }
 
 let settings = {
@@ -97,7 +106,8 @@ let settings = {
   "polygon_mumbai": polygon_mumbai,
   "polygon_mainnet": polygon_mainnet,
   "dev": dev,
-  "polygon_dev": polygon_dev
+  "polygon_dev": polygon_dev,
+  "goerli": goerli
 };
 
 function getSettings(network) {
@@ -143,7 +153,16 @@ function id(str) {
 	return `0x${ethUtil.keccak256(str).toString("hex").substring(0, 8)}`;
 }
 
+async function updateImplementation(beacon, newImpl){
+  const oldImpl = await beacon.implementation();
+  if (oldImpl != newImpl){
+    console.log(`old impl = ${oldImpl}`)
+    await beacon.upgradeTo(newImpl)
+    console.log(`new impl = ${await beacon.implementation()}`)
+  }
+}
+
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation };

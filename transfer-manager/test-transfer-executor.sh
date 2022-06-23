@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 truffle test \
-        ./test/v2/TransferExecutor.test.js \
-        ./test/contracts/v2/TransferExecutorTest.sol \
-        ./test/contracts/v2/TestRoyaltiesRegistry.sol \
-        ./test/contracts/v2/ERC20TransferProxyTest.sol \
-        ./test/contracts/v2/TransferProxyTest.sol \
-        ./test/contracts/tokens/TestERC20.sol \
-        ./test/contracts/tokens/TestERC721.sol \
-        ./test/contracts/tokens/TestERC721Dep.sol \
-        ./test/contracts/tokens/TestERC1155.sol
+        ./test/TransferExecutor.test.js \
+        ./test/contracts/TransferExecutorTest.sol \
+        ./test/contracts/TransferProxyTest.sol \
+        ./test/contracts/ERC20TransferProxyTest.sol \
+        ./test/contracts/TestERC20.sol \
+        ./test/contracts/TestERC721.sol \
+        ./test/contracts/TestERC1155.sol

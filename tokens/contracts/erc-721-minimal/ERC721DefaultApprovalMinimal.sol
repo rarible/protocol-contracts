@@ -2,7 +2,7 @@
 
 pragma solidity 0.7.6;
 
-import "@rarible/tokens-minimal/contracts/erc-721/ERC721UpgradeableMinimal.sol";
+import "./ERC721UpgradeableMinimal.sol";
 
 abstract contract ERC721DefaultApprovalMinimal is ERC721UpgradeableMinimal {
     mapping(address => bool) private defaultApprovals;

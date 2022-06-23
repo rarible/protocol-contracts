@@ -10,15 +10,19 @@ const { ERC721_LAZY, ERC1155_LAZY, getSettings } = require("./config.js")
 
 module.exports = async function (deployer, network) {
 
-  const { meta_support } = getSettings(network);
+  const { deploy_meta, deploy_non_meta } = getSettings(network);
 
-  let exchangeV2;
-  if (!!meta_support) {
-    exchangeV2 = await ExchangeMetaV2.deployed();
-  } else {
-    exchangeV2 = await ExchangeV2.deployed();
+  if (!!deploy_meta) {
+    await setTransferProxies(await ExchangeMetaV2.deployed());
+  } 
+  
+  if (!!deploy_non_meta){
+    await setTransferProxies(await ExchangeV2.deployed());
   }
 
+};
+
+async function setTransferProxies(exchangeV2) {
   //add exchangeV2 as operator to proxies
   const transferProxy = await TransferProxy.deployed();
   await transferProxy.addOperator(exchangeV2.address)
@@ -33,4 +37,5 @@ module.exports = async function (deployer, network) {
 
   const erc20TransferProxy = await ERC20TransferProxy.deployed();
   await erc20TransferProxy.addOperator(exchangeV2.address)
-};
+}
+

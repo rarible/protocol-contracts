@@ -71,7 +71,6 @@ const getTransactionData = async (nonce, abi, params, domainData) => {
   const signature = sigUtil.signTypedData_v4(new Buffer(privateKey.substring(2, 66), 'hex'), {
     data: dataToSign
   });
-//    console.log("test:"+sigUtil.recoverTypedSignature_v4({sig:signature, data:dataToSign}) ); for test only
   let r = signature.slice(0, 66);
   let s = "0x".concat(signature.slice(66, 130));
   let v = "0x".concat(signature.slice(130, 132));
@@ -93,7 +92,7 @@ contract("MetaTxTokenTest", accounts => {
   let salt;
   let chainId = 1337;
 
-  beforeEach(async () => {
+  before(async () => {
     salt = '0x' + (chainId).toString(16).padStart(64, '0');
     erc721NoMetaTx = await deployProxy(ERC721NoMetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });
     erc721WithMetaTx = await deployProxy(ERC721MetaTx, ["Rarible", "RARI", "ipfs:/", "", ZERO_ADDRESS, ZERO_ADDRESS], { initializer: '__ERC721Rarible_init' });

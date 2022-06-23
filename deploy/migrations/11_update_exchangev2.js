@@ -6,14 +6,23 @@ const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
 module.exports = async function (deployer, network) {
-  const { meta_support } = getSettings(network);
-  let exchangeV2toDeploy;
-  if (!!meta_support) {
-    exchangeV2toDeploy = ExchangeMetaV2;
-  } else {
-    exchangeV2toDeploy = ExchangeV2;
+  const { deploy_meta, deploy_non_meta } = getSettings(network);
+
+  //deploying ExchangeV2 with meta support if needed
+  if (!!deploy_meta) {
+    await updateExchange(ExchangeMetaV2, deployer);
+  } 
+
+  if (!!deploy_non_meta){
+    await updateExchange(ExchangeV2, deployer);
   }
 
+};
+
+
+
+
+async function updateExchange(exchangeV2toDeploy, deployer) {
   const existing = await exchangeV2toDeploy.deployed();
   await upgradeProxy(existing.address, exchangeV2toDeploy, { deployer });
-};
+}

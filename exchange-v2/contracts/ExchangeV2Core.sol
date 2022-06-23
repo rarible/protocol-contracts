@@ -3,17 +3,14 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@rarible/libraries/contracts/LibFill.sol";
-import "@rarible/libraries/contracts/LibOrderData.sol";
-import "@rarible/libraries/contracts/LibDeal.sol";
-import "@rarible/libraries/contracts/LibFeeSide.sol";
-import "@rarible/libraries/contracts/BpLibrary.sol";
-
+import "./libraries/LibFill.sol";
+import "./libraries/LibOrderData.sol";
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
 
 import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
-import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
+import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
+import "@rarible/transfer-manager/contracts/lib/LibDeal.sol";
 
 abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
     using SafeMathUpgradeable for uint;

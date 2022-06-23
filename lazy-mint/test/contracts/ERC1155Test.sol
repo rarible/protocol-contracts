@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 import "../../contracts/erc-1155/LibERC1155LazyMint.sol";
-import "@rarible/libraries/contracts/LibSignature.sol";
+import "@rarible/lib-signature/contracts/LibSignature.sol";
 import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
 
 contract ERC1155Test is EIP712Upgradeable {

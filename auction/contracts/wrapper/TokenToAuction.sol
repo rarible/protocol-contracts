@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-import "@rarible/lib-asset/contracts/LibAsset.sol";
-
 /// @dev contract to add tokenToAuctionId functionality to auctionHouse
 contract TokenToAuction {
     /// @dev mapping to store auction ids for token address + token id (only stores erc-721 tokens)

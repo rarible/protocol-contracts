@@ -26,28 +26,21 @@ const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 
 // UTILS
-const EIP712 = require("./EIP712");
+const { Order, Asset, sign } = require("../../scripts/order.js");
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("./assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../scripts/assets.js");
 
 contract("Test gas usage", accounts => {
 
   const registrar = accounts[0]
   const seller = accounts[1];
-  const sellerFundsRecipient = accounts[2];
-  const operator = accounts[3];
+
   const buyer = accounts[4];
-  const finder = accounts[5];
-  const royaltyRecipient = accounts[6];
-  const maker = accounts[7];
-  const taker = accounts[8];
   const protocol = accounts[9];
 
   const protocolFeeBP = 300;
-
-  const defaultRoyalties = [[royaltyRecipient, 1000]]
 
   const tokenId  = 12345;
   const tokenId1 = 123456;
@@ -55,7 +48,6 @@ contract("Test gas usage", accounts => {
   const tokenId3 = 12345678;
 
   let testHelper;
-
   
   before(async () => {
     testHelper = await RaribleTestHelper.new()
@@ -728,50 +720,5 @@ contract("Test gas usage", accounts => {
   async function getSignature(exchangeV2, order, signer) {
 		return sign(order, signer, exchangeV2.address);
 	}
-
-  function AssetType(assetClass, data) {
-    return { assetClass, data }
-  }
-
-  function Asset(assetClass, assetData, value) {
-    return { assetType: AssetType(assetClass, assetData), value };
-  }
-
-  function Order(maker, makeAsset, taker, takeAsset, salt, start, end, dataType, data) {
-    return { maker, makeAsset, taker, takeAsset, salt, start, end, dataType, data };
-  }
-
-  const Types = {
-    AssetType: [
-      {name: 'assetClass', type: 'bytes4'},
-      {name: 'data', type: 'bytes'}
-    ],
-    Asset: [
-      {name: 'assetType', type: 'AssetType'},
-      {name: 'value', type: 'uint256'}
-    ],
-    Order: [
-      {name: 'maker', type: 'address'},
-      {name: 'makeAsset', type: 'Asset'},
-      {name: 'taker', type: 'address'},
-      {name: 'takeAsset', type: 'Asset'},
-      {name: 'salt', type: 'uint256'},
-      {name: 'start', type: 'uint256'},
-      {name: 'end', type: 'uint256'},
-      {name: 'dataType', type: 'bytes4'},
-      {name: 'data', type: 'bytes'},
-    ]
-  };
-
-  async function sign(order, account, verifyingContract) {
-    const chainId = Number(await web3.eth.getChainId());
-    const data = EIP712.createTypeData({
-      name: "Exchange",
-      version: "2",
-      chainId,
-      verifyingContract
-    }, 'Order', order, Types);
-    return (await EIP712.signTypedData(web3, account, data)).sig;
-  }
 
 });

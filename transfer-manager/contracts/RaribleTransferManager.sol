@@ -8,11 +8,11 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/LibERC721LazyMint.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/LibERC1155LazyMint.sol";
 
-import "@rarible/royalties/contracts/IRoyaltiesProvider.sol";
+import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 
-import "@rarible/libraries/contracts/BpLibrary.sol";
+import "@rarible/lib-bp/contracts/BpLibrary.sol";
 
-import "@rarible/exchange-interfaces/contracts/ITransferManager.sol";
+import "./interfaces/ITransferManager.sol";
 
 abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;

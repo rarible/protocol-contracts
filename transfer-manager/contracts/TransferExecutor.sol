@@ -6,12 +6,12 @@ pragma abicoder v2;
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
-import "@rarible/exchange-interfaces/contracts/ITransferExecutor.sol";
+import "./interfaces/ITransferExecutor.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
+import "./lib/LibTransfer.sol";
 
 abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransferExecutor {
     using LibTransfer for address;

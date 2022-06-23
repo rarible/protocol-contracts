@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
-contract TestERC1155 is ERC1155, Ownable {
-    constructor(string memory uri) ERC1155(uri) {
-
+contract TestERC1155 is ERC1155Upgradeable {
+    function mint(address to, uint tokenId, uint amount) external {
+        _mint(to, tokenId, amount, "");
     }
 
-    function mint(address account, uint256 tokenId, uint256 amount, bytes memory data) external {
-        _mint(account, tokenId, amount, data);
-    }
 }
