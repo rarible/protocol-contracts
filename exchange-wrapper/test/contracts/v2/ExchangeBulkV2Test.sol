@@ -103,13 +103,6 @@ contract ExchangeBulkV2Test {
             _openSeaBuy.rssMetadata);
     }
 
-    function getDataFulfillBasicOrder(LibSeaPort.BasicOrderParameters calldata _seaPortBasic) external pure returns (bytes memory _data) {
-        _data = abi.encodeWithSelector(
-            ISeaPort.fulfillBasicOrder.selector,
-            _seaPortBasic
-        );
-    }
-
     function getDataWyvernAtomicMatchWithError(WyvernOrders memory _openSeaBuy) external pure returns(bytes memory _data) {
         _data = abi.encodeWithSelector(IWyvernExchangeError.atomicMatchError_.selector, _openSeaBuy.addrs, _openSeaBuy.uints, _openSeaBuy.feeMethodsSidesKindsHowToCalls, _openSeaBuy.calldataBuy, _openSeaBuy.calldataSell, _openSeaBuy.replacementPatternBuy, _openSeaBuy.replacementPatternSell, _openSeaBuy.staticExtradataBuy, _openSeaBuy.staticExtradataSell, _openSeaBuy.vs, _openSeaBuy.rssMetadata);
     }

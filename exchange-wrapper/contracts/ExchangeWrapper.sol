@@ -35,27 +35,26 @@ contract ExchangeWrapper is OwnableUpgradeable {
         bytes data;
     }
 
-    function __ExchangeWrapper_init(
-        IWyvernExchange _wyvernExchange,
-        IExchangeV2 _exchangeV2
-    ) external initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-        wyvernExchange = _wyvernExchange;
-        exchangeV2 = _exchangeV2;
-    }
-    //todo use this method
 //    function __ExchangeWrapper_init(
 //        IWyvernExchange _wyvernExchange,
-//        IExchangeV2 _exchangeV2,
-//        ISeaPort _seaPort
+//        IExchangeV2 _exchangeV2
 //    ) external initializer {
 //        __Context_init_unchained();
 //        __Ownable_init_unchained();
 //        wyvernExchange = _wyvernExchange;
 //        exchangeV2 = _exchangeV2;
-//        seaPort = _seaPort;
 //    }
+    function __ExchangeWrapper_init(
+        IWyvernExchange _wyvernExchange,
+        IExchangeV2 _exchangeV2,
+        ISeaPort _seaPort
+    ) external initializer {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+        wyvernExchange = _wyvernExchange;
+        exchangeV2 = _exchangeV2;
+        seaPort = _seaPort;
+    }
 
     function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
         wyvernExchange = _wyvernExchange;
@@ -90,8 +89,6 @@ contract ExchangeWrapper is OwnableUpgradeable {
     function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
         if (purchaseDetails.marketId == Markets.BasicSP) {
-//            (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
-//            require(success, "Purchase BasicSP failed");
             (LibSeaPort.BasicOrderParameters memory seaPortBasic, bytes4 typeNft) = abi.decode(purchaseDetails.data, (LibSeaPort.BasicOrderParameters, bytes4));
             bool success = ISeaPort(seaPort).fulfillBasicOrder{value : paymentAmount}(seaPortBasic);
             require(success, "Purchase BasicSeaPort failed");
@@ -99,6 +96,8 @@ contract ExchangeWrapper is OwnableUpgradeable {
                 IERC721Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier);
             } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
                 IERC1155Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier, seaPortBasic.offerAmount, "");
+            } else {
+                revert("Unknown BasicSeaPort offerToken type");
             }
         } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
@@ -153,6 +152,11 @@ contract ExchangeWrapper is OwnableUpgradeable {
         bytes memory buyOrderSignature; //empty signature is enough for buyerOrder
 
         IExchangeV2(exchangeV2).matchOrders{value : paymentAmount }(sellOrder, sellOrderSignature, buyerOrder, buyOrderSignature);
+    }
+
+    //this method need to prevent error ERC1155: transfer to non ERC1155Receiver implementer
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 
     receive() external payable {}
