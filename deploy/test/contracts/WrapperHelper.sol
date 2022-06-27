@@ -8,6 +8,7 @@ import {IERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC
 import {IWyvernExchange} from "../../contracts/ExchangeWrapperImport.sol";
 import {IExchangeV2} from "../../contracts/ExchangeWrapperImport.sol";
 import {LibOrder} from "../../contracts/ExchangeWrapperImport.sol";
+import {LibSeaPort} from "@rarible/exchange-wrapper/contracts/libraries/LibSeaPort.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -119,5 +120,9 @@ contract WrapperHelper {
 
     function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, uint purchaseAmount) external pure returns(bytes memory _data) {
         _data = abi.encode(orderLeft, signatureLeft, purchaseAmount);
+    }
+
+    function getDataSeaPortBasic(LibSeaPort.BasicOrderParameters calldata seaPortBasic, bytes4 typeNft) external pure returns(bytes memory _data) {
+        _data = abi.encode(seaPortBasic, typeNft);
     }
 }

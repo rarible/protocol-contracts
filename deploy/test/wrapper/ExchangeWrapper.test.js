@@ -17,6 +17,10 @@ const WyvernTokenTransferProxy = artifacts.require("WyvernTokenTransferProxy");
 const MerkleValidator = artifacts.require("MerkleValidator");
 const WyvernProxyRegistry = artifacts.require("WyvernProxyRegistry");
 
+//SEA PORT
+const ConduitController = artifacts.require("ConduitController.sol");
+const Seaport = artifacts.require("Seaport.sol");
+
 const { Order, Asset, sign } = require("../../../scripts/order.js");
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../../../scripts/assets");
@@ -39,6 +43,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   const erc1155TokenId3 = 57;
   let erc721;
   let erc1155;
+  let seller = accounts[1];
+  const zoneAddr = accounts[2];
+  const tokenId = 12345;
   /*OpenSeaOrders*/
   const feeMethodsSidesKindsHowToCallsMask = [1, 0, 0, 1, 1, 1, 0, 1];
   /* FeeMethod{ ProtocolFee, SplitFee }) buy
@@ -65,6 +72,110 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+  });
+
+  describe("singlePurchase Seaport order", () => {
+    /*We estimate use direct method fulfillBasicOrder(): const tx = await seaport.fulfillBasicOrder(basicOrder, {from: buyerLocal1, value: 2000})
+    SEAPORT: ETH <=> ERC721, 183102
+    SEAPORT: ETH <=> ERC1155, 126159
+    */
+    it("wrapper seaport ERC721<->ETH", async () => {
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+
+      bulkExchange = await ExchangeBulkV2.new();
+      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      await bulkExchange.setSeaPort(seaport.address);
+
+      const buyerLocal1 = accounts[2];
+      const token = await TestERC721.new();
+      await token.mint(seller, tokenId)
+      await token.setApprovalForAll(seaport.address, true, {from: seller})
+
+      const basicOrder = {
+        offerer: seller,
+        zone: zoneAddr,
+        basicOrderType: 0,
+        offerToken: token.address,
+        offerIdentifier: '0x3039',
+        offerAmount: '0x01',
+        considerationToken: '0x0000000000000000000000000000000000000000',
+        considerationIdentifier: '0x00',
+        considerationAmount: '1000',
+        startTime: 0,
+        endTime: '0xff00000000000000000000000000',
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885',
+        totalOriginalAdditionalRecipients: '0x01',
+        signature: '0x41651a6ed862341d20819a3c8a326b43c3fbc8f8dd9a0cde3b292c61665e8ed46592c083bb29f6f9dc68df824d02bbc9bc752b68081c95866d7d654659b3580f1b',
+        offererConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        fulfillerConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        additionalRecipients: [
+          {
+            amount: '100',
+            recipient: '0x6ef1ff55b97d3FfDD8E2C125874296587907C0fc'
+          }
+        ]
+      }
+//      let dataForSeaport = await wrapperHelper.getDataFulfillBasicOrder(basicOrder);
+      let dataForSeaport = await wrapperHelper.getDataSeaPortBasic(basicOrder, ERC721);
+      const tradeDataSeaPort = PurchaseData(2, 1100, dataForSeaport);
+      let feesUP = [];
+
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
+      console.log("SEAPORT by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
+      assert.equal(await token.balanceOf(seller), 0);
+      assert.equal(await token.balanceOf(buyerLocal1), 1);
+    })
+
+    it("seaport wrapper ERC155<->ETH", async () => {
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+
+      bulkExchange = await ExchangeBulkV2.new();
+      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      await bulkExchange.setSeaPort(seaport.address);
+
+      const buyerLocal1 = accounts[2];
+      const erc1155TokenIdLocal1 = tokenId;
+      const token = await TestERC1155.new("https://ipfs.rarible.com");
+      await token.mint(seller, erc1155TokenIdLocal1, 100);
+      await token.setApprovalForAll(seaport.address, true, {from: seller})
+
+      const basicOrder = {
+        offerer: seller,
+        zone: zoneAddr,
+        basicOrderType: 5,
+        offerToken: token.address,
+        offerIdentifier: '0x3039',
+        offerAmount: '0x0A',
+        considerationToken: '0x0000000000000000000000000000000000000000',
+        considerationIdentifier: '0x00',
+        considerationAmount: '1000',
+        startTime: 0,
+        endTime: '0xff00000000000000000000000000',
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885',
+        totalOriginalAdditionalRecipients: '0x01',
+        signature: '0x41651a6ed862341d20819a3c8a326b43c3fbc8f8dd9a0cde3b292c61665e8ed46592c083bb29f6f9dc68df824d02bbc9bc752b68081c95866d7d654659b3580f1b',
+        offererConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        fulfillerConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        additionalRecipients: [
+          {
+            amount: '100',
+            recipient: '0x6ef1ff55b97d3FfDD8E2C125874296587907C0fc'
+          }
+        ]
+      }
+      let dataForSeaport = await wrapperHelper.getDataSeaPortBasic(basicOrder, ERC1155);
+      const tradeDataSeaPort = PurchaseData(2, 1100, dataForSeaport);
+      let feesUP = [];
+
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
+      console.log("SEAPORT by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
+      assert.equal(await token.balanceOf(seller, erc1155TokenIdLocal1), 90);
+      assert.equal(await token.balanceOf(buyerLocal1,erc1155TokenIdLocal1), 10);
+    })
   });
 
   describe("purcahase Wywern orders", () => {
