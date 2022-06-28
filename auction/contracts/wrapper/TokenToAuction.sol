@@ -7,7 +7,7 @@ contract TokenToAuction {
     mapping(address => mapping(uint256 => uint256)) private tokenToAuctionId;
 
     /// @dev returns auction id by token address and token id
-    function getAuctionByToken(address _collection, uint tokenId) public view returns(uint) {
+    function getAuctionByToken(address _collection, uint tokenId) external view returns(uint) {
         return tokenToAuctionId[_collection][tokenId];
     }
 

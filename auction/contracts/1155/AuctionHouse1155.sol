@@ -314,7 +314,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseBase1155 {
     }
 
     /// @dev returns current highest bidder for an auction
-    function getCurrentBuyer(uint _auctionId) public view returns(address) {
+    function getCurrentBuyer(uint _auctionId) external view returns(address) {
         return auctions[_auctionId].buyer;
     }
 
