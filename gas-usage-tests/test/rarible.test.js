@@ -152,7 +152,6 @@ contract("rarible only gas usage tests", accounts => {
       )
     )
     console.log()
-
   })
 
   it("RARIBLE OLD: ETH", async () => {

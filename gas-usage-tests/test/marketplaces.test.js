@@ -117,7 +117,6 @@ contract("Test gas usage for marketplaces", accounts => {
 
     const fillAsk1 = await asks.fillAsk(token.address, tokenId1, zeroAddress, 1000, zeroAddress, {from: buyer, value: 1000})
     console.log("ZORA: buy ETH <=> ERC721 (second token in collection)",fillAsk1.receipt.gasUsed)
-
   })
   
   it("zora ETH offers", async () => {
@@ -170,7 +169,6 @@ contract("Test gas usage for marketplaces", accounts => {
     const fillOffer1 = await offers.fillOffer(token.address, tokenId3, 3, zeroAddress, 1000, zeroAddress, {from: seller})
     console.log("ZORA: accept bid ETH <=> ERC721 (second token in collection)", fillOffer1.receipt.gasUsed)
     assert.equal(await token.ownerOf(tokenId3), buyer, "buyer has token")
-
   })
 
   it("zora ERC20 asks", async () => {
@@ -243,7 +241,6 @@ contract("Test gas usage for marketplaces", accounts => {
     assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 60, "protocol")
     assert.equal(await erc20.balanceOf(seller), 1940, "seller")
-
   })
 
   it("zora ERC20 offers", async () => {
@@ -308,7 +305,6 @@ contract("Test gas usage for marketplaces", accounts => {
     const fillOffer1 = await offers.fillOffer(token.address, tokenId3, 3, erc20.address, 1000, zeroAddress, {from: seller})
     console.log("ZORA: accept bid ERC20 <=> ERC721 (second token in collection)", fillOffer1.receipt.gasUsed)
     assert.equal(await token.ownerOf(tokenId3), buyer, "buyer has token")
-
   })
 
   it("rarible ETH", async () => {
@@ -359,7 +355,6 @@ contract("Test gas usage for marketplaces", accounts => {
 
     const cancelTx1 = await exchangeV2.cancel(right, {from: seller})
     console.log("RARIBLE: cancel ETH order", cancelTx1.receipt.gasUsed)
-
   })
 
   it("rarible ERC-20", async () => {
@@ -472,7 +467,6 @@ contract("Test gas usage for marketplaces", accounts => {
 
     const cancelTx1 = await exchangeV2.cancel(right, {from: seller})
     console.log("OLD RARIBLE: cancel ETH order", cancelTx1.receipt.gasUsed)
-
   })
 
   it("OLD rarible ERC-20", async () => {
@@ -629,11 +623,9 @@ contract("Test gas usage for marketplaces", accounts => {
 
     const txCancelBulk = await openSea.incrementNonce({from: buyer})
     console.log("OPENSEA: bulk cancel (increment nonce)", txCancelBulk.receipt.gasUsed)
-
   })
 
   it("seaport ETH", async () => {
-    
     const conduitController = await ConduitController.new();
     const seaport = await Seaport.new(conduitController.address)
   
@@ -676,11 +668,9 @@ contract("Test gas usage for marketplaces", accounts => {
       )
     )
     console.log()
-  
   })
 
   it("seaport ERC-20", async () => {
-    
     const conduitController = await ConduitController.new();
     const seaport = await Seaport.new(conduitController.address)
   
@@ -725,7 +715,6 @@ contract("Test gas usage for marketplaces", accounts => {
     assert.equal(await erc20.balanceOf(buyer), 890, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 10, "protocol")
     assert.equal(await erc20.balanceOf(seller), 100, "seller")
-  
   })
 
   async function getOpenSeaMatchDataMerkleValidator(
