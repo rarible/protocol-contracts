@@ -260,9 +260,9 @@ contract("rarible only gas usage tests", accounts => {
     const token = await TestERC721.new();
     const erc20 = await TestERC20.new();
 
-    await erc20.mint(buyer, price * 2)
-    await erc20.approve(erc20TransferProxy.address, price * 2, { from: buyer })
-    assert.equal(await erc20.balanceOf(buyer), price * 2, "erc20 deposit")
+    await erc20.mint(buyer, 1030)
+    await erc20.approve(erc20TransferProxy.address, 1030, { from: buyer })
+    assert.equal(await erc20.balanceOf(buyer), 1030, "erc20 deposit")
 
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
@@ -280,7 +280,7 @@ contract("rarible only gas usage tests", accounts => {
     console.log("RARIBLE OLD: direct accept bid ERC-20 <=> ERC721", tx.receipt.gasUsed);
 
     assert.equal(await token.ownerOf(tokenId1), buyer, "buyer has token1");
-    assert.equal(await erc20.balanceOf(buyer), 970, "erc20 buyer");
+    assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(origin1), 60, "origin")
     assert.equal(await erc20.balanceOf(seller), 970, "seller")

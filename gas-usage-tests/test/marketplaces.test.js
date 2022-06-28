@@ -395,6 +395,11 @@ contract("Test gas usage for marketplaces", accounts => {
 
     console.log("RARIBLE: match ERC20 <=> ERC721", matchTx1.receipt.gasUsed)
 
+    assert.equal(await token.ownerOf(tokenId), buyer, "buyer has token1");
+    assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
+    assert.equal(await erc20.balanceOf(protocol), 30, "protocol")
+    assert.equal(await erc20.balanceOf(seller), 970, "seller")
+
     const tokenid1 = "1235112312"
 
     //TEST-CASE 2: ERC20 <=> ERC721
@@ -450,8 +455,15 @@ contract("Test gas usage for marketplaces", accounts => {
     const left = Order(buyer, Asset(ETH, "0x", 1000), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 0, 0, 0, ORDER_DATA_V2, encDataLeft);
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataRight);
     
-    const matchTx1 = await exchangeV2.matchOrders(left, "0x", right, await getSignature(exchangeV2, right, seller), { from: buyer, value: 1100 });
-    console.log("OLD RARIBLE: match ETH <=> ERC721", matchTx1.receipt.gasUsed)
+    console.log("OLD RARIBLE: match ETH <=> ERC721")
+    await verifyBalanceChange(buyer, 1030, async () =>
+      verifyBalanceChange(protocol, -60, async () =>
+        verifyBalanceChange(seller, -970, async () =>
+          exchangeV2.matchOrders(left, "0x", right, await getSignature(exchangeV2, right, seller), { from: buyer, value: 1030, gasPrice: 0 })
+        )
+      )
+    )
+    console.log()
 
     const tokenid1 = "1235112312"
 
@@ -462,8 +474,15 @@ contract("Test gas usage for marketplaces", accounts => {
     const left1 = Order(buyer, Asset(ETH, "0x", 1000), zeroAddress, Asset(ERC721, enc( token.address, tokenid1), 1), 0, 0, 0, ORDER_DATA_V2, encDataLeft);
 		const right1 = Order(seller, Asset(ERC721, enc( token.address, tokenid1), 1), zeroAddress, Asset(ETH, "0x", 1000), 2, 0, 0, ORDER_DATA_V2, encDataRight);
     
-    const matchTx2 = await exchangeV2.matchOrders(left1, "0x", right1, await getSignature(exchangeV2, right1, seller), { from: buyer, value: 1100});
-    console.log("OLD RARIBLE: match ETH <=> ERC721 (second token of collection)", matchTx2.receipt.gasUsed)
+    console.log("OLD RARIBLE: match ETH <=> ERC721 (second token of collection)")
+    await verifyBalanceChange(buyer, 1030, async () =>
+      verifyBalanceChange(protocol, -60, async () =>
+        verifyBalanceChange(seller, -970, async () =>
+          exchangeV2.matchOrders(left1, "0x", right1, await getSignature(exchangeV2, right1, seller), { from: buyer, value: 1100, gasPrice: 0 })
+        )
+      )
+    )
+    console.log()
 
     const cancelTx1 = await exchangeV2.cancel(right, {from: seller})
     console.log("OLD RARIBLE: cancel ETH order", cancelTx1.receipt.gasUsed)
@@ -679,8 +698,8 @@ contract("Test gas usage for marketplaces", accounts => {
     await token.setApprovalForAll(seaport.address, true, {from: seller})
 
     const erc20 = await TestERC20.new();
-    await erc20.mint(buyer, 1000)
-    await erc20.approve(seaport.address, 1000, {from: buyer})
+    await erc20.mint(buyer, 110)
+    await erc20.approve(seaport.address, 110, {from: buyer})
 
     const basicOrder = {
       offerer: seller,
@@ -712,7 +731,7 @@ contract("Test gas usage for marketplaces", accounts => {
     console.log("SEAPORT: ERC20 <=> ERC721", tx.receipt.gasUsed)
 
     assert.equal(await token.ownerOf(tokenId), buyer, "buyer has tokenId");
-    assert.equal(await erc20.balanceOf(buyer), 890, "erc20 buyer");
+    assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 10, "protocol")
     assert.equal(await erc20.balanceOf(seller), 100, "seller")
   })
