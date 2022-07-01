@@ -9,7 +9,8 @@ library LibDirectTransfer { //LibDirectTransfers
     struct Purchase {
         uint tokenSellAmount;
         uint tokenPurchaseAmount;
-        uint price;
+        uint priceSell;
+        uint pricePurchase;
         uint salt;
         address seller;
         bytes4 nftClass;
@@ -23,8 +24,10 @@ library LibDirectTransfer { //LibDirectTransfers
 
     /*All accept bid parameters need for create buyOrder and sellOrder*/
     struct AcceptBid {
-        uint tokenAmount;
-        uint price;
+        uint tokenBidAmount;
+        uint tokenAcceptAmount;
+        uint priceBid;
+        uint priceAccept;
         uint salt;
         address buyer;
         bytes4 nftClass;

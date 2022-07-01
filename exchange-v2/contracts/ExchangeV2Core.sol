@@ -43,10 +43,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     ) external payable {
         LibAsset.Asset memory nftSell = LibAsset.Asset(LibAsset.AssetType(direct.nftClass, direct.nftData), direct.tokenSellAmount);
         LibAsset.Asset memory nftPurchase = LibAsset.Asset(LibAsset.AssetType(direct.nftClass, direct.nftData), direct.tokenPurchaseAmount);
-        LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(direct.paymentClass, direct.paymentData), direct.price);
+        LibAsset.Asset memory paymentSell = LibAsset.Asset(LibAsset.AssetType(direct.paymentClass, direct.paymentData), direct.priceSell);
+        LibAsset.Asset memory paymentPurchase = LibAsset.Asset(LibAsset.AssetType(direct.paymentClass, direct.paymentData), direct.pricePurchase);
 
-        LibOrder.Order memory sellOrder = LibOrder.Order(direct.seller, nftSell, address(0), payment, direct.salt, 0, 0, LibOrderDataV3.V3_SELL, direct.sellOrderData);
-        LibOrder.Order memory purchaseOrder = LibOrder.Order(_msgSender(), payment, address(0), nftPurchase, 0, 0, 0, LibOrderDataV3.V3_BUY, direct.purchaseOrderData);
+        LibOrder.Order memory sellOrder = LibOrder.Order(direct.seller, nftSell, address(0), paymentSell, direct.salt, 0, 0, LibOrderDataV3.V3_SELL, direct.sellOrderData);
+        LibOrder.Order memory purchaseOrder = LibOrder.Order(_msgSender(), paymentPurchase, address(0), nftPurchase, 0, 0, 0, LibOrderDataV3.V3_BUY, direct.purchaseOrderData);
         validateOrders(sellOrder, direct.signature, purchaseOrder, "");
         matchAndTransfer(sellOrder, purchaseOrder);
     }
@@ -58,11 +59,13 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function directAcceptBid(
         LibDirectTransfer.AcceptBid calldata direct
     ) external payable {
-        LibAsset.Asset memory payment = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, direct.paymentData), direct.price);
-        LibAsset.Asset memory nft = LibAsset.Asset(LibAsset.AssetType(direct.nftClass, direct.nftData), direct.tokenAmount);
+        LibAsset.Asset memory nftBid = LibAsset.Asset(LibAsset.AssetType(direct.nftClass, direct.nftData), direct.tokenBidAmount);
+        LibAsset.Asset memory nftAccept = LibAsset.Asset(LibAsset.AssetType(direct.nftClass, direct.nftData), direct.tokenAcceptAmount);
+        LibAsset.Asset memory paymentBid = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, direct.paymentData), direct.priceBid);
+        LibAsset.Asset memory paymentAccept = LibAsset.Asset(LibAsset.AssetType(LibAsset.ERC20_ASSET_CLASS, direct.paymentData), direct.priceAccept);
 
-        LibOrder.Order memory bidOrder = LibOrder.Order(direct.buyer, payment, address(0), nft, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, direct.bidOrderData);
-        LibOrder.Order memory acceptOrder = LibOrder.Order(_msgSender(), nft, address(0), payment, 0, 0, 0, LibOrderDataV3.V3_SELL, direct.acceptOrderData);
+        LibOrder.Order memory bidOrder = LibOrder.Order(direct.buyer, paymentBid, address(0), nftBid, direct.salt, 0, 0, LibOrderDataV3.V3_BUY, direct.bidOrderData);
+        LibOrder.Order memory acceptOrder = LibOrder.Order(_msgSender(), nftAccept, address(0), paymentAccept, 0, 0, 0, LibOrderDataV3.V3_SELL, direct.acceptOrderData);
         validateOrders(bidOrder, direct.signature, acceptOrder, "");
         matchAndTransfer(bidOrder, acceptOrder);
     }
