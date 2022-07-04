@@ -17,6 +17,9 @@ const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 const CryptoPunksMarket = artifacts.require('CryptoPunksMarket');
 const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 
+//Lazy
+const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
+
 const { Order, Asset, sign } = require("../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -59,6 +62,42 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
   describe("gas estimation direct Purchase/AcceptBid", () => {
 
+    it("Direct buy ERC721_Lazy<->ETH, not same origin, not same royalties V3", async () => {
+      const _priceSell = 100;
+      const _pricePurchase = 100;
+      const salt = 1;
+      const nftAmount = 1
+      const erc721 = await prepareERC721Lazy();
+      const encodedMintData = await erc721.encode([erc721TokenId1, "uri", [], [], []]);
+
+      let addrOriginLeft = await LibPartToUint(accounts[6], 300);
+      let addrOriginRight = await LibPartToUint(accounts[5], 300);
+
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+
+      const _nftPurchaseAssetData = "0x";
+      const left = Order(makerLeft, Asset(id("ERC721_LAZY"), encodedMintData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+      const signature = await getSignature(left, makerLeft);
+
+      var directPurchaseParams = {
+        seller: makerLeft,
+        nftClass: id("ERC721_LAZY"),
+        paymentClass: ETH,
+        nftData: encodedMintData,
+        paymentData: _nftPurchaseAssetData,
+        tokenSellAmount: nftAmount,
+        tokenPurchaseAmount: nftAmount,
+        priceSell: _priceSell,
+        pricePurchase: _pricePurchase,
+        salt: salt, signature: signature,
+        sellOrderData: encDataLeft,
+        purchaseOrderData: encDataRight
+      };
+      const tx = await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200 });
+      console.log("direct buy ERC721Lazy<->ETH, not same origin, not same royalties V3:", tx.receipt.gasUsed);
+    })
+
     it("Direct buy ERC721<->ETH, not same origin, not same royalties V3", async () => {
       const _priceSell = 100;
       const _pricePurchase = 100;
@@ -92,7 +131,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         purchaseOrderData: encDataRight
       };
       const tx = await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200 });
-      console.log("direct buy NFT<->ETH, not same origin, not same royalties V3:", tx.receipt.gasUsed);
+      console.log("direct buy ERC721<->ETH, not same origin, not same royalties V3:", tx.receipt.gasUsed);
     })
 
     it("Direct accept bid ERC20<->ERC721, not same origin, not same royalties V3", async () => {
@@ -1678,6 +1717,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     await erc721.mint(user, tokenId, royalties);
     await erc721.setApprovalForAll(transferProxy.address, true, { from: user });
     return erc721;
+  }
+
+  async function prepareERC721Lazy() {
+    const erc721Lazy = await ERC721LazyMintTest.new();
+    return erc721Lazy;
   }
 
   async function prepareERC1155(user, value = 100, tokenId = erc1155TokenId1, royalties = []) {
