@@ -18,6 +18,8 @@ const { Order, Asset, sign } = require("../../scripts/order.js");
 const BN = web3.utils.BN;
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
+const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa6";
+const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa7";
 
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../scripts/assets.js");
 
@@ -72,7 +74,7 @@ contract("rarible only gas usage tests", accounts => {
   it("NEW + OLD: cancel()", async () => {
     const token = await TestERC721.new();
 
-    let encDataRight = await encDataV3_SELL([await LibPartToUint(seller, 10000), await LibPartToUint(), 0, 1000]);
+    let encDataRight = await encDataV3_SELL([await LibPartToUint(seller, 10000), await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
 
     const right = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
@@ -93,8 +95,8 @@ contract("rarible only gas usage tests", accounts => {
     let addrOriginLeft = await LibPartToUint(origin1, 300);
     let addrOriginRight = await LibPartToUint(origin1, 300);
 
-    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
     const left = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
 
@@ -128,8 +130,8 @@ contract("rarible only gas usage tests", accounts => {
     let addrOriginLeft = await LibPartToUint(origin1, 300);
     let addrOriginRight = await LibPartToUint(origin1, 300);
 
-    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
     const left = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
 
@@ -197,8 +199,8 @@ contract("rarible only gas usage tests", accounts => {
     let addrOriginLeft = await LibPartToUint(origin1, 300);
     let addrOriginRight = await LibPartToUint(origin1, 300);
 
-    let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-    let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
+    let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+    let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc(token.address, tokenId1), 1), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
 
@@ -233,8 +235,8 @@ contract("rarible only gas usage tests", accounts => {
     let addrOriginLeft = await LibPartToUint(origin1, 300);
     let addrOriginRight = await LibPartToUint(origin1, 300);
 
-    let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
-    let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+    let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+    let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
 
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc(token.address, tokenId1), 1), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
 
