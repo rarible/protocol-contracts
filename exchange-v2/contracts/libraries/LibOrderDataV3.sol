@@ -14,12 +14,14 @@ library LibOrderDataV3 {
         uint originFeeFirst;
         uint originFeeSecond;
         uint maxFeesBasePoint;
+        bytes32 marketplaceMarker;
     }
 
     struct DataV3_BUY {
         uint payouts;
         uint originFeeFirst;
         uint originFeeSecond;
+        bytes32 marketplaceMarker;
     }
 
     function decodeOrderDataV3_SELL(bytes memory data) internal pure returns (DataV3_SELL memory orderData) {
