@@ -22,6 +22,8 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
+const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f11";
 
 contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   let exchangeV2;
@@ -68,8 +70,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -89,8 +91,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
-      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -111,8 +113,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -147,8 +149,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -184,8 +186,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
-      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -214,8 +216,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
-      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
@@ -253,8 +255,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
-      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
 
       // setting protocol fee to 0 to check gas difference with V2 orders 
       await exchangeV2.setProtocolFee(0);
@@ -275,8 +277,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const right = Order(makerRight, Asset(ETH, "0x", price), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 0, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
@@ -1140,8 +1142,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
-      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000, MARKET_MARKER_SELL]);
 
       await royaltiesRegistry.setRoyaltiesByToken(erc1155.address, [[creator, 1000]]); //set royalties by token
 
@@ -1175,8 +1177,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
-      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0, MARKET_MARKER_BUY]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000, MARKET_MARKER_SELL]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
@@ -1239,8 +1241,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0, MARKET_MARKER_BUY]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
@@ -1253,7 +1255,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       // change protocol fee 5 => 3 and makerRight origin fee 3 => 4, so resulting fee is 11%
       await exchangeV2.setProtocolFee(300)
-      changeOrderData(right, await encDataV3_BUY([0, await LibPartToUint(originBuyer, 400), 0]))
+      changeOrderData(right, await encDataV3_BUY([0, await LibPartToUint(originBuyer, 400), 0, MARKET_MARKER_SELL]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
@@ -1268,8 +1270,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(), 0, 200]);
-      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(), 0]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(), 0, 200, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(), 0, MARKET_MARKER_BUY]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
@@ -1281,13 +1283,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       //maxFee = 0 is wrong even if protocolFee = 0
       await exchangeV2.setProtocolFee(0)
-      changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 0]))
+      changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 0, MARKET_MARKER_SELL]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
       //setting maxFee at 1% works
-      changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 100]))
+      changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 100, MARKET_MARKER_SELL]))
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
     })
@@ -1296,8 +1298,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerLeft, 1000)
       const erc1155 = await prepareERC1155(makerRight, 1000)
 
-      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 100), await LibPartToUint(originBuyer2, 200)]);
-      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 300), await LibPartToUint(originSeller2, 400), 1000]);
+      let encDataLeft = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 100), await LibPartToUint(originBuyer2, 200), MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_SELL([0, await LibPartToUint(originSeller, 300), await LibPartToUint(originSeller2, 400), 1000, MARKET_MARKER_SELL]);
 
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -1325,8 +1327,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc20 = await prepareERC20(makerLeft, 1000)
       const erc1155 = await prepareERC1155(makerRight, 1000)
 
-      let encDataLeft = await encDataV3_BUY([0, 0, await LibPartToUint(originBuyer2, 200)]);
-      let encDataRight = await encDataV3_SELL([0, 0, await LibPartToUint(originSeller2, 400), 1000]);
+      let encDataLeft = await encDataV3_BUY([0, 0, await LibPartToUint(originBuyer2, 200), MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_SELL([0, 0, await LibPartToUint(originSeller2, 400), 1000, MARKET_MARKER_SELL]);
 
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
