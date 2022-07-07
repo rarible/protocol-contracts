@@ -31,6 +31,7 @@
       - `uint payouts`, works the same as in `V1` orders, but there is only 1 value and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
       - `uint originFeeFirst`, instead of array there can only be 2 originFee in different vairables (originFeeFirst and originFeeSecond), and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
       - `uint originFeeSecond`, instead of array there can only be 2 originFee in different vairables (originFeeFirst and originFeeSecond), and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
+      - `bytes32 marketplaceMarker`, bytes32 id marketplace, which generate this order  
   - `"V3_SELL"`
     - fields
       - `uint payouts`, works the same as in `V1` orders, but there is only 1 value and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
@@ -42,6 +43,7 @@
         - `maxFeesBasePoint` should be more than `0`
         - `maxFeesBasePoint` should be more than `protocolFee`
         - `maxFeesBasePoint` should not be bigger than `10%`
+      - `bytes32 marketplaceMarker`, bytes32 id marketplace, which generate this order
   - `V3` orders can only be matched if buy-order is `V3_BUY` and the sell-order is `V3_SELL`
   - `V3` orders don't have `isMakeFill` field
     - `V3_SELL` orders' fills are always calculated from make side (as if `isMakeFill` = true)
