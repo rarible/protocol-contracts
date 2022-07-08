@@ -27,7 +27,8 @@ contract ExchangeWrapper is OwnableUpgradeable {
     enum Markets {
         ExchangeV2,
         WyvernExchange,
-        BasicSP
+        BasicSP,
+        MatchOrdersSeaPort
     }
 
     struct PurchaseDetails {
@@ -80,10 +81,27 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
-        if (purchaseDetails.marketId == Markets.BasicSP) {
+//        revert("SKS_TEST1");
+        if (purchaseDetails.marketId == Markets.MatchOrdersSeaPort) {
+            (LibSeaPort.Order memory orderLeft,
+            LibSeaPort.Order memory orderRight,
+            LibSeaPort.Fulfillment memory fulfillmentLeft,
+            LibSeaPort.Fulfillment memory fulfillmentRight) =
+            abi.decode(purchaseDetails.data, (LibSeaPort.Order, LibSeaPort.Order, LibSeaPort.Fulfillment, LibSeaPort.Fulfillment));
+            LibSeaPort.Order[] memory orders = new LibSeaPort.Order[](2);
+            orders[0] = orderLeft;
+            orders[1] = orderRight;
+            LibSeaPort.Fulfillment[] memory fulfillments = new LibSeaPort.Fulfillment[](2);
+            fulfillments[0] = fulfillmentLeft;
+            fulfillments[1] = fulfillmentRight;
+            LibSeaPort.Execution[] memory execution;
+            execution = ISeaPort(seaPort).matchOrders{value : paymentAmount}(orders, fulfillments);
+            //todo: check execution
+//            require(success, "Purchase BasicSeaPort matchOrders failed");
+        } else if (purchaseDetails.marketId == Markets.BasicSP) {
             (LibSeaPort.BasicOrderParameters memory seaPortBasic, bytes4 typeNft) = abi.decode(purchaseDetails.data, (LibSeaPort.BasicOrderParameters, bytes4));
             bool success = ISeaPort(seaPort).fulfillBasicOrder{value : paymentAmount}(seaPortBasic);
-            require(success, "Purchase BasicSeaPort failed");
+            require(success, "Purchase BasicSeaPort fulfillBasicOrder failed");
             if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
                 IERC721Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier);
             } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {

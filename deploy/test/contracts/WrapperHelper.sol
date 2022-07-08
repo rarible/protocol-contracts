@@ -125,4 +125,13 @@ contract WrapperHelper {
     function getDataSeaPortBasic(LibSeaPort.BasicOrderParameters calldata seaPortBasic, bytes4 typeNft) external pure returns(bytes memory _data) {
         _data = abi.encode(seaPortBasic, typeNft);
     }
+
+    function getDataSeaPortMatchOrders(
+        LibSeaPort.Order calldata _orderLeft,
+        LibSeaPort.Order calldata _orderRight,
+        LibSeaPort.Fulfillment calldata fulfillmentLeft,
+        LibSeaPort.Fulfillment calldata fulfillmentRight
+    ) external pure returns(bytes memory _data) {
+        _data = abi.encode(_orderLeft, _orderRight, fulfillmentLeft, fulfillmentRight);
+    }
 }
