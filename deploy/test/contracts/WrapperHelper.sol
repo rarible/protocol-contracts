@@ -9,6 +9,7 @@ import {IWyvernExchange} from "../../contracts/ExchangeWrapperImport.sol";
 import {IExchangeV2} from "../../contracts/ExchangeWrapperImport.sol";
 import {LibOrder} from "../../contracts/ExchangeWrapperImport.sol";
 import {LibSeaPort} from "@rarible/exchange-wrapper/contracts/libraries/LibSeaPort.sol";
+import {ISeaPort} from "@rarible/exchange-wrapper/contracts/interfaces/ISeaPort.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -133,5 +134,12 @@ contract WrapperHelper {
         LibSeaPort.Fulfillment calldata fulfillmentRight
     ) external pure returns(bytes memory _data) {
         _data = abi.encode(_orderLeft, _orderRight, fulfillmentLeft, fulfillmentRight);
+    }
+
+    function getDataSeaPortDataMatchOrders(
+        LibSeaPort.Order[] calldata _orders,
+        LibSeaPort.Fulfillment[] calldata _fulfillments
+    ) external pure returns(bytes memory _data) {
+        _data = abi.encodeWithSelector(ISeaPort.matchOrders.selector, _orders, _fulfillments);
     }
 }

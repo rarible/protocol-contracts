@@ -234,6 +234,114 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await token.balanceOf(buyerLocal1), 1);
     })
 
+    it("wrapper seaport (matchOrders through data selector) ERC721<->ETH", async () => {
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+      const thirdPartAccount = accounts[3];
+      bulkExchange = await ExchangeBulkV2.new();
+      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      await bulkExchange.setSeaPort(seaport.address);
+
+      const buyerLocal1 = accounts[2];
+      const token = await TestERC721.new();
+      await token.mint(seller, tokenId)
+      await token.setApprovalForAll(seaport.address, true, {from: seller})
+      const considerationItemLeft = {
+        itemType: 0,
+        token: '0x0000000000000000000000000000000000000000',
+        identifierOrCriteria: 0,
+        startAmount: 100,
+        endAmount: 100,
+        recipient: seller
+      }
+
+      const offerItemLeft = {
+        itemType: 2, // 2: ERC721 items
+        token: token.address,
+        identifierOrCriteria: '0x3039',
+        startAmount: 1,
+        endAmount: 1
+      }
+
+      const OrderParametersLeft = {
+        offerer: seller,// 0x00
+        zone: zoneAddr, // 0x20
+        offer: [offerItemLeft], // 0x40
+        consideration: [considerationItemLeft], // 0x60
+        orderType: 0, // 0: no partial fills, anyone can execute
+        startTime: 0, //
+        endTime: '0xff00000000000000000000000000', // 0xc0
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // 0xe0
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885', // 0x100
+        conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000', // 0x120
+        totalOriginalConsiderationItems: 1, // 0x140
+        // offer.length                          // 0x160
+      }
+
+      const orderLeft = {
+        parameters: OrderParametersLeft,
+        signature: '0x41651a6ed862341d20819a3c8a326b43c3fbc8f8dd9a0cde3b292c61665e8ed46592c083bb29f6f9dc68df824d02bbc9bc752b68081c95866d7d654659b3580f1b',
+      }
+
+      const offerItemRight = {
+        itemType: 0,
+        token: '0x0000000000000000000000000000000000000000',
+        identifierOrCriteria: 0,
+        startAmount: 100,
+        endAmount: 100,
+        recipient : seller
+      }
+
+      const considerationItemRight = {
+          itemType: 2, // 2: ERC721
+          token: token.address,
+          identifierOrCriteria: '0x3039',
+          startAmount: 1,
+          endAmount: 1,
+          recipient: buyerLocal1
+      }
+      const orderParametersRight = {
+        offerer: bulkExchange.address,
+        zone: zoneAddr,
+        offer: [offerItemRight],
+        consideration: [considerationItemRight],
+        orderType: 0, // 0: no partial fills, anyone can execute
+        startTime: 0,
+        endTime: '0xff00000000000000000000000000',
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885',
+        conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000',
+        totalOriginalConsiderationItems: 1,
+        // offer.length                          // 0x160
+      }
+
+      const orderRight = {
+        parameters: orderParametersRight,
+        signature: '0x41651a6ed862341d20819a3c8a326b43c3fbc8f8dd9a0cde3b292c61665e8ed46592c083bb29f6f9dc68df824d02bbc9bc752b68081c95866d7d654659b3580f1b',
+      }
+
+      const fulfillment1 = {
+        offerComponents: [ { orderIndex: 0, itemIndex: 0 } ],
+        considerationComponents: [ { orderIndex: 1, itemIndex: 0 } ]
+      }
+
+      const fulfillment2 = {
+        offerComponents: [ { orderIndex: 1, itemIndex: 0 } ],
+        considerationComponents: [ { orderIndex: 0, itemIndex: 0 } ]
+      }
+      _orders = [orderLeft, orderRight];
+      const _fulfillments = [fulfillment1, fulfillment2];
+
+      let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortDataMatchOrders(_orders, _fulfillments);
+      const tradeDataSeaPort = PurchaseData(4, 110, dataForSeaportWithSelector);
+      let feesUP = [];
+
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
+      console.log("SEAPORT matchOrders with methodSelector, by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
+      assert.equal(await token.balanceOf(seller), 0);
+      assert.equal(await token.balanceOf(buyerLocal1), 1);
+    })
+
     it("seaport wrapper ERC155<->ETH", async () => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)

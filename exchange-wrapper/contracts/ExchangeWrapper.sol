@@ -28,7 +28,8 @@ contract ExchangeWrapper is OwnableUpgradeable {
         ExchangeV2,
         WyvernExchange,
         BasicSP,
-        MatchOrdersSeaPort
+        MatchOrdersSeaPort,
+        MatchOrdersDataSeaPort
     }
 
     struct PurchaseDetails {
@@ -81,8 +82,11 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
-//        revert("SKS_TEST1");
-        if (purchaseDetails.marketId == Markets.MatchOrdersSeaPort) {
+        LibSeaPort.Execution[] memory execution;
+        if (purchaseDetails.marketId == Markets.MatchOrdersDataSeaPort) {
+            (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
+            require(success, "Purchase SeaPort matchOrders with selector failed");
+        } else if (purchaseDetails.marketId == Markets.MatchOrdersSeaPort) {
             (LibSeaPort.Order memory orderLeft,
             LibSeaPort.Order memory orderRight,
             LibSeaPort.Fulfillment memory fulfillmentLeft,
@@ -94,7 +98,6 @@ contract ExchangeWrapper is OwnableUpgradeable {
             LibSeaPort.Fulfillment[] memory fulfillments = new LibSeaPort.Fulfillment[](2);
             fulfillments[0] = fulfillmentLeft;
             fulfillments[1] = fulfillmentRight;
-            LibSeaPort.Execution[] memory execution;
             execution = ISeaPort(seaPort).matchOrders{value : paymentAmount}(orders, fulfillments);
             //todo: check execution
 //            require(success, "Purchase BasicSeaPort matchOrders failed");
