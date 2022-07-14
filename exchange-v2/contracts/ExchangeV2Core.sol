@@ -24,7 +24,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     //events
     event Cancel(bytes32 hash);
-    event Match(uint newLeftFill, uint newRightFill);
+    event Match(bytes32 leftHash, bytes32 rightHash, uint newLeftFill, uint newRightFill);
 
     function cancel(LibOrder.Order memory order) external {
         require(_msgSender() == order.maker, "not a maker");
@@ -115,7 +115,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrderData.GenericOrderData memory leftOrderData = LibOrderData.parse(orderLeft);
         LibOrderData.GenericOrderData memory rightOrderData = LibOrderData.parse(orderRight);
 
-        LibFill.FillResult memory newFill = getFillSetNew(
+        LibFill.FillResult memory newFill = setFillEmitMatch(
             orderLeft, 
             orderRight,
             leftOrderData.isMakeFill,
@@ -164,7 +164,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(_msgSender()).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-        emit Match(newFill.rightValue, newFill.leftValue);
     }
 
     /**
@@ -276,7 +275,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         @param rightMakeFill true if the right orders uses make-side fills, false otherwise
         @return returns change in orders' fills by the match 
     */
-    function getFillSetNew(
+    function setFillEmitMatch(
         LibOrder.Order memory orderLeft,
         LibOrder.Order memory orderRight,
         bool leftMakeFill,
@@ -305,6 +304,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
             }
         }
+
+        emit Match(leftOrderKeyHash, rightOrderKeyHash, newFill.rightValue, newFill.leftValue);
+
         return newFill;
     }
 
@@ -342,5 +344,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return 0;
     }
 
-    uint256[47] private __gap;
+    uint256[49] private __gap;
 }

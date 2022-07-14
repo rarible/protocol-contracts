@@ -75,8 +75,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const _nftPurchaseAssetData = "0x";
       const left = Order(makerLeft, Asset(id("ERC721_LAZY"), encodedMintData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
@@ -241,8 +241,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
       const _nftPurchaseAssetData = enc(erc20.address);
@@ -344,8 +344,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
-      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0]);
+      let encDataLeft  = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
       const _nftSellAssetData = enc(erc1155.address, erc1155TokenId1);
       const _nftPurchaseAssetData = enc(erc20.address);;
@@ -488,8 +488,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = await LibPartToUint(accounts[6], 300);
       let addrOriginRight = await LibPartToUint(accounts[5], 300);
 
-      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0]);
-      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000]);
+      let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_SELL]);
+      let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_BUY]);
 
       const _nftAssetData = enc(erc1155.address, erc1155TokenId1);
       const _paymentAssetData = enc(erc20.address);
@@ -739,6 +739,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const tx = await exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight });
       console.log("ERC20 <=> ERC20:", tx.receipt.gasUsed);
+
+      const hashLeft = await helper.hashKey(left)
+      const hashRight = await helper.hashKey(right)
+      truffleAssert.eventEmitted(tx, 'Match', (ev) => {
+        assert.equal(ev.leftHash, hashLeft, "Match left hash")
+        assert.equal(ev.rightHash, hashRight, "Match right hash")
+        return true;
+      });
 
       assert.equal(await exchangeV2.fills(await helper.hashKey(left)), 200);
 
