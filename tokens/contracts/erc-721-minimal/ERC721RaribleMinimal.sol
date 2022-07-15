@@ -11,12 +11,8 @@ contract ERC721RaribleMinimal is ERC721BaseMinimal, IsPrivateCollection, MinterA
     event CreateERC721Rarible(address owner, string name, string symbol);
     event CreateERC721RaribleUser(address owner, string name, string symbol);
 
-    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external virtual {
+    function __ERC721RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external virtual {
         __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
-
-        for(uint i = 0; i < operators.length; i++) {
-            setApprovalForAll(operators[i], true);
-        }
 
         isPrivate = true;
         emit CreateERC721RaribleUser(_msgSender(), _name, _symbol);
