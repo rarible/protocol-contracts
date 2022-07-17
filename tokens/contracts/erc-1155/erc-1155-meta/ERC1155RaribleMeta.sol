@@ -12,16 +12,12 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
     event CreateERC1155Rarible(address owner, string name, string symbol);
     event CreateERC1155RaribleUser(address owner, string name, string symbol);
 
-    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external {
+    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external {
         __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
-        for(uint i = 0; i < operators.length; i++) {
-            setApprovalForAll(operators[i], true);
-        }
         __MetaTransaction_init_unchained("ERC1155RaribleUserMeta", "1");
         
         isPrivate = true;
-
         emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
     }
     
@@ -31,7 +27,6 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
 
         isPrivate = false;
-
         emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
     }
 

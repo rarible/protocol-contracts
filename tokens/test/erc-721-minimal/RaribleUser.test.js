@@ -21,7 +21,7 @@ contract("ERC721RaribleUser minimal", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [whiteListProxy], zeroAddress, zeroAddress, { from: tokenOwner });
+    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", zeroAddress, zeroAddress, { from: tokenOwner });
   });
 
   it("check for ERC165 interface", async () => {
@@ -78,6 +78,12 @@ contract("ERC721RaribleUser minimal", accounts => {
     const tokenURI = "//uri";
     const signature = await getSignature(tokenId, tokenURI, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), minter);
 
+    //throw while mintAndTransfer, because tokenOwner don`t set approve in __ERC721RaribleUser_init
+    await expectThrow (
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: tokenOwner});
     const tx = await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, {from: whiteListProxy});
     const addressValue = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
 
@@ -100,6 +106,12 @@ contract("ERC721RaribleUser minimal", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, creators([minter]), fees, minter);
 
+    //throw while mintAndTransfer, because tokenOwner don`t set approve in __ERC721RaribleUser_init
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: tokenOwner});
     await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), fees, [signature]], transferTo, {from: whiteListProxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);
@@ -134,6 +146,7 @@ contract("ERC721RaribleUser minimal", accounts => {
     const signature1 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, minter);
     const signature2 = await getSignature(tokenId, tokenURI, creators([minter, creator2]), fees, creator2);
 
+    await token.setApprovalForAll(whiteListProxy, true, {from: tokenOwner});
     await token.mintAndTransfer([tokenId, tokenURI, creators([minter, creator2]), fees, [signature1, signature2]], transferTo, {from: whiteListProxy});
 
     assert.equal(await token.ownerOf(tokenId), transferTo);

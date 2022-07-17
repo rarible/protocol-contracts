@@ -27,7 +27,7 @@ contract("ERC1155RaribleUser", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], accounts[6], accounts[7], {from: tokenOwner});
+    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", accounts[6], accounts[7], {from: tokenOwner});
   });
 
   it("approve for all", async () => {
@@ -122,6 +122,12 @@ contract("ERC1155RaribleUser", accounts => {
     const tokenURI = "//uri";
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), minter);
 
+    //throw while mintAndTransfer, because tokenOwner don`t set approve in __ERC1155RaribleUser_init
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, mint, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: tokenOwner});
     const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, mint, {from: whiteListProxy});
     const addressValue = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
 
@@ -165,6 +171,12 @@ contract("ERC1155RaribleUser", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
+    //throw while mintAndTransfer, because tokenOwner don`t set approve in __ERC1155RaribleUser_init
+    await expectThrow(
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+    );
+
+    await token.setApprovalForAll(whiteListProxy, true, {from: tokenOwner});
     await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
 
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
