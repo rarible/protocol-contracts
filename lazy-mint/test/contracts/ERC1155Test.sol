@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "../../contracts/erc-1155/LibERC1155LazyMint.sol";
 import "@rarible/lib-signature/contracts/LibSignature.sol";
-import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 contract ERC1155Test is EIP712Upgradeable {
     using LibSignature for bytes32;

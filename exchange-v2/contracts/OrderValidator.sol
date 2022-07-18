@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 import "@rarible/lib-signature/contracts/IERC1271.sol";
 import "./libraries/LibOrder.sol";
 import "@rarible/lib-signature/contracts/LibSignature.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upgradeable {
     using LibSignature for bytes32;

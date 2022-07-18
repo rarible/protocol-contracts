@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity >=0.6.2 <0.9.0;
 pragma abicoder v2;
 
 import "../erc-721-minimal/ERC721RaribleMinimal.sol";
-import "@openzeppelin/contracts/proxy/BeaconProxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**

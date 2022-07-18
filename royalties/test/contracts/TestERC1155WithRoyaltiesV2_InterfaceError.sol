@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../contracts/LibRoyaltiesV2.sol";
 import "../../contracts/RoyaltiesV2.sol";
 import "../../contracts/impl/AbstractRoyalties.sol";

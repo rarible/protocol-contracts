@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 contract IsPrivateCollection {
     /// @dev true if collection is private, false if public

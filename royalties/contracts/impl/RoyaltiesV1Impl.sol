@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity >=0.6.2 <0.9.0;
 
 import "./AbstractRoyalties.sol";
 import "../RoyaltiesV1.sol";
@@ -11,7 +11,8 @@ contract RoyaltiesV1Impl is AbstractRoyalties, RoyaltiesV1 {
         LibPart.Part[] memory _royalties = royalties[id];
         address payable[] memory result = new address payable[](_royalties.length);
         for (uint i = 0; i < _royalties.length; i++) {
-            result[i] = address(uint160(_royalties[i].account));
+            // result[i] = address(uint160(_royalties[i].account));
+            result[i] = _royalties[i].account;
         }
         return result;
     }

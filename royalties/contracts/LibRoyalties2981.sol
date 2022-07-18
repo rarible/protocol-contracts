@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity >=0.6.2 <0.9.0;
 
 import "@rarible/lib-part/contracts/LibPart.sol";
 
@@ -12,7 +12,7 @@ library LibRoyalties2981 {
     uint96 constant _WEIGHT_VALUE = 1000000;
 
     /*Method for converting amount to percent and forming LibPart*/
-    function calculateRoyalties(address to, uint256 amount) internal view returns (LibPart.Part[] memory) {
+    function calculateRoyalties(address to, uint256 amount) internal pure returns (LibPart.Part[] memory) {
         LibPart.Part[] memory result;
         if (amount == 0) {
             return result;

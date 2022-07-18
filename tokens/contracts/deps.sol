@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/proxy/BeaconProxy.sol";
-import "@openzeppelin/contracts/proxy/UpgradeableBeacon.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 

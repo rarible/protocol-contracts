@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "./ERC721UpgradeableMinimal.sol";
@@ -8,7 +8,7 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
 import "../Mint721Validator.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "./ERC721URI.sol";
 
 abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl, ERC721URI {

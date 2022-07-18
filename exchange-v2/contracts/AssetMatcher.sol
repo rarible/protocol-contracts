@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "@rarible/exchange-interfaces/contracts/IAssetMatcher.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 abstract contract AssetMatcher is Initializable, OwnableUpgradeable {

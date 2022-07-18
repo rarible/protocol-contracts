@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.9.0;
 
 import "./ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /**
  * @dev Extension of {ERC1155} that allows token holders to destroy both their

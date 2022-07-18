@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "./libs/LibAucDataV1.sol";
@@ -12,7 +12,7 @@ import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 abstract contract AuctionHouseBase is OwnableUpgradeable,  ReentrancyGuardUpgradeable, RaribleTransferManager, TransferExecutor {
     using LibTransfer for address;

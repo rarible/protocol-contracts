@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 abstract contract SimpleTransferManager is ITransferManager {
     using SafeMathUpgradeable for uint;

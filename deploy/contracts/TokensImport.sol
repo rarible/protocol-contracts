@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 
 //tokens 721
 import {ERC721Rarible} from "@rarible/tokens/contracts/erc-721/ERC721Rarible.sol";

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import {LibAucDataV1} from "@rarible/auction/contracts/721/AuctionHouse721.sol";

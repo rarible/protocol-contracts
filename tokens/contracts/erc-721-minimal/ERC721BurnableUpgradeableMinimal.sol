@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.6.0 <0.9.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./ERC721UpgradeableMinimal.sol";
 
