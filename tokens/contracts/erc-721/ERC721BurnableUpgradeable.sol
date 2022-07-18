@@ -28,7 +28,7 @@ abstract contract ERC721BurnableUpgradeable is Initializable, ContextUpgradeable
      */
     function burn(uint256 tokenId) public virtual {
         if(!_exists(tokenId)) {
-            address owner = address(tokenId >> 96);
+            address owner = address(uint160(tokenId >> 96));
             require(owner == _msgSender(), "ERC721Burnable: caller is not owner, not burn");
             _setBurned(tokenId);
         } else {

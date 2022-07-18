@@ -20,7 +20,7 @@ abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApproval
         return ERC721DefaultApprovalMinimal.isApprovedForAll(owner, operator);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721LazyMinimal) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721LazyMinimal, ERC721UpgradeableMinimal, HasContractURI) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

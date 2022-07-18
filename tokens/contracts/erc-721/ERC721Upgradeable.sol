@@ -105,10 +105,17 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
         _name = name_;
         _symbol = symbol_;
 
-        // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721);
-        _registerInterface(_INTERFACE_ID_ERC721_METADATA);
-        _registerInterface(_INTERFACE_ID_ERC721_ENUMERABLE);
+        // // register the supported interfaces to conform to ERC721 via ERC165
+        // _registerInterface(_INTERFACE_ID_ERC721);
+        // _registerInterface(_INTERFACE_ID_ERC721_METADATA);
+        // _registerInterface(_INTERFACE_ID_ERC721_ENUMERABLE);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
+        return interfaceId == _INTERFACE_ID_ERC721 || 
+            interfaceId == _INTERFACE_ID_ERC721_METADATA || 
+            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE || 
+            super.supportsInterface(interfaceId);
     }
 
     /**
@@ -386,7 +393,7 @@ contract ERC721Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeab
     }
 
     /*Returns true if token with tokenId already burned*/
-    function _burned(uint256 tokenId) internal returns (bool) {
+    function _burned(uint256 tokenId) internal view returns (bool) {
         return _burnedTokens[tokenId];
     }
 

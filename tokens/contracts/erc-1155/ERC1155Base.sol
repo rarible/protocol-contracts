@@ -21,7 +21,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC1155Upgradeable, HasContractURI) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -51,7 +51,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
         leftToBurn = amount;
         lazyToBurn = 0;
-        address creator = address(id >> 96);
+        address creator = address(uint160(id >> 96));
         if (creator == _msgSender()) {
             lazyToBurn = amount;
             uint supply = ERC1155Lazy._getSupply(id);

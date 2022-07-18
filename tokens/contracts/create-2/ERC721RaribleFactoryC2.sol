@@ -89,10 +89,10 @@ contract ERC721RaribleFactoryC2 is Ownable {
     }
 
     function getDataPublic(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        return abi.encodeWithSelector(ERC721RaribleMinimal(address(0)).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
     }
 
     function getDataPrivate(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        return abi.encodeWithSelector(ERC721RaribleMinimal(address(0)).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
     }
 }

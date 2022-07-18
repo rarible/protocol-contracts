@@ -39,7 +39,7 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
+    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address) {
         return super._msgSender();
     }
 

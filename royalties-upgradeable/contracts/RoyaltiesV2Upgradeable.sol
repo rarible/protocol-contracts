@@ -9,6 +9,9 @@ import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 
 abstract contract RoyaltiesV2Upgradeable is ERC165Upgradeable, RoyaltiesV2 {
     function __RoyaltiesV2Upgradeable_init_unchained() internal initializer {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES || super.supportsInterface(interfaceId);
     }
 }

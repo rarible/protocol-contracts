@@ -78,9 +78,15 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         _name = name_;
         _symbol = symbol_;
 
-        // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721);
-        _registerInterface(_INTERFACE_ID_ERC721_METADATA);
+        // // register the supported interfaces to conform to ERC721 via ERC165
+        // _registerInterface(_INTERFACE_ID_ERC721);
+        // _registerInterface(_INTERFACE_ID_ERC721_METADATA);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
+        return interfaceId == _INTERFACE_ID_ERC721 || 
+            interfaceId == _INTERFACE_ID_ERC721_METADATA || 
+            super.supportsInterface(interfaceId);
     }
 
     /**

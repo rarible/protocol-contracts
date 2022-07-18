@@ -11,8 +11,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract TestERC721WithRoyaltiesV2OwnableUpgradeable is Initializable, RoyaltiesV2Impl, ERC721Upgradeable, OwnableUpgradeable {
     function initialize() public initializer {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
         __Ownable_init_unchained();
+    }
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES || super.supportsInterface(interfaceId);
     }
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees) external {
         _mint(to, tokenId);

@@ -12,9 +12,12 @@ import "../../contracts/impl/AbstractRoyalties.sol";
 contract TestERC1155WithRoyaltiesV2_InterfaceError is Initializable, AbstractRoyalties,  RoyaltiesV2, ERC1155Upgradeable {
 
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees, uint amount) external {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
         _mint(to, tokenId, amount, "");
         _saveRoyalties(tokenId, _fees);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES || super.supportsInterface(interfaceId);
     }
 
     function getRaribleV2Royalties(uint256) override external pure returns (LibPart.Part[] memory) {

@@ -25,7 +25,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
 
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC1155Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
         return interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
         || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
         || interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES
@@ -56,7 +56,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     }
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override virtual {
-        address minter = address(data.tokenId >> 96);
+        address minter = address(uint160(data.tokenId >> 96));
         address sender = _msgSender();
 
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");

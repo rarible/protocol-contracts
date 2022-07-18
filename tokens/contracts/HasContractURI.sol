@@ -15,7 +15,11 @@ abstract contract HasContractURI is ERC165Upgradeable {
 
     function __HasContractURI_init_unchained(string memory _contractURI) internal initializer {
         contractURI = _contractURI;
-        _registerInterface(_INTERFACE_ID_CONTRACT_URI);
+        // _registerInterface(_INTERFACE_ID_CONTRACT_URI);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == _INTERFACE_ID_CONTRACT_URI || super.supportsInterface(interfaceId);
     }
 
     /**

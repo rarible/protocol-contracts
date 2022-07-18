@@ -21,7 +21,7 @@ abstract contract ERC721Base is OwnableUpgradeable, ERC721DefaultApproval, ERC72
         return ERC721DefaultApproval.isApprovedForAll(owner, operator);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721Lazy) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Lazy, ERC721Upgradeable, HasContractURI) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

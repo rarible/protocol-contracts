@@ -9,7 +9,9 @@ import "../../contracts/LibRoyaltiesV2.sol";
 
 contract TestERC1155RoyaltiesV2 is RoyaltiesV2Impl, ERC1155Upgradeable {
     function initialize() public initializer {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
+    }
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES || super.supportsInterface(interfaceId);
     }
     function mint(address to, uint tokenId, uint amount, LibPart.Part[] memory _fees) external {
         _mint(to, tokenId, amount, "");

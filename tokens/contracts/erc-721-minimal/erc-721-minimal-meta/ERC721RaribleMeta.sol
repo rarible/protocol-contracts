@@ -36,7 +36,7 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
+    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address) {
         return super._msgSender();
     }
 

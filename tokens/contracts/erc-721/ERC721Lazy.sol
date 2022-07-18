@@ -26,7 +26,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC721Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
         return interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
         || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
         || interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES
@@ -49,7 +49,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
     }
 
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
-        address minter = address(data.tokenId >> 96);
+        address minter = address(uint160(data.tokenId >> 96));
         address sender = _msgSender();
 
         require(minter == data.creators[0].account, "tokenId incorrect");
@@ -81,7 +81,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
 
         _tokenOwners.set(tokenId, to);
 
-        address minter = address(tokenId >> 96);
+        address minter = address(uint160(tokenId >> 96));
         if (minter != to) {
             emit Transfer(address(0), minter, tokenId);
             emit Transfer(minter, to, tokenId);
