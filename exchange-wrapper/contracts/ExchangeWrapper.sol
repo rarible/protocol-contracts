@@ -8,6 +8,7 @@ import "@rarible/lib-bp/contracts/BpLibrary.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IWyvernExchange.sol";
 import "./interfaces/IExchangeV2.sol";
+import "./interfaces/ISeaPort.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
 
 contract ExchangeWrapper is OwnableUpgradeable {
@@ -17,10 +18,12 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     IWyvernExchange public wyvernExchange;
     IExchangeV2 public exchangeV2;
+    ISeaPort public seaPort;
 
     enum Markets {
         ExchangeV2,
-        WyvernExchange
+        WyvernExchange,
+        SeaPort
     }
 
     struct PurchaseDetails {
@@ -31,12 +34,14 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function __ExchangeWrapper_init(
         IWyvernExchange _wyvernExchange,
-        IExchangeV2 _exchangeV2
+        IExchangeV2 _exchangeV2,
+        ISeaPort _seaPort
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
         wyvernExchange = _wyvernExchange;
         exchangeV2 = _exchangeV2;
+        seaPort = _seaPort;
     }
 
     function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
@@ -45,6 +50,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function setExchange(IExchangeV2 _exchangeV2) external onlyOwner {
         exchangeV2 = _exchangeV2;
+    }
+
+    function setSeaPort(ISeaPort _seaPort) external onlyOwner {
+        seaPort = _seaPort;
     }
 
     function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
@@ -67,9 +76,12 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
-        if (purchaseDetails.marketId == Markets.WyvernExchange) {
+        if (purchaseDetails.marketId == Markets.SeaPort){
+            (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
+            require(success, "Purchase seaPort failed");
+        } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
-            require(success, "Purchase failed");
+            require(success, "Purchase wyvernExchange failed");
         } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
             (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature, uint purchaseAmount) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes, uint));
             matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount, purchaseAmount);
@@ -120,6 +132,11 @@ contract ExchangeWrapper is OwnableUpgradeable {
         bytes memory buyOrderSignature; //empty signature is enough for buyerOrder
 
         IExchangeV2(exchangeV2).matchOrders{value : paymentAmount }(sellOrder, sellOrderSignature, buyerOrder, buyOrderSignature);
+    }
+
+    //this method need to prevent error ERC1155: transfer to non ERC1155Receiver implementer
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 
     receive() external payable {}

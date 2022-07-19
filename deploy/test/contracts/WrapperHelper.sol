@@ -8,6 +8,8 @@ import {IERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC
 import {IWyvernExchange} from "../../contracts/ExchangeWrapperImport.sol";
 import {IExchangeV2} from "../../contracts/ExchangeWrapperImport.sol";
 import {LibOrder} from "../../contracts/ExchangeWrapperImport.sol";
+import {LibSeaPort} from "@rarible/exchange-wrapper/contracts/libraries/LibSeaPort.sol";
+import {ISeaPort} from "@rarible/exchange-wrapper/contracts/interfaces/ISeaPort.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -119,5 +121,35 @@ contract WrapperHelper {
 
     function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, uint purchaseAmount) external pure returns(bytes memory _data) {
         _data = abi.encode(orderLeft, signatureLeft, purchaseAmount);
+    }
+
+    function getDataSeaPortFulfillAdvancedOrder(
+        LibSeaPort.AdvancedOrder memory _advancedOrder,
+        LibSeaPort.CriteriaResolver[] memory _criteriaResolvers,
+        bytes32 _fulfillerConduitKey,
+        address _recipient
+    ) external pure returns(bytes memory _data) {
+        _data = abi.encodeWithSelector(ISeaPort.fulfillAdvancedOrder.selector, _advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
+    }
+
+    function getDataSeaPortFulfillAvailableAdvancedOrders(
+        LibSeaPort.AdvancedOrder[] memory _orders,
+        LibSeaPort.CriteriaResolver[] memory _criteriaResolvers,
+        LibSeaPort.FulfillmentComponent[][] memory _offerFulfillments,
+        LibSeaPort.FulfillmentComponent[][] memory _considerationFulfillments,
+        bytes32 _fulfillerConduitKey,
+        address _recipient,
+        uint256 _maximumFulfilled
+    ) external pure returns(bytes memory _data) {
+        _data = abi.encodeWithSelector(
+            ISeaPort.fulfillAvailableAdvancedOrders.selector,
+            _orders,
+            _criteriaResolvers,
+            _offerFulfillments,
+            _considerationFulfillments,
+            _fulfillerConduitKey,
+            _recipient,
+            _maximumFulfilled
+        );
     }
 }
