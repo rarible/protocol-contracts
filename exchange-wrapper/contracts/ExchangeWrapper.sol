@@ -10,6 +10,8 @@ import "./interfaces/IWyvernExchange.sol";
 import "./interfaces/IExchangeV2.sol";
 import "./interfaces/ISeaPort.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 contract ExchangeWrapper is OwnableUpgradeable {
     using LibTransfer for address;
@@ -23,7 +25,8 @@ contract ExchangeWrapper is OwnableUpgradeable {
     enum Markets {
         ExchangeV2,
         WyvernExchange,
-        SeaPort
+        SeaPortAdvancedOrders,
+        SeaPortBasicOrders
     }
 
     struct PurchaseDetails {
@@ -76,9 +79,20 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function purchase(PurchaseDetails memory purchaseDetails) internal {
         uint paymentAmount = purchaseDetails.amount;
-        if (purchaseDetails.marketId == Markets.SeaPort){
+        if (purchaseDetails.marketId == Markets.SeaPortAdvancedOrders){
             (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
-            require(success, "Purchase seaPort failed");
+            require(success, "Purchase SeaPortAdvancedOrders failed");
+        } else if (purchaseDetails.marketId == Markets.SeaPortBasicOrders) {
+            (LibSeaPort.BasicOrderParameters memory seaPortBasic, bytes4 typeNft) = abi.decode(purchaseDetails.data, (LibSeaPort.BasicOrderParameters, bytes4));
+            bool success = ISeaPort(seaPort).fulfillBasicOrder{value : paymentAmount}(seaPortBasic);
+            require(success, "Purchase SeaPortBasicOrder failed");
+            if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
+                IERC721Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier);
+            } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
+                IERC1155Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier, seaPortBasic.offerAmount, "");
+            } else {
+                revert("Unknown BasicSeaPort offerToken type");
+            }
         } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
             require(success, "Purchase wyvernExchange failed");

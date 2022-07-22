@@ -22,4 +22,9 @@ interface ISeaPort {
         address recipient,
         uint256 maximumFulfilled
     ) external payable returns (bool[] memory availableOrders, LibSeaPort.Execution[] memory executions);
+
+    function fulfillBasicOrder(LibSeaPort.BasicOrderParameters calldata parameters)
+        external
+        payable
+        returns (bool fulfilled);
 }

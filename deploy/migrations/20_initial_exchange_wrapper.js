@@ -58,7 +58,7 @@ module.exports = async function (deployer, network) {
     console.log("Found deployed wrapper contract. using it");
   } catch(e) {
     console.log("Deploying new exchange wrapper contract");
-    await deployer.deploy(ExchangeWrapper, { gas: 1500000 });
+    await deployer.deploy(ExchangeWrapper, { gas: 2500000 });
     exchangeWrapper = await ExchangeWrapper.deployed();
   }
   const exchangeV2 = (await ExchangeV2.deployed()).address;

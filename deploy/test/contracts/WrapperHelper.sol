@@ -152,4 +152,8 @@ contract WrapperHelper {
             _maximumFulfilled
         );
     }
+
+    function getDataSeaPortBasic(LibSeaPort.BasicOrderParameters calldata seaPortBasic, bytes4 typeNft) external pure returns(bytes memory _data) {
+        _data = abi.encode(seaPortBasic, typeNft);
+    }
 }
