@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 truffle test \
-        ./test/ExchangeAgregator.test.js \
+        ./test/ExchangeWrapper.test.js \
         ./test/contracts/TestERC721.sol \
         ./test/contracts/TestERC1155.sol \
         ./test/contracts/WrapperHelper.sol \
-        ./test/exchange/contracts/LooksRareTestHelper.sol \
+        ./test/contracts/LooksRareTestHelper.sol \
         --compile-all

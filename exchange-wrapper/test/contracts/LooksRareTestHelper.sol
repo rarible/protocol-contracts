@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import {LibLooksRare} from "./libraries/LibLooksRare.sol";
+import {LibLooksRare} from "../../contracts/libraries/LibLooksRare.sol";
 
 interface IExecutionStrategy {
     function canExecuteTakerAsk(LibLooksRare.TakerOrder calldata takerAsk, LibLooksRare.MakerOrder calldata makerBid)
