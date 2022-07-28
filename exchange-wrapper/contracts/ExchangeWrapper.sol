@@ -9,11 +9,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./interfaces/IWyvernExchange.sol";
 import "./interfaces/IExchangeV2.sol";
 import "./interfaces/ISeaPort.sol";
+import "./interfaces/ILooksRare.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
 
-contract ExchangeWrapper is OwnableUpgradeable {
+contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
@@ -21,12 +23,14 @@ contract ExchangeWrapper is OwnableUpgradeable {
     IWyvernExchange public wyvernExchange;
     IExchangeV2 public exchangeV2;
     ISeaPort public seaPort;
+    ILooksRare public looksRare;
 
     enum Markets {
         ExchangeV2,
         WyvernExchange,
         SeaPortAdvancedOrders,
-        SeaPortBasicOrders
+        SeaPortBasicOrders,
+        LooksRareOrders
     }
 
     struct PurchaseDetails {
@@ -57,6 +61,10 @@ contract ExchangeWrapper is OwnableUpgradeable {
 
     function setSeaPort(ISeaPort _seaPort) external onlyOwner {
         seaPort = _seaPort;
+    }
+
+    function setLooksRare(ILooksRare _looksRare) external onlyOwner {
+        looksRare = _looksRare;
     }
 
     function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
@@ -99,6 +107,17 @@ contract ExchangeWrapper is OwnableUpgradeable {
         } else if (purchaseDetails.marketId == Markets.ExchangeV2) {
             (LibOrder.Order memory sellOrder, bytes memory sellOrderSignature, uint purchaseAmount) = abi.decode(purchaseDetails.data, (LibOrder.Order, bytes, uint));
             matchExchangeV2(sellOrder, sellOrderSignature, paymentAmount, purchaseAmount);
+        } else if (purchaseDetails.marketId == Markets.LooksRareOrders) {
+            (LibLooksRare.TakerOrder memory takerOrder, LibLooksRare.MakerOrder memory makerOrder, bytes4 typeNft) = abi.decode(purchaseDetails.data, (LibLooksRare.TakerOrder, LibLooksRare.MakerOrder, bytes4));
+            ILooksRare(looksRare).matchAskWithTakerBidUsingETHAndWETH{value : paymentAmount}(takerOrder, makerOrder);
+
+            if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
+                IERC721Upgradeable(makerOrder.collection).safeTransferFrom(address(this), _msgSender(), makerOrder.tokenId);
+            } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
+                IERC1155Upgradeable(makerOrder.collection).safeTransferFrom(address(this), _msgSender(), makerOrder.tokenId, makerOrder.amount, "");
+            } else {
+                revert("Unknown token type");
+            }
         } else {
             revert("Unknown purchase details");
         }
