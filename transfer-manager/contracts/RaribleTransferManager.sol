@@ -92,36 +92,36 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
 
     /**
         @notice executes the fee-side transfers (payment + fees)
-        @param calculateSide DealSide of the fee-side order
+        @param paymentSide DealSide of the fee-side order
         @param nftSide  DealSide of the nft-side order
         @param _protocolFee protocol fee for the match (always 0 for V2 and earlier orders)
         @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
         @return totalAmount of fee-side asset
     */
     function doTransfersWithFees(
-        LibDeal.DealSide memory calculateSide,
+        LibDeal.DealSide memory paymentSide,
         LibDeal.DealSide memory nftSide,
         uint _protocolFee,
         uint maxFeesBasePoint
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(calculateSide.asset.value, _protocolFee, calculateSide.originFees, maxFeesBasePoint);
-        uint rest = transferProtocolFee(totalAmount, calculateSide.asset.value, calculateSide.from, _protocolFee, calculateSide.asset.assetType, calculateSide.proxy);
+        totalAmount = calculateTotalAmount(paymentSide.asset.value, _protocolFee, paymentSide.originFees, maxFeesBasePoint);
+        uint rest = transferProtocolFee(totalAmount, paymentSide.asset.value, paymentSide.from, _protocolFee, paymentSide.asset.assetType, paymentSide.proxy);
 
-        rest = transferRoyalties(calculateSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, calculateSide.asset.value, calculateSide.from, calculateSide.proxy);
+        rest = transferRoyalties(paymentSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, paymentSide.asset.value, paymentSide.from, paymentSide.proxy);
         if (
-            calculateSide.originFees.length  == 1 &&
+            paymentSide.originFees.length  == 1 &&
             nftSide.originFees.length  == 1 &&
-            nftSide.originFees[0].account == calculateSide.originFees[0].account
+            nftSide.originFees[0].account == paymentSide.originFees[0].account
         ) { 
             LibPart.Part[] memory origin = new  LibPart.Part[](1);
             origin[0].account = nftSide.originFees[0].account;
-            origin[0].value = nftSide.originFees[0].value + calculateSide.originFees[0].value;
-            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, origin, calculateSide.from, calculateSide.proxy);
+            origin[0].value = nftSide.originFees[0].value + paymentSide.originFees[0].value;
+            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, origin, paymentSide.from, paymentSide.proxy);
         } else {
-            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, calculateSide.originFees, calculateSide.from, calculateSide.proxy);
-            (rest,) = transferFees(calculateSide.asset.assetType, rest, calculateSide.asset.value, nftSide.originFees, calculateSide.from, calculateSide.proxy);
+            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, paymentSide.originFees, paymentSide.from, paymentSide.proxy);
+            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, nftSide.originFees, paymentSide.from, paymentSide.proxy);
         }
-        transferPayouts(calculateSide.asset.assetType, rest, calculateSide.from, nftSide.payouts, calculateSide.proxy);
+        transferPayouts(paymentSide.asset.assetType, rest, paymentSide.from, nftSide.payouts, paymentSide.proxy);
     }
 
     function transferProtocolFee(
@@ -147,7 +147,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     }
 
     /**
-        @notice Transfer royalties
+        @notice Transfer royalties. If there is only one royalties receiver and one address in payouts and they match,
+           nothing is transferred in this function
         @param paymentAssetType Asset Type which represents payment
         @param nftAssetType Asset Type which represents NFT to pay royalties for
         @param payouts Payouts to be made
@@ -222,8 +223,8 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         newRest = rest;
         for (uint256 i = 0; i < fees.length; i++) {
             totalFees = totalFees.add(fees[i].value);
-            (uint temp, uint feeValue) = subFeeInBp(newRest, amount, fees[i].value);
-            newRest = temp;
+            uint feeValue;
+            (newRest, feeValue) = subFeeInBp(newRest, amount, fees[i].value);
             if (feeValue > 0) {
                 transfer(LibAsset.Asset(assetType, feeValue), from, fees[i].account, proxy);
             }
