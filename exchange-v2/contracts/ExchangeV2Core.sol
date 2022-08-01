@@ -156,12 +156,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
             if (msg.value > totalMakeValue) {
-                address(_msgSender()).transferEth(msg.value.sub(totalMakeValue));
+                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
-                address(_msgSender()).transferEth(msg.value.sub(totalTakeValue));
+                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
     }
