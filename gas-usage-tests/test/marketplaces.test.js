@@ -24,13 +24,21 @@ const WyvernTokenTransferProxy = artifacts.require("WyvernTokenTransferProxy.sol
 const MerkleValidator = artifacts.require("MerkleValidator.sol");
 const WyvernProxyRegistry = artifacts.require("WyvernProxyRegistry.sol");
 
+//X2Y2
+const ERC721Delegate = artifacts.require("ERC721Delegate.sol");
+const X2Y2_r1 = artifacts.require("X2Y2_r1.sol");
+const X2Y2TestHelper = artifacts.require("X2Y2TestHelper.sol");
+
 //TOKENS
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
+const WETH9 = artifacts.require('WETH9');
 
 //SEA PORT
 const ConduitController = artifacts.require("ConduitController.sol");
 const Seaport = artifacts.require("Seaport.sol");
+
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
 // UTILS
 const { Order, Asset, sign } = require("../../scripts/order.js");
@@ -736,6 +744,104 @@ contract("Test gas usage for marketplaces", accounts => {
     assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 10, "protocol")
     assert.equal(await erc20.balanceOf(seller), 100, "seller")
+  })
+
+  it("x2y2 ETH", async () => {
+
+    const x2y2helper = await X2Y2TestHelper.new()
+    const weth = await WETH9.new()
+
+    const x2y2 = await X2Y2_r1.new()
+    await x2y2.initialize(120000, weth.address)
+
+    //doesn't work?
+    //const x2y2 = await deployProxy(X2Y2_r1, [120000, weth.address], { initializer: "initialize" });
+
+    await weth.deposit({value: 100, from: buyer})
+    await weth.approve(x2y2.address, 100, {from: buyer})
+    
+    const erc721delegate = await ERC721Delegate.new();
+    await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
+    await x2y2.updateDelegates([erc721delegate.address], [])
+
+    const token = await TestERC721.new();
+    await token.mint(seller, tokenId)
+    await token.setApprovalForAll(erc721delegate.address, true, {from: seller})
+    const tokenDataToEncode = [
+      {
+        token: token.address,
+        tokenId: tokenId
+      }
+    ]
+    const data = await x2y2helper.encodeData(tokenDataToEncode)
+
+    const orderItem = {
+      price: 1000,
+      data: data
+    }
+
+    const order = {
+      "salt": "216015207580153061888244896739707431392",
+      "user": seller,
+      "network": "1337",
+      "intent": "1",
+      "delegateType": "1",
+      "deadline": "1758351144",
+      "currency": "0x0000000000000000000000000000000000000000",
+      "dataMask": "0x",
+      "items": [
+        orderItem
+      ],
+      "r": "0x280849c314a4d9b00804aba77c3434754166aea1a4973f4ec1e89d22f4bd335c",
+      "s": "0x0b9902ec5b79551d583e82b732cff01ec28fb8831587f8fe4f2e8249f7f4f49e",
+      "v": 27,
+      "signVersion": 1
+    }
+
+    const itemHash = await x2y2helper.hashItem(order, orderItem)
+
+    const input = 
+    {
+      "orders": [
+        order
+      ],
+      "details": [
+        {
+          "op": 1,
+          "orderIdx": "0",
+          "itemIdx": "0",
+          "price": "1000",
+          "itemHash": itemHash,
+          "executionDelegate": erc721delegate.address,
+          "dataReplacement": "0x",
+          "bidIncentivePct": "0",
+          "aucMinIncrementPct": "0",
+          "aucIncDurationSecs": "0",
+          "fees": [
+            {
+              "percentage": "5000",
+              "to": "0xd823c605807cc5e6bd6fc0d7e4eea50d3e2d66cd"
+            }
+          ]
+        }
+      ],
+      "shared": {
+        "salt": "427525989460197",
+        "deadline": "1758363251",
+        "amountToEth": "100",
+        "amountToWeth": "0",
+        "user": buyer,
+        "canFail": false
+      },
+      "r": "0xc0f030ffba87896654c2981bda9c5ef0849c33a2b637fea7a777c8019ca13427",
+      "s": "0x26b893c0b10eb13815aae1e899ecb02dd1b2ed1995c21e4f1eb745e14f49f51f",
+      "v": 28
+    }
+
+    const tx = await x2y2.run(input, {from: buyer, value: 900})
+
+    console.log("X2Y2: ETH <=> ERC721", tx.receipt.gasUsed)
+    assert.equal(await token.ownerOf(tokenId), buyer, "buyer has tokenId");
   })
 
   async function getOpenSeaMatchDataMerkleValidator(

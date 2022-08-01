@@ -5,6 +5,7 @@ const ExchangeV2 = artifacts.require("ExchangeV2.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC1155 = artifacts.require("TestERC1155.sol");
+const WETH9 = artifacts.require('WETH9');
 
 const TransferProxy = artifacts.require("TransferProxy.sol");
 const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
@@ -12,13 +13,19 @@ const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 
+//Wyvern
 const WyvernExchangeWithBulkCancellations = artifacts.require("WyvernExchangeWithBulkCancellations");
 const WyvernTokenTransferProxy = artifacts.require("WyvernTokenTransferProxy");
 const MerkleValidator = artifacts.require("MerkleValidator");
 const WyvernProxyRegistry = artifacts.require("WyvernProxyRegistry");
+
 //SEA PORT
 const ConduitController = artifacts.require("ConduitController.sol");
 const Seaport = artifacts.require("Seaport.sol");
+
+//X2Y2
+const ERC721Delegate = artifacts.require("ERC721Delegate.sol");
+const X2Y2_r1 = artifacts.require("X2Y2_r1.sol");
 
 const { Order, Asset, sign } = require("../../../scripts/order.js");
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
@@ -62,6 +69,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     wrapperHelper = await WrapperHelper.new();
 
     transferProxy = await TransferProxy.deployed();
+    
+    bulkExchange = await ExchangeBulkV2.deployed();
   })
 
   beforeEach(async () => {
@@ -72,14 +81,12 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
   });
-
+  
   describe("purcahase Seaport orders", () => {
     it("wrapper call SeaPortBasic ERC721<->ETH", async () => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new();
-      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
       await bulkExchange.setSeaPort(seaport.address);
 
       const buyerLocal1 = accounts[2];
@@ -126,8 +133,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
       const thirdPartAccount = accounts[3];
-      bulkExchange = await ExchangeBulkV2.new();
-      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      
       await bulkExchange.setSeaPort(seaport.address);
 
       const buyerLocal1 = accounts[2];
@@ -179,10 +185,10 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const _recipient = buyerLocal1;
 
       let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
-      const tradeDataSeaPort = PurchaseData(2, 110, dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(2, 100, dataForSeaportWithSelector);
       let feesUP = [];
 
-      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 100})
       console.log("wrapper seaport (fulfillAdvancedOrder() by call : ETH <=> ERC721", tx.receipt.gasUsed)
       assert.equal(await token.balanceOf(seller), 0);
       assert.equal(await token.balanceOf(buyerLocal1), 1);
@@ -192,8 +198,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
       const thirdPartAccount = accounts[3];
-      bulkExchange = await ExchangeBulkV2.new();
-      await bulkExchange.__ExchangeWrapper_init(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
       await bulkExchange.setSeaPort(seaport.address);
 
       const buyerLocal1 = accounts[2];
@@ -264,10 +268,10 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
         _recipient,
         _maximumFulfilled);
 
-      const tradeDataSeaPort = PurchaseData(2, 110, dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(2, 100, dataForSeaportWithSelector);
       let feesUP = [];
 
-      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 100})
       console.log("SEAPORT fulfillAvalibleAdvancedOrder, by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
       assert.equal(await token.balanceOf(seller), 0);
       assert.equal(await token.balanceOf(buyerLocal1), 1);
@@ -283,7 +287,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller3 = accounts[4];
       const feeRecipienter = accounts[5];
       const feeRecipienterUP = accounts[6];
-      /*Wyvern*/
+      //Wyvern
       const wyvernProxyRegistry = await WyvernProxyRegistry.new();
       await wyvernProxyRegistry.registerProxy( {from: seller1} );
       await wyvernProxyRegistry.registerProxy( {from: seller2} );
@@ -314,7 +318,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
       await bulkExchange.setWyvern(openSea.address)
 
       let feesUPDetect = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
@@ -385,7 +388,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
           )
         )
       );
-/*need to estimate gas consumption*/
 //      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
 //      console.log("Bulk2 Wyvern orders, ERC721<->ETH (num = 3), by tradeData, Gas consumption :", tx.receipt.gasUsed);
       assert.equal(await erc721.balanceOf(buyer), 3);
@@ -399,7 +401,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller3 = accounts[4];
       const feeRecipienter = accounts[5];
       const feeRecipienterUP = accounts[6];
-      /*Wyvern*/
       const wyvernProxyRegistry = await WyvernProxyRegistry.new();
       await wyvernProxyRegistry.registerProxy( {from: seller1} );
       await wyvernProxyRegistry.registerProxy( {from: seller2} );
@@ -430,7 +431,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
       await bulkExchange.setWyvern(openSea.address)
 
       let feesUPDetect = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
@@ -510,7 +510,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller3 = accounts[4];
       const feeRecipienter = accounts[5];
       const feeRecipienterUP = accounts[6];
-      /*Wyvern*/
       const wyvernProxyRegistry = await WyvernProxyRegistry.new();
       await wyvernProxyRegistry.registerProxy( {from: seller1} );
       await wyvernProxyRegistry.registerProxy( {from: seller2} );
@@ -541,7 +540,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
       await bulkExchange.setWyvern(openSea.address)
 
       let feesUPDetect = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
@@ -623,8 +621,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
-      /*NB!!! set buyer in payouts*/
+      //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([ [], [] ]);
 
@@ -635,7 +632,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
       let signatureLeft2 = await getSignature(left2, seller2, exchangeV2.address);
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
-      /*NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker*/
+      //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
       let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 1);
       const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
@@ -686,8 +683,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
-      /*NB!!! set buyer in payouts*/
+      //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([ [], [] ]);
 
@@ -698,7 +694,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
       let signatureLeft2 = await getSignature(left2, seller2, exchangeV2.address);
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
-      /*NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker*/
+      //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
       let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 6);
       const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
@@ -740,7 +736,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller2 = accounts[3];
       const feeRecipienter = accounts[5];
       const feeRecipienterUP = accounts[6];
-      /*Wyvern*/
+      //Wyvern
       const wyvernProxyRegistry = await WyvernProxyRegistry.new();
       await wyvernProxyRegistry.registerProxy( {from: seller1} );
       await wyvernProxyRegistry.registerProxy( {from: seller2} );
@@ -766,10 +762,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
       await bulkExchange.setWyvern(openSea.address)
 
-      /*for first order*/
+      //for first order
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
         bulkExchange.address,
@@ -787,7 +782,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let dataForWyvernCall1 = await wrapperHelper.getDataWyvernAtomicMatchWithError(buySellOrders1);
       const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 
-      /*for second order*/
+      //for second order
       const matchData2 = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
         bulkExchange.address,
@@ -817,7 +812,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       		)
       	)
       );
-      /*exception if wrong method*/
+      //exception if wrong method
       await expectThrow(
         bulkExchange.singlePurchase(tradeData1, feesUP, { from: buyer, value: 400, gasPrice: 0 })
       );
@@ -830,7 +825,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller1 = accounts[1];
       const feeRecipienter = accounts[5];
       const feeRecipienterUP = accounts[6];
-      /*Wyvern*/
+      //Wyvern
       const wyvernProxyRegistry = await WyvernProxyRegistry.new();
       await wyvernProxyRegistry.registerProxy( {from: seller1} );
 
@@ -851,7 +846,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.setFeeReceiver(eth, protocol);
       await exchangeV2.setFeeReceiver(erc20.address, protocol);
 
-      bulkExchange = await ExchangeBulkV2.deployed();
       await bulkExchange.setWyvern(openSea.address)
 
       let feesUPFirst = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
@@ -876,7 +870,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let dataForWyvernCall1 = await wrapperHelper.getDataWyvernAtomicMatch(buySellOrders1);
       const tradeData1 = PurchaseData(1, 100, dataForWyvernCall1);
 
-      /*enough ETH for purchase*/
+      //enough ETH for purchase
       await verifyBalanceChange(buyer, 115, async () =>
       	verifyBalanceChange(seller1, -90, async () =>
       		verifyBalanceChange(feeRecipienter, -10, () =>
@@ -892,6 +886,104 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
     })
   });
+  
+  describe ("x2y2", () => {
+    it("x2y2 single", async () => {
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const weth = await WETH9.new()
+
+      const x2y2 = await X2Y2_r1.new()
+      await x2y2.initialize(120000, weth.address)
+
+      const erc721delegate = await ERC721Delegate.new();
+      await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
+      await x2y2.updateDelegates([erc721delegate.address], [])
+
+      await bulkExchange.setX2Y2(x2y2.address)
+
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
+
+      const tokenDataToEncode = [
+        {
+          token: erc721.address,
+          tokenId: tokenId
+        }
+      ]
+
+      const data = await wrapperHelper.encodeData(tokenDataToEncode)
+      const orderItem = {
+        price: 1000,
+        data: data
+      }
+
+      const order = {
+        "salt": "216015207580153061888244896739707431392",
+        "user": seller,
+        "network": "1337",
+        "intent": "1",
+        "delegateType": "1",
+        "deadline": "1758351144",
+        "currency": "0x0000000000000000000000000000000000000000",
+        "dataMask": "0x",
+        "items": [
+          orderItem
+        ],
+        "r": "0x280849c314a4d9b00804aba77c3434754166aea1a4973f4ec1e89d22f4bd335c",
+        "s": "0x0b9902ec5b79551d583e82b732cff01ec28fb8831587f8fe4f2e8249f7f4f49e",
+        "v": 27,
+        "signVersion": 1
+      }
+  
+      const itemHash = await wrapperHelper.hashItem(order, orderItem)
+      
+      const input = 
+      {
+        "orders": [
+          order
+        ],
+        "details": [
+          {
+            "op": 1,
+            "orderIdx": "0",
+            "itemIdx": "0",
+            "price": "1000",
+            "itemHash": itemHash,
+            "executionDelegate": erc721delegate.address,
+            "dataReplacement": "0x",
+            "bidIncentivePct": "0",
+            "aucMinIncrementPct": "0",
+            "aucIncDurationSecs": "0",
+            "fees": [
+              {
+                "percentage": "5000",
+                "to": "0xd823c605807cc5e6bd6fc0d7e4eea50d3e2d66cd"
+              }
+            ]
+          }
+        ],
+        "shared": {
+          "salt": "427525989460197",
+          "deadline": "1758363251",
+          "amountToEth": "0",
+          "amountToWeth": "0",
+          "user": bulkExchange.address,
+          "canFail": false
+        },
+        "r": "0xc0f030ffba87896654c2981bda9c5ef0849c33a2b637fea7a777c8019ca13427",
+        "s": "0x26b893c0b10eb13815aae1e899ecb02dd1b2ed1995c21e4f1eb745e14f49f51f",
+        "v": 28
+      }
+
+      const tradeData = PurchaseData(4, 1000, await wrapperHelper.encodeX2Y2Call(input))
+
+      const tx = await bulkExchange.singlePurchase(tradeData, [], {from: buyer, value: 1000})
+
+      console.log(tx.receipt.gasUsed)
+      assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
+    })
+  })
 
 	function encDataV2(tuple) {
     return helper.encodeV2(tuple);
