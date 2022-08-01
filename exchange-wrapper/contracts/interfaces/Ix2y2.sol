@@ -3,10 +3,6 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-interface IDelegate {
-
-}
-
 interface Ix2y2 {
 
     struct OrderItem {
@@ -47,7 +43,7 @@ interface Ix2y2 {
         uint256 itemIdx;
         uint256 price;
         bytes32 itemHash;
-        IDelegate executionDelegate;
+        address executionDelegate;
         bytes dataReplacement;
         uint256 bidIncentivePct;
         uint256 aucMinIncrementPct;
