@@ -16,8 +16,9 @@ import "./interfaces/IWyvernExchange.sol";
 import "./interfaces/IExchangeV2.sol";
 import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
+import "./interfaces/ILooksRare.sol";
 
-contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable {
+contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
@@ -26,13 +27,15 @@ contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable {
     IExchangeV2 public exchangeV2;
     ISeaPort public seaPort;
     Ix2y2 public x2y2;
+    ILooksRare public looksRare;
 
     enum Markets {
         ExchangeV2,
         WyvernExchange,
         SeaPortAdvancedOrders,
         SeaPortBasicOrders,
-        X2Y2
+        X2Y2,
+        LooksRareOrders
     }
 
     struct PurchaseDetails {
@@ -45,7 +48,8 @@ contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable {
         IWyvernExchange _wyvernExchange,
         IExchangeV2 _exchangeV2,
         ISeaPort _seaPort,
-        Ix2y2 _x2y2
+        Ix2y2 _x2y2,
+        ILooksRare _looksRare
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
@@ -53,6 +57,7 @@ contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable {
         exchangeV2 = _exchangeV2;
         seaPort = _seaPort;
         x2y2 = _x2y2;
+        looksRare = _looksRare;
     }
 
     function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
@@ -69,6 +74,10 @@ contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable {
 
     function setX2Y2(Ix2y2 _x2y2) external onlyOwner {
         x2y2 = _x2y2;
+    }
+
+    function setLooksRare(ILooksRare _looksRare) external onlyOwner {
+        looksRare = _looksRare;
     }
 
     function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
@@ -123,6 +132,17 @@ contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable {
                     }    
                 }
             } 
+        } else if (purchaseDetails.marketId == Markets.LooksRareOrders) {
+            (LibLooksRare.TakerOrder memory takerOrder, LibLooksRare.MakerOrder memory makerOrder, bytes4 typeNft) = abi.decode(purchaseDetails.data, (LibLooksRare.TakerOrder, LibLooksRare.MakerOrder, bytes4));
+            ILooksRare(looksRare).matchAskWithTakerBidUsingETHAndWETH{value : paymentAmount}(takerOrder, makerOrder);
+
+            if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
+                IERC721Upgradeable(makerOrder.collection).safeTransferFrom(address(this), _msgSender(), makerOrder.tokenId);
+            } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
+                IERC1155Upgradeable(makerOrder.collection).safeTransferFrom(address(this), _msgSender(), makerOrder.tokenId, makerOrder.amount, "");
+            } else {
+                revert("Unknown token type");
+            }
         } else {
             revert("Unknown purchase details");
         }

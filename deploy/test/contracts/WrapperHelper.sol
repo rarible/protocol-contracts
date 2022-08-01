@@ -11,6 +11,8 @@ import {LibOrder} from "../../contracts/ExchangeWrapperImport.sol";
 import {LibSeaPort} from "@rarible/exchange-wrapper/contracts/libraries/LibSeaPort.sol";
 import {ISeaPort} from "@rarible/exchange-wrapper/contracts/interfaces/ISeaPort.sol";
 import {Ix2y2} from "@rarible/exchange-wrapper/contracts/interfaces/Ix2y2.sol";
+import {LibLooksRare} from "@rarible/exchange-wrapper/contracts/libraries/LibLooksRare.sol";
+import {ILooksRare} from "@rarible/exchange-wrapper/contracts/interfaces/ILooksRare.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -162,10 +164,6 @@ contract WrapperHelper {
         return abi.encode(data);
     }
 
-    function decodeData(bytes calldata data) external pure returns(Ix2y2.Pair[] memory) {
-        return abi.decode(data, (Ix2y2.Pair[]));
-    }
-
     function hashItem(Ix2y2.Order memory order, Ix2y2.OrderItem memory item)
         external
         pure
@@ -192,4 +190,8 @@ contract WrapperHelper {
     }
 
     
+    function getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(LibLooksRare.TakerOrder calldata _takerBid, LibLooksRare.MakerOrder calldata _makerAsk, bytes4 typeNft) external pure returns(bytes memory _data) {
+        _data = abi.encode(_takerBid, _makerAsk, typeNft);
+    }
+
 }
