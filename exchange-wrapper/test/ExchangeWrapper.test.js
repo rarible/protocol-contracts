@@ -107,7 +107,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       assert.equal(await token.balanceOf(buyerLocal1), 0);
       let dataForLooksRare = await wrapperHelper.getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk, ERC721);
-      const tradeDataSeaPort = PurchaseData(5, 10000, dataForLooksRare);
+      const tradeDataSeaPort = PurchaseData(4, 10000, dataForLooksRare);
       let feesUP = [];
 
       const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 10000})
@@ -171,7 +171,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       assert.equal(await token.balanceOf(buyerLocal1, tokenId), 0);
       let dataForLooksRare = await wrapperHelper.getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk, ERC1155);
-      const tradeDataSeaPort = PurchaseData(5, 10000, dataForLooksRare);
+      const tradeDataSeaPort = PurchaseData(4, 10000, dataForLooksRare);
       let feesUP = [];
 
       const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 10000})
@@ -270,7 +270,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
         "v": 28
       }
 
-      const tradeData = PurchaseData(4, 1000, await wrapperHelper.encodeX2Y2Call(input))
+      const tradeData = PurchaseData(3, 1000, await wrapperHelper.encodeX2Y2Call(input))
 
       const tx = await bulkExchange.singlePurchase(tradeData, [], {from: buyer, value: 1000})
 

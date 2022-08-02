@@ -19,7 +19,7 @@ import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
 
-contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable, ERC1155HolderUpgradeable {
+contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155HolderUpgradeable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
@@ -192,4 +192,6 @@ contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable, ERC1155
     }
 
     receive() external payable {}
+
+    uint256[50] private __gap;
 }

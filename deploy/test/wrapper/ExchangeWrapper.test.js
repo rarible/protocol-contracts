@@ -83,51 +83,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   });
   
   describe("purcahase Seaport orders", () => {
-    it("wrapper call SeaPortBasic ERC721<->ETH", async () => {
-      const conduitController = await ConduitController.new();
-      const seaport = await Seaport.new(conduitController.address)
-
-      await bulkExchange.setSeaPort(seaport.address);
-
-      const buyerLocal1 = accounts[2];
-      const token = await TestERC721.new();
-      await token.mint(seller, tokenId)
-      await token.setApprovalForAll(seaport.address, true, {from: seller})
-
-      const basicOrder = {
-        offerer: seller,
-        zone: zoneAddr,
-        basicOrderType: 0,
-        offerToken: token.address,
-        offerIdentifier: '0x3039',
-        offerAmount: '0x01',
-        considerationToken: '0x0000000000000000000000000000000000000000',
-        considerationIdentifier: '0x00',
-        considerationAmount: '1000',
-        startTime: 0,
-        endTime: '0xff00000000000000000000000000',
-        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
-        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885',
-        totalOriginalAdditionalRecipients: '0x01',
-        signature: '0x41651a6ed862341d20819a3c8a326b43c3fbc8f8dd9a0cde3b292c61665e8ed46592c083bb29f6f9dc68df824d02bbc9bc752b68081c95866d7d654659b3580f1b',
-        offererConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
-        fulfillerConduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
-        additionalRecipients: [
-          {
-            amount: '100',
-            recipient: '0x6ef1ff55b97d3FfDD8E2C125874296587907C0fc'
-          }
-        ]
-      }
-        let dataForSeaport = await wrapperHelper.getDataSeaPortBasic(basicOrder, ERC721);
-        const tradeDataSeaPort = PurchaseData(3, 1100, dataForSeaport);
-        let feesUP = [];
-
-        const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feesUP, {from: buyerLocal1, value: 2000})
-        console.log("wrapper call SeaPortBasic: ETH <=> ERC721", tx.receipt.gasUsed)
-        assert.equal(await token.balanceOf(seller), 0);
-        assert.equal(await token.balanceOf(buyerLocal1), 1);
-      })
 
     it("wrapper seaport (fulfillAdvancedOrder through data selector, method fulfillAdvancedOrder) ERC721<->ETH", async () => {
       const conduitController = await ConduitController.new();
@@ -976,7 +931,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
         "v": 28
       }
 
-      const tradeData = PurchaseData(4, 1000, await wrapperHelper.encodeX2Y2Call(input))
+      const tradeData = PurchaseData(3, 1000, await wrapperHelper.encodeX2Y2Call(input))
 
       const tx = await bulkExchange.singlePurchase(tradeData, [], {from: buyer, value: 1000})
 
