@@ -156,71 +156,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
             if (msg.value > totalMakeValue) {
-                address(_msgSender()).transferEth(msg.value.sub(totalMakeValue));
+                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
-                address(_msgSender()).transferEth(msg.value.sub(totalTakeValue));
+                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
-    }
-
-    /**
-        @notice determines the max amount of fees for the match
-        @param dataTypeLeft data type of the left order
-        @param dataTypeRight data type of the right order
-        @param leftOrderData data of the left order
-        @param rightOrderData data of the right order
-        @param feeSide fee side of the match
-        @param _protocolFee protocol fee of the match
-        @return max fee amount in base points
-    */
-    function getMaxFee(
-        bytes4 dataTypeLeft, 
-        bytes4 dataTypeRight, 
-        LibOrderData.GenericOrderData memory leftOrderData, 
-        LibOrderData.GenericOrderData memory rightOrderData,
-        LibFeeSide.FeeSide feeSide,
-        uint _protocolFee
-    ) internal pure returns(uint) { 
-        if (
-            dataTypeLeft != LibOrderDataV3.V3_SELL && 
-            dataTypeRight != LibOrderDataV3.V3_SELL &&
-            dataTypeLeft != LibOrderDataV3.V3_BUY && 
-            dataTypeRight != LibOrderDataV3.V3_BUY 
-        ){
-            return 0;
-        }
-        
-        uint matchFees = getSumFees(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
-        uint maxFee;
-        if (feeSide == LibFeeSide.FeeSide.LEFT) {
-            maxFee = rightOrderData.maxFeesBasePoint;
-            require(
-                dataTypeLeft == LibOrderDataV3.V3_BUY && 
-                dataTypeRight == LibOrderDataV3.V3_SELL,
-                "wrong V3 type1"
-            );
-            
-        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
-            maxFee = leftOrderData.maxFeesBasePoint;
-            require(
-                dataTypeRight == LibOrderDataV3.V3_BUY && 
-                dataTypeLeft == LibOrderDataV3.V3_SELL,
-                "wrong V3 type2"
-            );
-        } else {
-            return 0;
-        }
-        require(
-            maxFee > 0 &&
-            maxFee >= matchFees &&
-            maxFee <= 1000, 
-            "wrong maxFee"
-        );
-        
-        return maxFee;
     }
 
     function getDealData(
@@ -241,6 +184,63 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             dealData.feeSide,
             dealData.protocolFee
         );
+    }
+
+    /**
+        @notice determines the max amount of fees for the match
+        @param dataTypeLeft data type of the left order
+        @param dataTypeRight data type of the right order
+        @param leftOrderData data of the left order
+        @param rightOrderData data of the right order
+        @param feeSide fee side of the match
+        @param _protocolFee protocol fee of the match
+        @return max fee amount in base points
+    */
+    function getMaxFee(
+        bytes4 dataTypeLeft,
+        bytes4 dataTypeRight,
+        LibOrderData.GenericOrderData memory leftOrderData,
+        LibOrderData.GenericOrderData memory rightOrderData,
+        LibFeeSide.FeeSide feeSide,
+        uint _protocolFee
+    ) internal pure returns(uint) {
+        if (
+            dataTypeLeft != LibOrderDataV3.V3_SELL &&
+            dataTypeRight != LibOrderDataV3.V3_SELL &&
+            dataTypeLeft != LibOrderDataV3.V3_BUY &&
+            dataTypeRight != LibOrderDataV3.V3_BUY
+        ){
+            return 0;
+        }
+
+        uint matchFees = getSumFees(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
+        uint maxFee;
+        if (feeSide == LibFeeSide.FeeSide.LEFT) {
+            maxFee = rightOrderData.maxFeesBasePoint;
+            require(
+                dataTypeLeft == LibOrderDataV3.V3_BUY &&
+                dataTypeRight == LibOrderDataV3.V3_SELL,
+                "wrong V3 type1"
+            );
+
+        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
+            maxFee = leftOrderData.maxFeesBasePoint;
+            require(
+                dataTypeRight == LibOrderDataV3.V3_BUY &&
+                dataTypeLeft == LibOrderDataV3.V3_SELL,
+                "wrong V3 type2"
+            );
+        } else {
+            return 0;
+        }
+        require(
+            maxFee > 0 &&
+            maxFee >= matchFees &&
+            maxFee <= 1000,
+            "wrong maxFee"
+        );
+
+        return maxFee;
     }
 
     /**

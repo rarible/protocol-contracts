@@ -16,7 +16,6 @@ library LibOrder {
         "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
     );
 
-    uint constant ON_CHAIN_ORDER = 0;
     bytes4 constant DEFAULT_ORDER_TYPE = 0xffffffff;
 
     struct Order {
@@ -29,11 +28,6 @@ library LibOrder {
         uint end;
         bytes4 dataType;
         bytes data;
-    }
-
-    struct MatchedAssets {
-        LibAsset.AssetType makeMatch;
-        LibAsset.AssetType takeMatch;
     }
 
     function calculateRemaining(Order memory order, uint fill, bool isMakeFill) internal pure returns (uint makeValue, uint takeValue) {

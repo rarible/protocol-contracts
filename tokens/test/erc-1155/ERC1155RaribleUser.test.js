@@ -7,7 +7,6 @@ const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.s
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require("./mint");
 
-
 contract("ERC1155RaribleUser", accounts => {
 
   let token;
@@ -27,7 +26,7 @@ contract("ERC1155RaribleUser", accounts => {
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [whiteListProxy], accounts[6], accounts[7], {from: tokenOwner});
+    await token.__ERC1155RaribleUser_init(name, "TST", "ipfs:/", "ipfs:/", [], accounts[6], accounts[7], {from: tokenOwner});
   });
 
   it("approve for all", async () => {
@@ -122,7 +121,7 @@ contract("ERC1155RaribleUser", accounts => {
     const tokenURI = "//uri";
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), minter);
 
-    const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, mint, {from: whiteListProxy});
+    const tx = await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), fees([royaltiesBeneficiary1,royaltiesBeneficiary2,royaltiesBeneficiary3]), [signature]], transferTo, mint, {from: tokenOwner});
     const addressValue = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
 
     assert.equal(addressValue[0], royaltiesBeneficiary1, "account");
@@ -165,7 +164,7 @@ contract("ERC1155RaribleUser", accounts => {
 
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy});
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: tokenOwner});
 
 		assert.equal(await token.uri(tokenId), "ipfs:/" + tokenURI);
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
@@ -266,15 +265,13 @@ contract("ERC1155RaribleUser", accounts => {
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], minter);
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: minter})
     );
 
-    await token.setApprovalForAll(whiteListProxy, true, {from: minter})
     await token.addMinter(minter, {from: tokenOwner});
     assert.equal(await token.isMinter(minter), true);
-    assert.equal(await token.isMinter(whiteListProxy), false);
 
-    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+    await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: minter})
     assert.equal(await token.balanceOf(transferTo, tokenId), mint);
     assert.equal(await token.balanceOf(minter, tokenId), 0);
   });
@@ -291,13 +288,11 @@ contract("ERC1155RaribleUser", accounts => {
     const signature = await getSignature(tokenId, tokenURI, supply, creators([minter]), [], transferTo);
 
     await expectThrow(
-      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})
+      token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: minter})
     );
 
-    await token.setApprovalForAll(whiteListProxy, true, {from: minter})
     await token.addMinter(minter, {from: tokenOwner});
     assert.equal(await token.isMinter(minter), true);
-    assert.equal(await token.isMinter(whiteListProxy), false);
 
     await expectThrow(
       token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [signature]], transferTo, mint, {from: whiteListProxy})

@@ -157,7 +157,7 @@ async function updateImplementation(beacon, newImpl){
   const oldImpl = await beacon.implementation();
   if (oldImpl != newImpl){
     console.log(`old impl = ${oldImpl}`)
-    await beacon.upgradeTo(newImpl)
+    await beacon.upgradeTo(newImpl, { gas: 200000 })
     console.log(`new impl = ${await beacon.implementation()}`)
   }
 }

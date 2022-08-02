@@ -43,6 +43,16 @@ contract("MinterAccessControl", accounts => {
     assert.equal(await token.isMinter(minter), true);
   })
 
+  it("should add a list of minters and emit events", async () => {
+    const minter = accounts[2];
+    const minter2 = accounts[3];
+
+    await token.addMinters([minter, minter2], {from: tokenOwner})
+
+    assert.equal(await token.isMinter(minter), true);
+    assert.equal(await token.isMinter(minter2), true);
+  })
+
   it("should remove a minter and emit event", async () => {
     const minter = accounts[2];
 
