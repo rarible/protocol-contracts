@@ -11,6 +11,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
 
 import "./interfaces/IWyvernExchange.sol";
 import "./interfaces/IExchangeV2.sol";
@@ -18,7 +19,7 @@ import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
 
-contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable {
+contract ExchangeWrapper is OwnableUpgradeable, ERC721HolderUpgradeable, ERC1155HolderUpgradeable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
@@ -189,12 +190,6 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable {
 
         IExchangeV2(exchangeV2).matchOrders{value : paymentAmount }(sellOrder, sellOrderSignature, buyerOrder, "");
     }
-
-    //this method need to prevent error ERC1155: transfer to non ERC1155Receiver implementer
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
 
     receive() external payable {}
 }
