@@ -34,7 +34,6 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         ExchangeV2,
         WyvernExchange,
         SeaPortAdvancedOrders,
-        SeaPortBasicOrders,
         X2Y2,
         LooksRareOrders
     }
@@ -104,17 +103,6 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         if (purchaseDetails.marketId == Markets.SeaPortAdvancedOrders){
             (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
             require(success, "Purchase SeaPortAdvancedOrders failed");
-        } else if (purchaseDetails.marketId == Markets.SeaPortBasicOrders) {
-            (LibSeaPort.BasicOrderParameters memory seaPortBasic, bytes4 typeNft) = abi.decode(purchaseDetails.data, (LibSeaPort.BasicOrderParameters, bytes4));
-            bool success = ISeaPort(seaPort).fulfillBasicOrder{value : paymentAmount}(seaPortBasic);
-            require(success, "Purchase SeaPortBasicOrder failed");
-            if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
-                IERC721Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier);
-            } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
-                IERC1155Upgradeable(seaPortBasic.offerToken).safeTransferFrom(address(this), _msgSender(), seaPortBasic.offerIdentifier, seaPortBasic.offerAmount, "");
-            } else {
-                revert("Unknown BasicSeaPort offerToken type");
-            }
         } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
             require(success, "Purchase wyvernExchange failed");

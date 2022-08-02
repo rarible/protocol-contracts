@@ -3,7 +3,11 @@
 pragma solidity >=0.6.9 <0.8.0;
 pragma abicoder v2;
 
-import "@rarible/exchange-v2/contracts/libraries/LibOrder.sol";
+import "@rarible/exchange-v2/contracts/ExchangeV2.sol";
+
+import {RoyaltiesRegistry} from "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol";
+import {TransferProxy} from "@rarible/transfer-proxy/contracts/proxy/TransferProxy.sol";
+import {ERC20TransferProxy} from "@rarible/transfer-proxy/contracts/proxy/ERC20TransferProxy.sol";
 
 interface IExchangeV2 {
     function matchOrders(
