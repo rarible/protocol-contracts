@@ -31,6 +31,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   const erc1155TokenId3 = 57;
   let erc721;
   let erc1155;
+  const feeRecipienterUP = accounts[6];
 
   before(async () => {
     helper = await RaribleTestHelper.new();
@@ -47,7 +48,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
   });
-  
+
   describe("bulkPurchase Rarible orders", () => {
 
     it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC721<->ETH", async () => {
@@ -55,7 +56,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller1 = accounts[1];
       const seller2 = accounts[3];
       const seller3 = accounts[4];
-      const feeRecipienterUP = accounts[6];
+      
       await erc721.mint(seller1, erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
       await erc721.mint(seller2, erc721TokenId2);
@@ -64,8 +65,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller3});
 
       exchangeV2 = await ExchangeV2.deployed();
-      await exchangeV2.setProtocolFee(300);
-
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([ [], [] ]);
@@ -80,29 +79,27 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
       let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 1);
-      const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData1 = PurchaseData(0, 100, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall2 = await wrapperHelper.getDataExchangeV2SellOrders(left2, signatureLeft2, 1);
-      const tradeData2 = PurchaseData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData2 = PurchaseData(0, 100, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall3 = await wrapperHelper.getDataExchangeV2SellOrders(left3, signatureLeft3, 1);
-      const tradeData3 = PurchaseData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let feesUPDetect = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
-      let feesUP = [feesUPDetect];
+      const feeSecond = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
+
     	await verifyBalanceChange(buyer, 345, async () =>
     		verifyBalanceChange(seller1, -100, async () =>
     		  verifyBalanceChange(seller2, -100, async () =>
     		    verifyBalanceChange(seller3, -100, async () =>
     			    verifyBalanceChange(feeRecipienterUP, -45, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 })
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], 0, feeSecond, false, { from: buyer, value: 400, gasPrice: 0 })
     				  )
     				)
     			)
     		)
     	);
-//      const tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 });
-//      console.log("Bulk, by bulkPurchase ERC721<->ETH (num = 3), Gas consumption :",tx.receipt.gasUsed);
       assert.equal(await erc721.balanceOf(seller1), 0);
       assert.equal(await erc721.balanceOf(seller2), 0);
       assert.equal(await erc721.balanceOf(seller3), 0);
@@ -114,7 +111,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const seller1 = accounts[1];
       const seller2 = accounts[3];
       const seller3 = accounts[4];
-      const feeRecipienterUP = accounts[6];
+      
       await erc1155.mint(seller1, erc1155TokenId1, 10);
       await erc1155.setApprovalForAll(transferProxy.address, true, {from: seller1});
       await erc1155.mint(seller2, erc1155TokenId2, 10);
@@ -123,7 +120,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc1155.setApprovalForAll(transferProxy.address, true, {from: seller3});
 
       exchangeV2 = await ExchangeV2.deployed();
-      await exchangeV2.setProtocolFee(300);
 
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
@@ -139,22 +135,22 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
       let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 6);
-      const tradeData1 = PurchaseData(0, 100, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData1 = PurchaseData(0, 60, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall2 = await wrapperHelper.getDataExchangeV2SellOrders(left2, signatureLeft2, 8);
-      const tradeData2 = PurchaseData(0, 100, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData2 = PurchaseData(0, 80, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       let dataForExchCall3 = await wrapperHelper.getDataExchangeV2SellOrders(left3, signatureLeft3, 10);
-      const tradeData3 = PurchaseData(0, 100, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let feesUPDetect = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500); //15%
-      let feesUP = [feesUPDetect];
+      const feeFirst = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
+
     	await verifyBalanceChange(buyer, 276, async () =>
     		verifyBalanceChange(seller1, -60, async () =>
     		  verifyBalanceChange(seller2, -80, async () =>
     		    verifyBalanceChange(seller3, -100, async () =>
     			    verifyBalanceChange(feeRecipienterUP, -36, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feesUP, { from: buyer, value: 400, gasPrice: 0 })
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeFirst, 0, false, { from: buyer, value: 400, gasPrice: 0 })
     				  )
     				)
     			)
@@ -178,7 +174,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   	return helper.encode(tuple)
   }
 
-  function PurchaseData(marketId, amount, data) {return {marketId, amount, data};};
+  function PurchaseData(marketId, amount, addFee, data) {
+    return {marketId, amount, addFee, data};
+  };
 	async function getSignature(order, signer, exchangeContract) {
 		return sign(order, signer, exchangeContract);
 	}

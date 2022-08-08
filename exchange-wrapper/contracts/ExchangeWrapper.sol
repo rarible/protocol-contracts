@@ -38,9 +38,17 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         LooksRareOrders
     }
 
+    /**
+        @notice struct for the purchase data
+        @param marketId - market key from Markets enum (what market to use)
+        @param amount - eth price (amount of eth that needs to be send to the marketplace)
+        @param addFee - true if wrapper adds additional fees on top of the order
+        @param data - data for market call 
+     */
     struct PurchaseDetails {
         Markets marketId;
         uint256 amount;
+        bool addFee;
         bytes data;
     }
 
@@ -80,25 +88,39 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         looksRare = _looksRare;
     }
 
-    function singlePurchase(PurchaseDetails memory purchaseDetails, uint[] memory fees) external payable {
-        purchase(purchaseDetails);
+    /**
+        @notice executes a single purchase
+        @param purchaseDetails - deatails about the purchase (more info in PurchaseDetails struct)
+        @param originFeeFirst - first optional fee (address + amount encoded in uint, first 12 bytes are amount, last 20 bytes are address)
+        @param originFeeSecond - second optional fee (address + amount encoded in uint, first 12 bytes are amount, last 20 bytes are address)
+     */
+    function singlePurchase(PurchaseDetails memory purchaseDetails, uint originFeeFirst, uint originFeeSecond) external payable {
+        uint amountForFees = purchase(purchaseDetails);
 
-        feesTransfer(msg.value, fees);
+        _transferFees(amountForFees, originFeeFirst, originFeeSecond);
 
-        changeTransfer();
+        transferChange();
     }
 
-    function bulkPurchase(PurchaseDetails[] memory purchaseDetails, uint[] memory fees) external payable {
+    /**
+        @notice executes an array of purchases
+        @param purchaseDetails - array of deatails about the purchases (more info in PurchaseDetails struct)
+        @param originFeeFirst - first optional fee (address + amount encoded in uint, first 12 bytes are amount, last 20 bytes are address)
+        @param originFeeSecond - second optional fee (address + amount encoded in uint, first 12 bytes are amount, last 20 bytes are address)
+        @param allowFail - true if fails while executing orders are allowed, false if fail of a single order means fail of the whole batch
+     */
+    function bulkPurchase(PurchaseDetails[] memory purchaseDetails, uint originFeeFirst, uint originFeeSecond, bool allowFail) external payable {
+        uint amountForFees = 0;
         for (uint i = 0; i < purchaseDetails.length; i++) {
-            purchase(purchaseDetails[i]);
+            amountForFees = amountForFees + purchase(purchaseDetails[i]);
         }
 
-        feesTransfer(msg.value, fees);
+        _transferFees(amountForFees, originFeeFirst, originFeeSecond);
 
-        changeTransfer();
+        transferChange();
     }
 
-    function purchase(PurchaseDetails memory purchaseDetails) internal {
+    function purchase(PurchaseDetails memory purchaseDetails) internal returns(uint){
         uint paymentAmount = purchaseDetails.amount;
         if (purchaseDetails.marketId == Markets.SeaPortAdvancedOrders){
             (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
@@ -135,22 +157,26 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         } else {
             revert("Unknown purchase details");
         }
+
+        return (purchaseDetails.addFee) ? paymentAmount : 0;
     }
 
-    function feesTransfer(uint amount, uint[] memory fees) internal {
-        uint spent = amount.sub(address(this).balance);
-        for (uint i = 0; i < fees.length; i++) {
-            uint feeValue = spent.bp(uint(fees[i] >> 160));
-            if (feeValue > 0) {
-                LibTransfer.transferEth(address(fees[i]), feeValue);
-            }
+    function _transferFees(uint amount, uint originFeeFirst, uint originFeeSecond) internal {
+        _transferFee(amount, originFeeFirst);
+        _transferFee(amount, originFeeSecond);
+    }
+
+    function _transferFee(uint amount, uint fee) internal {
+        uint feeValue = amount.bp(uint(fee >> 160));
+        if (feeValue > 0) {
+            LibTransfer.transferEth(address(fee), feeValue);
         }
     }
 
-    function changeTransfer() internal {
+    function transferChange() internal {
         uint ethAmount = address(this).balance;
         if (ethAmount > 0) {
-            address(_msgSender()).transferEth(ethAmount);
+            address(msg.sender).transferEth(ethAmount);
         }
     }
 
