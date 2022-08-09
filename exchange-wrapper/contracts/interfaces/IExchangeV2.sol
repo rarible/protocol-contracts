@@ -16,4 +16,8 @@ interface IExchangeV2 {
         LibOrder.Order memory orderRight,
         bytes memory signatureRight
     ) external payable;
+
+    function directPurchase(
+        LibDirectTransfer.Purchase calldata direct
+    ) external payable;
 }

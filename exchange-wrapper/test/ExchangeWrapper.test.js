@@ -42,8 +42,10 @@ const X2Y2_r1 = artifacts.require("X2Y2_r1.sol");
 
 const { Order, Asset, sign } = require("../../scripts/order.js");
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../../scripts/assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 
 contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let bulkExchange;
@@ -562,61 +564,58 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     })
   });
 
-  describe("bulkPurchase Rarible orders", () => {
+  describe("Rarible orders", () => {
 
-    it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC721<->ETH", async () => {
+    it("Test V2 order", async () => {
       const buyer = accounts[2];
       const seller1 = accounts[1];
-      const seller2 = accounts[3];
-      const seller3 = accounts[4];
       
       await erc721.mint(seller1, erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
-      await erc721.mint(seller2, erc721TokenId2);
-      await erc721.setApprovalForAll(transferProxy.address, true, {from: seller2});
-      await erc721.mint(seller3, erc721TokenId3);
-      await erc721.setApprovalForAll(transferProxy.address, true, {from: seller3});
 
       await deployRarible()
-      //NB!!! set buyer in payouts
+
       const encDataLeft = await encDataV2([[], [], false]);
-      const encDataLeftV1 = await encDataV1([ [], [] ]);
 
       const left1 = Order(seller1, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
-      const left2 = Order(seller2, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
-      const left3 = Order(seller3, Asset(ERC721, enc(erc721.address, erc721TokenId3), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V1, encDataLeftV1);
 
       let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
-      let signatureLeft2 = await getSignature(left2, seller2, exchangeV2.address);
-      let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
-      //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
       let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 1);
       const tradeData1 = PurchaseData(0, 100, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall2 = await wrapperHelper.getDataExchangeV2SellOrders(left2, signatureLeft2, 1);
-      const tradeData2 = PurchaseData(0, 100, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const feeSecond = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
 
-      let dataForExchCall3 = await wrapperHelper.getDataExchangeV2SellOrders(left3, signatureLeft3, 1);
-      const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const tx = await bulkExchange.singlePurchase(tradeData1, 0, feeSecond, { from: buyer, value: 400, gasPrice: 0 })
+      console.log("rarible V2 721 1 order 1 comission", tx.receipt.gasUsed)
+      assert.equal(await erc721.balanceOf(seller1), 0);
+      assert.equal(await erc721.balanceOf(buyer), 1);
+    })
+
+    it("Test V3 order", async () => {
+      const buyer = accounts[2];
+      const seller1 = accounts[1];
+      
+      await erc721.mint(seller1, erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
+
+      await deployRarible()
+
+      const encDataLeft = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
+
+      const left1 = Order(seller1, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+
+      let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
+
+      let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 1);
+      const tradeData1 = PurchaseData(0, 100, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       const feeSecond = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
 
-    	await verifyBalanceChange(buyer, 345, async () =>
-    		verifyBalanceChange(seller1, -100, async () =>
-    		  verifyBalanceChange(seller2, -100, async () =>
-    		    verifyBalanceChange(seller3, -100, async () =>
-    			    verifyBalanceChange(feeRecipienterUP, -45, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], 0, feeSecond, false, { from: buyer, value: 400, gasPrice: 0 })
-    				  )
-    				)
-    			)
-    		)
-    	);
+      const tx = await bulkExchange.singlePurchase(tradeData1, 0, feeSecond, { from: buyer, value: 400, gasPrice: 0 })
+      console.log("rarible V3 721 1 order 1 comission", tx.receipt.gasUsed)
       assert.equal(await erc721.balanceOf(seller1), 0);
-      assert.equal(await erc721.balanceOf(seller2), 0);
-      assert.equal(await erc721.balanceOf(seller3), 0);
-      assert.equal(await erc721.balanceOf(accounts[2]), 3);
+      assert.equal(await erc721.balanceOf(buyer), 1);
     })
 
     it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC1155<->ETH", async () => {
@@ -707,8 +706,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721.mint(seller2, erc721TokenIdLocal2);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller2), true, {from: seller2});
 
-      await deployRarible()
-
       await bulkExchange.setWyvern(openSea.address)
 
       //for first order
@@ -785,8 +782,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc1155TokenIdLocal1 = 5;
       await erc1155.mint(seller1, erc1155TokenIdLocal1, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller1), true, {from: seller1});
-
-      await deployRarible()
 
       await bulkExchange.setWyvern(openSea.address)
 
@@ -1060,6 +1055,10 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
   function encDataV1(tuple) {
   	return helper.encode(tuple)
+  }
+
+  function encDataV3_SELL(tuple) {
+    return helper.encodeV3_SELL(tuple);
   }
 
   async function getOpenSeaMatchDataMerkleValidator(

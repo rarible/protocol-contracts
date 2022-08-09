@@ -187,22 +187,58 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         uint paymentAmount,
         uint purchaseAmount
     ) internal {
-        LibOrder.Order memory buyerOrder;
-        buyerOrder.maker = address(this);
-        buyerOrder.makeAsset = sellOrder.takeAsset;
-        buyerOrder.takeAsset.assetType = sellOrder.makeAsset.assetType;
-        buyerOrder.takeAsset.value = purchaseAmount;
+        bytes4 dataType = sellOrder.dataType;
+        if (dataType == LibOrderDataV3.V3_SELL){
 
-        /*set buyer in payout*/
-        LibPart.Part[] memory payout = new LibPart.Part[](1);
-        payout[0].account = _msgSender();
-        payout[0].value = 10000;
-        LibOrderDataV2.DataV2 memory data;
-        data.payouts = payout;
-        buyerOrder.data = abi.encode(data);
-        buyerOrder.dataType = bytes4(keccak256("V2"));
+            IExchangeV2(exchangeV2).directPurchase{ value : paymentAmount }(
+                LibDirectTransfer.Purchase(
+                    sellOrder.makeAsset.value,
+                    purchaseAmount,
+                    sellOrder.takeAsset.value,
+                    sellOrder.takeAsset.value,
+                    sellOrder.salt,
+                    sellOrder.maker,
+                    sellOrder.makeAsset.assetType.assetClass,
+                    sellOrder.takeAsset.assetType.assetClass,
+                    sellOrder.makeAsset.assetType.data,
+                    sellOrder.takeAsset.assetType.data,
+                    sellOrder.data,
+                    getBuyOrderData(sellOrder.data),
+                    sellOrderSignature
+                )
+            );
+        } else {
+            LibOrder.Order memory buyerOrder;
+            buyerOrder.maker = address(this);
+            buyerOrder.makeAsset = sellOrder.takeAsset;
+            buyerOrder.takeAsset.assetType = sellOrder.makeAsset.assetType;
+            buyerOrder.takeAsset.value = purchaseAmount;
 
-        IExchangeV2(exchangeV2).matchOrders{value : paymentAmount }(sellOrder, sellOrderSignature, buyerOrder, "");
+            LibOrderData.GenericOrderData memory sellDataGeneric = LibOrderData.parse(sellOrder);
+
+            LibOrderDataV2.DataV2 memory data;
+            data.originFees = sellDataGeneric.originFees;
+            LibPart.Part[] memory payout = new LibPart.Part[](1);
+            payout[0].account = _msgSender();
+            payout[0].value = 10000;
+            data.payouts = payout;
+            
+            buyerOrder.data = abi.encode(data);
+            buyerOrder.dataType = LibOrderDataV2.V2;
+
+            IExchangeV2(exchangeV2).matchOrders{value : paymentAmount }(sellOrder, sellOrderSignature, buyerOrder, "");
+        }    
+    }
+
+    function getBuyOrderData(bytes memory sellData) internal view returns(bytes memory)  {
+        LibOrderDataV3.DataV3_SELL memory sellDataV3 = abi.decode(sellData, (LibOrderDataV3.DataV3_SELL));
+
+        LibOrderDataV3.DataV3_BUY memory result;
+        result.originFeeFirst = sellDataV3.originFeeFirst;
+        result.originFeeSecond = sellDataV3.originFeeSecond;
+        result.marketplaceMarker = sellDataV3.marketplaceMarker;
+        result.payouts = (uint256(10000) << 160) + uint256(_msgSender());
+        return abi.encode(result);
     }
 
     receive() external payable {}
