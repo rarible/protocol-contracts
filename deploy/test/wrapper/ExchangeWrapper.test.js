@@ -78,13 +78,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
       //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
-      let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 1);
+      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(left1, signatureLeft1, 1);
       const tradeData1 = PurchaseData(0, 100, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall2 = await wrapperHelper.getDataExchangeV2SellOrders(left2, signatureLeft2, 1);
+      let dataForExchCall2 = await wrapperHelper.getDataDirectPurchase(left2, signatureLeft2, 1);
       const tradeData2 = PurchaseData(0, 100, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall3 = await wrapperHelper.getDataExchangeV2SellOrders(left3, signatureLeft3, 1);
+      let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(left3, signatureLeft3, 1);
       const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       const feeSecond = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
@@ -134,13 +134,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
       //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
-      let dataForExchCall1 = await wrapperHelper.getDataExchangeV2SellOrders(left1, signatureLeft1, 6);
+      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(left1, signatureLeft1, 6);
       const tradeData1 = PurchaseData(0, 60, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall2 = await wrapperHelper.getDataExchangeV2SellOrders(left2, signatureLeft2, 8);
+      let dataForExchCall2 = await wrapperHelper.getDataDirectPurchase(left2, signatureLeft2, 8);
       const tradeData2 = PurchaseData(0, 80, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall3 = await wrapperHelper.getDataExchangeV2SellOrders(left3, signatureLeft3, 10);
+      let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(left3, signatureLeft3, 10);
       const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
       const feeFirst = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)

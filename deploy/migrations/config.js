@@ -82,7 +82,7 @@ const def = {
     tokenURIPrefix: "ipfs://",
   },
   deploy_CryptoPunks: true,
-  deploy_meta: true,
+  deploy_meta: false,
   deploy_non_meta: true,
   deploy_WETH: false
 }

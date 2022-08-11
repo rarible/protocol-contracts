@@ -344,9 +344,25 @@ contract("Test gas usage for marketplaces", accounts => {
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
     
     const signature1 = await getSignature(exchangeV2, right, seller);
-    const directBuyParams1  = {seller: seller, token: token.address, assetType: ERC721, tokenId: tokenId, tokenAmount: 1, price: price, salt: 1, signature: signature1};
-    
-    const matchTx1 = await exchangeV2.directPurchase(directBuyParams1, encDataRight, encDataLeft, { from: buyer, value: price });
+
+    const directBuyParams1 = {
+      sellOrderMaker: seller,
+      sellOrderNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenId),
+      sellOrderPaymentAmount: price,
+      paymentToken: zeroAddress,
+      sellOrderSalt: 1,
+      sellOrderStart: 0,
+      sellOrderEnd: 0,
+      sellOrderDataType: ORDER_DATA_V3_SELL,
+      sellOrderData: encDataRight,
+      sellOrderSignature: signature1,
+      buyOrderPaymentAmount: price,
+      buyOrderNftAmount: 1,
+      buyOrderData: encDataLeft
+    };
+    const matchTx1 = await exchangeV2.directPurchase(directBuyParams1, { from: buyer, value: price });
     console.log("RARIBLE: match ETH <=> ERC721", matchTx1.receipt.gasUsed)
 
     const tokenid1 = "1235112312"
@@ -358,9 +374,26 @@ contract("Test gas usage for marketplaces", accounts => {
 		const right1 = Order(seller, Asset(ERC721, enc( token.address, tokenid1), 1), zeroAddress, Asset(ETH, "0x", price), 2, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
     
     const signature2 = await getSignature(exchangeV2, right1, seller);
-    const directBuyParams2  = {seller: seller, token: token.address, assetType: ERC721, tokenId: tokenid1, tokenAmount: 1, price: price, salt: 2, signature: signature2};
-    
-    const matchTx2 = await exchangeV2.directPurchase(directBuyParams2, encDataRight, encDataLeft, { from: buyer, value: price });
+
+    const directBuyParams2 = {
+      sellOrderMaker: seller,
+      sellOrderNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenid1),
+      sellOrderPaymentAmount: price,
+      paymentToken: zeroAddress,
+      sellOrderSalt: 2,
+      sellOrderStart: 0,
+      sellOrderEnd: 0,
+      sellOrderDataType: ORDER_DATA_V3_SELL,
+      sellOrderData: encDataRight,
+      sellOrderSignature: signature2,
+      buyOrderPaymentAmount: price,
+      buyOrderNftAmount: 1,
+      buyOrderData: encDataLeft
+    };
+
+    const matchTx2 = await exchangeV2.directPurchase(directBuyParams2, { from: buyer, value: price });
     console.log("RARIBLE: match ETH <=> ERC721 (second token of collection)", matchTx2.receipt.gasUsed)
 
     const cancelTx1 = await exchangeV2.cancel(right, {from: seller})
@@ -398,10 +431,26 @@ contract("Test gas usage for marketplaces", accounts => {
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
     
     const signature = await getSignature(exchangeV2, left, buyer);
-  
-    const directAcceptParams  = {buyer: buyer, tokenPayment: erc20.address, tokenNft: token.address , assetType: ERC721, tokenId: tokenId, tokenAmount: 1, price: price, salt: 1, signature: signature};
 
-    const matchTx1 = await exchangeV2.directAcceptBid(directAcceptParams, encDataLeft, encDataRight, { from: seller });
+    const directAcceptParams = {
+      bidMaker: buyer,
+      bidNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenId),
+      bidPaymentAmount: price,
+      paymentToken: erc20.address,
+      bidSalt: 1,
+      bidStart: 0,
+      bidEnd: 0,
+      bidDataType: ORDER_DATA_V3_BUY,
+      bidData: encDataLeft,
+      bidSignature: signature,
+      sellOrderPaymentAmount: price,
+      sellOrderNftAmount: 1,
+      sellOrderData: encDataRight
+    };
+
+    const matchTx1 = await exchangeV2.directAcceptBid(directAcceptParams, { from: seller });
 
     console.log("RARIBLE: match ERC20 <=> ERC721", matchTx1.receipt.gasUsed)
 
@@ -424,9 +473,25 @@ contract("Test gas usage for marketplaces", accounts => {
     
     const signature1 = await getSignature(exchangeV2, left1, buyer);
   
-    const directAcceptParams1  = {buyer: buyer, tokenPayment: erc20.address, tokenNft: token.address , assetType: ERC721, tokenId: tokenid1, tokenAmount: 1, price: price, salt: 2, signature: signature1};
-
-    const matchTx2 = await exchangeV2.directAcceptBid(directAcceptParams1, encDataLeft, encDataRight, { from: seller });
+    const directAcceptParams1 = {
+      bidMaker: buyer,
+      bidNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenid1),
+      bidPaymentAmount: price,
+      paymentToken: erc20.address,
+      bidSalt: 2,
+      bidStart: 0,
+      bidEnd: 0,
+      bidDataType: ORDER_DATA_V3_BUY,
+      bidData: encDataLeft,
+      bidSignature: signature1,
+      sellOrderPaymentAmount: price,
+      sellOrderNftAmount: 1,
+      sellOrderData: encDataRight
+    };
+    
+    const matchTx2 = await exchangeV2.directAcceptBid(directAcceptParams1, { from: seller });
     console.log("RARIBLE: match ERC20 <=> ERC721 (second token of collection)", matchTx2.receipt.gasUsed)
 
     const cancelTx1 = await exchangeV2.cancel(left, {from: buyer})

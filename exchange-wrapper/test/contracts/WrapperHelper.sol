@@ -9,6 +9,7 @@ import {IERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC
 import {IWyvernExchange} from "../../contracts/interfaces/IWyvernExchange.sol";
 import {IExchangeV2} from "../../contracts/interfaces/IExchangeV2.sol";
 import {LibOrder} from "../../contracts/ExchangeWrapper.sol";
+import {LibDirectTransfer} from "../../contracts/ExchangeWrapper.sol";
 
 import {LibSeaPort} from "../../contracts/libraries/LibSeaPort.sol";
 import {ISeaPort} from "../../contracts/interfaces/ISeaPort.sol";
@@ -124,8 +125,8 @@ contract WrapperHelper {
         return (uint(value) << 160) + uint(account);
     }
 
-    function getDataExchangeV2SellOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, uint purchaseAmount) external pure returns(bytes memory _data) {
-        _data = abi.encode(orderLeft, signatureLeft, purchaseAmount);
+    function getDataDirectPurchase(LibDirectTransfer.Purchase memory data) external pure returns(bytes memory result) {
+        result = abi.encodeWithSelector(IExchangeV2.directPurchase.selector, data);
     }
 
     function getDataSeaPortFulfillAdvancedOrder(
@@ -194,6 +195,16 @@ contract WrapperHelper {
     
     function getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(LibLooksRare.TakerOrder calldata _takerBid, LibLooksRare.MakerOrder calldata _makerAsk, bytes4 typeNft) external pure returns(bytes memory _data) {
         _data = abi.encode(_takerBid, _makerAsk, typeNft);
+    }
+
+    function encodeFees(uint first, uint second) external pure returns(uint){
+        return (uint(uint16(first)) << 16) + uint(uint16(second));
+    }
+
+    function decodeFees(uint data) external pure returns(uint, uint) {
+        uint first = uint(uint16(data >> 16));
+        uint second = uint(uint16(data));
+        return (first, second);
     }
 
 }
