@@ -174,7 +174,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         LibOrderData.GenericOrderData memory leftOrderData,
         LibOrderData.GenericOrderData memory rightOrderData
     ) internal view returns(LibDeal.DealData memory dealData) {
-        dealData.protocolFee = getProtocolFeeConditional(leftDataType);
         dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
         dealData.maxFeesBasePoint = getMaxFee(
             leftDataType,
@@ -182,7 +181,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             leftOrderData,
             rightOrderData,
             dealData.feeSide,
-            dealData.protocolFee
+            0
         );
     }
 
@@ -328,20 +327,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {
         LibOrder.validate(order);
         validate(order, signature);
-    }
-
-    function getProtocolFee() internal virtual view returns(uint);
-
-    /**
-        @notice returns protocol Fee for V3 or upper orders, 0 for V2 and earlier ordrs
-        @param leftDataType type of the left order in a match
-        @return protocol fee
-    */
-    function getProtocolFeeConditional(bytes4 leftDataType) internal view returns(uint) {
-        if (leftDataType == LibOrderDataV3.V3_SELL || leftDataType == LibOrderDataV3.V3_BUY) {
-            return getProtocolFee();
-        }
-        return 0;
     }
 
     uint256[49] private __gap;

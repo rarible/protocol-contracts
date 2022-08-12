@@ -58,9 +58,12 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     helper = await RaribleTestHelper.new()
   });
 
+/*
+  disabled protocol fee for now. not reading it from the storage
   beforeEach(async () => {
     await exchangeV2.setProtocolFee(300);
   });
+*/
 
   describe("gas estimation direct Purchase/AcceptBid", () => {
 
@@ -545,8 +548,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
       let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
 
+/*
+      disabled protocol fee for now. not reading it from the storage
       // setting protocol fee to 0 to check gas difference with V2 orders
       await exchangeV2.setProtocolFee(0);
+*/
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -1532,6 +1538,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
     })
 
+/*
+    disabled protocol fee for now. not reading it from the storage
     it("should not match when there's a problem with fees sum ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
@@ -1560,6 +1568,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
     })
+*/
 
     it("should not match when there's a problem with max fee ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
@@ -1576,8 +1585,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
+/*
+      disabled protocol fee for now. not reading it from the storage
       //maxFee = 0 is wrong even if protocolFee = 0
       await exchangeV2.setProtocolFee(0)
+*/
       changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 0, MARKET_MARKER_SELL]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
@@ -1599,7 +1611,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
+/*
+      disabled protocol fee for now. not reading it from the storage
       await exchangeV2.setProtocolFee(0);
+*/
 
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
@@ -1628,7 +1643,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
 
+/*
+      disabled protocol fee for now. not reading it from the storage
       await exchangeV2.setProtocolFee(0);
+*/
 
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
