@@ -66,7 +66,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         );
 
         LibOrder.Order memory buyOrder = LibOrder.Order(
-            _msgSender(),
+            address(0),
             LibAsset.Asset(
                 paymentAssetType,
                 direct.buyOrderPaymentAmount
@@ -122,7 +122,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         );
 
         LibOrder.Order memory sellOrder = LibOrder.Order(
-            _msgSender(),
+            address(0),
             LibAsset.Asset(
                 LibAsset.AssetType(
                     direct.nftAssetClass,
@@ -168,10 +168,12 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
-            require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
+            if (orderRight.maker != address(0))
+                require(orderRight.maker == orderLeft.taker, "leftOrder.taker verification failed");
         }
         if (orderRight.taker != address(0)) {
-            require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
+            if (orderLeft.maker != address(0))
+                require(orderRight.taker == orderLeft.maker, "rightOrder.taker verification failed");
         }
     }
 
@@ -183,15 +185,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
 
-        LibOrderData.GenericOrderData memory leftOrderData = LibOrderData.parse(orderLeft);
-        LibOrderData.GenericOrderData memory rightOrderData = LibOrderData.parse(orderRight);
-
-        LibFill.FillResult memory newFill = setFillEmitMatch(
-            orderLeft, 
-            orderRight,
-            leftOrderData.isMakeFill,
-            rightOrderData.isMakeFill
-        );
+        (LibOrderData.GenericOrderData memory leftOrderData, LibOrderData.GenericOrderData memory rightOrderData, LibFill.FillResult memory newFill) =
+            parseOrdersSetFillEmitMatch(orderLeft, orderRight);
 
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(
             LibDeal.DealSide(
@@ -235,6 +230,34 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
             }
         }
+    }
+
+    function parseOrdersSetFillEmitMatch(
+        LibOrder.Order memory orderLeft,
+        LibOrder.Order memory orderRight
+    ) internal returns (LibOrderData.GenericOrderData memory leftOrderData, LibOrderData.GenericOrderData memory rightOrderData, LibFill.FillResult memory newFill) {
+        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
+        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
+
+        address msgSender = _msgSender();
+        if (orderLeft.maker == address(0)) {
+            orderLeft.maker = msgSender;
+        }
+        if (orderRight.maker == address(0)) {
+            orderRight.maker = msgSender;
+        }
+
+        leftOrderData = LibOrderData.parse(orderLeft);
+        rightOrderData = LibOrderData.parse(orderRight);
+
+        newFill = setFillEmitMatch(
+            orderLeft,
+            orderRight,
+            leftOrderKeyHash,
+            rightOrderKeyHash,
+            leftOrderData.isMakeFill,
+            rightOrderData.isMakeFill
+        );
     }
 
     function getDealData(
@@ -349,11 +372,11 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function setFillEmitMatch(
         LibOrder.Order memory orderLeft,
         LibOrder.Order memory orderRight,
+        bytes32 leftOrderKeyHash,
+        bytes32 rightOrderKeyHash,
         bool leftMakeFill,
         bool rightMakeFill
     ) internal returns (LibFill.FillResult memory) {
-        bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
-        bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
         uint leftOrderFill = getOrderFill(orderLeft.salt, leftOrderKeyHash);
         uint rightOrderFill = getOrderFill(orderRight.salt, rightOrderKeyHash);
         LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftMakeFill, rightMakeFill);
