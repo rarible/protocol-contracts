@@ -58,13 +58,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     helper = await RaribleTestHelper.new()
   });
 
-/*
-  disabled protocol fee for now. not reading it from the storage
-  beforeEach(async () => {
-    await exchangeV2.setProtocolFee(300);
-  });
-*/
-
   describe("gas estimation direct Purchase/AcceptBid", () => {
 
     it("Direct buy ERC721_Lazy<->ETH, not same origin, not same royalties V3", async () => {
@@ -217,8 +210,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
       await verifyBalanceChange(makerRight, 100, async () =>
-        verifyBalanceChange(makerLeft, -90, async () =>
-          verifyBalanceChange(protocol, -3, () =>
+        verifyBalanceChange(makerLeft, -93, async () =>
+          verifyBalanceChange(protocol, 0, () =>
             verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
               verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
                 verifyBalanceChange(accounts[7], -1, () =>  //royalties
@@ -272,11 +265,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(makerRight), 0);
       await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight });
       assert.equal(await erc20.balanceOf(makerRight), 900);
-      assert.equal(await erc20.balanceOf(makerLeft), 90);
+      assert.equal(await erc20.balanceOf(makerLeft), 93);
       assert.equal(await erc20.balanceOf(accounts[6]), 3);
       assert.equal(await erc20.balanceOf(accounts[5]), 3);
       assert.equal(await erc20.balanceOf(accounts[7]), 1);
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
       assert.equal(await erc721.balanceOf(makerLeft), 0);
       assert.equal(await erc721.balanceOf(makerRight), 1);
     })
@@ -319,8 +312,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 10);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 0);
       await verifyBalanceChange(makerRight, 100, async () =>
-        verifyBalanceChange(makerLeft, -90, async () =>
-          verifyBalanceChange(protocol, -3, () =>
+        verifyBalanceChange(makerLeft, -93, async () =>
+          verifyBalanceChange(protocol, 0, () =>
             verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
               verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
                 verifyBalanceChange(accounts[7], -1, () =>  //royalties
@@ -375,11 +368,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 0);
       await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight });
       assert.equal(await erc20.balanceOf(makerRight), 950);
-      assert.equal(await erc20.balanceOf(makerLeft), 47);
+      assert.equal(await erc20.balanceOf(makerLeft), 48);
       assert.equal(await erc20.balanceOf(accounts[6]), 1);
       assert.equal(await erc20.balanceOf(accounts[5]), 1);
       assert.equal(await erc20.balanceOf(accounts[7]), 0);
-      assert.equal(await erc20.balanceOf(protocol), 1);
+      assert.equal(await erc20.balanceOf(protocol), 0);
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 8);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 2);
     })
@@ -425,11 +418,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
       assert.equal(await erc20.balanceOf(makerLeft), 900);
-      assert.equal(await erc20.balanceOf(makerRight), 90);
+      assert.equal(await erc20.balanceOf(makerRight), 93);
       assert.equal(await erc20.balanceOf(accounts[6]), 3);
       assert.equal(await erc20.balanceOf(accounts[5]), 3);
       assert.equal(await erc20.balanceOf(accounts[7]), 1);
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
     })
 
     it("Direct accept bid ERC20<->ERC1155(all), not same origin, not same royalties V3", async () => {
@@ -472,11 +465,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 7);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 3);
       assert.equal(await erc20.balanceOf(makerLeft), 900);
-      assert.equal(await erc20.balanceOf(makerRight), 90);
+      assert.equal(await erc20.balanceOf(makerRight), 93);
       assert.equal(await erc20.balanceOf(accounts[6]), 3);
       assert.equal(await erc20.balanceOf(accounts[5]), 3);
       assert.equal(await erc20.balanceOf(accounts[7]), 1);
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
     })
 
     it("Direct accept bid ERC20<->ERC1155(partly), not same origin, not same royalties V3", async () => {
@@ -519,11 +512,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 7);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 3);
       assert.equal(await erc20.balanceOf(makerLeft), 1300);
-      assert.equal(await erc20.balanceOf(makerRight), 630);
+      assert.equal(await erc20.balanceOf(makerRight), 651);
       assert.equal(await erc20.balanceOf(accounts[6]), 21);
       assert.equal(await erc20.balanceOf(accounts[5]), 21);
       assert.equal(await erc20.balanceOf(accounts[7]), 7);
-      assert.equal(await erc20.balanceOf(protocol), 21);
+      assert.equal(await erc20.balanceOf(protocol), 0);
     })
 
   });
@@ -547,12 +540,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
       let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
-
-/*
-      disabled protocol fee for now. not reading it from the storage
-      // setting protocol fee to 0 to check gas difference with V2 orders
-      await exchangeV2.setProtocolFee(0);
-*/
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -1457,7 +1444,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 800);
 
       // 3% to protocol
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
       // 3% to originBuyer
       assert.equal(await erc20.balanceOf(originBuyer), 3);
       // 4% to originSeller
@@ -1465,7 +1452,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       // 10% to creator as royalties, 80 left
       assert.equal(await erc20.balanceOf(creator), 10);
       // 100% of what's left (80) to makerLeft
-      assert.equal(await erc20.balanceOf(makerLeft), 80);
+      assert.equal(await erc20.balanceOf(makerLeft), 83);
 
       //checking fills
       // sell-order has make-side fills
@@ -1538,43 +1525,32 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
     })
 
-/*
-    disabled protocol fee for now. not reading it from the storage
     it("should not match when there's a problem with fees sum ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
       let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000, MARKET_MARKER_SELL]);
-      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 700), 0, MARKET_MARKER_BUY]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
 
-      // change protocolFee 3 => 5%, so all fees are 12%
-      await exchangeV2.setProtocolFee(500)
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
-      // change protocol fee 5 => 3 and makerRight origin fee 3 => 4, so resulting fee is 11%
-      await exchangeV2.setProtocolFee(300)
       changeOrderData(right, await encDataV3_BUY([0, await LibPartToUint(originBuyer, 400), 0, MARKET_MARKER_SELL]))
-      await expectThrow(
-        exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
-      );
 
-      //changing protocolFee makes it work
-      await exchangeV2.setProtocolFee(200)
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
     })
-*/
+
 
     it("should not match when there's a problem with max fee ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(), 0, 200, MARKET_MARKER_SELL]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originBuyer, 300), 0, 200, MARKET_MARKER_SELL]);
       let encDataRight = await encDataV3_BUY([0, await LibPartToUint(), 0, MARKET_MARKER_BUY]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
@@ -1585,11 +1561,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
-/*
-      disabled protocol fee for now. not reading it from the storage
-      //maxFee = 0 is wrong even if protocolFee = 0
-      await exchangeV2.setProtocolFee(0)
-*/
       changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 0, MARKET_MARKER_SELL]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
@@ -1610,11 +1581,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
-
-/*
-      disabled protocol fee for now. not reading it from the storage
-      await exchangeV2.setProtocolFee(0);
-*/
 
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
@@ -1642,11 +1608,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
-
-/*
-      disabled protocol fee for now. not reading it from the storage
-      await exchangeV2.setProtocolFee(0);
-*/
 
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
