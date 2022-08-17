@@ -68,6 +68,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([ [], [] ]);
+      const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
+      const encDataRightV1 = await encDataV1([[[buyer, 10000]], []]);
 
       const left1 = Order(seller1, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const left2 = Order(seller2, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
@@ -76,25 +78,76 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
       let signatureLeft2 = await getSignature(left2, seller2, exchangeV2.address);
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
-      //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
-      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(left1, signatureLeft1, 1);
-      const tradeData1 = PurchaseData(0, 100, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const directPurchaseParams1 = {
+        sellOrderMaker: seller1,
+        sellOrderNftAmount: 1,
+        nftAssetClass: ERC721,
+        nftData: enc(erc721.address, erc721TokenId1),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
+        sellOrderSignature: signatureLeft1,
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 1,
+        buyOrderData: encDataRight
+      };
 
-      let dataForExchCall2 = await wrapperHelper.getDataDirectPurchase(left2, signatureLeft2, 1);
-      const tradeData2 = PurchaseData(0, 100, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams1);
+      const tradeData1 = PurchaseData(0, 100, await encodeFees(1500), dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(left3, signatureLeft3, 1);
-      const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const directPurchaseParams2 = {
+        sellOrderMaker: seller2,
+        sellOrderNftAmount: 1,
+        nftAssetClass: ERC721,
+        nftData: enc(erc721.address, erc721TokenId2),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
+        sellOrderSignature: signatureLeft2,
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 1,
+        buyOrderData: encDataRight
+      };
 
-      const feeSecond = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
+      let dataForExchCall2 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams2);
+      const tradeData2 = PurchaseData(0, 100, await encodeFees(1500), dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+
+      const directPurchaseParams3 = {
+        sellOrderMaker: seller3,
+        sellOrderNftAmount: 1,
+        nftAssetClass: ERC721,
+        nftData: enc(erc721.address, erc721TokenId3),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V1,
+        sellOrderData: encDataLeftV1,
+        sellOrderSignature: signatureLeft3,
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 1,
+        buyOrderData: encDataRightV1
+      };
+
+      let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams3);
+      const tradeData3 = PurchaseData(0, 100,  await encodeFees(1500), dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
     	await verifyBalanceChange(buyer, 345, async () =>
     		verifyBalanceChange(seller1, -100, async () =>
     		  verifyBalanceChange(seller2, -100, async () =>
     		    verifyBalanceChange(seller3, -100, async () =>
     			    verifyBalanceChange(feeRecipienterUP, -45, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], 0, feeSecond, false, { from: buyer, value: 400, gasPrice: 0 })
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 })
     				  )
     				)
     			)
@@ -124,6 +177,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([ [], [] ]);
+      const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
+      const encDataRightV1 = await encDataV1([[[buyer, 10000]], []]);
 
       const left1 = Order(seller1, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 10), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const left2 = Order(seller2, Asset(ERC1155, enc(erc1155.address, erc1155TokenId2), 10), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
@@ -134,23 +189,75 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let signatureLeft3 = await getSignature(left3, seller3, exchangeV2.address);
       //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
-      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(left1, signatureLeft1, 6);
-      const tradeData1 = PurchaseData(0, 60, true, dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const directPurchaseParams1 = {
+        sellOrderMaker: seller1,
+        sellOrderNftAmount: 10,
+        nftAssetClass: ERC1155,
+        nftData: enc(erc1155.address, erc1155TokenId1),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
+        sellOrderSignature: signatureLeft1,
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 6,
+        buyOrderData: encDataRight
+      };
 
-      let dataForExchCall2 = await wrapperHelper.getDataDirectPurchase(left2, signatureLeft2, 8);
-      const tradeData2 = PurchaseData(0, 80, true, dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams1);
+      const tradeData1 = PurchaseData(0, 60, await encodeFees(1500), dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(left3, signatureLeft3, 10);
-      const tradeData3 = PurchaseData(0, 100, true, dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
+      const directPurchaseParams2 = {
+        sellOrderMaker: seller2,
+        sellOrderNftAmount: 10,
+        nftAssetClass: ERC1155,
+        nftData: enc(erc1155.address, erc1155TokenId2),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
+        sellOrderSignature: signatureLeft2,
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 8,
+        buyOrderData: encDataRight
+      };
 
-      const feeFirst = await wrapperHelper.encodeOriginFeeIntoUint(feeRecipienterUP, 1500)
+      let dataForExchCall2 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams2);
+      const tradeData2 = PurchaseData(0, 80, await encodeFees(1500), dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
+
+      const directPurchaseParams3 = {
+        sellOrderMaker: seller3,
+        sellOrderNftAmount: 10,
+        nftAssetClass: ERC1155,
+        nftData: enc(erc1155.address, erc1155TokenId3),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V1,
+        sellOrderData: encDataLeftV1,
+        sellOrderSignature: signatureLeft3,
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 10,
+        buyOrderData: encDataRightV1
+      };
+
+      let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams3);
+      const tradeData3 = PurchaseData(0, 100,  await encodeFees(1500), dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
     	await verifyBalanceChange(buyer, 276, async () =>
     		verifyBalanceChange(seller1, -60, async () =>
     		  verifyBalanceChange(seller2, -80, async () =>
     		    verifyBalanceChange(seller3, -100, async () =>
     			    verifyBalanceChange(feeRecipienterUP, -36, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeFirst, 0, false, { from: buyer, value: 400, gasPrice: 0 })
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 })
     				  )
     				)
     			)
@@ -174,11 +281,16 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   	return helper.encode(tuple)
   }
 
-  function PurchaseData(marketId, amount, addFee, data) {
-    return {marketId, amount, addFee, data};
+  function PurchaseData(marketId, amount, fees, data) {
+    return {marketId, amount, fees, data};
   };
 	async function getSignature(order, signer, exchangeContract) {
 		return sign(order, signer, exchangeContract);
 	}
+
+  async function encodeFees(first = 0, second = 0) {
+    const result = await wrapperHelper.encodeFees(first, second);
+    return result.toString()
+  }
 
 });
