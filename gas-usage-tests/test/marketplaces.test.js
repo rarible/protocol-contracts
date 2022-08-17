@@ -326,7 +326,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init();
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, protocol, royaltiesRegistry.address);
 
     const token = await TestERC721.new();
     const erc20 = await TestERC20.new();
@@ -338,7 +338,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
-    let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(), 0, MARKET_MARKER_BUY ]);
+    let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(protocol, protocolFeeBP), 0, MARKET_MARKER_BUY ]);
 		let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL ]);
 
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -414,9 +414,6 @@ contract("Test gas usage for marketplaces", accounts => {
     const token = await TestERC721.new();
     const erc20 = await TestERC20.new();
 
-    await exchangeV2.setFeeReceiver(zeroAddress, protocol);
-    await exchangeV2.setFeeReceiver(erc20.address, protocol);
-
     //TEST-CASE 1: ERC20 <=> ERC721
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
@@ -425,7 +422,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20.approve(erc20TransferProxy.address, price, {from: buyer})
     assert.equal(await erc20.balanceOf(buyer), price, "erc20 deposit")
 
-    let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(), 0, MARKET_MARKER_BUY]);
+    let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(protocol, protocolFeeBP), 0, MARKET_MARKER_BUY]);
 		let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
 
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
@@ -525,7 +522,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
     let encDataLeft = await encDataV2([[], [], true]);
-    let encDataRight = await encDataV2([[], [], false]);
+    let encDataRight = await encDataV2([[], [[protocol, protocolFeeBP]], false]);
 
     const left = Order(buyer, Asset(ETH, "0x", 1000), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 0, 0, 0, ORDER_DATA_V2, encDataLeft);
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataRight);
@@ -577,9 +574,6 @@ contract("Test gas usage for marketplaces", accounts => {
     const token = await TestERC721.new();
     const erc20 = await TestERC20.new();
 
-    await exchangeV2.setFeeReceiver(zeroAddress, protocol);
-    await exchangeV2.setFeeReceiver(erc20.address, protocol);
-
     //TEST-CASE 1: ERC20 <=> ERC721
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
@@ -589,7 +583,7 @@ contract("Test gas usage for marketplaces", accounts => {
     assert.equal(await erc20.balanceOf(buyer), 1030, "erc20 deposit")
 
     let encDataLeft = await encDataV2([[], [], true]);
-    let encDataRight = await encDataV2([[], [], false]);
+    let encDataRight = await encDataV2([[], [[protocol, protocolFeeBP]], false]);
 
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), 1000), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 0, 0, 0, ORDER_DATA_V2, encDataLeft);
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ERC20, enc(erc20.address), 1000), 1, 0, 0, ORDER_DATA_V2, encDataRight);
