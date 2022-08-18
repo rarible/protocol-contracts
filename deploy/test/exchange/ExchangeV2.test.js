@@ -53,7 +53,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
     /*Auction*/
     exchangeV2 = await ExchangeV2.deployed();
-    await exchangeV2.setDefaultFeeReceiver(protocol)
 
     helper = await RaribleTestHelper.new()
   });

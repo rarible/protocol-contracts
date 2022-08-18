@@ -84,7 +84,7 @@ const getTransactionData = async (nonce, abi, params) => {
 
   return { r, s, v, functionSignature };
 }
-/*
+
 contract("exchange v2 meta", accounts => {
   let exchangeV2meta
   let transferProxy;
@@ -160,4 +160,4 @@ contract("exchange v2 meta", accounts => {
   }
   
 });
-  */
+  

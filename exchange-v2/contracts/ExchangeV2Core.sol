@@ -164,7 +164,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
       * @param orderRight right order
       * @param signatureRight order right signature
       */
-    function validateOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight, bytes memory signatureRight) internal {
+    function validateOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight, bytes memory signatureRight) internal view {
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
@@ -267,15 +267,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes4 rightDataType,
         LibOrderData.GenericOrderData memory leftOrderData,
         LibOrderData.GenericOrderData memory rightOrderData
-    ) internal view returns(LibDeal.DealData memory dealData) {
+    ) internal pure returns(LibDeal.DealData memory dealData) {
         dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
         dealData.maxFeesBasePoint = getMaxFee(
             leftDataType,
             rightDataType,
             leftOrderData,
             rightOrderData,
-            dealData.feeSide,
-            0
+            dealData.feeSide
         );
     }
 
@@ -286,7 +285,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         @param leftOrderData data of the left order
         @param rightOrderData data of the right order
         @param feeSide fee side of the match
-        @param _protocolFee protocol fee of the match
         @return max fee amount in base points
     */
     function getMaxFee(
@@ -294,8 +292,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes4 dataTypeRight,
         LibOrderData.GenericOrderData memory leftOrderData,
         LibOrderData.GenericOrderData memory rightOrderData,
-        LibFeeSide.FeeSide feeSide,
-        uint _protocolFee
+        LibFeeSide.FeeSide feeSide
     ) internal pure returns(uint) {
         if (
             dataTypeLeft != LibOrderDataV3.V3_SELL &&
@@ -306,7 +303,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return 0;
         }
 
-        uint matchFees = getSumFees(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
+        uint matchFees = getSumFees(leftOrderData.originFees, rightOrderData.originFees);
         uint maxFee;
         if (feeSide == LibFeeSide.FeeSide.LEFT) {
             maxFee = rightOrderData.maxFeesBasePoint;
@@ -338,21 +335,19 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
     /**
         @notice calculates amount of fees for the match
-        @param _protocolFee protocolFee of the match
         @param originLeft origin fees of the left order
         @param originRight origin fees of the right order
         @return sum of all fees for the match (protcolFee + leftOrder.originFees + rightOrder.originFees)
      */
-    function getSumFees(uint _protocolFee, LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
-        //start from protocol fee
-        uint result = _protocolFee;
+    function getSumFees(LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
+        uint result = 0;
 
         //adding left origin fees
         for (uint i; i < originLeft.length; i ++) {
             result = result + originLeft[i].value;
         }
 
-        //adding right protocol fees
+        //adding right origin fees
         for (uint i; i < originRight.length; i ++) {
             result = result + originRight[i].value;
         }
@@ -433,7 +428,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
         return result;
     }
-
 
     function getOtherOrderType(bytes4 dataType) internal pure returns(bytes4) {
         if (dataType == LibOrderDataV3.V3_SELL) {
