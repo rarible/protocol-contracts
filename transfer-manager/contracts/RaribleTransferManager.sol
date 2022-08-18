@@ -19,7 +19,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     using SafeMathUpgradeable for uint;
 
     // @notice protocolFee is deprecated 
-    uint public protocolFee;
+    uint private protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
     // deprecated: no need without protocolFee
