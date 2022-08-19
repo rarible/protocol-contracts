@@ -9,7 +9,6 @@ const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 
 //tokens
-const TestERC20 = artifacts.require("TestERC20.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC1155 = artifacts.require("TestERC1155.sol");
 const WETH9 = artifacts.require('WETH9');
