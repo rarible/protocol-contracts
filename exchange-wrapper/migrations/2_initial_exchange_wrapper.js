@@ -64,7 +64,11 @@ module.exports = async function (deployer, network) {
   }
   await exchangeWrapper.__ExchangeWrapper_init(settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, { gas: 200000 });
   */
-  exchangeWrapper = await deployProxy(ExchangeWrapper, [settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare], { deployer, initializer: '__ExchangeWrapper_init' })
+  //exchangeWrapper = await deployProxy(ExchangeWrapper, [settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare], { deployer, initializer: '__ExchangeWrapper_init' })
+
+  await deployer.deploy(ExchangeWrapper, settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, { gas: 3000000 });
+
+  exchangeWrapper = await ExchangeWrapper.deployed()
 
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
 };

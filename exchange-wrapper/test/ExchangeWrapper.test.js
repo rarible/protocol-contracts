@@ -55,6 +55,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let helper;
   let erc20;
   let protocol = accounts[9];
+  
   const eth = "0x0000000000000000000000000000000000000000";
   const erc721TokenId1 = 55;
   const erc721TokenId2 = 56;
@@ -94,7 +95,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     royaltiesRegistry = await RoyaltiesRegistry.new()
     await royaltiesRegistry.__RoyaltiesRegistry_init()
     
-    bulkExchange = await ExchangeBulkV2.deployed();
   })
 
   beforeEach(async () => {    
@@ -109,9 +109,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     it("wrapper seaport (fulfillAdvancedOrder through data selector, method fulfillAdvancedOrder) ERC721<->ETH", async () => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
-      const thirdPartAccount = accounts[3];
-      
-      await bulkExchange.setSeaPort(seaport.address);
+
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const buyerLocal1 = accounts[2];
       const token = await TestERC721.new();
@@ -173,8 +172,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     it("wrapper seaport (fulfillAvalibleAdvancedOrder through data selector, method ) ERC721<->ETH", async () => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
-      const thirdPartAccount = accounts[3];
-      await bulkExchange.setSeaPort(seaport.address);
+
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const buyerLocal1 = accounts[2];
       const token = await TestERC721.new();
@@ -287,7 +286,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721.mint(seller3, erc721TokenIdLocal3);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
 
-      await bulkExchange.setWyvern(openSea.address)
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -393,7 +392,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc1155.mint(seller3, erc1155TokenIdLocal3, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
 
-      await bulkExchange.setWyvern(openSea.address)
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -496,7 +495,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       await deployRarible()
 
-      await bulkExchange.setWyvern(openSea.address)
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -584,6 +583,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
 
       await deployRarible()
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
@@ -627,6 +627,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
 
       await deployRarible()
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const encDataLeft = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
       const encDataRight = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
@@ -676,6 +677,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc1155.setApprovalForAll(transferProxy.address, true, {from: seller3});
 
       await deployRarible()
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
@@ -804,8 +806,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721.mint(seller2, erc721TokenIdLocal2);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller2), true, {from: seller2});
 
-      await bulkExchange.setWyvern(openSea.address)
-
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
       //for first order
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -879,7 +880,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc1155.mint(seller1, erc1155TokenIdLocal1, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller1), true, {from: seller1});
 
-      await bulkExchange.setWyvern(openSea.address)
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -936,7 +937,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const lr_strategy = await LooksRareTestHelper.new(0);
       await lr_executionManager.addStrategy(lr_strategy.address);
 
-      await bulkExchange.setLooksRare(looksRareExchange.address);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address);
 
       const token = await TestERC721.new();
       await token.mint(seller, tokenId)
@@ -999,7 +1000,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const lr_strategy = await LooksRareTestHelper.new(0);
       await lr_executionManager.addStrategy(lr_strategy.address);
 
-      await bulkExchange.setLooksRare(looksRareExchange.address);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address);
 
       const token = await TestERC1155.new();
       await token.mint(seller, tokenId, 10)
@@ -1058,7 +1059,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc721delegate.address], [])
 
-      await bulkExchange.setX2Y2(x2y2.address)
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -1421,7 +1422,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     await transferProxy.addOperator(exchangeV2.address)
     await erc20TransferProxy.addOperator(exchangeV2.address)
 
-    await bulkExchange.setExchange(exchangeV2.address)
   }
 
 });

@@ -45,6 +45,16 @@ const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951
 contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let bulkExchange;
   let exchangeV2;
+  let seaport;
+  let transferManagerERC721;
+  let transferSelectorNFT;
+  let transferManagerERC1155;
+  let lr_strategy;
+  let looksRareExchange;
+  let weth;
+  let x2y2;
+  let erc721delegate;
+
   let wrapperHelper;
   let transferProxy;
   let royaltiesRegistry;
@@ -88,6 +98,39 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+
+    //rarible
+    await deployRarible();
+
+    //seaport
+    const conduitController = await ConduitController.new();
+    seaport = await Seaport.new(conduitController.address)
+
+    //looksRare
+    const LR_protocolFeeRecipient = accounts[3];
+    const lr_currencyManager = await LR_currencyManager.new();
+    const lr_executionManager = await LR_executionManager.new();
+    const LR_royaltyFeeRegistry = await RoyaltyFeeRegistry.new(9000);
+    const lr_royaltyFeeManager = await LR_royaltyFeeManager.new(LR_royaltyFeeRegistry.address);
+    weth = await WETH.new();
+    looksRareExchange = await LooksRareExchange.new(lr_currencyManager.address, lr_executionManager.address, lr_royaltyFeeManager.address, weth.address, LR_protocolFeeRecipient);
+    transferManagerERC721 = await TransferManagerERC721.new(looksRareExchange.address);
+    transferManagerERC1155 = await TransferManagerERC1155.new(looksRareExchange.address);
+    transferSelectorNFT = await TransferSelectorNFT.new(transferManagerERC721.address, transferManagerERC1155.address);// transfer721, transfer1155
+
+    await looksRareExchange.updateTransferSelectorNFT(transferSelectorNFT.address);
+    await lr_currencyManager.addCurrency(weth.address);
+    lr_strategy = await LooksRareTestHelper.new(0);
+    await lr_executionManager.addStrategy(lr_strategy.address);
+
+    x2y2 = await X2Y2_r1.new()
+    await x2y2.initialize(120000, weth.address)
+
+    erc721delegate = await ERC721Delegate.new();
+    await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
+    await x2y2.updateDelegates([erc721delegate.address], [])
+
+    bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address)
   });
   
   describe ("batch orders", () => {
@@ -98,8 +141,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const feeRecipientSecond = accounts[7];
 
       //making rarible orders
-      await deployRarible();
-      
       //Rarible V2 order
       await erc721.mint(seller, erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
@@ -160,12 +201,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const data1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams1);
       const tradeData1 = PurchaseData(0, 100, await encodeFees(500, 1000), data1);
 
-
       //seaport ORDER
-      const conduitController = await ConduitController.new();
-      const seaport = await Seaport.new(conduitController.address)
-      await bulkExchange.setSeaPort(seaport.address);
-
       await erc721.mint(seller, tokenId);
       await erc721.setApprovalForAll(seaport.address, true, {from: seller});
 
@@ -218,24 +254,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
-      const LR_protocolFeeRecipient = accounts[3];
-      const lr_currencyManager = await LR_currencyManager.new();
-      const lr_executionManager = await LR_executionManager.new();
-      const LR_royaltyFeeRegistry = await RoyaltyFeeRegistry.new(9000);
-      const lr_royaltyFeeManager = await LR_royaltyFeeManager.new(LR_royaltyFeeRegistry.address);
-      const weth = await WETH.new();
-      const looksRareExchange = await LooksRareExchange.new(lr_currencyManager.address, lr_executionManager.address, lr_royaltyFeeManager.address, weth.address, LR_protocolFeeRecipient);
-      const transferManagerERC721 = await TransferManagerERC721.new(looksRareExchange.address);
-      const transferManagerERC1155 = await TransferManagerERC1155.new(looksRareExchange.address);
-      const transferSelectorNFT = await TransferSelectorNFT.new(transferManagerERC721.address, transferManagerERC1155.address);// transfer721, transfer1155
-
-      await looksRareExchange.updateTransferSelectorNFT(transferSelectorNFT.address);
-      await lr_currencyManager.addCurrency(weth.address);
-      const lr_strategy = await LooksRareTestHelper.new(0);
-      await lr_executionManager.addStrategy(lr_strategy.address);
-
-      await bulkExchange.setLooksRare(looksRareExchange.address);
-
       await erc721.mint(seller, erc721TokenId3);
       await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
       await transferSelectorNFT.addCollectionTransferManager(erc721.address, transferManagerERC721.address);
@@ -271,17 +289,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataLooksRare = PurchaseData(4, 100, await encodeFees(500, 1000), dataForLooksRare);
 
       //x2y2 order
-
-      const x2y2 = await X2Y2_r1.new()
-      await x2y2.initialize(120000, weth.address)
-
       const tokenIdX2Y2 = 12312412523;
-
-      const erc721delegate = await ERC721Delegate.new();
-      await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
-      await x2y2.updateDelegates([erc721delegate.address], [])
-
-      await bulkExchange.setX2Y2(x2y2.address)
 
       await erc721.mint(seller, tokenIdX2Y2)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -381,9 +389,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const feeRecipientSecond = accounts[7];
 
-      //making rarible orders
-      await deployRarible();
-      
       //Rarible V2 order
       await erc721.mint(seller, erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
@@ -446,10 +451,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
 
       //seaport ORDER
-      const conduitController = await ConduitController.new();
-      const seaport = await Seaport.new(conduitController.address)
-      await bulkExchange.setSeaPort(seaport.address);
-
       await erc721.mint(seller, tokenId);
       await erc721.setApprovalForAll(seaport.address, true, {from: seller});
 
@@ -502,24 +503,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
-      const LR_protocolFeeRecipient = accounts[3];
-      const lr_currencyManager = await LR_currencyManager.new();
-      const lr_executionManager = await LR_executionManager.new();
-      const LR_royaltyFeeRegistry = await RoyaltyFeeRegistry.new(9000);
-      const lr_royaltyFeeManager = await LR_royaltyFeeManager.new(LR_royaltyFeeRegistry.address);
-      const weth = await WETH.new();
-      const looksRareExchange = await LooksRareExchange.new(lr_currencyManager.address, lr_executionManager.address, lr_royaltyFeeManager.address, weth.address, LR_protocolFeeRecipient);
-      const transferManagerERC721 = await TransferManagerERC721.new(looksRareExchange.address);
-      const transferManagerERC1155 = await TransferManagerERC1155.new(looksRareExchange.address);
-      const transferSelectorNFT = await TransferSelectorNFT.new(transferManagerERC721.address, transferManagerERC1155.address);// transfer721, transfer1155
-
-      await looksRareExchange.updateTransferSelectorNFT(transferSelectorNFT.address);
-      await lr_currencyManager.addCurrency(weth.address);
-      const lr_strategy = await LooksRareTestHelper.new(0);
-      await lr_executionManager.addStrategy(lr_strategy.address);
-
-      await bulkExchange.setLooksRare(looksRareExchange.address);
-
       await erc721.mint(seller, erc721TokenId3);
       await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
       await transferSelectorNFT.addCollectionTransferManager(erc721.address, transferManagerERC721.address);
@@ -555,17 +538,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataLooksRare = PurchaseData(4, 100, await encodeFees(500, 1000), dataForLooksRare);
 
       //x2y2 order
-
-      const x2y2 = await X2Y2_r1.new()
-      await x2y2.initialize(120000, weth.address)
-
       const tokenIdX2Y2 = 12312412523;
-
-      const erc721delegate = await ERC721Delegate.new();
-      await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
-      await x2y2.updateDelegates([erc721delegate.address], [])
-
-      await bulkExchange.setX2Y2(x2y2.address)
 
       await erc721.mint(seller, tokenIdX2Y2)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -642,12 +615,12 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       await expectThrow(
         bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 575, gasPrice: 0 })
       );
-
+      
       const tx = await verifyBalanceChangeReturnTx(buyer, 460, async () =>
         verifyBalanceChangeReturnTx(seller, -300, async () =>
           verifyBalanceChangeReturnTx(feeRecipienterUP, -20, () =>
             verifyBalanceChangeReturnTx(feeRecipientSecond, -40, () =>
-              bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 575, gasPrice: 0 })
+            bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 575, gasPrice: 0 })
             )
           )
         )
@@ -671,9 +644,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const feeRecipientSecond = accounts[7];
 
-      //making rarible orders
-      await deployRarible();
-      
       //Rarible V2 order
       await erc721.mint(seller, erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
@@ -734,12 +704,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const data1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams1);
       const tradeData1 = PurchaseData(0, 100, await encodeFees(500, 1000), data1);
 
-
       //seaport ORDER
-      const conduitController = await ConduitController.new();
-      const seaport = await Seaport.new(conduitController.address)
-      await bulkExchange.setSeaPort(seaport.address);
-
       await erc721.mint(seller, tokenId);
       await erc721.setApprovalForAll(seaport.address, true, {from: seller});
 
@@ -792,24 +757,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
-      const LR_protocolFeeRecipient = accounts[3];
-      const lr_currencyManager = await LR_currencyManager.new();
-      const lr_executionManager = await LR_executionManager.new();
-      const LR_royaltyFeeRegistry = await RoyaltyFeeRegistry.new(9000);
-      const lr_royaltyFeeManager = await LR_royaltyFeeManager.new(LR_royaltyFeeRegistry.address);
-      const weth = await WETH.new();
-      const looksRareExchange = await LooksRareExchange.new(lr_currencyManager.address, lr_executionManager.address, lr_royaltyFeeManager.address, weth.address, LR_protocolFeeRecipient);
-      const transferManagerERC721 = await TransferManagerERC721.new(looksRareExchange.address);
-      const transferManagerERC1155 = await TransferManagerERC1155.new(looksRareExchange.address);
-      const transferSelectorNFT = await TransferSelectorNFT.new(transferManagerERC721.address, transferManagerERC1155.address);// transfer721, transfer1155
-
-      await looksRareExchange.updateTransferSelectorNFT(transferSelectorNFT.address);
-      await lr_currencyManager.addCurrency(weth.address);
-      const lr_strategy = await LooksRareTestHelper.new(0);
-      await lr_executionManager.addStrategy(lr_strategy.address);
-
-      await bulkExchange.setLooksRare(looksRareExchange.address);
-
       await erc721.mint(seller, erc721TokenId3);
       await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
       await transferSelectorNFT.addCollectionTransferManager(erc721.address, transferManagerERC721.address);
@@ -845,17 +792,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataLooksRare = PurchaseData(4, 100, await encodeFees(500, 1000), dataForLooksRare);
 
       //x2y2 order
-
-      const x2y2 = await X2Y2_r1.new()
-      await x2y2.initialize(120000, weth.address)
-
       const tokenIdX2Y2 = 12312412523;
-
-      const erc721delegate = await ERC721Delegate.new();
-      await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
-      await x2y2.updateDelegates([erc721delegate.address], [])
-
-      await bulkExchange.setX2Y2(x2y2.address)
 
       await erc721.mint(seller, tokenIdX2Y2)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -972,9 +909,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const feeRecipientSecond = accounts[7];
 
-      //making rarible orders
-      await deployRarible();
-      
       //Rarible V2 order
       await erc721.mint(seller, erc721TokenId1);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
@@ -1037,10 +971,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
 
       //seaport ORDER
-      const conduitController = await ConduitController.new();
-      const seaport = await Seaport.new(conduitController.address)
-      await bulkExchange.setSeaPort(seaport.address);
-
       await erc721.mint(seller, tokenId);
       await erc721.setApprovalForAll(seaport.address, true, {from: seller});
 
@@ -1093,24 +1023,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
-      const LR_protocolFeeRecipient = accounts[3];
-      const lr_currencyManager = await LR_currencyManager.new();
-      const lr_executionManager = await LR_executionManager.new();
-      const LR_royaltyFeeRegistry = await RoyaltyFeeRegistry.new(9000);
-      const lr_royaltyFeeManager = await LR_royaltyFeeManager.new(LR_royaltyFeeRegistry.address);
-      const weth = await WETH.new();
-      const looksRareExchange = await LooksRareExchange.new(lr_currencyManager.address, lr_executionManager.address, lr_royaltyFeeManager.address, weth.address, LR_protocolFeeRecipient);
-      const transferManagerERC721 = await TransferManagerERC721.new(looksRareExchange.address);
-      const transferManagerERC1155 = await TransferManagerERC1155.new(looksRareExchange.address);
-      const transferSelectorNFT = await TransferSelectorNFT.new(transferManagerERC721.address, transferManagerERC1155.address);// transfer721, transfer1155
-
-      await looksRareExchange.updateTransferSelectorNFT(transferSelectorNFT.address);
-      await lr_currencyManager.addCurrency(weth.address);
-      const lr_strategy = await LooksRareTestHelper.new(0);
-      await lr_executionManager.addStrategy(lr_strategy.address);
-
-      await bulkExchange.setLooksRare(looksRareExchange.address);
-
       await erc721.mint(seller, erc721TokenId3);
       await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
       await transferSelectorNFT.addCollectionTransferManager(erc721.address, transferManagerERC721.address);
@@ -1146,17 +1058,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const tradeDataLooksRare = PurchaseData(4, 100, await encodeFees(500, 1000), dataForLooksRare);
 
       //x2y2 order
-
-      const x2y2 = await X2Y2_r1.new()
-      await x2y2.initialize(120000, weth.address)
-
       const tokenIdX2Y2 = 12312412523;
-
-      const erc721delegate = await ERC721Delegate.new();
-      await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
-      await x2y2.updateDelegates([erc721delegate.address], [])
-
-      await bulkExchange.setX2Y2(x2y2.address)
 
       await erc721.mint(seller, tokenIdX2Y2)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -1299,7 +1201,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     await transferProxy.addOperator(exchangeV2.address)
     await erc20TransferProxy.addOperator(exchangeV2.address)
 
-    await bulkExchange.setExchange(exchangeV2.address)
   }
 
   async function verifyBalanceChangeReturnTx(account, change, todo) {

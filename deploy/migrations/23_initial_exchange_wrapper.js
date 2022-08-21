@@ -65,15 +65,10 @@ function getSettings(network) {
 module.exports = async function (deployer, network) {
   const settings = getSettings(network);
   let exchangeWrapper;
-  try {
-    exchangeWrapper = await ExchangeWrapper.deployed();
-    console.log("Found deployed wrapper contract. using it");
-  } catch(e) {
-    console.log("Deploying new exchange wrapper contract");
-    await deployer.deploy(ExchangeWrapper, { gas: 5000000 });
-    exchangeWrapper = await ExchangeWrapper.deployed();
-  }
+
   const exchangeV2 = (await ExchangeV2.deployed()).address;
-  await exchangeWrapper.__ExchangeWrapper_init(settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, { gas: 200000 });
+  await deployer.deploy(ExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, { gas: 3000000 });
+
+  exchangeWrapper = await ExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
 };

@@ -45,7 +45,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
     ) external {
         //todo: check if token contract supports ERC721 interface?
 
-        uint _protocolFee = protocolFee;
+        uint _protocolFee;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
         require(getValueFromData(aucData.originFee) + _protocolFee <= MAX_FEE_BASE_POINT, "wrong fees");

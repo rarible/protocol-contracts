@@ -7,11 +7,13 @@ import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import "@rarible/lib-bp/contracts/BpLibrary.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721HolderUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155HolderUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
 
 import "./interfaces/IWyvernExchange.sol";
 import "./interfaces/IExchangeV2.sol";
@@ -19,16 +21,16 @@ import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
 
-contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155HolderUpgradeable {
+contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
     using LibTransfer for address;
     using BpLibrary for uint;
-    using SafeMathUpgradeable for uint;
+    using SafeMath for uint;
 
-    IWyvernExchange public wyvernExchange;
-    IExchangeV2 public exchangeV2;
-    ISeaPort public seaPort;
-    Ix2y2 public x2y2;
-    ILooksRare public looksRare;
+    address public immutable wyvernExchange;
+    address public immutable exchangeV2;
+    address public immutable seaPort;
+    address public immutable x2y2;
+    address public immutable looksRare;
 
     event Execution(bool result);
 
@@ -57,39 +59,17 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
         bytes data;
     }
 
-    function __ExchangeWrapper_init(
-        IWyvernExchange _wyvernExchange,
-        IExchangeV2 _exchangeV2,
-        ISeaPort _seaPort,
-        Ix2y2 _x2y2,
-        ILooksRare _looksRare
-    ) external initializer {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
+    constructor(
+        address _wyvernExchange,
+        address _exchangeV2,
+        address _seaPort,
+        address _x2y2,
+        address _looksRare
+    ) {
         wyvernExchange = _wyvernExchange;
         exchangeV2 = _exchangeV2;
         seaPort = _seaPort;
         x2y2 = _x2y2;
-        looksRare = _looksRare;
-    }
-
-    function setWyvern(IWyvernExchange _wyvernExchange) external onlyOwner {
-        wyvernExchange = _wyvernExchange;
-    }
-
-    function setExchange(IExchangeV2 _exchangeV2) external onlyOwner {
-        exchangeV2 = _exchangeV2;
-    }
-
-    function setSeaPort(ISeaPort _seaPort) external onlyOwner {
-        seaPort = _seaPort;
-    }
-
-    function setX2Y2(Ix2y2 _x2y2) external onlyOwner {
-        x2y2 = _x2y2;
-    }
-
-    function setLooksRare(ILooksRare _looksRare) external onlyOwner {
         looksRare = _looksRare;
     }
 
@@ -128,8 +108,8 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
             result = result || success;
             emit Execution(success);
 
-            sumFirstFees = sumFirstFees + firstFeeAmount;
-            sumSecondFees = sumSecondFees + secondFeeAmount;
+            sumFirstFees = sumFirstFees.add(firstFeeAmount);
+            sumSecondFees = sumSecondFees.add(secondFeeAmount);
         }
 
         require(result, "no successful executions");
@@ -179,12 +159,12 @@ contract ExchangeWrapper is ERC721HolderUpgradeable, OwnableUpgradeable, ERC1155
             Ix2y2.RunInput memory input = abi.decode(purchaseDetails.data, (Ix2y2.RunInput));
 
             if (allowFail) {
-                try x2y2.run{value : paymentAmount}(input) {
+                try Ix2y2(x2y2).run{value : paymentAmount}(input) {
                 } catch {
                     return (false, 0, 0);
                 }
             } else {
-                x2y2.run{value : paymentAmount}(input);
+                Ix2y2(x2y2).run{value : paymentAmount}(input);
             }
             for (uint i = 0; i < input.orders.length; i++) {
                 for (uint j = 0; j < input.orders[i].items.length; j++) {

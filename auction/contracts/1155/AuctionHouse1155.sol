@@ -45,7 +45,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseBase1155 {
     ) external {
         //todo: check if token contract supports ERC1155 interface?
 
-        uint _protocolFee = protocolFee;
+        uint _protocolFee;
         LibAucDataV1.DataV1 memory aucData = LibAucDataV1.parse(data, dataType);
         require(aucData.duration >= minimalDuration && aucData.duration <= MAX_DURATION, "incorrect duration");
         require(_sellTokenValue > 0, "incorrect _sellTokenValue");
