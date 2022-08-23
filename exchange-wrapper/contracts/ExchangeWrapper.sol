@@ -7,7 +7,6 @@ import "@rarible/transfer-manager/contracts/lib/LibTransfer.sol";
 import "@rarible/lib-bp/contracts/BpLibrary.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
@@ -19,7 +18,9 @@ import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
 
-contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder {
+import "./libraries/IsPausable.sol";
+
+contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMath for uint;
@@ -77,6 +78,8 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder {
         @param feeRecipientSecond - address of the second fee recipient
      */
     function singlePurchase(PurchaseDetails memory purchaseDetails, address feeRecipientFirst, address feeRecipientSecond) external payable {
+        requireNotPaused();
+
         (bool success, uint feeAmountFirst, uint feeAmountSecond) = purchase(purchaseDetails, false);
         emit Execution(success);
         
@@ -95,6 +98,8 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder {
      */
     
     function bulkPurchase(PurchaseDetails[] memory purchaseDetails, address feeRecipientFirst, address feeRecipientSecond, bool allowFail) external payable {
+        requireNotPaused();
+
         uint sumFirstFees = 0;
         uint sumSecondFees = 0;
         bool result = false;

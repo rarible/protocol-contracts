@@ -42,7 +42,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 
-contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
+contract("ExchangeWrapper default cases", accounts => {
   let bulkExchange;
   let exchangeV2;
   let seaport;

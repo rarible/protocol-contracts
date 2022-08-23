@@ -5,6 +5,7 @@
 `ExchangeWrapper` contract is a top-level wrapper over `ExchangeV2`, `WyvernExchangeWithBulkCancellations`, `SeaPort`, `X2Y2`, `LooksRare` contracts. 
 It performs single or array transfers of Rarible, Wyvern, SeaPort, X2Y2, LooksRare `Orders`.
 
+`ExchangeWrapper` can be paused and up-paused by owner.
 ## Algorithm
 
 `ExchangeWrapper` working with ETH transfers only.

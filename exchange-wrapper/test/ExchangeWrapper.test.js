@@ -1,3 +1,6 @@
+const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const truffleAssert = require('truffle-assertions');
+
 const ExchangeBulkV2 = artifacts.require("ExchangeWrapper.sol");
 const WrapperHelper = artifacts.require("WrapperHelper.sol");
 
@@ -40,13 +43,13 @@ const ERC721Delegate = artifacts.require("ERC721Delegate.sol");
 const X2Y2_r1 = artifacts.require("X2Y2_r1.sol");
 
 const { Order, Asset, sign } = require("../../scripts/order.js");
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 
-contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
+contract("ExchangeWrapper bulk cases", accounts => {
   let bulkExchange;
   let exchangeV2;
   let wrapperHelper;
@@ -104,18 +107,17 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
   });
   
-  describe("purcahase Seaport orders", () => {
-
-    it("wrapper seaport (fulfillAdvancedOrder through data selector, method fulfillAdvancedOrder) ERC721<->ETH", async () => {
+  describe ("libraries", () => {
+    it("pausable", async () => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
       bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS);
-
+      
+      // creating seaport order
       const buyerLocal1 = accounts[2];
-      const token = await TestERC721.new();
-      await token.mint(seller, tokenId)
-      await token.setApprovalForAll(seaport.address, true, {from: seller})
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(seaport.address, true, {from: seller})
       const considerationItemLeft = {
         itemType: 0,
         token: '0x0000000000000000000000000000000000000000',
@@ -127,7 +129,98 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const offerItemLeft = {
         itemType: 2, // 2: ERC721 items
-        token: token.address,
+        token: erc721.address,
+        identifierOrCriteria: '0x3039',
+        startAmount: 1,
+        endAmount: 1
+      }
+
+      const OrderParametersLeft = {
+        offerer: seller,// 0x00
+        zone: zoneAddr, // 0x20
+        offer: [offerItemLeft], // 0x40
+        consideration: [considerationItemLeft], // 0x60
+        orderType: 0, // 0: no partial fills, anyone can execute
+        startTime: 0, //
+        endTime: '0xff00000000000000000000000000', // 0xc0
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // 0xe0
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885', // 0x100
+        conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000', // 0x120
+        totalOriginalConsiderationItems: 1 // 0x140
+        // offer.length                          // 0x160
+      }
+
+      const _advancedOrder = {
+        parameters: OrderParametersLeft,
+        numerator: 1,
+        denominator: 1,
+        signature: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1b',
+        extraData: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1c'
+      }
+
+      const _criteriaResolvers = [];
+      const _fulfillerConduitKey = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const _recipient = buyerLocal1;
+
+      let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
+      const tradeDataSeaPort = PurchaseData(2, 100, 0, dataForSeaportWithSelector);
+
+      //error when called not from owner
+      await expectThrow(
+        bulkExchange.pause(true, { from: accounts[5]})
+      );
+
+      const txPaused = await bulkExchange.pause(true)
+      truffleAssert.eventEmitted(txPaused, 'Paused', (ev) => {
+        assert.equal(ev.paused, true, "was paused")
+        return true;
+      });
+
+      assert.equal(await bulkExchange.paused(), true, "is paused")
+
+      //contract is paused
+      await expectThrow(
+        bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 100})
+      );
+      
+      const txUnPause = await bulkExchange.pause(false);
+      truffleAssert.eventEmitted(txUnPause, 'Paused', (ev) => {
+        assert.equal(ev.paused, false, "was paused")
+        return true;
+      });
+
+      assert.equal(await bulkExchange.paused(), false, "is not paused")
+
+      await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 100})
+      assert.equal(await erc721.balanceOf(seller), 0);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 1);
+    })
+  })
+
+
+  describe("purcahase Seaport orders", () => {
+
+    it("wrapper seaport (fulfillAdvancedOrder through data selector, method fulfillAdvancedOrder) ERC721<->ETH", async () => {
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS);
+
+      const buyerLocal1 = accounts[2];
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(seaport.address, true, {from: seller})
+      const considerationItemLeft = {
+        itemType: 0,
+        token: '0x0000000000000000000000000000000000000000',
+        identifierOrCriteria: 0,
+        startAmount: 100,
+        endAmount: 100,
+        recipient: seller
+      }
+
+      const offerItemLeft = {
+        itemType: 2, // 2: ERC721 items
+        token: erc721.address,
         identifierOrCriteria: '0x3039',
         startAmount: 1,
         endAmount: 1
@@ -165,8 +258,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 100})
       console.log("wrapper seaport (fulfillAdvancedOrder() by call : ETH <=> ERC721", tx.receipt.gasUsed)
-      assert.equal(await token.balanceOf(seller), 0);
-      assert.equal(await token.balanceOf(buyerLocal1), 1);
+      assert.equal(await erc721.balanceOf(seller), 0);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 1);
     })
 
     it("wrapper seaport (fulfillAvalibleAdvancedOrder through data selector, method ) ERC721<->ETH", async () => {
@@ -176,9 +269,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const buyerLocal1 = accounts[2];
-      const token = await TestERC721.new();
-      await token.mint(seller, tokenId)
-      await token.setApprovalForAll(seaport.address, true, {from: seller})
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(seaport.address, true, {from: seller})
 
       const considerationItemLeft = {
         itemType: 0,
@@ -191,7 +283,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const offerItemLeft = {
         itemType: 2, // 2: ERC721 items
-        token: token.address,
+        token: erc721.address,
         identifierOrCriteria: '0x3039',
         startAmount: 1,
         endAmount: 1
@@ -247,8 +339,8 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 100})
       console.log("SEAPORT fulfillAvalibleAdvancedOrder, by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
-      assert.equal(await token.balanceOf(seller), 0);
-      assert.equal(await token.balanceOf(buyerLocal1), 1);
+      assert.equal(await erc721.balanceOf(seller), 0);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 1);
     })
   });
 
@@ -939,10 +1031,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address);
 
-      const token = await TestERC721.new();
-      await token.mint(seller, tokenId)
-      await token.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
-      await transferSelectorNFT.addCollectionTransferManager(token.address, transferManagerERC721.address);
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
+      await transferSelectorNFT.addCollectionTransferManager(erc721.address, transferManagerERC721.address);
 
       const takerBid = {
         isOrderAsk: false,
@@ -955,7 +1046,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const makerAsk = {
         isOrderAsk: true,
         signer: seller,
-        collection: token.address,
+        collection: erc721.address,
         price: 10000,
         tokenId: '0x3039',
         amount: 1,
@@ -972,13 +1063,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       }
       console.log("LooksRare: ETH <=> ERC721")
 
-      assert.equal(await token.balanceOf(buyerLocal1), 0);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 0);
       let dataForLooksRare = await wrapperHelper.getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk, ERC721);
       const tradeDataSeaPort = PurchaseData(4, 10000, 0, dataForLooksRare);
 
       const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 10000})
       console.log("wrapper call LooksRare: ETH <=> ERC721", tx.receipt.gasUsed)
-      assert.equal(await token.balanceOf(buyerLocal1), 1);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 1);
       assert.equal(await weth.balanceOf(seller), 10000);
     })
 
@@ -1002,10 +1093,9 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
 
       bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address);
 
-      const token = await TestERC1155.new();
-      await token.mint(seller, tokenId, 10)
-      await token.setApprovalForAll(transferManagerERC1155.address, true, {from: seller});
-      await transferSelectorNFT.addCollectionTransferManager(token.address, transferManagerERC1155.address);
+      await erc1155.mint(seller, tokenId, 10)
+      await erc1155.setApprovalForAll(transferManagerERC1155.address, true, {from: seller});
+      await transferSelectorNFT.addCollectionTransferManager(erc1155.address, transferManagerERC1155.address);
 
       const takerBid = {
         isOrderAsk: false,
@@ -1018,7 +1108,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       const makerAsk = {
         isOrderAsk: true,
         signer: seller,
-        collection: token.address,
+        collection: erc1155.address,
         price: 10000,
         tokenId: '0x3039',
         amount: 10,
@@ -1035,13 +1125,13 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       }
       console.log("LooksRare: ETH <=> ERC1155")
 
-      assert.equal(await token.balanceOf(buyerLocal1, tokenId), 0);
+      assert.equal(await erc1155.balanceOf(buyerLocal1, tokenId), 0);
       let dataForLooksRare = await wrapperHelper.getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk, ERC1155);
       const tradeDataSeaPort = PurchaseData(4, 10000, 0, dataForLooksRare);
 
       const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 10000})
       console.log("wrapper call LooksRare: ETH <=> ERC1155 = ", tx.receipt.gasUsed)
-      assert.equal(await token.balanceOf(buyerLocal1, tokenId), 10);
+      assert.equal(await erc1155.balanceOf(buyerLocal1, tokenId), 10);
       assert.equal(await weth.balanceOf(seller), 10000);
     })
   });
