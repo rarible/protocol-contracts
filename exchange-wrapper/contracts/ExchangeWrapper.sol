@@ -10,8 +10,6 @@ import "@rarible/lib-part/contracts/LibPart.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155Holder.sol";
 
@@ -21,7 +19,7 @@ import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
 
-contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
+contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMath for uint;
@@ -37,7 +35,7 @@ contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
     enum Markets {
         ExchangeV2,
         WyvernExchange,
-        SeaPortAdvancedOrders,
+        SeaPort,
         X2Y2,
         LooksRareOrders
     }
@@ -49,7 +47,6 @@ contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
         @param fees - 2 fees (in base points) that are going to be taken on top of order amount encoded in 1 uint256
                         bytes (29,30) used for the first value (goes to feeRecipientFirst)
                         bytes (31,32) are used for the second value (goes to feeRecipientSecond)
-
         @param data - data for market call 
      */
     struct PurchaseDetails {
@@ -121,21 +118,23 @@ contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
     }
 
     /**
-        @notice executase one purchase
+        @notice executes one purchase
         @param purchaseDetails - details about the purchase
         @param allowFail - true if errors are handled, false if revert on errors
-        @return payment amount for the order. if execution failed (with allowFail = true) or addFee = false for the order then return 0;
+        @return result false if execution failed, true if succeded
+        @return firstFeeAmount amount of the first fee of the purchase, 0 if failed
+        @return secondFeeAmount amount of the second fee of the purchase, 0 if failed
      */
     function purchase(PurchaseDetails memory purchaseDetails, bool allowFail) internal returns(bool, uint, uint) {
         uint paymentAmount = purchaseDetails.amount;
-        if (purchaseDetails.marketId == Markets.SeaPortAdvancedOrders){
+        if (purchaseDetails.marketId == Markets.SeaPort){
             (bool success,) = address(seaPort).call{value : paymentAmount}(purchaseDetails.data);
             if (allowFail) {
                 if (!success) {
                     return (false, 0, 0);
                 }
             } else {
-                require(success, "Purchase SeaPortAdvancedOrders failed");
+                require(success, "Purchase SeaPort failed");
             }
         } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(purchaseDetails.data);
@@ -200,12 +199,20 @@ contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
         return (true, firstFeeAmount, secondFeeAmount);
     }
 
+    /**
+        @notice transfers fee to feeRecipient
+        @param feeAmount - amount to be transfered
+        @param feeRecipient - address of the recipient
+     */
     function transferFee(uint feeAmount, address feeRecipient) internal {
         if (feeAmount > 0 && feeRecipient != address(0)) {
             LibTransfer.transferEth(feeRecipient, feeAmount);
         }
     }
 
+    /**
+        @notice transfers change back to sender
+     */
     function transferChange() internal {
         uint ethAmount = address(this).balance;
         if (ethAmount > 0) {
@@ -213,6 +220,13 @@ contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
         }
     }
 
+    /**
+        @notice parses fees in base points from one uint and calculates real amount of fees
+        @param fees two fees encoded in one uint, 29 and 30 bytes are used for the first fee, 31 and 32 bytes for second fee
+        @param amount price of the order
+        @return firstFeeAmount real amount for the first fee
+        @return secondFeeAmount real amount for the second fee
+     */
     function getFees(uint fees, uint amount) internal pure returns(uint, uint) {
         uint firstFee = uint(uint16(fees >> 16));
         uint secondFee = uint(uint16(fees));
@@ -220,6 +234,4 @@ contract ExchangeWrapper is ERC721Holder, Ownable, ERC1155Holder {
     }
 
     receive() external payable {}
-
-    uint256[50] private __gap;
 }
