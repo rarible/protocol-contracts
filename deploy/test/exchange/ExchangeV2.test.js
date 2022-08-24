@@ -53,13 +53,8 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
     /*Auction*/
     exchangeV2 = await ExchangeV2.deployed();
-    await exchangeV2.setDefaultFeeReceiver(protocol)
 
     helper = await RaribleTestHelper.new()
-  });
-
-  beforeEach(async () => {
-    await exchangeV2.setProtocolFee(300);
   });
 
   describe("gas estimation direct Purchase/AcceptBid", () => {
@@ -82,20 +77,24 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(id("ERC721_LAZY"), encodedMintData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directPurchaseParams = {
-        seller: makerLeft,
-        nftClass: id("ERC721_LAZY"),
-        paymentClass: ETH,
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: id("ERC721_LAZY"),
         nftData: encodedMintData,
-        paymentData: _nftPurchaseAssetData,
-        tokenSellAmount: nftAmount,
-        tokenPurchaseAmount: nftAmount,
-        priceSell: _priceSell,
-        pricePurchase: _pricePurchase,
-        salt: salt, signature: signature,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: zeroAddress,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
         sellOrderData: encDataLeft,
-        purchaseOrderData: encDataRight
+        sellOrderSignature: signature,
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftAmount,
+        buyOrderData: encDataRight
       };
+
       const tx = await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200 });
       console.log("direct buy ERC721Lazy<->ETH, not same origin, not same royalties V3:", tx.receipt.gasUsed);
     })
@@ -118,19 +117,22 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC721, _nftSellAssetData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directPurchaseParams = {
-        seller: makerLeft,
-        nftClass: ERC721,
-        paymentClass: ETH,
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: ERC721,
         nftData: _nftSellAssetData,
-        paymentData: _nftPurchaseAssetData,
-        tokenSellAmount: nftAmount,
-        tokenPurchaseAmount: nftAmount,
-        priceSell: _priceSell,
-        pricePurchase: _pricePurchase,
-        salt: salt, signature: signature,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: zeroAddress,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
         sellOrderData: encDataLeft,
-        purchaseOrderData: encDataRight
+        sellOrderSignature: signature,
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftAmount,
+        buyOrderData: encDataRight
       };
       const tx = await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200 });
       console.log("direct buy ERC721<->ETH, not same origin, not same royalties V3:", tx.receipt.gasUsed);
@@ -157,19 +159,25 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const bidOrder = Order(makerLeft, Asset(ERC20, _paymentAssetData, _priceBid), ZERO, Asset(ERC721, _nftAssetData, _nftBidAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(bidOrder, makerLeft);
 
-      var directAcceptParams = {
-        tokenBidAmount: _nftBidAmount,
-        tokenAcceptAmount: _nftAcceptAmount,
-        buyer: makerLeft,
-        nftClass: ERC721,
+
+      const directAcceptParams = {
+        bidMaker: makerLeft,
+        bidNftAmount: _nftBidAmount,
+        nftAssetClass: ERC721,
         nftData: _nftAssetData,
-        paymentData: _paymentAssetData,
-        bidOrderData: encDataLeft,
-        acceptOrderData: encDataRight,
-        priceBid: _priceBid,
-        priceAccept: _priceAccept,
-        salt: salt, signature: signature
+        bidPaymentAmount: _priceBid,
+        paymentToken: erc20.address,
+        bidSalt: salt,
+        bidStart: 0,
+        bidEnd: 0,
+        bidDataType: ORDER_DATA_V3_BUY,
+        bidData: encDataLeft,
+        bidSignature: signature,
+        sellOrderPaymentAmount: _priceAccept,
+        sellOrderNftAmount: _nftAcceptAmount,
+        sellOrderData: encDataRight
       };
+
       const tx = await exchangeV2.directAcceptBid(directAcceptParams, { from: makerRight });
       console.log("Direct accept bid ERC20<->ERC721, not same origin, not same royalties V3:", tx.receipt.gasUsed);
     })
@@ -196,26 +204,29 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
       const _nftPurchaseAssetData = "0x";
 
-      var directPurchaseParams = {
-        seller: makerLeft,
-        nftClass: ERC721,
-        paymentClass: ETH,
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: ERC721,
         nftData: _nftSellAssetData,
-        paymentData: _nftPurchaseAssetData,
-        tokenSellAmount: nftAmount,
-        tokenPurchaseAmount: nftAmount,
-        priceSell: _priceSell,
-        pricePurchase: _pricePurchase,
-        salt: salt, signature: signature,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: zeroAddress,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
         sellOrderData: encDataLeft,
-        purchaseOrderData: encDataRight
+        sellOrderSignature: signature,
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftAmount,
+        buyOrderData: encDataRight
       };
 
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
       await verifyBalanceChange(makerRight, 100, async () =>
-        verifyBalanceChange(makerLeft, -90, async () =>
-          verifyBalanceChange(protocol, -3, () =>
+        verifyBalanceChange(makerLeft, -93, async () =>
+          verifyBalanceChange(protocol, 0, () =>
             verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
               verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
                 verifyBalanceChange(accounts[7], -1, () =>  //royalties
@@ -250,30 +261,33 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC721, _nftSellAssetData, nftAmount), ZERO, Asset(ERC20, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directPurchaseParams = {
-        seller: makerLeft,
-        nftClass: ERC721,
-        paymentClass: ERC20,
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: ERC721,
         nftData: _nftSellAssetData,
-        paymentData: _nftPurchaseAssetData,
-        tokenSellAmount: nftAmount,
-        tokenPurchaseAmount: nftAmount,
-        priceSell: _priceSell,
-        pricePurchase: _pricePurchase,
-        salt: salt, signature: signature,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: erc20.address,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
         sellOrderData: encDataLeft,
-        purchaseOrderData: encDataRight
+        sellOrderSignature: signature,
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftAmount,
+        buyOrderData: encDataRight
       };
 
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
       await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight });
       assert.equal(await erc20.balanceOf(makerRight), 900);
-      assert.equal(await erc20.balanceOf(makerLeft), 90);
+      assert.equal(await erc20.balanceOf(makerLeft), 93);
       assert.equal(await erc20.balanceOf(accounts[6]), 3);
       assert.equal(await erc20.balanceOf(accounts[5]), 3);
       assert.equal(await erc20.balanceOf(accounts[7]), 1);
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
       assert.equal(await erc721.balanceOf(makerLeft), 0);
       assert.equal(await erc721.balanceOf(makerRight), 1);
     })
@@ -298,26 +312,29 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC1155, _nftSellAssetData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directPurchaseParams = {
-        seller: makerLeft,
-        nftClass: ERC1155,
-        paymentClass: ETH,
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: ERC1155,
         nftData: _nftSellAssetData,
-        paymentData: _nftPurchaseAssetData,
-        tokenSellAmount: nftAmount,
-        tokenPurchaseAmount: nftPurchaseAmount,
-        priceSell: _priceSell,
-        pricePurchase: _pricePurchase,
-        salt: salt, signature: signature,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: zeroAddress,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
         sellOrderData: encDataLeft,
-        purchaseOrderData: encDataRight
+        sellOrderSignature: signature,
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftPurchaseAmount,
+        buyOrderData: encDataRight
       };
 
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 10);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 0);
       await verifyBalanceChange(makerRight, 100, async () =>
-        verifyBalanceChange(makerLeft, -90, async () =>
-          verifyBalanceChange(protocol, -3, () =>
+        verifyBalanceChange(makerLeft, -93, async () =>
+          verifyBalanceChange(protocol, 0, () =>
             verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
               verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
                 verifyBalanceChange(accounts[7], -1, () =>  //royalties
@@ -353,30 +370,34 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC1155, _nftSellAssetData, nftAmount), ZERO, Asset(ERC20, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directPurchaseParams = {
-        seller: makerLeft,
-        nftClass: ERC1155,
-        paymentClass: ERC20,
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: ERC1155,
         nftData: _nftSellAssetData,
-        paymentData: _nftPurchaseAssetData,
-        tokenSellAmount: nftAmount,
-        tokenPurchaseAmount: nftPurchaseAmount,
-        priceSell: _priceSell,
-        pricePurchase: _pricePurchase,
-        salt: salt, signature: signature,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: erc20.address,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
         sellOrderData: encDataLeft,
-        purchaseOrderData: encDataRight
+        sellOrderSignature: signature,
+
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftPurchaseAmount,
+        buyOrderData: encDataRight
       };
 
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 10);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 0);
       await exchangeV2.directPurchase(directPurchaseParams, { from: makerRight });
       assert.equal(await erc20.balanceOf(makerRight), 950);
-      assert.equal(await erc20.balanceOf(makerLeft), 47);
+      assert.equal(await erc20.balanceOf(makerLeft), 48);
       assert.equal(await erc20.balanceOf(accounts[6]), 1);
       assert.equal(await erc20.balanceOf(accounts[5]), 1);
       assert.equal(await erc20.balanceOf(accounts[7]), 0);
-      assert.equal(await erc20.balanceOf(protocol), 1);
+      assert.equal(await erc20.balanceOf(protocol), 0);
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 8);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 2);
     })
@@ -402,18 +423,22 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC20, _paymentAssetData, _priceBid), ZERO, Asset(ERC721, _nftAssetData, _nftBidAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directAcceptParams = {
-        tokenBidAmount: _nftBidAmount,
-        tokenAcceptAmount: _nftAcceptAmount,
-        buyer: makerLeft,
-        nftClass: ERC721,
+      const directAcceptParams = {
+        bidMaker: makerLeft,
+        bidNftAmount: _nftBidAmount,
+        nftAssetClass: ERC721,
         nftData: _nftAssetData,
-        paymentData: _paymentAssetData,
-        bidOrderData: encDataLeft,
-        acceptOrderData: encDataRight,
-        priceBid: _priceBid,
-        priceAccept: _priceAccept,
-        salt: salt, signature: signature
+        bidPaymentAmount: _priceBid,
+        paymentToken: erc20.address,
+        bidSalt: salt,
+        bidStart: 0,
+        bidEnd: 0,
+        bidDataType: ORDER_DATA_V3_BUY,
+        bidData: encDataLeft,
+        bidSignature: signature,
+        sellOrderPaymentAmount: _priceAccept,
+        sellOrderNftAmount: _nftAcceptAmount,
+        sellOrderData: encDataRight
       };
 
       assert.equal(await erc721.balanceOf(makerLeft), 0);
@@ -422,11 +447,11 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
       assert.equal(await erc20.balanceOf(makerLeft), 900);
-      assert.equal(await erc20.balanceOf(makerRight), 90);
+      assert.equal(await erc20.balanceOf(makerRight), 93);
       assert.equal(await erc20.balanceOf(accounts[6]), 3);
       assert.equal(await erc20.balanceOf(accounts[5]), 3);
       assert.equal(await erc20.balanceOf(accounts[7]), 1);
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
     })
 
     it("Direct accept bid ERC20<->ERC1155(all), not same origin, not same royalties V3", async () => {
@@ -450,30 +475,35 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC20, _paymentAssetData, 100), ZERO, Asset(ERC1155, _nftAssetData, _nftBidAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directAcceptParams = {
-        tokenBidAmount: _nftBidAmount,
-        tokenAcceptAmount: _nftAcceptAmount,
-        buyer: makerLeft,
-        nftClass: ERC1155,
+      const directAcceptParams = {
+        bidMaker: makerLeft,
+        bidNftAmount: _nftBidAmount,
+        nftAssetClass: ERC1155,
         nftData: _nftAssetData,
-        paymentData: _paymentAssetData,
-        bidOrderData: encDataLeft,
-        acceptOrderData: encDataRight,
-        priceBid: _priceBid,
-        priceAccept: _priceAccept,
-        salt: salt, signature: signature
+        bidPaymentAmount: _priceBid,
+        paymentToken: erc20.address,
+        bidSalt: salt,
+        bidStart: 0,
+        bidEnd: 0,
+        bidDataType: ORDER_DATA_V3_BUY,
+        bidData: encDataLeft,
+        bidSignature: signature,
+        sellOrderPaymentAmount: _priceAccept,
+        sellOrderNftAmount: _nftAcceptAmount,
+        sellOrderData: encDataRight
       };
+      
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 0);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 10);
       await exchangeV2.directAcceptBid(directAcceptParams,{ from: makerRight });
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 7);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 3);
       assert.equal(await erc20.balanceOf(makerLeft), 900);
-      assert.equal(await erc20.balanceOf(makerRight), 90);
+      assert.equal(await erc20.balanceOf(makerRight), 93);
       assert.equal(await erc20.balanceOf(accounts[6]), 3);
       assert.equal(await erc20.balanceOf(accounts[5]), 3);
       assert.equal(await erc20.balanceOf(accounts[7]), 1);
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
     })
 
     it("Direct accept bid ERC20<->ERC1155(partly), not same origin, not same royalties V3", async () => {
@@ -497,30 +527,136 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC20, _paymentAssetData, _priceBid), ZERO, Asset(ERC1155, _nftAssetData, _nftBidAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
-      var directAcceptParams = {
-        tokenBidAmount: _nftBidAmount,
-        tokenAcceptAmount: _nftAcceptAmount,
-        buyer: makerLeft,
-        nftClass: ERC1155,
+      const directAcceptParams = {
+        bidMaker: makerLeft,
+        bidNftAmount: _nftBidAmount,
+        nftAssetClass: ERC1155,
         nftData: _nftAssetData,
-        paymentData: _paymentAssetData,
-        bidOrderData: encDataLeft,
-        acceptOrderData: encDataRight,
-        priceBid: _priceBid,
-        priceAccept: _priceAccept,
-        salt: salt, signature: signature
+        bidPaymentAmount: _priceBid,
+        paymentToken: erc20.address,
+        bidSalt: salt,
+        bidStart: 0,
+        bidEnd: 0,
+        bidDataType: ORDER_DATA_V3_BUY,
+        bidData: encDataLeft,
+        bidSignature: signature,
+        sellOrderPaymentAmount: _priceAccept,
+        sellOrderNftAmount: _nftAcceptAmount,
+        sellOrderData: encDataRight
       };
+
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 0);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 10);
       await exchangeV2.directAcceptBid(directAcceptParams,{ from: makerRight });
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 7);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 3);
       assert.equal(await erc20.balanceOf(makerLeft), 1300);
-      assert.equal(await erc20.balanceOf(makerRight), 630);
+      assert.equal(await erc20.balanceOf(makerRight), 651);
       assert.equal(await erc20.balanceOf(accounts[6]), 21);
       assert.equal(await erc20.balanceOf(accounts[5]), 21);
       assert.equal(await erc20.balanceOf(accounts[7]), 7);
-      assert.equal(await erc20.balanceOf(protocol), 21);
+      assert.equal(await erc20.balanceOf(protocol), 0);
+    })
+
+    it("Direct Purchase ERC721<->ETH, not same origin, not same royalties V2", async () => {
+      const _priceSell = 100;
+      const _pricePurchase = 100;
+      const salt = 1;
+      const nftAmount = 1
+      const erc721 = await prepareERC721(makerLeft, erc721TokenId1, [[accounts[7], 100]]); //with royalties
+
+      let encDataLeft  = await encDataV2([[], [[accounts[6], 300]], true]);
+      let encDataRight = await encDataV2([[], [[accounts[5], 300]], false]);
+
+      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", _priceSell), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const signature = await getSignature(left, makerLeft);
+
+      const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
+
+      const directPurchaseParams = {
+        sellOrderMaker: makerLeft,
+        sellOrderNftAmount: nftAmount,
+        nftAssetClass: ERC721,
+        nftData: _nftSellAssetData,
+        sellOrderPaymentAmount: _priceSell,
+        paymentToken: zeroAddress,
+        sellOrderSalt: salt,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
+        sellOrderSignature: signature,
+        buyOrderPaymentAmount: _pricePurchase,
+        buyOrderNftAmount: nftAmount,
+        buyOrderData: encDataRight
+      };
+
+      assert.equal(await erc721.balanceOf(makerLeft), 1);
+      assert.equal(await erc721.balanceOf(makerRight), 0);
+      await verifyBalanceChange(makerRight, 103, async () =>
+        verifyBalanceChange(makerLeft, -96, async () =>
+          verifyBalanceChange(protocol, 0, () =>
+            verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
+              verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
+                verifyBalanceChange(accounts[7], -1, () =>  //royalties
+                  exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200, gasPrice: 0 })
+                )
+              )
+            )
+          )
+        )
+      );
+      assert.equal(await erc721.balanceOf(makerLeft), 0);
+      assert.equal(await erc721.balanceOf(makerRight), 1);
+    })
+
+    it("Direct accept bid ERC721<->ERC20, not same origin, not same royalties V2", async () => {
+      const _priceBid = 100;
+      const _priceAccept = 100;
+      const salt = 1;
+      const _nftBidAmount = 1;
+      const _nftAcceptAmount = 1;
+      const erc20 = await prepareERC20(makerLeft, 1000);
+      const erc721 = await prepareERC721(makerRight, erc721TokenId1, [[accounts[7], 100]]); //with royalties
+
+      let encDataLeft  = await encDataV2([[], [[accounts[6], 300]], true]);
+      let encDataRight = await encDataV2([[], [[accounts[5], 300]], false]);
+      
+      const _nftAssetData = enc(erc721.address, erc721TokenId1);
+      const _paymentAssetData = enc(erc20.address);
+
+      const left = Order(makerLeft, Asset(ERC20, _paymentAssetData, _priceBid), ZERO, Asset(ERC721, _nftAssetData, _nftBidAmount), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const signature = await getSignature(left, makerLeft);
+
+      const directAcceptParams = {
+        bidMaker: makerLeft,
+        bidNftAmount: _nftBidAmount,
+        nftAssetClass: ERC721,
+        nftData: _nftAssetData,
+        bidPaymentAmount: _priceBid,
+        paymentToken: erc20.address,
+        bidSalt: salt,
+        bidStart: 0,
+        bidEnd: 0,
+        bidDataType: ORDER_DATA_V2,
+        bidData: encDataLeft,
+        bidSignature: signature,
+        sellOrderPaymentAmount: _priceAccept,
+        sellOrderNftAmount: _nftAcceptAmount,
+        sellOrderData: encDataRight
+      };
+
+      assert.equal(await erc721.balanceOf(makerLeft), 0);
+      assert.equal(await erc721.balanceOf(makerRight), 1);
+      await exchangeV2.directAcceptBid(directAcceptParams, { from: makerRight });
+      assert.equal(await erc721.balanceOf(makerLeft), 1);
+      assert.equal(await erc721.balanceOf(makerRight), 0);
+      assert.equal(await erc20.balanceOf(makerLeft), 897);
+      assert.equal(await erc20.balanceOf(makerRight), 96);
+      assert.equal(await erc20.balanceOf(accounts[6]), 3);
+      assert.equal(await erc20.balanceOf(accounts[5]), 3);
+      assert.equal(await erc20.balanceOf(accounts[7]), 1);
+      assert.equal(await erc20.balanceOf(protocol), 0);
     })
 
   });
@@ -544,9 +680,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
       let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
-
-      // setting protocol fee to 0 to check gas difference with V2 orders
-      await exchangeV2.setProtocolFee(0);
 
       const left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       const right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
@@ -1451,7 +1584,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 800);
 
       // 3% to protocol
-      assert.equal(await erc20.balanceOf(protocol), 3);
+      assert.equal(await erc20.balanceOf(protocol), 0);
       // 3% to originBuyer
       assert.equal(await erc20.balanceOf(originBuyer), 3);
       // 4% to originSeller
@@ -1459,7 +1592,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       // 10% to creator as royalties, 80 left
       assert.equal(await erc20.balanceOf(creator), 10);
       // 100% of what's left (80) to makerLeft
-      assert.equal(await erc20.balanceOf(makerLeft), 80);
+      assert.equal(await erc20.balanceOf(makerLeft), 83);
 
       //checking fills
       // sell-order has make-side fills
@@ -1537,35 +1670,27 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
       let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originSeller, 400), 0, 1000, MARKET_MARKER_SELL]);
-      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 300), 0, MARKET_MARKER_BUY]);
+      let encDataRight = await encDataV3_BUY([0, await LibPartToUint(originBuyer, 700), 0, MARKET_MARKER_BUY]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
       let right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
 
-      // change protocolFee 3 => 5%, so all fees are 12%
-      await exchangeV2.setProtocolFee(500)
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
-      // change protocol fee 5 => 3 and makerRight origin fee 3 => 4, so resulting fee is 11%
-      await exchangeV2.setProtocolFee(300)
       changeOrderData(right, await encDataV3_BUY([0, await LibPartToUint(originBuyer, 400), 0, MARKET_MARKER_SELL]))
-      await expectThrow(
-        exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
-      );
 
-      //changing protocolFee makes it work
-      await exchangeV2.setProtocolFee(200)
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
     })
+
 
     it("should not match when there's a problem with max fee ", async () => {
       const erc20 = await prepareERC20(makerRight, 1000)
       const erc1155 = await prepareERC1155(makerLeft, 1000)
 
-      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(), 0, 200, MARKET_MARKER_SELL]);
+      let encDataLeft = await encDataV3_SELL([0, await LibPartToUint(originBuyer, 300), 0, 200, MARKET_MARKER_SELL]);
       let encDataRight = await encDataV3_BUY([0, await LibPartToUint(), 0, MARKET_MARKER_BUY]);
 
       let left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
@@ -1576,8 +1701,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
       );
 
-      //maxFee = 0 is wrong even if protocolFee = 0
-      await exchangeV2.setProtocolFee(0)
       changeOrderData(left, await encDataV3_SELL([0, await LibPartToUint(), 0, 0, MARKET_MARKER_SELL]))
       await expectThrow(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
@@ -1598,8 +1721,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
-
-      await exchangeV2.setProtocolFee(0);
 
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 
@@ -1627,8 +1748,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       let left = Order(makerLeft, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
       let right = Order(makerRight, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
-
-      await exchangeV2.setProtocolFee(0);
 
       await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight })
 

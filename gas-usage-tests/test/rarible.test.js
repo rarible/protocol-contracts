@@ -107,21 +107,22 @@ contract("rarible only gas usage tests", accounts => {
 
     const signature = await getSignature(exchangeV2, left, seller);
 
-    const directBuyParams = { seller: seller, token: token.address, assetType: ERC721, tokenId: tokenId1, tokenAmount: 1, price: price, salt: salt, signature: signature };
-
     var directPurchaseParams = {
-      seller: seller,
-      nftClass: ERC721,
-      paymentClass: ETH,
+      sellOrderMaker: seller,
+      sellOrderNftAmount: nftAmount,
+      nftAssetClass: ERC721,
       nftData: _nftSellAssetData,
-      paymentData: _nftPurchaseAssetData,
-      tokenSellAmount: nftAmount,
-      tokenPurchaseAmount: nftAmount,
-      priceSell: price,
-      pricePurchase: price,
-      salt: salt, signature: signature,
+      sellOrderPaymentAmount: price,
+      paymentToken: zeroAddress,
+      sellOrderSalt: salt,
+      sellOrderStart: 0,
+      sellOrderEnd: 0,
+      sellOrderDataType: ORDER_DATA_V3_SELL,
       sellOrderData: encDataLeft,
-      purchaseOrderData: encDataRight
+      sellOrderSignature: signature,
+      buyOrderPaymentAmount: price,
+      buyOrderNftAmount: nftAmount,
+      buyOrderData: encDataRight
     };
 
     console.log("RARIBLE NEW: direct buy ETH <=> ERC721 ROYALTIES = SELLER");
@@ -160,21 +161,22 @@ contract("rarible only gas usage tests", accounts => {
 
     const signature = await getSignature(exchangeV2, left, seller);
 
-    const directBuyParams = { seller: seller, token: token.address, assetType: ERC721, tokenId: tokenId1, tokenAmount: 1, price: price, salt: salt, signature: signature };
-
     var directPurchaseParams = {
-      seller: seller,
-      nftClass: ERC721,
-      paymentClass: ETH,
+      sellOrderMaker: seller,
+      sellOrderNftAmount: nftAmount,
+      nftAssetClass: ERC721,
       nftData: _nftSellAssetData,
-      paymentData: _nftPurchaseAssetData,
-      tokenSellAmount: nftAmount,
-      tokenPurchaseAmount: nftAmount,
-      priceSell: price,
-      pricePurchase: price,
-      salt: salt, signature: signature,
+      sellOrderPaymentAmount: price,
+      paymentToken: zeroAddress,
+      sellOrderSalt: salt,
+      sellOrderStart: 0,
+      sellOrderEnd: 0,
+      sellOrderDataType: ORDER_DATA_V3_SELL,
       sellOrderData: encDataLeft,
-      purchaseOrderData: encDataRight
+      sellOrderSignature: signature,
+      buyOrderPaymentAmount: price,
+      buyOrderNftAmount: nftAmount,
+      buyOrderData: encDataRight
     };
 
     console.log("RARIBLE NEW: direct buy ETH <=> ERC721 ROYALTIES != SELLER:");
@@ -281,18 +283,22 @@ contract("rarible only gas usage tests", accounts => {
 
     const signature = await getSignature(exchangeV2, left, buyer);
 
-    var directAcceptParams = {
-      tokenBidAmount: nftAmount,
-      tokenAcceptAmount: nftAmount,
-      buyer: buyer,
-      nftClass: ERC721,
+    const directAcceptParams = {
+      bidMaker: buyer,
+      bidNftAmount: nftAmount,
+      nftAssetClass: ERC721,
       nftData: _nftAssetData,
-      paymentData: _paymentAssetData,
-      bidOrderData: encDataLeft,
-      acceptOrderData: encDataRight,
-      priceBid: price,
-      priceAccept: price,
-      salt: salt, signature: signature
+      bidPaymentAmount: price,
+      paymentToken: erc20.address,
+      bidSalt: 1,
+      bidStart: 0,
+      bidEnd: 0,
+      bidDataType: ORDER_DATA_V3_BUY,
+      bidData: encDataLeft,
+      bidSignature: signature,
+      sellOrderPaymentAmount: price,
+      sellOrderNftAmount: nftAmount,
+      sellOrderData: encDataRight
     };
 
     const tx = await exchangeV2.directAcceptBid(directAcceptParams, { from: seller });
@@ -332,18 +338,22 @@ contract("rarible only gas usage tests", accounts => {
 
     const signature = await getSignature(exchangeV2, left, buyer);
 
-    var directAcceptParams = {
-      tokenBidAmount: nftAmount,
-      tokenAcceptAmount: nftAmount,
-      buyer: buyer,
-      nftClass: ERC721,
+    const directAcceptParams = {
+      bidMaker: buyer,
+      bidNftAmount: nftAmount,
+      nftAssetClass: ERC721,
       nftData: _nftAssetData,
-      paymentData: _paymentAssetData,
-      bidOrderData: encDataLeft,
-      acceptOrderData: encDataRight,
-      priceBid: price,
-      priceAccept: price,
-      salt: salt, signature: signature
+      bidPaymentAmount: price,
+      paymentToken: erc20.address,
+      bidSalt: 1,
+      bidStart: 0,
+      bidEnd: 0,
+      bidDataType: ORDER_DATA_V3_BUY,
+      bidData: encDataLeft,
+      bidSignature: signature,
+      sellOrderPaymentAmount: price,
+      sellOrderNftAmount: nftAmount,
+      sellOrderData: encDataRight
     };
 
     const tx = await exchangeV2.directAcceptBid(directAcceptParams, { from: seller });

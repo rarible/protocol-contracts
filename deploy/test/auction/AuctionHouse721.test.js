@@ -46,13 +46,11 @@ contract("AuctionHouse721", accounts => {
 
     /*Auction*/
     testAuctionHouse = await AuctionHouse721.deployed();
-    await testAuctionHouse.setDefaultFeeReceiver(protocol)
 
     helper = await AuctionTestHelper.new()
   });
 
   beforeEach(async () => {
-    await testAuctionHouse.setProtocolFee(300);
     await testAuctionHouse.changeMinimalDuration(900)
   });
 
@@ -243,13 +241,6 @@ contract("AuctionHouse721", accounts => {
       });
       assert.equal(id, await getAuctionId(), "id from event")
 
-      const setProtocolFeeTx = await testAuctionHouse.setProtocolFee(500)
-      truffleAssert.eventEmitted(setProtocolFeeTx, 'ProtocolFeeChanged', (ev) => {
-        assert.equal(ev.oldValue, 300, "old protocolFee from event")
-        assert.equal(ev.newValue, 500, "new protocolFee from event")
-        return true;
-      });
-
       //bid initialize
       let auctionId = await getAuctionId();
       let bidFees = await OriginFee(accounts[6], 400);
@@ -410,8 +401,6 @@ contract("AuctionHouse721", accounts => {
       const extension = 900;
 
       const dataV1 = await encDataV1([await OriginFee(), duration, 0, 100]); //originFees, duration, startTime, buyOutPrice
-
-      await testAuctionHouse.setProtocolFee(0)
 
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller });
       const auctionId = await getAuctionId();
@@ -711,8 +700,6 @@ contract("AuctionHouse721", accounts => {
     })
 
     it("should correctly process case with multiple erc20 auctions", async () => {
-      await testAuctionHouse.setProtocolFee(0)
-
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20(buyer, 1000)
       let dataV1 = await encDataV1([await OriginFee(), 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
@@ -761,9 +748,6 @@ contract("AuctionHouse721", accounts => {
       const buyAssetType = await prepareETH()
       const auctionId = await getAuctionId() + 1;
       let dataV1 = await encDataV1([await OriginFee(), 1000, 0, 0]);
-
-      await testAuctionHouse.setProtocolFee(0)
-
       assert.equal(await wrapper.auctionIdMatchesToken(auctionId, erc721.address, erc721TokenId1), false, "auctionIdMatchesToken before creation")
       assert.equal(await wrapper.isFinalized(auctionId), true, "isFinalized before creation")
 
@@ -822,9 +806,6 @@ contract("AuctionHouse721", accounts => {
     it("faulty eth-bidders should be processed correctly", async () => {
       const faultyBidder = await FaultyBidder.new();
       const addressToReturn = accounts[6]
-
-      await testAuctionHouse.setProtocolFee(0)
-
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareETH()
       let dataV1 = await encDataV1([await OriginFee(), 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
@@ -909,9 +890,6 @@ contract("AuctionHouse721", accounts => {
         truffleAssert.ErrorType.REVERT,
         "wrong fees"
       )
-
-      await testAuctionHouse.setProtocolFee(0)
-
       // creating auction with 8% + 0% fees works
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller });
 

@@ -46,13 +46,11 @@ contract("AuctionHouse1155", accounts => {
 
     /*Auction*/
     testAuctionHouse = await AuctionHouse1155.deployed();
-    await testAuctionHouse.setDefaultFeeReceiver(protocol)
 
     helper = await AuctionTestHelper.new()
   });
 
   beforeEach(async () => {
-    await testAuctionHouse.setProtocolFee(300);
     await testAuctionHouse.changeMinimalDuration(900)
   });
 
@@ -178,13 +176,6 @@ contract("AuctionHouse1155", accounts => {
         return true;
       });
       assert.equal(id, auctionId, "id from event")
-
-      const setProtocolFeeTx = await testAuctionHouse.setProtocolFee(500)
-      truffleAssert.eventEmitted(setProtocolFeeTx, 'ProtocolFeeChanged', (ev) => {
-        assert.equal(ev.oldValue, 300, "old protocolFee from event")
-        assert.equal(ev.newValue, 500, "new protocolFee from event")
-        return true;
-      });
 
       //bid initialize
 
@@ -342,8 +333,6 @@ contract("AuctionHouse1155", accounts => {
       const extension = 900;
 
       const dataV1 = await encDataV1([await OriginFee(), duration, 0, 100]); //originFees, duration, startTime, buyOutPrice
-
-      await testAuctionHouse.setProtocolFee(0)
 
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 90, V1, dataV1, { from: seller });
       const auctionId = await getAuctionId();
@@ -638,7 +627,6 @@ contract("AuctionHouse1155", accounts => {
     })
 
     it("should correctly process case with multiple erc20 auctions", async () => {
-      await testAuctionHouse.setProtocolFee(0)
 
       const sellAsset = await prepareERC1155Sell()
       const buyAssetType = await prepareERC20(buyer, 1000)
@@ -688,8 +676,6 @@ contract("AuctionHouse1155", accounts => {
     it("faulty eth-bidders should be processed correctly", async () => {
       const faultyBidder = await FaultyBidder.new();
       const addressToReturn = accounts[6]
-
-      await testAuctionHouse.setProtocolFee(0)
 
       const sellAsset = await prepareERC1155Sell()
       const buyAssetType = await prepareETH()
@@ -775,9 +761,7 @@ contract("AuctionHouse1155", accounts => {
         truffleAssert.ErrorType.REVERT,
         "wrong fees"
       )
-
-      await testAuctionHouse.setProtocolFee(0)
-
+      
       // creating auction with 8% + 0% fees works
       await testAuctionHouse.startAuction(...sellAsset, buyAssetType, 9, V1, dataV1, { from: seller });
 
