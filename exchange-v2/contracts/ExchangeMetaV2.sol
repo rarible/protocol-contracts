@@ -27,8 +27,4 @@ contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTra
         return super._msgSender();
     }
 
-    function getProtocolFee() internal override view returns(uint) {
-        return protocolFee;
-    }
-
 }

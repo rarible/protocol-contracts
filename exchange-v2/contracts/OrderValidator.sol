@@ -23,8 +23,6 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
         if (order.salt == 0) {
             if (order.maker != address(0)) {
                 require(_msgSender() == order.maker, "maker is not tx sender");
-            } else {
-                order.maker = _msgSender();
             }
         } else {
             if (_msgSender() != order.maker) {
