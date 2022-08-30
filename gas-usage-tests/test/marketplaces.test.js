@@ -38,7 +38,18 @@ const WETH9 = artifacts.require('WETH9');
 const ConduitController = artifacts.require("ConduitController.sol");
 const Seaport = artifacts.require("Seaport.sol");
 
+//SUDOSWAP
+const LSSVMPairEnumerableERC20 = artifacts.require("LSSVMPairEnumerableERC20.sol");
+const LSSVMPairEnumerableETH = artifacts.require("LSSVMPairEnumerableETH.sol");
+const LSSVMPairMissingEnumerableERC20 = artifacts.require("LSSVMPairMissingEnumerableERC20.sol");
+const LSSVMPairMissingEnumerableETH = artifacts.require("LSSVMPairMissingEnumerableETH.sol");
+const LSSVMPairFactory = artifacts.require("LSSVMPairFactory.sol");
+const LSSVMRouter = artifacts.require("LSSVMRouter.sol");
+const LinearCurve = artifacts.require("LinearCurve.sol");
+const ExponentialCurve = artifacts.require("ExponentialCurve.sol");
+
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+const truffleAssert = require('truffle-assertions');
 
 // UTILS
 const { Order, Asset, sign } = require("../../scripts/order.js");
@@ -73,7 +84,7 @@ contract("Test gas usage for marketplaces", accounts => {
   before(async () => {
     testHelper = await RaribleTestHelper.new()
   });
-
+  
   it("zora ETH asks", async () => {
     const ZPFS = await ZoraProtocolFeeSettings.new();
     const ZMM = await ZoraModuleManager.new(registrar, ZPFS.address);
@@ -893,6 +904,83 @@ contract("Test gas usage for marketplaces", accounts => {
 
     console.log("X2Y2: ETH <=> ERC721", tx.receipt.gasUsed)
     assert.equal(await token.ownerOf(tokenId), buyer, "buyer has tokenId");
+  })
+  
+  it("sudoswap ETH", async () => {
+
+    //deploying templates
+    const _enumerableETHTemplate = (await LSSVMPairEnumerableETH.new()).address;
+    const _missingEnumerableETHTemplate = (await LSSVMPairMissingEnumerableETH.new()).address;
+    const _enumerableERC20Template = (await LSSVMPairEnumerableERC20.new()).address
+    const _missingEnumerableERC20Template = (await LSSVMPairMissingEnumerableERC20.new()).address;
+
+    const _protocolFeeMultiplier = "5000000000000000";
+
+    //Deploy factory
+    const factory = await LSSVMPairFactory.new(_enumerableETHTemplate, _missingEnumerableETHTemplate, _enumerableERC20Template, _missingEnumerableERC20Template, protocol, _protocolFeeMultiplier)
+    
+    //Deploy router
+    const router = await LSSVMRouter.new(factory.address)
+
+    //Whitelist router in factory
+    await factory.setRouterAllowed(router.address, true)
+    
+    //Deploy bonding curves
+    const exp = await ExponentialCurve.new()
+    const lin = await LinearCurve.new();
+
+    // Whitelist bonding curves in factory
+    await factory.setBondingCurveAllowed(exp.address, true)
+    await factory.setBondingCurveAllowed(lin.address, true)
+    
+    const token = await TestERC721.new();
+
+    await token.mint(seller, tokenId)
+    await token.setApprovalForAll(factory.address, true, {from: seller})
+
+    const nftGetter = accounts[5];
+
+    /*
+    ERC721 _nft,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        LSSVMPair.PoolType _poolType,
+        uint128 _delta,
+        uint96 _fee,
+        uint128 _spotPrice,
+        uint256[] calldata _initialNFTIDs
+    */
+    const inpput = [
+      token.address,
+      lin.address,
+      seller,
+      1,
+      "100",
+      0,
+      "1000",
+      [
+        tokenId
+      ]
+    ]
+    
+    const txCreate = await factory.createPairETH(...inpput, {from: seller})
+
+    let pair;
+    truffleAssert.eventEmitted(txCreate, 'NewPair', (ev) => {
+      pair = ev.poolAddress;
+      return true;
+    });
+
+    assert.equal(await token.ownerOf(tokenId), pair, "pair has token")
+
+    await verifyBalanceChange(seller, -1100, async () =>
+      verifyBalanceChange(factory, -5, async () =>
+        verifyBalanceChange(buyer, 1105, async () =>
+          router.swapETHForSpecificNFTs( [ {pair: pair, nftIds: [ tokenId ] } ], buyer, nftGetter, "99999999999999", { from: buyer, value: 1500, gasPrice: 0 } )
+        )
+      )
+    )
+    assert.equal(await token.ownerOf(tokenId), nftGetter, "pair has token")
   })
 
   async function getOpenSeaMatchDataMerkleValidator(
