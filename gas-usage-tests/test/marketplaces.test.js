@@ -973,6 +973,8 @@ contract("Test gas usage for marketplaces", accounts => {
 
     assert.equal(await token.ownerOf(tokenId), pair, "pair has token")
 
+    const Pair = await LSSVMPairMissingEnumerableETH.at(pair)
+    //console.log(await Pair.getBuyNFTQuote(1))
     console.log("SUDOSWAP: ETH <=> ERC721")
     await verifyBalanceChange(seller, -1100, async () =>
       verifyBalanceChange(factory.address, -5, async () =>
