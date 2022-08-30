@@ -973,10 +973,11 @@ contract("Test gas usage for marketplaces", accounts => {
 
     assert.equal(await token.ownerOf(tokenId), pair, "pair has token")
 
+    console.log("SUDOSWAP: ETH <=> ERC721")
     await verifyBalanceChange(seller, -1100, async () =>
       verifyBalanceChange(factory.address, -5, async () =>
         verifyBalanceChange(buyer, 1105, async () =>
-          router.swapETHForSpecificNFTs( [ {pair: pair, nftIds: [ tokenId ] } ], buyer, nftGetter, "99999999999999", { from: buyer, value: 1500, gasPrice: 0 } )
+          router.swapETHForSpecificNFTs( [ {pair: pair, nftIds: [ tokenId ] } ], buyer, nftGetter, "99999999999999", { from: buyer, value: 1105, gasPrice: 0 } )
         )
       )
     )
