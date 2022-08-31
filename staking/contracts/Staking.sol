@@ -130,5 +130,12 @@ contract Staking is StakingBase, StakingRestake {
         emit Migrate(msg.sender, id);
     }
 
+    function setMinStakePeriod(uint newMinStakePeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinStakePeriod < TWO_YEAR_WEEKS, "new stake period > 2 years");
+        minStakePeriod = newMinStakePeriod;
+
+        emit MinStakePeriod(newMinStakePeriod);
+    }
+
     uint256[50] private __gap;
 }

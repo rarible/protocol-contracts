@@ -32,25 +32,40 @@ contract("Staking", accounts => {
 	describe("Part1. Check base metods Staking contract, createLock, withdraw", () => {
 
 		it("Test1. Try to createLock() and check balance", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 1500);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[2], 20, 10, 0, { from: accounts[2] });
-      balanceOf  = await staking.balanceOf.call(accounts[2]);
+			await staking.stake(accounts[2], accounts[2], 1000, 100, 0, { from: accounts[2] }); //address account, address delegate, uint amount, uint slope, uint cliff
+      balanceOf = await staking.balanceOf.call(accounts[2]);
 
-			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 80);			//tail user balance
-      assert.equal(balanceOf, 21);
+			assert.equal(await token.balanceOf(staking.address), 1000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 500);			      //tail user balance
+      assert.equal(balanceOf, 276);                                     //stRari calculated by formula
 		});
 
+		it("Test1.1 Try to createLock() throw, stake period < minimal stake period", async () => {
+    	await token.mint(accounts[2], 3300);
+    	await token.approve(staking.address, 1000000, { from: accounts[2] });
+    	await staking.setMinStakePeriod(10);
+    	await expectThrow(
+        staking.stake(accounts[2], accounts[2], 3000, 1500, 2, { from: accounts[2] })
+      );
+      await staking.stake(accounts[2], accounts[2], 3000, 60, 0, { from: accounts[2] });
+
+    	balanceOf = await staking.balanceOf.call(accounts[2]);
+    	assert.equal(await token.balanceOf(staking.address), 3000);				//balance Lock on deposite
+    	assert.equal(await token.balanceOf(accounts[2]), 300);			//tail user balance
+    	assert.equal(balanceOf, 1621);
+    });
+
 		it("Test2. Try to createLock() and check totalBalance", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 2200);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-      await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
+      await staking.stake(accounts[2], accounts[2], 2000, 200, 0, { from: accounts[2] });
 
 			let totalBalance = await staking.totalSupply.call();
- 			assert.equal(await token.balanceOf(staking.address), 30);				//balance Lock on deposite
-   		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
-			assert.equal(totalBalance, 31);
+ 			assert.equal(await token.balanceOf(staking.address), 2000);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 200);			      //tail user balance
+			assert.equal(totalBalance, 553);                                   //stRari calculated by formula
 		});
 
 		it("Test3.1. CreateLock() and check withdraw()", async () => {
@@ -572,8 +587,8 @@ contract("Staking", accounts => {
 			let idLock1 = 1;
 			await staking.stake(accounts[2], accounts[2], 50, 10, 3, { from: accounts[2] });
 			let idLock2 = 2;
-      assert.equal(await token.balanceOf(staking.address), 80);	//balance Lock on deposite
-      assert.equal(await staking.balanceOf.call(accounts[2]), 84);
+      assert.equal(await token.balanceOf(staking.address), 80);	    //balance Lock on deposite
+      assert.equal(await staking.balanceOf.call(accounts[2]), 20);  //stRari calculated by formula
 
 			await increaseTime(WEEK * 2); //2 week later nothing change, because cliff
 			let newAmount = 60;
@@ -605,7 +620,7 @@ contract("Staking", accounts => {
 			await staking.stake(accounts[2], accounts[2], 50, 10, 3, { from: accounts[2] });
 			let idLock2 = 2;
       assert.equal(await token.balanceOf(staking.address), 80);	//balance Lock on deposite
-      assert.equal(await staking.balanceOf.call(accounts[2]), 84);
+      assert.equal(await staking.balanceOf.call(accounts[2]), 20); //stRari calculated by formula
 
 			await increaseTime(WEEK * 2); //2 week later nothing change, because cliff
 			let newAmount = 50;
@@ -861,7 +876,7 @@ contract("Staking", accounts => {
     	await staking.stake(accounts[2], accounts[2], 50, 10, 3, { from: accounts[2] });
     	let idLock2 = 2;
       assert.equal(await token.balanceOf(staking.address), 80);	//balance Lock on deposite
-      assert.equal(await staking.balanceOf.call(accounts[2]), 84);
+      assert.equal(await staking.balanceOf.call(accounts[2]), 20); //stRari calculated by formula
 
     	await increaseTime(WEEK * 2); //2 week later nothing change, because cliff
     	let newAmount = 50;
@@ -881,15 +896,15 @@ contract("Staking", accounts => {
 			await staking.stake(accounts[2], accounts[3], 60000, 2000, 0, { from: accounts[2] });
 			let idLock = 1;
 
-      balanceOf  = await staking.balanceOf.call(accounts[3]);
+      balanceOf = await staking.balanceOf.call(accounts[3]);
 			assert.equal(await token.balanceOf(staking.address), 60000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 40000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 86160);
+      assert.equal(balanceOf, 25846);
 
       await increaseTime(WEEK*29); //29 week later
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 2872);
+      assert.equal(balanceOf, 848);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 2000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 98000);			//tail user balance
@@ -908,15 +923,15 @@ contract("Staking", accounts => {
 			await staking.stake(accounts[2], accounts[3], 60000, 2000, 0, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
-      let balanceOf  = await staking.balanceOf.call(accounts[3]);
+      let balanceOf = await staking.balanceOf.call(accounts[3]);
 			assert.equal(await token.balanceOf(staking.address), 60000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 40000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 86160);
+      assert.equal(balanceOf, 25846);
 
       await increaseTime(WEEK*20); //20 week later
-      balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 28720);
+      balanceOf = await staking.balanceOf.call(accounts[3]);
+      assert.equal(balanceOf, 8606);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 20000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 80000);			//tail user balance
@@ -930,7 +945,7 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);
 
       balanceOf  = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 21840);
+      assert.equal(balanceOf, 5538);
 
   		await increaseTime(WEEK*10); //10 week later
       balanceOf  = await staking.balanceOf.call(accounts[3]);
@@ -970,11 +985,11 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 60000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 40000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 86160);
+      assert.equal(balanceOf, 25846);
 
       await increaseTime(WEEK*20); //20 week later
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 28720);                                    //miss user balance stRari
+      assert.equal(balanceOf, 8606);                                    //miss user balance stRari
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 20000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 80000);
@@ -985,7 +1000,7 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 28720);    //stRary balance accounts[4], after _delegateTo
+      assert.equal(balanceOf, 8606);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK*10); //10 week later
       balanceOf = await staking.balanceOf.call(accounts[4]);
@@ -996,23 +1011,23 @@ contract("Staking", accounts => {
 		});
 
 		it("Test2.1 delegate() and check balance delegated stRari, in tail time, after redelegate", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 10000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[3], 63, 10, 0, { from: accounts[2] });  //first time stake
+			await staking.stake(accounts[2], accounts[3], 6300, 1000, 0, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
       let balanceOf = await staking.balanceOf.call(accounts[3]);
-			assert.equal(await token.balanceOf(staking.address), 63);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 37);			//tail user balance
+			assert.equal(await token.balanceOf(staking.address), 6300);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 3700);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 67);
+      assert.equal(balanceOf, 1599);
 
       await increaseTime(WEEK*6); //6 week later
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 7);
+      assert.equal(balanceOf, 225);
       await staking.withdraw({ from: accounts[2] });
-			assert.equal(await token.balanceOf(staking.address), 3);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 97);
+			assert.equal(await token.balanceOf(staking.address), 300);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 9700);
 
 		  await staking.delegateTo(idLock, accounts[4], { from: accounts[2] });  //delegate from accounts[3]
 
@@ -1020,34 +1035,34 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 7);    //stRary balance accounts[4], after _delegateTo
+      assert.equal(balanceOf, 225);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK); //1 week later
       balanceOf = await staking.balanceOf.call(accounts[4]);
       assert.equal(balanceOf, 0);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+  		assert.equal(await token.balanceOf(accounts[2]), 10000);			//tail user balance
 		});
 
 		it("Test2.2 delegate() and check balance delegated stRari, in cliff time, cliff > 0 after redelegate", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 1000000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[3], 63, 10, 2, { from: accounts[2] });  //first time stake
+			await staking.stake(accounts[2], accounts[3], 630000, 100000, 2, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
       let balanceOf = await staking.balanceOf.call(accounts[3]);
-			assert.equal(await token.balanceOf(staking.address), 63);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 37);			//tail user balance
+			assert.equal(await token.balanceOf(staking.address), 630000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 370000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 67);
+      assert.equal(balanceOf, 169615);
 
       await increaseTime(WEEK); //1 week later, cliff works
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 67);
+      assert.equal(balanceOf, 169615);
       await staking.withdraw({ from: accounts[2] });
-			assert.equal(await token.balanceOf(staking.address), 63);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 37);
+			assert.equal(await token.balanceOf(staking.address), 630000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 370000);
 
 		  await staking.delegateTo(idLock, accounts[4], { from: accounts[2] });  //delegate from accounts[3]
 
@@ -1055,38 +1070,38 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 67);    //stRary balance accounts[4], after _delegateTo
+      assert.equal(balanceOf, 169615);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK); //1 week later cliff works
       balanceOf = await staking.balanceOf.call(accounts[4]);
-      assert.equal(balanceOf, 67);
+      assert.equal(balanceOf, 169615);
 
   		await increaseTime(WEEK*7); //1 week later all will finish
       balanceOf = await staking.balanceOf.call(accounts[4]);
       assert.equal(balanceOf, 0);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+  		assert.equal(await token.balanceOf(accounts[2]), 1000000);			//tail user balance
 		});
 
 		it("Test2.3 delegate() and check balance delegated stRari, in slope time, cliff > 0 after redelegate", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 1000000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[3], 63, 10, 2, { from: accounts[2] });  //first time stake
+			await staking.stake(accounts[2], accounts[3], 630000, 100000, 2, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
       let balanceOf = await staking.balanceOf.call(accounts[3]);
-			assert.equal(await token.balanceOf(staking.address), 63);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 37);			//tail user balance
+			assert.equal(await token.balanceOf(staking.address), 630000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 370000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 67);
+      assert.equal(balanceOf, 169615);
 
       await increaseTime(WEEK*4); //4 week later, cliff finished, slope works
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 47);
+      assert.equal(balanceOf, 121153);    //slope=24231
       await staking.withdraw({ from: accounts[2] });
-			assert.equal(await token.balanceOf(staking.address), 43);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 57);
+			assert.equal(await token.balanceOf(staking.address), 430000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 570000);
 
 		  await staking.delegateTo(idLock, accounts[4], { from: accounts[2] });  //delegate from accounts[3]
 
@@ -1094,34 +1109,34 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 47);    //stRary balance accounts[4], after _delegateTo
+      assert.equal(balanceOf, 121153);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK*5); //5 week later cliff, slope finished, tail finished
       balanceOf = await staking.balanceOf.call(accounts[4]);
       assert.equal(balanceOf, 0);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+  		assert.equal(await token.balanceOf(accounts[2]), 1000000);			//tail user balance
 		});
 
 		it("Test2.4 delegate() and check balance delegated stRari, in tail time, cliff > 0 after redelegate", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 1000000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[3], 63, 10, 2, { from: accounts[2] });  //first time stake
+			await staking.stake(accounts[2], accounts[3], 630000, 100000, 2, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
       let balanceOf = await staking.balanceOf.call(accounts[3]);
-			assert.equal(await token.balanceOf(staking.address), 63);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 37);			//tail user balance
+			assert.equal(await token.balanceOf(staking.address), 630000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 370000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 67);
+      assert.equal(balanceOf, 169615);
 
       await increaseTime(WEEK*8); //8 week later, cliff finished, slope finished, tail works
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 7);
+      assert.equal(balanceOf, 24229);
       await staking.withdraw({ from: accounts[2] });
-			assert.equal(await token.balanceOf(staking.address), 3);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 97);
+			assert.equal(await token.balanceOf(staking.address), 30000);				//balance Lock on deposite
+  		assert.equal(await token.balanceOf(accounts[2]), 970000);
 
 		  await staking.delegateTo(idLock, accounts[4], { from: accounts[2] });  //delegate from accounts[3]
 
@@ -1129,14 +1144,14 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo
 
       balanceOf = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 7);    //stRary balance accounts[4], after _delegateTo
+      assert.equal(balanceOf, 24229);    //stRary balance accounts[4], after _delegateTo
 
   		await increaseTime(WEEK); //1 week later cliff, slope finished, tail finished
       balanceOf = await staking.balanceOf.call(accounts[4]);
       assert.equal(balanceOf, 0);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite
-  		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
+  		assert.equal(await token.balanceOf(accounts[2]), 1000000);			//tail user balance
 		});
 
 		it("Test3. delegate() and check totalBalance, balance delegated stRari, after that redelegate and redelegate back", async () => {
@@ -1151,12 +1166,12 @@ contract("Staking", accounts => {
 			assert.equal(await token.balanceOf(staking.address), 60000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 40000);			//tail user balance
       assert.equal(idLock, 1);
-      assert.equal(balanceOf, 86160);
-      assert.equal(totalBalance, 86160);
+      assert.equal(balanceOf, 25846);
+      assert.equal(totalBalance, 25846);
 
       await increaseTime(WEEK*20); //20 week later
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 28720);
+      assert.equal(balanceOf, 8606);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 20000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 80000);			      //miss user balance stRari
@@ -1166,14 +1181,14 @@ contract("Staking", accounts => {
       assert.equal(balanceOf, 0);     //stRary balance accounts[3], after _delegateTo()
 
       balanceOf  = await staking.balanceOf.call(accounts[4]); //for check balance accounts[4]
-      assert.equal(balanceOf, 28720);    //stRary balance accounts[3], after _delegateTo()
+      assert.equal(balanceOf, 8606);    //stRary balance accounts[3], after _delegateTo()
 
   		await increaseTime(WEEK*5); //5 week later
 		  await staking.delegateTo(idLock, accounts[3], { from: accounts[2] });  //delegate from accounts[4] to accounts[3] (delegate back)
       balanceOf  = await staking.balanceOf.call(accounts[4]);
       assert.equal(balanceOf, 0);
       balanceOf  = await staking.balanceOf.call(accounts[3]);
-      assert.equal(balanceOf, 14360);
+      assert.equal(balanceOf, 4296);
       await staking.withdraw({ from: accounts[2] });
 			assert.equal(await token.balanceOf(staking.address), 10000);				//balance Lock on deposite
   		assert.equal(await token.balanceOf(accounts[2]), 90000);			//tail user balance
@@ -1259,41 +1274,41 @@ contract("Staking", accounts => {
 	describe("Part7. Check Migration()", () => {
 
 		it("Test1. migrate() after start", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 100000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[2], 60, 2, 0, { from: accounts[2] });  //first time stake
+			await staking.stake(accounts[2], accounts[2], 60000, 2000, 0, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
       await staking.startMigration(newStaking.address);    //Start migration!!!, only owner
 
       let balanceOf = await staking.balanceOf.call(accounts[2]); //check balance account
-      assert.equal(balanceOf, 86);
- 			assert.equal(await token.balanceOf(staking.address), 60);				//balance Lock on deposite
-   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+      assert.equal(balanceOf, 25846);
+ 			assert.equal(await token.balanceOf(staking.address), 60000);				//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40000);			      //tail user balance
 
       let totalBalance = await staking.totalSupply.call(); //check balance total
-      assert.equal(totalBalance, 86);
+      assert.equal(totalBalance, 25846);
 
       await staking.migrate([idLock], { from: accounts[2] });            //migrate
 
       balanceOf = await staking.balanceOf.call(accounts[2]); //check balance account
       assert.equal(balanceOf, 0);
  			assert.equal(await token.balanceOf(staking.address), 0);				//balance Lock on deposite after migrate
- 			assert.equal(await token.balanceOf(newStaking.address), 60);		//balance Lock on deposite
-   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+ 			assert.equal(await token.balanceOf(newStaking.address), 60000);		//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40000);			      //tail user balance
 
       totalBalance = await staking.totalSupply.call(); //check balance total
       assert.equal(totalBalance, 0);
 		});
 
 		it("Test2. After 10 weeks migrate() slope works", async () => {
-			await token.mint(accounts[2], 100);
+			await token.mint(accounts[2], 100000);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
-			await staking.stake(accounts[2], accounts[3], 60, 2, 0, { from: accounts[2] });  //first time stake
+			await staking.stake(accounts[2], accounts[3], 60000, 2000, 0, { from: accounts[2] });  //first time stake
 			let idLock = 1;
 
       let balanceOf = await staking.balanceOf.call(accounts[3]); //check balance account
-      assert.equal(balanceOf, 86);
+      assert.equal(balanceOf, 25846);
 
       await increaseTime(WEEK * 10);
       await staking.startMigration(newStaking.address);    //Start migration!!!, only owner
@@ -1301,16 +1316,16 @@ contract("Staking", accounts => {
 
       balanceOf = await staking.balanceOf.call(accounts[3]); //check balance account
       assert.equal(balanceOf, 0);
- 			assert.equal(await token.balanceOf(staking.address), 20);				//balance Lock on deposite after migrate, till withdraw
- 			assert.equal(await token.balanceOf(newStaking.address), 40);		//balance Lock on deposite
-   		assert.equal(await token.balanceOf(accounts[2]), 40);			      //tail user balance
+ 			assert.equal(await token.balanceOf(staking.address), 20000);				//balance Lock on deposite after migrate, till withdraw
+ 			assert.equal(await token.balanceOf(newStaking.address), 40000);		//balance Lock on deposite
+   		assert.equal(await token.balanceOf(accounts[2]), 40000);			      //tail user balance
 
       let totalBalance = await staking.totalSupply.call(); //check balance total
       assert.equal(totalBalance, 0);
 
       await staking.withdraw({ from: accounts[2] });
       assert.equal(await token.balanceOf(staking.address), 0);         //after withdraw
-      assert.equal(await token.balanceOf(accounts[2]), 60);			      //tail user balance
+      assert.equal(await token.balanceOf(accounts[2]), 60000);			      //tail user balance
 		});
 
 		it("Test3. After 10 weeks migrate() tial works", async () => {

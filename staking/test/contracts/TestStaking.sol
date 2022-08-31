@@ -7,7 +7,7 @@ import "../../contracts/StakingBase.sol";
 
 contract TestStaking is StakingBase {
 
-    function getStakeTest(uint amount, uint slope, uint cliff) external pure returns (uint stakeAmount, uint stakeSlope) {
+    function getStakeTest(uint amount, uint slope, uint cliff) external view returns (uint stakeAmount, uint stakeSlope) {
         (stakeAmount, stakeSlope) = getStake(amount, slope, cliff);
     }
 }

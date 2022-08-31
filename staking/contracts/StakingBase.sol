@@ -16,11 +16,10 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant WEEK = 604800;                         //seconds one week
     uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch start)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
-    uint256 constant ST_FORMULA_MULTIPLIER = 10816;         //stFormula multiplier = TWO_YEAR_WEEKS^2
-    uint256 constant ST_FORMULA_DIVIDER = 1000;             //stFormula divider
-    uint256 constant ST_FORMULA_COMPENSATE = 11356800;      //stFormula compensate = (0.7 + 0.35) * ST_FORMULA_MULTIPLIER * 1000
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4650;    //stFormula slope multiplier = 9.3 * 0.5 * 1000
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 9300;    //stFormula cliff multiplier = 9.3 * 1000
+
+    uint256 constant ST_FORMULA_NEW_DIVIDER = 10000000000;        //stFormula divider
+    uint256 constant ST_FORMULA_STABLE_MULTIPLIER = 2000000000;   //stFormula constant multiplier
+    uint256 constant ST_FORMULA_LINEAR_MULTIPLIER = 8000000000;   //stFormula linear multiplier
 
     /**
      * @dev ERC20 token to lock
@@ -40,6 +39,11 @@ contract StakingBase is OwnableUpgradeable {
      * @dev address to migrate Stakes to (zero if not in migration state)
      */
     address public migrateTo;
+
+    /**
+      *@dev minimal stake period in weeks, minStakePeriod < TWO_YEAR_WEEKS
+      */
+    uint public minStakePeriod;
 
     /**
      * @dev represents one user Stake
@@ -93,6 +97,10 @@ contract StakingBase is OwnableUpgradeable {
      * @dev StartMigration initiate migration to another contract, account - msg.sender, to - address delegate to
      */
     event StartMigration(address indexed account, address indexed to);
+    /**
+     * @dev set minStakePeriod, require newMinStakePeriod < TWO_YEAR_WEEKS = 104
+     */
+    event MinStakePeriod(uint indexed newMinStakePeriod);
 
     function __StakingBase_init_unchained(IERC20Upgradeable _token) internal initializer {
         token = _token;
@@ -118,17 +126,17 @@ contract StakingBase is OwnableUpgradeable {
 
     /**
      * Сalculate and return (newAmount, newSlope), using formula:
-     * k = (ST_FORMULA_COMPENSATE + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod)^2 + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod)^2) / ST_FORMULA_MULTIPLIER
-     * newAmount = k * amount / ST_FORMULA_DIVIDER
-     * newSlope = newAmount / slopePeriod
+     * stRari = (Rari*(ST_FORMULA_STABLE_MULTIPLIER + ST_FORMULA_LINEAR_MULTIPLIER * (stakePeriod - minStakePeriod))/(TWO_YEAR_WEEKS - minStakePeriod)) / ST_FORMULA_MULTIPLIER
      **/
-    function getStake(uint amount, uint slope, uint cliff) public pure returns (uint stakeAmount, uint stakeSlope) {
-        uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
-
+    function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
         uint slopePeriod = divUp(amount, slope);
-        uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
-        uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
-        stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
+        uint stakePeriod = slopePeriod.add(cliff);
+        require(stakePeriod >= minStakePeriod, "stake period < minimal stake period");
+
+        uint linearSide = (stakePeriod - minStakePeriod).mul(ST_FORMULA_LINEAR_MULTIPLIER).div(TWO_YEAR_WEEKS - minStakePeriod);
+        uint multiplier = linearSide.add(ST_FORMULA_STABLE_MULTIPLIER);
+
+        stakeAmount = amount.mul(multiplier).div(ST_FORMULA_NEW_DIVIDER);
         stakeSlope = divUp(stakeAmount, slopePeriod);
     }
 
@@ -144,7 +152,6 @@ contract StakingBase is OwnableUpgradeable {
         account = stakes[id].account;
         require(account == msg.sender, "caller not a stake owner");
     }
-
     /**
      * @dev Throws if stopped
      */
@@ -158,5 +165,7 @@ contract StakingBase is OwnableUpgradeable {
         _;
     }
 
-    uint256[50] private __gap;
+    //add minStakePeriod, decrease __gap
+    uint256[49] private __gap;
+
 }
