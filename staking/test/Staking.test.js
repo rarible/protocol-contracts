@@ -1374,35 +1374,25 @@ contract("Staking", accounts => {
 
 		it("Test1. Set different parameters getStake(amount, slope, cliff), check result newAmount, newSlope", async () => {
       let result = [];
-      // slope = 30, cliff = 30, koeff = 2210,
+      // slope = 1324, cliff = 30,
 		  result = await testStaking.getStakeTest(60000, 2000, 30);
-		  assert.equal(result[0], 132600);
-		  assert.equal(result[1], 4420);
+		  assert.equal(result[0], 39692);
+		  assert.equal(result[1], 1324);
 
-		  // slope = 48, cliff = 48, koeff = 4021,
+		  // slope = 1877, cliff = 48
 		  result = await testStaking.getStakeTest(96000, 2000, 48);
-		  assert.equal(result[0], 386016);
-		  assert.equal(result[1], 8042);
-
-		  // slope = 84, cliff = 48, koeff = 10150,
-		  result = await testStaking.getStakeTest(84000, 1000, 84);
-		  assert.equal(result[0], 852600);
-		  assert.equal(result[1], 10150);
-
-		  // slope = 104, cliff = 104, koeff = 15000,
-		  result = await testStaking.getStakeTest(104000, 1000, 104);
-		  assert.equal(result[0], 1560000);
-		  assert.equal(result[1], 15000);
+		  assert.equal(result[0], 90092);
+		  assert.equal(result[1], 1877);
 
 		  // slope = 104, cliff = 0, koeff = 5700,
 		  result = await testStaking.getStakeTest(104000, 1000, 0);
-		  assert.equal(result[0], 592800);
-		  assert.equal(result[1], 5700);
+		  assert.equal(result[0], 104000);
+		  assert.equal(result[1], 1000);
 
 		  // slope = 1, cliff = 104, koeff = 10350,
-		  result = await testStaking.getStakeTest(104000, 104000, 104);
-		  assert.equal(result[0], 1076400);
-		  assert.equal(result[1], 1076400);
+		  result = await testStaking.getStakeTest(104000, 104000, 103);
+		  assert.equal(result[0], 104000);
+		  assert.equal(result[1], 104000);
 
 		});
 
@@ -1414,17 +1404,17 @@ contract("Staking", accounts => {
 
     	assert.equal(await token.balanceOf(staking.address), 5200);				//balance Lock on deposite
     	assert.equal(await token.balanceOf(accounts[2]), 800);			//tail user balance
-      assert.equal(balanceOf, 23592);
+      assert.equal(balanceOf, 5200);
 
       await increaseTime(WEEK*102);
 			await staking.withdraw({ from: accounts[2] });
 			balanceOf = await staking.balanceOf.call(accounts[2]);
-      assert.equal(balanceOf, 892);  //slope =454, tail =438
+      assert.equal(balanceOf, 200);  //slope =454, tail =438
 
       await increaseTime(WEEK);
 			await staking.withdraw({ from: accounts[2] });
 			balanceOf = await staking.balanceOf.call(accounts[2]);
-      assert.equal(balanceOf, 438);
+      assert.equal(balanceOf, 100);
  			assert.equal(await token.balanceOf(staking.address), 100);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 5900);			//tail user balance
 
@@ -1444,12 +1434,12 @@ contract("Staking", accounts => {
 
     	assert.equal(await token.balanceOf(staking.address), 52000);				//balance Lock on deposite
     	assert.equal(await token.balanceOf(accounts[2]), 8000);			//tail user balance
-      assert.equal(balanceOf, 235924);
+      assert.equal(balanceOf, 52000);
 
       await increaseTime(WEEK*103);
 			await staking.withdraw({ from: accounts[2] });
 			balanceOf = await staking.balanceOf.call(accounts[2]);
-      assert.equal(balanceOf, 4537);
+      assert.equal(balanceOf, 1000);
  			assert.equal(await token.balanceOf(staking.address), 1000);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 59000);			//tail user balance
 
