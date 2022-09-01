@@ -2,7 +2,7 @@
 
 This contract locks ERC-20 tokens and issues back staked tokens. These staked tokens are not transferrable, but they can be delegated to other users. Tokens unlock linearly. 
 
-![Line](../broken-line/documents/line.svg)
+![Line](documents/svg/line.svg)
 
 User locks tokens on `start` moment, amount of locked tokens is `bias`. In `cliff` period amount of locked tokens doesn't change, then it starts to decline linearly. 
 
@@ -83,15 +83,13 @@ Also, special function delegate can be used to delegate one Stake to other accou
 
 Stake value is calculated by the formula:
 
-stake = K * tokens / 1000;
+stake = (tokens*(20000000 + 80000000 * (stakePeriod - minStakePeriod))/(104 - minStakePeriod)) / 10^8;
 
-K = ( 11356800 + 9300 * (cliffPeriod)^2 + 4650 * (slopePeriod)^2) / 10816;
+Stake value depends on the values of cliff and slope periods. The longer the stake period, the more stake 
+the user will receive. Max staking period equal 2 years cliff plus slope period. 
+The example linearly changes stake value, with token value = 1000, shown in the picture 8. 
 
-Stake value depends on the values of period cliff and period slope. The longer the stake period, the more stake 
-the user will receive. Max staking period equal 2 years cliff period and 2 years slope period. 
-The K coefficient changes non-linearly, as shown in the picture 8. 
-
-![Staking 8](documents/svg/Pict7GgraphicK.svg)
+![Staking 8](documents/svg/Pict7GgraphicStakeValue.svg)
 
 ##### Contract events
 Staking contract emits these events:
@@ -102,3 +100,4 @@ Staking contract emits these events:
 - Migrate - when user migrates his stakes to new contract
 - StopStaking - when user deprecate to run contract functions accept withdraw
 - StartMigration - when user set address migrate to
+- MinStakePeriod - when contract owner set minimal stake period

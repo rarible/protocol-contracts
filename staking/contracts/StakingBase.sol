@@ -17,9 +17,9 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch start)
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
-    uint256 constant ST_FORMULA_NEW_DIVIDER = 10000000000;        //stFormula divider
-    uint256 constant ST_FORMULA_STABLE_MULTIPLIER = 2000000000;   //stFormula constant multiplier
-    uint256 constant ST_FORMULA_LINEAR_MULTIPLIER = 8000000000;   //stFormula linear multiplier
+    uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
+    uint256 constant ST_FORMULA_STABLE_MULTIPLIER = 20000000;   //stFormula constant multiplier
+    uint256 constant ST_FORMULA_LINEAR_MULTIPLIER = 80000000;   //stFormula linear multiplier
 
     /**
      * @dev ERC20 token to lock
@@ -100,7 +100,7 @@ contract StakingBase is OwnableUpgradeable {
     /**
      * @dev set minStakePeriod, require newMinStakePeriod < TWO_YEAR_WEEKS = 104
      */
-    event MinStakePeriod(uint indexed newMinStakePeriod);
+    event SetMinStakePeriod(uint indexed newMinStakePeriod);
 
     function __StakingBase_init_unchained(IERC20Upgradeable _token) internal initializer {
         token = _token;
@@ -126,7 +126,7 @@ contract StakingBase is OwnableUpgradeable {
 
     /**
      * Сalculate and return (newAmount, newSlope), using formula:
-     * stRari = (Rari*(ST_FORMULA_STABLE_MULTIPLIER + ST_FORMULA_LINEAR_MULTIPLIER * (stakePeriod - minStakePeriod))/(TWO_YEAR_WEEKS - minStakePeriod)) / ST_FORMULA_MULTIPLIER
+     * staking = (tokens * (ST_FORMULA_STABLE_MULTIPLIER + ST_FORMULA_LINEAR_MULTIPLIER * (stakePeriod - minStakePeriod))/(TWO_YEAR_WEEKS - minStakePeriod)) / ST_FORMULA_DIVIDER
      **/
     function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
         uint slopePeriod = divUp(amount, slope);
@@ -136,7 +136,7 @@ contract StakingBase is OwnableUpgradeable {
         uint linearSide = (stakePeriod - minStakePeriod).mul(ST_FORMULA_LINEAR_MULTIPLIER).div(TWO_YEAR_WEEKS - minStakePeriod);
         uint multiplier = linearSide.add(ST_FORMULA_STABLE_MULTIPLIER);
 
-        stakeAmount = amount.mul(multiplier).div(ST_FORMULA_NEW_DIVIDER);
+        stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
         stakeSlope = divUp(stakeAmount, slopePeriod);
     }
 

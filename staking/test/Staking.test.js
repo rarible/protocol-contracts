@@ -1590,6 +1590,17 @@ contract("Staking", accounts => {
       assert.equal(newContract, newStaking.address);
 		});
 
+		it("Test6.1 check emit SetMinStakePeriod()", async () => {
+      let setMinStakePeriodResult = await staking.setMinStakePeriod(20, { from: accounts[0] });
+
+			let newMinStake;
+      truffleAssert.eventEmitted(setMinStakePeriodResult, 'SetMinStakePeriod', (ev) => {
+       	newMinStake = ev.newMinStakePeriod;
+        return true;
+      });
+      assert.equal(newMinStake, 20);
+		});
+
 		it("Test7. check emit StopStaking()", async () => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });

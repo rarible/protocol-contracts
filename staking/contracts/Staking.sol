@@ -134,7 +134,7 @@ contract Staking is StakingBase, StakingRestake {
         require(newMinStakePeriod < TWO_YEAR_WEEKS, "new stake period > 2 years");
         minStakePeriod = newMinStakePeriod;
 
-        emit MinStakePeriod(newMinStakePeriod);
+        emit SetMinStakePeriod(newMinStakePeriod);
     }
 
     uint256[50] private __gap;
