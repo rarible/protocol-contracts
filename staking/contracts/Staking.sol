@@ -130,11 +130,18 @@ contract Staking is StakingBase, StakingRestake {
         emit Migrate(msg.sender, id);
     }
 
-    function setMinStakePeriod(uint newMinStakePeriod) external  notStopped notMigrating onlyOwner {
-        require(newMinStakePeriod < TWO_YEAR_WEEKS, "new stake period > 2 years");
-        minStakePeriod = newMinStakePeriod;
+    function setMinCliffPeriod(uint newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinCliffPeriod < TWO_YEAR_WEEKS, "new cliff period > 2 years");
+        minCliffPeriod = newMinCliffPeriod;
 
-        emit SetMinStakePeriod(newMinStakePeriod);
+        emit SetMinCliffPeriod(newMinCliffPeriod);
+    }
+
+    function setMinSlopePeriod(uint newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinSlopePeriod < TWO_YEAR_WEEKS, "new slope period > 2 years");
+        minSlopePeriod = newMinSlopePeriod;
+
+        emit SetMinSlopePeriod(newMinSlopePeriod);
     }
 
     uint256[50] private __gap;

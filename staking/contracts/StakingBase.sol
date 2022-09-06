@@ -18,8 +18,11 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
-    uint256 constant ST_FORMULA_STABLE_MULTIPLIER = 20000000;   //stFormula constant multiplier
     uint256 constant ST_FORMULA_LINEAR_MULTIPLIER = 80000000;   //stFormula linear multiplier
+
+    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 10000000;   //stFormula const multiplier
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 60000000;   //stFormula cliff multiplier
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 30000000;   //stFormula slope multiplier
 
     /**
      * @dev ERC20 token to lock
@@ -41,9 +44,14 @@ contract StakingBase is OwnableUpgradeable {
     address public migrateTo;
 
     /**
-      *@dev minimal stake period in weeks, minStakePeriod < TWO_YEAR_WEEKS
-      */
-    uint public minStakePeriod;
+     * @dev minimal cliff period in weeks, minCliffPeriod < TWO_YEAR_WEEKS
+     */
+
+    uint public minCliffPeriod;
+    /**
+     * @dev minimal slope period in weeks, minSlopePeriod < TWO_YEAR_WEEKS
+     */
+    uint public minSlopePeriod;
 
     /**
      * @dev represents one user Stake
@@ -98,9 +106,13 @@ contract StakingBase is OwnableUpgradeable {
      */
     event StartMigration(address indexed account, address indexed to);
     /**
-     * @dev set minStakePeriod, require newMinStakePeriod < TWO_YEAR_WEEKS = 104
+     * @dev set newMinCliffPeriod, require newMinCliffPeriod < TWO_YEAR_WEEKS = 104
      */
-    event SetMinStakePeriod(uint indexed newMinStakePeriod);
+    event SetMinCliffPeriod(uint indexed newMinCliffPeriod);
+    /**
+     * @dev set newMinSlopePeriod, require newMinSlopePeriod < TWO_YEAR_WEEKS = 104
+     */
+    event SetMinSlopePeriod(uint indexed newMinSlopePeriod);
 
     function __StakingBase_init_unchained(IERC20Upgradeable _token) internal initializer {
         token = _token;
@@ -126,15 +138,20 @@ contract StakingBase is OwnableUpgradeable {
 
     /**
      * Сalculate and return (newAmount, newSlope), using formula:
-     * staking = (tokens * (ST_FORMULA_STABLE_MULTIPLIER + ST_FORMULA_LINEAR_MULTIPLIER * (stakePeriod - minStakePeriod))/(TWO_YEAR_WEEKS - minStakePeriod)) / ST_FORMULA_DIVIDER
+     * staking = (tokens * (
+     *      ST_FORMULA_CONST_MULTIPLIER
+     *      + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod - minCliffPeriod))/(TWO_YEAR_WEEKS - minCliffPeriod)
+     *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(TWO_YEAR_WEEKS - minSlopePeriod)
+     *      )) / ST_FORMULA_DIVIDER
      **/
     function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
         uint slopePeriod = divUp(amount, slope);
-        uint stakePeriod = slopePeriod.add(cliff);
-        require(stakePeriod >= minStakePeriod, "stake period < minimal stake period");
+        require(cliff >= minCliffPeriod, "cliff period < minimal stake period");
+        require(slopePeriod >= minSlopePeriod, "slope period < minimal stake period");
 
-        uint linearSide = (stakePeriod - minStakePeriod).mul(ST_FORMULA_LINEAR_MULTIPLIER).div(TWO_YEAR_WEEKS - minStakePeriod);
-        uint multiplier = linearSide.add(ST_FORMULA_STABLE_MULTIPLIER);
+        uint cliffSide = (cliff - minCliffPeriod).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(TWO_YEAR_WEEKS - minCliffPeriod);
+        uint slopeSide = (slopePeriod - minSlopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(TWO_YEAR_WEEKS - minSlopePeriod);
+        uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_CONST_MULTIPLIER);
 
         stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
         stakeSlope = divUp(stakeAmount, slopePeriod);
