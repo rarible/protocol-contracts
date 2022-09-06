@@ -13,9 +13,9 @@ const rinkeby = {
 const mainnet = {
   wyvernExchange: "0x7f268357A8c2552623316e2562D90e642bB538E5",
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
-  x2y2: "0x0000000000000000000000000000000000000000",
-  looksRare: "0x0000000000000000000000000000000000000000",
-  sudoSwap: "0x0000000000000000000000000000000000000000"
+  x2y2: "0x74312363e45DCaBA76c59ec49a7Aa8A65a67EeD3",
+  looksRare: "0x59728544B08AB483533076417FbBB2fD0B17CE3a",
+  sudoSwap: "0x2b2e8cda09bba9660dca5cb6233787738ad68329"
 }
 const ropsten = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
@@ -77,4 +77,5 @@ module.exports = async function (deployer, network) {
 
   exchangeWrapper = await ExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
+  console.log("With settings:", settings)
 };
