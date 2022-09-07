@@ -83,10 +83,15 @@ Also, special function delegate can be used to delegate one Stake to other accou
 
 Stake value is calculated by the formula:
 
-stake = (tokens*(20000000 + 80000000 * (stakePeriod - minStakePeriod))/(104 - minStakePeriod)) / 10^8;
+stake = (tokens * (10000000 + 60000000 * (cliffPeriod - minCliffPeriod))/(104 - minCliffPeriod) + 30000000 * (slopePeriod - minSlopePeriod))/(104 - minSlopePeriod)) / 10^8;
 
-Stake value depends on the values of cliff and slope periods. The longer the stake period, the more stake 
-the user will receive. Max staking period equal 2 years cliff plus slope period. 
+ - `cliffPeriod` - time (number of weeks) when cliff works;
+ - `minCliffPeriod` - minimal time (number of weeks) for cliff;
+ - `slopePeriod` - time (number of weeks) when slope works;
+ - `minSlopePeriod` - minimal time (number of weeks) for slope;
+
+Stake value depends on the values of period cliff and period slope. The longer the stake period, the more stake
+the user will receive. Max staking period equal 2 years cliff period and 2 years slope period.
 The example linearly changes stake value, with token value = 1000, shown in the picture 8. 
 
 ![Staking 8](documents/svg/Pict7GgraphicStakeValue.svg)

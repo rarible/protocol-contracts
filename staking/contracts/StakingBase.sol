@@ -18,8 +18,6 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
-    uint256 constant ST_FORMULA_LINEAR_MULTIPLIER = 80000000;   //stFormula linear multiplier
-
     uint256 constant ST_FORMULA_CONST_MULTIPLIER = 10000000;   //stFormula const multiplier
     uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 60000000;   //stFormula cliff multiplier
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 30000000;   //stFormula slope multiplier
