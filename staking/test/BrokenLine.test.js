@@ -117,7 +117,7 @@ contract("BrokenLine", accounts => {
 		it("Add line with slope>bias, expect throw ", async () => {
 			let id = 1;
 			await expectThrow(
-    		forTest.addTest([1, 40, 0], id, 0)
+    		forTest.addTest([1, 40, 100], id, 0)
     	);
 		})
 

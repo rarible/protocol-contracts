@@ -83,7 +83,7 @@ Also, special function delegate can be used to delegate one Stake to other accou
 
 Stake value is calculated by the formula:
 
-stake = (tokens * (10000000 + 60000000 * (cliffPeriod - minCliffPeriod))/(104 - minCliffPeriod) + 30000000 * (slopePeriod - minSlopePeriod))/(104 - minSlopePeriod)) / 10^8;
+stake = (tokens * (10000000 + 80400000 * (cliffPeriod - minCliffPeriod))/(104 - minCliffPeriod) + 40000000 * (slopePeriod - minSlopePeriod))/(104 - minSlopePeriod)) / 10^8;
 
  - `cliffPeriod` - time (number of weeks) when cliff works;
  - `minCliffPeriod` - minimal time (number of weeks) for cliff;
@@ -105,4 +105,5 @@ Staking contract emits these events:
 - Migrate - when user migrates his stakes to new contract
 - StopStaking - when user deprecate to run contract functions accept withdraw
 - StartMigration - when user set address migrate to
-- MinStakePeriod - when contract owner set minimal stake period
+- SetMinCliffPeriod - when contract owner set minimal cliff period
+- SetMinSlopePeriod - when contract owner set minimal slope period

@@ -18,9 +18,9 @@ contract StakingBase is OwnableUpgradeable {
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
-    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 10000000;   //stFormula const multiplier
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 60000000;   //stFormula cliff multiplier
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 30000000;   //stFormula slope multiplier
+    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 20000000;   //stFormula const multiplier
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 80400000;   //stFormula cliff multiplier
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 40000000;   //stFormula slope multiplier
 
     /**
      * @dev ERC20 token to lock
@@ -46,6 +46,7 @@ contract StakingBase is OwnableUpgradeable {
      */
 
     uint public minCliffPeriod;
+
     /**
      * @dev minimal slope period in weeks, minSlopePeriod < TWO_YEAR_WEEKS
      */
@@ -180,7 +181,8 @@ contract StakingBase is OwnableUpgradeable {
         _;
     }
 
-    //add minStakePeriod, decrease __gap
-    uint256[49] private __gap;
+    //add minCliffPeriod, decrease __gap
+    //add minSlopePeriod, decrease __gap
+    uint256[48] private __gap;
 
 }
