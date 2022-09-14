@@ -16,6 +16,7 @@ contract("RariMine", accounts => {
  	const WEEK = DAY * 7;
  	const MONTH = WEEK * 4;
  	const YEAR = DAY * 365;
+ 	const zeroAddress = "0x0000000000000000000000000000000000000000";
 
 	beforeEach(async () => {
 		deposite = accounts[1];
@@ -62,6 +63,31 @@ contract("RariMine", accounts => {
       assert.equal(await token.balanceOf(rariMine.address), 0);
       assert.equal(await token.balanceOf(tokenOwner), 1400);
 		});
+
+		it("Test 3. throw", async () => {
+      await token.mint(tokenOwner, 1500);
+      await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+
+      let balanceRecipient = {recipient: zeroAddress, value: 100};
+      await expectThrow( // throw zero recipient = zero address
+        rariMine.plus([balanceRecipient])
+      );
+      const recipient = accounts[3];
+      balanceRecipient = {recipient: recipient, value: 0};
+      await expectThrow( // throw zero recipient = zero amount
+        rariMine.plus([balanceRecipient])
+      );
+
+      balanceRecipient = {recipient: zeroAddress, value: 100};
+      await expectThrow( // throw zero recipient = zero address
+        rariMine.minus([balanceRecipient])
+      );
+
+      balanceRecipient = {recipient: recipient, value: 0};
+      await expectThrow( // throw zero recipient = zero amount
+        rariMine.minus([balanceRecipient])
+      );
+    });
 
 	})
 
