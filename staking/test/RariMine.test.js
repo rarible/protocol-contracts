@@ -29,9 +29,9 @@ contract("RariMine", accounts => {
 
 	describe("Check RariMine claim", () => {
 
-		it("Test 1. Claim() and stake tokens", async () => {
-			await token.mint(tokenOwner, 1500);
-   		await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+    it("Test 1.1 Claim() and stake tokens", async () => {
+      await token.mint(tokenOwner, 1500);
+      await token.approve(rariMine.address, 1000000, { from: tokenOwner });
       const recipient = accounts[3];
       const amount = 100;
       let balanceRecipient = {recipient: recipient, value: amount};
@@ -45,11 +45,50 @@ contract("RariMine", accounts => {
       assert.equal(await token.balanceOf(staking.address), 100);
       assert.equal(await token.balanceOf(rariMine.address), 0);
       assert.equal(await token.balanceOf(tokenOwner), 1400);
-		});
+    });
 
-		it("Test 2. Claim() and transfer tokens to recipient", async () => {
-			await token.mint(tokenOwner, 1500);
-   		await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+    it("Test 1.2 Claim() and stake tokens, emit event", async () => {
+      await token.mint(tokenOwner, 1500);
+      await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+      const recipient = accounts[3];
+      const amount = 100;
+      const slopePeriod = 10;
+      const cliffPeriod = 10;
+      let balanceRecipient = {recipient: recipient, value: amount};
+      await rariMine.plus([balanceRecipient]);
+
+      const txSetSlopePeriod = await rariMine.setSlopePeriod(slopePeriod);
+      const txSetCliffPeriod = await rariMine.setCliffPeriod(cliffPeriod);
+      let txSlopePeriod;
+      let txCliffPeriod;
+
+      truffleAssert.eventEmitted(txSetSlopePeriod, 'SlopePeriodChange', (ev) => {
+        txSlopePeriod = ev.newSlopePeriod;
+        return true;
+      });
+      assert.equal(txSlopePeriod, slopePeriod, "SlopePeriodChange event incorrect");
+
+      truffleAssert.eventEmitted(txSetCliffPeriod, 'CliffPeriodChange', (ev) => {
+        txCliffPeriod = ev.newCliffPeriod;
+        return true;
+      });
+      assert.equal(txCliffPeriod, cliffPeriod, "CliffPeriodChange event incorrect");
+
+      const txClaim = await rariMine.claim({from: recipient});
+      let txTokenOwner;
+      let txBalance;
+      truffleAssert.eventEmitted(txClaim, 'BalanceChange', (ev) => {
+        txTokenOwner = ev.owner;
+        txBalance = ev.balance;
+        return true;
+      });
+      assert.equal(txTokenOwner, recipient, "BalanceChange event incorrect");
+      assert.equal(txBalance, 0, "BalanceChange event incorrect");
+    });
+
+    it("Test 2.1 Claim() and transfer tokens to recipient", async () => {
+    	await token.mint(tokenOwner, 1500);
+     	await token.approve(rariMine.address, 1000000, { from: tokenOwner });
       const recipient = accounts[3];
       const amount = 100;
       let balanceRecipient = {recipient: recipient, value: amount};
@@ -62,9 +101,28 @@ contract("RariMine", accounts => {
       assert.equal(await token.balanceOf(staking.address), 0);
       assert.equal(await token.balanceOf(rariMine.address), 0);
       assert.equal(await token.balanceOf(tokenOwner), 1400);
-		});
+    });
 
-		it("Test 3. throw", async () => {
+    it("Test 2.2 Claim() and transfer tokens to recipient emit event", async () => {
+    	await token.mint(tokenOwner, 1500);
+     	await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+      const recipient = accounts[3];
+      const amount = 100;
+      let balanceRecipient = {recipient: recipient, value: amount};
+      await rariMine.plus([balanceRecipient]);
+      const txClaim = await rariMine.claim({from: recipient});
+      let txTokenOwner;
+      let txBalance;
+      truffleAssert.eventEmitted(txClaim, 'BalanceChange', (ev) => {
+        txTokenOwner = ev.owner;
+        txBalance = ev.balance;
+        return true;
+      });
+      assert.equal(txTokenOwner, recipient, "BalanceChange event incorrect");
+      assert.equal(txBalance, 0, "BalanceChange event incorrect");
+    });
+
+    it("Test 3. throw", async () => {
       await token.mint(tokenOwner, 1500);
       await token.approve(rariMine.address, 1000000, { from: tokenOwner });
 

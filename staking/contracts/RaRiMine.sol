@@ -8,19 +8,19 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "./IStaking.sol";
 import "./LibStakingMath.sol";
 
-    /**
-     * @dev RariMine, a contract that allows you to increase (function plus())
-     *      or decrease (function minus()) the balance of ERC20 users tokens.
-     *      Also user can initiate stake or withdraw his own amount of ERC20 tokens.
-     *      In function claim() Withdraw case works only for slopePeriod == cliffPeriod == 0,
-     *      else stake`ll be initiate with amount equal ERC20 tokens user balance.
-     */
+/**
+ * @dev RariMine, a contract that allows to increase (function plus())
+ *      or decrease (function minus()) the balance of ERC20 users tokens.
+ *      Also user can initiate stake or withdraw his own amount of ERC20 tokens.
+ *      In function claim() Withdraw case works only for slopePeriod == cliffPeriod == 0,
+ *      else stake`ll be initiate with amount equal ERC20 tokens user balance.
+ */
 contract RariMine is Ownable {
     using SafeMathUpgradeable for uint256;
 
     event BalanceChange(address indexed owner, uint256 balance);
-    event SlopePeriodChange(uint newSlopePeriod);
-    event CliffPeriodChange(uint newCliffPeriod);
+    event SlopePeriodChange(uint indexed newSlopePeriod);
+    event CliffPeriodChange(uint indexed newCliffPeriod);
 
     struct Balance {
         address recipient;
@@ -55,21 +55,22 @@ contract RariMine is Ownable {
         require(stakeAmount > 0, "Amount for stake == 0");
         balances[_msgSender()] = 0;
         uint slope = stakeAmount;
-        if (slopePeriod == 0){
-            if (cliffPeriod == 0){
+        if (slopePeriod == 0) {
+            if (cliffPeriod == 0) {
                 require(
-                token.transferFrom(tokenOwner, msg.sender, stakeAmount),
-                "Recipient transfer token error"
+                    token.transferFrom(tokenOwner, msg.sender, stakeAmount),
+                    "Recipient transfer token error"
                 );
+                emit BalanceChange(_msgSender(), 0);
                 return;
             }
-        } else{
+        } else {
             slope = LibStakingMath.divUp(stakeAmount, slopePeriod);
         }
 
         require(
             token.transferFrom(tokenOwner, address(this), stakeAmount),
-            "Contract transfer transfer token error"
+            "Contract transfer token error"
         );
         token.approve(address(staking), stakeAmount);
         staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, cliffPeriod);
