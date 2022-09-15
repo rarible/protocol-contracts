@@ -7,27 +7,27 @@ const increaseTime = tests.increaseTime;
 const { expectThrow } = require("@daonomic/tests-common");
 
 contract("RariMine", accounts => {
-	let staking;
-	let testStaking;
-	let token;
-	let deposite;
+  let staking;
+  let testStaking;
+  let token;
+  let deposite;
 
-	const DAY = 86400;
- 	const WEEK = DAY * 7;
- 	const MONTH = WEEK * 4;
- 	const YEAR = DAY * 365;
- 	const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const DAY = 86400;
+  const WEEK = DAY * 7;
+  const MONTH = WEEK * 4;
+  const YEAR = DAY * 365;
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
 
-	beforeEach(async () => {
-		deposite = accounts[1];
-		tokenOwner = accounts[2];
-		token = await ERC20.new();
-		staking = await Staking.new();
-		await staking.__Staking_init(token.address); //initialize staking, set token
-		rariMine = await RariMine.new(token.address, tokenOwner, staking.address); //initialize rariMine
-	})
+  beforeEach(async () => {
+    deposite = accounts[1];
+    tokenOwner = accounts[2];
+    token = await ERC20.new();
+    staking = await Staking.new();
+    await staking.__Staking_init(token.address); //initialize staking, set token
+    rariMine = await RariMine.new(token.address, tokenOwner, staking.address); //initialize rariMine
+  })
 
-	describe("Check RariMine claim", () => {
+  describe("Check RariMine claim", () => {
 
     it("Test 1.1 Claim() and stake tokens", async () => {
       await token.mint(tokenOwner, 1500);
@@ -87,8 +87,8 @@ contract("RariMine", accounts => {
     });
 
     it("Test 2.1 Claim() and transfer tokens to recipient", async () => {
-    	await token.mint(tokenOwner, 1500);
-     	await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+      await token.mint(tokenOwner, 1500);
+      await token.approve(rariMine.address, 1000000, { from: tokenOwner });
       const recipient = accounts[3];
       const amount = 100;
       let balanceRecipient = {recipient: recipient, value: amount};
@@ -104,8 +104,8 @@ contract("RariMine", accounts => {
     });
 
     it("Test 2.2 Claim() and transfer tokens to recipient emit event", async () => {
-    	await token.mint(tokenOwner, 1500);
-     	await token.approve(rariMine.address, 1000000, { from: tokenOwner });
+      await token.mint(tokenOwner, 1500);
+      await token.approve(rariMine.address, 1000000, { from: tokenOwner });
       const recipient = accounts[3];
       const amount = 100;
       let balanceRecipient = {recipient: recipient, value: amount};
@@ -147,6 +147,6 @@ contract("RariMine", accounts => {
       );
     });
 
-	})
+  })
 
 })
