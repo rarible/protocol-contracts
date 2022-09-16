@@ -44,6 +44,12 @@ const dev = {
   deploy_WETH: true,
   deploy_non_meta: true,
 }
+const staging = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: true,
+  deploy_WETH: true,
+  deploy_non_meta: true,
+}
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
   deploy_CryptoPunks: false,
@@ -107,7 +113,8 @@ let settings = {
   "polygon_mainnet": polygon_mainnet,
   "dev": dev,
   "polygon_dev": polygon_dev,
-  "goerli": goerli
+  "goerli": goerli,
+  "staging": staging
 };
 
 function getSettings(network) {

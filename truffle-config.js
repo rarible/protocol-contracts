@@ -66,7 +66,8 @@ module.exports = {
     polygon_mainnet: createNetwork("polygon_mainnet"),
     polygon_dev: createNetwork("polygon_dev"),
     dev: createNetwork("dev"),
-    goerli: createNetwork("goerli")
+    goerli: createNetwork("goerli"),
+    staging: createNetwork("staging")
   },
 
   compilers: {
