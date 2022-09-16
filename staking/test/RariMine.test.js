@@ -24,7 +24,8 @@ contract("RariMine", accounts => {
     token = await ERC20.new();
     staking = await Staking.new();
     await staking.__Staking_init(token.address); //initialize staking, set token
-    rariMine = await RariMine.new(token.address, tokenOwner, staking.address); //initialize rariMine
+    rariMine = await RariMine.new();
+    await rariMine.__RariMine_init(token.address, tokenOwner, staking.address);//initialize rariMine
   })
 
   describe("Check RariMine claim", () => {

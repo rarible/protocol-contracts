@@ -36,12 +36,12 @@ contract RariMine is OwnableUpgradeable {
     uint public cliffPeriod;
 
     /**
-     * @dev constructor, initialise necessary contracts needed for work
+     * @dev __RariMine_init, initialise necessary contracts needed for work
      * @param _token, ERC20 token address contract
      * @param _tokenOwner, address token owner
      * @param _staking, staking address contract
      */
-    constructor(ERC20 _token, address _tokenOwner, IStaking _staking) {
+    function __RariMine_init(ERC20 _token, address _tokenOwner, IStaking _staking) external initializer {
         token = _token;
         tokenOwner = _tokenOwner;
         staking = _staking;
