@@ -44,24 +44,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
     await RTM.init____(transferProxy.address, erc20TransferProxy.address, protocolCommission, community, royaltiesRegistry.address);
-    /*
-    erc20 = await TestERC20.new();
-    t2 = await TestERC20.new();
-    erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
-    erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
-    await RTM.setFeeReceiver(erc20.address, protocol);//
-    await RTM.setFeeReceiver(eth, protocol);//
-    erc721V1 = await ERC721_V1.new("Rarible", "RARI", "https://ipfs.rarible.com");
-    await erc721V1.initialize();
-    erc721V2 = await ERC721_V2.new("Rarible", "RARI", "https://ipfs.rarible.com");
-    await erc721V2.initialize();
-    erc1155V1 = await ERC1155_V1.new("https://ipfs.rarible.com");
-    await erc1155V1.initialize();
-    erc1155V2 = await ERC1155_V2.new("https://ipfs.rarible.com");
-    await erc1155V2.initialize();
-    erc721V1_Error = await ERC721_V1_Error.new("Rarible", "RARI", "https://ipfs.rarible.com");
-    erc1155V2_Error = await ERC1155_V2_Error.new("https://ipfs.rarible.com");
-    */
   });
 
   describe("Check doTransfersExternal()", () => {
@@ -173,8 +155,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     it("Transfer from ERC1155 to ERC721, (buyerFee3%, sallerFee3% = 6%) of ERC1155 protocol (buyerFee3%, sallerFee3%)", async () => {
       const erc721 = await prepareERC721(accounts[2])
       const erc1155 = await prepareERC1155(accounts[1], 105)
-      
-      await RTM.setFeeReceiver(erc1155.address, protocol);
 
       const left = Order(accounts[1], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, "0xffffffff", "0x");

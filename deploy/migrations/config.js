@@ -70,7 +70,7 @@ const polygon_dev = {
 }
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
-  deploy_legacy: true,
+  deploy_legacy: false,
   beneficiary: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   buyerFeeSigner: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   "rarible_token_legacy": {
@@ -90,7 +90,7 @@ const def = {
   deploy_CryptoPunks: true,
   deploy_meta: true,
   deploy_non_meta: true,
-  deploy_WETH: true
+  deploy_WETH: false
 }
 const goerli = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",

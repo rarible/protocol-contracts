@@ -158,4 +158,6 @@ contract("exchange v2 meta", accounts => {
   async function getSignature(order, signer) {
     return sign(order, signer, exchangeV2meta.address);
   }
+  
 });
+  

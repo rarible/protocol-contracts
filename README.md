@@ -16,9 +16,12 @@ Also, you can find Rarible Smart Contracts deployed instances across Mainnet, Te
 yarn
 yarn bootstrap
 ```
-
+if error, check node version for `yarn` expected node version ">=12.19", for check and set necessary version use, for example
+```shell
+node -v
+nvm use 12.22.6
+```
 then use truffle to compile, test: cd into directory and then
-
 ```shell
 truffle test --compile-all
 ```
