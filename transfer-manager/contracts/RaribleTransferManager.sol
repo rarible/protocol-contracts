@@ -85,17 +85,19 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint rest = totalAmount;
 
         rest = transferRoyalties(paymentSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, paymentSide.asset.value, paymentSide.from, paymentSide.proxy);
+        uint96 sumOriginFees = nftSide.originFees[0].value + paymentSide.originFees[0].value;
         if (
-            paymentSide.originFees.length  == 1 &&
-            nftSide.originFees.length  == 1 &&
-            nftSide.originFees[0].account == paymentSide.originFees[0].account
+            paymentSide.originFees.length  == 1 &&                                  //if only one paymentSide originFees
+            nftSide.originFees.length  == 1 &&                                      //&& only one nftSide originFees
+            nftSide.originFees[0].account == paymentSide.originFees[0].account &&   //&& recipient is the same
+            sumOriginFees >= nftSide.originFees[0].value                            //&& sum OriginFees don`t overflow uint96
         ) { 
             LibPart.Part[] memory origin = new  LibPart.Part[](1);
             origin[0].account = nftSide.originFees[0].account;
-            origin[0].value = nftSide.originFees[0].value + paymentSide.originFees[0].value;
-            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, origin, paymentSide.from, paymentSide.proxy);
+            origin[0].value = sumOriginFees;
+            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, origin, paymentSide.from, paymentSide.proxy);                //do transferFees() once
         } else {
-            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, paymentSide.originFees, paymentSide.from, paymentSide.proxy);
+            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, paymentSide.originFees, paymentSide.from, paymentSide.proxy); //else - do transferFees() twice
             (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, nftSide.originFees, paymentSide.from, paymentSide.proxy);
         }
         transferPayouts(paymentSide.asset.assetType, rest, paymentSide.from, nftSide.payouts, paymentSide.proxy);
