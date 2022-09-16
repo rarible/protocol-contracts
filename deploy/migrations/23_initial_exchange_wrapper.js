@@ -1,7 +1,9 @@
-const { deployProxy } = require('@openzeppelin/truffle-upgrades');
-
 const ExchangeWrapper = artifacts.require('ExchangeWrapper');
 const ExchangeV2 = artifacts.require('ExchangeV2');
+const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
+
+const { getSettings } = require("./config.js")
+
 
 const rinkeby = {
   wyvernExchange: "0xdD54D660178B28f6033a953b0E55073cFA7e3744",
@@ -60,7 +62,7 @@ let settings = {
   "dev": dev
 };
 
-function getSettings(network) {
+function getWrapperSettings(network) {
   if (settings[network] !== undefined) {
     return settings[network];
   } else {
@@ -69,10 +71,20 @@ function getSettings(network) {
 }
 
 module.exports = async function (deployer, network) {
-  const settings = getSettings(network);
+  const settings = getWrapperSettings(network);
   let exchangeWrapper;
 
-  const exchangeV2 = (await ExchangeV2.deployed()).address;
+  const { deploy_meta, deploy_non_meta } = getSettings(network);
+
+  let exchangeV2;
+   if (!!deploy_meta) {
+    exchangeV2 = (await ExchangeMetaV2.deployed()).address;
+  } 
+
+  if (!!deploy_non_meta){
+    exchangeV2 = (await ExchangeV2.deployed()).address;
+  }
+
   await deployer.deploy(ExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
 
   exchangeWrapper = await ExchangeWrapper.deployed()
