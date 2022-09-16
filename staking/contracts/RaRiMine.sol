@@ -2,7 +2,8 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+//import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "./IStaking.sol";
@@ -15,7 +16,7 @@ import "./LibStakingMath.sol";
  *      In function claim() Withdraw case works only for slopePeriod == cliffPeriod == 0,
  *      else stake`ll be initiate with amount equal ERC20 tokens user balance.
  */
-contract RariMine is Ownable {
+contract RariMine is OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
 
     event BalanceChange(address indexed owner, uint256 balance);
@@ -44,6 +45,8 @@ contract RariMine is Ownable {
         token = _token;
         tokenOwner = _tokenOwner;
         staking = _staking;
+        __Ownable_init_unchained();
+        __Context_init_unchained();
     }
 
     /**
@@ -129,4 +132,6 @@ contract RariMine is Ownable {
         cliffPeriod = _cliffPeriod;
         emit CliffPeriodChange(_cliffPeriod);
     }
+
+    uint256[48] private __gap;
 }
