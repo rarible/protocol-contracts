@@ -108,9 +108,9 @@ library LibBrokenLine {
         }
         uint finishTimeMinusOne = finishTime.sub(1);
         int mod = safeInt(bias.mod(slope));
-        uint cliffEnd = line.start.add(lineData.cliff).sub(1);
+        uint cliffEnd = line.start.add(lineData.cliff);
         if (toTime <= cliffEnd) {//cliff works
-            cliff = cliffEnd.sub(toTime).add(1);
+            cliff = cliffEnd.sub(toTime);
             //in cliff finish time compensate change slope by oldLine.slope
             brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
             //in new Line finish point use oldLine.slope
@@ -118,7 +118,7 @@ library LibBrokenLine {
         } else if (toTime <= finishTimeMinusOne) {//slope works
             //maybe we dont need decrease brokenLine.initial.slope write now
             //now compensate change slope by oldLine.slope
-//            brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
+            brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
             //in new Line finish point use oldLine.slope
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
             bias = finishTime.sub(toTime).mul(slope).add(uint(mod));
@@ -127,7 +127,7 @@ library LibBrokenLine {
         } else {//tail works
             //maybe we dont need decrease brokenLine.initial.slope write now
             //now compensate change slope by tail
-//            brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
+            brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
             bias = uint(mod);
             slope = bias;
             //save slope for history , when call function update() we update brokenLine.initial.slope to actual

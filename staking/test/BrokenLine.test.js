@@ -104,9 +104,86 @@ contract("BrokenLine", accounts => {
       assert.equal(amountSlope[1], 0);  //slope
 
   		});
+  })
+
+	describe("Check actualBackValue delete", () => {
+    it("Test1. One line can be added with cliff, remove() from cliff", async () => {
+    	let id1 = 256;
+    	// struct Line: start, bias, slope
+    	await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff
+    	await forTest.update(1);
+    	await assertCurrent([1, 100, 0]);
+
+    	await forTest.update(3);
+    	await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
+
+			resultRemove = await forTest.removeTest(id1, 3);
+			let amountRemove;
+			let slopeRemove;
+			let cliffRemove;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amountRemove = ev.bias;
+      	slopeRemove = ev.slope;
+        cliffRemove = ev.cliff;
+        return true;
+      });
+			assert.equal(amountRemove, 100);
+			assert.equal(slopeRemove, 10);
+			assert.equal(cliffRemove, 2);
+      await assertCurrent([3, 0, 0]);
+
+      amountSlope = await forTest.getActualValueBack.call(3); //what about 1 week ago
+    	assert.equal(amountSlope[0], 0);  //bias
+      assert.equal(amountSlope[1], 0);  //slope
+
+      amountSlope = await forTest.getActualValueBack.call(2); //what about 1 week ago
+    	assert.equal(amountSlope[0], 100);  //bias
+      assert.equal(amountSlope[1], 0);  //slope
 
 
-  	})
+//    	await forTest.update(10);
+//    	await assertCurrent([10, 50, 10]); // timeStamp, bias, slope
+//
+//    	await forTest.update(15);
+//    	await assertCurrent([15, 0, 0]); // line is finished
+//
+//    	await forTest.update(16);
+//    	await assertCurrent([16, 0, 0]); // timeStamp, bias, slope
+//      //      Line already finished, but we can define some history
+//    	let amountSlope;
+//    	amountSlope = await forTest.getActualValueBack.call(9); //what about 1 week ago
+//    	assert.equal(amountSlope[0], 60);  //bias
+//      assert.equal(amountSlope[1], 10);  //slope
+//
+//      amountSlope = await forTest.getActualValueBack.call(6); //what about 4 week ago
+//  		assert.equal(amountSlope[0], 90);  //bias
+//      assert.equal(amountSlope[1], 10);  //slope
+//
+//      amountSlope = await forTest.getActualValueBack.call(5); //what about 5 week ago
+//    	assert.equal(amountSlope[0], 100);  //bias
+//      assert.equal(amountSlope[1], 0);  //slope
+//
+//      amountSlope = await forTest.getActualValueBack.call(4); //what about 6 week ago
+//    	assert.equal(amountSlope[0], 100);  //bias
+//      assert.equal(amountSlope[1], 0);  //slope
+//
+//      amountSlope = await forTest.getActualValueBack.call(3); //what about 7 week ago
+//    	assert.equal(amountSlope[0], 100);  //bias
+//      assert.equal(amountSlope[1], 0);  //slope
+//
+//      amountSlope = await forTest.getActualValueBack.call(1); //what about 9 week ago
+//    	assert.equal(amountSlope[0], 100);  //bias
+//      assert.equal(amountSlope[1], 0);  //slope
+//
+//      amountSlope = await forTest.getActualValueBack.call(0); //what about 10 week ago
+//    	assert.equal(amountSlope[0], 0);  //bias
+//      assert.equal(amountSlope[1], 0);  //slope
+  		});
+
+
+
+  })
+
 //	describe("Check add()", () => {
 //
 //		it("Should update if no line added", async () => {
