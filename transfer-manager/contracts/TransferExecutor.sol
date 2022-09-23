@@ -6,6 +6,8 @@ pragma abicoder v2;
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
+import "@rarible/lib-safe-erc20/contracts/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ITransferExecutor.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
@@ -15,6 +17,7 @@ import "./lib/LibTransfer.sol";
 
 abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransferExecutor {
     using LibTransfer for address;
+    using SafeERC20 for IERC20;
 
     mapping (bytes4 => address) proxies;
 
@@ -50,7 +53,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
             //not using transfer proxy when transfering from this contract
             (address token) = abi.decode(asset.assetType.data, (address));
             if (from == address(this)){
-                IERC20Upgradeable(token).transfer(to, asset.value);
+                IERC20(token).safeTransfer(to, asset.value);
             } else {
                 IERC20TransferProxy(proxy).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.value);
             }
