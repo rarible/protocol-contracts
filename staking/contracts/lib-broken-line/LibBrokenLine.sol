@@ -67,20 +67,15 @@ library LibBrokenLine {
             //no cliff, need to increase brokenLine.initial.slope write now
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
             //no cliff, save slope in slopeChanges, when call function update() we update brokenLine.initial.slope to actual
-//            brokenLine.slopeChanges.addToItem(lineStart, safeInt(line.slope).sub(mod));
             brokenLine.slopeChanges.addToItem(lineStart, safeInt(line.slope));
         } else {
-//            uint cliffEnd = line.start.add(cliff).sub(1);
             uint cliffEnd = line.start.add(cliff);
             brokenLine.slopeChanges.addToItem(cliffEnd, safeInt(line.slope));
             period = period.add(cliff);
         }
 
-//        int mod = safeInt(line.bias.mod(line.slope));
         uint256 endPeriod = lineStart.add(period);
-//        uint256 endPeriodMinus1 = endPeriod.sub(1);
-//        brokenLine.slopeChanges.subFromItem(endPeriodMinus1, safeInt(line.slope).sub(mod));
-//        brokenLine.slopeChanges.subFromItem(endPeriod, mod);
+        //real time point, when line is finished if bias % slope > 0 (means we have tail)
         uint256 endPeriodPlus1 = endPeriod.add(1); //сделал для того чтобы заканчивалась лин
         brokenLine.slopeChanges.subFromItem(endPeriod, safeInt(line.slope).sub(mod));
         brokenLine.slopeChanges.subFromItem(endPeriodPlus1, mod);
@@ -101,7 +96,8 @@ library LibBrokenLine {
         slope = line.slope;
         cliff = 0;
         //for information: bias.div(slope) - this`s period while slope works
-        uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff);
+        //real time point, when line is finished
+        uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff).add(1);
         if (toTime > finishTime) {
             bias = 0;
             return (bias, slope, cliff);
@@ -109,23 +105,30 @@ library LibBrokenLine {
         uint finishTimeMinusOne = finishTime.sub(1);
         int mod = safeInt(bias.mod(slope));
         uint cliffEnd = line.start.add(lineData.cliff);
-        if (toTime <= cliffEnd) {//cliff works
+        if (toTime < cliffEnd) {
             cliff = cliffEnd.sub(toTime);
             //in cliff finish time compensate change slope by oldLine.slope
             brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
             //in new Line finish point use oldLine.slope
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
-        } else if (toTime <= finishTimeMinusOne) {//slope works
-            //maybe we dont need decrease brokenLine.initial.slope write now
+        } else if (toTime == cliffEnd) {//cliff works
+            brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
+
+            cliff = cliffEnd.sub(toTime);
+            //in cliff finish time compensate change slope by oldLine.slope
+            brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
+            //in new Line finish point use oldLine.slope
+            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
+        } else if (toTime < finishTimeMinusOne) {//slope works
+            //todo think why comment        } else if (toTime <= finishTimeMinusOne) {//slope works
             //now compensate change slope by oldLine.slope
             brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
             //in new Line finish point use oldLine.slope
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
-            bias = finishTime.sub(toTime).mul(slope).add(uint(mod));
+            bias = finishTimeMinusOne.sub(toTime).mul(slope).add(uint(mod));
             //save slope for history , when call function update() we update brokenLine.initial.slope to actual
             brokenLine.slopeChanges.subFromItem(toTime, safeInt(slope).sub(mod));
         } else {//tail works
-            //maybe we dont need decrease brokenLine.initial.slope write now
             //now compensate change slope by tail
             brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
             bias = uint(mod);
@@ -164,9 +167,6 @@ library LibBrokenLine {
                 int newBias = safeInt(bias).add(brokenLine.biasChanges[time]); //
                 require(newBias >= 0, "bias < 0, something wrong with bias");
                 bias = uint(newBias);
-
-//                brokenLine.slopeChanges[time] = 0; //we dont clear history
-//                time = time.add(1);
             }
         }
         brokenLine.initial.start = toTime;
@@ -184,6 +184,7 @@ library LibBrokenLine {
         require(toTime > time, "can't update BrokenLine for past time");
         while (time < toTime) {
             bias = bias.sub(slope);
+
             time = time.add(1);
             int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
             require(newSlope >= 0, "slope < 0, something wrong with slope");
