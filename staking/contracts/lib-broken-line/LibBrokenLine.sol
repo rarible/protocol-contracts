@@ -98,8 +98,9 @@ library LibBrokenLine {
         //for information: bias.div(slope) - this`s period while slope works
         //real time point, when line is finished
         uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff).add(1);
-        if (toTime > finishTime) {
+        if (toTime >= finishTime) {
             bias = 0;
+            slope = 0;
             return (bias, slope, cliff);
         }
         uint finishTimeMinusOne = finishTime.sub(1);
