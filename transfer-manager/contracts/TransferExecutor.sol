@@ -6,7 +6,6 @@ pragma abicoder v2;
 import "@rarible/exchange-interfaces/contracts/ITransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ITransferExecutor.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
