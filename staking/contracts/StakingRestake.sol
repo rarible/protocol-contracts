@@ -11,7 +11,7 @@ contract StakingRestake is StakingBase {
 
     function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped notMigrating returns (uint) {
         address account = verifyStakeOwner(id);
-        uint time = roundTimestamp(block.timestamp);
+        uint time = roundTimestamp(getBlockNumber());
         verification(account, id, newAmount, newSlope, newCliff, time);
 
         address delegate = stakes[id].delegate;
