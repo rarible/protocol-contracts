@@ -13,8 +13,8 @@ contract StakingBase is OwnableUpgradeable {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant WEEK = 604800;                         //seconds one week
-    uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch start)
+    uint256 constant WEEK = 50400;                         //blocks one week
+    uint256 constant STARTING_POINT_WEEK = 0;            //starting point week (Staking Epoch start) 2676
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
@@ -168,6 +168,11 @@ contract StakingBase is OwnableUpgradeable {
         account = stakes[id].account;
         require(account == msg.sender, "caller not a stake owner");
     }
+
+    function getBlockNumber() internal virtual view returns (uint) {
+        return block.number;
+    }
+
     /**
      * @dev Throws if stopped
      */

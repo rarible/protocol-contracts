@@ -15,7 +15,7 @@ import "./LibIntMapping.sol";
   * because users can only run out of lockup periods.
   **/
 
-library LibBrokenLine {
+library LibBrokenLine_original {
     using SignedSafeMathUpgradeable for int;
     using SafeMathUpgradeable for uint;
     using LibIntMapping for mapping(uint => int);

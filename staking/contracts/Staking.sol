@@ -27,7 +27,7 @@ contract Staking is StakingBase, StakingRestake {
         emit StartMigration(msg.sender, to);
     }
 
-    function stake(address account, address delegate, uint amount, uint slope, uint cliff) external notStopped notMigrating returns (uint) {
+    function stake(address account, address _delegate, uint amount, uint slope, uint cliff) external notStopped notMigrating returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
         require(divUp(amount, slope) <= TWO_YEAR_WEEKS, "period too big");
@@ -35,10 +35,10 @@ contract Staking is StakingBase, StakingRestake {
 
         counter++;
 
-        uint time = roundTimestamp(block.timestamp);
-        addLines(account, delegate, amount, slope, cliff, time);
+        uint time = roundTimestamp(getBlockNumber());
+        addLines(account, _delegate, amount, slope, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
-        emit StakeCreate(counter, account, delegate, time, amount, slope, cliff);
+        emit StakeCreate(counter, account, _delegate, time, amount, slope, cliff);
         return counter;
     }
 
@@ -55,7 +55,7 @@ contract Staking is StakingBase, StakingRestake {
     function getAvailableForWithdraw(address account) public view returns (uint value) {
         value = accounts[account].amount;
         if (!stopped) {
-            uint time = roundTimestamp(block.timestamp);
+            uint time = roundTimestamp(getBlockNumber());
             uint bias = accounts[account].locked.actualValue(time);
             value = value.sub(bias);
         }
@@ -74,15 +74,15 @@ contract Staking is StakingBase, StakingRestake {
 
     //Getting "current week" of the contract.
     function getWeek() external view returns (uint) {
-        return roundTimestamp(block.timestamp);
+        return roundTimestamp(getBlockNumber());
     }
 
     function delegateTo(uint id, address newDelegate) external notStopped notMigrating {
         address account = verifyStakeOwner(id);
-        address delegate = stakes[id].delegate;
-        uint time = roundTimestamp(block.timestamp);
-        accounts[delegate].balance.update(time);
-        (uint bias, uint slope, uint cliff) = accounts[delegate].balance.remove(id, time);
+        address _delegate = stakes[id].delegate;
+        uint time = roundTimestamp(getBlockNumber());
+        accounts[_delegate].balance.update(time);
+        (uint bias, uint slope, uint cliff) = accounts[_delegate].balance.remove(id, time);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope);
         accounts[newDelegate].balance.update(time);
         accounts[newDelegate].balance.add(id, line, cliff);
@@ -94,7 +94,7 @@ contract Staking is StakingBase, StakingRestake {
         if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint time = roundTimestamp(block.timestamp);
+        uint time = roundTimestamp(getBlockNumber());
         return totalSupplyLine.actualValue(time);
     }
 
@@ -102,7 +102,7 @@ contract Staking is StakingBase, StakingRestake {
         if ((accounts[account].balance.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint time = roundTimestamp(block.timestamp);
+        uint time = roundTimestamp(getBlockNumber());
         return accounts[account].balance.actualValue(time);
     }
 
@@ -110,12 +110,12 @@ contract Staking is StakingBase, StakingRestake {
         if (migrateTo == address(0)) {
             return;
         }
-        uint time = roundTimestamp(block.timestamp);
+        uint time = roundTimestamp(getBlockNumber());
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
         for (uint256 i = 0; i < id.length; i++) {
             address account = verifyStakeOwner(id[i]);
-            address delegate = stakes[id[i]].delegate;
-            updateLines(account, delegate, time);
+            address _delegate = stakes[id[i]].delegate;
+            updateLines(account, _delegate, time);
             //save data Line before remove
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
@@ -123,9 +123,9 @@ contract Staking is StakingBase, StakingRestake {
             require(token.transfer(migrateTo, residue), "transfer failed");
             accounts[account].amount = accounts[account].amount.sub(residue);
 
-            accounts[delegate].balance.remove(id[i], time);
+            accounts[_delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
-            nextVersionStake.initiateData(id[i], lineData, account, delegate);
+            nextVersionStake.initiateData(id[i], lineData, account, _delegate);
         }
         emit Migrate(msg.sender, id);
     }
