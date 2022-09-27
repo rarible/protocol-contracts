@@ -74,12 +74,11 @@ library LibBrokenLine {
             period = period.add(cliff);
         }
 
-        uint256 endPeriod = lineStart.add(period);
-        //real time point, when line is finished if bias % slope > 0 (means we have tail)
-        uint256 endPeriodPlus1 = endPeriod.add(1); //сделал для того чтобы заканчивалась лин
-        brokenLine.slopeChanges.subFromItem(endPeriod, safeInt(line.slope).sub(mod));
-        brokenLine.slopeChanges.subFromItem(endPeriodPlus1, mod);
-
+        uint256 finishTime = lineStart.add(period);
+        //finishTimePlus1 - time point, when line is finished if bias % slope > 0 (means we have tail)
+        uint256 finishTimePlus1 = finishTime.add(1); //сделал для того чтобы заканчивалась лин
+        brokenLine.slopeChanges.subFromItem(finishTime, safeInt(line.slope).sub(mod));
+        brokenLine.slopeChanges.subFromItem(finishTimePlus1, mod);
     }
 
     /**
@@ -106,15 +105,10 @@ library LibBrokenLine {
         uint finishTimeMinusOne = finishTime.sub(1);
         int mod = safeInt(bias.mod(slope));
         uint cliffEnd = line.start.add(lineData.cliff);
-        if (toTime < cliffEnd) {
-            cliff = cliffEnd.sub(toTime);
-            //in cliff finish time compensate change slope by oldLine.slope
-            brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
-            //in new Line finish point use oldLine.slope
-            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
-        } else if (toTime == cliffEnd) {//cliff works
-            brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
-
+        if (toTime < cliffEnd){
+            if (toTime == cliffEnd) {//cliff works
+                brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
+            }
             cliff = cliffEnd.sub(toTime);
             //in cliff finish time compensate change slope by oldLine.slope
             brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
