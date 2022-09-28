@@ -1,0 +1,531 @@
+{
+  "contractName": "INextVersionStake",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "idLock",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "start",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "bias",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "slope",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct LibBrokenLine.Line",
+              "name": "line",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint256",
+              "name": "cliff",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct LibBrokenLine.LineData",
+          "name": "lineData",
+          "type": "tuple"
+        },
+        {
+          "internalType": "address",
+          "name": "locker",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "delegate",
+          "type": "address"
+        }
+      ],
+      "name": "initiateData",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"idLock\",\"type\":\"uint256\"},{\"components\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bias\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"slope\",\"type\":\"uint256\"}],\"internalType\":\"struct LibBrokenLine.Line\",\"name\":\"line\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"cliff\",\"type\":\"uint256\"}],\"internalType\":\"struct LibBrokenLine.LineData\",\"name\":\"lineData\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"locker\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"delegate\",\"type\":\"address\"}],\"name\":\"initiateData\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/INextVersionStake.sol\":\"INextVersionStake\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol\":{\"keccak256\":\"0x0dd1e9b19801e3e7d900fbf4182d81e1afd23ad7be39504e33df6bbcba91d724\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://5e30d594df25d0651c2cd6f85d856e5fc9f3dbae68d017e1da33eb3c7e2f1ecc\",\"dweb:/ipfs/QmPgkV99jZr3Zs9ex8dJ5j22oX4wDuDtMCnXNy67bTwgAB\"]},\"@openzeppelin/contracts-upgradeable/math/SignedSafeMathUpgradeable.sol\":{\"keccak256\":\"0xe391db37b722a67addfa9fce3101edf44ba68e2e12ae6fd74d68677b04ffd5a8\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://f05f8e1638130e2d97e9cd6d1dca2b338ee4c0e0615365a721fce999941f674b\",\"dweb:/ipfs/QmegzMV3Hqa8fkiNrKdbCGUhe9fwJbYuyScd7J2eVBA2Fs\"]},\"project:/contracts/INextVersionStake.sol\":{\"keccak256\":\"0xa564cb7f836c7b6b5a196afe3d142109c58ae83c38c6311c4789e96fa070ae5b\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9116451e8d0f74d08ec989af66d2a8c2e7a84ada7129d4dbd31d6d6b75c7f564\",\"dweb:/ipfs/QmdTXxrWiAktkEUt3evVa8LwYGfFKmkY45iPA5HSUXxPP3\"]},\"project:/contracts/libs/LibBrokenLine.sol\":{\"keccak256\":\"0x0be3367a473cf28df8b8a2c6d9c8255e5b4eaacf2f627c2b6f70bd4daadbf888\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8f23462e6775956dc63b08fe9b1157e894f7b703340d4540dfc0f99784fd84b0\",\"dweb:/ipfs/Qmd92bmdMpeJRPet7thcECNSRMYWDKnbX21R8Gh2Tnj33J\"]},\"project:/contracts/libs/LibIntMapping.sol\":{\"keccak256\":\"0xfdafc79db7d94590025c7b7c37bd30a3bc79915cf6fcaf7a94ee5f89e7822063\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://e7fe51f2e3dd89b4088506c02ce377c7536101fec1c189d855d08888e93cb188\",\"dweb:/ipfs/QmNt5yWncj4tLf7xRzvC9JXqFBY6ntYuiWXh15vWggBrbV\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\r\n\r\npragma solidity 0.7.6;\r\npragma abicoder v2;\r\n\r\nimport \"./libs/LibBrokenLine.sol\";\r\n\r\ninterface INextVersionStake {\r\n    function initiateData(uint idLock, LibBrokenLine.LineData memory lineData, address locker, address delegate) external;\r\n}\r\n",
+  "sourcePath": "C:\\rarible\\protocol-contracts\\staking\\contracts\\INextVersionStake.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/INextVersionStake.sol",
+    "exportedSymbols": {
+      "INextVersionStake": [
+        1113
+      ],
+      "LibBrokenLine": [
+        3777
+      ],
+      "LibIntMapping": [
+        3830
+      ],
+      "SafeMathUpgradeable": [
+        485
+      ],
+      "SignedSafeMathUpgradeable": [
+        664
+      ]
+    },
+    "id": 1114,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1099,
+        "literals": [
+          "solidity",
+          "0.7",
+          ".6"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "35:22:7"
+      },
+      {
+        "id": 1100,
+        "literals": [
+          "abicoder",
+          "v2"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "59:19:7"
+      },
+      {
+        "absolutePath": "project:/contracts/libs/LibBrokenLine.sol",
+        "file": "./libs/LibBrokenLine.sol",
+        "id": 1101,
+        "nodeType": "ImportDirective",
+        "scope": 1114,
+        "sourceUnit": 3778,
+        "src": "82:34:7",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "id": 1113,
+        "linearizedBaseContracts": [
+          1113
+        ],
+        "name": "INextVersionStake",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "functionSelector": "8d7cdec2",
+            "id": 1112,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "initiateData",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1110,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1103,
+                  "mutability": "mutable",
+                  "name": "idLock",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1112,
+                  "src": "177:11:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 1102,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "177:4:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1105,
+                  "mutability": "mutable",
+                  "name": "lineData",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1112,
+                  "src": "190:38:7",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_LineData_$3080_memory_ptr",
+                    "typeString": "struct LibBrokenLine.LineData"
+                  },
+                  "typeName": {
+                    "id": 1104,
+                    "name": "LibBrokenLine.LineData",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 3080,
+                    "src": "190:22:7",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_LineData_$3080_storage_ptr",
+                      "typeString": "struct LibBrokenLine.LineData"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1107,
+                  "mutability": "mutable",
+                  "name": "locker",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1112,
+                  "src": "230:14:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1106,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "230:7:7",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1109,
+                  "mutability": "mutable",
+                  "name": "delegate",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1112,
+                  "src": "246:16:7",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1108,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "246:7:7",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "176:87:7"
+            },
+            "returnParameters": {
+              "id": 1111,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "272:0:7"
+            },
+            "scope": 1113,
+            "src": "155:118:7",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 1114,
+        "src": "120:156:7"
+      }
+    ],
+    "src": "35:243:7"
+  },
+  "legacyAST": {
+    "attributes": {
+      "absolutePath": "project:/contracts/INextVersionStake.sol",
+      "exportedSymbols": {
+        "INextVersionStake": [
+          1113
+        ],
+        "LibBrokenLine": [
+          3777
+        ],
+        "LibIntMapping": [
+          3830
+        ],
+        "SafeMathUpgradeable": [
+          485
+        ],
+        "SignedSafeMathUpgradeable": [
+          664
+        ]
+      },
+      "license": "MIT"
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "0.7",
+            ".6"
+          ]
+        },
+        "id": 1099,
+        "name": "PragmaDirective",
+        "src": "35:22:7"
+      },
+      {
+        "attributes": {
+          "literals": [
+            "abicoder",
+            "v2"
+          ]
+        },
+        "id": 1100,
+        "name": "PragmaDirective",
+        "src": "59:19:7"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 3778,
+          "absolutePath": "project:/contracts/libs/LibBrokenLine.sol",
+          "file": "./libs/LibBrokenLine.sol",
+          "scope": 1114,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 1101,
+        "name": "ImportDirective",
+        "src": "82:34:7"
+      },
+      {
+        "attributes": {
+          "abstract": false,
+          "baseContracts": [
+            null
+          ],
+          "contractDependencies": [
+            null
+          ],
+          "contractKind": "interface",
+          "fullyImplemented": false,
+          "linearizedBaseContracts": [
+            1113
+          ],
+          "name": "INextVersionStake",
+          "scope": 1114
+        },
+        "children": [
+          {
+            "attributes": {
+              "functionSelector": "8d7cdec2",
+              "implemented": false,
+              "isConstructor": false,
+              "kind": "function",
+              "modifiers": [
+                null
+              ],
+              "name": "initiateData",
+              "scope": 1113,
+              "stateMutability": "nonpayable",
+              "virtual": false,
+              "visibility": "external"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "idLock",
+                      "scope": 1112,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "uint256",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "uint",
+                          "type": "uint256"
+                        },
+                        "id": 1102,
+                        "name": "ElementaryTypeName",
+                        "src": "177:4:7"
+                      }
+                    ],
+                    "id": 1103,
+                    "name": "VariableDeclaration",
+                    "src": "177:11:7"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "lineData",
+                      "scope": 1112,
+                      "stateVariable": false,
+                      "storageLocation": "memory",
+                      "type": "struct LibBrokenLine.LineData",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "LibBrokenLine.LineData",
+                          "referencedDeclaration": 3080,
+                          "type": "struct LibBrokenLine.LineData"
+                        },
+                        "id": 1104,
+                        "name": "UserDefinedTypeName",
+                        "src": "190:22:7"
+                      }
+                    ],
+                    "id": 1105,
+                    "name": "VariableDeclaration",
+                    "src": "190:38:7"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "locker",
+                      "scope": 1112,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "stateMutability": "nonpayable",
+                          "type": "address"
+                        },
+                        "id": 1106,
+                        "name": "ElementaryTypeName",
+                        "src": "230:7:7"
+                      }
+                    ],
+                    "id": 1107,
+                    "name": "VariableDeclaration",
+                    "src": "230:14:7"
+                  },
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "delegate",
+                      "scope": 1112,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "stateMutability": "nonpayable",
+                          "type": "address"
+                        },
+                        "id": 1108,
+                        "name": "ElementaryTypeName",
+                        "src": "246:7:7"
+                      }
+                    ],
+                    "id": 1109,
+                    "name": "VariableDeclaration",
+                    "src": "246:16:7"
+                  }
+                ],
+                "id": 1110,
+                "name": "ParameterList",
+                "src": "176:87:7"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 1111,
+                "name": "ParameterList",
+                "src": "272:0:7"
+              }
+            ],
+            "id": 1112,
+            "name": "FunctionDefinition",
+            "src": "155:118:7"
+          }
+        ],
+        "id": 1113,
+        "name": "ContractDefinition",
+        "src": "120:156:7"
+      }
+    ],
+    "id": 1114,
+    "name": "SourceUnit",
+    "src": "35:243:7"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.7.6+commit.7338295f.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2022-09-28T17:01:58.195Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 pragma abicoder v2;
 
-import "../../contracts/lib-broken-line/LibBrokenLine.sol";
+import "../../contracts/libs/LibBrokenLine.sol";
 
 contract BrokenLineTest {
     LibBrokenLine.BrokenLine public brokenLineTestLocal;
