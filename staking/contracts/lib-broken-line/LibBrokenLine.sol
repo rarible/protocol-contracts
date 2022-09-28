@@ -169,14 +169,25 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
-    function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint bias) {
-        uint time = brokenLine.initial.start;
-        bias = brokenLine.initial.bias;
-        if ((time == toTime) || (bias == 0)){
+    function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint) {
+        uint fromTime = brokenLine.initial.start;
+        uint bias = brokenLine.initial.bias;
+        if (fromTime == toTime) {
+            return (bias);
+        }
+
+        if (toTime > fromTime) {
+            return actualValueForward(brokenLine, fromTime, toTime, bias);
+        }
+        return actualValueBack(brokenLine, fromTime, toTime, bias);
+    }
+
+    function actualValueForward(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
+        if ((bias == 0)){
             return (bias);
         }
         uint slope = brokenLine.initial.slope;
-        require(toTime > time, "can't update BrokenLine for past time");
+        uint time = fromTime;
         while (time < toTime) {
             bias = bias.sub(slope);
 
@@ -189,25 +200,16 @@ library LibBrokenLine {
             require(newBias >= 0, "bias < 0, something wrong with bias");
             bias = uint(newBias);
         }
+        return bias;
     }
 
-    function actualValueBack(BrokenLine storage brokenLine, uint toTime) internal view returns (uint bias, uint slope) {
-        uint time = brokenLine.initial.start;
-        bias = brokenLine.initial.bias;
-
-        slope = brokenLine.initial.slope;
+    function actualValueBack(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
+        uint time = fromTime;
+        uint slope = brokenLine.initial.slope;
         //slope changes may be set in biasChanges map, use it
         int newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
         require(newSlope >= 0, "slope < 0, something wrong with slope");
         slope = uint(newSlope);
-        if (time == toTime) {
-            //todo think maybe need it
-            //some bias changes may be set in biasChanges map, use it
-//            int newBias = safeInt(bias).sub(brokenLine.biasChanges[time]); //
-//            require(newBias >= 0, "bias < 0, something wrong with bias");
-//            bias = uint(newBias);
-            return (bias, slope);
-        }
 
         while (time > toTime) {
             bias = bias.add(slope);
@@ -217,10 +219,11 @@ library LibBrokenLine {
             bias = uint(newBias);
 
             time = time.sub(1);
-            int newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
+            newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
             require(newSlope >= 0, "slope < 0, something wrong with slope");
             slope = uint(newSlope);
         }
+        return bias;
     }
 
     function safeInt(uint value) pure internal returns (int result) {

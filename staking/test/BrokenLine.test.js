@@ -41,17 +41,14 @@ contract("BrokenLine", accounts => {
 			assert.equal(cliffRemove, 2);
       await assertCurrent([3, 0, 0]);
 
-      amountSlope = await forTest.getActualValueBack.call(3); //what about 1 week ago
-    	assert.equal(amountSlope[0], 0);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(3); //what about 1 week ago
+    	assert.equal(biasBackTime, 0);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(2); //what about 2 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(2); //what about 2 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(1); //what about 3 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(1); //what about 3 week ago
+    	assert.equal(biasBackTime, 100);  //bias
   	});
 
     it("Test2. One line can be added with cliff+slope, remove() from slopePeriod", async () => {
@@ -79,17 +76,14 @@ contract("BrokenLine", accounts => {
 			assert.equal(cliffRemove, 0);
       await assertCurrent([10, 0, 0]);
 
-      amountSlope = await forTest.getActualValueBack.call(9); //what about 1 week ago
-    	assert.equal(amountSlope[0], 60);  //bias
-      assert.equal(amountSlope[1], 10);  //slope
+      biasBackTime = await forTest.getActualValue.call(9); //what about 1 week ago
+    	assert.equal(biasBackTime, 60);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(2); //what about 1 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(2); //what about 1 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(1); //what about 1 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(1); //what about 1 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
   	});
 
@@ -138,17 +132,14 @@ contract("BrokenLine", accounts => {
 			assert.equal(cliffRemove, 0);
       await assertCurrent([15, 0, 0]);
 
-      amountSlope = await forTest.getActualValueBack.call(14); //what about 1 week ago
-    	assert.equal(amountSlope[0], 15);  //bias
-      assert.equal(amountSlope[1], 10);  //slope
+      biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
+    	assert.equal(biasBackTime, 15);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(4); //what about 10 week ago
-    	assert.equal(amountSlope[0], 105);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(4); //what about 10 week ago
+    	assert.equal(biasBackTime, 105);  //bias
 //
-//      amountSlope = await forTest.getActualValueBack.call(1); //what about 1 week ago
-//    	assert.equal(amountSlope[0], 100);  //bias
-//      assert.equal(amountSlope[1], 0);  //slope
+//      biasBackTime = await forTest.getActualValue.call(1); //what about 14 week ago
+//    	assert.equal(biasBackTime, 100);  //bias
 
   	});
 
@@ -190,25 +181,20 @@ contract("BrokenLine", accounts => {
       await forTest.update(16);
       await assertCurrent([16, 0, 0]); // timeStamp, bias, slope
       //      Line already finished, but we can define some history
-      amountSlope = await forTest.getActualValueBack.call(14); //what about 1 week ago
-      assert.equal(amountSlope[0], 10);  //bias
-      assert.equal(amountSlope[1], 10);  //slope
+      biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
+      assert.equal(biasBackTime, 10);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(5); //what about 10 week ago
-      assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(5); //what about 10 week ago
+      assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(4); //what about 12 week ago
-      assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(4); //what about 12 week ago
+      assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(3); //what about 13 week ago
-      assert.equal(amountSlope[0], 200);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(3); //what about 13 week ago
+      assert.equal(biasBackTime, 200);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(2); //what about 13 week ago
-      assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(2); //what about 13 week ago
+      assert.equal(biasBackTime, 100);  //bias
 
     });
 
@@ -234,35 +220,28 @@ contract("BrokenLine", accounts => {
     	await forTest.update(16);
     	await assertCurrent([16, 0, 0]); // timeStamp, bias, slope
       //      Line already finished, but we can define some history
-    	let amountSlope;
-    	amountSlope = await forTest.getActualValueBack.call(9); //what about 1 week ago
-    	assert.equal(amountSlope[0], 60);  //bias
-      assert.equal(amountSlope[1], 10);  //slope
+    	let biasBackTime;
+    	biasBackTime = await forTest.getActualValue.call(9); //what about 1 week ago
+    	assert.equal(biasBackTime, 60);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(6); //what about 4 week ago
-  		assert.equal(amountSlope[0], 90);  //bias
-      assert.equal(amountSlope[1], 10);  //slope
+      biasBackTime = await forTest.getActualValue.call(6); //what about 4 week ago
+  		assert.equal(biasBackTime, 90);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(5); //what about 5 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(5); //what about 5 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(4); //what about 6 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(4); //what about 6 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(3); //what about 7 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(3); //what about 7 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(1); //what about 9 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(1); //what about 9 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(0); //what about 10 week ago
-    	assert.equal(amountSlope[0], 0);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
-  		});
+      biasBackTime = await forTest.getActualValue.call(0); //what about 10 week ago
+    	assert.equal(biasBackTime, 0);  //bias
+  	});
 
     it("Test2. Second cliff+slope line added to cliff, back values detect from slope", async () => {
     	let id1 = 255;
@@ -287,21 +266,17 @@ contract("BrokenLine", accounts => {
     	await forTest.update(16);
     	await assertCurrent([16, 0, 0]); // timeStamp, bias, slope
       //      Line already finished, but we can define some history
-      amountSlope = await forTest.getActualValueBack.call(14); //what about 1 week ago
-    	assert.equal(amountSlope[0], 20);  //bias
-      assert.equal(amountSlope[1], 20);  //slope
+      biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
+    	assert.equal(biasBackTime, 20);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(5); //what about 10 week ago
-    	assert.equal(amountSlope[0], 200);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(5); //what about 10 week ago
+    	assert.equal(biasBackTime, 200);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(3); //what about 12 week ago
-    	assert.equal(amountSlope[0], 200);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(3); //what about 12 week ago
+    	assert.equal(biasBackTime, 200);  //bias
 
-      amountSlope = await forTest.getActualValueBack.call(2); //what about 13 week ago
-    	assert.equal(amountSlope[0], 100);  //bias
-      assert.equal(amountSlope[1], 0);  //slope
+      biasBackTime = await forTest.getActualValue.call(2); //what about 13 week ago
+    	assert.equal(biasBackTime, 100);  //bias
 
   		});
   })
