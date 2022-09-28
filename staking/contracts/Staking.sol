@@ -6,8 +6,9 @@ pragma abicoder v2;
 import "./INextVersionStake.sol";
 import "./StakingBase.sol";
 import "./StakingRestake.sol";
+import "./StakingVotes.sol";
 
-contract Staking is StakingBase, StakingRestake {
+contract Staking is StakingBase, StakingRestake, StakingVotes {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
