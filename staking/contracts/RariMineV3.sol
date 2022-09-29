@@ -63,7 +63,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
                 emit Value(recipient, _balances[i].value);
 
                 // stake some tokens
-                uint stakeAmount = toClaim - claimAmount;
+                uint stakeAmount = toClaim.sub(claimAmount);
                 uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_CLIFF_WEEKS);
                 token.approve(address(staking), stakeAmount);
                 staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
