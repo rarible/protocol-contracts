@@ -4,3 +4,4 @@ truffle test \
         ./contracts/Staking.sol \
         ./test/contracts/TestERC20.sol \
         ./test/contracts/RariMine.sol \
+        ./test/contracts/TestStaking.sol \

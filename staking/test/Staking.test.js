@@ -22,6 +22,7 @@ contract("Staking", accounts => {
 		newStaking = await TestNewStaking.new();
 		newStakingNoInterface = await TestNewStakingNoInterface.new();
 		await staking.__Staking_init(token.address); //initialize, set owner
+		await incrementBlock(WEEK); //to avoid stake() from ZERO point timeStamp
 	})
 
 	describe("Part1. Check base metods Staking contract, createLock, withdraw", () => {
