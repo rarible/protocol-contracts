@@ -31,6 +31,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     uint256 constant CLAIM_FORMULA_CLAIM   = 40000000;  // 40% to withdraw
     uint256 constant CLAIM_FORMULA_DIVIDER = 100000000; //  
     uint256 constant CLAIM_CLIFF_WEEKS     = 42;        // the meaning of life, the universe, and everything
+    uint256 constant CLAIM_SLOPE_WEEKS     = 42;        // the meaning of life, the universe, and everything
 
     mapping(address => uint) public claimed;
 
@@ -54,7 +55,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             if (msg.sender == recipient) {
                 uint toClaim = _balances[i].value.sub(claimed[recipient]);
                 require(toClaim > 0, "nothing to claim");
-                claimed[recipient] = _balances[i].value;
+                claimed[recipient] += _balances[i].value;
 
                 // claim rari tokens
                 uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
@@ -64,7 +65,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
                 // stake some tokens
                 uint stakeAmount = toClaim.sub(claimAmount);
-                uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_CLIFF_WEEKS);
+                uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_SLOPE_WEEKS);
                 token.approve(address(staking), stakeAmount);
                 staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
                 return;
