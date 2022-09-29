@@ -94,10 +94,11 @@ library LibBrokenLine {
         uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff);
         if (toTime > finishTime) {
             bias = 0;
-            slope = 0; //todo think about it need or not
+            slope = 0;
             return (bias, slope, cliff);
         }
         uint finishTimeMinusOne = finishTime.sub(1);
+        uint toTimeMinusOne = toTime.sub(1);
         int mod = safeInt(bias.mod(slope));
         uint cliffEnd = line.start.add(lineData.cliff).sub(1);
         if (toTime <= cliffEnd) {//cliff works
@@ -113,21 +114,20 @@ library LibBrokenLine {
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
             bias = finishTime.sub(toTime).mul(slope).add(uint(mod));
             //save slope for history
-            brokenLine.slopeChanges.subFromItem(toTime.sub(1), safeInt(slope).sub(mod));
+            brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope).sub(mod));
         } else {//tail works
             //now compensate change slope by tail
             brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
             bias = uint(mod);
             slope = bias;
             //save slope for history
-            brokenLine.slopeChanges.subFromItem(toTime.sub(1), safeInt(slope));
-
+            brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope));
         }
         brokenLine.slopeChanges.addToItem(finishTime, mod);
         brokenLine.initial.bias = brokenLine.initial.bias.sub(bias);
         brokenLine.initiatedLines[id].line.bias = 0;
-
-        brokenLine.biasChanges.subFromItem(toTime.sub(1), safeInt(bias));
+        //save bias for history
+        brokenLine.biasChanges.subFromItem(toTimeMinusOne, safeInt(bias));
     }
 
     /**
@@ -180,6 +180,7 @@ library LibBrokenLine {
         }
         uint slope = brokenLine.initial.slope;
         uint time = fromTime;
+
         while (time < toTime) {
             bias = bias.sub(slope);
 
@@ -196,23 +197,19 @@ library LibBrokenLine {
     }
 
     function actualValueBack(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
-        uint time = fromTime;
         uint slope = brokenLine.initial.slope;
-        //slope changes may be set in biasChanges map, use it
-        int newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
-        require(newSlope >= 0, "slope < 0, something wrong with slope");
-        slope = uint(newSlope);
+        uint time = fromTime;
 
         while (time >= toTime) {
             bias = bias.add(slope);
-//            time = time.sub(1);
 
-            int newBias = safeInt(bias).sub(brokenLine.biasChanges[time]); //
+            int newBias = safeInt(bias).sub(brokenLine.biasChanges[time]);
             require(newBias >= 0, "bias < 0, something wrong with bias");
             bias = uint(newBias);
 
             time = time.sub(1);
-            newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
+
+            int newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
             require(newSlope >= 0, "slope < 0, something wrong with slope");
             slope = uint(newSlope);
         }
