@@ -149,9 +149,6 @@ library LibBrokenLine {
                 require(newSlope >= 0, "slope < 0, something wrong with slope");
                 slope = uint(newSlope);
 
-                int newBias = safeInt(bias).add(brokenLine.biasChanges[time]);
-                require(newBias >= 0, "bias < 0, something wrong with bias");
-                bias = uint(newBias);
                 time = time.add(1);
             }
         }
@@ -188,9 +185,6 @@ library LibBrokenLine {
             require(newSlope >= 0, "slope < 0, something wrong with slope");
             slope = uint(newSlope);
 
-            int newBias = safeInt(bias).add(brokenLine.biasChanges[time]); //
-            require(newBias >= 0, "bias < 0, something wrong with bias");
-            bias = uint(newBias);
             time = time.add(1);
         }
         return bias;
