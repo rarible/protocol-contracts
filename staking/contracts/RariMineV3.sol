@@ -14,7 +14,9 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./libs/LibString.sol";
 import "./libs/LibAddress.sol";
 import "./libs/LibUint.sol";
+import "./libs/LibStakingMath.sol";
 import "./IRariMine.sol";
+import "./IStaking.sol";
 
 contract RariMineV3 is OwnableUpgradeable, IRariMine {
     using SafeMathUpgradeable for uint;
@@ -24,17 +26,24 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
     IERC20Upgradeable public token;
     address public tokenOwner;
+    IStaking public staking;
+    uint256 constant CLAIM_FORMULA_STAKE   = 60000000;  // 60% to stake
+    uint256 constant CLAIM_FORMULA_CLAIM   = 40000000;  // 40% to withdraw
+    uint256 constant CLAIM_FORMULA_DIVIDER = 100000000; //  
+    uint256 constant CLAIM_CLIFF_WEEKS     = 42;        // the meaning of life, the universe, and everything
+
     mapping(address => uint) public claimed;
 
-    function __RariMineV3_init(IERC20Upgradeable _token, address _tokenOwner) external initializer {
-        __RariMineV3_init_unchained(_token, _tokenOwner);
+    function __RariMineV3_init(IERC20Upgradeable _token, address _tokenOwner, IStaking _staking) external initializer {
+        __RariMineV3_init_unchained(_token, _tokenOwner, _staking);
         __Ownable_init_unchained();
         __Context_init_unchained();
     }
 
-    function __RariMineV3_init_unchained(IERC20Upgradeable _token, address _tokenOwner) internal initializer {
+    function __RariMineV3_init_unchained(IERC20Upgradeable _token, address _tokenOwner, IStaking _staking) internal initializer {
         token = _token;
         tokenOwner = _tokenOwner;
+        staking = _staking;
     }
 
     function claim(Balance[] memory _balances, uint8 v, bytes32 r, bytes32 s) public {
@@ -46,9 +55,18 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
                 uint toClaim = _balances[i].value.sub(claimed[recipient]);
                 require(toClaim > 0, "nothing to claim");
                 claimed[recipient] = _balances[i].value;
-                require(token.transferFrom(tokenOwner, msg.sender, toClaim), "transfer is not successful");
-                emit Claim(recipient, toClaim);
+
+                // claim rari tokens
+                uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
+                require(token.transferFrom(tokenOwner, msg.sender, claimAmount), "transfer is not successful");
+                emit Claim(recipient, claimAmount);
                 emit Value(recipient, _balances[i].value);
+
+                // stake some tokens
+                uint stakeAmount = toClaim - claimAmount;
+                uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_CLIFF_WEEKS);
+                token.approve(address(staking), stakeAmount);
+                staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
                 return;
             }
         }
