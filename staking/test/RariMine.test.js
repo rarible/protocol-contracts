@@ -1,6 +1,6 @@
 const RariMine = artifacts.require("RariMine.sol");
-const Staking = artifacts.require("Staking.sol");
 const ERC20 = artifacts.require("TestERC20.sol");
+const TestStaking = artifacts.require("TestStaking.sol");
 const truffleAssert = require('truffle-assertions');
 const tests = require("@daonomic/tests-common");
 const increaseTime = tests.increaseTime;
@@ -8,7 +8,6 @@ const { expectThrow } = require("@daonomic/tests-common");
 
 contract("RariMine", accounts => {
   let staking;
-  let testStaking;
   let token;
   let deposite;
 
@@ -22,10 +21,11 @@ contract("RariMine", accounts => {
     deposite = accounts[1];
     tokenOwner = accounts[2];
     token = await ERC20.new();
-    staking = await Staking.new();
+    staking = await TestStaking.new();
     await staking.__Staking_init(token.address); //initialize staking, set token
     rariMine = await RariMine.new();
     await rariMine.__RariMine_init(token.address, tokenOwner, staking.address);//initialize rariMine
+    await incrementBlock(WEEK); //to avoid stake() from ZERO point timeStamp
   })
 
   describe("Check RariMine claim", () => {
@@ -150,4 +150,7 @@ contract("RariMine", accounts => {
 
   })
 
+    async function incrementBlock(amount) {
+      await staking.incrementBlock(amount);
+    }
 })
