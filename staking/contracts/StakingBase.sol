@@ -13,8 +13,8 @@ contract StakingBase is OwnableUpgradeable {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant WEEK = 50400;                         //blocks one week
-    uint256 constant STARTING_POINT_WEEK = 0;            //starting point week (Staking Epoch start) 2676
+    uint256 constant public WEEK = 50; //blocks one week = 50400
+    //todo: set actual value!
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
@@ -51,6 +51,11 @@ contract StakingBase is OwnableUpgradeable {
      * @dev minimal slope period in weeks, minSlopePeriod < TWO_YEAR_WEEKS
      */
     uint public minSlopePeriod;
+
+    /**
+     * @dev staking epoch start in weeks
+     */
+    uint public startingPointWeek;
 
     /**
      * @dev represents one user Stake
@@ -112,9 +117,14 @@ contract StakingBase is OwnableUpgradeable {
      * @dev set newMinSlopePeriod, require newMinSlopePeriod < TWO_YEAR_WEEKS = 104
      */
     event SetMinSlopePeriod(uint indexed newMinSlopePeriod);
+    /**
+     * @dev set startingPointWeek
+     */
+    event SetStartingPointWeek(uint indexed newStartingPointWeek);
 
-    function __StakingBase_init_unchained(IERC20Upgradeable _token) internal initializer {
+    function __StakingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek) internal initializer {
         token = _token;
+        startingPointWeek = _startingPointWeek;
     }
 
     function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
@@ -160,8 +170,8 @@ contract StakingBase is OwnableUpgradeable {
         return ((a.sub(1)).div(b)).add(1);
     }
 
-    function roundTimestamp(uint ts) pure internal returns (uint) {
-        return ts.div(WEEK).sub(STARTING_POINT_WEEK);
+    function roundTimestamp(uint ts) view internal returns (uint) {
+        return ts.div(WEEK).sub(startingPointWeek);
     }
 
     function verifyStakeOwner(uint id) internal view returns (address account) {
@@ -171,6 +181,27 @@ contract StakingBase is OwnableUpgradeable {
 
     function getBlockNumber() internal virtual view returns (uint) {
         return block.number;
+    }
+
+    function setStartingPointWeek(uint newStartingPointWeek) public notStopped notMigrating onlyOwner {
+        require(newStartingPointWeek < roundTimestamp(getBlockNumber()) , "wrong newStartingPointWeek");
+        startingPointWeek = newStartingPointWeek;
+
+        emit SetStartingPointWeek(newStartingPointWeek);
+    } 
+
+    function setMinCliffPeriod(uint newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinCliffPeriod < TWO_YEAR_WEEKS, "new cliff period > 2 years");
+        minCliffPeriod = newMinCliffPeriod;
+
+        emit SetMinCliffPeriod(newMinCliffPeriod);
+    }
+
+    function setMinSlopePeriod(uint newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinSlopePeriod < TWO_YEAR_WEEKS, "new slope period > 2 years");
+        minSlopePeriod = newMinSlopePeriod;
+
+        emit SetMinSlopePeriod(newMinSlopePeriod);
     }
 
     /**

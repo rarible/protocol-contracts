@@ -21,7 +21,7 @@ contract("Staking", accounts => {
 		staking = await TestStaking.new();
 		newStaking = await TestNewStaking.new();
 		newStakingNoInterface = await TestNewStakingNoInterface.new();
-		await staking.__Staking_init(token.address); //initialize, set owner
+		await staking.__Staking_init(token.address, 0); //initialize, set owner
 		await incrementBlock(WEEK); //to avoid stake() from ZERO point timeStamp
 	})
 
@@ -1621,6 +1621,29 @@ contract("Staking", accounts => {
         return true;
       });
       assert.equal(newMinCliff, 20);
+		});
+
+    it("Test6.1 check emit SetMinSlopePeriod()", async () => {
+      let setMinSlopePeriodResult = await staking.setMinSlopePeriod(20, { from: accounts[0] });
+
+			let newMinSlope;
+      truffleAssert.eventEmitted(setMinSlopePeriodResult, 'SetMinSlopePeriod', (ev) => {
+       	newMinSlope = ev.newMinSlopePeriod;
+        return true;
+      });
+      assert.equal(newMinSlope, 20);
+		});
+
+		it("Test6.3 check emit SetMinCliffPeriod()", async () => {
+      await incrementBlock(WEEK * 20)
+      let SetStartingPointWeek = await staking.setStartingPointWeek(19, { from: accounts[0] });
+
+			let newStartingPointWeek;
+      truffleAssert.eventEmitted(SetStartingPointWeek, 'SetStartingPointWeek', (ev) => {
+        newStartingPointWeek = ev.newStartingPointWeek;
+        return true;
+      });
+      assert.equal(newStartingPointWeek, 19);
 		});
 
 		it("Test7. check emit StopStaking()", async () => {

@@ -17,23 +17,27 @@ contract StakingVotes is StakingBase, IVotesUpgradeable {
     }
 
     /**
-     * @dev Returns the amount of votes that `account` had at the end of a past block (`blockNumber`).
+     * @dev Returns the amount of votes that `account` had
+     * at the end of the last period before blockNumber
      */
     function getPastVotes(address account, uint256 blockNumber) external override view returns (uint256) {
-        require(blockNumber < getBlockNumber(), "block not yet mined");
-        return accounts[account].balance.actualValue(blockNumber);
+        uint currentWeek = roundTimestamp(blockNumber);
+        require(blockNumber < getBlockNumber() && currentWeek > 0, "block not yet mined");
+
+        uint lastBlockOfTheLastWeek = (currentWeek * WEEK) - 1;
+        return accounts[account].balance.actualValue(lastBlockOfTheLastWeek);
     }
 
     /**
-     * @dev Returns the total supply of votes available at the end of a past block (`blockNumber`).
-     *
-     * NOTE: This value is the sum of all available votes, which is not necessarily the sum of all delegated votes.
-     * Votes that have not been delegated are still part of total supply, even though they would not participate in a
-     * vote.
+     * @dev Returns the total supply of votes available 
+     * at the end of the last period before blockNumber
      */
     function getPastTotalSupply(uint256 blockNumber) external override view returns (uint256) {
-        require(blockNumber < getBlockNumber(), "block not yet mined");
-        return totalSupplyLine.actualValue(blockNumber);
+         uint currentWeek = roundTimestamp(blockNumber);
+        require(blockNumber < getBlockNumber() && currentWeek > 0, "block not yet mined");
+
+        uint lastBlockOfTheLastWeek = (currentWeek * WEEK) - 1;
+        return totalSupplyLine.actualValue(lastBlockOfTheLastWeek);
     }
 
     /**

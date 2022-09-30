@@ -12,8 +12,8 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    function __Staking_init(IERC20Upgradeable _token) external initializer {
-        __StakingBase_init_unchained(_token);
+    function __Staking_init(IERC20Upgradeable _token, uint _startingPointWeek) external initializer {
+        __StakingBase_init_unchained(_token, _startingPointWeek);
         __Ownable_init_unchained();
         __Context_init_unchained();
     }
@@ -131,18 +131,16 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit Migrate(msg.sender, id);
     }
 
-    function setMinCliffPeriod(uint newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
-        require(newMinCliffPeriod < TWO_YEAR_WEEKS, "new cliff period > 2 years");
-        minCliffPeriod = newMinCliffPeriod;
-
-        emit SetMinCliffPeriod(newMinCliffPeriod);
+    function name() public view virtual returns (string memory) {
+        return "RariStaking";
     }
 
-    function setMinSlopePeriod(uint newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
-        require(newMinSlopePeriod < TWO_YEAR_WEEKS, "new slope period > 2 years");
-        minSlopePeriod = newMinSlopePeriod;
+    function symbol() public view virtual returns (string memory) {
+        return "RST";
+    }
 
-        emit SetMinSlopePeriod(newMinSlopePeriod);
+    function decimals() public view virtual returns (uint8) {
+        return 18;
     }
 
     uint256[50] private __gap;
