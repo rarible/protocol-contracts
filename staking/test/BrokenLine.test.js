@@ -16,279 +16,279 @@ contract("BrokenLine", accounts => {
 	})
 
 	describe("Check actualBackValue after remove Line", () => {
-    it("Test1. One line can be added with cliff, remove() from cliff", async () => {
-    	let id1 = 256;
-    	// struct Line: start, bias, slope
-    	await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff
-    	await forTest.update(1);
-    	await assertCurrent([1, 100, 0]);
+		it("Test1. One line can be added with cliff, remove() from cliff", async () => {
+			let id1 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff
+			await forTest.update(1);
+			await assertCurrent([1, 100, 0]);
 
-    	await forTest.update(3);
-    	await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
+			await forTest.update(3);
+			await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
 
 			resultRemove = await forTest.removeTest(id1, 3);
 			let amountRemove;
 			let slopeRemove;
 			let cliffRemove;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amountRemove = ev.bias;
-      	slopeRemove = ev.slope;
-        cliffRemove = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amountRemove = ev.bias;
+				slopeRemove = ev.slope;
+				cliffRemove = ev.cliff;
+				return true;
+			});
 			assert.equal(amountRemove, 100);
 			assert.equal(slopeRemove, 10);
 			assert.equal(cliffRemove, 2);
-      await assertCurrent([3, 0, 0]);
+			await assertCurrent([3, 0, 0]);
 
-      biasBackTime = await forTest.getActualValue.call(3); //what about 1 week ago
-    	assert.equal(biasBackTime, 0);  //bias
+			biasBackTime = await forTest.getActualValue.call(3); //what about 1 week ago
+			assert.equal(biasBackTime, 0);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(2); //what about 2 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(2); //what about 2 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(1); //what about 3 week ago
-    	assert.equal(biasBackTime, 100);  //bias
-  	});
+			biasBackTime = await forTest.getActualValue.call(1); //what about 3 week ago
+			assert.equal(biasBackTime, 100);  //bias
+		});
 
-    it("Test2. One line can be added with cliff+slope, remove() from slopePeriod", async () => {
-    	let id1 = 256;
-    	// struct Line: start, bias, slope
-    	await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff
-    	await forTest.update(1);
-    	await assertCurrent([1, 100, 0]);
+		it("Test2. One line can be added with cliff+slope, remove() from slopePeriod", async () => {
+			let id1 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff
+			await forTest.update(1);
+			await assertCurrent([1, 100, 0]);
 
-    	await forTest.update(3);
-    	await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
+			await forTest.update(3);
+			await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
 
 			resultRemove = await forTest.removeTest(id1, 10);
 			let amountRemove;
 			let slopeRemove;
 			let cliffRemove;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amountRemove = ev.bias;
-      	slopeRemove = ev.slope;
-        cliffRemove = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amountRemove = ev.bias;
+				slopeRemove = ev.slope;
+				cliffRemove = ev.cliff;
+				return true;
+			});
 			assert.equal(amountRemove, 50);
 			assert.equal(slopeRemove, 10);
 			assert.equal(cliffRemove, 0);
-      await assertCurrent([10, 0, 0]);
+			await assertCurrent([10, 0, 0]);
 
-      biasBackTime = await forTest.getActualValue.call(9); //what about 1 week ago
-    	assert.equal(biasBackTime, 60);  //bias
+			biasBackTime = await forTest.getActualValue.call(9); //what about 1 week ago
+			assert.equal(biasBackTime, 60);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(2); //what about 1 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(2); //what about 1 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(1); //what about 1 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(1); //what about 1 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-  	});
+		});
 
-    it("Test3. One line can be added with cliff+slope+tail, remove() from slopePeriod(finishTailTime)", async () => {
-    	let id1 = 256;
-    	// struct Line: start, bias, slope
-    	await forTest.addTest([1, 105, 10], id1, 4); //Line, id, cliff
-    	await forTest.update(1);
-    	await assertCurrent([1, 105, 0]);
+		it("Test3. One line can be added with cliff+slope+tail, remove() from slopePeriod(finishTailTime)", async () => {
+			let id1 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([1, 105, 10], id1, 4); //Line, id, cliff
+			await forTest.update(1);
+			await assertCurrent([1, 105, 0]);
 
 			let resultRemove = await forTest.removeTest(id1, 16);
 			let amountRemove;
 			let slopeRemove;
 			let cliffRemove;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amountRemove = ev.bias;
-      	slopeRemove = ev.slope;
-        cliffRemove = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amountRemove = ev.bias;
+				slopeRemove = ev.slope;
+				cliffRemove = ev.cliff;
+				return true;
+			});
 			assert.equal(amountRemove, 0);
 			assert.equal(slopeRemove, 0);
 			assert.equal(cliffRemove, 0);
-      await assertCurrent([16, 0, 0]);
-    });
+			await assertCurrent([16, 0, 0]);
+		});
 
-    it("Test4. One line can be added with cliff+slope+tail, remove() from slopePeriod(tailTime)", async () => {
-    	let id1 = 256;
-    	// struct Line: start, bias, slope
-    	await forTest.addTest([1, 105, 10], id1, 4); //Line, id, cliff
-    	await forTest.update(1);
-    	await assertCurrent([1, 105, 0]);
+		it("Test4. One line can be added with cliff+slope+tail, remove() from slopePeriod(tailTime)", async () => {
+			let id1 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([1, 105, 10], id1, 4); //Line, id, cliff
+			await forTest.update(1);
+			await assertCurrent([1, 105, 0]);
 
 			resultRemove = await forTest.removeTest(id1, 15);
 			let amountRemove;
 			let slopeRemove;
 			let cliffRemove;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amountRemove = ev.bias;
-      	slopeRemove = ev.slope;
-        cliffRemove = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amountRemove = ev.bias;
+				slopeRemove = ev.slope;
+				cliffRemove = ev.cliff;
+				return true;
+			});
 			assert.equal(amountRemove, 5);
 			assert.equal(slopeRemove, 5);
 			assert.equal(cliffRemove, 0);
-      await assertCurrent([15, 0, 0]);
+			await assertCurrent([15, 0, 0]);
 
-      biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
-    	assert.equal(biasBackTime, 15);  //bias
+			biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
+			assert.equal(biasBackTime, 15);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(4); //what about 10 week ago
-    	assert.equal(biasBackTime, 105);  //bias
-//
-//      biasBackTime = await forTest.getActualValue.call(1); //what about 14 week ago
-//    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(4); //what about 10 week ago
+			assert.equal(biasBackTime, 105);  //bias
+			//
+			//      biasBackTime = await forTest.getActualValue.call(1); //what about 14 week ago
+			//    	assert.equal(biasBackTime, 100);  //bias
 
-  	});
+		});
 
-    it("Test5. Second cliff only line added to cliff, back values detect from slope", async () => {
-      let id1 = 255;
-      let id2 = 256;
-      // struct Line: start, bias, slope
-      await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff from 1 to 5 timeWeek
-      await forTest.update(1);
-      await assertCurrent([1, 100, 0]);
+		it("Test5. Second cliff only line added to cliff, back values detect from slope", async () => {
+			let id1 = 255;
+			let id2 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([1, 100, 10], id1, 4); //Line, id, cliff from 1 to 5 timeWeek
+			await forTest.update(1);
+			await assertCurrent([1, 100, 0]);
 
-      await forTest.update(3);
-      await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
+			await forTest.update(3);
+			await assertCurrent([3, 100, 0]); // timeStamp, bias, slope
 
-      //add one more Line
-      await forTest.addTest([3, 100, 10], id2, 2); //Line, id, cliff from 3 to 5 timeWeek
+			//add one more Line
+			await forTest.addTest([3, 100, 10], id2, 2); //Line, id, cliff from 3 to 5 timeWeek
 
 			resultRemove = await forTest.removeTest(id1, 4);
 			let amountRemove;
 			let slopeRemove;
 			let cliffRemove;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amountRemove = ev.bias;
-      	slopeRemove = ev.slope;
-        cliffRemove = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amountRemove = ev.bias;
+				slopeRemove = ev.slope;
+				cliffRemove = ev.cliff;
+				return true;
+			});
 			assert.equal(amountRemove, 100);
 			assert.equal(slopeRemove, 10);
 			assert.equal(cliffRemove, 1);
-      await assertCurrent([4, 100, 0]);
+			await assertCurrent([4, 100, 0]);
 
-      await forTest.update(10);
-      await assertCurrent([10, 50, 10]); // timeStamp, bias, slope
+			await forTest.update(10);
+			await assertCurrent([10, 50, 10]); // timeStamp, bias, slope
 
-      await forTest.update(15);
-      await assertCurrent([15, 0, 0]); // line is finished
+			await forTest.update(15);
+			await assertCurrent([15, 0, 0]); // line is finished
 
-      await forTest.update(16);
-      await assertCurrent([16, 0, 0]); // timeStamp, bias, slope
-      //      Line already finished, but we can define some history
-      biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
-      assert.equal(biasBackTime, 10);  //bias
+			await forTest.update(16);
+			await assertCurrent([16, 0, 0]); // timeStamp, bias, slope
+			//      Line already finished, but we can define some history
+			biasBackTime = await forTest.getActualValue.call(14); //what about 1 week ago
+			assert.equal(biasBackTime, 10);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(5); //what about 10 week ago
-      assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(5); //what about 10 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(4); //what about 12 week ago
-      assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(4); //what about 12 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(3); //what about 13 week ago
-      assert.equal(biasBackTime, 200);  //bias
+			biasBackTime = await forTest.getActualValue.call(3); //what about 13 week ago
+			assert.equal(biasBackTime, 200);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(2); //what about 13 week ago
-      assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(2); //what about 13 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-    });
+		});
 
-  })
+	})
 
 	describe("Check actualBackValue", () => {
-    it("Test1. One line can be added with cliff, back values detect from slope", async () => {
-    	let id1 = 256;
-    	// struct Line: start, bias, slope
-    	await forTest.addTest([11, 100, 10], id1, 4); //Line, id, cliff
-    	await forTest.update(11);
-    	await assertCurrent([11, 100, 0]);
+		it("Test1. One line can be added with cliff, back values detect from slope", async () => {
+			let id1 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([11, 100, 10], id1, 4); //Line, id, cliff
+			await forTest.update(11);
+			await assertCurrent([11, 100, 0]);
 
-    	await forTest.update(15);
-    	await assertCurrent([15, 100, 10]); // timeStamp, bias, slope
+			await forTest.update(15);
+			await assertCurrent([15, 100, 10]); // timeStamp, bias, slope
 
-    	await forTest.update(20);
-    	await assertCurrent([20, 50, 10]); // timeStamp, bias, slope
+			await forTest.update(20);
+			await assertCurrent([20, 50, 10]); // timeStamp, bias, slope
 
-    	await forTest.update(25);
-    	await assertCurrent([25, 0, 0]); // line is finished
+			await forTest.update(25);
+			await assertCurrent([25, 0, 0]); // line is finished
 
-    	await forTest.update(26);
-    	await assertCurrent([26, 0, 0]); // timeStamp, bias, slope
-      //      Line already finished, but we can define some history
-    	let biasBackTime;
-    	biasBackTime = await forTest.getActualValue.call(19); //what about 1 week ago
-    	assert.equal(biasBackTime, 60);  //bias
+			await forTest.update(26);
+			await assertCurrent([26, 0, 0]); // timeStamp, bias, slope
+			//      Line already finished, but we can define some history
+			let biasBackTime;
+			biasBackTime = await forTest.getActualValue.call(19); //what about 1 week ago
+			assert.equal(biasBackTime, 60);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(16); //what about 4 week ago
-  		assert.equal(biasBackTime, 90);  //bias
+			biasBackTime = await forTest.getActualValue.call(16); //what about 4 week ago
+			assert.equal(biasBackTime, 90);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(15); //what about 5 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(15); //what about 5 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(14); //what about 6 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(14); //what about 6 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(13); //what about 7 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(13); //what about 7 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(11); //what about 9 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(11); //what about 9 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(10); //what about 10 week ago
-    	assert.equal(biasBackTime, 0);  //bias
-  	});
+			biasBackTime = await forTest.getActualValue.call(10); //what about 10 week ago
+			assert.equal(biasBackTime, 0);  //bias
+		});
 
-    it("Test2. Second cliff+slope line added to cliff, back values detect from slope", async () => {
-    	let id1 = 255;
-    	let id2 = 256;
-    	// struct Line: start, bias, slope
-    	await forTest.addTest([11, 100, 10], id1, 4); //Line, id, cliff from 1 to 5 timeWeek
-    	await forTest.update(11);
-    	await assertCurrent([11, 100, 0]);
+		it("Test2. Second cliff+slope line added to cliff, back values detect from slope", async () => {
+			let id1 = 255;
+			let id2 = 256;
+			// struct Line: start, bias, slope
+			await forTest.addTest([11, 100, 10], id1, 4); //Line, id, cliff from 1 to 5 timeWeek
+			await forTest.update(11);
+			await assertCurrent([11, 100, 0]);
 
-    	await forTest.update(13);
-    	await assertCurrent([13, 100, 0]); // timeStamp, bias, slope
+			await forTest.update(13);
+			await assertCurrent([13, 100, 0]); // timeStamp, bias, slope
 
-    	//add one more Line
-    	await forTest.addTest([13, 100, 10], id2, 2); //Line, id, cliff from 3 to 5 timeWeek
+			//add one more Line
+			await forTest.addTest([13, 100, 10], id2, 2); //Line, id, cliff from 3 to 5 timeWeek
 
-    	await forTest.update(20);
-    	await assertCurrent([20, 100, 20]); // timeStamp, bias, slope
+			await forTest.update(20);
+			await assertCurrent([20, 100, 20]); // timeStamp, bias, slope
 
-    	await forTest.update(25);
-    	await assertCurrent([25, 0, 0]); // line is finished
+			await forTest.update(25);
+			await assertCurrent([25, 0, 0]); // line is finished
 
-    	await forTest.update(26);
-    	await assertCurrent([26, 0, 0]); // timeStamp, bias, slope
-      //      Line already finished, but we can define some history
-      biasBackTime = await forTest.getActualValue.call(24); //what about 1 week ago
-    	assert.equal(biasBackTime, 20);  //bias
+			await forTest.update(26);
+			await assertCurrent([26, 0, 0]); // timeStamp, bias, slope
+			//      Line already finished, but we can define some history
+			biasBackTime = await forTest.getActualValue.call(24); //what about 1 week ago
+			assert.equal(biasBackTime, 20);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(15); //what about 10 week ago
-    	assert.equal(biasBackTime, 200);  //bias
+			biasBackTime = await forTest.getActualValue.call(15); //what about 10 week ago
+			assert.equal(biasBackTime, 200);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(13); //what about 12 week ago
-    	assert.equal(biasBackTime, 200);  //bias
+			biasBackTime = await forTest.getActualValue.call(13); //what about 12 week ago
+			assert.equal(biasBackTime, 200);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(12); //what about 13 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(12); //what about 13 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(11); //what about 14 week ago
-    	assert.equal(biasBackTime, 100);  //bias
+			biasBackTime = await forTest.getActualValue.call(11); //what about 14 week ago
+			assert.equal(biasBackTime, 100);  //bias
 
-      biasBackTime = await forTest.getActualValue.call(10); //what about 14 week ago
-    	assert.equal(biasBackTime, 0);  //bias
+			biasBackTime = await forTest.getActualValue.call(10); //what about 14 week ago
+			assert.equal(biasBackTime, 0);  //bias
 
 			await expectThrow(
-    		forTest.getActualValue(0)
-    	);
-  		});
-  })
+				forTest.getActualValue(0)
+			);
+		});
+	})
 
 	describe("Check add()", () => {
 
@@ -378,22 +378,22 @@ contract("BrokenLine", accounts => {
 			let id = 1;
 			await forTest.addTest([1, 20, 10], id, 0);
 			await expectThrow(
-    		forTest.addTest([1, 40, 10], id, 0)
-    	);
+				forTest.addTest([1, 40, 10], id, 0)
+			);
 		})
 
 		it("Add line with slope == 0, expect throw ", async () => {
 			let id = 1;
 			await expectThrow(
-    		forTest.addTest([1, 40, 0], id, 0)
-    	);
+				forTest.addTest([1, 40, 0], id, 0)
+			);
 		})
 
 		it("Add line with slope>bias, expect throw ", async () => {
 			let id = 1;
 			await expectThrow(
-    		forTest.addTest([1, 40, 100], id, 0)
-    	);
+				forTest.addTest([1, 40, 100], id, 0)
+			);
 		})
 
 
@@ -416,10 +416,10 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 90, 10]);
 
 			await forTest.update(12);
-    	await assertCurrent([12, 10, 10]);
+			await assertCurrent([12, 10, 10]);
 
-    	await forTest.update(13);
-    	await assertCurrent([13, 0, 0]);
+			await forTest.update(13);
+			await assertCurrent([13, 0, 0]);
 		});
 
 		it("One line can be added with cliff(20, 10), begin from 3", async () => {
@@ -443,7 +443,7 @@ contract("BrokenLine", accounts => {
 		});
 
 		it("One line can be added with cliff(20, 10), begin from 10, maybe line.start==0 its impossible, but need to check also!", async () => {
-		//for this test we checked if line.start==0, now it`s not possible because in point line.start - 1 we save biasChange, slopeChange(if line hasn`t cliff)
+			//for this test we checked if line.start==0, now it`s not possible because in point line.start - 1 we save biasChange, slopeChange(if line hasn`t cliff)
 			await forTest.addTest([10, 20, 10], 1, 2);
 			await assertCurrent([10, 20, 0]);
 
@@ -464,7 +464,7 @@ contract("BrokenLine", accounts => {
 		});
 
 		it("One line can be added with cliff(2, 1), begin from 5, check change balance for 3 steps!", async () => {
-		//for this test we checked if line.start==0, now it`s not possible because in point line.start - 1 we save biasChange, slopeChange(if line hasn`t cliff)
+			//for this test we checked if line.start==0, now it`s not possible because in point line.start - 1 we save biasChange, slopeChange(if line hasn`t cliff)
 			await forTest.addTest([5, 2, 1], 1, 1);
 			await assertCurrent([5, 2, 0]);
 
@@ -479,7 +479,7 @@ contract("BrokenLine", accounts => {
 		});
 
 		it("One line can be added with no cliff(2, 1), begin from 200, check change balance for 2 steps!", async () => {
-		//for this test we checked if line.start==0, now it`s not possible because in point line.start - 1 we save biasChange, slopeChange(if line hasn`t cliff)
+			//for this test we checked if line.start==0, now it`s not possible because in point line.start - 1 we save biasChange, slopeChange(if line hasn`t cliff)
 			await forTest.addTest([200, 2, 1], 1, 0);
 			await assertCurrent([200, 2, 1]);
 
@@ -508,13 +508,13 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 35, 10]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 25, 10]);
+			await assertCurrent([5, 25, 10]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 5, 5]);
+			await forTest.update(7);
+			await assertCurrent([7, 5, 5]);
 
-    	await forTest.update(8);
-    	await assertCurrent([8, 0, 0]);
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
 		});
 
 		it("Two line can be added: first+tail, cliff+tail, no cliff shorter than freeze", async () => {
@@ -532,13 +532,13 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 35, 10]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 25, 10]);
+			await assertCurrent([5, 25, 10]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 5, 5]);
+			await forTest.update(7);
+			await assertCurrent([7, 5, 5]);
 
-    	await forTest.update(8);
-    	await assertCurrent([8, 0, 0]);
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
 		});
 
 		it("Two line can be added, only one with cliff, no cliff longer than freeze", async () => {
@@ -553,13 +553,13 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 40, 15]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 25, 15]);
+			await assertCurrent([5, 25, 15]);
 
 			await forTest.update(6);
-    	await assertCurrent([6, 10, 10]);
+			await assertCurrent([6, 10, 10]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 0, 0]);
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
 		});
 
 		it("Two line can be added, only one with cliff, no cliff == freeze", async () => {
@@ -574,13 +574,13 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 30, 10]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 20, 10]);
+			await assertCurrent([5, 20, 10]);
 
 			await forTest.update(6);
-    	await assertCurrent([6, 10, 10]);
+			await assertCurrent([6, 10, 10]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 0, 0]);
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
 		});
 
 		it("Three line can be added, only one with cliff, no cliff == freeze", async () => {
@@ -596,13 +596,13 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 30, 10]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 20, 10]);
+			await assertCurrent([5, 20, 10]);
 
 			await forTest.update(6);
-    	await assertCurrent([6, 10, 10]);
+			await assertCurrent([6, 10, 10]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 0, 0]);
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
 		});
 
 		it("Two line can be added with different cliff ", async () => {
@@ -617,16 +617,16 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 90, 10]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 80, 30]);
+			await assertCurrent([5, 80, 30]);
 
 			await forTest.update(6);
-    	await assertCurrent([6, 50, 30]);
+			await assertCurrent([6, 50, 30]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 20, 20]);
+			await forTest.update(7);
+			await assertCurrent([7, 20, 20]);
 
-    	await forTest.update(8);
-    	await assertCurrent([8, 0, 0]);
+			await forTest.update(8);
+			await assertCurrent([8, 0, 0]);
 		});
 
 		it("Two line can be added with the same cliff ", async () => {
@@ -641,13 +641,13 @@ contract("BrokenLine", accounts => {
 			await assertCurrent([4, 90, 30]);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 60, 30]);
+			await assertCurrent([5, 60, 30]);
 
 			await forTest.update(6);
-    	await assertCurrent([6, 30, 30]);
+			await assertCurrent([6, 30, 30]);
 
-    	await forTest.update(7);
-    	await assertCurrent([7, 0, 0]);
+			await forTest.update(7);
+			await assertCurrent([7, 0, 0]);
 		});
 
 		it("Expect throw time incorrect ", async () => {
@@ -658,8 +658,8 @@ contract("BrokenLine", accounts => {
 			await forTest.update(3);
 			await assertCurrent([3, 90, 0]);
 			await expectThrow(
-    		forTest.update(2)
-    	);
+				forTest.update(2)
+			);
 		});
 
 	})
@@ -682,19 +682,19 @@ contract("BrokenLine", accounts => {
 			resultRemove = await forTest.removeTest(id1, 4);
 			let amount1;
 			let slope1;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.bias;
-      	slope1 = ev.slope;
-        return true;
-      });
-      assert.equal(amount1, 90);
-      assert.equal(slope1, 10);
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount1 = ev.bias;
+				slope1 = ev.slope;
+				return true;
+			});
+			assert.equal(amount1, 90);
+			assert.equal(slope1, 10);
 
 			await forTest.update(5);
-    	await assertCurrent([5, 0, 0]);
+			await assertCurrent([5, 0, 0]);
 
 			await forTest.update(12);
-    	await assertCurrent([12, 0, 0]);
+			await assertCurrent([12, 0, 0]);
 
 		});
 
@@ -707,18 +707,18 @@ contract("BrokenLine", accounts => {
 			let amount;
 			let cliff;
 			let slope;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount = ev.bias;
-      	cliff = ev.cliff;
-      	slope = ev.slope;
-        return true;
-      });
-      assert.equal(amount, 20);
-      assert.equal(cliff, 0);
-      assert.equal(slope, 8);
-      await assertCurrent([3, 0, 0]);
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount = ev.bias;
+				cliff = ev.cliff;
+				slope = ev.slope;
+				return true;
+			});
+			assert.equal(amount, 20);
+			assert.equal(cliff, 0);
+			assert.equal(slope, 8);
+			await assertCurrent([3, 0, 0]);
 
-      await forTest.update(3);
+			await forTest.update(3);
 			await assertCurrent([3, 0, 0]);
 
 			await forTest.update(4);
@@ -741,10 +741,10 @@ contract("BrokenLine", accounts => {
 
 			resultRemove = await forTest.removeTest(id1, 5);
 			let amount1;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount1 = ev.bias;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount1 = ev.bias;
+				return true;
+			});
 			assert.equal(amount1, 4);
 
 			await forTest.update(5);
@@ -755,10 +755,10 @@ contract("BrokenLine", accounts => {
 			let id1 = 3;
 			await forTest.addTest([1, 20, 8], id1, 2);
 			await assertCurrent([1, 20, 0]);
-      let idUnknown = 213;
+			let idUnknown = 213;
 			await expectThrow(
-    		forTest.removeTest(idUnknown, 5)
-    	);
+				forTest.removeTest(idUnknown, 5)
+			);
 		});
 
 		it("Test5. Two line can be added with cliff, and tail step 5 - remove when cliff begin", async () => {
@@ -770,12 +770,12 @@ contract("BrokenLine", accounts => {
 
 			resultRemove = await forTest.removeTest(id1, 1);
 			let amount;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount = ev.bias;
-      	slope = ev.slope;
-        cliff = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount = ev.bias;
+				slope = ev.slope;
+				cliff = ev.cliff;
+				return true;
+			});
 			assert.equal(amount, 32);
 			assert.equal(slope, 15);
 			assert.equal(cliff, 3);
@@ -802,12 +802,12 @@ contract("BrokenLine", accounts => {
 
 			resultRemove = await forTest.removeTest(id1, 2);
 			let amount;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount = ev.bias;
-      	slope = ev.slope;
-        cliff = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount = ev.bias;
+				slope = ev.slope;
+				cliff = ev.cliff;
+				return true;
+			});
 			assert.equal(amount, 32);
 			assert.equal(slope, 15);
 			assert.equal(cliff, 2);
@@ -834,12 +834,12 @@ contract("BrokenLine", accounts => {
 
 			resultRemove = await forTest.removeTest(id1, 4);
 			let amount;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount = ev.bias;
-      	slope = ev.slope;
-        cliff = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount = ev.bias;
+				slope = ev.slope;
+				cliff = ev.cliff;
+				return true;
+			});
 			assert.equal(amount, 32);
 			assert.equal(slope, 15);
 			assert.equal(cliff, 0);
@@ -866,12 +866,12 @@ contract("BrokenLine", accounts => {
 
 			resultRemove = await forTest.removeTest(id1, 5);
 			let amount;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount = ev.bias;
-      	slope = ev.slope;
-        cliff = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount = ev.bias;
+				slope = ev.slope;
+				cliff = ev.cliff;
+				return true;
+			});
 			assert.equal(amount, 17);
 			assert.equal(slope, 15);
 			assert.equal(cliff, 0);
@@ -898,14 +898,14 @@ contract("BrokenLine", accounts => {
 			let amount;
 			let slope;
 			let cliff;
-      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
-      	amount = ev.bias;
-      	slope = ev.slope;
-      	cliff = ev.cliff;
-        return true;
-      });
+			truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+				amount = ev.bias;
+				slope = ev.slope;
+				cliff = ev.cliff;
+				return true;
+			});
 			assert.equal(amount, 0);
-//			assert.equal(slope, 10); //to do: think why here were 10? Line is already finished
+			//			assert.equal(slope, 10); //to do: think why here were 10? Line is already finished
 			assert.equal(slope, 0);
 			assert.equal(cliff, 0);
 		});
