@@ -7,7 +7,7 @@ import "../../contracts/Staking.sol";
 
 contract TestStaking is Staking {
 
-    uint blockNumberMocked;
+    uint public blockNumberMocked;
 
     function incrementBlock (uint _amount) external {
         blockNumberMocked = blockNumberMocked + _amount;

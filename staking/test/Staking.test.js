@@ -5,15 +5,16 @@ const TestNewStakingNoInterface = artifacts.require("TestNewStakingNoInteface.so
 const truffleAssert = require('truffle-assertions');
 const { expectThrow } = require("@daonomic/tests-common");
 
+const zeroAddress = "0x0000000000000000000000000000000000000000";
+
 contract("Staking", accounts => {
 	let staking;
 	let token;
 	let deposite;
+  let currentBlock;
 
-	const DAY = 7200; // blocks in 1 day
- 	const WEEK = DAY * 7;
- 	const MONTH = WEEK * 4;
- 	const YEAR = DAY * 365;
+	//const DAY = 7200; // blocks in 1 day
+ 	let WEEK;
 
 	beforeEach(async () => {
 		deposite = accounts[1];
@@ -22,7 +23,147 @@ contract("Staking", accounts => {
 		newStaking = await TestNewStaking.new();
 		newStakingNoInterface = await TestNewStakingNoInterface.new();
 		await staking.__Staking_init(token.address, 0); //initialize, set owner
-		await incrementBlock(WEEK); //to avoid stake() from ZERO point timeStamp
+
+    WEEK = await staking.WEEK()
+		await incrementBlock(WEEK + 1); //to avoid stake() from ZERO point timeStamp
+	})
+
+  describe("staking votes", () => {
+		it("staking votes events and balances", async () => {
+      const user = accounts[2];
+      const delegate = accounts[3];
+
+      //minting tokens
+			await token.mint(user, 1000000);
+   		await token.approve(staking.address, 1000000, { from: user });
+
+      //staking tokens
+			const stakeTx = await staking.stake(user, user, 3000, 1000, 0, { from: user }); //address account, address delegate, uint amount, uint slope, uint cliff
+      const stakeId = await staking.counter()
+
+      //checking events
+      //DelegateChanged event
+      const DelegateChangedFromStakeTx = (await staking.getPastEvents("DelegateChanged", {
+        fromBlock: stakeTx.receipt.blockNumber,
+        toBlock: stakeTx.receipt.blockNumber
+      }));
+      assert.equal(DelegateChangedFromStakeTx[0].args.delegator, user)
+      assert.equal(DelegateChangedFromStakeTx[0].args.fromDelegate, zeroAddress)
+      assert.equal(DelegateChangedFromStakeTx[0].args.toDelegate, user)
+      
+      //DelegateVotesChanged event
+      const DelegateVotesChangedFromStakeTx = (await staking.getPastEvents("DelegateVotesChanged", {
+        fromBlock: stakeTx.receipt.blockNumber,
+        toBlock: stakeTx.receipt.blockNumber
+      }));
+      assert.equal(DelegateVotesChangedFromStakeTx[0].args.delegate, user)
+      assert.equal(DelegateVotesChangedFromStakeTx[0].args.previousBalance, 0)
+      assert.equal(DelegateVotesChangedFromStakeTx[0].args.newBalance, 634)
+
+      //checking balances
+      assert.equal(await token.balanceOf(staking.address), 3000);
+      assert.equal(await staking.balanceOf(user), 634);
+      assert.equal(await staking.getVotes(user), 634)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 0)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 422);
+      assert.equal(await staking.getVotes(user), 422)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 634)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 634)
+
+      //redelegating the stake
+      const txDelegateTo = await staking.delegateTo(stakeId, delegate, {from: user})
+
+      //DelegateChanged event
+      const DelegateChangedFromDelegateToTx = (await staking.getPastEvents("DelegateChanged", {
+        fromBlock: txDelegateTo.receipt.blockNumber,
+        toBlock: txDelegateTo.receipt.blockNumber
+      }));
+      assert.equal(DelegateChangedFromDelegateToTx[0].args.delegator, user)
+      assert.equal(DelegateChangedFromDelegateToTx[0].args.fromDelegate, user)
+      assert.equal(DelegateChangedFromDelegateToTx[0].args.toDelegate, delegate)
+
+      //DelegateVotesChanged event
+      const DelegateVotesChangedFromelegateToTx = (await staking.getPastEvents("DelegateVotesChanged", {
+        fromBlock: txDelegateTo.receipt.blockNumber,
+        toBlock: txDelegateTo.receipt.blockNumber
+      }));
+      assert.equal(DelegateVotesChangedFromelegateToTx[0].args.delegate, user)
+      assert.equal(DelegateVotesChangedFromelegateToTx[0].args.previousBalance, 0)
+      assert.equal(DelegateVotesChangedFromelegateToTx[0].args.newBalance, 0)
+      
+      assert.equal(DelegateVotesChangedFromelegateToTx[1].args.delegate, delegate)
+      assert.equal(DelegateVotesChangedFromelegateToTx[1].args.previousBalance, 0)
+      assert.equal(DelegateVotesChangedFromelegateToTx[1].args.newBalance, 422)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      //todo: fix this!!!
+      //assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 634)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 634)
+
+      assert.equal(await staking.balanceOf(delegate), 422);
+      assert.equal(await staking.getVotes(delegate), 422)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 210);
+      assert.equal(await staking.getVotes(delegate), 210)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 422)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 422)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 210)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 210)
+
+      //moving ahead half a week
+      await incrementBlock(WEEK / 2)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 210)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 210)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 0)
+
+      //revert if current block
+      await expectThrow(
+        staking.getPastVotes(user, currentBlock)
+      );
+
+      await expectThrow(
+        staking.getPastTotalSupply(currentBlock)
+      );
+
+		});
 	})
 
 	describe("Part1. Check base metods Staking contract, createLock, withdraw", () => {
@@ -83,12 +224,12 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
-			/*3 week later*/
+			//3 week later
 			await incrementBlock(WEEK * 3);
 			await staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 100);			//tail user balance
-   		/*one week later*/
+   		//one week later
 			await incrementBlock(WEEK);
 			await staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 0);	//balance Lock ondeposite
@@ -111,7 +252,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
-			/*3 week later*/
+			//3 week later
 			await incrementBlock(WEEK * 2);
 			let availableForWithdraw = await staking.getAvailableForWithdraw.call(accounts[2]);
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
@@ -123,7 +264,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[3], 30, 10, 0, { from: accounts[2] });
-			/*3 week later*/
+			//3 week later
 			await incrementBlock(WEEK * 2);
 			let accountAndDelegate = await staking.getAccountAndDelegate.call(1);
    		assert.equal(accountAndDelegate[0], accounts[2]);
@@ -139,12 +280,12 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
-			/*3 week later nothing change, because cliff */
+			//3 week later nothing change, because cliff 
 			await incrementBlock(WEEK * 3);
 			await staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
    		assert.equal(await token.balanceOf(accounts[2]), 70);			//tail user balance
-   		/*one week later*/
+   		//one week later
 			await incrementBlock(WEEK);
 			await staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 20);	//balance Lock ondeposite
@@ -155,7 +296,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[2], accounts[2], 30, 10, 0, { from: accounts[2] });
-			/*one week later*/
+			//one week later
 			await incrementBlock(WEEK);
 			await staking.withdraw({ from: accounts[3] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
@@ -166,7 +307,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[3], accounts[3], 30, 10, 0, { from: accounts[2] });
-			/*one week later*/
+			//one week later
 			await incrementBlock(WEEK);
 			await staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
@@ -177,7 +318,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
       await staking.stake(accounts[3], accounts[3], 30, 10, 0, { from: accounts[2] });
-			/*one week later*/
+			//one week later
 			await incrementBlock(WEEK);
 			await staking.withdraw({ from: accounts[3] });
  			assert.equal(await token.balanceOf(staking.address), 20);	//balance Lock on deposite
@@ -1664,6 +1805,7 @@ contract("Staking", accounts => {
 
   async function incrementBlock(amount) {
     await staking.incrementBlock(amount);
+    currentBlock = await staking.blockNumberMocked();
   }
 
 })

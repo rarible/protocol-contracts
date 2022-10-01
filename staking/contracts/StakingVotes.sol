@@ -13,31 +13,29 @@ contract StakingVotes is StakingBase, IVotesUpgradeable {
      * @dev Returns the current amount of votes that `account` has.
      */
     function getVotes(address account) external override view returns (uint256) {
-        return accounts[account].balance.actualValue(getBlockNumber());
+        return accounts[account].balance.actualValue(roundTimestamp(getBlockNumber()));
     }
 
     /**
      * @dev Returns the amount of votes that `account` had
-     * at the end of the last period before blockNumber
+     * at the end of the last period
      */
     function getPastVotes(address account, uint256 blockNumber) external override view returns (uint256) {
         uint currentWeek = roundTimestamp(blockNumber);
         require(blockNumber < getBlockNumber() && currentWeek > 0, "block not yet mined");
 
-        uint lastBlockOfTheLastWeek = (currentWeek * WEEK) - 1;
-        return accounts[account].balance.actualValue(lastBlockOfTheLastWeek);
+        return accounts[account].balance.actualValue(currentWeek - 1);
     }
 
     /**
      * @dev Returns the total supply of votes available 
-     * at the end of the last period before blockNumber
+     * at the end of the last period
      */
     function getPastTotalSupply(uint256 blockNumber) external override view returns (uint256) {
-         uint currentWeek = roundTimestamp(blockNumber);
+        uint currentWeek = roundTimestamp(blockNumber);
         require(blockNumber < getBlockNumber() && currentWeek > 0, "block not yet mined");
 
-        uint lastBlockOfTheLastWeek = (currentWeek * WEEK) - 1;
-        return totalSupplyLine.actualValue(lastBlockOfTheLastWeek);
+        return totalSupplyLine.actualValue(currentWeek - 1);
     }
 
     /**

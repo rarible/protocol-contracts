@@ -13,8 +13,9 @@ contract StakingBase is OwnableUpgradeable {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant public WEEK = 50; //blocks one week = 50400
     //todo: set actual value!
+    uint256 constant public WEEK = 50; //blocks one week = 50400
+    
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider

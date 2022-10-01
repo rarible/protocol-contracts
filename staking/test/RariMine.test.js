@@ -11,10 +11,8 @@ contract("RariMine", accounts => {
   let token;
   let deposite;
 
-  const DAY = 86400;
-  const WEEK = DAY * 7;
-  const MONTH = WEEK * 4;
-  const YEAR = DAY * 365;
+  //const DAY = 86400;
+  let WEEK;
   const zeroAddress = "0x0000000000000000000000000000000000000000";
 
   beforeEach(async () => {
@@ -25,6 +23,8 @@ contract("RariMine", accounts => {
     await staking.__Staking_init(token.address, 0); //initialize staking, set token
     rariMine = await RariMine.new();
     await rariMine.__RariMine_init(token.address, tokenOwner, staking.address);//initialize rariMine
+
+    WEEK = await staking.WEEK()
     await incrementBlock(WEEK); //to avoid stake() from ZERO point timeStamp
   })
 

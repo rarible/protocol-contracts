@@ -40,6 +40,10 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         addLines(account, _delegate, amount, slope, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
         emit StakeCreate(counter, account, _delegate, time, amount, slope, cliff);
+
+        // IVotesUpgradeable events
+        emit DelegateChanged(account, address(0), _delegate);
+        emit DelegateVotesChanged(_delegate, 0, accounts[_delegate].balance.actualValue(time));
         return counter;
     }
 
@@ -89,6 +93,11 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         accounts[newDelegate].balance.add(id, line, cliff);
         stakes[id].delegate = newDelegate;
         emit Delegate(id, account, newDelegate, time);
+
+        // IVotesUpgradeable events
+        emit DelegateChanged(account, _delegate, newDelegate);
+        emit DelegateVotesChanged(_delegate, 0, accounts[_delegate].balance.actualValue(time));
+        emit DelegateVotesChanged(newDelegate, 0, accounts[newDelegate].balance.actualValue(time));
     }
 
     function totalSupply() external view returns (uint) {
