@@ -4,9 +4,8 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./StakingBase.sol";
-import "./IVotesUpgradeable.sol";
 
-contract StakingVotes is StakingBase, IVotesUpgradeable {
+contract StakingVotes is StakingBase {
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
     /**

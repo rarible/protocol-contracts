@@ -8,7 +8,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./lib-broken-line/LibBrokenLine.sol";
 
-contract StakingBase is OwnableUpgradeable {
+import "./IVotesUpgradeable.sol";
+
+abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
 
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;

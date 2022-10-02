@@ -32,6 +32,7 @@ contract("Staking", accounts => {
 		it("staking votes events and balances", async () => {
       const user = accounts[2];
       const delegate = accounts[3];
+      const reStakeDelegate = accounts[4]
 
       //minting tokens
 			await token.mint(user, 1000000);
@@ -121,6 +122,41 @@ contract("Staking", accounts => {
       assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 422)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 422)
 
+      const txReStake = await staking.restake(stakeId, reStakeDelegate, 4000, 1000, 0, {from: user})
+      //DelegateChanged event
+      const DelegateChangedFromReStakeTx = (await staking.getPastEvents("DelegateChanged", {
+        fromBlock: txReStake.receipt.blockNumber,
+        toBlock: txReStake.receipt.blockNumber
+      }));
+      assert.equal(DelegateChangedFromReStakeTx[0].args.delegator, user)
+      assert.equal(DelegateChangedFromReStakeTx[0].args.fromDelegate, delegate)
+      assert.equal(DelegateChangedFromReStakeTx[0].args.toDelegate, reStakeDelegate)
+
+      //DelegateVotesChanged event
+      const DelegateVotesChangedFromReStakeTx = (await staking.getPastEvents("DelegateVotesChanged", {
+        fromBlock: txReStake.receipt.blockNumber,
+        toBlock: txReStake.receipt.blockNumber
+      }));
+      assert.equal(DelegateVotesChangedFromReStakeTx[0].args.delegate, delegate)
+      assert.equal(DelegateVotesChangedFromReStakeTx[0].args.previousBalance, 0)
+      assert.equal(DelegateVotesChangedFromReStakeTx[0].args.newBalance, 0)
+      
+      assert.equal(DelegateVotesChangedFromReStakeTx[1].args.delegate, reStakeDelegate)
+      assert.equal(DelegateVotesChangedFromReStakeTx[1].args.previousBalance, 0)
+      assert.equal(DelegateVotesChangedFromReStakeTx[1].args.newBalance, 861)
+
+      assert.equal(await token.balanceOf(staking.address), 4000);
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 422)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 422)
+
+      assert.equal(await staking.balanceOf(reStakeDelegate), 861);
+      assert.equal(await staking.getVotes(reStakeDelegate), 861)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 0)
+
       //moving ahead 1 week
       await incrementBlock(WEEK)
 
@@ -129,8 +165,12 @@ contract("Staking", accounts => {
       assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
       assert.equal(await staking.balanceOf(delegate), 0);
       assert.equal(await staking.getVotes(delegate), 0)
-      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 210)
-      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 210)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 861)
+
+      assert.equal(await staking.balanceOf(reStakeDelegate), 645);
+      assert.equal(await staking.getVotes(reStakeDelegate), 645)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 861)
 
       //moving ahead half a week
       await incrementBlock(WEEK / 2)
@@ -140,8 +180,57 @@ contract("Staking", accounts => {
       assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
       assert.equal(await staking.balanceOf(delegate), 0);
       assert.equal(await staking.getVotes(delegate), 0)
-      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 210)
-      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 210)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 861)
+
+      assert.equal(await staking.balanceOf(reStakeDelegate), 645);
+      assert.equal(await staking.getVotes(reStakeDelegate), 645)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 861)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 645)
+      
+      assert.equal(await staking.balanceOf(reStakeDelegate), 429);
+      assert.equal(await staking.getVotes(reStakeDelegate), 429)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 645)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 429)
+      
+      assert.equal(await staking.balanceOf(reStakeDelegate), 213);
+      assert.equal(await staking.getVotes(reStakeDelegate), 213)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 429)
+
+      //moving ahead 1 week
+      await incrementBlock(WEEK)
+
+      assert.equal(await staking.balanceOf(user), 0);
+      assert.equal(await staking.getVotes(user), 0)
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 0)
+      assert.equal(await staking.balanceOf(delegate), 0);
+      assert.equal(await staking.getVotes(delegate), 0)
+      assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
+      assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 213)
+      
+      assert.equal(await staking.balanceOf(reStakeDelegate), 0);
+      assert.equal(await staking.getVotes(reStakeDelegate), 0)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 213)
 
       //moving ahead 1 week
       await incrementBlock(WEEK)
@@ -153,6 +242,10 @@ contract("Staking", accounts => {
       assert.equal(await staking.getVotes(delegate), 0)
       assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 0)
+      
+      assert.equal(await staking.balanceOf(reStakeDelegate), 0);
+      assert.equal(await staking.getVotes(reStakeDelegate), 0)
+      assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 0)
 
       //revert if current block
       await expectThrow(

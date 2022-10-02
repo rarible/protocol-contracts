@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "./StakingBase.sol";
 
-contract StakingRestake is StakingBase {
+abstract contract StakingRestake is StakingBase {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -16,14 +16,19 @@ contract StakingRestake is StakingBase {
 
         address delegate = stakes[id].delegate;
         accounts[account].locked.update(time);
-        uint bias = accounts[account].locked.initial.bias;
-        uint residue = removeLines(id, account, delegate, time);
-        rebalance(id, account, bias, residue, newAmount);
+
+        rebalance(id, account, accounts[account].locked.initial.bias, removeLines(id, account, delegate, time), newAmount);
 
         counter++;
 
         addLines(account, newDelegate, newAmount, newSlope, newCliff, time);
         emit Restake(id, account, newDelegate, counter, time, newAmount, newSlope, newCliff);
+
+        // IVotesUpgradeable events
+        emit DelegateChanged(account, delegate, newDelegate);
+        emit DelegateVotesChanged(delegate, 0, accounts[delegate].balance.actualValue(time));
+        emit DelegateVotesChanged(newDelegate, 0, accounts[newDelegate].balance.actualValue(time));
+
         return counter;
     }
 
