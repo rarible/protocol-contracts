@@ -103,8 +103,8 @@ contract("Staking", accounts => {
 
       assert.equal(await staking.balanceOf(user), 0);
       assert.equal(await staking.getVotes(user), 0)
-      //todo: fix this!!!
-      //assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 634)
+
+      assert.equal(await staking.getPastVotes(user, (currentBlock - 1)), 634)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 634)
 
       assert.equal(await staking.balanceOf(delegate), 422);

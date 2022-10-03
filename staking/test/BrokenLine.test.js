@@ -293,6 +293,37 @@ contract("BrokenLine", accounts => {
       biasBackTime = await forTest.getActualValue.call(10);
       assert.equal(biasBackTime, 0);  //bias
       });
+
+    it("Test8. One slope+tail remove() in slope after one week, back values detect ", async () => {
+      let id1 = 255;
+      let id2 = 256;
+      // struct Line: start, bias, slope
+      await forTest.addTest([11, 634, 212], id1, 0); //Line, id, cliff from 1 to 5 timeWeek
+      await forTest.update(11);
+      await assertCurrent([11, 634, 212]);
+      //remove after one week
+      resultRemove = await forTest.removeTest(id1, 12);
+      let amountRemove;
+      let slopeRemove;
+      let cliffRemove;
+      truffleAssert.eventEmitted(resultRemove, 'resultRemoveLine', (ev) => {
+      	amountRemove = ev.bias;
+      	slopeRemove = ev.slope;
+        cliffRemove = ev.cliff;
+        return true;
+      });
+      assert.equal(amountRemove, 422);
+      assert.equal(slopeRemove, 212);
+      assert.equal(cliffRemove, 0);
+      await assertCurrent([12, 0, 0]);
+
+      let biasBackTime = await forTest.getActualValue.call(11);
+      assert.equal(biasBackTime, 634);  //bias when we add line with id1
+
+
+      biasBackTime = await forTest.getActualValue.call(10);
+      assert.equal(biasBackTime, 0);  //bias
+      });
   })
 
 	describe("Check actualBackValue after add Line", () => {

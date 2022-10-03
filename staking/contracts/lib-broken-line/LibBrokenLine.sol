@@ -114,7 +114,7 @@ library LibBrokenLine {
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
             bias = finishTime.sub(toTime).mul(slope).add(uint(mod));
             //save slope for history
-            brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope).sub(mod));
+            brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope));
         } else {//tail works
             //now compensate change slope by tail
             brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
