@@ -7,36 +7,36 @@
   "immutableReferences": {},
   "generatedSources": [],
   "deployedGeneratedSources": [],
-  "sourceMap": "229:2488:63:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "229:2488:63:-:0;;;;;;;;",
+  "sourceMap": "229:2488:64:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "229:2488:64:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.7.6;\n\nimport \"./LibOrder.sol\";\nimport \"@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol\";\nimport \"@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol\";\n\nlibrary LibFill {\n    using SafeMathUpgradeable for uint;\n\n    struct FillResult {\n        uint leftValue;\n        uint rightValue;\n    }\n\n    struct IsMakeFill {\n        bool leftMake;\n        bool rightMake;\n    }\n\n    /**\n     * @dev Should return filled values\n     * @param leftOrder left order\n     * @param rightOrder right order\n     * @param leftOrderFill current fill of the left order (0 if order is unfilled)\n     * @param rightOrderFill current fill of the right order (0 if order is unfilled)\n     * @param leftIsMakeFill true if left orders fill is calculated from the make side, false if from the take side\n     * @param rightIsMakeFill true if right orders fill is calculated from the make side, false if from the take side\n     */\n    function fillOrder(LibOrder.Order memory leftOrder, LibOrder.Order memory rightOrder, uint leftOrderFill, uint rightOrderFill, bool leftIsMakeFill, bool rightIsMakeFill) internal pure returns (FillResult memory) {\n        (uint leftMakeValue, uint leftTakeValue) = LibOrder.calculateRemaining(leftOrder, leftOrderFill, leftIsMakeFill);\n        (uint rightMakeValue, uint rightTakeValue) = LibOrder.calculateRemaining(rightOrder, rightOrderFill, rightIsMakeFill);\n\n        //We have 3 cases here:\n        if (rightTakeValue > leftMakeValue) { //1nd: left order should be fully filled\n            return fillLeft(leftMakeValue, leftTakeValue, rightOrder.makeAsset.value, rightOrder.takeAsset.value);\n        }//2st: right order should be fully filled or 3d: both should be fully filled if required values are the same\n        return fillRight(leftOrder.makeAsset.value, leftOrder.takeAsset.value, rightMakeValue, rightTakeValue);\n    }\n\n    function fillRight(uint leftMakeValue, uint leftTakeValue, uint rightMakeValue, uint rightTakeValue) internal pure returns (FillResult memory result) {\n        uint makerValue = LibMath.safeGetPartialAmountFloor(rightTakeValue, leftMakeValue, leftTakeValue);\n        require(makerValue <= rightMakeValue, \"fillRight: unable to fill\");\n        return FillResult(rightTakeValue, makerValue);\n    }\n\n    function fillLeft(uint leftMakeValue, uint leftTakeValue, uint rightMakeValue, uint rightTakeValue) internal pure returns (FillResult memory result) {\n        uint rightTake = LibMath.safeGetPartialAmountFloor(leftTakeValue, rightMakeValue, rightTakeValue);\n        require(rightTake <= leftMakeValue, \"fillLeft: unable to fill\");\n        return FillResult(leftMakeValue, leftTakeValue);\n    }\n}\n",
   "sourcePath": "@rarible/exchange-v2/contracts/libraries/LibFill.sol",
   "ast": {
     "absolutePath": "@rarible/exchange-v2/contracts/libraries/LibFill.sol",
     "exportedSymbols": {
       "LibAsset": [
-        12610
+        12789
       ],
       "LibFill": [
-        9760
+        9939
       ],
       "LibMath": [
-        9957
+        10136
       ],
       "LibOrder": [
-        10199
+        10378
       ],
       "LibOrderDataV1": [
-        10664
+        10843
       ],
       "LibOrderDataV2": [
-        10703
+        10882
       ],
       "LibOrderDataV3": [
-        10778
+        10957
       ],
       "LibPart": [
-        12667
+        12846
       ],
       "MathUpgradeable": [
         450
@@ -45,50 +45,50 @@
         805
       ]
     },
-    "id": 9761,
+    "id": 9940,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 9605,
+        "id": 9784,
         "literals": [
           "solidity",
           "0.7",
           ".6"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:22:63"
+        "src": "33:22:64"
       },
       {
         "absolutePath": "@rarible/exchange-v2/contracts/libraries/LibOrder.sol",
         "file": "./LibOrder.sol",
-        "id": 9606,
+        "id": 9785,
         "nodeType": "ImportDirective",
-        "scope": 9761,
-        "sourceUnit": 10200,
-        "src": "57:24:63",
+        "scope": 9940,
+        "sourceUnit": 10379,
+        "src": "57:24:64",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
         "absolutePath": "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol",
         "file": "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol",
-        "id": 9607,
+        "id": 9786,
         "nodeType": "ImportDirective",
-        "scope": 9761,
+        "scope": 9940,
         "sourceUnit": 806,
-        "src": "82:74:63",
+        "src": "82:74:64",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
         "absolutePath": "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol",
         "file": "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol",
-        "id": 9608,
+        "id": 9787,
         "nodeType": "ImportDirective",
-        "scope": 9761,
+        "scope": 9940,
         "sourceUnit": 451,
-        "src": "157:70:63",
+        "src": "157:70:64",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -98,33 +98,33 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 9760,
+        "id": 9939,
         "linearizedBaseContracts": [
-          9760
+          9939
         ],
         "name": "LibFill",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
-            "id": 9611,
+            "id": 9790,
             "libraryName": {
-              "id": 9609,
+              "id": 9788,
               "name": "SafeMathUpgradeable",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 805,
-              "src": "257:19:63",
+              "src": "257:19:64",
               "typeDescriptions": {
                 "typeIdentifier": "t_contract$_SafeMathUpgradeable_$805",
                 "typeString": "library SafeMathUpgradeable"
               }
             },
             "nodeType": "UsingForDirective",
-            "src": "251:35:63",
+            "src": "251:35:64",
             "typeName": {
-              "id": 9610,
+              "id": 9789,
               "name": "uint",
               "nodeType": "ElementaryTypeName",
-              "src": "281:4:63",
+              "src": "281:4:64",
               "typeDescriptions": {
                 "typeIdentifier": "t_uint256",
                 "typeString": "uint256"
@@ -133,16 +133,16 @@
           },
           {
             "canonicalName": "LibFill.FillResult",
-            "id": 9616,
+            "id": 9795,
             "members": [
               {
                 "constant": false,
-                "id": 9613,
+                "id": 9792,
                 "mutability": "mutable",
                 "name": "leftValue",
                 "nodeType": "VariableDeclaration",
-                "scope": 9616,
-                "src": "320:14:63",
+                "scope": 9795,
+                "src": "320:14:64",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -150,10 +150,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9612,
+                  "id": 9791,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "320:4:63",
+                  "src": "320:4:64",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -163,12 +163,12 @@
               },
               {
                 "constant": false,
-                "id": 9615,
+                "id": 9794,
                 "mutability": "mutable",
                 "name": "rightValue",
                 "nodeType": "VariableDeclaration",
-                "scope": 9616,
-                "src": "344:15:63",
+                "scope": 9795,
+                "src": "344:15:64",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -176,10 +176,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9614,
+                  "id": 9793,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "344:4:63",
+                  "src": "344:4:64",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -190,22 +190,22 @@
             ],
             "name": "FillResult",
             "nodeType": "StructDefinition",
-            "scope": 9760,
-            "src": "292:74:63",
+            "scope": 9939,
+            "src": "292:74:64",
             "visibility": "public"
           },
           {
             "canonicalName": "LibFill.IsMakeFill",
-            "id": 9621,
+            "id": 9800,
             "members": [
               {
                 "constant": false,
-                "id": 9618,
+                "id": 9797,
                 "mutability": "mutable",
                 "name": "leftMake",
                 "nodeType": "VariableDeclaration",
-                "scope": 9621,
-                "src": "400:13:63",
+                "scope": 9800,
+                "src": "400:13:64",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -213,10 +213,10 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 9617,
+                  "id": 9796,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
-                  "src": "400:4:63",
+                  "src": "400:4:64",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bool",
                     "typeString": "bool"
@@ -226,12 +226,12 @@
               },
               {
                 "constant": false,
-                "id": 9620,
+                "id": 9799,
                 "mutability": "mutable",
                 "name": "rightMake",
                 "nodeType": "VariableDeclaration",
-                "scope": 9621,
-                "src": "423:14:63",
+                "scope": 9800,
+                "src": "423:14:64",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -239,10 +239,10 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 9619,
+                  "id": 9798,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
-                  "src": "423:4:63",
+                  "src": "423:4:64",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bool",
                     "typeString": "bool"
@@ -253,30 +253,30 @@
             ],
             "name": "IsMakeFill",
             "nodeType": "StructDefinition",
-            "scope": 9760,
-            "src": "372:72:63",
+            "scope": 9939,
+            "src": "372:72:64",
             "visibility": "public"
           },
           {
             "body": {
-              "id": 9688,
+              "id": 9867,
               "nodeType": "Block",
-              "src": "1194:721:63",
+              "src": "1194:721:64",
               "statements": [
                 {
                   "assignments": [
-                    9640,
-                    9642
+                    9819,
+                    9821
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 9640,
+                      "id": 9819,
                       "mutability": "mutable",
                       "name": "leftMakeValue",
                       "nodeType": "VariableDeclaration",
-                      "scope": 9688,
-                      "src": "1205:18:63",
+                      "scope": 9867,
+                      "src": "1205:18:64",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -284,10 +284,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 9639,
+                        "id": 9818,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "1205:4:63",
+                        "src": "1205:4:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -297,12 +297,12 @@
                     },
                     {
                       "constant": false,
-                      "id": 9642,
+                      "id": 9821,
                       "mutability": "mutable",
                       "name": "leftTakeValue",
                       "nodeType": "VariableDeclaration",
-                      "scope": 9688,
-                      "src": "1225:18:63",
+                      "scope": 9867,
+                      "src": "1225:18:64",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -310,10 +310,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 9641,
+                        "id": 9820,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "1225:4:63",
+                        "src": "1225:4:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -322,40 +322,40 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 9649,
+                  "id": 9828,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 9645,
+                        "id": 9824,
                         "name": "leftOrder",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9624,
-                        "src": "1275:9:63",
+                        "referencedDeclaration": 9803,
+                        "src": "1275:9:64",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                          "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                           "typeString": "struct LibOrder.Order memory"
                         }
                       },
                       {
-                        "id": 9646,
+                        "id": 9825,
                         "name": "leftOrderFill",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9628,
-                        "src": "1286:13:63",
+                        "referencedDeclaration": 9807,
+                        "src": "1286:13:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9647,
+                        "id": 9826,
                         "name": "leftIsMakeFill",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9632,
-                        "src": "1301:14:63",
+                        "referencedDeclaration": 9811,
+                        "src": "1301:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -365,7 +365,7 @@
                     "expression": {
                       "argumentTypes": [
                         {
-                          "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                          "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                           "typeString": "struct LibOrder.Order memory"
                         },
                         {
@@ -378,32 +378,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 9643,
+                        "id": 9822,
                         "name": "LibOrder",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 10199,
-                        "src": "1247:8:63",
+                        "referencedDeclaration": 10378,
+                        "src": "1247:8:64",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_LibOrder_$10199_$",
+                          "typeIdentifier": "t_type$_t_contract$_LibOrder_$10378_$",
                           "typeString": "type(library LibOrder)"
                         }
                       },
-                      "id": 9644,
+                      "id": 9823,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "calculateRemaining",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 10056,
-                      "src": "1247:27:63",
+                      "referencedDeclaration": 10235,
+                      "src": "1247:27:64",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_pure$_t_struct$_Order_$9994_memory_ptr_$_t_uint256_$_t_bool_$returns$_t_uint256_$_t_uint256_$",
+                        "typeIdentifier": "t_function_internal_pure$_t_struct$_Order_$10173_memory_ptr_$_t_uint256_$_t_bool_$returns$_t_uint256_$_t_uint256_$",
                         "typeString": "function (struct LibOrder.Order memory,uint256,bool) pure returns (uint256,uint256)"
                       }
                     },
-                    "id": 9648,
+                    "id": 9827,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -411,7 +411,7 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1247:69:63",
+                    "src": "1247:69:64",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$_t_uint256_$_t_uint256_$",
@@ -419,22 +419,22 @@
                     }
                   },
                   "nodeType": "VariableDeclarationStatement",
-                  "src": "1204:112:63"
+                  "src": "1204:112:64"
                 },
                 {
                   "assignments": [
-                    9651,
-                    9653
+                    9830,
+                    9832
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 9651,
+                      "id": 9830,
                       "mutability": "mutable",
                       "name": "rightMakeValue",
                       "nodeType": "VariableDeclaration",
-                      "scope": 9688,
-                      "src": "1327:19:63",
+                      "scope": 9867,
+                      "src": "1327:19:64",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -442,10 +442,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 9650,
+                        "id": 9829,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "1327:4:63",
+                        "src": "1327:4:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -455,12 +455,12 @@
                     },
                     {
                       "constant": false,
-                      "id": 9653,
+                      "id": 9832,
                       "mutability": "mutable",
                       "name": "rightTakeValue",
                       "nodeType": "VariableDeclaration",
-                      "scope": 9688,
-                      "src": "1348:19:63",
+                      "scope": 9867,
+                      "src": "1348:19:64",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -468,10 +468,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 9652,
+                        "id": 9831,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "1348:4:63",
+                        "src": "1348:4:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -480,40 +480,40 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 9660,
+                  "id": 9839,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 9656,
+                        "id": 9835,
                         "name": "rightOrder",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9626,
-                        "src": "1399:10:63",
+                        "referencedDeclaration": 9805,
+                        "src": "1399:10:64",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                          "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                           "typeString": "struct LibOrder.Order memory"
                         }
                       },
                       {
-                        "id": 9657,
+                        "id": 9836,
                         "name": "rightOrderFill",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9630,
-                        "src": "1411:14:63",
+                        "referencedDeclaration": 9809,
+                        "src": "1411:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9658,
+                        "id": 9837,
                         "name": "rightIsMakeFill",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9634,
-                        "src": "1427:15:63",
+                        "referencedDeclaration": 9813,
+                        "src": "1427:15:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -523,7 +523,7 @@
                     "expression": {
                       "argumentTypes": [
                         {
-                          "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                          "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                           "typeString": "struct LibOrder.Order memory"
                         },
                         {
@@ -536,32 +536,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 9654,
+                        "id": 9833,
                         "name": "LibOrder",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 10199,
-                        "src": "1371:8:63",
+                        "referencedDeclaration": 10378,
+                        "src": "1371:8:64",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_LibOrder_$10199_$",
+                          "typeIdentifier": "t_type$_t_contract$_LibOrder_$10378_$",
                           "typeString": "type(library LibOrder)"
                         }
                       },
-                      "id": 9655,
+                      "id": 9834,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "calculateRemaining",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 10056,
-                      "src": "1371:27:63",
+                      "referencedDeclaration": 10235,
+                      "src": "1371:27:64",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_pure$_t_struct$_Order_$9994_memory_ptr_$_t_uint256_$_t_bool_$returns$_t_uint256_$_t_uint256_$",
+                        "typeIdentifier": "t_function_internal_pure$_t_struct$_Order_$10173_memory_ptr_$_t_uint256_$_t_bool_$returns$_t_uint256_$_t_uint256_$",
                         "typeString": "function (struct LibOrder.Order memory,uint256,bool) pure returns (uint256,uint256)"
                       }
                     },
-                    "id": 9659,
+                    "id": 9838,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -569,7 +569,7 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1371:72:63",
+                    "src": "1371:72:64",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$_t_uint256_$_t_uint256_$",
@@ -577,7 +577,7 @@
                     }
                   },
                   "nodeType": "VariableDeclarationStatement",
-                  "src": "1326:117:63"
+                  "src": "1326:117:64"
                 },
                 {
                   "condition": {
@@ -585,18 +585,18 @@
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     },
-                    "id": 9663,
+                    "id": 9842,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftExpression": {
-                      "id": 9661,
+                      "id": 9840,
                       "name": "rightTakeValue",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9653,
-                      "src": "1490:14:63",
+                      "referencedDeclaration": 9832,
+                      "src": "1490:14:64",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
@@ -605,53 +605,53 @@
                     "nodeType": "BinaryOperation",
                     "operator": ">",
                     "rightExpression": {
-                      "id": 9662,
+                      "id": 9841,
                       "name": "leftMakeValue",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9640,
-                      "src": "1507:13:63",
+                      "referencedDeclaration": 9819,
+                      "src": "1507:13:64",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       }
                     },
-                    "src": "1490:30:63",
+                    "src": "1490:30:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
                     }
                   },
-                  "id": 9676,
+                  "id": 9855,
                   "nodeType": "IfStatement",
-                  "src": "1486:203:63",
+                  "src": "1486:203:64",
                   "trueBody": {
-                    "id": 9675,
+                    "id": 9854,
                     "nodeType": "Block",
-                    "src": "1522:167:63",
+                    "src": "1522:167:64",
                     "statements": [
                       {
                         "expression": {
                           "arguments": [
                             {
-                              "id": 9665,
+                              "id": 9844,
                               "name": "leftMakeValue",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9640,
-                              "src": "1593:13:63",
+                              "referencedDeclaration": 9819,
+                              "src": "1593:13:64",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
                                 "typeString": "uint256"
                               }
                             },
                             {
-                              "id": 9666,
+                              "id": 9845,
                               "name": "leftTakeValue",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 9642,
-                              "src": "1608:13:63",
+                              "referencedDeclaration": 9821,
+                              "src": "1608:13:64",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
                                 "typeString": "uint256"
@@ -660,40 +660,40 @@
                             {
                               "expression": {
                                 "expression": {
-                                  "id": 9667,
+                                  "id": 9846,
                                   "name": "rightOrder",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 9626,
-                                  "src": "1623:10:63",
+                                  "referencedDeclaration": 9805,
+                                  "src": "1623:10:64",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                                    "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                                     "typeString": "struct LibOrder.Order memory"
                                   }
                                 },
-                                "id": 9668,
+                                "id": 9847,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
                                 "lValueRequested": false,
                                 "memberName": "makeAsset",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 9979,
-                                "src": "1623:20:63",
+                                "referencedDeclaration": 10158,
+                                "src": "1623:20:64",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_Asset_$12567_memory_ptr",
+                                  "typeIdentifier": "t_struct$_Asset_$12746_memory_ptr",
                                   "typeString": "struct LibAsset.Asset memory"
                                 }
                               },
-                              "id": 9669,
+                              "id": 9848,
                               "isConstant": false,
                               "isLValue": true,
                               "isPure": false,
                               "lValueRequested": false,
                               "memberName": "value",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 12566,
-                              "src": "1623:26:63",
+                              "referencedDeclaration": 12745,
+                              "src": "1623:26:64",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
                                 "typeString": "uint256"
@@ -702,40 +702,40 @@
                             {
                               "expression": {
                                 "expression": {
-                                  "id": 9670,
+                                  "id": 9849,
                                   "name": "rightOrder",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 9626,
-                                  "src": "1651:10:63",
+                                  "referencedDeclaration": 9805,
+                                  "src": "1651:10:64",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                                    "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                                     "typeString": "struct LibOrder.Order memory"
                                   }
                                 },
-                                "id": 9671,
+                                "id": 9850,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
                                 "lValueRequested": false,
                                 "memberName": "takeAsset",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 9983,
-                                "src": "1651:20:63",
+                                "referencedDeclaration": 10162,
+                                "src": "1651:20:64",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_Asset_$12567_memory_ptr",
+                                  "typeIdentifier": "t_struct$_Asset_$12746_memory_ptr",
                                   "typeString": "struct LibAsset.Asset memory"
                                 }
                               },
-                              "id": 9672,
+                              "id": 9851,
                               "isConstant": false,
                               "isLValue": true,
                               "isPure": false,
                               "lValueRequested": false,
                               "memberName": "value",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 12566,
-                              "src": "1651:26:63",
+                              "referencedDeclaration": 12745,
+                              "src": "1651:26:64",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
                                 "typeString": "uint256"
@@ -761,18 +761,18 @@
                                 "typeString": "uint256"
                               }
                             ],
-                            "id": 9664,
+                            "id": 9843,
                             "name": "fillLeft",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9759,
-                            "src": "1584:8:63",
+                            "referencedDeclaration": 9938,
+                            "src": "1584:8:64",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_struct$_FillResult_$9616_memory_ptr_$",
+                              "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_struct$_FillResult_$9795_memory_ptr_$",
                               "typeString": "function (uint256,uint256,uint256,uint256) pure returns (struct LibFill.FillResult memory)"
                             }
                           },
-                          "id": 9673,
+                          "id": 9852,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -780,17 +780,17 @@
                           "lValueRequested": false,
                           "names": [],
                           "nodeType": "FunctionCall",
-                          "src": "1584:94:63",
+                          "src": "1584:94:64",
                           "tryCall": false,
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                            "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                             "typeString": "struct LibFill.FillResult memory"
                           }
                         },
-                        "functionReturnParameters": 9638,
-                        "id": 9674,
+                        "functionReturnParameters": 9817,
+                        "id": 9853,
                         "nodeType": "Return",
-                        "src": "1577:101:63"
+                        "src": "1577:101:64"
                       }
                     ]
                   }
@@ -801,40 +801,40 @@
                       {
                         "expression": {
                           "expression": {
-                            "id": 9678,
+                            "id": 9857,
                             "name": "leftOrder",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9624,
-                            "src": "1823:9:63",
+                            "referencedDeclaration": 9803,
+                            "src": "1823:9:64",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                              "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                               "typeString": "struct LibOrder.Order memory"
                             }
                           },
-                          "id": 9679,
+                          "id": 9858,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "makeAsset",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 9979,
-                          "src": "1823:19:63",
+                          "referencedDeclaration": 10158,
+                          "src": "1823:19:64",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Asset_$12567_memory_ptr",
+                            "typeIdentifier": "t_struct$_Asset_$12746_memory_ptr",
                             "typeString": "struct LibAsset.Asset memory"
                           }
                         },
-                        "id": 9680,
+                        "id": 9859,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "value",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 12566,
-                        "src": "1823:25:63",
+                        "referencedDeclaration": 12745,
+                        "src": "1823:25:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -843,64 +843,64 @@
                       {
                         "expression": {
                           "expression": {
-                            "id": 9681,
+                            "id": 9860,
                             "name": "leftOrder",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 9624,
-                            "src": "1850:9:63",
+                            "referencedDeclaration": 9803,
+                            "src": "1850:9:64",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                              "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                               "typeString": "struct LibOrder.Order memory"
                             }
                           },
-                          "id": 9682,
+                          "id": 9861,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
                           "lValueRequested": false,
                           "memberName": "takeAsset",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 9983,
-                          "src": "1850:19:63",
+                          "referencedDeclaration": 10162,
+                          "src": "1850:19:64",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_Asset_$12567_memory_ptr",
+                            "typeIdentifier": "t_struct$_Asset_$12746_memory_ptr",
                             "typeString": "struct LibAsset.Asset memory"
                           }
                         },
-                        "id": 9683,
+                        "id": 9862,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
                         "lValueRequested": false,
                         "memberName": "value",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 12566,
-                        "src": "1850:25:63",
+                        "referencedDeclaration": 12745,
+                        "src": "1850:25:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9684,
+                        "id": 9863,
                         "name": "rightMakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9651,
-                        "src": "1877:14:63",
+                        "referencedDeclaration": 9830,
+                        "src": "1877:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9685,
+                        "id": 9864,
                         "name": "rightTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9653,
-                        "src": "1893:14:63",
+                        "referencedDeclaration": 9832,
+                        "src": "1893:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -926,18 +926,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 9677,
+                      "id": 9856,
                       "name": "fillRight",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9724,
-                      "src": "1813:9:63",
+                      "referencedDeclaration": 9903,
+                      "src": "1813:9:64",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_struct$_FillResult_$9616_memory_ptr_$",
+                        "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_struct$_FillResult_$9795_memory_ptr_$",
                         "typeString": "function (uint256,uint256,uint256,uint256) pure returns (struct LibFill.FillResult memory)"
                       }
                     },
-                    "id": 9686,
+                    "id": 9865,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -945,58 +945,58 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "1813:95:63",
+                    "src": "1813:95:64",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                      "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                       "typeString": "struct LibFill.FillResult memory"
                     }
                   },
-                  "functionReturnParameters": 9638,
-                  "id": 9687,
+                  "functionReturnParameters": 9817,
+                  "id": 9866,
                   "nodeType": "Return",
-                  "src": "1806:102:63"
+                  "src": "1806:102:64"
                 }
               ]
             },
             "documentation": {
-              "id": 9622,
+              "id": 9801,
               "nodeType": "StructuredDocumentation",
-              "src": "450:527:63",
+              "src": "450:527:64",
               "text": " @dev Should return filled values\n @param leftOrder left order\n @param rightOrder right order\n @param leftOrderFill current fill of the left order (0 if order is unfilled)\n @param rightOrderFill current fill of the right order (0 if order is unfilled)\n @param leftIsMakeFill true if left orders fill is calculated from the make side, false if from the take side\n @param rightIsMakeFill true if right orders fill is calculated from the make side, false if from the take side"
             },
-            "id": 9689,
+            "id": 9868,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "fillOrder",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 9635,
+              "id": 9814,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9624,
+                  "id": 9803,
                   "mutability": "mutable",
                   "name": "leftOrder",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1001:31:63",
+                  "scope": 9868,
+                  "src": "1001:31:64",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                    "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                     "typeString": "struct LibOrder.Order"
                   },
                   "typeName": {
-                    "id": 9623,
+                    "id": 9802,
                     "name": "LibOrder.Order",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9994,
-                    "src": "1001:14:63",
+                    "referencedDeclaration": 10173,
+                    "src": "1001:14:64",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Order_$9994_storage_ptr",
+                      "typeIdentifier": "t_struct$_Order_$10173_storage_ptr",
                       "typeString": "struct LibOrder.Order"
                     }
                   },
@@ -1004,26 +1004,26 @@
                 },
                 {
                   "constant": false,
-                  "id": 9626,
+                  "id": 9805,
                   "mutability": "mutable",
                   "name": "rightOrder",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1034:32:63",
+                  "scope": 9868,
+                  "src": "1034:32:64",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                    "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                     "typeString": "struct LibOrder.Order"
                   },
                   "typeName": {
-                    "id": 9625,
+                    "id": 9804,
                     "name": "LibOrder.Order",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9994,
-                    "src": "1034:14:63",
+                    "referencedDeclaration": 10173,
+                    "src": "1034:14:64",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Order_$9994_storage_ptr",
+                      "typeIdentifier": "t_struct$_Order_$10173_storage_ptr",
                       "typeString": "struct LibOrder.Order"
                     }
                   },
@@ -1031,12 +1031,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9628,
+                  "id": 9807,
                   "mutability": "mutable",
                   "name": "leftOrderFill",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1068:18:63",
+                  "scope": 9868,
+                  "src": "1068:18:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1044,10 +1044,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9627,
+                    "id": 9806,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1068:4:63",
+                    "src": "1068:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1057,12 +1057,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9630,
+                  "id": 9809,
                   "mutability": "mutable",
                   "name": "rightOrderFill",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1088:19:63",
+                  "scope": 9868,
+                  "src": "1088:19:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1070,10 +1070,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9629,
+                    "id": 9808,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1088:4:63",
+                    "src": "1088:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1083,12 +1083,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9632,
+                  "id": 9811,
                   "mutability": "mutable",
                   "name": "leftIsMakeFill",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1109:19:63",
+                  "scope": 9868,
+                  "src": "1109:19:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1096,10 +1096,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 9631,
+                    "id": 9810,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1109:4:63",
+                    "src": "1109:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -1109,12 +1109,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9634,
+                  "id": 9813,
                   "mutability": "mutable",
                   "name": "rightIsMakeFill",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1130:20:63",
+                  "scope": 9868,
+                  "src": "1130:20:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1122,10 +1122,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 9633,
+                    "id": 9812,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1130:4:63",
+                    "src": "1130:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -1134,67 +1134,67 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1000:151:63"
+              "src": "1000:151:64"
             },
             "returnParameters": {
-              "id": 9638,
+              "id": 9817,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9637,
+                  "id": 9816,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9689,
-                  "src": "1175:17:63",
+                  "scope": 9868,
+                  "src": "1175:17:64",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                    "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                     "typeString": "struct LibFill.FillResult"
                   },
                   "typeName": {
-                    "id": 9636,
+                    "id": 9815,
                     "name": "FillResult",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9616,
-                    "src": "1175:10:63",
+                    "referencedDeclaration": 9795,
+                    "src": "1175:10:64",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FillResult_$9616_storage_ptr",
+                      "typeIdentifier": "t_struct$_FillResult_$9795_storage_ptr",
                       "typeString": "struct LibFill.FillResult"
                     }
                   },
                   "visibility": "internal"
                 }
               ],
-              "src": "1174:19:63"
+              "src": "1174:19:64"
             },
-            "scope": 9760,
-            "src": "982:933:63",
+            "scope": 9939,
+            "src": "982:933:64",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 9723,
+              "id": 9902,
               "nodeType": "Block",
-              "src": "2071:245:63",
+              "src": "2071:245:64",
               "statements": [
                 {
                   "assignments": [
-                    9703
+                    9882
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 9703,
+                      "id": 9882,
                       "mutability": "mutable",
                       "name": "makerValue",
                       "nodeType": "VariableDeclaration",
-                      "scope": 9723,
-                      "src": "2081:15:63",
+                      "scope": 9902,
+                      "src": "2081:15:64",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -1202,10 +1202,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 9702,
+                        "id": 9881,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "2081:4:63",
+                        "src": "2081:4:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1214,40 +1214,40 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 9710,
+                  "id": 9889,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 9706,
+                        "id": 9885,
                         "name": "rightTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9697,
-                        "src": "2133:14:63",
+                        "referencedDeclaration": 9876,
+                        "src": "2133:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9707,
+                        "id": 9886,
                         "name": "leftMakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9691,
-                        "src": "2149:13:63",
+                        "referencedDeclaration": 9870,
+                        "src": "2149:13:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9708,
+                        "id": 9887,
                         "name": "leftTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9693,
-                        "src": "2164:13:63",
+                        "referencedDeclaration": 9872,
+                        "src": "2164:13:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1270,32 +1270,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 9704,
+                        "id": 9883,
                         "name": "LibMath",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9957,
-                        "src": "2099:7:63",
+                        "referencedDeclaration": 10136,
+                        "src": "2099:7:64",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_LibMath_$9957_$",
+                          "typeIdentifier": "t_type$_t_contract$_LibMath_$10136_$",
                           "typeString": "type(library LibMath)"
                         }
                       },
-                      "id": 9705,
+                      "id": 9884,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "safeGetPartialAmountFloor",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9800,
-                      "src": "2099:33:63",
+                      "referencedDeclaration": 9979,
+                      "src": "2099:33:64",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
                         "typeString": "function (uint256,uint256,uint256) pure returns (uint256)"
                       }
                     },
-                    "id": 9709,
+                    "id": 9888,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1303,7 +1303,7 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2099:79:63",
+                    "src": "2099:79:64",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -1311,7 +1311,7 @@
                     }
                   },
                   "nodeType": "VariableDeclarationStatement",
-                  "src": "2081:97:63"
+                  "src": "2081:97:64"
                 },
                 {
                   "expression": {
@@ -1321,18 +1321,18 @@
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         },
-                        "id": 9714,
+                        "id": 9893,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
-                          "id": 9712,
+                          "id": 9891,
                           "name": "makerValue",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9703,
-                          "src": "2196:10:63",
+                          "referencedDeclaration": 9882,
+                          "src": "2196:10:64",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
@@ -1341,18 +1341,18 @@
                         "nodeType": "BinaryOperation",
                         "operator": "<=",
                         "rightExpression": {
-                          "id": 9713,
+                          "id": 9892,
                           "name": "rightMakeValue",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9695,
-                          "src": "2210:14:63",
+                          "referencedDeclaration": 9874,
+                          "src": "2210:14:64",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           }
                         },
-                        "src": "2196:28:63",
+                        "src": "2196:28:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -1360,14 +1360,14 @@
                       },
                       {
                         "hexValue": "66696c6c52696768743a20756e61626c6520746f2066696c6c",
-                        "id": 9715,
+                        "id": 9894,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "2226:27:63",
+                        "src": "2226:27:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_fafa639e71bc283159815431c09be05e86127daed8482a92e50dafed5209d8c5",
                           "typeString": "literal_string \"fillRight: unable to fill\""
@@ -1386,7 +1386,7 @@
                           "typeString": "literal_string \"fillRight: unable to fill\""
                         }
                       ],
-                      "id": 9711,
+                      "id": 9890,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1394,13 +1394,13 @@
                         4294967278
                       ],
                       "referencedDeclaration": 4294967278,
-                      "src": "2188:7:63",
+                      "src": "2188:7:64",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 9716,
+                    "id": 9895,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1408,39 +1408,39 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2188:66:63",
+                    "src": "2188:66:64",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 9717,
+                  "id": 9896,
                   "nodeType": "ExpressionStatement",
-                  "src": "2188:66:63"
+                  "src": "2188:66:64"
                 },
                 {
                   "expression": {
                     "arguments": [
                       {
-                        "id": 9719,
+                        "id": 9898,
                         "name": "rightTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9697,
-                        "src": "2282:14:63",
+                        "referencedDeclaration": 9876,
+                        "src": "2282:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9720,
+                        "id": 9899,
                         "name": "makerValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9703,
-                        "src": "2298:10:63",
+                        "referencedDeclaration": 9882,
+                        "src": "2298:10:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1458,18 +1458,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 9718,
+                      "id": 9897,
                       "name": "FillResult",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9616,
-                      "src": "2271:10:63",
+                      "referencedDeclaration": 9795,
+                      "src": "2271:10:64",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_FillResult_$9616_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_FillResult_$9795_storage_ptr_$",
                         "typeString": "type(struct LibFill.FillResult storage pointer)"
                       }
                     },
-                    "id": 9721,
+                    "id": 9900,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1477,38 +1477,38 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2271:38:63",
+                    "src": "2271:38:64",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                      "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                       "typeString": "struct LibFill.FillResult memory"
                     }
                   },
-                  "functionReturnParameters": 9701,
-                  "id": 9722,
+                  "functionReturnParameters": 9880,
+                  "id": 9901,
                   "nodeType": "Return",
-                  "src": "2264:45:63"
+                  "src": "2264:45:64"
                 }
               ]
             },
-            "id": 9724,
+            "id": 9903,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "fillRight",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 9698,
+              "id": 9877,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9691,
+                  "id": 9870,
                   "mutability": "mutable",
                   "name": "leftMakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9724,
-                  "src": "1940:18:63",
+                  "scope": 9903,
+                  "src": "1940:18:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1516,10 +1516,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9690,
+                    "id": 9869,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1940:4:63",
+                    "src": "1940:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1529,12 +1529,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9693,
+                  "id": 9872,
                   "mutability": "mutable",
                   "name": "leftTakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9724,
-                  "src": "1960:18:63",
+                  "scope": 9903,
+                  "src": "1960:18:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1542,10 +1542,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9692,
+                    "id": 9871,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1960:4:63",
+                    "src": "1960:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1555,12 +1555,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9695,
+                  "id": 9874,
                   "mutability": "mutable",
                   "name": "rightMakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9724,
-                  "src": "1980:19:63",
+                  "scope": 9903,
+                  "src": "1980:19:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1568,10 +1568,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9694,
+                    "id": 9873,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1980:4:63",
+                    "src": "1980:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1581,12 +1581,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9697,
+                  "id": 9876,
                   "mutability": "mutable",
                   "name": "rightTakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9724,
-                  "src": "2001:19:63",
+                  "scope": 9903,
+                  "src": "2001:19:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1594,10 +1594,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9696,
+                    "id": 9875,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2001:4:63",
+                    "src": "2001:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1606,67 +1606,67 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1939:82:63"
+              "src": "1939:82:64"
             },
             "returnParameters": {
-              "id": 9701,
+              "id": 9880,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9700,
+                  "id": 9879,
                   "mutability": "mutable",
                   "name": "result",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9724,
-                  "src": "2045:24:63",
+                  "scope": 9903,
+                  "src": "2045:24:64",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                    "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                     "typeString": "struct LibFill.FillResult"
                   },
                   "typeName": {
-                    "id": 9699,
+                    "id": 9878,
                     "name": "FillResult",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9616,
-                    "src": "2045:10:63",
+                    "referencedDeclaration": 9795,
+                    "src": "2045:10:64",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FillResult_$9616_storage_ptr",
+                      "typeIdentifier": "t_struct$_FillResult_$9795_storage_ptr",
                       "typeString": "struct LibFill.FillResult"
                     }
                   },
                   "visibility": "internal"
                 }
               ],
-              "src": "2044:26:63"
+              "src": "2044:26:64"
             },
-            "scope": 9760,
-            "src": "1921:395:63",
+            "scope": 9939,
+            "src": "1921:395:64",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 9758,
+              "id": 9937,
               "nodeType": "Block",
-              "src": "2471:244:63",
+              "src": "2471:244:64",
               "statements": [
                 {
                   "assignments": [
-                    9738
+                    9917
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 9738,
+                      "id": 9917,
                       "mutability": "mutable",
                       "name": "rightTake",
                       "nodeType": "VariableDeclaration",
-                      "scope": 9758,
-                      "src": "2481:14:63",
+                      "scope": 9937,
+                      "src": "2481:14:64",
                       "stateVariable": false,
                       "storageLocation": "default",
                       "typeDescriptions": {
@@ -1674,10 +1674,10 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 9737,
+                        "id": 9916,
                         "name": "uint",
                         "nodeType": "ElementaryTypeName",
-                        "src": "2481:4:63",
+                        "src": "2481:4:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1686,40 +1686,40 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 9745,
+                  "id": 9924,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 9741,
+                        "id": 9920,
                         "name": "leftTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9728,
-                        "src": "2532:13:63",
+                        "referencedDeclaration": 9907,
+                        "src": "2532:13:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9742,
+                        "id": 9921,
                         "name": "rightMakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9730,
-                        "src": "2547:14:63",
+                        "referencedDeclaration": 9909,
+                        "src": "2547:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9743,
+                        "id": 9922,
                         "name": "rightTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9732,
-                        "src": "2563:14:63",
+                        "referencedDeclaration": 9911,
+                        "src": "2563:14:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1742,32 +1742,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 9739,
+                        "id": 9918,
                         "name": "LibMath",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9957,
-                        "src": "2498:7:63",
+                        "referencedDeclaration": 10136,
+                        "src": "2498:7:64",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_LibMath_$9957_$",
+                          "typeIdentifier": "t_type$_t_contract$_LibMath_$10136_$",
                           "typeString": "type(library LibMath)"
                         }
                       },
-                      "id": 9740,
+                      "id": 9919,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "safeGetPartialAmountFloor",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 9800,
-                      "src": "2498:33:63",
+                      "referencedDeclaration": 9979,
+                      "src": "2498:33:64",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_uint256_$",
                         "typeString": "function (uint256,uint256,uint256) pure returns (uint256)"
                       }
                     },
-                    "id": 9744,
+                    "id": 9923,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1775,7 +1775,7 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2498:80:63",
+                    "src": "2498:80:64",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -1783,7 +1783,7 @@
                     }
                   },
                   "nodeType": "VariableDeclarationStatement",
-                  "src": "2481:97:63"
+                  "src": "2481:97:64"
                 },
                 {
                   "expression": {
@@ -1793,18 +1793,18 @@
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         },
-                        "id": 9749,
+                        "id": 9928,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
-                          "id": 9747,
+                          "id": 9926,
                           "name": "rightTake",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9738,
-                          "src": "2596:9:63",
+                          "referencedDeclaration": 9917,
+                          "src": "2596:9:64",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
@@ -1813,18 +1813,18 @@
                         "nodeType": "BinaryOperation",
                         "operator": "<=",
                         "rightExpression": {
-                          "id": 9748,
+                          "id": 9927,
                           "name": "leftMakeValue",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 9726,
-                          "src": "2609:13:63",
+                          "referencedDeclaration": 9905,
+                          "src": "2609:13:64",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           }
                         },
-                        "src": "2596:26:63",
+                        "src": "2596:26:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -1832,14 +1832,14 @@
                       },
                       {
                         "hexValue": "66696c6c4c6566743a20756e61626c6520746f2066696c6c",
-                        "id": 9750,
+                        "id": 9929,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "2624:26:63",
+                        "src": "2624:26:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_e87a29a1cbbf07137d8bd75012046954267f18f0f1cea5502962a05055275d89",
                           "typeString": "literal_string \"fillLeft: unable to fill\""
@@ -1858,7 +1858,7 @@
                           "typeString": "literal_string \"fillLeft: unable to fill\""
                         }
                       ],
-                      "id": 9746,
+                      "id": 9925,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1866,13 +1866,13 @@
                         4294967278
                       ],
                       "referencedDeclaration": 4294967278,
-                      "src": "2588:7:63",
+                      "src": "2588:7:64",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 9751,
+                    "id": 9930,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1880,39 +1880,39 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2588:63:63",
+                    "src": "2588:63:64",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 9752,
+                  "id": 9931,
                   "nodeType": "ExpressionStatement",
-                  "src": "2588:63:63"
+                  "src": "2588:63:64"
                 },
                 {
                   "expression": {
                     "arguments": [
                       {
-                        "id": 9754,
+                        "id": 9933,
                         "name": "leftMakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9726,
-                        "src": "2679:13:63",
+                        "referencedDeclaration": 9905,
+                        "src": "2679:13:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         }
                       },
                       {
-                        "id": 9755,
+                        "id": 9934,
                         "name": "leftTakeValue",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 9728,
-                        "src": "2694:13:63",
+                        "referencedDeclaration": 9907,
+                        "src": "2694:13:64",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -1930,18 +1930,18 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 9753,
+                      "id": 9932,
                       "name": "FillResult",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 9616,
-                      "src": "2668:10:63",
+                      "referencedDeclaration": 9795,
+                      "src": "2668:10:64",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_type$_t_struct$_FillResult_$9616_storage_ptr_$",
+                        "typeIdentifier": "t_type$_t_struct$_FillResult_$9795_storage_ptr_$",
                         "typeString": "type(struct LibFill.FillResult storage pointer)"
                       }
                     },
-                    "id": 9756,
+                    "id": 9935,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1949,38 +1949,38 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "2668:40:63",
+                    "src": "2668:40:64",
                     "tryCall": false,
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                      "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                       "typeString": "struct LibFill.FillResult memory"
                     }
                   },
-                  "functionReturnParameters": 9736,
-                  "id": 9757,
+                  "functionReturnParameters": 9915,
+                  "id": 9936,
                   "nodeType": "Return",
-                  "src": "2661:47:63"
+                  "src": "2661:47:64"
                 }
               ]
             },
-            "id": 9759,
+            "id": 9938,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "fillLeft",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 9733,
+              "id": 9912,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9726,
+                  "id": 9905,
                   "mutability": "mutable",
                   "name": "leftMakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9759,
-                  "src": "2340:18:63",
+                  "scope": 9938,
+                  "src": "2340:18:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1988,10 +1988,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9725,
+                    "id": 9904,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2340:4:63",
+                    "src": "2340:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2001,12 +2001,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9728,
+                  "id": 9907,
                   "mutability": "mutable",
                   "name": "leftTakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9759,
-                  "src": "2360:18:63",
+                  "scope": 9938,
+                  "src": "2360:18:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2014,10 +2014,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9727,
+                    "id": 9906,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2360:4:63",
+                    "src": "2360:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2027,12 +2027,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9730,
+                  "id": 9909,
                   "mutability": "mutable",
                   "name": "rightMakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9759,
-                  "src": "2380:19:63",
+                  "scope": 9938,
+                  "src": "2380:19:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2040,10 +2040,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9729,
+                    "id": 9908,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2380:4:63",
+                    "src": "2380:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2053,12 +2053,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 9732,
+                  "id": 9911,
                   "mutability": "mutable",
                   "name": "rightTakeValue",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9759,
-                  "src": "2401:19:63",
+                  "scope": 9938,
+                  "src": "2401:19:64",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2066,10 +2066,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 9731,
+                    "id": 9910,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2401:4:63",
+                    "src": "2401:4:64",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2078,82 +2078,82 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "2339:82:63"
+              "src": "2339:82:64"
             },
             "returnParameters": {
-              "id": 9736,
+              "id": 9915,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 9735,
+                  "id": 9914,
                   "mutability": "mutable",
                   "name": "result",
                   "nodeType": "VariableDeclaration",
-                  "scope": 9759,
-                  "src": "2445:24:63",
+                  "scope": 9938,
+                  "src": "2445:24:64",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_FillResult_$9616_memory_ptr",
+                    "typeIdentifier": "t_struct$_FillResult_$9795_memory_ptr",
                     "typeString": "struct LibFill.FillResult"
                   },
                   "typeName": {
-                    "id": 9734,
+                    "id": 9913,
                     "name": "FillResult",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9616,
-                    "src": "2445:10:63",
+                    "referencedDeclaration": 9795,
+                    "src": "2445:10:64",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FillResult_$9616_storage_ptr",
+                      "typeIdentifier": "t_struct$_FillResult_$9795_storage_ptr",
                       "typeString": "struct LibFill.FillResult"
                     }
                   },
                   "visibility": "internal"
                 }
               ],
-              "src": "2444:26:63"
+              "src": "2444:26:64"
             },
-            "scope": 9760,
-            "src": "2322:393:63",
+            "scope": 9939,
+            "src": "2322:393:64",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           }
         ],
-        "scope": 9761,
-        "src": "229:2488:63"
+        "scope": 9940,
+        "src": "229:2488:64"
       }
     ],
-    "src": "33:2685:63"
+    "src": "33:2685:64"
   },
   "legacyAST": {
     "attributes": {
       "absolutePath": "@rarible/exchange-v2/contracts/libraries/LibFill.sol",
       "exportedSymbols": {
         "LibAsset": [
-          12610
+          12789
         ],
         "LibFill": [
-          9760
+          9939
         ],
         "LibMath": [
-          9957
+          10136
         ],
         "LibOrder": [
-          10199
+          10378
         ],
         "LibOrderDataV1": [
-          10664
+          10843
         ],
         "LibOrderDataV2": [
-          10703
+          10882
         ],
         "LibOrderDataV3": [
-          10778
+          10957
         ],
         "LibPart": [
-          12667
+          12846
         ],
         "MathUpgradeable": [
           450
@@ -2173,54 +2173,54 @@
             ".6"
           ]
         },
-        "id": 9605,
+        "id": 9784,
         "name": "PragmaDirective",
-        "src": "33:22:63"
+        "src": "33:22:64"
       },
       {
         "attributes": {
-          "SourceUnit": 10200,
+          "SourceUnit": 10379,
           "absolutePath": "@rarible/exchange-v2/contracts/libraries/LibOrder.sol",
           "file": "./LibOrder.sol",
-          "scope": 9761,
+          "scope": 9940,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 9606,
+        "id": 9785,
         "name": "ImportDirective",
-        "src": "57:24:63"
+        "src": "57:24:64"
       },
       {
         "attributes": {
           "SourceUnit": 806,
           "absolutePath": "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol",
           "file": "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol",
-          "scope": 9761,
+          "scope": 9940,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 9607,
+        "id": 9786,
         "name": "ImportDirective",
-        "src": "82:74:63"
+        "src": "82:74:64"
       },
       {
         "attributes": {
           "SourceUnit": 451,
           "absolutePath": "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol",
           "file": "@openzeppelin/contracts-upgradeable/math/MathUpgradeable.sol",
-          "scope": 9761,
+          "scope": 9940,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 9608,
+        "id": 9787,
         "name": "ImportDirective",
-        "src": "157:70:63"
+        "src": "157:70:64"
       },
       {
         "attributes": {
@@ -2234,10 +2234,10 @@
           "contractKind": "library",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            9760
+            9939
           ],
           "name": "LibFill",
-          "scope": 9761
+          "scope": 9940
         },
         "children": [
           {
@@ -2248,29 +2248,29 @@
                   "referencedDeclaration": 805,
                   "type": "library SafeMathUpgradeable"
                 },
-                "id": 9609,
+                "id": 9788,
                 "name": "UserDefinedTypeName",
-                "src": "257:19:63"
+                "src": "257:19:64"
               },
               {
                 "attributes": {
                   "name": "uint",
                   "type": "uint256"
                 },
-                "id": 9610,
+                "id": 9789,
                 "name": "ElementaryTypeName",
-                "src": "281:4:63"
+                "src": "281:4:64"
               }
             ],
-            "id": 9611,
+            "id": 9790,
             "name": "UsingForDirective",
-            "src": "251:35:63"
+            "src": "251:35:64"
           },
           {
             "attributes": {
               "canonicalName": "LibFill.FillResult",
               "name": "FillResult",
-              "scope": 9760,
+              "scope": 9939,
               "visibility": "public"
             },
             "children": [
@@ -2279,7 +2279,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "leftValue",
-                  "scope": 9616,
+                  "scope": 9795,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2291,21 +2291,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 9612,
+                    "id": 9791,
                     "name": "ElementaryTypeName",
-                    "src": "320:4:63"
+                    "src": "320:4:64"
                   }
                 ],
-                "id": 9613,
+                "id": 9792,
                 "name": "VariableDeclaration",
-                "src": "320:14:63"
+                "src": "320:14:64"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "rightValue",
-                  "scope": 9616,
+                  "scope": 9795,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2317,25 +2317,25 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 9614,
+                    "id": 9793,
                     "name": "ElementaryTypeName",
-                    "src": "344:4:63"
+                    "src": "344:4:64"
                   }
                 ],
-                "id": 9615,
+                "id": 9794,
                 "name": "VariableDeclaration",
-                "src": "344:15:63"
+                "src": "344:15:64"
               }
             ],
-            "id": 9616,
+            "id": 9795,
             "name": "StructDefinition",
-            "src": "292:74:63"
+            "src": "292:74:64"
           },
           {
             "attributes": {
               "canonicalName": "LibFill.IsMakeFill",
               "name": "IsMakeFill",
-              "scope": 9760,
+              "scope": 9939,
               "visibility": "public"
             },
             "children": [
@@ -2344,7 +2344,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "leftMake",
-                  "scope": 9621,
+                  "scope": 9800,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bool",
@@ -2356,21 +2356,21 @@
                       "name": "bool",
                       "type": "bool"
                     },
-                    "id": 9617,
+                    "id": 9796,
                     "name": "ElementaryTypeName",
-                    "src": "400:4:63"
+                    "src": "400:4:64"
                   }
                 ],
-                "id": 9618,
+                "id": 9797,
                 "name": "VariableDeclaration",
-                "src": "400:13:63"
+                "src": "400:13:64"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "rightMake",
-                  "scope": 9621,
+                  "scope": 9800,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bool",
@@ -2382,19 +2382,19 @@
                       "name": "bool",
                       "type": "bool"
                     },
-                    "id": 9619,
+                    "id": 9798,
                     "name": "ElementaryTypeName",
-                    "src": "423:4:63"
+                    "src": "423:4:64"
                   }
                 ],
-                "id": 9620,
+                "id": 9799,
                 "name": "VariableDeclaration",
-                "src": "423:14:63"
+                "src": "423:14:64"
               }
             ],
-            "id": 9621,
+            "id": 9800,
             "name": "StructDefinition",
-            "src": "372:72:63"
+            "src": "372:72:64"
           },
           {
             "attributes": {
@@ -2405,7 +2405,7 @@
                 null
               ],
               "name": "fillOrder",
-              "scope": 9760,
+              "scope": 9939,
               "stateMutability": "pure",
               "virtual": false,
               "visibility": "internal"
@@ -2415,9 +2415,9 @@
                 "attributes": {
                   "text": " @dev Should return filled values\n @param leftOrder left order\n @param rightOrder right order\n @param leftOrderFill current fill of the left order (0 if order is unfilled)\n @param rightOrderFill current fill of the right order (0 if order is unfilled)\n @param leftIsMakeFill true if left orders fill is calculated from the make side, false if from the take side\n @param rightIsMakeFill true if right orders fill is calculated from the make side, false if from the take side"
                 },
-                "id": 9622,
+                "id": 9801,
                 "name": "StructuredDocumentation",
-                "src": "450:527:63"
+                "src": "450:527:64"
               },
               {
                 "children": [
@@ -2426,7 +2426,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftOrder",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct LibOrder.Order",
@@ -2436,24 +2436,24 @@
                       {
                         "attributes": {
                           "name": "LibOrder.Order",
-                          "referencedDeclaration": 9994,
+                          "referencedDeclaration": 10173,
                           "type": "struct LibOrder.Order"
                         },
-                        "id": 9623,
+                        "id": 9802,
                         "name": "UserDefinedTypeName",
-                        "src": "1001:14:63"
+                        "src": "1001:14:64"
                       }
                     ],
-                    "id": 9624,
+                    "id": 9803,
                     "name": "VariableDeclaration",
-                    "src": "1001:31:63"
+                    "src": "1001:31:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightOrder",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct LibOrder.Order",
@@ -2463,24 +2463,24 @@
                       {
                         "attributes": {
                           "name": "LibOrder.Order",
-                          "referencedDeclaration": 9994,
+                          "referencedDeclaration": 10173,
                           "type": "struct LibOrder.Order"
                         },
-                        "id": 9625,
+                        "id": 9804,
                         "name": "UserDefinedTypeName",
-                        "src": "1034:14:63"
+                        "src": "1034:14:64"
                       }
                     ],
-                    "id": 9626,
+                    "id": 9805,
                     "name": "VariableDeclaration",
-                    "src": "1034:32:63"
+                    "src": "1034:32:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftOrderFill",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -2492,21 +2492,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9627,
+                        "id": 9806,
                         "name": "ElementaryTypeName",
-                        "src": "1068:4:63"
+                        "src": "1068:4:64"
                       }
                     ],
-                    "id": 9628,
+                    "id": 9807,
                     "name": "VariableDeclaration",
-                    "src": "1068:18:63"
+                    "src": "1068:18:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightOrderFill",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -2518,21 +2518,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9629,
+                        "id": 9808,
                         "name": "ElementaryTypeName",
-                        "src": "1088:4:63"
+                        "src": "1088:4:64"
                       }
                     ],
-                    "id": 9630,
+                    "id": 9809,
                     "name": "VariableDeclaration",
-                    "src": "1088:19:63"
+                    "src": "1088:19:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftIsMakeFill",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bool",
@@ -2544,21 +2544,21 @@
                           "name": "bool",
                           "type": "bool"
                         },
-                        "id": 9631,
+                        "id": 9810,
                         "name": "ElementaryTypeName",
-                        "src": "1109:4:63"
+                        "src": "1109:4:64"
                       }
                     ],
-                    "id": 9632,
+                    "id": 9811,
                     "name": "VariableDeclaration",
-                    "src": "1109:19:63"
+                    "src": "1109:19:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightIsMakeFill",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bool",
@@ -2570,19 +2570,19 @@
                           "name": "bool",
                           "type": "bool"
                         },
-                        "id": 9633,
+                        "id": 9812,
                         "name": "ElementaryTypeName",
-                        "src": "1130:4:63"
+                        "src": "1130:4:64"
                       }
                     ],
-                    "id": 9634,
+                    "id": 9813,
                     "name": "VariableDeclaration",
-                    "src": "1130:20:63"
+                    "src": "1130:20:64"
                   }
                 ],
-                "id": 9635,
+                "id": 9814,
                 "name": "ParameterList",
-                "src": "1000:151:63"
+                "src": "1000:151:64"
               },
               {
                 "children": [
@@ -2591,7 +2591,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "",
-                      "scope": 9689,
+                      "scope": 9868,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct LibFill.FillResult",
@@ -2601,30 +2601,30 @@
                       {
                         "attributes": {
                           "name": "FillResult",
-                          "referencedDeclaration": 9616,
+                          "referencedDeclaration": 9795,
                           "type": "struct LibFill.FillResult"
                         },
-                        "id": 9636,
+                        "id": 9815,
                         "name": "UserDefinedTypeName",
-                        "src": "1175:10:63"
+                        "src": "1175:10:64"
                       }
                     ],
-                    "id": 9637,
+                    "id": 9816,
                     "name": "VariableDeclaration",
-                    "src": "1175:17:63"
+                    "src": "1175:17:64"
                   }
                 ],
-                "id": 9638,
+                "id": 9817,
                 "name": "ParameterList",
-                "src": "1174:19:63"
+                "src": "1174:19:64"
               },
               {
                 "children": [
                   {
                     "attributes": {
                       "assignments": [
-                        9640,
-                        9642
+                        9819,
+                        9821
                       ]
                     },
                     "children": [
@@ -2633,7 +2633,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "leftMakeValue",
-                          "scope": 9688,
+                          "scope": 9867,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -2645,21 +2645,21 @@
                               "name": "uint",
                               "type": "uint256"
                             },
-                            "id": 9639,
+                            "id": 9818,
                             "name": "ElementaryTypeName",
-                            "src": "1205:4:63"
+                            "src": "1205:4:64"
                           }
                         ],
-                        "id": 9640,
+                        "id": 9819,
                         "name": "VariableDeclaration",
-                        "src": "1205:18:63"
+                        "src": "1205:18:64"
                       },
                       {
                         "attributes": {
                           "constant": false,
                           "mutability": "mutable",
                           "name": "leftTakeValue",
-                          "scope": 9688,
+                          "scope": 9867,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -2671,14 +2671,14 @@
                               "name": "uint",
                               "type": "uint256"
                             },
-                            "id": 9641,
+                            "id": 9820,
                             "name": "ElementaryTypeName",
-                            "src": "1225:4:63"
+                            "src": "1225:4:64"
                           }
                         ],
-                        "id": 9642,
+                        "id": 9821,
                         "name": "VariableDeclaration",
-                        "src": "1225:18:63"
+                        "src": "1225:18:64"
                       },
                       {
                         "attributes": {
@@ -2699,7 +2699,7 @@
                             "attributes": {
                               "argumentTypes": [
                                 {
-                                  "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                                  "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                                   "typeString": "struct LibOrder.Order memory"
                                 },
                                 {
@@ -2716,7 +2716,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "calculateRemaining",
-                              "referencedDeclaration": 10056,
+                              "referencedDeclaration": 10235,
                               "type": "function (struct LibOrder.Order memory,uint256,bool) pure returns (uint256,uint256)"
                             },
                             "children": [
@@ -2725,73 +2725,73 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 10199,
+                                  "referencedDeclaration": 10378,
                                   "type": "type(library LibOrder)",
                                   "value": "LibOrder"
                                 },
-                                "id": 9643,
+                                "id": 9822,
                                 "name": "Identifier",
-                                "src": "1247:8:63"
+                                "src": "1247:8:64"
                               }
                             ],
-                            "id": 9644,
+                            "id": 9823,
                             "name": "MemberAccess",
-                            "src": "1247:27:63"
+                            "src": "1247:27:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9624,
+                              "referencedDeclaration": 9803,
                               "type": "struct LibOrder.Order memory",
                               "value": "leftOrder"
                             },
-                            "id": 9645,
+                            "id": 9824,
                             "name": "Identifier",
-                            "src": "1275:9:63"
+                            "src": "1275:9:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9628,
+                              "referencedDeclaration": 9807,
                               "type": "uint256",
                               "value": "leftOrderFill"
                             },
-                            "id": 9646,
+                            "id": 9825,
                             "name": "Identifier",
-                            "src": "1286:13:63"
+                            "src": "1286:13:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9632,
+                              "referencedDeclaration": 9811,
                               "type": "bool",
                               "value": "leftIsMakeFill"
                             },
-                            "id": 9647,
+                            "id": 9826,
                             "name": "Identifier",
-                            "src": "1301:14:63"
+                            "src": "1301:14:64"
                           }
                         ],
-                        "id": 9648,
+                        "id": 9827,
                         "name": "FunctionCall",
-                        "src": "1247:69:63"
+                        "src": "1247:69:64"
                       }
                     ],
-                    "id": 9649,
+                    "id": 9828,
                     "name": "VariableDeclarationStatement",
-                    "src": "1204:112:63"
+                    "src": "1204:112:64"
                   },
                   {
                     "attributes": {
                       "assignments": [
-                        9651,
-                        9653
+                        9830,
+                        9832
                       ]
                     },
                     "children": [
@@ -2800,7 +2800,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "rightMakeValue",
-                          "scope": 9688,
+                          "scope": 9867,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -2812,21 +2812,21 @@
                               "name": "uint",
                               "type": "uint256"
                             },
-                            "id": 9650,
+                            "id": 9829,
                             "name": "ElementaryTypeName",
-                            "src": "1327:4:63"
+                            "src": "1327:4:64"
                           }
                         ],
-                        "id": 9651,
+                        "id": 9830,
                         "name": "VariableDeclaration",
-                        "src": "1327:19:63"
+                        "src": "1327:19:64"
                       },
                       {
                         "attributes": {
                           "constant": false,
                           "mutability": "mutable",
                           "name": "rightTakeValue",
-                          "scope": 9688,
+                          "scope": 9867,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -2838,14 +2838,14 @@
                               "name": "uint",
                               "type": "uint256"
                             },
-                            "id": 9652,
+                            "id": 9831,
                             "name": "ElementaryTypeName",
-                            "src": "1348:4:63"
+                            "src": "1348:4:64"
                           }
                         ],
-                        "id": 9653,
+                        "id": 9832,
                         "name": "VariableDeclaration",
-                        "src": "1348:19:63"
+                        "src": "1348:19:64"
                       },
                       {
                         "attributes": {
@@ -2866,7 +2866,7 @@
                             "attributes": {
                               "argumentTypes": [
                                 {
-                                  "typeIdentifier": "t_struct$_Order_$9994_memory_ptr",
+                                  "typeIdentifier": "t_struct$_Order_$10173_memory_ptr",
                                   "typeString": "struct LibOrder.Order memory"
                                 },
                                 {
@@ -2883,7 +2883,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "calculateRemaining",
-                              "referencedDeclaration": 10056,
+                              "referencedDeclaration": 10235,
                               "type": "function (struct LibOrder.Order memory,uint256,bool) pure returns (uint256,uint256)"
                             },
                             "children": [
@@ -2892,67 +2892,67 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 10199,
+                                  "referencedDeclaration": 10378,
                                   "type": "type(library LibOrder)",
                                   "value": "LibOrder"
                                 },
-                                "id": 9654,
+                                "id": 9833,
                                 "name": "Identifier",
-                                "src": "1371:8:63"
+                                "src": "1371:8:64"
                               }
                             ],
-                            "id": 9655,
+                            "id": 9834,
                             "name": "MemberAccess",
-                            "src": "1371:27:63"
+                            "src": "1371:27:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9626,
+                              "referencedDeclaration": 9805,
                               "type": "struct LibOrder.Order memory",
                               "value": "rightOrder"
                             },
-                            "id": 9656,
+                            "id": 9835,
                             "name": "Identifier",
-                            "src": "1399:10:63"
+                            "src": "1399:10:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9630,
+                              "referencedDeclaration": 9809,
                               "type": "uint256",
                               "value": "rightOrderFill"
                             },
-                            "id": 9657,
+                            "id": 9836,
                             "name": "Identifier",
-                            "src": "1411:14:63"
+                            "src": "1411:14:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9634,
+                              "referencedDeclaration": 9813,
                               "type": "bool",
                               "value": "rightIsMakeFill"
                             },
-                            "id": 9658,
+                            "id": 9837,
                             "name": "Identifier",
-                            "src": "1427:15:63"
+                            "src": "1427:15:64"
                           }
                         ],
-                        "id": 9659,
+                        "id": 9838,
                         "name": "FunctionCall",
-                        "src": "1371:72:63"
+                        "src": "1371:72:64"
                       }
                     ],
-                    "id": 9660,
+                    "id": 9839,
                     "name": "VariableDeclarationStatement",
-                    "src": "1326:117:63"
+                    "src": "1326:117:64"
                   },
                   {
                     "attributes": {},
@@ -2976,37 +2976,37 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9653,
+                              "referencedDeclaration": 9832,
                               "type": "uint256",
                               "value": "rightTakeValue"
                             },
-                            "id": 9661,
+                            "id": 9840,
                             "name": "Identifier",
-                            "src": "1490:14:63"
+                            "src": "1490:14:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9640,
+                              "referencedDeclaration": 9819,
                               "type": "uint256",
                               "value": "leftMakeValue"
                             },
-                            "id": 9662,
+                            "id": 9841,
                             "name": "Identifier",
-                            "src": "1507:13:63"
+                            "src": "1507:13:64"
                           }
                         ],
-                        "id": 9663,
+                        "id": 9842,
                         "name": "BinaryOperation",
-                        "src": "1490:30:63"
+                        "src": "1490:30:64"
                       },
                       {
                         "children": [
                           {
                             "attributes": {
-                              "functionReturnParameters": 9638
+                              "functionReturnParameters": 9817
                             },
                             "children": [
                               {
@@ -3047,39 +3047,39 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 9759,
+                                      "referencedDeclaration": 9938,
                                       "type": "function (uint256,uint256,uint256,uint256) pure returns (struct LibFill.FillResult memory)",
                                       "value": "fillLeft"
                                     },
-                                    "id": 9664,
+                                    "id": 9843,
                                     "name": "Identifier",
-                                    "src": "1584:8:63"
+                                    "src": "1584:8:64"
                                   },
                                   {
                                     "attributes": {
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 9640,
+                                      "referencedDeclaration": 9819,
                                       "type": "uint256",
                                       "value": "leftMakeValue"
                                     },
-                                    "id": 9665,
+                                    "id": 9844,
                                     "name": "Identifier",
-                                    "src": "1593:13:63"
+                                    "src": "1593:13:64"
                                   },
                                   {
                                     "attributes": {
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 9642,
+                                      "referencedDeclaration": 9821,
                                       "type": "uint256",
                                       "value": "leftTakeValue"
                                     },
-                                    "id": 9666,
+                                    "id": 9845,
                                     "name": "Identifier",
-                                    "src": "1608:13:63"
+                                    "src": "1608:13:64"
                                   },
                                   {
                                     "attributes": {
@@ -3088,7 +3088,7 @@
                                       "isPure": false,
                                       "lValueRequested": false,
                                       "member_name": "value",
-                                      "referencedDeclaration": 12566,
+                                      "referencedDeclaration": 12745,
                                       "type": "uint256"
                                     },
                                     "children": [
@@ -3099,7 +3099,7 @@
                                           "isPure": false,
                                           "lValueRequested": false,
                                           "member_name": "makeAsset",
-                                          "referencedDeclaration": 9979,
+                                          "referencedDeclaration": 10158,
                                           "type": "struct LibAsset.Asset memory"
                                         },
                                         "children": [
@@ -3108,23 +3108,23 @@
                                               "overloadedDeclarations": [
                                                 null
                                               ],
-                                              "referencedDeclaration": 9626,
+                                              "referencedDeclaration": 9805,
                                               "type": "struct LibOrder.Order memory",
                                               "value": "rightOrder"
                                             },
-                                            "id": 9667,
+                                            "id": 9846,
                                             "name": "Identifier",
-                                            "src": "1623:10:63"
+                                            "src": "1623:10:64"
                                           }
                                         ],
-                                        "id": 9668,
+                                        "id": 9847,
                                         "name": "MemberAccess",
-                                        "src": "1623:20:63"
+                                        "src": "1623:20:64"
                                       }
                                     ],
-                                    "id": 9669,
+                                    "id": 9848,
                                     "name": "MemberAccess",
-                                    "src": "1623:26:63"
+                                    "src": "1623:26:64"
                                   },
                                   {
                                     "attributes": {
@@ -3133,7 +3133,7 @@
                                       "isPure": false,
                                       "lValueRequested": false,
                                       "member_name": "value",
-                                      "referencedDeclaration": 12566,
+                                      "referencedDeclaration": 12745,
                                       "type": "uint256"
                                     },
                                     "children": [
@@ -3144,7 +3144,7 @@
                                           "isPure": false,
                                           "lValueRequested": false,
                                           "member_name": "takeAsset",
-                                          "referencedDeclaration": 9983,
+                                          "referencedDeclaration": 10162,
                                           "type": "struct LibAsset.Asset memory"
                                         },
                                         "children": [
@@ -3153,47 +3153,47 @@
                                               "overloadedDeclarations": [
                                                 null
                                               ],
-                                              "referencedDeclaration": 9626,
+                                              "referencedDeclaration": 9805,
                                               "type": "struct LibOrder.Order memory",
                                               "value": "rightOrder"
                                             },
-                                            "id": 9670,
+                                            "id": 9849,
                                             "name": "Identifier",
-                                            "src": "1651:10:63"
+                                            "src": "1651:10:64"
                                           }
                                         ],
-                                        "id": 9671,
+                                        "id": 9850,
                                         "name": "MemberAccess",
-                                        "src": "1651:20:63"
+                                        "src": "1651:20:64"
                                       }
                                     ],
-                                    "id": 9672,
+                                    "id": 9851,
                                     "name": "MemberAccess",
-                                    "src": "1651:26:63"
+                                    "src": "1651:26:64"
                                   }
                                 ],
-                                "id": 9673,
+                                "id": 9852,
                                 "name": "FunctionCall",
-                                "src": "1584:94:63"
+                                "src": "1584:94:64"
                               }
                             ],
-                            "id": 9674,
+                            "id": 9853,
                             "name": "Return",
-                            "src": "1577:101:63"
+                            "src": "1577:101:64"
                           }
                         ],
-                        "id": 9675,
+                        "id": 9854,
                         "name": "Block",
-                        "src": "1522:167:63"
+                        "src": "1522:167:64"
                       }
                     ],
-                    "id": 9676,
+                    "id": 9855,
                     "name": "IfStatement",
-                    "src": "1486:203:63"
+                    "src": "1486:203:64"
                   },
                   {
                     "attributes": {
-                      "functionReturnParameters": 9638
+                      "functionReturnParameters": 9817
                     },
                     "children": [
                       {
@@ -3234,13 +3234,13 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9724,
+                              "referencedDeclaration": 9903,
                               "type": "function (uint256,uint256,uint256,uint256) pure returns (struct LibFill.FillResult memory)",
                               "value": "fillRight"
                             },
-                            "id": 9677,
+                            "id": 9856,
                             "name": "Identifier",
-                            "src": "1813:9:63"
+                            "src": "1813:9:64"
                           },
                           {
                             "attributes": {
@@ -3249,7 +3249,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "value",
-                              "referencedDeclaration": 12566,
+                              "referencedDeclaration": 12745,
                               "type": "uint256"
                             },
                             "children": [
@@ -3260,7 +3260,7 @@
                                   "isPure": false,
                                   "lValueRequested": false,
                                   "member_name": "makeAsset",
-                                  "referencedDeclaration": 9979,
+                                  "referencedDeclaration": 10158,
                                   "type": "struct LibAsset.Asset memory"
                                 },
                                 "children": [
@@ -3269,23 +3269,23 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 9624,
+                                      "referencedDeclaration": 9803,
                                       "type": "struct LibOrder.Order memory",
                                       "value": "leftOrder"
                                     },
-                                    "id": 9678,
+                                    "id": 9857,
                                     "name": "Identifier",
-                                    "src": "1823:9:63"
+                                    "src": "1823:9:64"
                                   }
                                 ],
-                                "id": 9679,
+                                "id": 9858,
                                 "name": "MemberAccess",
-                                "src": "1823:19:63"
+                                "src": "1823:19:64"
                               }
                             ],
-                            "id": 9680,
+                            "id": 9859,
                             "name": "MemberAccess",
-                            "src": "1823:25:63"
+                            "src": "1823:25:64"
                           },
                           {
                             "attributes": {
@@ -3294,7 +3294,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "value",
-                              "referencedDeclaration": 12566,
+                              "referencedDeclaration": 12745,
                               "type": "uint256"
                             },
                             "children": [
@@ -3305,7 +3305,7 @@
                                   "isPure": false,
                                   "lValueRequested": false,
                                   "member_name": "takeAsset",
-                                  "referencedDeclaration": 9983,
+                                  "referencedDeclaration": 10162,
                                   "type": "struct LibAsset.Asset memory"
                                 },
                                 "children": [
@@ -3314,69 +3314,69 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 9624,
+                                      "referencedDeclaration": 9803,
                                       "type": "struct LibOrder.Order memory",
                                       "value": "leftOrder"
                                     },
-                                    "id": 9681,
+                                    "id": 9860,
                                     "name": "Identifier",
-                                    "src": "1850:9:63"
+                                    "src": "1850:9:64"
                                   }
                                 ],
-                                "id": 9682,
+                                "id": 9861,
                                 "name": "MemberAccess",
-                                "src": "1850:19:63"
+                                "src": "1850:19:64"
                               }
                             ],
-                            "id": 9683,
+                            "id": 9862,
                             "name": "MemberAccess",
-                            "src": "1850:25:63"
+                            "src": "1850:25:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9651,
+                              "referencedDeclaration": 9830,
                               "type": "uint256",
                               "value": "rightMakeValue"
                             },
-                            "id": 9684,
+                            "id": 9863,
                             "name": "Identifier",
-                            "src": "1877:14:63"
+                            "src": "1877:14:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9653,
+                              "referencedDeclaration": 9832,
                               "type": "uint256",
                               "value": "rightTakeValue"
                             },
-                            "id": 9685,
+                            "id": 9864,
                             "name": "Identifier",
-                            "src": "1893:14:63"
+                            "src": "1893:14:64"
                           }
                         ],
-                        "id": 9686,
+                        "id": 9865,
                         "name": "FunctionCall",
-                        "src": "1813:95:63"
+                        "src": "1813:95:64"
                       }
                     ],
-                    "id": 9687,
+                    "id": 9866,
                     "name": "Return",
-                    "src": "1806:102:63"
+                    "src": "1806:102:64"
                   }
                 ],
-                "id": 9688,
+                "id": 9867,
                 "name": "Block",
-                "src": "1194:721:63"
+                "src": "1194:721:64"
               }
             ],
-            "id": 9689,
+            "id": 9868,
             "name": "FunctionDefinition",
-            "src": "982:933:63"
+            "src": "982:933:64"
           },
           {
             "attributes": {
@@ -3387,7 +3387,7 @@
                 null
               ],
               "name": "fillRight",
-              "scope": 9760,
+              "scope": 9939,
               "stateMutability": "pure",
               "virtual": false,
               "visibility": "internal"
@@ -3400,7 +3400,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftMakeValue",
-                      "scope": 9724,
+                      "scope": 9903,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3412,21 +3412,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9690,
+                        "id": 9869,
                         "name": "ElementaryTypeName",
-                        "src": "1940:4:63"
+                        "src": "1940:4:64"
                       }
                     ],
-                    "id": 9691,
+                    "id": 9870,
                     "name": "VariableDeclaration",
-                    "src": "1940:18:63"
+                    "src": "1940:18:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftTakeValue",
-                      "scope": 9724,
+                      "scope": 9903,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3438,21 +3438,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9692,
+                        "id": 9871,
                         "name": "ElementaryTypeName",
-                        "src": "1960:4:63"
+                        "src": "1960:4:64"
                       }
                     ],
-                    "id": 9693,
+                    "id": 9872,
                     "name": "VariableDeclaration",
-                    "src": "1960:18:63"
+                    "src": "1960:18:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightMakeValue",
-                      "scope": 9724,
+                      "scope": 9903,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3464,21 +3464,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9694,
+                        "id": 9873,
                         "name": "ElementaryTypeName",
-                        "src": "1980:4:63"
+                        "src": "1980:4:64"
                       }
                     ],
-                    "id": 9695,
+                    "id": 9874,
                     "name": "VariableDeclaration",
-                    "src": "1980:19:63"
+                    "src": "1980:19:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightTakeValue",
-                      "scope": 9724,
+                      "scope": 9903,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3490,19 +3490,19 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9696,
+                        "id": 9875,
                         "name": "ElementaryTypeName",
-                        "src": "2001:4:63"
+                        "src": "2001:4:64"
                       }
                     ],
-                    "id": 9697,
+                    "id": 9876,
                     "name": "VariableDeclaration",
-                    "src": "2001:19:63"
+                    "src": "2001:19:64"
                   }
                 ],
-                "id": 9698,
+                "id": 9877,
                 "name": "ParameterList",
-                "src": "1939:82:63"
+                "src": "1939:82:64"
               },
               {
                 "children": [
@@ -3511,7 +3511,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "result",
-                      "scope": 9724,
+                      "scope": 9903,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct LibFill.FillResult",
@@ -3521,29 +3521,29 @@
                       {
                         "attributes": {
                           "name": "FillResult",
-                          "referencedDeclaration": 9616,
+                          "referencedDeclaration": 9795,
                           "type": "struct LibFill.FillResult"
                         },
-                        "id": 9699,
+                        "id": 9878,
                         "name": "UserDefinedTypeName",
-                        "src": "2045:10:63"
+                        "src": "2045:10:64"
                       }
                     ],
-                    "id": 9700,
+                    "id": 9879,
                     "name": "VariableDeclaration",
-                    "src": "2045:24:63"
+                    "src": "2045:24:64"
                   }
                 ],
-                "id": 9701,
+                "id": 9880,
                 "name": "ParameterList",
-                "src": "2044:26:63"
+                "src": "2044:26:64"
               },
               {
                 "children": [
                   {
                     "attributes": {
                       "assignments": [
-                        9703
+                        9882
                       ]
                     },
                     "children": [
@@ -3552,7 +3552,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "makerValue",
-                          "scope": 9723,
+                          "scope": 9902,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -3564,14 +3564,14 @@
                               "name": "uint",
                               "type": "uint256"
                             },
-                            "id": 9702,
+                            "id": 9881,
                             "name": "ElementaryTypeName",
-                            "src": "2081:4:63"
+                            "src": "2081:4:64"
                           }
                         ],
-                        "id": 9703,
+                        "id": 9882,
                         "name": "VariableDeclaration",
-                        "src": "2081:15:63"
+                        "src": "2081:15:64"
                       },
                       {
                         "attributes": {
@@ -3609,7 +3609,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "safeGetPartialAmountFloor",
-                              "referencedDeclaration": 9800,
+                              "referencedDeclaration": 9979,
                               "type": "function (uint256,uint256,uint256) pure returns (uint256)"
                             },
                             "children": [
@@ -3618,67 +3618,67 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 9957,
+                                  "referencedDeclaration": 10136,
                                   "type": "type(library LibMath)",
                                   "value": "LibMath"
                                 },
-                                "id": 9704,
+                                "id": 9883,
                                 "name": "Identifier",
-                                "src": "2099:7:63"
+                                "src": "2099:7:64"
                               }
                             ],
-                            "id": 9705,
+                            "id": 9884,
                             "name": "MemberAccess",
-                            "src": "2099:33:63"
+                            "src": "2099:33:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9697,
+                              "referencedDeclaration": 9876,
                               "type": "uint256",
                               "value": "rightTakeValue"
                             },
-                            "id": 9706,
+                            "id": 9885,
                             "name": "Identifier",
-                            "src": "2133:14:63"
+                            "src": "2133:14:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9691,
+                              "referencedDeclaration": 9870,
                               "type": "uint256",
                               "value": "leftMakeValue"
                             },
-                            "id": 9707,
+                            "id": 9886,
                             "name": "Identifier",
-                            "src": "2149:13:63"
+                            "src": "2149:13:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9693,
+                              "referencedDeclaration": 9872,
                               "type": "uint256",
                               "value": "leftTakeValue"
                             },
-                            "id": 9708,
+                            "id": 9887,
                             "name": "Identifier",
-                            "src": "2164:13:63"
+                            "src": "2164:13:64"
                           }
                         ],
-                        "id": 9709,
+                        "id": 9888,
                         "name": "FunctionCall",
-                        "src": "2099:79:63"
+                        "src": "2099:79:64"
                       }
                     ],
-                    "id": 9710,
+                    "id": 9889,
                     "name": "VariableDeclarationStatement",
-                    "src": "2081:97:63"
+                    "src": "2081:97:64"
                   },
                   {
                     "children": [
@@ -3717,9 +3717,9 @@
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
-                            "id": 9711,
+                            "id": 9890,
                             "name": "Identifier",
-                            "src": "2188:7:63"
+                            "src": "2188:7:64"
                           },
                           {
                             "attributes": {
@@ -3740,31 +3740,31 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 9703,
+                                  "referencedDeclaration": 9882,
                                   "type": "uint256",
                                   "value": "makerValue"
                                 },
-                                "id": 9712,
+                                "id": 9891,
                                 "name": "Identifier",
-                                "src": "2196:10:63"
+                                "src": "2196:10:64"
                               },
                               {
                                 "attributes": {
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 9695,
+                                  "referencedDeclaration": 9874,
                                   "type": "uint256",
                                   "value": "rightMakeValue"
                                 },
-                                "id": 9713,
+                                "id": 9892,
                                 "name": "Identifier",
-                                "src": "2210:14:63"
+                                "src": "2210:14:64"
                               }
                             ],
-                            "id": 9714,
+                            "id": 9893,
                             "name": "BinaryOperation",
-                            "src": "2196:28:63"
+                            "src": "2196:28:64"
                           },
                           {
                             "attributes": {
@@ -3777,23 +3777,23 @@
                               "type": "literal_string \"fillRight: unable to fill\"",
                               "value": "fillRight: unable to fill"
                             },
-                            "id": 9715,
+                            "id": 9894,
                             "name": "Literal",
-                            "src": "2226:27:63"
+                            "src": "2226:27:64"
                           }
                         ],
-                        "id": 9716,
+                        "id": 9895,
                         "name": "FunctionCall",
-                        "src": "2188:66:63"
+                        "src": "2188:66:64"
                       }
                     ],
-                    "id": 9717,
+                    "id": 9896,
                     "name": "ExpressionStatement",
-                    "src": "2188:66:63"
+                    "src": "2188:66:64"
                   },
                   {
                     "attributes": {
-                      "functionReturnParameters": 9701
+                      "functionReturnParameters": 9880
                     },
                     "children": [
                       {
@@ -3826,59 +3826,59 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9616,
+                              "referencedDeclaration": 9795,
                               "type": "type(struct LibFill.FillResult storage pointer)",
                               "value": "FillResult"
                             },
-                            "id": 9718,
+                            "id": 9897,
                             "name": "Identifier",
-                            "src": "2271:10:63"
+                            "src": "2271:10:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9697,
+                              "referencedDeclaration": 9876,
                               "type": "uint256",
                               "value": "rightTakeValue"
                             },
-                            "id": 9719,
+                            "id": 9898,
                             "name": "Identifier",
-                            "src": "2282:14:63"
+                            "src": "2282:14:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9703,
+                              "referencedDeclaration": 9882,
                               "type": "uint256",
                               "value": "makerValue"
                             },
-                            "id": 9720,
+                            "id": 9899,
                             "name": "Identifier",
-                            "src": "2298:10:63"
+                            "src": "2298:10:64"
                           }
                         ],
-                        "id": 9721,
+                        "id": 9900,
                         "name": "FunctionCall",
-                        "src": "2271:38:63"
+                        "src": "2271:38:64"
                       }
                     ],
-                    "id": 9722,
+                    "id": 9901,
                     "name": "Return",
-                    "src": "2264:45:63"
+                    "src": "2264:45:64"
                   }
                 ],
-                "id": 9723,
+                "id": 9902,
                 "name": "Block",
-                "src": "2071:245:63"
+                "src": "2071:245:64"
               }
             ],
-            "id": 9724,
+            "id": 9903,
             "name": "FunctionDefinition",
-            "src": "1921:395:63"
+            "src": "1921:395:64"
           },
           {
             "attributes": {
@@ -3889,7 +3889,7 @@
                 null
               ],
               "name": "fillLeft",
-              "scope": 9760,
+              "scope": 9939,
               "stateMutability": "pure",
               "virtual": false,
               "visibility": "internal"
@@ -3902,7 +3902,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftMakeValue",
-                      "scope": 9759,
+                      "scope": 9938,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3914,21 +3914,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9725,
+                        "id": 9904,
                         "name": "ElementaryTypeName",
-                        "src": "2340:4:63"
+                        "src": "2340:4:64"
                       }
                     ],
-                    "id": 9726,
+                    "id": 9905,
                     "name": "VariableDeclaration",
-                    "src": "2340:18:63"
+                    "src": "2340:18:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "leftTakeValue",
-                      "scope": 9759,
+                      "scope": 9938,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3940,21 +3940,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9727,
+                        "id": 9906,
                         "name": "ElementaryTypeName",
-                        "src": "2360:4:63"
+                        "src": "2360:4:64"
                       }
                     ],
-                    "id": 9728,
+                    "id": 9907,
                     "name": "VariableDeclaration",
-                    "src": "2360:18:63"
+                    "src": "2360:18:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightMakeValue",
-                      "scope": 9759,
+                      "scope": 9938,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3966,21 +3966,21 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9729,
+                        "id": 9908,
                         "name": "ElementaryTypeName",
-                        "src": "2380:4:63"
+                        "src": "2380:4:64"
                       }
                     ],
-                    "id": 9730,
+                    "id": 9909,
                     "name": "VariableDeclaration",
-                    "src": "2380:19:63"
+                    "src": "2380:19:64"
                   },
                   {
                     "attributes": {
                       "constant": false,
                       "mutability": "mutable",
                       "name": "rightTakeValue",
-                      "scope": 9759,
+                      "scope": 9938,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -3992,19 +3992,19 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 9731,
+                        "id": 9910,
                         "name": "ElementaryTypeName",
-                        "src": "2401:4:63"
+                        "src": "2401:4:64"
                       }
                     ],
-                    "id": 9732,
+                    "id": 9911,
                     "name": "VariableDeclaration",
-                    "src": "2401:19:63"
+                    "src": "2401:19:64"
                   }
                 ],
-                "id": 9733,
+                "id": 9912,
                 "name": "ParameterList",
-                "src": "2339:82:63"
+                "src": "2339:82:64"
               },
               {
                 "children": [
@@ -4013,7 +4013,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "result",
-                      "scope": 9759,
+                      "scope": 9938,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct LibFill.FillResult",
@@ -4023,29 +4023,29 @@
                       {
                         "attributes": {
                           "name": "FillResult",
-                          "referencedDeclaration": 9616,
+                          "referencedDeclaration": 9795,
                           "type": "struct LibFill.FillResult"
                         },
-                        "id": 9734,
+                        "id": 9913,
                         "name": "UserDefinedTypeName",
-                        "src": "2445:10:63"
+                        "src": "2445:10:64"
                       }
                     ],
-                    "id": 9735,
+                    "id": 9914,
                     "name": "VariableDeclaration",
-                    "src": "2445:24:63"
+                    "src": "2445:24:64"
                   }
                 ],
-                "id": 9736,
+                "id": 9915,
                 "name": "ParameterList",
-                "src": "2444:26:63"
+                "src": "2444:26:64"
               },
               {
                 "children": [
                   {
                     "attributes": {
                       "assignments": [
-                        9738
+                        9917
                       ]
                     },
                     "children": [
@@ -4054,7 +4054,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "rightTake",
-                          "scope": 9758,
+                          "scope": 9937,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -4066,14 +4066,14 @@
                               "name": "uint",
                               "type": "uint256"
                             },
-                            "id": 9737,
+                            "id": 9916,
                             "name": "ElementaryTypeName",
-                            "src": "2481:4:63"
+                            "src": "2481:4:64"
                           }
                         ],
-                        "id": 9738,
+                        "id": 9917,
                         "name": "VariableDeclaration",
-                        "src": "2481:14:63"
+                        "src": "2481:14:64"
                       },
                       {
                         "attributes": {
@@ -4111,7 +4111,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "safeGetPartialAmountFloor",
-                              "referencedDeclaration": 9800,
+                              "referencedDeclaration": 9979,
                               "type": "function (uint256,uint256,uint256) pure returns (uint256)"
                             },
                             "children": [
@@ -4120,67 +4120,67 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 9957,
+                                  "referencedDeclaration": 10136,
                                   "type": "type(library LibMath)",
                                   "value": "LibMath"
                                 },
-                                "id": 9739,
+                                "id": 9918,
                                 "name": "Identifier",
-                                "src": "2498:7:63"
+                                "src": "2498:7:64"
                               }
                             ],
-                            "id": 9740,
+                            "id": 9919,
                             "name": "MemberAccess",
-                            "src": "2498:33:63"
+                            "src": "2498:33:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9728,
+                              "referencedDeclaration": 9907,
                               "type": "uint256",
                               "value": "leftTakeValue"
                             },
-                            "id": 9741,
+                            "id": 9920,
                             "name": "Identifier",
-                            "src": "2532:13:63"
+                            "src": "2532:13:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9730,
+                              "referencedDeclaration": 9909,
                               "type": "uint256",
                               "value": "rightMakeValue"
                             },
-                            "id": 9742,
+                            "id": 9921,
                             "name": "Identifier",
-                            "src": "2547:14:63"
+                            "src": "2547:14:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9732,
+                              "referencedDeclaration": 9911,
                               "type": "uint256",
                               "value": "rightTakeValue"
                             },
-                            "id": 9743,
+                            "id": 9922,
                             "name": "Identifier",
-                            "src": "2563:14:63"
+                            "src": "2563:14:64"
                           }
                         ],
-                        "id": 9744,
+                        "id": 9923,
                         "name": "FunctionCall",
-                        "src": "2498:80:63"
+                        "src": "2498:80:64"
                       }
                     ],
-                    "id": 9745,
+                    "id": 9924,
                     "name": "VariableDeclarationStatement",
-                    "src": "2481:97:63"
+                    "src": "2481:97:64"
                   },
                   {
                     "children": [
@@ -4219,9 +4219,9 @@
                               "type": "function (bool,string memory) pure",
                               "value": "require"
                             },
-                            "id": 9746,
+                            "id": 9925,
                             "name": "Identifier",
-                            "src": "2588:7:63"
+                            "src": "2588:7:64"
                           },
                           {
                             "attributes": {
@@ -4242,31 +4242,31 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 9738,
+                                  "referencedDeclaration": 9917,
                                   "type": "uint256",
                                   "value": "rightTake"
                                 },
-                                "id": 9747,
+                                "id": 9926,
                                 "name": "Identifier",
-                                "src": "2596:9:63"
+                                "src": "2596:9:64"
                               },
                               {
                                 "attributes": {
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 9726,
+                                  "referencedDeclaration": 9905,
                                   "type": "uint256",
                                   "value": "leftMakeValue"
                                 },
-                                "id": 9748,
+                                "id": 9927,
                                 "name": "Identifier",
-                                "src": "2609:13:63"
+                                "src": "2609:13:64"
                               }
                             ],
-                            "id": 9749,
+                            "id": 9928,
                             "name": "BinaryOperation",
-                            "src": "2596:26:63"
+                            "src": "2596:26:64"
                           },
                           {
                             "attributes": {
@@ -4279,23 +4279,23 @@
                               "type": "literal_string \"fillLeft: unable to fill\"",
                               "value": "fillLeft: unable to fill"
                             },
-                            "id": 9750,
+                            "id": 9929,
                             "name": "Literal",
-                            "src": "2624:26:63"
+                            "src": "2624:26:64"
                           }
                         ],
-                        "id": 9751,
+                        "id": 9930,
                         "name": "FunctionCall",
-                        "src": "2588:63:63"
+                        "src": "2588:63:64"
                       }
                     ],
-                    "id": 9752,
+                    "id": 9931,
                     "name": "ExpressionStatement",
-                    "src": "2588:63:63"
+                    "src": "2588:63:64"
                   },
                   {
                     "attributes": {
-                      "functionReturnParameters": 9736
+                      "functionReturnParameters": 9915
                     },
                     "children": [
                       {
@@ -4328,69 +4328,69 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9616,
+                              "referencedDeclaration": 9795,
                               "type": "type(struct LibFill.FillResult storage pointer)",
                               "value": "FillResult"
                             },
-                            "id": 9753,
+                            "id": 9932,
                             "name": "Identifier",
-                            "src": "2668:10:63"
+                            "src": "2668:10:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9726,
+                              "referencedDeclaration": 9905,
                               "type": "uint256",
                               "value": "leftMakeValue"
                             },
-                            "id": 9754,
+                            "id": 9933,
                             "name": "Identifier",
-                            "src": "2679:13:63"
+                            "src": "2679:13:64"
                           },
                           {
                             "attributes": {
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 9728,
+                              "referencedDeclaration": 9907,
                               "type": "uint256",
                               "value": "leftTakeValue"
                             },
-                            "id": 9755,
+                            "id": 9934,
                             "name": "Identifier",
-                            "src": "2694:13:63"
+                            "src": "2694:13:64"
                           }
                         ],
-                        "id": 9756,
+                        "id": 9935,
                         "name": "FunctionCall",
-                        "src": "2668:40:63"
+                        "src": "2668:40:64"
                       }
                     ],
-                    "id": 9757,
+                    "id": 9936,
                     "name": "Return",
-                    "src": "2661:47:63"
+                    "src": "2661:47:64"
                   }
                 ],
-                "id": 9758,
+                "id": 9937,
                 "name": "Block",
-                "src": "2471:244:63"
+                "src": "2471:244:64"
               }
             ],
-            "id": 9759,
+            "id": 9938,
             "name": "FunctionDefinition",
-            "src": "2322:393:63"
+            "src": "2322:393:64"
           }
         ],
-        "id": 9760,
+        "id": 9939,
         "name": "ContractDefinition",
-        "src": "229:2488:63"
+        "src": "229:2488:64"
       }
     ],
-    "id": 9761,
+    "id": 9940,
     "name": "SourceUnit",
-    "src": "33:2685:63"
+    "src": "33:2685:64"
   },
   "compiler": {
     "name": "solc",
@@ -4398,7 +4398,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.5",
-  "updatedAt": "2022-10-03T12:18:06.465Z",
+  "updatedAt": "2022-10-03T17:47:10.525Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
