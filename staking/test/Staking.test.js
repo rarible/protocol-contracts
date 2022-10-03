@@ -4,6 +4,7 @@ const TestStaking = artifacts.require("TestStaking.sol");
 const TestNewStakingNoInterface = artifacts.require("TestNewStakingNoInteface.sol");
 const truffleAssert = require('truffle-assertions');
 const { expectThrow } = require("@daonomic/tests-common");
+const { assertStorageUpgradeSafe } = require('@openzeppelin/upgrades-core');
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 
@@ -22,7 +23,7 @@ contract("Staking", accounts => {
 		staking = await TestStaking.new();
 		newStaking = await TestNewStaking.new();
 		newStakingNoInterface = await TestNewStakingNoInterface.new();
-		await staking.__Staking_init(token.address, 0); //initialize, set owner
+		await staking.__Staking_init(token.address, 0, 0, 0); //initialize, set owner
 
     WEEK = await staking.WEEK()
 		await incrementBlock(WEEK + 1); //to avoid stake() from ZERO point timeStamp
@@ -256,6 +257,37 @@ contract("Staking", accounts => {
         staking.getPastTotalSupply(currentBlock)
       );
 
+		});
+
+    it("staking epoch shift works", async () => {
+      let block = 15668146;
+      const epochShift = 10500;
+
+      await staking.setEpochShift(epochShift);
+      await staking.setBlock(block);
+
+      const nextEpoch = 311 * Number(WEEK) + epochShift;
+
+      assert.equal(await staking.getWeek(), 310)
+      assert.equal(await staking.blockTillNextPeriod(), nextEpoch - block)
+
+      block = block + 12000;
+
+      await staking.setBlock(block);
+
+      assert.equal(await staking.getWeek(), 310)
+      assert.equal(await staking.blockTillNextPeriod(), nextEpoch - block)
+
+      block = block + 400;
+
+      await staking.setBlock(block)
+
+      assert.equal(await staking.getWeek(), 310)
+      assert.equal(await staking.blockTillNextPeriod(), nextEpoch - block)
+
+      await staking.incrementBlock(4500)
+
+      assert.equal(await staking.getWeek(), 311)
 		});
 	})
 

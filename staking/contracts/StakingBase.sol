@@ -15,8 +15,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    //todo: set actual value!
-    uint256 constant public WEEK = 50; //blocks one week = 50400
+    uint256 constant public WEEK = 50400; //blocks one week = 50400, day = 7200
     
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
 
@@ -125,9 +124,11 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      */
     event SetStartingPointWeek(uint indexed newStartingPointWeek);
 
-    function __StakingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek) internal initializer {
+    function __StakingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) internal initializer {
         token = _token;
         startingPointWeek = _startingPointWeek;
+        minCliffPeriod = _minCliffPeriod;
+        minSlopePeriod = _minSlopePeriod;
     }
 
     function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
@@ -172,9 +173,18 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     function divUp(uint a, uint b) internal pure returns (uint) {
         return ((a.sub(1)).div(b)).add(1);
     }
-
+    
     function roundTimestamp(uint ts) view internal returns (uint) {
-        return ts.div(WEEK).sub(startingPointWeek);
+        if (ts < getEpochShift()) {
+            return 0;
+        }
+        uint shifted = ts.sub(getEpochShift());
+        return shifted.div(WEEK).sub(startingPointWeek);
+    }
+
+    // blocks to shift epoch
+    function getEpochShift() internal view virtual returns (uint) {
+        return 10500;
     }
 
     function verifyStakeOwner(uint id) internal view returns (address account) {

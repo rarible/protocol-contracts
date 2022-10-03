@@ -20,7 +20,7 @@ contract("RariMine", accounts => {
     tokenOwner = accounts[2];
     token = await ERC20.new();
     staking = await TestStaking.new();
-    await staking.__Staking_init(token.address, 0); //initialize staking, set token
+    await staking.__Staking_init(token.address, 0, 0, 0); //initialize staking, set token
     rariMine = await RariMine.new();
     await rariMine.__RariMine_init(token.address, tokenOwner, staking.address);//initialize rariMine
 

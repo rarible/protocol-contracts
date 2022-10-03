@@ -12,8 +12,8 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    function __Staking_init(IERC20Upgradeable _token, uint _startingPointWeek) external initializer {
-        __StakingBase_init_unchained(_token, _startingPointWeek);
+    function __Staking_init(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) external initializer {
+        __StakingBase_init_unchained(_token, _startingPointWeek, _minCliffPeriod, _minSlopePeriod);
         __Ownable_init_unchained();
         __Context_init_unchained();
     }
@@ -141,11 +141,11 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
     }
 
     function name() public view virtual returns (string memory) {
-        return "RariStaking";
+        return "Rarible Vote-Escrow";
     }
 
     function symbol() public view virtual returns (string memory) {
-        return "RST";
+        return "veRARI";
     }
 
     function decimals() public view virtual returns (uint8) {

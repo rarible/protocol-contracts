@@ -8,6 +8,7 @@ import "../../contracts/Staking.sol";
 contract TestStaking is Staking {
 
     uint public blockNumberMocked;
+    uint public epocShift;
 
     function incrementBlock (uint _amount) external {
         blockNumberMocked = blockNumberMocked + _amount;
@@ -20,4 +21,24 @@ contract TestStaking is Staking {
     function getStakeTest(uint amount, uint slope, uint cliff) external view returns (uint stakeAmount, uint stakeSlope) {
         (stakeAmount, stakeSlope) = getStake(amount, slope, cliff);
     }
+
+    function getEpochShift() internal view override returns (uint) {
+        return epocShift;
+    }
+
+    function setEpochShift(uint _epocShift) external {
+        epocShift = _epocShift;
+    }
+
+    function setBlock(uint _block) external {
+        blockNumberMocked = _block;
+    }
+
+    function blockTillNextPeriod() external view returns (uint){
+        uint currentWeek = this.getWeek();
+        //return (WEEK * (currentWeek + 1)) - getBlockNumber();
+        return (WEEK * (currentWeek + 1)) + getEpochShift() - getBlockNumber();
+    }
 }
+//15680546
+//15674400 
