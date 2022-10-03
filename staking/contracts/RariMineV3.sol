@@ -17,8 +17,9 @@ import "./libs/LibUint.sol";
 import "./libs/LibStakingMath.sol";
 import "./IRariMine.sol";
 import "./IStaking.sol";
+import "./IERC20Read.sol";
 
-contract RariMineV3 is OwnableUpgradeable, IRariMine {
+contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
     using SafeMathUpgradeable for uint;
     using LibString for string;
     using LibUint for uint;
@@ -27,6 +28,11 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     IERC20Upgradeable public token;
     address public tokenOwner;
     IStaking public staking;
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
+    uint256 private _totalSupply;
+
     uint256 constant CLAIM_FORMULA_STAKE   = 60000000;  // 60% to stake
     uint256 constant CLAIM_FORMULA_CLAIM   = 40000000;  // 40% to withdraw
     uint256 constant CLAIM_FORMULA_DIVIDER = 100000000; //  
@@ -45,33 +51,36 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         token = _token;
         tokenOwner = _tokenOwner;
         staking = _staking;
+        _decimals = 18;
+        _name = "Rari Mine Claimed Tokens";
+        _symbol = "RariMine";
     }
 
-    function claim(Balance[] memory _balances, uint8 v, bytes32 r, bytes32 s) public {
-        require(prepareMessage(_balances).recover(v, r, s) == owner(), "owner should sign balances");
+    function claim(Balance memory _balance, uint8 v, bytes32 r, bytes32 s) public {
+        require(prepareMessage(_balance, address(this)).recover(v, r, s) == owner(), "owner should sign balances");
 
-        for (uint i = 0; i < _balances.length; i++) {
-            address recipient = _balances[i].recipient;
-            if (msg.sender == recipient) {
-                uint toClaim = _balances[i].value.sub(claimed[recipient]);
-                require(toClaim > 0, "nothing to claim");
-                claimed[recipient] += _balances[i].value;
+        address recipient = _balance.recipient;
+        if (_msgSender() == recipient) {
+            uint toClaim = _balance.value.sub(claimed[recipient]);
+            require(toClaim > 0, "nothing to claim");
+            claimed[recipient] += _balance.value;
+            _totalSupply += _balance.value;
 
-                // claim rari tokens
-                uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
-                require(token.transferFrom(tokenOwner, msg.sender, claimAmount), "transfer is not successful");
-                emit Claim(recipient, claimAmount);
-                emit Value(recipient, _balances[i].value);
+            // claim rari tokens
+            uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
+            require(token.transferFrom(tokenOwner, _msgSender(), claimAmount), "transfer is not successful");
+            emit Claim(recipient, claimAmount);
+            emit Value(recipient, _balance.value);
 
-                // stake some tokens
-                uint stakeAmount = toClaim.sub(claimAmount);
-                uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_SLOPE_WEEKS);
-                token.approve(address(staking), stakeAmount);
-                staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
-                return;
-            }
+            // stake some tokens
+            uint stakeAmount = toClaim.sub(claimAmount);
+            uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_SLOPE_WEEKS);
+            token.approve(address(staking), stakeAmount);
+            staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
+            return;
         }
-        revert("msg.sender not found in receipients");
+        
+        revert("_msgSender() is not the receipient");
     }
 
     function doOverride(Balance[] memory _balances) public onlyOwner {
@@ -81,8 +90,12 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         }
     }
 
-    function prepareMessage(Balance[] memory _balances) internal pure returns (string memory) {
-        return toString(keccak256(abi.encode(_balances)));
+    function prepareMessage(Balance memory _balance, address _address) internal pure returns (string memory) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return toString(keccak256(abi.encode(_balance, _address, id)));
     }
 
     function toString(bytes32 value) internal pure returns (string memory) {
@@ -93,6 +106,40 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             str[1+i*2] = alphabet[uint8(value[i] & 0x0f)];
         }
         return string(str);
+    }
+
+    /**
+     * @dev Returns the amount of tokens of released to the users.
+     */
+    function totalSupply() external override view returns (uint256) {
+        return _totalSupply;
+    }
+    /**
+     * @dev Returns the amount of tokens owned by `account`.
+     */
+    function balanceOf(address account) external override view returns (uint256) {
+        return claimed[account];
+    }
+
+    /**
+     * @dev Returns the token name.
+     */
+    function name() public override view returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @dev Returns the token decimals.
+     */
+    function decimals() public override view returns (uint8) {
+        return _decimals;
+    }
+
+    /**
+     * @dev Returns the token symbol.
+     */
+    function symbol() public override view returns (string memory) {
+        return _symbol;
     }
 
     uint256[48] private __gap;

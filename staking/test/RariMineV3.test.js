@@ -54,7 +54,16 @@ contract("RariMineV3", accounts => {
             const encodedParameters = await libEncoder.encodeAbi(balances);
             console.log("encoded parameters",encodedParameters);
             const hash = await libSignature.getKeccak(encodedParameters);
-            const signature = await signPersonalMessage(hash, accounts[0]);
+            console.log("hash", hash.toString());
+
+            const prepareMessage = await libEncoder.prepareMessage(balances);
+            console.log("prepareHash", prepareMessage);
+
+
+            const strHash = await libSignature.toString(hash);
+            console.log("strHash", strHash.toString());
+            // TODO: hash to strings with contract function(hex representation)
+            const signature = await signPersonalMessage(prepareMessage, accounts[0]);
             console.log('accounts[0]', accounts[0]);
             const ownerRari = await rariMine.owner();
             console.log('rariMine owner',ownerRari);
