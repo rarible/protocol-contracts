@@ -30,6 +30,7 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
     address public immutable seaPort;
     address public immutable x2y2;
     address public immutable looksRare;
+    address public immutable sudoswap;
 
     event Execution(bool result);
 
@@ -38,7 +39,8 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
         WyvernExchange,
         SeaPort,
         X2Y2,
-        LooksRareOrders
+        LooksRareOrders,
+        SudoSwap
     }
 
     /**
@@ -62,13 +64,15 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
         address _exchangeV2,
         address _seaPort,
         address _x2y2,
-        address _looksRare
+        address _looksRare,
+        address _sudoswap
     ) {
         wyvernExchange = _wyvernExchange;
         exchangeV2 = _exchangeV2;
         seaPort = _seaPort;
         x2y2 = _x2y2;
         looksRare = _looksRare;
+        sudoswap = _sudoswap;
     }
 
     /**
@@ -195,6 +199,15 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
                 IERC1155Upgradeable(makerOrder.collection).safeTransferFrom(address(this), _msgSender(), makerOrder.tokenId, makerOrder.amount, "");
             } else {
                 revert("Unknown token type");
+            }
+        } else if (purchaseDetails.marketId == Markets.SudoSwap) {
+            (bool success,) = address(sudoswap).call{value : paymentAmount}(purchaseDetails.data);
+            if (allowFail) {
+                if (!success) {
+                    return (false, 0, 0);
+                }
+            } else {
+                require(success, "Purchase sudoswap failed");
             }
         } else {
             revert("Unknown purchase details");

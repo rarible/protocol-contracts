@@ -47,6 +47,11 @@ module.exports = async function (deployer, network) {
   const exchangeV1 = await ExchangeV1.deployed()
   console.log(`deployed exchangeV1 at ${exchangeV1.address}`)
 
+  await transferProxy.addOperator(exchangeV1.address)
+  await erc20TransferProxy.addOperator(exchangeV1.address)
+  await transferProxyDeprecated.addOperator(exchangeV1.address)
+  await exchangeStateV1.addOperator(exchangeV1.address)
+
   if (!!settings.rarible_token_legacy){
     await deployer.deploy(
       RaribleToken,

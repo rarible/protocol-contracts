@@ -50,7 +50,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
             //not using transfer proxy when transfering from this contract
             (address token) = abi.decode(asset.assetType.data, (address));
             if (from == address(this)){
-                IERC20Upgradeable(token).transfer(to, asset.value);
+                require(IERC20Upgradeable(token).transfer(to, asset.value), "erc20 transfer failed");
             } else {
                 IERC20TransferProxy(proxy).erc20safeTransferFrom(IERC20Upgradeable(token), from, to, asset.value);
             }
