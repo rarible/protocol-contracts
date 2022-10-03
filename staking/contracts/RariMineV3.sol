@@ -68,7 +68,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
 
             // claim rari tokens
             uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
-            require(token.transferFrom(tokenOwner, _msgSender(), claimAmount), "transfer is not successful");
+            require(token.transferFrom(tokenOwner, _msgSender(), toClaim), "transfer is not successful");
             emit Claim(recipient, claimAmount);
             emit Value(recipient, _balance.value);
 

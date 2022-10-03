@@ -10,8 +10,16 @@ contract LibEncoderTest {
         uint256 value;
     }
 
-    function encodeAbi(Balance[] memory _balances) external pure returns (bytes memory) {
-        return abi.encode(_balances);
+    function encodeAbi(Balance memory _balance, address _address) external pure returns (bytes memory) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return abi.encode(_balance, _address, id);
+    }
+
+    function getKeccak256(bytes memory data) external pure returns (bytes32) {
+        return keccak256(data);
     }
 
     function toString(bytes32 value) public pure returns (string memory) {
@@ -24,8 +32,12 @@ contract LibEncoderTest {
         return string(str);
     }
 
-    function prepareMessage(Balance[] memory _balances) external pure returns (string memory) {
-        return toString(keccak256(abi.encode(_balances)));
+    function prepareMessage(Balance memory _balance, address _address) external pure returns (string memory) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return toString(keccak256(abi.encode(_balance, _address, id)));
     }
 
 }
