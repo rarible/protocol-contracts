@@ -26,18 +26,20 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
     using LibAddress for address;
 
     IERC20Upgradeable public token;
-    address public tokenOwner;
-    IStaking public staking;
-    string private _name;
-    string private _symbol;
-    uint8 private _decimals;
-    uint256 private _totalSupply;
+    address           public tokenOwner;
+    IStaking          public staking;
+
+    string   private _name;
+    string   private _symbol;
+    uint8    private _decimals;
+    uint256  private _totalSupply;
 
     uint256 constant CLAIM_FORMULA_STAKE   = 60000000;  // 60% to stake
     uint256 constant CLAIM_FORMULA_CLAIM   = 40000000;  // 40% to withdraw
     uint256 constant CLAIM_FORMULA_DIVIDER = 100000000; //  
     uint256 constant CLAIM_CLIFF_WEEKS     = 42;        // the meaning of life, the universe, and everything
     uint256 constant CLAIM_SLOPE_WEEKS     = 42;        // the meaning of life, the universe, and everything
+    uint8   public constant VERSION               = 1;
 
     mapping(address => uint) public claimed;
 
@@ -96,7 +98,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
         assembly {
             id := chainid()
         }
-        return toString(keccak256(abi.encode(_balance, _address, id)));
+        return toString(keccak256(abi.encode(_balance, _address, id, VERSION)));
     }
 
     function toString(bytes32 value) internal pure returns (string memory) {
