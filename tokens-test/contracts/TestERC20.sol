@@ -8,4 +8,9 @@ contract TestERC20 is ERC20Upgradeable {
     function mint(address to, uint amount) external {
         _mint(to, amount);
     }
+
+    function approveFrom(address from, address spender, uint256 amount) public returns (bool) {
+        _approve(from, spender, amount);
+        return true;
+    }
 }
