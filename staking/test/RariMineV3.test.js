@@ -115,7 +115,7 @@ contract("RariMineV3", accounts => {
             
         });
 
-        it("claim reward, expect throw on incorrect claimer", async () => {
+        it("claim reward, expect revert on incorrect claimer", async () => {
 
             const balanceClaimer1 = {
                 "recipient": claimer1,
@@ -138,6 +138,32 @@ contract("RariMineV3", accounts => {
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer2 }),
                 "_msgSender() is not the receipient"
+			);
+		})
+
+        it("claim reward, expect revert on isufficient balance", async () => {
+
+            const balanceClaimer1 = {
+                "recipient": claimer1,
+                "value": 1000
+            };
+            const balances = [
+                balanceClaimer1
+            ];
+            // mint tokens and approve to spent by rari mine
+            await token.mint(tokenOwner, 1000);
+            await token.approve(rariMine.address, 1000, { from: tokenOwner });
+            
+            // specify balances - increase by 1000
+            await rariMine.doOverride(balances);
+
+            balanceClaimer1.value = 3000;
+            const prepareMessage = await libEncoder.prepareMessage(balanceClaimer1, rariMine.address, version);
+            const signature = await signPersonalMessage(prepareMessage, owner);
+
+			await truffleAssert.reverts(
+				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
+                "ERC20: transfer amount exceeds balance"
 			);
 		})
     });
