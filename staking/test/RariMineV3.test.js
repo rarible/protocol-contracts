@@ -80,6 +80,12 @@ contract("RariMineV3", accounts => {
 
             console.log(balances, signature.r, signature.s, signature.v);
             await rariMine.claim(balance0, signature.v, signature.r, signature.s, { from: accounts[1] });
+            const stakingBalance = await token.balanceOf(staking.address);
+            console.log(stakingBalance);
+
+            const account1Balance = await token.balanceOf(accounts[1]);
+            console.log(account1Balance);
+            //assert.equal(await token.balanceOf(staking.address), 100);
             
         });
 

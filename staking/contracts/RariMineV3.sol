@@ -53,7 +53,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
         staking = _staking;
         _decimals = 18;
         _name = "Rari Mine Claimed Tokens";
-        _symbol = "RariMine";
+        _symbol = "RariMineCT";
     }
 
     function claim(Balance memory _balance, uint8 v, bytes32 r, bytes32 s) public {
@@ -68,14 +68,15 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
 
             // claim rari tokens
             uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
-            require(token.transferFrom(tokenOwner, _msgSender(), toClaim), "transfer is not successful");
+            require(token.transferFrom(tokenOwner, _msgSender(), claimAmount), "transfer to msg sender is not successful");
             emit Claim(recipient, claimAmount);
             emit Value(recipient, _balance.value);
 
             // stake some tokens
             uint stakeAmount = toClaim.sub(claimAmount);
             uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_SLOPE_WEEKS);
-            token.approve(address(staking), stakeAmount);
+            require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
+            require(token.approve(address(staking), stakeAmount), "approve is not successful");
             staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
             return;
         }
