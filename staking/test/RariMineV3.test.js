@@ -36,8 +36,7 @@ contract("RariMineV3", accounts => {
         libSignature = await LibSignatureTest.new();
         libEncoder = await LibEncoderTest.new();
         rariMine = await RariMineV3.new();
-        console.log("token.address", token.address);
-        await staking.__Staking_init(token.address); //initialize, set owner
+        await staking.__Staking_init(token.address, 0, 0, 0); //initialize, set owner
         await staking.incrementBlock(WEEK);
         await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address);
         version = await rariMine.VERSION();
