@@ -95,6 +95,11 @@ contract WrapperHelper {
         bytes signatureRight;
     }
 
+    struct AdditionalData {
+        bytes data;
+        uint[] additionalRoyalties;
+    }
+
     function getDataWyvernAtomicMatch(WyvernOrders memory _openSeaBuy) external pure returns(bytes memory _data) {
         _data = abi.encodeWithSelector(IWyvernExchange.atomicMatch_.selector, _openSeaBuy.addrs, _openSeaBuy.uints, _openSeaBuy.feeMethodsSidesKindsHowToCalls, _openSeaBuy.calldataBuy, _openSeaBuy.calldataSell, _openSeaBuy.replacementPatternBuy, _openSeaBuy.replacementPatternSell, _openSeaBuy.staticExtradataBuy, _openSeaBuy.staticExtradataSell, _openSeaBuy.vs, _openSeaBuy.rssMetadata);
     }
@@ -200,6 +205,22 @@ contract WrapperHelper {
 
     function encodeFees(uint first, uint second) external pure returns(uint){
         return (uint(uint16(first)) << 16) + uint(uint16(second));
+    }
+
+    function encodeDataType(uint dataType) external pure returns(uint){
+        return (uint(uint16(dataType)) << 32);
+    }
+
+    function encodeFeesPlusDataType(uint first, uint second, uint dataType) external pure returns(uint){
+        return (uint(uint16(dataType)) << 32) + (uint(uint16(first)) << 16) + uint(uint16(second));
+    }
+
+    function encodeDataPlusRoyalties(AdditionalData calldata data) external pure returns(bytes memory) {
+        return abi.encode(data);
+    }
+
+    function encodeBpPlusAccount(uint bp, address account) external pure returns (uint) {
+        return (uint(bp) << 160) + uint(account);
     }
 
     function decodeFees(uint data) external pure returns(uint, uint) {
