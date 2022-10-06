@@ -1,9 +1,11 @@
 const os = require('os');
+const path = require('path');
 
 let apiKey;
 try {
-	console.log(`Loading etherscan key from ${os.homedir() + "/.ethereum/etherscan.json"}`);
-	apiKey = require(os.homedir() + "/.ethereum/etherscan.json").apiKey;
+  const filePath = path.join(os.homedir(), ".ethereum", "etherscan.json");
+	console.log(`Loading etherscan key from ${filePath}`);
+	apiKey = require(filePath).apiKey;
 	console.log("loaded etherscan api key");
 } catch {
 	console.log("unable to load etherscan key from config")
@@ -12,7 +14,7 @@ try {
 
 function createNetwork(name) {
   try {
-    var json = require(os.homedir() + "/.ethereum/" + name + ".json");
+    var json = require(path.join(os.homedir(), ".ethereum", name + ".json"));
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
 
     return {
