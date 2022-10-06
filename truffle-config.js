@@ -1,16 +1,7 @@
+const fs = require("fs");
 const os = require('os');
 const path = require('path');
-
-let apiKey;
-try {
-  const filePath = path.join(os.homedir(), ".ethereum", "etherscan.json");
-	console.log(`Loading etherscan key from ${filePath}`);
-	apiKey = require(filePath).apiKey;
-	console.log("loaded etherscan api key");
-} catch {
-	console.log("unable to load etherscan key from config")
-	apiKey = "UNKNOWN"
-}
+require('dotenv').config();
 
 function createNetwork(name) {
   try {
@@ -47,9 +38,31 @@ function createProvider(address, key, url) {
   return new HDWalletProvider(key, url);
 }
 
+function getScanApiKey(name) {
+  let apiKey = "UNKNOWN"
+  const envApiKeyName = `${name.toUpperCase()}_API_KEY`;
+  if(process.env[envApiKeyName]) {
+    console.log(`loading ${name} key from env ${envApiKeyName}`);
+    apiKey = process.env[envApiKeyName];
+    console.log(`loaded ${name} key from env ${envApiKeyName}`);
+  } else {
+    const filePath = path.join(os.homedir(), ".ethereum", name+".json");
+    if(fs.existsSync(filePath)) {
+      console.log(`Loading ${name} key from ${filePath}`);
+      apiKey = require(filePath).apiKey;
+      console.log(`loaded ${name} api key`);
+    } else {
+      console.log(`unable to load ${name} key from config`)
+    }
+  }
+	return apiKey;
+}
+
 module.exports = {
 	api_keys: {
-    etherscan: apiKey
+    etherscan: getScanApiKey('etherscan'),
+    polygonscan: getScanApiKey('polygonscan'),
+    polygon_mumbai: getScanApiKey('polygonscan'),
   },
 
 	plugins: [
