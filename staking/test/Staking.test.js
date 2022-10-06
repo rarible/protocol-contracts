@@ -260,34 +260,31 @@ contract("Staking", accounts => {
 		});
 
     it("staking epoch shift works", async () => {
-      let block = 15668146;
-      const epochShift = 10500;
+      //setting block and epoch shift
+      let block = 15691519;
+      const epochShift = 39725;
 
       await staking.setEpochShift(epochShift);
       await staking.setBlock(block);
 
-      const nextEpoch = 311 * Number(WEEK) + epochShift;
+      //const nextEpoch = 311 * Number(WEEK) + epochShift;
 
+      //22606 block left til lthe next epoch
       assert.equal(await staking.getWeek(), 310)
-      assert.equal(await staking.blockTillNextPeriod(), nextEpoch - block)
+      assert.equal(await staking.blockTillNextPeriod(), 22606)
 
-      block = block + 12000;
-
-      await staking.setBlock(block);
-
+      //22000 blocks don't increment epoch
+      await staking.incrementBlock(22000);
       assert.equal(await staking.getWeek(), 310)
-      assert.equal(await staking.blockTillNextPeriod(), nextEpoch - block)
 
-      block = block + 400;
-
-      await staking.setBlock(block)
-
+      //600 more blocks don't increment epoch
+      await staking.incrementBlock(600)
       assert.equal(await staking.getWeek(), 310)
-      assert.equal(await staking.blockTillNextPeriod(), nextEpoch - block)
 
-      await staking.incrementBlock(4500)
-
+      //10 more block do
+      await staking.incrementBlock(10)
       assert.equal(await staking.getWeek(), 311)
+      
 		});
 	})
 
