@@ -17,9 +17,8 @@ import "./libs/LibUint.sol";
 import "./libs/LibStakingMath.sol";
 import "./IRariMine.sol";
 import "./IStaking.sol";
-import "./IERC20Read.sol";
 
-contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
+contract RariMineV3 is OwnableUpgradeable, IRariMine {
     using SafeMathUpgradeable for uint;
     using LibString for string;
     using LibUint for uint;
@@ -29,33 +28,42 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
     address           public tokenOwner;
     IStaking          public staking;
 
-    string   private _name;
-    string   private _symbol;
-    uint8    private _decimals;
-    uint256  private _totalSupply;
+    uint256 public claimFormulaClaim;
+    uint256 public claimCliffWeeks;
+    uint256 public claimSlopeWeeks;
+    uint256 constant CLAIM_FORMULA_DIVIDER = 10000; 
 
-    uint256 constant CLAIM_FORMULA_STAKE   = 60000000;  // 60% to stake
-    uint256 constant CLAIM_FORMULA_CLAIM   = 40000000;  // 40% to withdraw
-    uint256 constant CLAIM_FORMULA_DIVIDER = 100000000; //  
-    uint256 constant CLAIM_CLIFF_WEEKS     = 42;        // the meaning of life, the universe, and everything
-    uint256 constant CLAIM_SLOPE_WEEKS     = 42;        // the meaning of life, the universe, and everything
-    uint8   public constant VERSION               = 1;
-
+    uint8   public constant VERSION        = 1;
+    
     mapping(address => uint) public claimed;
 
-    function __RariMineV3_init(IERC20Upgradeable _token, address _tokenOwner, IStaking _staking) external initializer {
-        __RariMineV3_init_unchained(_token, _tokenOwner, _staking);
+    event SetClaimFormulaClaim(uint256 indexed newClaimFormulaClaim);
+    event SetClaimCliffWeeks(uint256 indexed newClaimCliffWeeks);
+    event SetClaimSlopeWeeks(uint256 indexed newClaimSlopeWeeks);
+
+    function __RariMineV3_init(IERC20Upgradeable _token, 
+                                address _tokenOwner, 
+                                IStaking _staking, 
+                                uint256 _claimCliffWeeks, 
+                                uint256 _claimSlopeWeeks, 
+                                uint256 _claimFormulaClaim) external initializer {
+        __RariMineV3_init_unchained(_token, _tokenOwner, _staking, _claimCliffWeeks, _claimSlopeWeeks, _claimFormulaClaim);
         __Ownable_init_unchained();
         __Context_init_unchained();
     }
 
-    function __RariMineV3_init_unchained(IERC20Upgradeable _token, address _tokenOwner, IStaking _staking) internal initializer {
+    function __RariMineV3_init_unchained(IERC20Upgradeable _token, 
+                                        address _tokenOwner, 
+                                        IStaking _staking, 
+                                        uint256 _claimCliffWeeks, 
+                                        uint256 _claimSlopeWeeks, 
+                                        uint256 _claimFormulaClaim) internal initializer {
         token = _token;
         tokenOwner = _tokenOwner;
         staking = _staking;
-        _decimals = 18;
-        _name = "Rari Mine Claimed Tokens";
-        _symbol = "RariMineCT";
+        claimCliffWeeks = _claimCliffWeeks;
+        claimSlopeWeeks = _claimSlopeWeeks;
+        claimFormulaClaim = _claimFormulaClaim;
     }
 
     function claim(Balance memory _balance, uint8 v, bytes32 r, bytes32 s) public {
@@ -65,21 +73,20 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
         if (_msgSender() == recipient) {
             uint toClaim = _balance.value.sub(claimed[recipient]);
             require(toClaim > 0, "nothing to claim");
-            claimed[recipient] += _balance.value;
-            _totalSupply += _balance.value;
+            claimed[recipient].add(_balance.value);
 
             // claim rari tokens
-            uint claimAmount = toClaim.mul(CLAIM_FORMULA_CLAIM).div(CLAIM_FORMULA_DIVIDER);
+            uint claimAmount = toClaim.mul(claimFormulaClaim).div(CLAIM_FORMULA_DIVIDER);
             require(token.transferFrom(tokenOwner, _msgSender(), claimAmount), "transfer to msg sender is not successful");
             emit Claim(recipient, claimAmount);
             emit Value(recipient, _balance.value);
 
             // stake some tokens
             uint stakeAmount = toClaim.sub(claimAmount);
-            uint slope = LibStakingMath.divUp(stakeAmount, CLAIM_SLOPE_WEEKS);
+            uint slope = LibStakingMath.divUp(stakeAmount, claimSlopeWeeks);
             require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
             require(token.approve(address(staking), stakeAmount), "approve is not successful");
-            staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, CLAIM_CLIFF_WEEKS);
+            staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, claimCliffWeeks);
             return;
         }
         
@@ -111,38 +118,19 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine, IERC20Read {
         return string(str);
     }
 
-    /**
-     * @dev Returns the amount of tokens of released to the users.
-     */
-    function totalSupply() external override view returns (uint256) {
-        return _totalSupply;
-    }
-    /**
-     * @dev Returns the amount of tokens owned by `account`.
-     */
-    function balanceOf(address account) external override view returns (uint256) {
-        return claimed[account];
+    function setClaimFormulaClaim(uint256 _value) public onlyOwner {
+        claimFormulaClaim = _value;
+        emit SetClaimCliffWeeks(claimFormulaClaim);
     }
 
-    /**
-     * @dev Returns the token name.
-     */
-    function name() public override view returns (string memory) {
-        return _name;
+    function setClaimCliffWeeks(uint256 value) external onlyOwner {
+        claimCliffWeeks = value;
+        emit SetClaimCliffWeeks(claimCliffWeeks);
     }
 
-    /**
-     * @dev Returns the token decimals.
-     */
-    function decimals() public override view returns (uint8) {
-        return _decimals;
-    }
-
-    /**
-     * @dev Returns the token symbol.
-     */
-    function symbol() public override view returns (string memory) {
-        return _symbol;
+    function setClaimSlopeWeeks(uint256 _value) public onlyOwner {
+        claimSlopeWeeks = _value;
+        emit SetClaimCliffWeeks(claimSlopeWeeks);
     }
 
     uint256[48] private __gap;
