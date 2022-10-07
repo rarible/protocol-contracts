@@ -32,8 +32,9 @@ library LibBrokenLine {
     }
 
     struct BrokenLine {
-        mapping(uint => int) slopeChanges;         //change of slope applies to the next time point
-        mapping(uint => LineData) initiatedLines;  //initiated (successfully added) Lines
+        mapping(uint => int) slopeChanges;          //change of slope applies to the next time point
+        mapping(uint => int) biasChanges;           //change of bias applies to the next time point
+        mapping(uint => LineData) initiatedLines;   //initiated (successfully added) Lines
         Line initial;
     }
 
@@ -50,11 +51,21 @@ library LibBrokenLine {
 
         update(brokenLine, line.start);
         brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
+        //save bias for history in line.start minus one
+        uint256 lineStartMinusOne = line.start.sub(1);
+        brokenLine.biasChanges.addToItem(lineStartMinusOne, safeInt(line.bias));
+        //period is time without tail
         uint period = line.bias.div(line.slope);
+
         if (cliff == 0) {
+            //no cliff, need to increase brokenLine.initial.slope write now
             brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
+            //no cliff, save slope in history in time minus one
+            brokenLine.slopeChanges.addToItem(lineStartMinusOne, safeInt(line.slope));
         } else {
-            uint cliffEnd = line.start.add(cliff).sub(1);
+            //cliffEnd finish in lineStart minus one plus cliff
+            uint cliffEnd = lineStartMinusOne.add(cliff);
+            //save slope in history in cliffEnd 
             brokenLine.slopeChanges.addToItem(cliffEnd, safeInt(line.slope));
             period = period.add(cliff);
         }
@@ -83,9 +94,11 @@ library LibBrokenLine {
         uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff);
         if (toTime > finishTime) {
             bias = 0;
+            slope = 0;
             return (bias, slope, cliff);
         }
         uint finishTimeMinusOne = finishTime.sub(1);
+        uint toTimeMinusOne = toTime.sub(1);
         int mod = safeInt(bias.mod(slope));
         uint cliffEnd = line.start.add(lineData.cliff).sub(1);
         if (toTime <= cliffEnd) {//cliff works
@@ -100,15 +113,21 @@ library LibBrokenLine {
             //in new Line finish point use oldLine.slope
             brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
             bias = finishTime.sub(toTime).mul(slope).add(uint(mod));
+            //save slope for history
+            brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope));
         } else {//tail works
             //now compensate change slope by tail
             brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
             bias = uint(mod);
             slope = bias;
+            //save slope for history
+            brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope));
         }
         brokenLine.slopeChanges.addToItem(finishTime, mod);
         brokenLine.initial.bias = brokenLine.initial.bias.sub(bias);
         brokenLine.initiatedLines[id].line.bias = 0;
+        //save bias for history
+        brokenLine.biasChanges.subFromItem(toTimeMinusOne, safeInt(bias));
     }
 
     /**
@@ -125,10 +144,11 @@ library LibBrokenLine {
             require(toTime > time, "can't update BrokenLine for past time");
             while (time < toTime) {
                 bias = bias.sub(slope);
+
                 int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
                 require(newSlope >= 0, "slope < 0, something wrong with slope");
                 slope = uint(newSlope);
-                brokenLine.slopeChanges[time] = 0;
+
                 time = time.add(1);
             }
         }
@@ -137,21 +157,57 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
-    function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint bias) {
-        uint time = brokenLine.initial.start;
-        bias = brokenLine.initial.bias;
-        if ((time == toTime) || (bias == 0)){
+    function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint) {
+        uint fromTime = brokenLine.initial.start;
+        uint bias = brokenLine.initial.bias;
+        if (fromTime == toTime) {
+            return (bias);
+        }
+
+        if (toTime > fromTime) {
+            return actualValueForward(brokenLine, fromTime, toTime, bias);
+        }
+        require(toTime > 0, "unexpected past time");
+        return actualValueBack(brokenLine, fromTime, toTime, bias);
+    }
+
+    function actualValueForward(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
+        if ((bias == 0)){
             return (bias);
         }
         uint slope = brokenLine.initial.slope;
-        require(toTime > time, "can't update BrokenLine for past time");
+        uint time = fromTime;
+
         while (time < toTime) {
             bias = bias.sub(slope);
+
             int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
             require(newSlope >= 0, "slope < 0, something wrong with slope");
             slope = uint(newSlope);
+
             time = time.add(1);
         }
+        return bias;
+    }
+
+    function actualValueBack(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
+        uint slope = brokenLine.initial.slope;
+        uint time = fromTime;
+
+        while (time > toTime) {
+            time = time.sub(1);
+
+            int newBias = safeInt(bias).sub(brokenLine.biasChanges[time]);
+            require(newBias >= 0, "bias < 0, something wrong with bias");
+            bias = uint(newBias);
+
+            int newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
+            require(newSlope >= 0, "slope < 0, something wrong with slope");
+            slope = uint(newSlope);
+
+            bias = bias.add(slope);
+        }
+        return bias;
     }
 
     function safeInt(uint value) pure internal returns (int result) {
