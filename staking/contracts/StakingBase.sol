@@ -8,19 +8,21 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./lib-broken-line/LibBrokenLine.sol";
 
-contract StakingBase is OwnableUpgradeable {
+import "./IVotesUpgradeable.sol";
+
+abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
 
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant WEEK = 604800;                         //seconds one week
-    uint256 constant STARTING_POINT_WEEK = 2676;            //starting point week (Staking Epoch start)
+    uint256 constant public WEEK = 50400; //blocks one week = 50400, day = 7200
+    
     uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
-    uint256 constant ST_FORMULA_MULTIPLIER = 10816;         //stFormula multiplier = TWO_YEAR_WEEKS^2
-    uint256 constant ST_FORMULA_DIVIDER = 1000;             //stFormula divider
-    uint256 constant ST_FORMULA_COMPENSATE = 11356800;      //stFormula compensate = (0.7 + 0.35) * ST_FORMULA_MULTIPLIER * 1000
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4650;    //stFormula slope multiplier = 9.3 * 0.5 * 1000
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 9300;    //stFormula cliff multiplier = 9.3 * 1000
+
+    uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
+    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 20000000;   //stFormula const multiplier
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 80400000;   //stFormula cliff multiplier
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 40000000;   //stFormula slope multiplier
 
     /**
      * @dev ERC20 token to lock
@@ -40,6 +42,22 @@ contract StakingBase is OwnableUpgradeable {
      * @dev address to migrate Stakes to (zero if not in migration state)
      */
     address public migrateTo;
+
+    /**
+     * @dev minimal cliff period in weeks, minCliffPeriod < TWO_YEAR_WEEKS
+     */
+
+    uint public minCliffPeriod;
+
+    /**
+     * @dev minimal slope period in weeks, minSlopePeriod < TWO_YEAR_WEEKS
+     */
+    uint public minSlopePeriod;
+
+    /**
+     * @dev staking epoch start in weeks
+     */
+    uint public startingPointWeek;
 
     /**
      * @dev represents one user Stake
@@ -93,9 +111,24 @@ contract StakingBase is OwnableUpgradeable {
      * @dev StartMigration initiate migration to another contract, account - msg.sender, to - address delegate to
      */
     event StartMigration(address indexed account, address indexed to);
+    /**
+     * @dev set newMinCliffPeriod, require newMinCliffPeriod < TWO_YEAR_WEEKS = 104
+     */
+    event SetMinCliffPeriod(uint indexed newMinCliffPeriod);
+    /**
+     * @dev set newMinSlopePeriod, require newMinSlopePeriod < TWO_YEAR_WEEKS = 104
+     */
+    event SetMinSlopePeriod(uint indexed newMinSlopePeriod);
+    /**
+     * @dev set startingPointWeek
+     */
+    event SetStartingPointWeek(uint indexed newStartingPointWeek);
 
-    function __StakingBase_init_unchained(IERC20Upgradeable _token) internal initializer {
+    function __StakingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) internal initializer {
         token = _token;
+        startingPointWeek = _startingPointWeek;
+        minCliffPeriod = _minCliffPeriod;
+        minSlopePeriod = _minSlopePeriod;
     }
 
     function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
@@ -118,16 +151,21 @@ contract StakingBase is OwnableUpgradeable {
 
     /**
      * Сalculate and return (newAmount, newSlope), using formula:
-     * k = (ST_FORMULA_COMPENSATE + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod)^2 + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod)^2) / ST_FORMULA_MULTIPLIER
-     * newAmount = k * amount / ST_FORMULA_DIVIDER
-     * newSlope = newAmount / slopePeriod
+     * staking = (tokens * (
+     *      ST_FORMULA_CONST_MULTIPLIER
+     *      + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod - minCliffPeriod))/(TWO_YEAR_WEEKS - minCliffPeriod)
+     *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(TWO_YEAR_WEEKS - minSlopePeriod)
+     *      )) / ST_FORMULA_DIVIDER
      **/
-    function getStake(uint amount, uint slope, uint cliff) public pure returns (uint stakeAmount, uint stakeSlope) {
-        uint cliffSide = cliff.mul(cliff).mul(ST_FORMULA_CLIFF_MULTIPLIER);
-
+    function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
         uint slopePeriod = divUp(amount, slope);
-        uint slopeSide = slopePeriod.mul(slopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER);
-        uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_COMPENSATE).div(ST_FORMULA_MULTIPLIER);
+        require(cliff >= minCliffPeriod, "cliff period < minimal stake period");
+        require(slopePeriod >= minSlopePeriod, "slope period < minimal stake period");
+
+        uint cliffSide = (cliff - minCliffPeriod).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(TWO_YEAR_WEEKS - minCliffPeriod);
+        uint slopeSide = (slopePeriod - minSlopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(TWO_YEAR_WEEKS - minSlopePeriod);
+        uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_CONST_MULTIPLIER);
+
         stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
         stakeSlope = divUp(stakeAmount, slopePeriod);
     }
@@ -135,14 +173,53 @@ contract StakingBase is OwnableUpgradeable {
     function divUp(uint a, uint b) internal pure returns (uint) {
         return ((a.sub(1)).div(b)).add(1);
     }
+    
+    function roundTimestamp(uint ts) view public returns (uint) {
+        if (ts < getEpochShift()) {
+            return 0;
+        }
+        uint shifted = ts.sub(getEpochShift());
+        return shifted.div(WEEK).sub(startingPointWeek);
+    }
 
-    function roundTimestamp(uint ts) pure internal returns (uint) {
-        return ts.div(WEEK).sub(STARTING_POINT_WEEK);
+    /**
+    * @notice method returns the amount of blocks to shift staking epoch to.
+    * By the time of development, the default weekly-epoch calculated by main-net block number
+    * would start at about 11-35 UTC on Tuesday
+    * we move it to 00-00 UTC Monday by adding 125(35 mins) + 3600(12 hours) + 36000(5 days) = 39725 blocks 
+    */
+    function getEpochShift() internal view virtual returns (uint) {
+        return 39725;
     }
 
     function verifyStakeOwner(uint id) internal view returns (address account) {
         account = stakes[id].account;
         require(account == msg.sender, "caller not a stake owner");
+    }
+
+    function getBlockNumber() internal virtual view returns (uint) {
+        return block.number;
+    }
+
+    function setStartingPointWeek(uint newStartingPointWeek) public notStopped notMigrating onlyOwner {
+        require(newStartingPointWeek < roundTimestamp(getBlockNumber()) , "wrong newStartingPointWeek");
+        startingPointWeek = newStartingPointWeek;
+
+        emit SetStartingPointWeek(newStartingPointWeek);
+    } 
+
+    function setMinCliffPeriod(uint newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinCliffPeriod < TWO_YEAR_WEEKS, "new cliff period > 2 years");
+        minCliffPeriod = newMinCliffPeriod;
+
+        emit SetMinCliffPeriod(newMinCliffPeriod);
+    }
+
+    function setMinSlopePeriod(uint newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
+        require(newMinSlopePeriod < TWO_YEAR_WEEKS, "new slope period > 2 years");
+        minSlopePeriod = newMinSlopePeriod;
+
+        emit SetMinSlopePeriod(newMinSlopePeriod);
     }
 
     /**
@@ -158,5 +235,8 @@ contract StakingBase is OwnableUpgradeable {
         _;
     }
 
-    uint256[50] private __gap;
+    //add minCliffPeriod, decrease __gap
+    //add minSlopePeriod, decrease __gap
+    uint256[48] private __gap;
+
 }

@@ -21,6 +21,10 @@ contract BrokenLineTest {
         return brokenLineTestLocal.initial;
     }
 
+    function getActualValue(uint timeTo) external returns (uint bias) {
+        return LibBrokenLine.actualValue(brokenLineTestLocal, timeTo);
+    }
+
     function removeTest(uint id, uint toTime) public {
         (uint bias, uint slope, uint cliff) = LibBrokenLine.remove(brokenLineTestLocal, id, toTime);
         emit resultRemoveLine(bias, slope, cliff);
