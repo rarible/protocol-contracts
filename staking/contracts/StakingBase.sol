@@ -174,7 +174,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
         return ((a.sub(1)).div(b)).add(1);
     }
     
-    function roundTimestamp(uint ts) view internal returns (uint) {
+    function roundTimestamp(uint ts) view public returns (uint) {
         if (ts < getEpochShift()) {
             return 0;
         }
