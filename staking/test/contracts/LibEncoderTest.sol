@@ -15,7 +15,7 @@ contract LibEncoderTest {
         assembly {
             id := chainid()
         }
-        return abi.encode(_balance, _address, id, _version);
+        return abi.encode(_balance, _address, _version, id);
     }
 
     function getKeccak256(bytes memory data) external pure returns (bytes32) {
@@ -37,7 +37,7 @@ contract LibEncoderTest {
         assembly {
             id := chainid()
         }
-        return toString(keccak256(abi.encode(_balance, _address, id, _version)));
+        return toString(keccak256(abi.encode(_balance, _address, _version, id)));
     }
 
 }

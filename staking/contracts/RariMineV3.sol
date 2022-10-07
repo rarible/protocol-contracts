@@ -105,7 +105,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         assembly {
             id := chainid()
         }
-        return toString(keccak256(abi.encode(_balance, _address, id, VERSION)));
+        return toString(keccak256(abi.encode(_balance, _address, VERSION, id)));
     }
 
     function toString(bytes32 value) internal pure returns (string memory) {
@@ -123,14 +123,14 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         emit SetClaimCliffWeeks(claimFormulaClaim);
     }
 
-    function setClaimCliffWeeks(uint256 value) external onlyOwner {
-        claimCliffWeeks = value;
-        emit SetClaimCliffWeeks(claimCliffWeeks);
+    function setClaimCliffWeeks(uint256 _value) external onlyOwner {
+        claimCliffWeeks = _value;
+        emit SetClaimCliffWeeks(_value);
     }
 
     function setClaimSlopeWeeks(uint256 _value) public onlyOwner {
         claimSlopeWeeks = _value;
-        emit SetClaimCliffWeeks(claimSlopeWeeks);
+        emit SetClaimCliffWeeks(_value);
     }
 
     uint256[48] private __gap;

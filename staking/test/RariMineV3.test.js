@@ -3,11 +3,13 @@ const ERC20 = artifacts.require("TestERC20.sol");
 const TestStaking = artifacts.require("TestStaking.sol");
 const LibSignatureTest = artifacts.require("LibSignatureTest.sol");
 const LibEncoderTest = artifacts.require("LibEncoderTest.sol");
+const keccak256 = require('keccak256')
 
+// "1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8"
 const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 const { signPersonalMessage } = require("../../scripts/sign.js");
-const Web3 = require('web3');
+// const web3 = require('web3');
 
 contract("RariMineV3", accounts => {
     let rariMine;
@@ -20,6 +22,7 @@ contract("RariMineV3", accounts => {
     let claimers;
     let version;
     let owner;
+    let chainId;
 
     const DAY = 7200; // blocks in 1 day
 	const WEEK = DAY * 7;
@@ -38,9 +41,39 @@ contract("RariMineV3", accounts => {
         rariMine = await RariMineV3.new();
         await staking.__Staking_init(token.address, 0, 0, 0); //initialize, set owner
         await staking.incrementBlock(WEEK);
-        await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address);
+        await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 42, 42, 4000);
         version = await rariMine.VERSION();
+        chainId = await web3.eth.getChainId();
     })
+
+    // return toString(keccak256(abi.encode(_balance, _address, id, VERSION)));
+    function getPrepareMessage(balance, contractAddress, version, chainId) {
+        const encodedParameters = web3.eth.abi.encodeParameters(
+            [
+                
+                {
+                    "ParentStruct": {
+                        "recipient": 'uint256',
+                        "value": 'uint256'
+                    }
+                },
+                'uint256',
+                'uint256',
+                'uint256'
+            ],
+            [
+                balance,
+                contractAddress,
+                version,
+                chainId
+            ]
+        );
+
+        console.log("encodedParametrs " ,encodedParameters)
+        const keccak256EncodedParameters = keccak256(encodedParameters).toString('hex');
+        console.log("keccak256EncodedParameters", keccak256EncodedParameters);
+        return keccak256EncodedParameters;
+    }
 
     describe("Check claim()", () => {
 
@@ -60,7 +93,10 @@ contract("RariMineV3", accounts => {
             await rariMine.doOverride(balances);
 
             balanceClaimer1.value = 2000;
-            const prepareMessage = await libEncoder.prepareMessage(balanceClaimer1, rariMine.address, version);
+
+            const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
+            console.log('prepareMessage', prepareMessage);
+
             const signature = await signPersonalMessage(prepareMessage, owner);
 
             const receipt = await rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 });
@@ -115,6 +151,32 @@ contract("RariMineV3", accounts => {
         });
 
         it("claim reward, expect revert on incorrect claimer", async () => {
+
+            const balanceClaimer1 = {
+                "recipient": claimer1,
+                "value": 1000
+            };
+            const balances = [
+                balanceClaimer1
+            ];
+            // mint tokens and approve to spent by rari mine
+            await token.mint(tokenOwner, 1000);
+            await token.approve(rariMine.address, 1000, { from: tokenOwner });
+            
+            // specify balances - increase by 1000
+            await rariMine.doOverride(balances);
+
+            balanceClaimer1.value = 2000;
+            const prepareMessage = await libEncoder.prepareMessage(balanceClaimer1, rariMine.address, version);
+            const signature = await signPersonalMessage(prepareMessage, owner);
+
+			await truffleAssert.reverts(
+				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer2 }),
+                "_msgSender() is not the receipient"
+			);
+		})
+
+        it("claim big reward, expect revert on incorrect claimer", async () => {
 
             const balanceClaimer1 = {
                 "recipient": claimer1,
