@@ -12,7 +12,8 @@ contract StakingVotes is StakingBase {
      * @dev Returns the current amount of votes that `account` has.
      */
     function getVotes(address account) external override view returns (uint256) {
-        return accounts[account].balance.actualValue(roundTimestamp(getBlockNumber()));
+        uint currentWeek = roundTimestamp(getBlockNumber());
+        return accounts[account].balance.actualValue(currentWeek - 1);
     }
 
     /**

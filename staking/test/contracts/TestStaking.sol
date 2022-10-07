@@ -36,9 +36,6 @@ contract TestStaking is Staking {
 
     function blockTillNextPeriod() external view returns (uint){
         uint currentWeek = this.getWeek();
-        //return (WEEK * (currentWeek + 1)) - getBlockNumber();
         return (WEEK * (currentWeek + 1)) + getEpochShift() - getBlockNumber();
     }
 }
-//15680546
-//15674400 
