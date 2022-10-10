@@ -17,11 +17,12 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
 
     uint256 constant public WEEK = 50400; //blocks one week = 50400, day = 7200
     
-    uint256 constant TWO_YEAR_WEEKS = 104;                  //two year weeks
+    uint256 constant MAX_CLIFF_PERIOD = 103;
+    uint256 constant MAX_SLOPE_PERIOD = 104;
 
     uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
     uint256 constant ST_FORMULA_CONST_MULTIPLIER = 20000000;   //stFormula const multiplier
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 80400000;   //stFormula cliff multiplier
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 80000000;   //stFormula cliff multiplier
     uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 40000000;   //stFormula slope multiplier
 
     /**
@@ -44,13 +45,13 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     address public migrateTo;
 
     /**
-     * @dev minimal cliff period in weeks, minCliffPeriod < TWO_YEAR_WEEKS
+     * @dev minimal cliff period in weeks, minCliffPeriod < MAX_CLIFF_PERIOD
      */
 
     uint public minCliffPeriod;
 
     /**
-     * @dev minimal slope period in weeks, minSlopePeriod < TWO_YEAR_WEEKS
+     * @dev minimal slope period in weeks, minSlopePeriod < MAX_SLOPE_PERIOD
      */
     uint public minSlopePeriod;
 
@@ -86,7 +87,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     /**
      * @dev Emitted when create Lock with parameters (account, delegate, amount, slope, cliff)
      */
-    event StakeCreate(uint indexed id, address indexed account, address indexed delegate, uint time, uint amount, uint slope, uint cliff);
+    event StakeCreate(uint indexed id, address indexed account, address indexed delegate, uint time, uint amount, uint slopePeriod, uint cliff);
     /**
      * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlope, newCliff) for Lock with given id
      */
@@ -112,11 +113,11 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      */
     event StartMigration(address indexed account, address indexed to);
     /**
-     * @dev set newMinCliffPeriod, require newMinCliffPeriod < TWO_YEAR_WEEKS = 104
+     * @dev set newMinCliffPeriod
      */
     event SetMinCliffPeriod(uint indexed newMinCliffPeriod);
     /**
-     * @dev set newMinSlopePeriod, require newMinSlopePeriod < TWO_YEAR_WEEKS = 104
+     * @dev set newMinSlopePeriod
      */
     event SetMinSlopePeriod(uint indexed newMinSlopePeriod);
     /**
@@ -153,8 +154,8 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      * Сalculate and return (newAmount, newSlope), using formula:
      * staking = (tokens * (
      *      ST_FORMULA_CONST_MULTIPLIER
-     *      + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod - minCliffPeriod))/(TWO_YEAR_WEEKS - minCliffPeriod)
-     *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(TWO_YEAR_WEEKS - minSlopePeriod)
+     *      + ST_FORMULA_CLIFF_MULTIPLIER * (cliffPeriod - minCliffPeriod))/(MAX_CLIFF_PERIOD - minCliffPeriod)
+     *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(MAX_SLOPE_PERIOD - minSlopePeriod)
      *      )) / ST_FORMULA_DIVIDER
      **/
     function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
@@ -162,8 +163,8 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
         require(cliff >= minCliffPeriod, "cliff period < minimal stake period");
         require(slopePeriod >= minSlopePeriod, "slope period < minimal stake period");
 
-        uint cliffSide = (cliff - minCliffPeriod).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(TWO_YEAR_WEEKS - minCliffPeriod);
-        uint slopeSide = (slopePeriod - minSlopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(TWO_YEAR_WEEKS - minSlopePeriod);
+        uint cliffSide = (cliff - minCliffPeriod).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(MAX_CLIFF_PERIOD - minCliffPeriod);
+        uint slopeSide = (slopePeriod - minSlopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(MAX_SLOPE_PERIOD - minSlopePeriod);
         uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_CONST_MULTIPLIER);
 
         stakeAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
@@ -209,14 +210,14 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     } 
 
     function setMinCliffPeriod(uint newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
-        require(newMinCliffPeriod < TWO_YEAR_WEEKS, "new cliff period > 2 years");
+        require(newMinCliffPeriod < MAX_CLIFF_PERIOD, "new cliff period > 2 years");
         minCliffPeriod = newMinCliffPeriod;
 
         emit SetMinCliffPeriod(newMinCliffPeriod);
     }
 
     function setMinSlopePeriod(uint newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
-        require(newMinSlopePeriod < TWO_YEAR_WEEKS, "new slope period > 2 years");
+        require(newMinSlopePeriod < MAX_SLOPE_PERIOD, "new slope period > 2 years");
         minSlopePeriod = newMinSlopePeriod;
 
         emit SetMinSlopePeriod(newMinSlopePeriod);
