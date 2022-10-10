@@ -252,6 +252,32 @@ contract("RariMineV3", accounts => {
                 "owner should sign balances"
 			);
 		})
+
+        it("claim rewardin case signature is not correct(incorrect message with wrong version of the contract) expect revert : owner should sign a balance", async () => {
+
+            const balanceClaimer1 = {
+                "recipient": claimer1,
+                "value": 1000
+            };
+            const balances = [
+                balanceClaimer1
+            ];
+            // mint tokens and approve to spent by rari mine
+            await token.mint(tokenOwner, 1000);
+            await token.approve(rariMine.address, 1000, { from: tokenOwner });
+            
+            // specify balances - increase by 1000
+            await rariMine.doOverride(balances);
+
+            balanceClaimer1.value = 3000;
+            const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, 0, chainId);
+            const signature = await signPersonalMessage(prepareMessage, accounts[5]);
+
+			await truffleAssert.reverts(
+				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
+                "owner should sign balances"
+			);
+		})
     });
     
 })
