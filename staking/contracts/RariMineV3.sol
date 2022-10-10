@@ -49,14 +49,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         uint256 _claimSlopeWeeks,
         uint256 _claimFormulaClaim
     ) external initializer {
-        __RariMineV3_init_unchained(
-            _token,
-            _tokenOwner,
-            _staking,
-            _claimCliffWeeks,
-            _claimSlopeWeeks,
-            _claimFormulaClaim
-        );
+        __RariMineV3_init_unchained(_token, _tokenOwner, _staking, _claimCliffWeeks, _claimSlopeWeeks, _claimFormulaClaim);
         __Ownable_init_unchained();
         __Context_init_unchained();
     }
@@ -83,28 +76,17 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         bytes32 r,
         bytes32 s
     ) public {
-        require(
-            prepareMessage(_balance, address(this)).recover(v, r, s) == owner(),
-            "owner should sign balances"
-        );
+        require(prepareMessage(_balance, address(this)).recover(v, r, s) == owner(), "owner should sign balances");
 
         address recipient = _balance.recipient;
         if (_msgSender() == recipient) {
-            uint256 toClaim = _balance.value.sub(
-                claimed[recipient],
-                "nothing to claim"
-            );
+            uint256 toClaim = _balance.value.sub(claimed[recipient], "nothing to claim");
             claimed[recipient] = claimed[recipient].add(_balance.value);
 
             // claim rari tokens
-            uint256 claimAmount = toClaim.mul(claimFormulaClaim).div(
-                CLAIM_FORMULA_DIVIDER
-            );
+            uint256 claimAmount = toClaim.mul(claimFormulaClaim).div(CLAIM_FORMULA_DIVIDER);
             if (claimAmount > 0) {
-                require(
-                    token.transferFrom(tokenOwner, recipient, claimAmount),
-                    "transfer to msg sender is not successful"
-                );
+                require(token.transferFrom(tokenOwner, recipient, claimAmount), "transfer to msg sender is not successful");
                 emit Claim(recipient, claimAmount);
                 emit Value(recipient, _balance.value);
             }
@@ -112,21 +94,9 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             // stake some tokens
             uint256 stakeAmount = toClaim.sub(claimAmount);
             uint256 slope = LibStakingMath.divUp(stakeAmount, claimSlopeWeeks);
-            require(
-                token.transferFrom(tokenOwner, address(this), stakeAmount),
-                "transfer to RariMine is not successful"
-            );
-            require(
-                token.approve(address(staking), stakeAmount),
-                "approve is not successful"
-            );
-            staking.stake(
-                recipient,
-                recipient,
-                stakeAmount,
-                slope,
-                claimCliffWeeks
-            );
+            require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
+            require(token.approve(address(staking), stakeAmount), "approve is not successful");
+            staking.stake(recipient, recipient, stakeAmount, slope, claimCliffWeeks);
             return;
         }
 
@@ -140,11 +110,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         }
     }
 
-    function prepareMessage(Balance memory _balance, address _address)
-        internal
-        pure
-        returns (string memory)
-    {
+    function prepareMessage(Balance memory _balance, address _address) internal pure returns (string memory) {
         uint256 id;
         assembly {
             id := chainid()
