@@ -39,7 +39,7 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         uint time = roundTimestamp(getBlockNumber());
         addLines(account, _delegate, amount, slopePeriod, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
-        emit StakeCreate(counter, account, _delegate, time, amount, divUp(amount, slopeP: eriod), cliff);//todo thinke maybe emit with slopePeriod parameter?
+        emit StakeCreate(counter, account, _delegate, time, amount, divUp(amount, slopePeriod), cliff);//todo thinke maybe emit with slopePeriod parameter?
 
         // IVotesUpgradeable events
         emit DelegateChanged(account, address(0), _delegate);
