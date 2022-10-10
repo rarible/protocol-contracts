@@ -23,6 +23,11 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StopStaking(msg.sender);
     }
 
+    function start() external onlyOwner stopped {
+        stopped = false;
+        emit StartStaking(msg.sender);
+    }
+
     function startMigration(address to) external onlyOwner {
         migrateTo = to;
         emit StartMigration(msg.sender, to);

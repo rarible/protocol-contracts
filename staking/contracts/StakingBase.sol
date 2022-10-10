@@ -109,6 +109,10 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      */
     event StopStaking(address indexed account);
     /**
+     * @dev Start run contract functions, accept withdraw, account - msg.sender
+     */
+    event StartStaking(address indexed account);
+    /**
      * @dev StartMigration initiate migration to another contract, account - msg.sender, to - address delegate to
      */
     event StartMigration(address indexed account, address indexed to);
@@ -228,6 +232,14 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      */
     modifier notStopped() {
         require(!stopped, "stopped");
+        _;
+    }
+
+    /**
+     * @dev Throws if not stopped
+     */
+    modifier stopped() {
+        require(stopped, "not stopped");
         _;
     }
 
