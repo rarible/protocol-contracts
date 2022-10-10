@@ -41,7 +41,7 @@ contract("RariMineV3", accounts => {
         rariMine = await RariMineV3.new();
         await staking.__Staking_init(token.address, 0, 0, 0); //initialize, set owner
         await staking.incrementBlock(WEEK);
-        await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 42, 42, 4000);
+        await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 4000);
         version = await rariMine.VERSION();
         chainId = await web3.eth.getChainId();
     })
@@ -69,9 +69,7 @@ contract("RariMineV3", accounts => {
             ]
         );
 
-        console.log("encodedParametrs " ,encodedParameters)
         const keccak256EncodedParameters = keccak256(encodedParameters).toString('hex');
-        console.log("keccak256EncodedParameters", keccak256EncodedParameters);
         return keccak256EncodedParameters;
     }
 
@@ -134,7 +132,7 @@ contract("RariMineV3", accounts => {
             for (let balanceClaimerIndex = 0; balanceClaimerIndex < balances.length; balanceClaimerIndex++) {
                 let balanceClaimer = balances[balanceClaimerIndex];
                 balanceClaimer.value = 1000;
-                const prepareMessage = await libEncoder.prepareMessage(balanceClaimer, rariMine.address, version);
+                const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
                 const signature = await signPersonalMessage(prepareMessage, owner);
 
                 const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
@@ -167,7 +165,7 @@ contract("RariMineV3", accounts => {
             await rariMine.doOverride(balances);
 
             balanceClaimer1.value = 2000;
-            const prepareMessage = await libEncoder.prepareMessage(balanceClaimer1, rariMine.address, version);
+            const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
             const signature = await signPersonalMessage(prepareMessage, owner);
 
 			await truffleAssert.reverts(
@@ -193,7 +191,7 @@ contract("RariMineV3", accounts => {
             await rariMine.doOverride(balances);
 
             balanceClaimer1.value = 2000;
-            const prepareMessage = await libEncoder.prepareMessage(balanceClaimer1, rariMine.address, version);
+            const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
             const signature = await signPersonalMessage(prepareMessage, owner);
 
 			await truffleAssert.reverts(
@@ -219,7 +217,7 @@ contract("RariMineV3", accounts => {
             await rariMine.doOverride(balances);
 
             balanceClaimer1.value = 3000;
-            const prepareMessage = await libEncoder.prepareMessage(balanceClaimer1, rariMine.address, version);
+            const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
             const signature = await signPersonalMessage(prepareMessage, owner);
 
 			await truffleAssert.reverts(
