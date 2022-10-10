@@ -84,13 +84,13 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     LibBrokenLine.BrokenLine public totalSupplyLine;
 
     /**
-     * @dev Emitted when create Lock with parameters (account, delegate, amount, slope, cliff)
+     * @dev Emitted when create Lock with parameters (account, delegate, amount, slopePeriod, cliff)
      */
-    event StakeCreate(uint indexed id, address indexed account, address indexed delegate, uint time, uint amount, uint slope, uint cliff);
+    event StakeCreate(uint indexed id, address indexed account, address indexed delegate, uint time, uint amount, uint slopePeriod, uint cliff);
     /**
-     * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlope, newCliff) for Lock with given id
+     * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlopePeriod, newCliff) for Lock with given id
      */
-    event Restake(uint indexed id, address indexed account, address indexed delegate, uint counter, uint time, uint amount, uint slope, uint cliff);
+    event Restake(uint indexed id, address indexed account, address indexed delegate, uint counter, uint time, uint amount, uint slopePeriod, uint cliff);
     /**
      * @dev Emitted when to set newDelegate address for Lock with given id
      */

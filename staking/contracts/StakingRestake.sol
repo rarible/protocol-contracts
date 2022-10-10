@@ -9,10 +9,10 @@ abstract contract StakingRestake is StakingBase {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    function restake(uint id, address newDelegate, uint newAmount, uint newSlope, uint newCliff) external notStopped notMigrating returns (uint) {
+    function restake(uint id, address newDelegate, uint newAmount, uint newSlopePeriod, uint newCliff) external notStopped notMigrating returns (uint) {
         address account = verifyStakeOwner(id);
         uint time = roundTimestamp(getBlockNumber());
-        verification(account, id, newAmount, newSlope, newCliff, time);
+        verification(account, id, newAmount, newSlopePeriod, newCliff, time);
 
         address delegate = stakes[id].delegate;
         accounts[account].locked.update(time);
@@ -21,8 +21,8 @@ abstract contract StakingRestake is StakingBase {
 
         counter++;
 
-        addLines(account, newDelegate, newAmount, newSlope, newCliff, time);
-        emit Restake(id, account, newDelegate, counter, time, newAmount, newSlope, newCliff);
+        addLines(account, newDelegate, newAmount, newSlopePeriod, newCliff, time);
+        emit Restake(id, account, newDelegate, counter, time, newAmount, newSlopePeriod, newCliff);
 
         // IVotesUpgradeable events
         emit DelegateChanged(account, delegate, newDelegate);
@@ -38,25 +38,28 @@ abstract contract StakingRestake is StakingBase {
      *      2. cliff period and slope period less or equal two years
      *      3. newFinishTime more or equal oldFinishTime
      */
-    function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
+    function verification(address account, uint id, uint newAmount, uint newSlopePeriod, uint newCliff, uint toTime) internal view {
         require(newAmount > 0, "zero amount");
         require(newCliff <= TWO_YEAR_WEEKS, "cliff too big");
-        uint period = divUp(newAmount, newSlope);
-        require(period <= TWO_YEAR_WEEKS, "slope too big");
-        uint newEnd = toTime.add(newCliff).add(period);
+        require(newSlopePeriod <= TWO_YEAR_WEEKS, "slope period too big");
+        require(newSlopePeriod > 0, "slope period equal 0");
+
+        //check Line with new parameters don`t finish earlier than old Line
+        uint newEnd = toTime.add(newCliff).add(newSlopePeriod);
         LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id];
         LibBrokenLine.Line memory line = lineData.line;
-        period = divUp(line.bias, line.slope);
-        uint oldEnd = line.start.add(lineData.cliff).add(period);
+        uint oldSlopePeriod = divUp(line.bias, line.slope);
+        uint oldEnd = line.start.add(lineData.cliff).add(oldSlopePeriod);
         require(oldEnd <= newEnd, "new line period stake too short");
+
         //check Line with new parameters don`t cut corner old Line
         uint oldCliffEnd = line.start.add(lineData.cliff);
         uint newCliffEnd = toTime.add(newCliff);
         if (oldCliffEnd > newCliffEnd) {
             uint balance = oldCliffEnd.sub(newCliffEnd);
-            uint oldBias = line.bias;
+            uint newSlope = divUp(newAmount, newSlopePeriod);
             uint newBias = newAmount.sub(balance.mul(newSlope));
-            require(newBias >= oldBias, "detect cut deposit corner");
+            require(newBias >= line.bias, "detect cut deposit corner");
         }
     }
 
