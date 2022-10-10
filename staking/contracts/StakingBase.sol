@@ -158,9 +158,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(TWO_YEAR_WEEKS - minSlopePeriod)
      *      )) / ST_FORMULA_DIVIDER
      **/
-//    function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
     function getStake(uint amount, uint slopePeriod, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
-//        uint slopePeriod = divUp(amount, slope);
         require(cliff >= minCliffPeriod, "cliff period < minimal stake period");
         require(slopePeriod >= minSlopePeriod, "slope period < minimal stake period");
 
