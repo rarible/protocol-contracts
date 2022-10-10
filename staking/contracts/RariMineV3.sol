@@ -87,7 +87,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             uint slope = LibStakingMath.divUp(stakeAmount, claimSlopeWeeks);
             require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
             require(token.approve(address(staking), stakeAmount), "approve is not successful");
-            staking.stake(_msgSender(), _msgSender(), stakeAmount, slope, claimCliffWeeks);
+            staking.stake(recipient, recipient, stakeAmount, slope, claimCliffWeeks);
             return;
         }
         
