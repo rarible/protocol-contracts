@@ -186,10 +186,10 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     * @notice method returns the amount of blocks to shift staking epoch to.
     * By the time of development, the default weekly-epoch calculated by main-net block number
     * would start at about 11-35 UTC on Tuesday
-    * we move it to 00-00 UTC Monday by adding 125(35 mins) + 3600(12 hours) + 36000(5 days) = 39725 blocks 
+    * we move it to 00-00 UTC Thursday by adding 10800 blocks (approx)
     */
     function getEpochShift() internal view virtual returns (uint) {
-        return 39725;
+        return 10800;
     }
 
     function verifyStakeOwner(uint id) internal view returns (address account) {
