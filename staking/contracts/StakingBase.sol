@@ -238,7 +238,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     /**
      * @dev Throws if not stopped
      */
-    modifier stopped() {
+    modifier isStopped() {
         require(stopped, "not stopped");
         _;
     }

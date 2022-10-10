@@ -23,7 +23,7 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StopStaking(msg.sender);
     }
 
-    function start() external onlyOwner stopped {
+    function start() external onlyOwner isStopped {
         stopped = false;
         emit StartStaking(msg.sender);
     }
