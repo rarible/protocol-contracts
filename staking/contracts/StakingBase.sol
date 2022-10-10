@@ -133,11 +133,11 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
 
     function addLines(address account, address delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
         updateLines(account, delegate, time);
-        (uint stAmount, uint slope) = getStake(amount, slopePeriod, cliff);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, slope);
+        (uint stAmount, uint stSlope) = getStake(amount, slopePeriod, cliff);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
         totalSupplyLine.add(counter, line, cliff);
         accounts[delegate].balance.add(counter, line, cliff);
-        slope = divUp(amount, slopePeriod);
+        uint slope = divUp(amount, slopePeriod);
         line = LibBrokenLine.Line(time, amount, slope);
         accounts[account].locked.add(counter, line, cliff);
         stakes[counter].account = account;
