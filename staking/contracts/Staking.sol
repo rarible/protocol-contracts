@@ -28,18 +28,18 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StartMigration(msg.sender, to);
     }
 
-    function stake(address account, address _delegate, uint amount, uint slope, uint cliff) external notStopped notMigrating returns (uint) {
+    function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
-        require(divUp(amount, slope) <= TWO_YEAR_WEEKS, "period too big");
+        require(slopePeriod <= TWO_YEAR_WEEKS, "period too big"); //don`t need to div
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         counter++;
 
         uint time = roundTimestamp(getBlockNumber());
-        addLines(account, _delegate, amount, slope, cliff, time);
+        addLines(account, _delegate, amount, slopePeriod, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
-        emit StakeCreate(counter, account, _delegate, time, amount, slope, cliff);
+        emit StakeCreate(counter, account, _delegate, time, amount, divUp(amount, slopeP: eriod), cliff);//todo thinke maybe emit with slopePeriod parameter?
 
         // IVotesUpgradeable events
         emit DelegateChanged(account, address(0), _delegate);
