@@ -6,7 +6,7 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "./lib-broken-line/LibBrokenLine.sol";
+import "./libs/LibBrokenLine.sol";
 
 import "./IVotesUpgradeable.sol";
 
