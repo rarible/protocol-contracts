@@ -40,9 +40,9 @@ abstract contract StakingRestake is StakingBase {
      */
     function verification(address account, uint id, uint newAmount, uint newSlope, uint newCliff, uint toTime) internal view {
         require(newAmount > 0, "zero amount");
-        require(newCliff <= TWO_YEAR_WEEKS, "cliff too big");
+        require(newCliff <= MAX_CLIFF_PERIOD, "cliff too big");
         uint period = divUp(newAmount, newSlope);
-        require(period <= TWO_YEAR_WEEKS, "slope too big");
+        require(period <= MAX_SLOPE_PERIOD, "slope too big");
         uint newEnd = toTime.add(newCliff).add(period);
         LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id];
         LibBrokenLine.Line memory line = lineData.line;

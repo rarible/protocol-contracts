@@ -1,31 +1,24 @@
+const fs = require("fs");
 const os = require('os');
-
-let apiKey;
-try {
-	console.log(`Loading etherscan key from ${os.homedir() + "/.ethereum/etherscan.json"}`);
-	apiKey = require(os.homedir() + "/.ethereum/etherscan.json").apiKey;
-	console.log("loaded etherscan api key");
-} catch {
-	console.log("unable to load etherscan key from config")
-	apiKey = "UNKNOWN"
-}
+const path = require('path');
+require('dotenv').config();
 
 function createNetwork(name) {
   try {
-    var json = require(os.homedir() + "/.ethereum/" + name + ".json");
+    var json = require(path.join(os.homedir(), ".ethereum", name + ".json"));
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
 
     return {
       provider: () => {
         const { estimate } = require("@rarible/estimate-middleware")
-	      if (json.path != null) {
-	        const { createProvider: createTrezorProvider } = require("@rarible/trezor-provider")
-	        const provider = createTrezorProvider({ url: json.url, path: json.path, chainId: json.network_id })
-	        provider.send = provider.sendAsync
-	        return provider
-	      } else {
-	        return createProvider(json.address, json.key, json.url)
-	      }
+        if (json.path != null) {
+          const { createProvider: createTrezorProvider } = require("@rarible/trezor-provider")
+          const provider = createTrezorProvider({ url: json.url, path: json.path, chainId: json.network_id })
+          provider.send = provider.sendAsync
+          return provider
+        } else {
+          return createProvider(json.address, json.key, json.url)
+        }
       },
       from: json.address,
       gas: 8000000,
@@ -45,14 +38,35 @@ function createProvider(address, key, url) {
   return new HDWalletProvider(key, url);
 }
 
+function getScanApiKey(name) {
+  let apiKey = "UNKNOWN"
+  const envApiKeyName = `${name.toUpperCase()}_API_KEY`;
+  if (process.env[envApiKeyName]) {
+    console.log(`loading ${name} key from env ${envApiKeyName}`);
+    apiKey = process.env[envApiKeyName];
+    console.log(`loaded ${name} key from env ${envApiKeyName}`);
+  } else {
+    const filePath = path.join(os.homedir(), ".ethereum", name + ".json");
+    if (fs.existsSync(filePath)) {
+      console.log(`Loading ${name} key from ${filePath}`);
+      apiKey = require(filePath).apiKey;
+      console.log(`loaded ${name} api key`);
+    } else {
+      console.log(`unable to load ${name} key from config`)
+    }
+  }
+  return apiKey;
+}
+
 module.exports = {
-	api_keys: {
-    etherscan: apiKey
+  api_keys: {
+    etherscan: getScanApiKey('etherscan'),
+    polygonscan: getScanApiKey('polygonscan'),
+    polygon_mumbai: getScanApiKey('polygonscan'),
   },
 
-	plugins: [
-    'truffle-plugin-verify',
-    'truffle-contract-size'
+  plugins: [
+    'truffle-plugin-verify'
   ],
 
   networks: {
@@ -76,7 +90,7 @@ module.exports = {
       version: "0.7.6",
       settings: {
         optimizer: {
-          enabled : true,
+          enabled: true,
           runs: 200
         },
         evmVersion: "istanbul"
