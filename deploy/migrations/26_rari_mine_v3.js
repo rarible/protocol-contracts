@@ -20,7 +20,7 @@ const rinkeby = {
 }
 const goerli = {
     token: "0xbe6dEA792E5D557d71a4cDEf7d22d6dccA133891",
-    tokenOwner: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
+    tokenOwner: "0xcb525c5E60EF37F5f7fb57233c7Ee1338eDC4eAD",
     staking: "0x6D5E228C25730502aF5ACffa2eB34956c33ad7C2",
     claimCliffWeeks: 3,
     claimSlopeWeeks: 1,
@@ -63,7 +63,7 @@ module.exports = async function (deployer, network, accounts) {
 
     const { token, tokenOwner, staking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim } = getSettings(network);
 
-    const rariMineV3 = await deployProxy(RariMineV3, [token, tokenOwner, staking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim], { deployer, initializer: '__RariMineV3_init' })
+    const rariMineV3 = await deployProxy(RariMineV3, [token, tokenOwner, staking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim], { deployer, initializer: '__RariMineV3_init', gas: 3000000 })
 
     console.log(`deployed RariMineV3 at ${rariMineV3.address}`)
     console.log(`settings: ${getSettings(network)}`)
