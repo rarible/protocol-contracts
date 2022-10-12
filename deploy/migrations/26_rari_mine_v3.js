@@ -21,7 +21,7 @@ const rinkeby = {
 const goerli = {
     token: "0xbe6dEA792E5D557d71a4cDEf7d22d6dccA133891",
     tokenOwner: "0xcb525c5E60EF37F5f7fb57233c7Ee1338eDC4eAD",
-    staking: "0x6D5E228C25730502aF5ACffa2eB34956c33ad7C2",
+    staking: "0x39C9D13e1b17Bf1975aFe892e18B1D5A1482b52D",
     claimCliffWeeks: 3,
     claimSlopeWeeks: 1,
     claimFormulaClaim: 4000
