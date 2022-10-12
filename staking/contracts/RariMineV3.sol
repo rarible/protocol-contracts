@@ -41,6 +41,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     event SetClaimCliffWeeks(uint256 indexed newClaimCliffWeeks);
     event SetClaimSlopeWeeks(uint256 indexed newClaimSlopeWeeks);
     event SetNewTokenOwner(address indexed newTokenOwner);
+    event SetNewStaking(address indexed newStaking);
 
     function __RariMineV3_init(
         IERC20Upgradeable _token,
@@ -147,6 +148,11 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     function setClaimSlopeWeeks(uint256 newClaimSlopeWeeks) external onlyOwner {
         claimSlopeWeeks = newClaimSlopeWeeks;
         emit SetClaimCliffWeeks(newClaimSlopeWeeks);
+    }
+
+    function setStaking(address newStaking) external onlyOwner {
+        staking = IStaking(newStaking);
+        emit SetNewStaking(newStaking);
     }
 
     uint256[48] private __gap;
