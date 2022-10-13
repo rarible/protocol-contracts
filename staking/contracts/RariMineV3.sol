@@ -83,7 +83,8 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         address recipient = _balance.recipient;
         if (_msgSender() == recipient) {
             uint256 toClaim = _balance.value.sub(claimed[recipient], "nothing to claim");
-            claimed[recipient] = claimed[recipient].add(_balance.value);
+            require(toClaim > 0, "nothing to claim");
+            claimed[recipient] = _balance.value;
 
             // claim rari tokens
             uint256 claimAmount = toClaim.mul(claimFormulaClaim).div(CLAIM_FORMULA_DIVIDER);
