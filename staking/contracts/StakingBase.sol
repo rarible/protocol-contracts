@@ -248,6 +248,25 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
         _;
     }
 
+    function updateAccountLines(address account, uint time) public notStopped notMigrating onlyOwner {
+        accounts[account].balance.update(time);
+        accounts[account].locked.update(time);
+    }
+
+    function updateTotalSupplyLine(uint time) public notStopped notMigrating onlyOwner {
+        totalSupplyLine.update(time);
+    }
+
+    function updateAccountLinesBlockNumber(address account, uint256 blockNumber) external notStopped notMigrating onlyOwner {
+        uint256 time = roundTimestamp(blockNumber);
+        updateAccountLines(account, time);
+    }
+    
+    function updateTotalSupplyLineBlockNumber(uint256 blockNumber) external notStopped notMigrating onlyOwner {
+        uint256 time = roundTimestamp(blockNumber);
+        updateTotalSupplyLine(time);
+    }
+
     //add minCliffPeriod, decrease __gap
     //add minSlopePeriod, decrease __gap
     uint256[48] private __gap;

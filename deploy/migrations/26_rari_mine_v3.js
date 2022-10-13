@@ -6,9 +6,9 @@ const mainnet = {
     token: "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
     tokenOwner: "0x876E927e97c8517Ea231066a1e78174A8dcAc191",
     staking: "0x096Bd9a7a2e703670088C05035e23c7a9F428496",
-    claimCliffWeeks: 0,
-    claimSlopeWeeks: 0,
-    claimFormulaClaim: 4000
+    claimCliffWeeks: 3,
+    claimSlopeWeeks: 1,
+    claimFormulaClaim: 0
 }
 const goerli = {
     token: "0xbe6dEA792E5D557d71a4cDEf7d22d6dccA133891",
