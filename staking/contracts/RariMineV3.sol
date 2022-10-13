@@ -40,6 +40,8 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     event SetClaimFormulaClaim(uint256 indexed newClaimFormulaClaim);
     event SetClaimCliffWeeks(uint256 indexed newClaimCliffWeeks);
     event SetClaimSlopeWeeks(uint256 indexed newClaimSlopeWeeks);
+    event SetNewTokenOwner(address indexed newTokenOwner);
+    event SetNewStaking(address indexed newStaking);
 
     function __RariMineV3_init(
         IERC20Upgradeable _token,
@@ -128,23 +130,29 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         return string(str);
     }
 
-    function balanceOf(address account) public view returns (uint256) {
-        return claimed[account];
+    function setTokenOwner(address newTokenOwner) external onlyOwner {
+        tokenOwner = newTokenOwner;
+        emit SetNewTokenOwner(newTokenOwner);
     }
 
-    function setClaimFormulaClaim(uint256 _value) external onlyOwner {
-        claimFormulaClaim = _value;
-        emit SetClaimCliffWeeks(claimFormulaClaim);
+    function setClaimFormulaClaim(uint256 newClaimFormulaClaim) external onlyOwner {
+        claimFormulaClaim = newClaimFormulaClaim;
+        emit SetClaimCliffWeeks(newClaimFormulaClaim);
     }
 
-    function setClaimCliffWeeks(uint256 _value) external onlyOwner {
-        claimCliffWeeks = _value;
-        emit SetClaimCliffWeeks(_value);
+    function setClaimCliffWeeks(uint256 newClaimCliffWeeks) external onlyOwner {
+        claimCliffWeeks = newClaimCliffWeeks;
+        emit SetClaimCliffWeeks(newClaimCliffWeeks);
     }
 
-    function setClaimSlopeWeeks(uint256 _value) external onlyOwner {
-        claimSlopeWeeks = _value;
-        emit SetClaimCliffWeeks(_value);
+    function setClaimSlopeWeeks(uint256 newClaimSlopeWeeks) external onlyOwner {
+        claimSlopeWeeks = newClaimSlopeWeeks;
+        emit SetClaimCliffWeeks(newClaimSlopeWeeks);
+    }
+
+    function setStaking(address newStaking) external onlyOwner {
+        staking = IStaking(newStaking);
+        emit SetNewStaking(newStaking);
     }
 
     uint256[48] private __gap;
