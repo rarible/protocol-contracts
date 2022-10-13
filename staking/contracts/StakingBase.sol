@@ -132,6 +132,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     }
 
     function addLines(address account, address delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
+        require(slopePeriod <= amount, "Wrong value slopePeriod");
         updateLines(account, delegate, time);
         (uint stAmount, uint stSlope) = getStake(amount, slopePeriod, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
