@@ -38,9 +38,11 @@ contract("RariMineV3", accounts => {
         staking = await TestStaking.new();
         libSignature = await LibSignatureTest.new();
         libEncoder = await LibEncoderTest.new();
-        rariMine = await RariMineV3.new();
+        
         await staking.__Staking_init(token.address, 0, 0, 0); //initialize, set owner
         await staking.incrementBlock(WEEK);
+
+        rariMine = await RariMineV3.new();
         await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 4000);
         version = await rariMine.VERSION();
         chainId = await web3.eth.getChainId();
@@ -316,6 +318,92 @@ contract("RariMineV3", accounts => {
 
                 const finalBalanceClaimer = await token.balanceOf(balanceClaimer.recipient);
                 assert.equal(await token.balanceOf(balanceClaimer.recipient), 400* (balanceClaimerIndex + 1));
+            }
+            
+            
+        });
+
+        it("Should claim all the reward ", async () => {
+
+            rariMine = await RariMineV3.new();
+            await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 10000);   
+            const balanceClaimer1 = {
+                "recipient": claimer1,
+                "value": 1000
+            };
+            const balanceClaimer2 = {
+                "recipient": claimer1,
+                "value": 2000
+            };
+            const balanceClaimer3 = {
+                "recipient": claimer1,
+                "value": 3000
+            };
+            const balances = [
+                balanceClaimer1,
+                balanceClaimer2,
+                balanceClaimer3
+            ];
+            // mint tokens and approve to spent by rari mine
+            await token.mint(tokenOwner, 3000);
+            await token.approve(rariMine.address, 3000, { from: tokenOwner });
+            
+            // specify balances - increase by 1000
+            for (let balanceClaimerIndex = 0; balanceClaimerIndex < balances.length; balanceClaimerIndex++) {
+                let balanceClaimer = balances[balanceClaimerIndex];
+                console.log('balanceClaimer, ', balanceClaimer);
+                const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
+                const signature = await signPersonalMessage(prepareMessage, owner);
+
+                const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
+                console.log(`GasUsed in claim: ${receipt.receipt.gasUsed}`);
+
+                assert.equal(await token.balanceOf(staking.address), 0 * (balanceClaimerIndex + 1));
+
+                assert.equal(await token.balanceOf(balanceClaimer.recipient), 1000* (balanceClaimerIndex + 1));
+            }
+            
+            
+        });
+
+        it("Should stake all the reward ", async () => {
+
+            rariMine = await RariMineV3.new();
+            await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 0);   
+            const balanceClaimer1 = {
+                "recipient": claimer1,
+                "value": 1000
+            };
+            const balanceClaimer2 = {
+                "recipient": claimer1,
+                "value": 2000
+            };
+            const balanceClaimer3 = {
+                "recipient": claimer1,
+                "value": 3000
+            };
+            const balances = [
+                balanceClaimer1,
+                balanceClaimer2,
+                balanceClaimer3
+            ];
+            // mint tokens and approve to spent by rari mine
+            await token.mint(tokenOwner, 3000);
+            await token.approve(rariMine.address, 3000, { from: tokenOwner });
+            
+            // specify balances - increase by 1000
+            for (let balanceClaimerIndex = 0; balanceClaimerIndex < balances.length; balanceClaimerIndex++) {
+                let balanceClaimer = balances[balanceClaimerIndex];
+                console.log('balanceClaimer, ', balanceClaimer);
+                const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
+                const signature = await signPersonalMessage(prepareMessage, owner);
+
+                const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
+                console.log(`GasUsed in claim: ${receipt.receipt.gasUsed}`);
+
+                assert.equal(await token.balanceOf(staking.address), 1000 * (balanceClaimerIndex + 1));
+
+                assert.equal(await token.balanceOf(balanceClaimer.recipient), 0* (balanceClaimerIndex + 1));
             }
             
             
