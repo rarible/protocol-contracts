@@ -3,17 +3,9 @@ const RariMineV3 = artifacts.require("RariMineV3");
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
 const mainnet = {
-    token: "0x0000000000000000000000000000000000000000",
-    tokenOwner: "0x0000000000000000000000000000000000000000",
-    staking: "0x0000000000000000000000000000000000000000",
-    claimCliffWeeks: 0,
-    claimSlopeWeeks: 0,
-    claimFormulaClaim: 4000
-}
-const rinkeby = {
-    token: "0xfad6072626ec68003CEA5064AdA1b42A48352d9B",
-    tokenOwner: "0x0000000000000000000000000000000000000000",
-    staking: "0x0000000000000000000000000000000000000000",
+    token: "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
+    tokenOwner: "0x876E927e97c8517Ea231066a1e78174A8dcAc191",
+    staking: "0x096Bd9a7a2e703670088C05035e23c7a9F428496",
     claimCliffWeeks: 0,
     claimSlopeWeeks: 0,
     claimFormulaClaim: 4000
@@ -26,29 +18,10 @@ const goerli = {
     claimSlopeWeeks: 1,
     claimFormulaClaim: 4000
 }
-const dev = {
-    token: "0x55eB2809896aB7414706AaCDde63e3BBb26e0BC6",
-    tokenOwner: "0x0000000000000000000000000000000000000000",
-    staking: "0x0000000000000000000000000000000000000000",
-    claimCliffWeeks: 0,
-    claimSlopeWeeks: 0,
-    claimFormulaClaim: 4000
-}
-const def = {
-    token: "0x0000000000000000000000000000000000000000",
-    tokenOwner: "0x0000000000000000000000000000000000000000",
-    staking: "0x0000000000000000000000000000000000000000",
-    claimCliffWeeks: 0,
-    claimSlopeWeeks: 0,
-    claimFormulaClaim: 4000
-}
 
 let settings = {
-    "default": def,
-    "rinkeby": rinkeby,
     "mainnet": mainnet,
-    "goerli": goerli,
-    "dev": dev
+    "goerli": goerli
 };
 
 function getSettings(network) {
