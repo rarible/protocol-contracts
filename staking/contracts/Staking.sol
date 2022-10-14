@@ -23,6 +23,11 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StopStaking(msg.sender);
     }
 
+    function start() external onlyOwner isStopped {
+        stopped = false;
+        emit StartStaking(msg.sender);
+    }
+
     function startMigration(address to) external onlyOwner {
         migrateTo = to;
         emit StartMigration(msg.sender, to);
@@ -30,8 +35,8 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
 
     function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating returns (uint) {
         require(amount > 0, "zero amount");
-        require(cliff <= TWO_YEAR_WEEKS, "cliff too big");
-        require(slopePeriod <= TWO_YEAR_WEEKS, "period too big"); //don`t need to div
+        require(cliff <= MAX_CLIFF_PERIOD, "cliff too big");
+        require(slopePeriod <= MAX_SLOPE_PERIOD, "period too big");
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         counter++;

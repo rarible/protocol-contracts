@@ -40,8 +40,8 @@ abstract contract StakingRestake is StakingBase {
      */
     function verification(address account, uint id, uint newAmount, uint newSlopePeriod, uint newCliff, uint toTime) internal view {
         require(newAmount > 0, "zero amount");
-        require(newCliff <= TWO_YEAR_WEEKS, "cliff too big");
-        require(newSlopePeriod <= TWO_YEAR_WEEKS, "slope period too big");
+        require(newCliff <= MAX_CLIFF_PERIOD, "cliff too big");
+        require(newSlopePeriod <= MAX_SLOPE_PERIOD, "slope period too big");
         require(newSlopePeriod > 0, "slope period equal 0");
 
         //check Line with new parameters don`t finish earlier than old Line
