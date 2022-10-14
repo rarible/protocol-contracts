@@ -83,6 +83,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         address recipient = _balance.recipient;
         if (_msgSender() == recipient) {
             uint256 toClaim = _balance.value.sub(claimed[recipient], "nothing to claim");
+            require(toClaim > 0, "nothing to claim");
             claimed[recipient] = _balance.value;
 
             // claim rari tokens
@@ -95,10 +96,12 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
             // stake some tokens
             uint256 stakeAmount = toClaim.sub(claimAmount);
-            uint256 slopePeriod = claimSlopeWeeks;
-            require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
-            require(token.approve(address(staking), stakeAmount), "approve is not successful");
-            staking.stake(recipient, recipient, stakeAmount, slopePeriod, claimCliffWeeks);
+            if(stakeAmount > 0) {
+                require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
+                require(token.approve(address(staking), stakeAmount), "approve is not successful");
+                staking.stake(recipient, recipient, stakeAmount, claimSlopeWeeks, claimCliffWeeks);
+            }
+
             return;
         }
 
