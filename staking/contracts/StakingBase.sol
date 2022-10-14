@@ -85,13 +85,13 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     LibBrokenLine.BrokenLine public totalSupplyLine;
 
     /**
-     * @dev Emitted when create Lock with parameters (account, delegate, amount, slope, cliff)
+     * @dev Emitted when create Lock with parameters (account, delegate, amount, slopePeriod, cliff)
      */
     event StakeCreate(uint indexed id, address indexed account, address indexed delegate, uint time, uint amount, uint slopePeriod, uint cliff);
     /**
-     * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlope, newCliff) for Lock with given id
+     * @dev Emitted when change Lock parameters (newDelegate, newAmount, newSlopePeriod, newCliff) for Lock with given id
      */
-    event Restake(uint indexed id, address indexed account, address indexed delegate, uint counter, uint time, uint amount, uint slope, uint cliff);
+    event Restake(uint indexed id, address indexed account, address indexed delegate, uint counter, uint time, uint amount, uint slopePeriod, uint cliff);
     /**
      * @dev Emitted when to set newDelegate address for Lock with given id
      */
@@ -136,12 +136,14 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
         minSlopePeriod = _minSlopePeriod;
     }
 
-    function addLines(address account, address delegate, uint amount, uint slope, uint cliff, uint time) internal {
+    function addLines(address account, address delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
+        require(slopePeriod <= amount, "Wrong value slopePeriod");
         updateLines(account, delegate, time);
-        (uint stAmount, uint stSlope) = getStake(amount, slope, cliff);
+        (uint stAmount, uint stSlope) = getStake(amount, slopePeriod, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
         totalSupplyLine.add(counter, line, cliff);
         accounts[delegate].balance.add(counter, line, cliff);
+        uint slope = divUp(amount, slopePeriod);
         line = LibBrokenLine.Line(time, amount, slope);
         accounts[account].locked.add(counter, line, cliff);
         stakes[counter].account = account;
@@ -162,8 +164,7 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
      *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(MAX_SLOPE_PERIOD - minSlopePeriod)
      *      )) / ST_FORMULA_DIVIDER
      **/
-    function getStake(uint amount, uint slope, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
-        uint slopePeriod = divUp(amount, slope);
+    function getStake(uint amount, uint slopePeriod, uint cliff) public view returns (uint stakeAmount, uint stakeSlope) {
         require(cliff >= minCliffPeriod, "cliff period < minimal stake period");
         require(slopePeriod >= minSlopePeriod, "slope period < minimal stake period");
 

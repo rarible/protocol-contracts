@@ -199,7 +199,7 @@ contract("RariMineV3", accounts => {
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
-                "nothing to claim"
+                "nothing to claim" //todo: why another message: zero amount ?
 			);
 		})
 
