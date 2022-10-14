@@ -52,7 +52,7 @@ contract("Staking", accounts => {
       assert.equal(DelegateChangedFromStakeTx[0].args.delegator, user)
       assert.equal(DelegateChangedFromStakeTx[0].args.fromDelegate, zeroAddress)
       assert.equal(DelegateChangedFromStakeTx[0].args.toDelegate, user)
-      
+
       //DelegateVotesChanged event
       const DelegateVotesChangedFromStakeTx = (await staking.getPastEvents("DelegateVotesChanged", {
         fromBlock: stakeTx.receipt.blockNumber,
@@ -97,7 +97,7 @@ contract("Staking", accounts => {
       assert.equal(DelegateVotesChangedFromelegateToTx[0].args.delegate, user)
       assert.equal(DelegateVotesChangedFromelegateToTx[0].args.previousBalance, 0)
       assert.equal(DelegateVotesChangedFromelegateToTx[0].args.newBalance, 0)
-      
+
       assert.equal(DelegateVotesChangedFromelegateToTx[1].args.delegate, delegate)
       assert.equal(DelegateVotesChangedFromelegateToTx[1].args.previousBalance, 0)
       assert.equal(DelegateVotesChangedFromelegateToTx[1].args.newBalance, 422)
@@ -141,7 +141,7 @@ contract("Staking", accounts => {
       assert.equal(DelegateVotesChangedFromReStakeTx[0].args.delegate, delegate)
       assert.equal(DelegateVotesChangedFromReStakeTx[0].args.previousBalance, 0)
       assert.equal(DelegateVotesChangedFromReStakeTx[0].args.newBalance, 0)
-      
+
       assert.equal(DelegateVotesChangedFromReStakeTx[1].args.delegate, reStakeDelegate)
       assert.equal(DelegateVotesChangedFromReStakeTx[1].args.previousBalance, 0)
       assert.equal(DelegateVotesChangedFromReStakeTx[1].args.newBalance, 861)
@@ -198,7 +198,7 @@ contract("Staking", accounts => {
       assert.equal(await staking.getVotes(delegate), 0)
       assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 645)
-      
+
       assert.equal(await staking.balanceOf(reStakeDelegate), 429);
       assert.equal(await staking.getVotes(reStakeDelegate), 645)
       assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 645)
@@ -213,7 +213,7 @@ contract("Staking", accounts => {
       assert.equal(await staking.getVotes(delegate), 0)
       assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 429)
-      
+
       assert.equal(await staking.balanceOf(reStakeDelegate), 213);
       assert.equal(await staking.getVotes(reStakeDelegate), 429)
       assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 429)
@@ -228,7 +228,7 @@ contract("Staking", accounts => {
       assert.equal(await staking.getVotes(delegate), 0)
       assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 213)
-      
+
       assert.equal(await staking.balanceOf(reStakeDelegate), 0);
       assert.equal(await staking.getVotes(reStakeDelegate), 213)
       assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 213)
@@ -243,7 +243,7 @@ contract("Staking", accounts => {
       assert.equal(await staking.getVotes(delegate), 0)
       assert.equal(await staking.getPastVotes(delegate, (currentBlock - 1)), 0)
       assert.equal(await staking.getPastTotalSupply((currentBlock - 1)), 0)
-      
+
       assert.equal(await staking.balanceOf(reStakeDelegate), 0);
       assert.equal(await staking.getVotes(reStakeDelegate), 0)
       assert.equal(await staking.getPastVotes(reStakeDelegate, (currentBlock - 1)), 0)
@@ -284,7 +284,7 @@ contract("Staking", accounts => {
       //10 more block do
       await staking.incrementBlock(10)
       assert.equal(await staking.getWeek(), 311)
-      
+
 		});
 	})
 
@@ -402,7 +402,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[2], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[2] });
 			await staking.stake(accounts[2], accounts[2], 30, 3, 3, { from: accounts[2] });
-			//3 week later nothing change, because cliff 
+			//3 week later nothing change, because cliff
 			await incrementBlock(WEEK * 3);
 			await staking.withdraw({ from: accounts[2] });
  			assert.equal(await token.balanceOf(staking.address), 30);	//balance Lock on deposite
@@ -889,7 +889,7 @@ contract("Staking", accounts => {
 			await token.mint(accounts[3], 100);
    		await token.approve(staking.address, 1000000, { from: accounts[3] });
 
-			await staking.stake(accounts[2], accounts[2], 30, 10, 3, { from: accounts[2] });
+			await staking.stake(accounts[2], accounts[2], 30, 3, 3, { from: accounts[2] });
 			let idLock1 = 1;
 			await staking.stake(accounts[2], accounts[2], 50, 5, 3, { from: accounts[2] });
 			let idLock2 = 2;
