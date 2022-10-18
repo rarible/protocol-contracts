@@ -40,6 +40,8 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     event SetClaimFormulaClaim(uint256 indexed newClaimFormulaClaim);
     event SetClaimCliffWeeks(uint256 indexed newClaimCliffWeeks);
     event SetClaimSlopeWeeks(uint256 indexed newClaimSlopeWeeks);
+    event SetNewTokenOwner(address indexed newTokenOwner);
+    event SetNewStaking(address indexed newStaking);
 
     function __RariMineV3_init(
         IERC20Upgradeable _token,
@@ -81,7 +83,8 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         address recipient = _balance.recipient;
         if (_msgSender() == recipient) {
             uint256 toClaim = _balance.value.sub(claimed[recipient], "nothing to claim");
-            claimed[recipient] = claimed[recipient].add(_balance.value);
+            require(toClaim > 0, "nothing to claim");
+            claimed[recipient] = _balance.value;
 
             // claim rari tokens
             uint256 claimAmount = toClaim.mul(claimFormulaClaim).div(CLAIM_FORMULA_DIVIDER);
@@ -93,10 +96,12 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
             // stake some tokens
             uint256 stakeAmount = toClaim.sub(claimAmount);
-            uint256 slope = LibStakingMath.divUp(stakeAmount, claimSlopeWeeks);
-            require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
-            require(token.approve(address(staking), stakeAmount), "approve is not successful");
-            staking.stake(recipient, recipient, stakeAmount, slope, claimCliffWeeks);
+            if(stakeAmount > 0) {
+                require(token.transferFrom(tokenOwner, address(this), stakeAmount), "transfer to RariMine is not successful");
+                require(token.approve(address(staking), stakeAmount), "approve is not successful");
+                staking.stake(recipient, recipient, stakeAmount, claimSlopeWeeks, claimCliffWeeks);
+            }
+
             return;
         }
 
@@ -128,23 +133,29 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         return string(str);
     }
 
-    function balanceOf(address account) public view returns (uint256) {
-        return claimed[account];
+    function setTokenOwner(address newTokenOwner) external onlyOwner {
+        tokenOwner = newTokenOwner;
+        emit SetNewTokenOwner(newTokenOwner);
     }
 
-    function setClaimFormulaClaim(uint256 _value) external onlyOwner {
-        claimFormulaClaim = _value;
-        emit SetClaimCliffWeeks(claimFormulaClaim);
+    function setClaimFormulaClaim(uint256 newClaimFormulaClaim) external onlyOwner {
+        claimFormulaClaim = newClaimFormulaClaim;
+        emit SetClaimCliffWeeks(newClaimFormulaClaim);
     }
 
-    function setClaimCliffWeeks(uint256 _value) external onlyOwner {
-        claimCliffWeeks = _value;
-        emit SetClaimCliffWeeks(_value);
+    function setClaimCliffWeeks(uint256 newClaimCliffWeeks) external onlyOwner {
+        claimCliffWeeks = newClaimCliffWeeks;
+        emit SetClaimCliffWeeks(newClaimCliffWeeks);
     }
 
-    function setClaimSlopeWeeks(uint256 _value) external onlyOwner {
-        claimSlopeWeeks = _value;
-        emit SetClaimCliffWeeks(_value);
+    function setClaimSlopeWeeks(uint256 newClaimSlopeWeeks) external onlyOwner {
+        claimSlopeWeeks = newClaimSlopeWeeks;
+        emit SetClaimCliffWeeks(newClaimSlopeWeeks);
+    }
+
+    function setStaking(address newStaking) external onlyOwner {
+        staking = IStaking(newStaking);
+        emit SetNewStaking(newStaking);
     }
 
     uint256[48] private __gap;

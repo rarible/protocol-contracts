@@ -1,4 +1,4 @@
-FROM node:12.22.5 as base
+FROM node:14.18.2 as base
 WORKDIR /protocol
 RUN npm install -g truffle@5.4.17
 COPY . .
@@ -11,4 +11,9 @@ ENTRYPOINT ["truffle", "test", "--compile-all"]
 
 FROM base as exchange-v2
 WORKDIR /protocol/exchange-v2
+ENTRYPOINT ["truffle", "test", "--compile-all"]
+
+FROM base as staking
+WORKDIR /protocol/staking
+RUN rm -rf build
 ENTRYPOINT ["truffle", "test", "--compile-all"]

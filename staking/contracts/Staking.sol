@@ -33,8 +33,7 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StartMigration(msg.sender, to);
     }
 
-    function stake(address account, address _delegate, uint amount, uint slope, uint cliff) external notStopped notMigrating returns (uint) {
-        uint slopePeriod = divUp(amount, slope);
+    function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= MAX_CLIFF_PERIOD, "cliff too big");
         require(slopePeriod <= MAX_SLOPE_PERIOD, "period too big");
@@ -43,7 +42,7 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         counter++;
 
         uint time = roundTimestamp(getBlockNumber());
-        addLines(account, _delegate, amount, slope, cliff, time);
+        addLines(account, _delegate, amount, slopePeriod, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
         emit StakeCreate(counter, account, _delegate, time, amount, slopePeriod, cliff);
 

@@ -19,6 +19,13 @@ const mainnet = {
   looksRare: "0x59728544B08AB483533076417FbBB2fD0B17CE3a",
   sudoSwap: "0x2b2e8cda09bba9660dca5cb6233787738ad68329"
 }
+const goerli = {
+  wyvernExchange: "0x0000000000000000000000000000000000000000",
+  seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+  x2y2: "0x0000000000000000000000000000000000000000",
+  looksRare: "0xD112466471b5438C1ca2D218694200e49d81D047",
+  sudoSwap: "0x25b4EfC43c9dCAe134233CD577fFca7CfAd6748F"
+}
 const ropsten = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
@@ -59,6 +66,7 @@ let settings = {
   "mainnet-fork": mainnet,
   "e2e": e2e,
   "e2e-fork": e2e,
+  "goerli": goerli,
   "dev": dev
 };
 
