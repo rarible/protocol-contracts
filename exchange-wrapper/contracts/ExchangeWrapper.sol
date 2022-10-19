@@ -151,7 +151,7 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
         @return secondFeeAmount amount of the second fee of the purchase, 0 if failed
      */
     function purchase(PurchaseDetails memory purchaseDetails, bool allowFail) internal returns(bool, uint, uint) {
-        (bytes memory marketData, uint[] memory additionalRoyalties) = getDataAndAdditionalData (purchaseDetails.data, purchaseDetails.fees);
+        (bytes memory marketData, uint[] memory additionalRoyalties) = getDataAndAdditionalData (purchaseDetails.data, purchaseDetails.fees, purchaseDetails.marketId);
         uint paymentAmount = purchaseDetails.amount;
         if (purchaseDetails.marketId == Markets.SeaPort){
             (bool success,) = address(seaPort).call{value : paymentAmount}(marketData);
@@ -191,15 +191,26 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
             } else {
                 Ix2y2(x2y2).run{value : paymentAmount}(input);
             }
-            for (uint i = 0; i < input.orders.length; i++) {
-                for (uint j = 0; j < input.orders[i].items.length; j++) {
-                    Ix2y2.Pair[] memory pairs = abi.decode(input.orders[i].items[j].data, (Ix2y2.Pair[]));
-                    for (uint256 k = 0; k < pairs.length; k++) {
-                        Ix2y2.Pair memory p = pairs[k];
-                        IERC721Upgradeable(address(p.token)).safeTransferFrom(address(this), _msgSender(), p.tokenId);
-                    }    
+
+            //for every element in input.details[] getting
+            // order = input.details[i].orderIdx
+            // and from that order getting item = input.details[i].itemId
+            for (uint i = 0; i < input.details.length; i++) {
+                uint orderId = input.details[i].orderIdx;
+                uint itemId = input.details[i].itemIdx;
+                bytes memory data = input.orders[orderId].items[itemId].data;
+                {
+                    if (input.orders[orderId].dataMask.length > 0 && input.details[i].dataReplacement.length > 0) {
+                        _arrayReplace(data, input.details[i].dataReplacement, input.orders[orderId].dataMask);
+                    }
                 }
-            } 
+                Ix2y2.Pair[] memory pairs = abi.decode(data, (Ix2y2.Pair[]));
+
+                for (uint256 j = 0; j < pairs.length; j++) {
+                    Ix2y2.Pair memory p = pairs[j];
+                    IERC721Upgradeable(address(p.token)).safeTransferFrom(address(this), _msgSender(), p.tokenId);
+                }
+            }
         } else if (purchaseDetails.marketId == Markets.LooksRareOrders) {
             (LibLooksRare.TakerOrder memory takerOrder, LibLooksRare.MakerOrder memory makerOrder, bytes4 typeNft) = abi.decode(marketData, (LibLooksRare.TakerOrder, LibLooksRare.MakerOrder, bytes4));
             if (allowFail) {
@@ -226,10 +237,12 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
             } else {
                 require(success, "Purchase sudoswap failed");
             }
-            transferAdditionalRoyalties(additionalRoyalties, purchaseDetails.amount);
         } else {
             revert("Unknown purchase details");
         }
+
+        //transferring royalties
+        transferAdditionalRoyalties(additionalRoyalties, purchaseDetails.amount);
         
         (uint firstFeeAmount, uint secondFeeAmount) = getFees(purchaseDetails.fees, purchaseDetails.amount);
         return (true, firstFeeAmount, secondFeeAmount);
@@ -275,18 +288,27 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
         @return marketData data for market call
         @return additionalRoyalties array uint256, (base point + address)
      */
-    function getDataAndAdditionalData (bytes memory _data, uint feesAndDataType) internal pure returns (bytes memory, uint[] memory) {
+    function getDataAndAdditionalData (bytes memory _data, uint feesAndDataType, Markets marketId) internal pure returns (bytes memory, uint[] memory) {
         AdditionalDataTypes dataType = AdditionalDataTypes(uint16(feesAndDataType >> 32));
+        uint[] memory additionalRoyalties;
 
+        //return no royalties if wrong data type
         if (dataType == AdditionalDataTypes.NoAdditionalData) {
-            uint[] memory additionalRoyalties;
             return (_data, additionalRoyalties);
-        } else if (dataType == AdditionalDataTypes.RoyaltiesAdditionalData) {
-            AdditionalData memory additionalData = abi.decode(_data, (AdditionalData));
-            return (additionalData.data, additionalData.additionalRoyalties);
-        } else {
-            revert("unknown additionalDataType");
         }
+
+        if (dataType == AdditionalDataTypes.RoyaltiesAdditionalData) {
+            AdditionalData memory additionalData = abi.decode(_data, (AdditionalData));
+
+            //return no royalties if market doesn't support royalties
+            if (supportsRoyalties(marketId)) {
+                return (additionalData.data, additionalData.additionalRoyalties);
+            } else {
+                return (additionalData.data, additionalRoyalties);
+            } 
+        }
+        
+        revert("unknown additionalDataType");
     }
 
     /**
@@ -302,6 +324,34 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
                 transferFee(value, account);
             }
         }
+    }
+
+    // modifies `src`
+    function _arrayReplace(
+        bytes memory src,
+        bytes memory replacement,
+        bytes memory mask
+    ) internal view virtual {
+        require(src.length == replacement.length);
+        require(src.length == mask.length);
+
+        for (uint256 i = 0; i < src.length; i++) {
+            if (mask[i] != 0) {
+                src[i] = replacement[i];
+            }
+        }
+    }
+
+    /**
+        @notice returns true if this contract supports additional royalties for the marketpale
+        now royalties suppoкrt only for marketId = sudoswap
+    */
+    function supportsRoyalties(Markets marketId) internal pure returns (bool){
+        if (marketId == Markets.SudoSwap) {
+            return true;
+        }
+
+        return false;
     }
 
     receive() external payable {}

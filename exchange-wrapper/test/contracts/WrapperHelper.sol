@@ -207,11 +207,7 @@ contract WrapperHelper {
         return (uint(uint16(first)) << 16) + uint(uint16(second));
     }
 
-    function encodeDataType(uint dataType) external pure returns(uint){
-        return (uint(uint16(dataType)) << 32);
-    }
-
-    function encodeFeesPlusDataType(uint first, uint second, uint dataType) external pure returns(uint){
+    function encodeFeesPlusDataType(uint dataType, uint first, uint second) external pure returns(uint){
         return (uint(uint16(dataType)) << 32) + (uint(uint16(first)) << 16) + uint(uint16(second));
     }
 
