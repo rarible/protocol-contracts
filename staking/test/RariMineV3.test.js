@@ -22,6 +22,7 @@ contract("RariMineV3", accounts => {
     let claimers;
     let version;
     let owner;
+    let signer;
     let chainId;
 
     const DAY = 7200; // blocks in 1 day
@@ -34,6 +35,7 @@ contract("RariMineV3", accounts => {
         claimers = [];
         tokenOwner = accounts[2];
         owner = accounts[0];
+        signer = accounts[4];
         token = await ERC20.new();
         staking = await TestStaking.new();
         libSignature = await LibSignatureTest.new();
@@ -44,6 +46,7 @@ contract("RariMineV3", accounts => {
 
         rariMine = await RariMineV3.new();
         await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 4000);
+        await rariMine.setSigner(signer);
         version = await rariMine.VERSION();
         chainId = await web3.eth.getChainId();
     })
@@ -97,7 +100,7 @@ contract("RariMineV3", accounts => {
             const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
             console.log('prepareMessage', prepareMessage);
 
-            const signature = await signPersonalMessage(prepareMessage, owner);
+            const signature = await signPersonalMessage(prepareMessage, signer);
 
             const receipt = await rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 });
             truffleAssert.eventEmitted(receipt, 'Claim');
@@ -135,7 +138,7 @@ contract("RariMineV3", accounts => {
                 let balanceClaimer = balances[balanceClaimerIndex];
                 balanceClaimer.value = 1000;
                 const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
-                const signature = await signPersonalMessage(prepareMessage, owner);
+                const signature = await signPersonalMessage(prepareMessage, signer);
 
                 const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
                 console.log(`GasUsed in claim: ${receipt.receipt.gasUsed}`);
@@ -168,7 +171,7 @@ contract("RariMineV3", accounts => {
 
             balanceClaimer1.value = 2000;
             const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
-            const signature = await signPersonalMessage(prepareMessage, owner);
+            const signature = await signPersonalMessage(prepareMessage, signer);
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer2 }),
@@ -194,7 +197,7 @@ contract("RariMineV3", accounts => {
 
             balanceClaimer1.value = 2000;
             const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
-            const signature = await signPersonalMessage(prepareMessage, owner);
+            const signature = await signPersonalMessage(prepareMessage, signer);
             await rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 });
 
 			await truffleAssert.reverts(
@@ -221,7 +224,7 @@ contract("RariMineV3", accounts => {
 
             balanceClaimer1.value = 3000;
             const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
-            const signature = await signPersonalMessage(prepareMessage, owner);
+            const signature = await signPersonalMessage(prepareMessage, signer);
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
@@ -251,11 +254,11 @@ contract("RariMineV3", accounts => {
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
-                "owner should sign balances"
+                "signer should sign balances"
 			);
 		})
 
-        it("claim rewardin case signature is not correct(incorrect message with wrong version of the contract) expect revert : owner should sign a balance", async () => {
+        it("claim rewardin case signature is not correct(incorrect message with wrong version of the contract) expect revert : signer should sign a balance", async () => {
 
             const balanceClaimer1 = {
                 "recipient": claimer1,
@@ -277,7 +280,7 @@ contract("RariMineV3", accounts => {
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
-                "owner should sign balances"
+                "signer should sign balances"
 			);
 		});
 
@@ -308,7 +311,7 @@ contract("RariMineV3", accounts => {
                 let balanceClaimer = balances[balanceClaimerIndex];
                 console.log('balanceClaimer, ', balanceClaimer);
                 const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
-                const signature = await signPersonalMessage(prepareMessage, owner);
+                const signature = await signPersonalMessage(prepareMessage, signer);
 
                 const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
                 console.log(`GasUsed in claim: ${receipt.receipt.gasUsed}`);
@@ -326,7 +329,8 @@ contract("RariMineV3", accounts => {
         it("Should claim all the reward ", async () => {
 
             rariMine = await RariMineV3.new();
-            await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 10000);   
+            await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 10000);
+            await rariMine.setSigner(signer);  
             const balanceClaimer1 = {
                 "recipient": claimer1,
                 "value": 1000
@@ -353,7 +357,7 @@ contract("RariMineV3", accounts => {
                 let balanceClaimer = balances[balanceClaimerIndex];
                 console.log('balanceClaimer, ', balanceClaimer);
                 const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
-                const signature = await signPersonalMessage(prepareMessage, owner);
+                const signature = await signPersonalMessage(prepareMessage, signer);
 
                 const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
                 console.log(`GasUsed in claim: ${receipt.receipt.gasUsed}`);
@@ -369,7 +373,8 @@ contract("RariMineV3", accounts => {
         it("Should stake all the reward ", async () => {
 
             rariMine = await RariMineV3.new();
-            await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 0);   
+            await rariMine.__RariMineV3_init(token.address, tokenOwner, staking.address, 4, 4, 0);
+            await rariMine.setSigner(signer); 
             const balanceClaimer1 = {
                 "recipient": claimer1,
                 "value": 1000
@@ -396,7 +401,7 @@ contract("RariMineV3", accounts => {
                 let balanceClaimer = balances[balanceClaimerIndex];
                 console.log('balanceClaimer, ', balanceClaimer);
                 const prepareMessage = getPrepareMessage(balanceClaimer, rariMine.address, version, chainId);
-                const signature = await signPersonalMessage(prepareMessage, owner);
+                const signature = await signPersonalMessage(prepareMessage, signer);
 
                 const receipt = await rariMine.claim(balanceClaimer, signature.v, signature.r, signature.s, { from: balanceClaimer.recipient });
                 console.log(`GasUsed in claim: ${receipt.receipt.gasUsed}`);
@@ -409,5 +414,35 @@ contract("RariMineV3", accounts => {
             
         });
     });
-    
+    describe("Check signer", () => {
+
+        it("only signer should sign the message", async () => {
+
+            const balanceClaimer1 = {
+                "recipient": claimer1,
+                "value": 1000
+            };
+            const balances = [
+                balanceClaimer1
+            ];
+            // mint tokens and approve to spent by rari mine
+            await token.mint(tokenOwner, 1000);
+            await token.approve(rariMine.address, 1000, { from: tokenOwner });
+            
+            // specify balances - increase by 1000
+            await rariMine.setSigner(signer);
+
+            balanceClaimer1.value = 2000;
+
+            const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
+            console.log('prepareMessage', prepareMessage);
+
+            const signature = await signPersonalMessage(prepareMessage, owner);
+
+            await truffleAssert.reverts(
+				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
+                "signer should sign balances"
+			);
+        });
+    })
 })
