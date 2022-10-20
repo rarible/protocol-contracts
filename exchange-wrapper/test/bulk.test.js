@@ -176,6 +176,7 @@ contract("ExchangeWrapper default cases", accounts => {
   });
   
   describe ("batch orders", () => {
+    
     it("batch all cases 5%+10% fees for all (raribleV2, RaribleV3, seaPort, x2y2, looksRare, sudoswap)", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
@@ -1350,6 +1351,311 @@ contract("ExchangeWrapper default cases", accounts => {
       assert.equal(await erc721.ownerOf(tokenIdSudo), buyer, "buyer has tokenId2");
 
     })
+
+    it("batch all cases 5%+10% fees for all sudoswap fails, no royalties", async () => {
+      const seller = accounts[1];
+      const buyer = accounts[2];
+
+      const feeRecipientSecond = accounts[7];
+
+      //making rarible orders
+      //Rarible V2 order
+      await erc721.mint(seller, erc721TokenId1);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
+      
+      const encDataLeft = await encDataV2([[], [], false]);
+      const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
+
+      const left = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+
+      const directPurchaseParams = {
+        sellOrderMaker: seller,
+        sellOrderNftAmount: 1,
+        nftAssetClass: ERC721,
+        nftData: enc(erc721.address, erc721TokenId1),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 1,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
+        sellOrderSignature: await getSignature(left, seller, exchangeV2.address),
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 1,
+        buyOrderData: encDataRight
+      };
+
+      const data = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
+      const tradeData = PurchaseData(0, 100, await encodeFees(500, 1000), data);
+
+      //rarible V3 order
+      await erc721.mint(seller, erc721TokenId2);
+      await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
+
+      const encDataLeft1 = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
+      const encDataRight1 = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
+
+      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V3_SELL, encDataLeft1);
+
+      const directPurchaseParams1 = {
+        sellOrderMaker: seller,
+        sellOrderNftAmount: 1,
+        nftAssetClass: ERC721,
+        nftData: enc(erc721.address, erc721TokenId2),
+        sellOrderPaymentAmount: 100,
+        paymentToken: ZERO_ADDRESS,
+        sellOrderSalt: 2,
+        sellOrderStart: 0,
+        sellOrderEnd: 0,
+        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderData: encDataLeft1,
+        sellOrderSignature: await getSignature(left1, seller, exchangeV2.address),
+        buyOrderPaymentAmount: 100,
+        buyOrderNftAmount: 1,
+        buyOrderData: encDataRight1
+      };
+
+      const data1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams1);
+      const tradeData1 = PurchaseData(0, 100, await encodeFees(500, 1000), data1);
+
+      //seaport ORDER
+      await erc721.mint(seller, tokenId);
+      await erc721.setApprovalForAll(seaport.address, true, {from: seller});
+
+      const considerationItemLeft = {
+        itemType: 0,
+        token: '0x0000000000000000000000000000000000000000',
+        identifierOrCriteria: 0,
+        startAmount: 100,
+        endAmount: 100,
+        recipient: seller
+      }
+
+      const offerItemLeft = {
+        itemType: 2, // 2: ERC721 items
+        token: erc721.address,
+        identifierOrCriteria: tokenId,
+        startAmount: 1,
+        endAmount: 1
+      }
+
+      const OrderParametersLeft = {
+        offerer: seller,// 0x00
+        zone: zoneAddr, // 0x20
+        offer: [offerItemLeft], // 0x40
+        consideration: [considerationItemLeft], // 0x60
+        orderType: 0, // 0: no partial fills, anyone can execute
+        startTime: 0, //
+        endTime: '0xff00000000000000000000000000', // 0xc0
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // 0xe0
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885', // 0x100
+        conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000', // 0x120
+        totalOriginalConsiderationItems: 1 // 0x140
+        // offer.length                          // 0x160
+      }
+
+      const _advancedOrder = {
+        parameters: OrderParametersLeft,
+        numerator: 1,
+        denominator: 1,
+        signature: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1b',
+        extraData: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1c'
+      }
+
+      const _criteriaResolvers = [];
+      const _fulfillerConduitKey = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const _recipient = buyer;
+
+      let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
+      
+      const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
+
+      //looksRareOrder
+      await erc721.mint(seller, erc721TokenId3);
+      await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
+      await transferSelectorNFT.addCollectionTransferManager(erc721.address, transferManagerERC721.address);
+
+      const takerBid = {
+        isOrderAsk: false,
+        taker: bulkExchange.address,
+        price: 100,
+        tokenId: erc721TokenId3,
+        minPercentageToAsk: 8000,
+        params: '0x'
+      }
+      const makerAsk = {
+        isOrderAsk: true,
+        signer: seller,
+        collection: erc721.address,
+        price: 100,
+        tokenId: erc721TokenId3,
+        amount: 1,
+        strategy: lr_strategy.address,
+        currency: weth.address,
+        nonce: 16,
+        startTime: 0,
+        endTime: '0xff00000000000000000000000000',
+        minPercentageToAsk: 8000,
+        params: '0x',
+        v: 28,
+        r: '0x66719130e732d87a2fd63e4b5360f627d013b93a9c6768ab3fa305c178c84388',
+        s: '0x6f56a6089adf5af7cc45885d4294ebfd7ea9326a42aa977fc0732677e007cdd3'
+      }
+
+      const dataForLooksRare = await wrapperHelper.getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk, ERC721);
+      const tradeDataLooksRare = PurchaseData(4, 100, await encodeFees(500, 1000), dataForLooksRare);
+
+      //x2y2 order
+      const tokenIdX2Y2 = 12312412523;
+
+      await erc721.mint(seller, tokenIdX2Y2)
+      await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
+
+      const tokenDataToEncode = [
+        {
+          token: erc721.address,
+          tokenId: tokenIdX2Y2
+        }
+      ]
+
+      const dataX2y2 = await wrapperHelper.encodeData(tokenDataToEncode)
+      const orderItem = {
+        price: 100,
+        data: dataX2y2
+      }
+
+      const order = {
+        "salt": "216015207580153061888244896739707431392",
+        "user": seller,
+        "network": "1337",
+        "intent": "1",
+        "delegateType": "1",
+        "deadline": "1758351144",
+        "currency": "0x0000000000000000000000000000000000000000",
+        "dataMask": "0x",
+        "items": [
+          orderItem
+        ],
+        "r": "0x280849c314a4d9b00804aba77c3434754166aea1a4973f4ec1e89d22f4bd335c",
+        "s": "0x0b9902ec5b79551d583e82b732cff01ec28fb8831587f8fe4f2e8249f7f4f49e",
+        "v": 27,
+        "signVersion": 1
+      }
+  
+      const itemHash = await wrapperHelper.hashItem(order, orderItem)
+      
+      const input = 
+      {
+        "orders": [
+          order
+        ],
+        "details": [
+          {
+            "op": 1,
+            "orderIdx": "0",
+            "itemIdx": "0",
+            "price": "100",
+            "itemHash": itemHash,
+            "executionDelegate": erc721delegate.address,
+            "dataReplacement": "0x",
+            "bidIncentivePct": "0",
+            "aucMinIncrementPct": "0",
+            "aucIncDurationSecs": "0",
+            "fees": []
+          }
+        ],
+        "shared": {
+          "salt": "427525989460197",
+          "deadline": "1758363251",
+          "amountToEth": "0",
+          "amountToWeth": "0",
+          "user": bulkExchange.address,
+          "canFail": false
+        },
+        "r": "0xc0f030ffba87896654c2981bda9c5ef0849c33a2b637fea7a777c8019ca13427",
+        "s": "0x26b893c0b10eb13815aae1e899ecb02dd1b2ed1995c21e4f1eb745e14f49f51f",
+        "v": 28
+      }
+
+      const tradeDataX2y2 = PurchaseData(3, 100, await encodeFees(500, 1000), await wrapperHelper.encodeX2Y2Call(input))
+      
+      //sudoswap order
+      const tokenIdSudo = 999666;
+
+      await erc721.mint(seller, tokenIdSudo)
+      await erc721.setApprovalForAll(factorySudoSwap.address, true, {from: seller})
+
+      const inpput = [
+        erc721.address,
+        lin.address,
+        seller,
+        1,
+        "100",
+        0,
+        "1000",
+        [
+          tokenIdSudo
+        ]
+      ]
+
+      const txCreate = await factorySudoSwap.createPairETH(...inpput, {from: seller})
+
+      let pair;
+      truffleAssert.eventEmitted(txCreate, 'NewPair', (ev) => {
+        pair = ev.poolAddress;
+        return true;
+      });
+
+      assert.equal(await erc721.ownerOf(tokenIdSudo), pair, "pair has token")
+
+      const inputSudo = [
+        [ {pair: pair, nftIds: [ tokenIdSudo ] } ],
+        buyer, 
+        buyer, 
+        "0" //making order fail
+      ]
+
+      const royaltyAccount1 = accounts[4];
+      const royaltyAccount2 = accounts[5];
+      const dataSudoSwap = await wrapperHelper.encodeSudoSwapCall(...inputSudo);
+      const additionalRoyalties = [await encodeBpPlusAccountTest(1000, royaltyAccount1), await encodeBpPlusAccountTest(2000, royaltyAccount2)];
+      
+      const dataPlusAdditionalRoyaltiesStruct = {
+        data: dataSudoSwap,
+        additionalRoyalties: additionalRoyalties
+      };
+      const dataPlusAdditionalRoyalties = await wrapperHelper.encodeDataPlusRoyalties(dataPlusAdditionalRoyaltiesStruct);
+
+      const tradeDataSudo = PurchaseData(5, 1105, await encodeDataTypeAndFees(1, 500, 1000), dataPlusAdditionalRoyalties)
+
+      const tx = await verifyBalanceChangeReturnTx(buyer, 575, async () =>
+        verifyBalanceChangeReturnTx(seller, -400, async () =>
+          verifyBalanceChangeReturnTx(feeRecipienterUP, -25, () =>
+            verifyBalanceChangeReturnTx(feeRecipientSecond, -50, () =>
+              verifyBalanceChangeReturnTx(factorySudoSwap.address, 0, () =>
+                verifyBalanceChangeReturnTx(royaltyAccount1, 0, () =>
+                  verifyBalanceChangeReturnTx(royaltyAccount2, 0, () =>
+                    bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680, gasPrice: 0 })
+                  ) 
+                )
+              )
+            )
+          )
+        )
+      );
+      await checkExecutions(tx, [true, true, true, true, true, false])
+
+      assert.equal(await weth.balanceOf(seller), 100);
+
+      assert.equal(await erc721.ownerOf(erc721TokenId1), buyer, "buyer has tokenId1");
+      assert.equal(await erc721.ownerOf(erc721TokenId2), buyer, "buyer has tokenId2");
+      assert.equal(await erc721.ownerOf(erc721TokenId3), buyer, "buyer has tokenId2");
+      assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId2");
+      assert.equal(await erc721.ownerOf(tokenIdX2Y2), buyer, "buyer has tokenId2");
+      assert.equal(await erc721.ownerOf(tokenIdSudo), pair, "seller still has tokenId2");
+
+    })
     
   })
 
@@ -1424,6 +1730,16 @@ contract("ExchangeWrapper default cases", accounts => {
       //console.dir(Execution[i], {depth: null})
       assert.equal(Execution[i].args.result, result[i], "execution " + i)
     }
+  }
+
+  async function encodeDataTypeAndFees(dataType = 0, first = 0, second = 0) {
+    const result = await wrapperHelper.encodeFeesPlusDataType(dataType, first, second);
+    return result.toString()
+  }
+
+  async function encodeBpPlusAccountTest(bp = 0, account = ZERO_ADDRESS) {
+    const result = await wrapperHelper.encodeBpPlusAccount(bp, account);
+    return result.toString()
   }
 
 });

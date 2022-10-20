@@ -37,11 +37,14 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
     mapping(address => uint256) public claimed;
 
+    address public signer;
+
     event SetClaimFormulaClaim(uint256 indexed newClaimFormulaClaim);
     event SetClaimCliffWeeks(uint256 indexed newClaimCliffWeeks);
     event SetClaimSlopeWeeks(uint256 indexed newClaimSlopeWeeks);
     event SetNewTokenOwner(address indexed newTokenOwner);
     event SetNewStaking(address indexed newStaking);
+    event SetNewSigner(address indexed newSigner);
 
     function __RariMineV3_init(
         IERC20Upgradeable _token,
@@ -70,6 +73,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         claimCliffWeeks = _claimCliffWeeks;
         claimSlopeWeeks = _claimSlopeWeeks;
         claimFormulaClaim = _claimFormulaClaim;
+        signer = _msgSender();
     }
 
     function claim(
@@ -78,7 +82,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         bytes32 r,
         bytes32 s
     ) public {
-        require(prepareMessage(_balance, address(this)).recover(v, r, s) == owner(), "owner should sign balances");
+        require(prepareMessage(_balance, address(this)).recover(v, r, s) == signer, "signer should sign balances");
 
         address recipient = _balance.recipient;
         if (_msgSender() == recipient) {
@@ -158,5 +162,10 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         emit SetNewStaking(newStaking);
     }
 
-    uint256[48] private __gap;
+    function setSigner(address newSigner) external onlyOwner {
+        signer = newSigner;
+        emit SetNewSigner(newSigner);
+    }
+
+    uint256[47] private __gap;
 }
