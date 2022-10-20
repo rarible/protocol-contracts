@@ -344,7 +344,7 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
 
     /**
         @notice returns true if this contract supports additional royalties for the marketpale
-        now royalties suppoкrt only for marketId = sudoswap
+        now royalties support only for marketId = sudoswap
     */
     function supportsRoyalties(Markets marketId) internal pure returns (bool){
         if (marketId == Markets.SudoSwap) {
