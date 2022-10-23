@@ -38,13 +38,15 @@ contract Staking is IStaking, StakingBase, StakingRestake, StakingVotes {
         require(amount > 0, "zero amount");
         require(cliff <= MAX_CLIFF_PERIOD, "cliff too big");
         require(slopePeriod <= MAX_SLOPE_PERIOD, "period too big");
-        require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         counter++;
 
         uint time = roundTimestamp(getBlockNumber());
         addLines(account, _delegate, amount, slopePeriod, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
+
+        require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
+
         emit StakeCreate(counter, account, _delegate, time, amount, slopePeriod, cliff);
 
         // IVotesUpgradeable events
@@ -136,12 +138,13 @@ contract Staking is IStaking, StakingBase, StakingRestake, StakingVotes {
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
 
-            require(token.transfer(migrateTo, residue), "transfer failed");
             accounts[account].amount = accounts[account].amount.sub(residue);
 
             accounts[_delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
             nextVersionStake.initiateData(id[i], lineData, account, _delegate);
+
+            require(token.transfer(migrateTo, residue), "transfer failed");
         }
         emit Migrate(msg.sender, id);
     }
