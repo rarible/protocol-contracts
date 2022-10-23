@@ -20,10 +20,10 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     uint256 constant MAX_CLIFF_PERIOD = 103;
     uint256 constant MAX_SLOPE_PERIOD = 104;
 
-    uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
-    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 20000000;   //stFormula const multiplier
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 80000000;   //stFormula cliff multiplier
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 40000000;   //stFormula slope multiplier
+    uint256 constant ST_FORMULA_DIVIDER =  1 * (10 ** 8);           //stFormula divider          100000000
+    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 2 * (10 ** 7);   //stFormula const multiplier  20000000
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8 * (10 ** 7);   //stFormula cliff multiplier  80000000
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4 * (10 ** 7);   //stFormula slope multiplier  40000000
 
     /**
      * @dev ERC20 token to lock
