@@ -132,6 +132,10 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     function __StakingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) internal initializer {
         token = _token;
         startingPointWeek = _startingPointWeek;
+
+        //setting min cliff and slope
+        require(_minCliffPeriod <= MAX_CLIFF_PERIOD, "cliff too big");
+        require(_minSlopePeriod <= MAX_SLOPE_PERIOD, "period too big");
         minCliffPeriod = _minCliffPeriod;
         minSlopePeriod = _minSlopePeriod;
     }
