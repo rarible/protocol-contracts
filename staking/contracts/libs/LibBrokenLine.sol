@@ -211,7 +211,7 @@ library LibBrokenLine {
     }
 
     function safeInt(uint value) pure internal returns (int result) {
+        require(value < 2**255, "int cast error");
         result = int(value);
-        require(value == uint(result), "int cast error");
     }
 }
