@@ -7,8 +7,9 @@ import "./INextVersionStake.sol";
 import "./StakingBase.sol";
 import "./StakingRestake.sol";
 import "./StakingVotes.sol";
+import "./IStaking.sol";
 
-contract Staking is StakingBase, StakingRestake, StakingVotes {
+contract Staking is IStaking, StakingBase, StakingRestake, StakingVotes {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -33,7 +34,7 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StartMigration(msg.sender, to);
     }
 
-    function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating returns (uint) {
+    function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating override returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= MAX_CLIFF_PERIOD, "cliff too big");
         require(slopePeriod <= MAX_SLOPE_PERIOD, "period too big");
