@@ -140,23 +140,23 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
         minSlopePeriod = _minSlopePeriod;
     }
 
-    function addLines(address account, address delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
+    function addLines(address account, address _delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
         require(slopePeriod <= amount, "Wrong value slopePeriod");
-        updateLines(account, delegate, time);
+        updateLines(account, _delegate, time);
         (uint stAmount, uint stSlope) = getStake(amount, slopePeriod, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
         totalSupplyLine.add(counter, line, cliff);
-        accounts[delegate].balance.add(counter, line, cliff);
+        accounts[_delegate].balance.add(counter, line, cliff);
         uint slope = divUp(amount, slopePeriod);
         line = LibBrokenLine.Line(time, amount, slope);
         accounts[account].locked.add(counter, line, cliff);
         stakes[counter].account = account;
-        stakes[counter].delegate = delegate;
+        stakes[counter].delegate = _delegate;
     }
 
-    function updateLines(address account, address delegate, uint time) internal {
+    function updateLines(address account, address _delegate, uint time) internal {
         totalSupplyLine.update(time);
-        accounts[delegate].balance.update(time);
+        accounts[_delegate].balance.update(time);
         accounts[account].locked.update(time);
     }
 

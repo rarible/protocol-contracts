@@ -78,9 +78,9 @@ contract Staking is IStaking, StakingBase, StakingRestake, StakingVotes {
     }
 
     //For a given Line id, the owner and delegate addresses.
-    function getAccountAndDelegate(uint id) external view returns (address account, address delegate) {
-        account = stakes[id].account;
-        delegate = stakes[id].delegate;
+    function getAccountAndDelegate(uint id) external view returns (address _account, address _delegate) {
+        _account = stakes[id].account;
+        _delegate = stakes[id].delegate;
     }
 
     //Getting "current week" of the contract.
