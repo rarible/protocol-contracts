@@ -41,6 +41,7 @@ const Seaport = artifacts.require("Seaport.sol");
 //X2Y2
 const ERC721Delegate = artifacts.require("ERC721Delegate.sol");
 const X2Y2_r1 = artifacts.require("X2Y2_r1.sol");
+const ERC1155Delegate = artifacts.require("ERC1155Delegate.sol");
 
 //SUDOSWAP
 const LSSVMPairEnumerableERC20 = artifacts.require("LSSVMPairEnumerableERC20.sol");
@@ -1159,7 +1160,7 @@ contract("ExchangeWrapper bulk cases", accounts => {
   });
 
   describe ("x2y2", () => {
-    it("x2y2 single", async () => {
+    it("x2y2 721 single", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
       const weth = await WETH9.new()
@@ -1244,7 +1245,106 @@ contract("ExchangeWrapper bulk cases", accounts => {
       assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
     })
 
-    it("x2y2 single advanced order", async () => {
+    it("x2y2 1155", async () => {
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const weth = await WETH9.new()
+
+      const x2y2 = await X2Y2_r1.new()
+      await x2y2.initialize(120000, weth.address)
+
+      const erc1155delegate = await ERC1155Delegate.new();
+      await erc1155delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
+      await x2y2.updateDelegates([erc1155delegate.address], [])
+
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS);
+
+      const amount = 5;
+      await erc1155.mint(seller, tokenId, amount)
+      await erc1155.setApprovalForAll(erc1155delegate.address, true, {from: seller})
+
+      const tokenDataToEncode = [
+        {
+          token: erc1155.address,
+          tokenId: tokenId,
+          amount: amount
+        }
+      ]
+  
+      const data = await wrapperHelper.encodeData1155(tokenDataToEncode)
+      const orderItem = {
+        price: 1000,
+        data: data
+      }
+  
+
+      const order = {
+        "salt": "216015207580153061888244896739707431392",
+        "user": seller,
+        "network": "1337",
+        "intent": "1",
+        "delegateType": "2",
+        "deadline": "1758351144",
+        "currency": "0x0000000000000000000000000000000000000000",
+        "dataMask": "0x",
+        "items": [
+          orderItem
+        ],
+        "r": "0x280849c314a4d9b00804aba77c3434754166aea1a4973f4ec1e89d22f4bd335c",
+        "s": "0x0b9902ec5b79551d583e82b732cff01ec28fb8831587f8fe4f2e8249f7f4f49e",
+        "v": 27,
+        "signVersion": 1
+      }
+
+      const itemHash = await wrapperHelper.hashItem(order, orderItem)
+
+      const input =
+      {
+        "orders": [
+          order
+        ],
+        "details": [
+          {
+            "op": 1,
+            "orderIdx": "0",
+            "itemIdx": "0",
+            "price": "1000",
+            "itemHash": itemHash,
+            "executionDelegate": erc1155delegate.address,
+            "dataReplacement": "0x",
+            "bidIncentivePct": "0",
+            "aucMinIncrementPct": "0",
+            "aucIncDurationSecs": "0",
+            "fees": [
+              {
+                "percentage": "5000",
+                "to": "0xd823c605807cc5e6bd6fc0d7e4eea50d3e2d66cd"
+              }
+            ]
+          }
+        ],
+        "shared": {
+          "salt": "427525989460197",
+          "deadline": "1758363251",
+          "amountToEth": "0",
+          "amountToWeth": "0",
+          "user": bulkExchange.address,
+          "canFail": false
+        },
+        "r": "0xc0f030ffba87896654c2981bda9c5ef0849c33a2b637fea7a777c8019ca13427",
+        "s": "0x26b893c0b10eb13815aae1e899ecb02dd1b2ed1995c21e4f1eb745e14f49f51f",
+        "v": 28
+      }
+
+      const tradeData = PurchaseData(3, 1000, 0, await wrapperHelper.encodeX2Y2Call(input))
+
+      const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1000})
+
+      console.log(tx.receipt.gasUsed)
+      assert.equal(await erc1155.balanceOf(buyer, tokenId), amount, "buyer has tokenId");
+    })
+
+    it("x2y2 721 single advanced order", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
       const weth = await WETH9.new()

@@ -5,9 +5,15 @@ pragma abicoder v2;
 
 contract X2Y2TestHelper {
 
-    struct Pair {
+    struct Pair721 {
         address token;
         uint256 tokenId;
+    }
+
+    struct Pair1155 {
+        address token;
+        uint256 tokenId;
+        uint256 amount;
     }
 
     struct OrderItem {
@@ -33,7 +39,11 @@ contract X2Y2TestHelper {
     }
 
 
-    function encodeData(Pair[] calldata data) external pure returns(bytes memory){
+    function encodeData(Pair721[] calldata data) external pure returns(bytes memory){
+        return abi.encode(data);
+    }
+
+    function encodeData1155(Pair1155[] calldata data) external pure returns(bytes memory){
         return abi.encode(data);
     }
 

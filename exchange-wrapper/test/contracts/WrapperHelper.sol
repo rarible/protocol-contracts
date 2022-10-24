@@ -169,7 +169,11 @@ contract WrapperHelper {
         _data = abi.encode(seaPortBasic, typeNft);
     }
 
-    function encodeData(Ix2y2.Pair[] calldata data) external pure returns(bytes memory){
+    function encodeData(Ix2y2.Pair721[] calldata data) external pure returns(bytes memory){
+        return abi.encode(data);
+    }
+
+    function encodeData1155(Ix2y2.Pair1155[] calldata data) external pure returns(bytes memory){
         return abi.encode(data);
     }
 
