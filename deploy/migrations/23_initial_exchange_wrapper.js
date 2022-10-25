@@ -1,4 +1,4 @@
-const ExchangeWrapper = artifacts.require('ExchangeWrapper');
+const RaribleExchangeWrapper = artifacts.require('RaribleExchangeWrapper');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
@@ -93,9 +93,9 @@ module.exports = async function (deployer, network) {
     exchangeV2 = (await ExchangeV2.deployed()).address;
   }
 
-  await deployer.deploy(ExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
 
-  exchangeWrapper = await ExchangeWrapper.deployed()
+  exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
   console.log("With settings:", settings)
 };

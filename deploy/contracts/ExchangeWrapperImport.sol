@@ -2,4 +2,4 @@
 
 pragma solidity 0.7.6;
 
-import "@rarible/exchange-wrapper/contracts/ExchangeWrapper.sol";
+import "@rarible/exchange-wrapper/contracts/RaribleExchangeWrapper.sol";

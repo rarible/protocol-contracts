@@ -1,7 +1,7 @@
 const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 
-const ExchangeBulkV2 = artifacts.require("ExchangeWrapper.sol");
+const ExchangeBulkV2 = artifacts.require("RaribleExchangeWrapper.sol");
 const WrapperHelper = artifacts.require("WrapperHelper.sol");
 
 //rarible
@@ -60,7 +60,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 
-contract("ExchangeWrapper bulk cases", accounts => {
+contract("RaribleExchangeWrapper bulk cases", accounts => {
   let bulkExchange;
   let exchangeV2;
   let wrapperHelper;

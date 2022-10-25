@@ -1,6 +1,6 @@
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
-const ExchangeWrapper = artifacts.require('ExchangeWrapper');
+const RaribleExchangeWrapper = artifacts.require('RaribleExchangeWrapper');
 
 const rinkeby = {
   exchangeV2: "0xd4a57a3bD3657D0d46B4C5bAC12b3F156B9B886b",
@@ -58,9 +58,9 @@ module.exports = async function (deployer, network) {
   const settings = getSettings(network);
   let exchangeWrapper;
 
-  await deployer.deploy(ExchangeWrapper, settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
 
-  exchangeWrapper = await ExchangeWrapper.deployed()
+  exchangeWrapper = await RaribleExchangeWrapper.deployed()
 
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
 };

@@ -20,7 +20,7 @@ import "./interfaces/ILooksRare.sol";
 
 import "./libraries/IsPausable.sol";
 
-contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
+contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMath for uint;
