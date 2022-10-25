@@ -10,9 +10,15 @@ interface Ix2y2 {
         bytes data;
     }
 
-    struct Pair {
+    struct Pair721 {
         address token;
         uint256 tokenId;
+    }
+
+    struct Pair1155 {
+        address token;
+        uint256 tokenId;
+        uint256 amount;
     }
 
     struct Order {

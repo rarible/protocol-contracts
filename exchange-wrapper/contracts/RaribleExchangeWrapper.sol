@@ -20,7 +20,7 @@ import "./interfaces/ILooksRare.sol";
 
 import "./libraries/IsPausable.sol";
 
-contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
+contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
     using LibTransfer for address;
     using BpLibrary for uint;
     using SafeMath for uint;
@@ -204,11 +204,25 @@ contract ExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
                         _arrayReplace(data, input.details[i].dataReplacement, input.orders[orderId].dataMask);
                     }
                 }
-                Ix2y2.Pair[] memory pairs = abi.decode(data, (Ix2y2.Pair[]));
 
-                for (uint256 j = 0; j < pairs.length; j++) {
-                    Ix2y2.Pair memory p = pairs[j];
-                    IERC721Upgradeable(address(p.token)).safeTransferFrom(address(this), _msgSender(), p.tokenId);
+                // 1 = erc-721
+                if (input.orders[orderId].delegateType == 1) {
+                    Ix2y2.Pair721[] memory pairs = abi.decode(data, (Ix2y2.Pair721[]));
+
+                    for (uint256 j = 0; j < pairs.length; j++) {
+                        Ix2y2.Pair721 memory p = pairs[j];
+                        IERC721Upgradeable(address(p.token)).safeTransferFrom(address(this), _msgSender(), p.tokenId);
+                    }
+                } else if (input.orders[orderId].delegateType == 2) {
+                    // 2 = erc-1155
+                    Ix2y2.Pair1155[] memory pairs = abi.decode(data, (Ix2y2.Pair1155[]));
+
+                    for (uint256 j = 0; j < pairs.length; j++) {
+                        Ix2y2.Pair1155 memory p = pairs[j];
+                        IERC1155Upgradeable(address(p.token)).safeTransferFrom(address(this),  _msgSender(), p.tokenId, p.amount, "");
+                    }
+                } else {
+                    revert("unknown delegateType x2y2");
                 }
             }
         } else if (purchaseDetails.marketId == Markets.LooksRareOrders) {
