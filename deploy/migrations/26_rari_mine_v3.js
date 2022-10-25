@@ -1,11 +1,11 @@
 const RariMineV3 = artifacts.require("RariMineV3");
+const Staking = artifacts.require("Staking");
 
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
 const mainnet = {
     token: "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
     tokenOwner: "0x876E927e97c8517Ea231066a1e78174A8dcAc191",
-    staking: "0x096Bd9a7a2e703670088C05035e23c7a9F428496",
     claimCliffWeeks: 3,
     claimSlopeWeeks: 1,
     claimFormulaClaim: 0
@@ -13,13 +13,21 @@ const mainnet = {
 const goerli = {
     token: "0xbe6dEA792E5D557d71a4cDEf7d22d6dccA133891",
     tokenOwner: "0xcb525c5E60EF37F5f7fb57233c7Ee1338eDC4eAD",
-    staking: "0x39C9D13e1b17Bf1975aFe892e18B1D5A1482b52D",
     claimCliffWeeks: 3,
     claimSlopeWeeks: 1,
     claimFormulaClaim: 4000
 }
 
+const def = {
+  token: "0x0000000000000000000000000000000000000000",
+  tokenOwner: "0x0000000000000000000000000000000000000000",
+  claimCliffWeeks: 3,
+  claimSlopeWeeks: 1,
+  claimFormulaClaim: 4000
+}
+
 let settings = {
+    "default": def,
     "mainnet": mainnet,
     "goerli": goerli
 };
@@ -34,7 +42,9 @@ function getSettings(network) {
 
 module.exports = async function (deployer, network, accounts) {
 
-    const { token, tokenOwner, staking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim } = getSettings(network);
+    const { token, tokenOwner, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim } = getSettings(network);
+
+    const staking = (await Staking.deployed()).address;
 
     const rariMineV3 = await deployProxy(RariMineV3, [token, tokenOwner, staking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim], { deployer, initializer: '__RariMineV3_init', gas: 3000000 })
 

@@ -8,8 +8,8 @@ import {IERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC
 
 import {IWyvernExchange} from "../../contracts/interfaces/IWyvernExchange.sol";
 import {IExchangeV2} from "../../contracts/interfaces/IExchangeV2.sol";
-import {LibOrder} from "../../contracts/ExchangeWrapper.sol";
-import {LibDirectTransfer} from "../../contracts/ExchangeWrapper.sol";
+import {LibOrder} from "../../contracts/RaribleExchangeWrapper.sol";
+import {LibDirectTransfer} from "../../contracts/RaribleExchangeWrapper.sol";
 
 import {LibSeaPort} from "../../contracts/libraries/LibSeaPort.sol";
 import {ISeaPort} from "../../contracts/interfaces/ISeaPort.sol";
@@ -169,7 +169,11 @@ contract WrapperHelper {
         _data = abi.encode(seaPortBasic, typeNft);
     }
 
-    function encodeData(Ix2y2.Pair[] calldata data) external pure returns(bytes memory){
+    function encodeData(Ix2y2.Pair721[] calldata data) external pure returns(bytes memory){
+        return abi.encode(data);
+    }
+
+    function encodeData1155(Ix2y2.Pair1155[] calldata data) external pure returns(bytes memory){
         return abi.encode(data);
     }
 

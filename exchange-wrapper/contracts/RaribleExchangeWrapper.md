@@ -1,14 +1,14 @@
-# ExchangeWrapper contract
+# RaribleExchangeWrapper contract
 
 ## Features
 
-`ExchangeWrapper` contract is a top-level wrapper over `ExchangeV2`, `WyvernExchangeWithBulkCancellations`, `SeaPort`, `X2Y2`, `LooksRare` contracts. 
+`RaribleExchangeWrapper` contract is a top-level wrapper over `ExchangeV2`, `WyvernExchangeWithBulkCancellations`, `SeaPort`, `X2Y2`, `LooksRare` contracts. 
 It performs single or array transfers of Rarible, Wyvern, SeaPort, X2Y2, LooksRare `Orders`.
 
-`ExchangeWrapper` can be paused and up-paused by owner.
+`RaribleExchangeWrapper` can be paused and up-paused by owner.
 ## Algorithm
 
-`ExchangeWrapper` working with ETH transfers only.
+`RaribleExchangeWrapper` working with ETH transfers only.
 
 To start transfer, use:
 
@@ -46,7 +46,7 @@ struct PurchaseDetails {
   bytes (29,30) used for the first value (goes to feeRecipientFirst)
   bytes (31,32) are used for the second value (goes to feeRecipientSecond)
 
-For Wyvern orders `data` field encoded as shown in the [example](../test/contracts/WrapperHelper.sol) of the `getDataWyvernAtomicMatch` method. For Wyvern orders it is necessary to form a sell order. Don't need to sign it, because field `order.maker` ==  `ExchangeWrapper.address` in the sale order (maker == msg.sender), and set the buyer's address in the `calldataBuy` field.
+For Wyvern orders `data` field encoded as shown in the [example](../test/contracts/WrapperHelper.sol) of the `getDataWyvernAtomicMatch` method. For Wyvern orders it is necessary to form a sell order. Don't need to sign it, because field `order.maker` ==  `RaribleExchangeWrapper.address` in the sale order (maker == msg.sender), and set the buyer's address in the `calldataBuy` field.
 
 For Rarible orders `data` field encoded as shown in the [example](../test/contracts/WrapperHelper.sol) of the `getDataExchangeV2SellOrders` method. It is not necessary to form a sell order for Rarible orders, it will be formed inside the `bulkTransfer` method.
 
@@ -64,4 +64,4 @@ It is allowed to transfer mixed orders of all supported marketplaces, encapsulat
 
 ## Tests
 
-See tests [here](../../deploy/test/wrapper/ExchangeWrapper.test.js).
+See tests [here](../../deploy/test/wrapper/RaribleExchangeWrapper.test.js).

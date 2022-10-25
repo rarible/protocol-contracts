@@ -1,4 +1,4 @@
-const ExchangeBulkV2 = artifacts.require("ExchangeWrapper.sol");
+const ExchangeBulkV2 = artifacts.require("RaribleExchangeWrapper.sol");
 const WrapperHelper = artifacts.require("WrapperHelper.sol");
 const ExchangeV2 = artifacts.require("ExchangeV2.sol");
 
