@@ -7,8 +7,9 @@ import "./INextVersionStake.sol";
 import "./StakingBase.sol";
 import "./StakingRestake.sol";
 import "./StakingVotes.sol";
+import "./IStaking.sol";
 
-contract Staking is StakingBase, StakingRestake, StakingVotes {
+contract Staking is IStaking, StakingBase, StakingRestake, StakingVotes {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
@@ -33,17 +34,19 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
         emit StartMigration(msg.sender, to);
     }
 
-    function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating returns (uint) {
+    function stake(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating override returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= MAX_CLIFF_PERIOD, "cliff too big");
         require(slopePeriod <= MAX_SLOPE_PERIOD, "period too big");
-        require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         counter++;
 
         uint time = roundTimestamp(getBlockNumber());
         addLines(account, _delegate, amount, slopePeriod, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
+
+        require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
+
         emit StakeCreate(counter, account, _delegate, time, amount, slopePeriod, cliff);
 
         // IVotesUpgradeable events
@@ -77,9 +80,9 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
     }
 
     //For a given Line id, the owner and delegate addresses.
-    function getAccountAndDelegate(uint id) external view returns (address account, address delegate) {
-        account = stakes[id].account;
-        delegate = stakes[id].delegate;
+    function getAccountAndDelegate(uint id) external view returns (address _account, address _delegate) {
+        _account = stakes[id].account;
+        _delegate = stakes[id].delegate;
     }
 
     //Getting "current week" of the contract.
@@ -135,12 +138,13 @@ contract Staking is StakingBase, StakingRestake, StakingVotes {
             LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
             (uint residue,,) = accounts[account].locked.remove(id[i], time);
 
-            require(token.transfer(migrateTo, residue), "transfer failed");
             accounts[account].amount = accounts[account].amount.sub(residue);
 
             accounts[_delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
             nextVersionStake.initiateData(id[i], lineData, account, _delegate);
+
+            require(token.transfer(migrateTo, residue), "transfer failed");
         }
         emit Migrate(msg.sender, id);
     }

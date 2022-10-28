@@ -20,10 +20,10 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     uint256 constant MAX_CLIFF_PERIOD = 103;
     uint256 constant MAX_SLOPE_PERIOD = 104;
 
-    uint256 constant ST_FORMULA_DIVIDER = 100000000;        //stFormula divider
-    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 20000000;   //stFormula const multiplier
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 80000000;   //stFormula cliff multiplier
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 40000000;   //stFormula slope multiplier
+    uint256 constant ST_FORMULA_DIVIDER =  1 * (10 ** 8);           //stFormula divider          100000000
+    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 2 * (10 ** 7);   //stFormula const multiplier  20000000
+    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8 * (10 ** 7);   //stFormula cliff multiplier  80000000
+    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4 * (10 ** 7);   //stFormula slope multiplier  40000000
 
     /**
      * @dev ERC20 token to lock
@@ -132,27 +132,31 @@ abstract contract StakingBase is OwnableUpgradeable, IVotesUpgradeable {
     function __StakingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) internal initializer {
         token = _token;
         startingPointWeek = _startingPointWeek;
+
+        //setting min cliff and slope
+        require(_minCliffPeriod <= MAX_CLIFF_PERIOD, "cliff too big");
+        require(_minSlopePeriod <= MAX_SLOPE_PERIOD, "period too big");
         minCliffPeriod = _minCliffPeriod;
         minSlopePeriod = _minSlopePeriod;
     }
 
-    function addLines(address account, address delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
+    function addLines(address account, address _delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
         require(slopePeriod <= amount, "Wrong value slopePeriod");
-        updateLines(account, delegate, time);
+        updateLines(account, _delegate, time);
         (uint stAmount, uint stSlope) = getStake(amount, slopePeriod, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
         totalSupplyLine.add(counter, line, cliff);
-        accounts[delegate].balance.add(counter, line, cliff);
+        accounts[_delegate].balance.add(counter, line, cliff);
         uint slope = divUp(amount, slopePeriod);
         line = LibBrokenLine.Line(time, amount, slope);
         accounts[account].locked.add(counter, line, cliff);
         stakes[counter].account = account;
-        stakes[counter].delegate = delegate;
+        stakes[counter].delegate = _delegate;
     }
 
-    function updateLines(address account, address delegate, uint time) internal {
+    function updateLines(address account, address _delegate, uint time) internal {
         totalSupplyLine.update(time);
-        accounts[delegate].balance.update(time);
+        accounts[_delegate].balance.update(time);
         accounts[account].locked.update(time);
     }
 

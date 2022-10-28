@@ -14,10 +14,10 @@ abstract contract StakingRestake is StakingBase {
         uint time = roundTimestamp(getBlockNumber());
         verification(account, id, newAmount, newSlopePeriod, newCliff, time);
 
-        address delegate = stakes[id].delegate;
+        address _delegate = stakes[id].delegate;
         accounts[account].locked.update(time);
 
-        rebalance(id, account, accounts[account].locked.initial.bias, removeLines(id, account, delegate, time), newAmount);
+        rebalance(id, account, accounts[account].locked.initial.bias, removeLines(id, account, _delegate, time), newAmount);
 
         counter++;
 
@@ -25,8 +25,8 @@ abstract contract StakingRestake is StakingBase {
         emit Restake(id, account, newDelegate, counter, time, newAmount, newSlopePeriod, newCliff);
 
         // IVotesUpgradeable events
-        emit DelegateChanged(account, delegate, newDelegate);
-        emit DelegateVotesChanged(delegate, 0, accounts[delegate].balance.actualValue(time));
+        emit DelegateChanged(account, _delegate, newDelegate);
+        emit DelegateVotesChanged(_delegate, 0, accounts[_delegate].balance.actualValue(time));
         emit DelegateVotesChanged(newDelegate, 0, accounts[newDelegate].balance.actualValue(time));
 
         return counter;
@@ -78,8 +78,8 @@ abstract contract StakingRestake is StakingBase {
         if (addAmount > balance) {
             //need more, than balance, so need transfer tokens to this
             uint transferAmount = addAmount.sub(balance);
-            require(token.transferFrom(stakes[id].account, address(this), transferAmount), "transfer failed");
             accounts[account].amount = accounts[account].amount.add(transferAmount);
+            require(token.transferFrom(stakes[id].account, address(this), transferAmount), "transfer failed");
         }
     }
 
