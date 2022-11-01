@@ -124,7 +124,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         uint sumSecondFees = 0;
         bool result = false;
 
-        for (uint i = 0; i < purchaseDetails.length; i++) {
+        for (uint i = 0; i < purchaseDetails.length; ++i) {
             (bool success, uint firstFeeAmount, uint secondFeeAmount) = purchase(purchaseDetails[i], allowFail);
 
             result = result || success;
@@ -195,7 +195,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
             //for every element in input.details[] getting
             // order = input.details[i].orderIdx
             // and from that order getting item = input.details[i].itemId
-            for (uint i = 0; i < input.details.length; i++) {
+            for (uint i = 0; i < input.details.length; ++i) {
                 uint orderId = input.details[i].orderIdx;
                 uint itemId = input.details[i].itemIdx;
                 bytes memory data = input.orders[orderId].items[itemId].data;
@@ -330,7 +330,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         @param _additionalRoyalties array uint256 (base point + royalty recipient address)
      */
     function transferAdditionalRoyalties (uint[] memory _additionalRoyalties, uint amount) internal {
-        for (uint i = 0; i < _additionalRoyalties.length; i++) {
+        for (uint i = 0; i < _additionalRoyalties.length; ++i) {
             if (_additionalRoyalties[i] > 0) {
                 address payable account = payable(address(_additionalRoyalties[i]));
                 uint basePoint = uint(_additionalRoyalties[i] >> 160);
@@ -349,7 +349,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         require(src.length == replacement.length);
         require(src.length == mask.length);
 
-        for (uint256 i = 0; i < src.length; i++) {
+        for (uint256 i = 0; i < src.length; ++i) {
             if (mask[i] != 0) {
                 src[i] = replacement[i];
             }

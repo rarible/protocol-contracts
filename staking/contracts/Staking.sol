@@ -130,7 +130,7 @@ contract Staking is IStaking, StakingBase, StakingRestake, StakingVotes {
         }
         uint time = roundTimestamp(getBlockNumber());
         INextVersionStake nextVersionStake = INextVersionStake(migrateTo);
-        for (uint256 i = 0; i < id.length; i++) {
+        for (uint256 i = 0; i < id.length; ++i) {
             address account = verifyStakeOwner(id[i]);
             address _delegate = stakes[id[i]].delegate;
             updateLines(account, _delegate, time);

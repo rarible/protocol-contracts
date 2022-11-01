@@ -29,7 +29,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         require(ids.length == amounts.length, "ids != amounts");
         uint256[] memory leftToBurns = new uint256[](ids.length);
         uint256[] memory lazyToBurns = new uint256[](ids.length);
-        for (uint i = 0; i < ids.length; i++) {
+        for (uint i = 0; i < ids.length; ++i) {
             (leftToBurns[i], lazyToBurns[i]) = _burnLazy(ids[i], amounts[i]);
         }
         ERC1155BurnableUpgradeable.burnBatch(account, ids, leftToBurns);

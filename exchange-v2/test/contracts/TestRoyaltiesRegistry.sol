@@ -24,7 +24,7 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider {
 
 	function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external {
 		uint sumRoyalties = 0;
-		for (uint i = 0; i < royalties.length; i++) {
+		for (uint i = 0; i < royalties.length; ++i) {
 			require(royalties[i].account != address(0x0), "RoyaltiesByToken recipient should be present");
 			require(royalties[i].value != 0, "Fee value for RoyaltiesByToken should be > 0");
 			royaltiesByToken[token].royalties.push(royalties[i]);
@@ -58,7 +58,7 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider {
 	function setRoyaltiesCacheByTokenAndTokenId(address token, uint tokenId, LibPart.Part[] memory royalties) internal {
 		uint sumRoyalties = 0;
 		bytes32 key = keccak256(abi.encode(token, tokenId));
-		for (uint i = 0; i < royalties.length; i++) {
+		for (uint i = 0; i < royalties.length; ++i) {
 			require(royalties[i].account != address(0x0), "RoyaltiesByTokenAndTokenId recipient should be present");
 			require(royalties[i].value != 0, "Fee value for RoyaltiesByTokenAndTokenId should be > 0");
 			royaltiesByTokenAndTokenId[key].royalties.push(royalties[i]);

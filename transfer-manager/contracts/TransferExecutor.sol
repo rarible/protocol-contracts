@@ -16,7 +16,7 @@ import "./lib/LibTransfer.sol";
 abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransferExecutor {
     using LibTransfer for address;
 
-    mapping (bytes4 => address) proxies;
+    mapping (bytes4 => address) internal proxies;
 
     event ProxyChange(bytes4 indexed assetType, address proxy);
 

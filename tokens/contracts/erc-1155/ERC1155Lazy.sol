@@ -68,7 +68,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             require(data.creators.length == data.signatures.length);
 
             bytes32 hash = LibERC1155LazyMint.hash(data);
-            for (uint i = 0; i < data.creators.length; i++) {
+            for (uint i = 0; i < data.creators.length; ++i) {
                 address creator = data.creators[i].account;
                 if (creator != sender) {
                     validate(creator, hash, data.signatures[i]);
@@ -115,7 +115,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     function _saveCreators(uint tokenId, LibPart.Part[] memory _creators) internal {
         LibPart.Part[] storage creatorsOfToken = creators[tokenId];
         uint total = 0;
-        for (uint i = 0; i < _creators.length; i++) {
+        for (uint i = 0; i < _creators.length; ++i) {
             require(_creators[i].account != address(0x0), "Account should be present");
             require(_creators[i].value != 0, "Creator share should be positive");
             creatorsOfToken.push(_creators[i]);

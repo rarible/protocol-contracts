@@ -20,11 +20,11 @@ library LibERC721LazyMint {
 
     function hash(Mint721Data memory data) internal pure returns (bytes32) {
         bytes32[] memory royaltiesBytes = new bytes32[](data.royalties.length);
-        for (uint i = 0; i < data.royalties.length; i++) {
+        for (uint i = 0; i < data.royalties.length; ++i) {
             royaltiesBytes[i] = LibPart.hash(data.royalties[i]);
         }
         bytes32[] memory creatorsBytes = new bytes32[](data.creators.length);
-        for (uint i = 0; i < data.creators.length; i++) {
+        for (uint i = 0; i < data.creators.length; ++i) {
             creatorsBytes[i] = LibPart.hash(data.creators[i]);
         }
         return keccak256(abi.encode(

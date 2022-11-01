@@ -8,7 +8,7 @@ User locks tokens on `start` moment, amount of locked tokens is `bias`. In `clif
 
 Staked balance behaves pretty much the same way, but initial `bias` is multiplied by `value k` calculated using `Stake` parameters (slope, cliff, bias etc.)
 
-This contract is based on [LibBrokenLine](../broken-line/readme.md).
+This contract is based on [LibBrokenLine](./contracts/libs/LibBrokenLine.md).
 
 ### Features
 

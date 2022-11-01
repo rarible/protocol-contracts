@@ -31,7 +31,7 @@ contract RoyaltiesV2Impl is AbstractRoyalties, RoyaltiesV2, IERC2981 {
         LibPart.Part[] memory _royalties = royalties[id];
         receiver = _royalties[0].account;
         uint percent;
-        for (uint i = 0; i < _royalties.length; i++) {
+        for (uint i = 0; i < _royalties.length; ++i) {
             percent += _royalties[i].value;
         }
         //don`t need require(percent < 10000, "Token royalty > 100%"); here, because check later in calculateRoyalties

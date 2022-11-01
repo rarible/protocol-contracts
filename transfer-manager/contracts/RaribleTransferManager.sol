@@ -90,6 +90,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             nftSide.originFees.length  == 1 &&
             nftSide.originFees[0].account == paymentSide.originFees[0].account
         ) { 
+            require(nftSide.originFees[0].value < 10000 && paymentSide.originFees[0].value < 10000, "wrong origin fees");
             LibPart.Part[] memory origin = new  LibPart.Part[](1);
             origin[0].account = nftSide.originFees[0].account;
             origin[0].value = nftSide.originFees[0].value + paymentSide.originFees[0].value;
@@ -176,7 +177,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     ) internal returns (uint newRest, uint totalFees) {
         totalFees = 0;
         newRest = rest;
-        for (uint256 i = 0; i < fees.length; i++) {
+        for (uint256 i = 0; i < fees.length; ++i) {
             totalFees = totalFees.add(fees[i].value);
             uint feeValue;
             (newRest, feeValue) = subFeeInBp(newRest, amount, fees[i].value);
@@ -204,7 +205,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         require(payouts.length > 0, "transferPayouts: nothing to transfer");
         uint sumBps = 0;
         uint rest = amount;
-        for (uint256 i = 0; i < payouts.length - 1; i++) {
+        for (uint256 i = 0; i < payouts.length - 1; ++i) {
             uint currentAmount = amount.bp(payouts[i].value);
             sumBps = sumBps.add(payouts[i].value);
             if (currentAmount > 0) {
@@ -235,11 +236,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         if (maxFeesBasePoint > 0) {
             return amount;
         }
-        uint total = amount;
-        for (uint256 i = 0; i < orderOriginFees.length; i++) {
-            total = total.add(amount.bp(orderOriginFees[i].value));
+        uint fees = 0;
+        for (uint256 i = 0; i < orderOriginFees.length; ++i) {
+            //require(orderOriginFees[i].value <= 10000, "origin fee is too big");
+            fees = fees + orderOriginFees[i].value;
         }
-        return total;
+        return amount.add(amount.bp(fees));
     }
 
     function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {

@@ -18,7 +18,7 @@ contract RoyaltiesV1Test {
         uint[] memory values = royalties.getFeeBps(id);
 
         require(recipients.length == values.length);
-        for (uint i = 0; i < recipients.length; i++) {
+        for (uint i = 0; i < recipients.length; ++i) {
             emit Test(recipients[i], values[i]);
         }
     }
