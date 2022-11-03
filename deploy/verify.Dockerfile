@@ -8,4 +8,6 @@ ENV NETWORK=polygon_mumbai
 ENV POLYGONSCAN_API_KEY=""
 ENV ETHERSCAN_API_KEY=""
 WORKDIR /protocol/deploy
-ENTRYPOINT truffle run verify RariMineV3 Staking --network ${NETWORK}
+RUN apt-get update
+RUN apt-get install -y jq
+ENTRYPOINT ./verify-all.bash
