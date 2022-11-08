@@ -15,7 +15,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
     using SafeMathUpgradeable for uint;
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant public WEEK = 50400; //blocks one week = 50400, day = 7200
+    uint256 constant public WEEK = 50400; //blocks one week = 50400, day = 7200, goerli = 50
     
     uint256 constant MAX_CLIFF_PERIOD = 103;
     uint256 constant MAX_SLOPE_PERIOD = 104;
