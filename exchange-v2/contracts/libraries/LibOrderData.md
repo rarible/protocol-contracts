@@ -50,11 +50,11 @@
     - `V3_BUY` orders' fills are always calculated from take side (as if `isMakeFill` = false)
   - fees logic
     - `V3` orders' fees work differently from all previous orders types
-    - `prtocolFee` is used and taken from seller side
+    - `protocolFee` is used and taken from seller side
     - `originFees` are taken from seller side only.
-    - sum of `prtocolFee` + buy-order `originFees` + sell-order `originFees` should not be bigger than `maxFeesBasePoint`
+    - sum of `protocolFee` + buy-order `originFees` + sell-order `originFees` should not be bigger than `maxFeesBasePoint`
     - example:
-      - `prtocolFee` is 3%
+      - `protocolFee` is 3%
       - sell order is `1 ERC721` => `100 ETH`
         - `maxFeesBasePoint` is 10 %
         - Sell order has `originFeeFirst` = `{2% to addr3}`
