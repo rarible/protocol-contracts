@@ -71,7 +71,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         ERC1155Lazy._mint(account, id, amount, data);
     }
 
-    function __ERC1155Base_init_unchained(string memory _name, string memory _symbol) internal initializer {
+    function __ERC1155Base_init_unchained(string memory _name, string memory _symbol) internal {
         name = _name;
         symbol = _symbol;
     }

@@ -73,4 +73,20 @@ contract RaribleTestHelper {
             );
     }
 
+    function encodeLazy721(LibERC721LazyMint.Mint721Data memory data, address token)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return abi.encode(token, data);
+    }
+
+    function encodeLazy1155(LibERC1155LazyMint.Mint1155Data memory data, address token)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return abi.encode(token, data);
+    }
+
 }
