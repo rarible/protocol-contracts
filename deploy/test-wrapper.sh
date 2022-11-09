@@ -6,4 +6,4 @@ truffle test \
         ./test/contracts/TestERC1155.sol \
         ./test/contracts/WrapperHelper.sol \
         ./test/exchange/contracts/RaribleTestHelper.sol \
-        --compile-all
+        --compile-all --contracts_build_directory=./build/goerli

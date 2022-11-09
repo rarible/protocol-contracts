@@ -8,7 +8,7 @@ echo $path
 network_id=$(jq '.network_id' $path)
 echo $network_id
 
-FILES="build/contracts/*"
+FILES="build/${NETWORK}/*"
 COUNTER=0
 VERIFIED=0
 NOT_VERIFIED=0
