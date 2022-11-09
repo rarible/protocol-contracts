@@ -11,7 +11,7 @@ contract RoyaltiesV2LegacyImpl is RoyaltyV2Legacy {
 
     function _saveRoyalties(uint256 id, LibPart.Part[] memory _royalties) public {
         uint256 totalValue;
-        for (uint i = 0; i < _royalties.length; i++) {
+        for (uint i = 0; i < _royalties.length; ++i) {
             require(_royalties[i].account != address(0x0), "Recipient should be present");
             require(_royalties[i].value != 0, "Royalty value should be positive");
             totalValue += _royalties[i].value;
@@ -23,7 +23,7 @@ contract RoyaltiesV2LegacyImpl is RoyaltyV2Legacy {
 
     function _updateAccount(uint256 _id, address _from, address _to) internal {
         uint length = royalties[_id].length;
-        for(uint i = 0; i < length; i++) {
+        for(uint i = 0; i < length; ++i) {
             if (royalties[_id][i].account == _from) {
                 royalties[_id][i].account = address(uint160(_to));
             }

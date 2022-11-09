@@ -113,7 +113,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     }
 
     function doOverride(Balance[] memory _balances) public onlyOwner {
-        for (uint256 i = 0; i < _balances.length; i++) {
+        for (uint256 i = 0; i < _balances.length; ++i) {
             claimed[_balances[i].recipient] = _balances[i].value;
             emit Value(_balances[i].recipient, _balances[i].value);
         }
@@ -130,7 +130,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     function toString(bytes32 value) internal pure returns (string memory) {
         bytes memory alphabet = "0123456789abcdef";
         bytes memory str = new bytes(64);
-        for (uint256 i = 0; i < 32; i++) {
+        for (uint256 i = 0; i < 32; ++i) {
             str[i * 2] = alphabet[uint8(value[i] >> 4)];
             str[1 + i * 2] = alphabet[uint8(value[i] & 0x0f)];
         }

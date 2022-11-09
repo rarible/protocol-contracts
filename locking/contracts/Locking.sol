@@ -130,7 +130,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
         }
         uint time = roundTimestamp(getBlockNumber());
         INextVersionLock nextVersionLock = INextVersionLock(migrateTo);
-        for (uint256 i = 0; i < id.length; i++) {
+        for (uint256 i = 0; i < id.length; ++i) {
             address account = verifyLockOwner(id[i]);
             address _delegate = locks[id[i]].delegate;
             updateLines(account, _delegate, time);

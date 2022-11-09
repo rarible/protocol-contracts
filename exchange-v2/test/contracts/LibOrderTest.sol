@@ -19,7 +19,7 @@ contract LibOrderTest {
     }
 
     function validate(LibOrder.Order calldata order) external view {
-        LibOrder.validate(order);
+        LibOrder.validateOrderTime(order);
     }
 
     function hashV2(address maker, LibAsset.Asset memory makeAsset, LibAsset.Asset memory takeAsset, uint salt, bytes memory data) public pure returns(bytes32){

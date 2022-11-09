@@ -29,7 +29,7 @@ abstract contract MinterAccessControl is OwnableUpgradeable {
      * @dev Add `minters` to the list of allowed minters.
      */
     function addMinters(address[] memory minters) external onlyOwner {
-        for (uint i = 0; i < minters.length; i++) {
+        for (uint i = 0; i < minters.length; ++i) {
             address minter = minters[i];
             _minters[minter] = true;
             emit MinterStatusChanged(minter, true);

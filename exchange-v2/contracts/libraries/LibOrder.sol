@@ -75,7 +75,7 @@ library LibOrder {
             ));
     }
 
-    function validate(LibOrder.Order memory order) internal view {
+    function validateOrderTime(LibOrder.Order memory order) internal view {
         require(order.start == 0 || order.start < block.timestamp, "Order start validation failed");
         require(order.end == 0 || order.end > block.timestamp, "Order end validation failed");
     }

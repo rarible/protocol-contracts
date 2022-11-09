@@ -4,7 +4,7 @@
 It's responsible for transferring all Assets. This manager supports different types of fees, also it supports different beneficiaries (specified in Order.data)  
 
 Types of fees supported:
-- protocol fee (controlled by `protocolFee` field) 
+- (!DEPRECATED) protocol fee (controlled by `protocolFee` field) 
 - origin fee (is coming from `Order.data`)
 - royalties (provided by external `IRoyaltiesProvider`)
 
@@ -38,16 +38,6 @@ Then, in this method the following actions are done:
 
 - `doTransfersWithFees` 
     - calculates total amount of asset that is going to be transfered
-    - transfers protocol fee to protocol/community
-        - now protocol fee is set at 3%
-        - both users pay protocol fee and origin fees (from their order), so if the fee side value is 100 eth, the user that sends ether should send at least 
-            ```
-            amount + (protocol fee + origin fees) * amount = 100 + 0,03*100 = 103 ETH
-            ```
-            and the user that gets ether will get
-            ```
-            amount - (protocol fee + origin fees) * amount = 100 - 0,03*100 = 97 ETH
-            ``` 
     - then royalties are transfered
         - royalty is a fee that transfered to creator of `ERC1155`/`ERC721` token from every purchase
         - royalties can't be over 50 %
@@ -65,7 +55,7 @@ Then, in this method the following actions are done:
     - if `transferPayouts` called for the nft side (non fee side), then it tranfers full amount of this asset
 
 
-So, to sum it all up, lets try to calculate all fees for a simple example
+So, to sum it all up, lets try to calculate all fees for a simple example (for V1 and V2 orders)
 - there are 2 orders
     1. `ETH 100` => `1 ERC721`, `orderMaker` = acc1, `origins` = [[acc2, 3%], [acc3, 10%]], `payouts` = [[acc1, 100%]] 
     2. `1 ERC721` => `100 ETH`, `orderMaker` = acc4, `origins` = [[]], `payouts` = [[acc4, 70%], [acc5, 30%]]
@@ -75,14 +65,12 @@ So, to sum it all up, lets try to calculate all fees for a simple example
     - `transferPayouts`(1 ERC721)
         - there is only one payout address and 1 token, so it simply gets tranfered to acc1
     - `doTransfersWithFees`(100 ETH)
-        - let's assume protocol fee = 3%
         - let's calculate ETH amount to be sent by acc1
-            - 100 ETH + 3% protocolFee + 3% acc2-origin + 10% acc3-origin = 100 + 0,16*100 = 116 ETH
-        - so acc1 needs to send 116 ETH, from which 3 is going to be his part of the protocol fee, 3 sent to acc2 as origin, 10 sent to acc3 as origin too
-        - 3 more ETH are taken as acc4 prtocol fee, 97 left
-        - 30 ETH payed as royalty to nft creator, 67 left
+            - 100 ETH + 3% acc2-origin + 10% acc3-origin = 100 + 0,13*100 = 113 ETH
+        - so acc1 needs to send 113 ETH, from which 3 are sent to acc2 as origin, 10 are sent to acc3 as origin too ( 100 ETH left)
+        - 30 ETH paid as royalty to nft creator, 70 left
         - right order doesn't have origins, so we skip it
-        - what's left is divided between acc4 and acc5, as it says in right order payouts (`payouts` = [[acc4, 70%], [acc5, 30%]]), so 20,1 ETH goes to acc5, 46,9 ETH to acc4
+        - what's left is divided between acc4 and acc5, as it says in right order payouts (`payouts` = [[acc4, 70%], [acc5, 30%]]), so 49 ETH goes to acc4, 21 ETH to acc5
 
 
 

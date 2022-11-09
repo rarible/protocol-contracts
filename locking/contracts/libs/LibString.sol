@@ -12,8 +12,8 @@ library LibString {
         bytes memory _bb = bytes(_b);
         bytes memory bab = new bytes(_ba.length + _bb.length);
         uint k = 0;
-        for (uint i = 0; i < _ba.length; i++) bab[k++] = _ba[i];
-        for (uint i = 0; i < _bb.length; i++) bab[k++] = _bb[i];
+        for (uint i = 0; i < _ba.length; ++i) bab[k++] = _ba[i];
+        for (uint i = 0; i < _bb.length; ++i) bab[k++] = _bb[i];
         return string(bab);
     }
 
@@ -23,9 +23,9 @@ library LibString {
         bytes memory _bc = bytes(_c);
         bytes memory bbb = new bytes(_ba.length + _bb.length + _bc.length);
         uint k = 0;
-        for (uint i = 0; i < _ba.length; i++) bbb[k++] = _ba[i];
-        for (uint i = 0; i < _bb.length; i++) bbb[k++] = _bb[i];
-        for (uint i = 0; i < _bc.length; i++) bbb[k++] = _bc[i];
+        for (uint i = 0; i < _ba.length; ++i) bbb[k++] = _ba[i];
+        for (uint i = 0; i < _bb.length; ++i) bbb[k++] = _bb[i];
+        for (uint i = 0; i < _bc.length; ++i) bbb[k++] = _bc[i];
         return string(bbb);
     }
 
@@ -43,13 +43,13 @@ library LibString {
     function concat(bytes memory _ba, bytes memory _bb, bytes memory _bc, bytes memory _bd, bytes memory _be, bytes memory _bf, bytes memory _bg) internal pure returns (bytes memory) {
         bytes memory resultBytes = new bytes(_ba.length + _bb.length + _bc.length + _bd.length + _be.length + _bf.length + _bg.length);
         uint k = 0;
-        for (uint i = 0; i < _ba.length; i++) resultBytes[k++] = _ba[i];
-        for (uint i = 0; i < _bb.length; i++) resultBytes[k++] = _bb[i];
-        for (uint i = 0; i < _bc.length; i++) resultBytes[k++] = _bc[i];
-        for (uint i = 0; i < _bd.length; i++) resultBytes[k++] = _bd[i];
-        for (uint i = 0; i < _be.length; i++) resultBytes[k++] = _be[i];
-        for (uint i = 0; i < _bf.length; i++) resultBytes[k++] = _bf[i];
-        for (uint i = 0; i < _bg.length; i++) resultBytes[k++] = _bg[i];
+        for (uint i = 0; i < _ba.length; ++i) resultBytes[k++] = _ba[i];
+        for (uint i = 0; i < _bb.length; ++i) resultBytes[k++] = _bb[i];
+        for (uint i = 0; i < _bc.length; ++i) resultBytes[k++] = _bc[i];
+        for (uint i = 0; i < _bd.length; ++i) resultBytes[k++] = _bd[i];
+        for (uint i = 0; i < _be.length; ++i) resultBytes[k++] = _be[i];
+        for (uint i = 0; i < _bf.length; ++i) resultBytes[k++] = _bf[i];
+        for (uint i = 0; i < _bg.length; ++i) resultBytes[k++] = _bg[i];
         return resultBytes;
     }
 }
