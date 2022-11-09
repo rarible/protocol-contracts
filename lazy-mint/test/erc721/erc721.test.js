@@ -1,7 +1,7 @@
 const ERC721Test = artifacts.require("ERC721Test.sol");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
-const { sign } = require("./mint");
+const { sign } = require("../../../scripts/mint721.js");
 
 contract("ERC721Test", accounts => {
 	let testing;
