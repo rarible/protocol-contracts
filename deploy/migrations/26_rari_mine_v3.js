@@ -1,5 +1,5 @@
 const RariMineV3 = artifacts.require("RariMineV3");
-const Staking = artifacts.require("Staking");
+const Locking = artifacts.require("Locking");
 
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
@@ -44,9 +44,9 @@ module.exports = async function (deployer, network, accounts) {
 
     const { token, tokenOwner, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim } = getSettings(network);
 
-    const staking = (await Staking.deployed()).address;
+    const locking = (await Locking.deployed()).address;
 
-    const rariMineV3 = await deployProxy(RariMineV3, [token, tokenOwner, staking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim], { deployer, initializer: '__RariMineV3_init', gas: 3000000 })
+    const rariMineV3 = await deployProxy(RariMineV3, [token, tokenOwner, locking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim], { deployer, initializer: '__RariMineV3_init', gas: 3000000 })
 
     console.log(`deployed RariMineV3 at ${rariMineV3.address}`)
     console.log(`settings: ${getSettings(network)}`)

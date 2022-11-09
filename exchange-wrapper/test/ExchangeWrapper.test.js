@@ -1442,30 +1442,14 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const seller = accounts[1];
       const buyer = accounts[2];
 
-      //deploying templates
-      const _enumerableETHTemplate = (await LSSVMPairEnumerableETH.new()).address;
-      const _missingEnumerableETHTemplate = (await LSSVMPairMissingEnumerableETH.new()).address;
-      const _enumerableERC20Template = (await LSSVMPairEnumerableERC20.new()).address
-      const _missingEnumerableERC20Template = (await LSSVMPairMissingEnumerableERC20.new()).address;
-
-      const _protocolFeeMultiplier = "5000000000000000";
-
       //Deploy factory
-      const factory = await LSSVMPairFactory.new(_enumerableETHTemplate, _missingEnumerableETHTemplate, _enumerableERC20Template, _missingEnumerableERC20Template, protocol, _protocolFeeMultiplier)
+      const factory = await LSSVMPairFactory.deployed()
 
       //Deploy router
-      const router = await LSSVMRouter.new(factory.address)
-
-      //Whitelist router in factory
-      await factory.setRouterAllowed(router.address, true)
+      const router = await LSSVMRouter.deployed()
 
       //Deploy bonding curves
-      const exp = await ExponentialCurve.new()
-      const lin = await LinearCurve.new();
-
-      // Whitelist bonding curves in factory
-      await factory.setBondingCurveAllowed(exp.address, true)
-      await factory.setBondingCurveAllowed(lin.address, true)
+      const lin = await LinearCurve.deployed();
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(factory.address, true, {from: seller})
