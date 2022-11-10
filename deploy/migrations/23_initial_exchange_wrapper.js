@@ -4,14 +4,6 @@ const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
 const { getSettings } = require("./config.js")
 
-
-const rinkeby = {
-  wyvernExchange: "0xdD54D660178B28f6033a953b0E55073cFA7e3744",
-  seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
-  x2y2: "0x0000000000000000000000000000000000000000",
-  looksRare: "0x0000000000000000000000000000000000000000",
-  sudoSwap: "0x0000000000000000000000000000000000000000"
-}
 const mainnet = {
   wyvernExchange: "0x7f268357A8c2552623316e2562D90e642bB538E5",
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
@@ -27,13 +19,6 @@ const goerli = {
   sudoSwap: "0x25b4EfC43c9dCAe134233CD577fFca7CfAd6748F"
 }
 const ropsten = {
-  wyvernExchange: "0x0000000000000000000000000000000000000000",
-  seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
-  x2y2: "0x0000000000000000000000000000000000000000",
-  looksRare: "0x0000000000000000000000000000000000000000",
-  sudoSwap: "0x0000000000000000000000000000000000000000"
-}
-const e2e = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x0000000000000000000000000000000000000000",
@@ -56,18 +41,32 @@ const dev = {
   sudoSwap: "0xc64E5D291CaEdF42b77fa9E50d5Fd46113227857"
 }
 
+const staging = {
+  wyvernExchange: "0x0000000000000000000000000000000000000000",
+  seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+  x2y2: "0x0000000000000000000000000000000000000000",
+  looksRare: "0x0000000000000000000000000000000000000000",
+  sudoSwap: "0xE27A07e9B293dC677e34aB5fF726073ECbeCA842"
+}
+
+const polygon_staging = {
+  wyvernExchange: "0x0000000000000000000000000000000000000000",
+  seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+  x2y2: "0x0000000000000000000000000000000000000000",
+  looksRare: "0x0000000000000000000000000000000000000000",
+  sudoSwap: "0x55eB2809896aB7414706AaCDde63e3BBb26e0BC6"
+}
+
 let settings = {
   "default": def,
-  "rinkeby": rinkeby,
-  "rinkeby-fork": rinkeby,
   "ropsten": ropsten,
   "ropsten-fork": ropsten,
   "mainnet": mainnet,
   "mainnet-fork": mainnet,
-  "e2e": e2e,
-  "e2e-fork": e2e,
   "goerli": goerli,
-  "dev": dev
+  "dev": dev,
+  "staging": staging,
+  "polygon_staging": polygon_staging
 };
 
 function getWrapperSettings(network) {
