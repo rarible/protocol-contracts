@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.7.6;
+pragma abicoder v2;
 
 import "./LibOrder.sol";
 
@@ -15,22 +16,22 @@ library LibOrderData {
 
     function parse(LibOrder.Order memory order) pure internal returns (GenericOrderData memory dataOrder) {
         if (order.dataType == LibOrderDataV1.V1) {
-            LibOrderDataV1.DataV1 memory data = LibOrderDataV1.decodeOrderDataV1(order.data);
+            LibOrderDataV1.DataV1 memory data = abi.decode(order.data, (LibOrderDataV1.DataV1));
             dataOrder.payouts = data.payouts;
             dataOrder.originFees = data.originFees;
         } else if (order.dataType == LibOrderDataV2.V2) {
-            LibOrderDataV2.DataV2 memory data = LibOrderDataV2.decodeOrderDataV2(order.data);
+            LibOrderDataV2.DataV2 memory data = abi.decode(order.data, (LibOrderDataV2.DataV2));
             dataOrder.payouts = data.payouts;
             dataOrder.originFees = data.originFees;
             dataOrder.isMakeFill = data.isMakeFill;
         } else if (order.dataType == LibOrderDataV3.V3_SELL) {
-            LibOrderDataV3.DataV3_SELL memory data = LibOrderDataV3.decodeOrderDataV3_SELL(order.data);
+            LibOrderDataV3.DataV3_SELL memory data = abi.decode(order.data, (LibOrderDataV3.DataV3_SELL));
             dataOrder.payouts = parsePayouts(data.payouts);
             dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
             dataOrder.isMakeFill = true;
             dataOrder.maxFeesBasePoint = data.maxFeesBasePoint;
         } else if (order.dataType == LibOrderDataV3.V3_BUY) {
-            LibOrderDataV3.DataV3_BUY memory data = LibOrderDataV3.decodeOrderDataV3_BUY(order.data);
+            LibOrderDataV3.DataV3_BUY memory data = abi.decode(order.data, (LibOrderDataV3.DataV3_BUY));
             dataOrder.payouts = parsePayouts(data.payouts);
             dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
             dataOrder.isMakeFill = false;

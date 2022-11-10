@@ -45,7 +45,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
         checkOwner(token);
         uint sumRoyalties = 0;
         delete royaltiesByToken[token];
-        for (uint i = 0; i < royalties.length; i++) {
+        for (uint i = 0; i < royalties.length; ++i) {
             require(royalties[i].account != address(0x0), "RoyaltiesByToken recipient should be present");
             require(royalties[i].value != 0, "Royalty value for RoyaltiesByToken should be > 0");
             royaltiesByToken[token].royalties.push(royalties[i]);
@@ -88,7 +88,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
         uint sumRoyalties = 0;
         bytes32 key = keccak256(abi.encode(token, tokenId));
         delete royaltiesByTokenAndTokenId[key].royalties;
-        for (uint i = 0; i < royalties.length; i++) {
+        for (uint i = 0; i < royalties.length; ++i) {
             require(royalties[i].account != address(0x0), "RoyaltiesByTokenAndTokenId recipient should be present");
             require(royalties[i].value != 0, "Royalty value for RoyaltiesByTokenAndTokenId should be > 0");
             royaltiesByTokenAndTokenId[key].royalties.push(royalties[i]);
@@ -133,7 +133,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
             return (new LibPart.Part[](0), true);
         }
         LibPart.Part[] memory result = new LibPart.Part[](values.length);
-        for (uint256 i = 0; i < values.length; i++) {
+        for (uint256 i = 0; i < values.length; ++i) {
             result[i].value = uint96(values[i]);
             result[i].account = recipients[i];
         }

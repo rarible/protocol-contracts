@@ -13,7 +13,7 @@ FROM base as exchange-v2
 WORKDIR /protocol/exchange-v2
 ENTRYPOINT ["truffle", "test", "--compile-all"]
 
-FROM base as staking
-WORKDIR /protocol/staking
+FROM base as locking
+WORKDIR /protocol/locking
 RUN rm -rf build
 ENTRYPOINT ["truffle", "test", "--compile-all"]

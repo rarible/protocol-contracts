@@ -17,7 +17,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
-    uint256 private constant UINT256_MAX = 2 ** 256 - 1;
+    uint256 private constant UINT256_MAX = type(uint256).max;
 
     //state of the orders
     mapping(bytes32 => uint) public fills;
@@ -189,26 +189,26 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             parseOrdersSetFillEmitMatch(orderLeft, orderRight);
 
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(
-            LibDeal.DealSide(
-                LibAsset.Asset( 
-                    makeMatch,
-                    newFill.leftValue
-                ),
-                leftOrderData.payouts,
-                leftOrderData.originFees,
-                proxies[makeMatch.assetClass],
-                orderLeft.maker
-            ), 
-            LibDeal.DealSide(
-                LibAsset.Asset( 
+            LibDeal.DealSide({
+                asset: LibAsset.Asset({
+                    assetType: makeMatch,
+                    value: newFill.leftValue
+                }),
+                payouts: leftOrderData.payouts,
+                originFees: leftOrderData.originFees,
+                proxy: proxies[makeMatch.assetClass],
+                from: orderLeft.maker
+            }), 
+            LibDeal.DealSide({
+                asset: LibAsset.Asset( 
                     takeMatch,
                     newFill.rightValue
                 ),
-                rightOrderData.payouts,
-                rightOrderData.originFees,
-                proxies[takeMatch.assetClass],
-                orderRight.maker
-            ),
+                payouts: rightOrderData.payouts,
+                originFees: rightOrderData.originFees,
+                proxy: proxies[takeMatch.assetClass],
+                from: orderRight.maker
+            }),
             getDealData(
                 makeMatch.assetClass,
                 takeMatch.assetClass,
@@ -414,7 +414,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     function validateFull(LibOrder.Order memory order, bytes memory signature) internal view {
-        LibOrder.validate(order);
+        LibOrder.validateOrderTime(order);
         validate(order, signature);
     }
 

@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
 
     bytes constant EMPTY = "";
-    mapping(bytes4 => address) matchers;
+    mapping(bytes4 => address) internal matchers;
 
     event MatcherChange(bytes4 indexed assetType, address matcher);
 
@@ -65,7 +65,7 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         revert("not found IAssetMatcher");
     }
 
-    function simpleMatch(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private view returns (LibAsset.AssetType memory) {
+    function simpleMatch(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) private pure returns (LibAsset.AssetType memory) {
         bytes32 leftHash = keccak256(leftAssetType.data);
         bytes32 rightHash = keccak256(rightAssetType.data);
         if (leftHash == rightHash) {

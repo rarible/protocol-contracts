@@ -1556,6 +1556,24 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc1155.balanceOf(buyer1, erc1155TokenId1), 100);
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 0);
     })
+
+    it("should correctly behave if origin fees are too big", async () => {
+      const buyer1 = accounts[3];
+
+      const erc1155 = await prepareERC1155(makerLeft, 200)
+
+      const encDataLeft = await encDataV2([[[makerLeft, 10000]], [[accounts[5], 1000]], true]);
+      const encDataRight = await encDataV2([[], [[accounts[5], "79228162514264337593543949336"]], false]);
+
+      const left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const right = Order(makerRight, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
+
+      await truffleAssert.fails(
+        exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: "600" }),
+        truffleAssert.ErrorType.REVERT,
+        "wrong origin fees"
+      )
+    })
   })
 
   describe("matchOrders, orderType = V3", () => {

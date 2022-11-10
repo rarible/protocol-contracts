@@ -14,8 +14,4 @@ library LibOrderDataV2 {
         bool isMakeFill;
     }
 
-    function decodeOrderDataV2(bytes memory data) internal pure returns (DataV2 memory orderData) {
-        orderData = abi.decode(data, (DataV2));
-    }
-
 }

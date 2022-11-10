@@ -277,7 +277,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
 
         _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
 
-        for (uint i = 0; i < ids.length; i++) {
+        for (uint i = 0; i < ids.length; ++i) {
             _balances[ids[i]][to] = amounts[i].add(_balances[ids[i]][to]);
         }
 
@@ -324,7 +324,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
 
         _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
 
-        for (uint i = 0; i < ids.length; i++) {
+        for (uint i = 0; i < ids.length; ++i) {
             _balances[ids[i]][account] = _balances[ids[i]][account].sub(
                 amounts[i],
                 "ERC1155: burn amount exceeds balance"

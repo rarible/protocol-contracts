@@ -61,7 +61,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
     /// @dev returns royalties type from uint
     function _getRoyaltiesType(uint data) internal pure returns(uint) {
-        for (uint i = 1; i <= royaltiesTypesAmount; i++) {
+        for (uint i = 1; i <= royaltiesTypesAmount; ++i) {
             if (data / 2**(256-i) == 1) {
                 return i;
             }
@@ -96,7 +96,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
         setRoyaltiesType(token, 1, address(0));
         uint sumRoyalties = 0;
         delete royaltiesByToken[token];
-        for (uint i = 0; i < royalties.length; i++) {
+        for (uint i = 0; i < royalties.length; ++i) {
             require(royalties[i].account != address(0x0), "RoyaltiesByToken recipient should be present");
             require(royalties[i].value != 0, "Royalty value for RoyaltiesByToken should be > 0");
             royaltiesByToken[token].royalties.push(royalties[i]);
@@ -222,7 +222,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
             return new LibPart.Part[](0);
         }
         LibPart.Part[] memory result = new LibPart.Part[](values.length);
-        for (uint256 i = 0; i < values.length; i++) {
+        for (uint256 i = 0; i < values.length; ++i) {
             result[i].value = uint96(values[i]);
             result[i].account = recipients[i];
         }

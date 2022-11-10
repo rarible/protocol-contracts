@@ -24,12 +24,4 @@ library LibOrderDataV3 {
         bytes32 marketplaceMarker;
     }
 
-    function decodeOrderDataV3_SELL(bytes memory data) internal pure returns (DataV3_SELL memory orderData) {
-        orderData = abi.decode(data, (DataV3_SELL));
-    }
-
-    function decodeOrderDataV3_BUY(bytes memory data) internal pure returns (DataV3_BUY memory orderData) {
-        orderData = abi.decode(data, (DataV3_BUY));
-    }
-
 }
