@@ -11,6 +11,7 @@ pipeline {
         NETWORK = "goerli"
       }
       steps {
+        sh './patches/apply-patch.bash'
         sh 'yarn install'
         sh 'yarn bootsrap'
         sh 'cd exchange-v2; yarn test; cd ..;'
@@ -27,6 +28,7 @@ pipeline {
             docker { image 'baseverify:latest' }
         }
         steps {
+            sh './patches/apply-patch.bash'
             sh 'yarn install'
             sh 'yarn bootstrap'
             sh 'cd deploy'
@@ -42,6 +44,7 @@ pipeline {
             docker { image 'baseverify:latest' }
         }
         steps {
+            sh './patches/apply-patch.bash'
             sh 'yarn install'
             sh 'yarn bootstrap'
             sh 'cd deploy'
@@ -61,6 +64,7 @@ pipeline {
             docker { image 'baseverify:latest' }
         }
         steps {
+            sh './patches/apply-patch.bash'
             sh 'yarn install'
             sh 'yarn bootstrap'
             sh 'cd deploy'
