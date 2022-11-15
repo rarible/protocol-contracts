@@ -361,7 +361,10 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         now royalties support only for marketId = sudoswap
     */
     function supportsRoyalties(Markets marketId) internal pure returns (bool){
-        if (marketId == Markets.SudoSwap) {
+        if (
+            marketId == Markets.SudoSwap ||
+            marketId == Markets.LooksRareOrders
+        ) {
             return true;
         }
 
