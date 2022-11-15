@@ -1091,11 +1091,11 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const tradeDataSeaPort = PurchaseData(4, 10000, dataTypePlusFees, dataPlusAdditionalRoyalties);
 
       await verifyBalanceChange(buyerLocal1, 13000, () =>
-      	verifyBalanceChange(royaltyAccount1, -1000, () =>
-      		verifyBalanceChange(royaltyAccount2, -2000, () =>
+        verifyBalanceChange(royaltyAccount1, -1000, () =>
+          verifyBalanceChange(royaltyAccount2, -2000, () =>
             bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 13000, gasPrice: 0})
-      		)
-      	)
+          )
+        )
       );
       
       assert.equal(await erc721.balanceOf(buyerLocal1), 1);
