@@ -21,7 +21,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     mapping(uint => uint) private supply;
     mapping(uint => uint) private minted;
 
-    function __ERC1155Lazy_init_unchained() internal initializer {
+    function __ERC1155Lazy_init_unchained() internal {
 
     }
 
@@ -51,6 +51,7 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             left = amount - transfer;
         }
         if (left > 0) {
+            require(from == data.creators[0].account, "wrong order maker");
             mintAndTransfer(data, to, left);
         }
     }
