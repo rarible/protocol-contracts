@@ -1098,7 +1098,6 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       	)
       );
       
-      //console.log("wrapper call LooksRare: ETH <=> ERC721", tx.receipt.gasUsed)
       assert.equal(await erc721.balanceOf(buyerLocal1), 1);
       assert.equal(await weth.balanceOf(seller), 10000);
     })
