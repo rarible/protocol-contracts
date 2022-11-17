@@ -1022,7 +1022,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
   });
 
   describe("purcahase LooksRare orders", () => {
-    it("wrapper call matchAskWithTakerBidUsingETHAndWETH  ETH<->ERC721, trying royalites", async () => {
+    it("wrapper call matchAskWithTakerBidUsingETHAndWETH  ETH<->ERC721, with royalites", async () => {
       const buyerLocal1 = accounts[2];
       const LR_protocolFeeRecipient = accounts[3];
       const lr_currencyManager = await LR_currencyManager.new();
@@ -1077,7 +1077,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       assert.equal(await erc721.balanceOf(buyerLocal1), 0);
       let dataForLooksRare = await wrapperHelper.getDataWrapperMatchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk, ERC721);
       
-      //adding royalties doesn't work
+      //adding royalties 
       const royaltyAccount1 = accounts[4];
       const royaltyAccount2 = accounts[5];
       const additionalRoyalties = [await encodeBpPlusAccountTest(1000, royaltyAccount1), await encodeBpPlusAccountTest(2000, royaltyAccount2)];
@@ -1090,8 +1090,14 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
       const tradeDataSeaPort = PurchaseData(4, 10000, dataTypePlusFees, dataPlusAdditionalRoyalties);
 
-      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 10000})
-      console.log("wrapper call LooksRare: ETH <=> ERC721", tx.receipt.gasUsed)
+      await verifyBalanceChange(buyerLocal1, 13000, () =>
+        verifyBalanceChange(royaltyAccount1, -1000, () =>
+          verifyBalanceChange(royaltyAccount2, -2000, () =>
+            bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 13000, gasPrice: 0})
+          )
+        )
+      );
+      
       assert.equal(await erc721.balanceOf(buyerLocal1), 1);
       assert.equal(await weth.balanceOf(seller), 10000);
     })
