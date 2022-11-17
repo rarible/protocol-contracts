@@ -1,4 +1,4 @@
-const { createTypeData, signTypedData } = require("../../../scripts/EIP712");
+const { createTypeData, signTypedData } = require("./EIP712");
 
 const Types = {
 	Part: [

@@ -7,7 +7,7 @@ const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
 const truffleAssert = require('truffle-assertions');
 
-const { sign } = require("./mint");
+const { sign } = require("../../../scripts/mint721.js");
 const { expectThrow } = require("@daonomic/tests-common");
 
 contract("ERC721Rarible", accounts => {

@@ -44,6 +44,7 @@ abstract contract ERC721LazyMinimal is IERC721LazyMint, ERC721UpgradeableMinimal
         if (_exists(data.tokenId)) {
             safeTransferFrom(from, to, data.tokenId);
         } else {
+            require(from == data.creators[0].account, "wrong order maker");
             mintAndTransfer(data, to);
         }
     }
