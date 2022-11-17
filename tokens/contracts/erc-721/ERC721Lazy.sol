@@ -44,6 +44,7 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
         if (_exists(data.tokenId)) {
             safeTransferFrom(from, to, data.tokenId);
         } else {
+            require(from == data.creators[0].account, "wrong order maker");
             mintAndTransfer(data, to);
         }
     }

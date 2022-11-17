@@ -7,7 +7,7 @@ const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferPro
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const truffleAssert = require('truffle-assertions');
 
-const { sign } = require("./mint");
+const { sign } = require("../../../scripts/mint721.js");
 const { expectThrow } = require("@daonomic/tests-common");
 
 contract("ERC721Rarible minimal", accounts => {
