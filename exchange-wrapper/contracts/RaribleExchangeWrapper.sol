@@ -357,7 +357,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     }
 
     /**
-        @notice returns true if this contract supports additional royalties for the marketpale
+        @notice returns true if this contract supports additional royalties for the marketplace
         now royalties are supported for:
           1. SudoSwap
           2. LooksRare
