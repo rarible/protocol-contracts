@@ -75,7 +75,8 @@ module.exports = {
   },
 
   plugins: [
-    'truffle-plugin-verify'
+    'truffle-plugin-verify',
+    'truffle-contract-size'
   ],
 
   networks: {
