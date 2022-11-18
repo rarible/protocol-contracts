@@ -49,6 +49,5 @@ module.exports = async function (deployer, network, accounts) {
     const rariMineV3 = await deployProxy(RariMineV3, [token, tokenOwner, locking, claimCliffWeeks, claimSlopeWeeks, claimFormulaClaim], { deployer, initializer: '__RariMineV3_init', gas: 3000000 })
 
     console.log(`deployed RariMineV3 at ${rariMineV3.address}`)
-    console.log(`settings: ${getSettings(network)}`)
 
 };
