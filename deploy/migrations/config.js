@@ -36,19 +36,21 @@ const e2e = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
   deploy_CryptoPunks: true,
   deploy_WETH: true,
-  deploy_non_meta: true,
+  deploy_non_meta: true
 }
 const dev = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
   deploy_WETH: true,
   deploy_non_meta: true,
+  deploy_test_erc20: true
 }
 const staging = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
   deploy_WETH: true,
   deploy_non_meta: true,
+  deploy_test_erc20: true
 }
 const polygon_staging = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
@@ -56,6 +58,7 @@ const polygon_staging = {
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
   deploy_WETH: true,
   deploy_meta: true,
+  deploy_test_erc20: true
 }
 const polygon_mumbai = {
   communityWallet: "0x0CA38eAc26A4D0F17F7f323189282e2c0d8259bD",
@@ -73,7 +76,8 @@ const polygon_dev = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
   deploy_meta: true,
-  deploy_WETH: true
+  deploy_WETH: true,
+  deploy_test_erc20: true
 }
 const def = {
   communityWallet: "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4",
@@ -97,13 +101,15 @@ const def = {
   deploy_CryptoPunks: true,
   deploy_meta: true,
   deploy_non_meta: true,
-  deploy_WETH: false
+  deploy_WETH: false,
+  deploy_test_erc20: true
 }
 const goerli = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: true,
   deploy_meta: false,
   deploy_non_meta: true,
+  deploy_test_erc20: true
 }
 
 let settings = {
