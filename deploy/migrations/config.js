@@ -133,6 +133,18 @@ function getSettings(network) {
   }
 }
 
+function getAdminProxy(network) {
+  let json;
+  try {
+    json = require(`../.openzeppelin/${network}.json`)
+  } catch (e) {
+    const tconfig = require('../truffle-config.js')
+    const network_id = tconfig.networks[network].network_id;
+    json = require(`../.openzeppelin/unknown-${network_id}.json`)
+  }
+  return json.admin.address;
+}
+
 async function getProxyImplementation(proxy, network, ProxyAdmin) {
   if (network === "test") {
     network = "unknown-1337"
@@ -150,16 +162,7 @@ async function getProxyImplementation(proxy, network, ProxyAdmin) {
     network = "unknown-300501"
   }
 
-  let json;
-  try {
-    json = require(`../.openzeppelin/${network}.json`)
-  } catch (e) {
-    const tconfig = require('../truffle-config.js')
-    console.log(tconfig)
-    const network_id = tconfig.networks[network].network_id;
-    json = require(`../.openzeppelin/unknown-${network_id}.json`)
-  }
-  const c = await ProxyAdmin.at(json.admin.address)
+  const c = await ProxyAdmin.at(getAdminProxy(network))
   const deployed = await proxy.deployed()
   return c.getProxyImplementation(deployed.address)
 }
@@ -180,4 +183,4 @@ async function updateImplementation(beacon, newImpl){
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation, getAdminProxy };
