@@ -29,21 +29,23 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
         } else {
             if (_msgSender() != order.maker) {
                 bytes32 hash = LibOrder.hash(order);
-                address signer;
-                if (signature.length == 65) {
-                    signer = _hashTypedDataV4(hash).recover(signature);
-                }
-                if  (signer != order.maker) {
-                    if (order.maker.isContract()) {
-                        require(
-                            IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
-                            "contract order signature verification error"
-                        );
-                    } else {
-                        revert("order signature verification error");
-                    }
+                // if maker is contract checking ERC1271 signature
+                if (order.maker.isContract()) {
+                    require(
+                        IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
+                        "contract order signature verification error"
+                    );
                 } else {
-                    require (order.maker != address(0), "no maker");
+                    // if maker is not contract then checking ECDSA signature
+                    address signer;
+                    if (signature.length == 65) {
+                        signer = _hashTypedDataV4(hash).recover(signature);
+                    }
+                    if (signer != order.maker) {
+                        revert("order signature verification error");
+                    } else {
+                        require (order.maker != address(0), "no maker");
+                    }
                 }
             }
         }
