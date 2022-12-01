@@ -1571,7 +1571,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       await truffleAssert.fails(
         exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: "600" }),
         truffleAssert.ErrorType.REVERT,
-        "wrong origin fees"
+        "origin fee is too big"
       )
     })
   })
