@@ -113,6 +113,24 @@ const goerli = {
   deploy_test_erc20: true
 }
 
+const optimism_mainnet = {
+  communityWallet: "0x1cf0df2a5a20cd61d68d4489eebbf85b8d39e18a",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: false
+}
+
+const optimism_goerli = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -129,7 +147,9 @@ let settings = {
   "polygon_dev": polygon_dev,
   "goerli": goerli,
   "staging": staging,
-  "polygon_staging": polygon_staging
+  "polygon_staging": polygon_staging,
+  "optimism_mainnet": optimism_mainnet,
+  "optimism_goerli": optimism_goerli,
 };
 
 function getSettings(network) {

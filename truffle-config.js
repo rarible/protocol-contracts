@@ -92,7 +92,9 @@ module.exports = {
     dev: createNetwork("dev"),
     goerli: createNetwork("goerli"),
     staging: createNetwork("staging"),
-    polygon_staging: createNetwork("polygon_staging")
+    polygon_staging: createNetwork("polygon_staging"),
+    optimism_mainnet: createNetwork("optimism_mainnet"),
+    optimism_goerli: createNetwork("optimism_goerli")
   },
 
   compilers: {
