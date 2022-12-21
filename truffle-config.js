@@ -3,9 +3,18 @@ const os = require('os');
 const path = require('path');
 require('dotenv').config();
 
+function getConfigPath() {
+  const configPath = process.env["NETWORK_CONFIG_PATH"];
+  if (configPath) {
+    return configPath;
+  } else {
+    return path.join(os.homedir(),  ".ethereum");
+  }
+}
+
 function createNetwork(name) {
   try {
-    var json = require(path.join(os.homedir(), ".ethereum", name + ".json"));
+    var json = require(path.join(getConfigPath(), name + ".json"));
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
 
     return {
@@ -46,7 +55,7 @@ function getScanApiKey(name) {
     apiKey = process.env[envApiKeyName];
     console.log(`loaded ${name} key from env ${envApiKeyName}`);
   } else {
-    const filePath = path.join(os.homedir(), ".ethereum", name + ".json");
+    const filePath = path.join(getConfigPath(), name + ".json");
     if (fs.existsSync(filePath)) {
       console.log(`Loading ${name} key from ${filePath}`);
       apiKey = require(filePath).apiKey;

@@ -1,15 +1,7 @@
-pipeline {
-  agent any
+@Library('shared-library') _
 
-	options {
-		disableConcurrentBuilds()
-	}
-    
-  stages {
-    stage('test') {
-      steps {
-        sh 'cd exchange-v2; npm i; truffle test --compile-all'
-      }
-    }
-  }
-}
+def pipelineConfig = [
+  "buildWith": "nodetruffle"
+]
+
+pipelineProtocolContracts(pipelineConfig)
