@@ -17,7 +17,8 @@ contract("OrderValidator", accounts => {
   it("Test1. should validate if signer is correct", async () => {
     const testOrder = order.Order(accounts[1], order.Asset("0xffffffff", "0x", 100), ZERO, order.Asset("0xffffffff", "0x", 200), 1, 0, 0, "0xffffffff", "0x");
     const signature = await getSignature(testOrder, accounts[1], testing.address);
-    await testing.validateOrderTest(testOrder, signature);
+    const tx = await testing.validateOrderTest2(testOrder, signature);
+    console.log(tx.receipt.gasUsed)
   });
 
   it("Test2. should fail validate if signer is incorrect", async () => {

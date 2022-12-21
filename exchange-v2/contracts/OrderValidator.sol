@@ -37,11 +37,7 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
                     );
                 } else {
                     // if maker is not contract then checking ECDSA signature
-                    address signer;
-                    if (signature.length == 65) {
-                        signer = _hashTypedDataV4(hash).recover(signature);
-                    }
-                    if (signer != order.maker) {
+                    if (_hashTypedDataV4(hash).recover(signature) != order.maker) {
                         revert("order signature verification error");
                     } else {
                         require (order.maker != address(0), "no maker");

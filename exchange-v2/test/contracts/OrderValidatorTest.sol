@@ -13,4 +13,8 @@ contract OrderValidatorTest is OrderValidator {
     function validateOrderTest(LibOrder.Order calldata order, bytes calldata signature) external view {
         return validate(order, signature);
     }
+
+    function validateOrderTest2(LibOrder.Order calldata order, bytes calldata signature) external {
+        return validate(order, signature);
+    }
 }
