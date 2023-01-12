@@ -57,6 +57,14 @@ const polygon_staging = {
   sudoSwap: "0x55eB2809896aB7414706AaCDde63e3BBb26e0BC6"
 }
 
+const polygon_mumbai = {
+  wyvernExchange: "0x0000000000000000000000000000000000000000",
+  seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
+  x2y2: "0x0000000000000000000000000000000000000000",
+  looksRare: "0x0000000000000000000000000000000000000000",
+  sudoSwap: "0x0000000000000000000000000000000000000000"
+}
+
 let settings = {
   "default": def,
   "ropsten": ropsten,
@@ -66,7 +74,8 @@ let settings = {
   "goerli": goerli,
   "dev": dev,
   "staging": staging,
-  "polygon_staging": polygon_staging
+  "polygon_staging": polygon_staging,
+  "polygon_mumbai": polygon_mumbai
 };
 
 function getWrapperSettings(network) {
