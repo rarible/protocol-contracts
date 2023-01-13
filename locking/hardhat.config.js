@@ -1,6 +1,7 @@
 /** @type import('hardhat/config').HardhatUserConfig */
 require("@nomiclabs/hardhat-truffle5");
 require("hardhat-gas-reporter");
+require("@nomicfoundation/hardhat-foundry");
 
 module.exports = {
   defaultNetwork: "hardhat",
