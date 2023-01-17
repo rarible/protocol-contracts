@@ -64,3 +64,4 @@ See more information on [CONTRIBUTING.md](https://github.com/rarible/protocol/bl
 ## License
 
 Smart contracts for Rarible protocol are available under the [MIT License](LICENSE.md).
+
