@@ -19,7 +19,7 @@ yarn bootstrap
 if error, check node version for `yarn` expected node version ">=14.18.2", for check and set necessary version use, for example
 ```shell
 node -v
-nvm use 14.18.2
+nvm use 18.13.0
 ```
 then use truffle to compile, test: cd into directory and then
 ```shell
@@ -64,3 +64,4 @@ See more information on [CONTRIBUTING.md](https://github.com/rarible/protocol/bl
 ## License
 
 Smart contracts for Rarible protocol are available under the [MIT License](LICENSE.md).
+
