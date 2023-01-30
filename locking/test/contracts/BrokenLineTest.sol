@@ -9,11 +9,22 @@ contract BrokenLineTest {
     LibBrokenLine.BrokenLine public brokenLineTestLocal;
     event resultRemoveLine(uint bias, uint slope, uint cliff);
 
-    function addTest(LibBrokenLine.Line memory line, uint id, uint cliff) public {
-        LibBrokenLine.add(brokenLineTestLocal, id, line, cliff);
+    struct LineOld {
+        uint32 start;
+        uint96 bias;
+        uint96 slope;
     }
 
-    function update(uint timeTo) public {
+    function addTest(LineOld memory lineOld, uint id, uint32 cliff) public {
+        LibBrokenLine.Line memory line;
+        line.start = lineOld.start;
+        line.bias = lineOld.bias;
+        line.slope = lineOld.slope;
+        line.cliff = cliff;
+        LibBrokenLine.add(brokenLineTestLocal, id, line);
+    }
+
+    function update(uint32 timeTo) public {
         LibBrokenLine.update(brokenLineTestLocal, timeTo);
     }
 
@@ -21,12 +32,16 @@ contract BrokenLineTest {
         return brokenLineTestLocal.initial;
     }
 
-    function getActualValue(uint timeTo) external returns (uint bias) {
+    function getActualValue(uint32 timeTo) external returns (uint bias) {
         return LibBrokenLine.actualValue(brokenLineTestLocal, timeTo);
     }
 
-    function removeTest(uint id, uint toTime) public {
+    function removeTest(uint id, uint32 toTime) public {
         (uint bias, uint slope, uint cliff) = LibBrokenLine.remove(brokenLineTestLocal, id, toTime);
         emit resultRemoveLine(bias, slope, cliff);
+    }
+
+    function getSlopeChanges(uint time) external view returns (int96) {
+        return brokenLineTestLocal.slopeChanges[time];
     }
 }

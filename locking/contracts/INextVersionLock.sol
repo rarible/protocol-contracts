@@ -6,5 +6,5 @@ pragma abicoder v2;
 import "./libs/LibBrokenLine.sol";
 
 interface INextVersionLock {
-    function initiateData(uint idLock, LibBrokenLine.LineData memory lineData, address locker, address delegate) external;
+    function initiateData(uint idLock, LibBrokenLine.Line memory line, address locker, address delegate) external;
 }

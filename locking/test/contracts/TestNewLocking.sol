@@ -7,7 +7,7 @@ import "../../contracts/libs/LibBrokenLine.sol";
 import "../../contracts/INextVersionLock.sol";
 
 contract TestNewLocking is INextVersionLock {
-    function initiateData(uint idLock, LibBrokenLine.LineData memory lineData, address locker, address delegate) override external {
+    function initiateData(uint idLock, LibBrokenLine.Line memory line, address locker, address delegate) override external {
 
     }
 }

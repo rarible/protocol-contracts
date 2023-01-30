@@ -7,30 +7,30 @@ import "../../contracts/Locking.sol";
 
 contract TestLocking is Locking {
 
-    uint public blockNumberMocked;
-    uint public epocShift;
+    uint32 public blockNumberMocked;
+    uint32 public epocShift;
 
-    function incrementBlock (uint _amount) external {
+    function incrementBlock (uint32 _amount) external {
         blockNumberMocked = blockNumberMocked + _amount;
     }
 
-    function getBlockNumber() internal override view returns (uint) {
+    function getBlockNumber() internal override view returns (uint32) {
         return blockNumberMocked;
     }
 
-    function getLockTest(uint amount, uint slope, uint cliff) external view returns (uint lockAmount, uint lockSlope) {
+    function getLockTest(uint96 amount, uint32 slope, uint32 cliff) external view returns (uint96 lockAmount, uint96 lockSlope) {
         (lockAmount, lockSlope) = getLock(amount, slope, cliff);
     }
 
-    function getEpochShift() internal view override returns (uint) {
+    function getEpochShift() internal view override returns (uint32) {
         return epocShift;
     }
 
-    function setEpochShift(uint _epocShift) external {
+    function setEpochShift(uint32 _epocShift) external {
         epocShift = _epocShift;
     }
 
-    function setBlock(uint _block) external {
+    function setBlock(uint32 _block) external {
         blockNumberMocked = _block;
     }
 

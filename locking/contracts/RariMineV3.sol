@@ -14,7 +14,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./libs/LibString.sol";
 import "./libs/LibAddress.sol";
 import "./libs/LibUint.sol";
-import "./libs/LibLockingMath.sol";
 import "./IRariMine.sol";
 import "./ILocking.sol";
 
@@ -103,7 +102,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             if(lockAmount > 0) {
                 require(token.transferFrom(tokenOwner, address(this), lockAmount), "transfer to RariMine is not successful");
                 require(token.approve(address(locking), lockAmount), "approve is not successful");
-                locking.lock(recipient, recipient, lockAmount, claimSlopeWeeks, claimCliffWeeks);
+                locking.lock(recipient, recipient, uint96(lockAmount), uint32(claimSlopeWeeks), uint32(claimCliffWeeks));
             }
 
             return;

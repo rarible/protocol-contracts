@@ -10,10 +10,12 @@ import "./LockingVotes.sol";
 import "./ILocking.sol";
 
 contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
-    using SafeMathUpgradeable for uint;
+    using SafeMathUpgradeable96 for uint96;
+    using SafeMathUpgradeable32 for uint32;
+
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    function __Locking_init(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) external initializer {
+    function __Locking_init(IERC20Upgradeable _token, uint32 _startingPointWeek, uint32 _minCliffPeriod, uint32 _minSlopePeriod) external initializer {
         __LockingBase_init_unchained(_token, _startingPointWeek, _minCliffPeriod, _minSlopePeriod);
         __Ownable_init_unchained();
         __Context_init_unchained();
@@ -34,14 +36,14 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
         emit StartMigration(msg.sender, to);
     }
 
-    function lock(address account, address _delegate, uint amount, uint slopePeriod, uint cliff) external notStopped notMigrating override returns (uint) {
+    function lock(address account, address _delegate, uint96 amount, uint32 slopePeriod, uint32 cliff) external notStopped notMigrating override returns (uint) {
         require(amount > 0, "zero amount");
         require(cliff <= MAX_CLIFF_PERIOD, "cliff too big");
         require(slopePeriod <= MAX_SLOPE_PERIOD, "period too big");
 
         counter++;
 
-        uint time = roundTimestamp(getBlockNumber());
+        uint32 time = roundTimestamp(getBlockNumber());
         addLines(account, _delegate, amount, slopePeriod, cliff, time);
         accounts[account].amount = accounts[account].amount.add(amount);
 
@@ -56,7 +58,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
     }
 
     function withdraw() external {
-        uint value = getAvailableForWithdraw(msg.sender);
+        uint96 value = getAvailableForWithdraw(msg.sender);
         if (value > 0) {
             accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
             require(token.transfer(msg.sender, value), "transfer failed");
@@ -65,13 +67,14 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
     }
 
     // Amount available for withdrawal
-    function getAvailableForWithdraw(address account) public view returns (uint value) {
-        value = accounts[account].amount;
+    function getAvailableForWithdraw(address account) public view returns (uint96) {
+        uint96 value = accounts[account].amount;
         if (!stopped) {
-            uint time = roundTimestamp(getBlockNumber());
-            uint bias = accounts[account].locked.actualValue(time);
+            uint32 time = roundTimestamp(getBlockNumber());
+            uint96 bias = accounts[account].locked.actualValue(time);
             value = value.sub(bias);
         }
+        return value;
     }
 
     //Remaining locked amount
@@ -93,12 +96,12 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
     function delegateTo(uint id, address newDelegate) external notStopped notMigrating {
         address account = verifyLockOwner(id);
         address _delegate = locks[id].delegate;
-        uint time = roundTimestamp(getBlockNumber());
+        uint32 time = roundTimestamp(getBlockNumber());
         accounts[_delegate].balance.update(time);
-        (uint bias, uint slope, uint cliff) = accounts[_delegate].balance.remove(id, time);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope);
+        (uint96 bias, uint96 slope, uint32 cliff) = accounts[_delegate].balance.remove(id, time);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope, cliff);
         accounts[newDelegate].balance.update(time);
-        accounts[newDelegate].balance.add(id, line, cliff);
+        accounts[newDelegate].balance.add(id, line);
         locks[id].delegate = newDelegate;
         emit Delegate(id, account, newDelegate, time);
 
@@ -112,7 +115,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
         if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint time = roundTimestamp(getBlockNumber());
+        uint32 time = roundTimestamp(getBlockNumber());
         return totalSupplyLine.actualValue(time);
     }
 
@@ -120,7 +123,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
         if ((accounts[account].balance.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint time = roundTimestamp(getBlockNumber());
+        uint32 time = roundTimestamp(getBlockNumber());
         return accounts[account].balance.actualValue(time);
     }
 
@@ -128,21 +131,21 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
         if (migrateTo == address(0)) {
             return;
         }
-        uint time = roundTimestamp(getBlockNumber());
+        uint32 time = roundTimestamp(getBlockNumber());
         INextVersionLock nextVersionLock = INextVersionLock(migrateTo);
         for (uint256 i = 0; i < id.length; ++i) {
             address account = verifyLockOwner(id[i]);
             address _delegate = locks[id[i]].delegate;
             updateLines(account, _delegate, time);
             //save data Line before remove
-            LibBrokenLine.LineData memory lineData = accounts[account].locked.initiatedLines[id[i]];
-            (uint residue,,) = accounts[account].locked.remove(id[i], time);
+            LibBrokenLine.Line memory line = accounts[account].locked.initiatedLines[id[i]];
+            (uint96 residue,,) = accounts[account].locked.remove(id[i], time);
 
             accounts[account].amount = accounts[account].amount.sub(residue);
 
             accounts[_delegate].balance.remove(id[i], time);
             totalSupplyLine.remove(id[i], time);
-            nextVersionLock.initiateData(id[i], lineData, account, _delegate);
+            nextVersionLock.initiateData(id[i], line, account, _delegate);
 
             require(token.transfer(migrateTo, residue), "transfer failed");
         }

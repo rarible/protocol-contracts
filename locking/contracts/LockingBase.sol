@@ -11,19 +11,20 @@ import "./libs/LibBrokenLine.sol";
 import "./IVotesUpgradeable.sol";
 
 abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
-
-    using SafeMathUpgradeable for uint;
+    using SafeMathUpgradeable96 for uint96;
+    using SafeMathUpgradeable32 for uint32;
+    
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
-    uint256 constant public WEEK = 50400; //blocks one week = 50400, day = 7200, goerli = 50
+    uint32 constant public WEEK = 50400; //blocks one week = 50400, day = 7200, goerli = 50
     
-    uint256 constant MAX_CLIFF_PERIOD = 103;
-    uint256 constant MAX_SLOPE_PERIOD = 104;
+    uint32 constant MAX_CLIFF_PERIOD = 103;
+    uint32 constant MAX_SLOPE_PERIOD = 104;
 
-    uint256 constant ST_FORMULA_DIVIDER =  1 * (10 ** 8);           //stFormula divider          100000000
-    uint256 constant ST_FORMULA_CONST_MULTIPLIER = 2 * (10 ** 7);   //stFormula const multiplier  20000000
-    uint256 constant ST_FORMULA_CLIFF_MULTIPLIER = 8 * (10 ** 7);   //stFormula cliff multiplier  80000000
-    uint256 constant ST_FORMULA_SLOPE_MULTIPLIER = 4 * (10 ** 7);   //stFormula slope multiplier  40000000
+    uint32 constant ST_FORMULA_DIVIDER =  1 * (10 ** 8);           //stFormula divider          100000000
+    uint32 constant ST_FORMULA_CONST_MULTIPLIER = 2 * (10 ** 7);   //stFormula const multiplier  20000000
+    uint32 constant ST_FORMULA_CLIFF_MULTIPLIER = 8 * (10 ** 7);   //stFormula cliff multiplier  80000000
+    uint32 constant ST_FORMULA_SLOPE_MULTIPLIER = 4 * (10 ** 7);   //stFormula slope multiplier  40000000
 
     /**
      * @dev ERC20 token to lock
@@ -48,17 +49,17 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
      * @dev minimal cliff period in weeks, minCliffPeriod < MAX_CLIFF_PERIOD
      */
 
-    uint public minCliffPeriod;
+    uint32 public minCliffPeriod;
 
     /**
      * @dev minimal slope period in weeks, minSlopePeriod < MAX_SLOPE_PERIOD
      */
-    uint public minSlopePeriod;
+    uint32 public minSlopePeriod;
 
     /**
      * @dev locking epoch start in weeks
      */
-    uint public startingPointWeek;
+    uint32 public startingPointWeek;
 
     /**
      * @dev represents one user Lock
@@ -77,7 +78,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
     struct Account {
         LibBrokenLine.BrokenLine balance;
         LibBrokenLine.BrokenLine locked;
-        uint amount;
+        uint96 amount;
     }
 
     mapping(address => Account) accounts;
@@ -129,7 +130,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
      */
     event SetStartingPointWeek(uint indexed newStartingPointWeek);
 
-    function __LockingBase_init_unchained(IERC20Upgradeable _token, uint _startingPointWeek, uint _minCliffPeriod, uint _minSlopePeriod) internal initializer {
+    function __LockingBase_init_unchained(IERC20Upgradeable _token, uint32 _startingPointWeek, uint32 _minCliffPeriod, uint32 _minSlopePeriod) internal initializer {
         token = _token;
         startingPointWeek = _startingPointWeek;
 
@@ -140,21 +141,21 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         minSlopePeriod = _minSlopePeriod;
     }
 
-    function addLines(address account, address _delegate, uint amount, uint slopePeriod, uint cliff, uint time) internal {
+    function addLines(address account, address _delegate, uint96 amount, uint32 slopePeriod, uint32 cliff, uint32 time) internal {
         require(slopePeriod <= amount, "Wrong value slopePeriod");
         updateLines(account, _delegate, time);
-        (uint stAmount, uint stSlope) = getLock(amount, slopePeriod, cliff);
-        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope);
-        totalSupplyLine.add(counter, line, cliff);
-        accounts[_delegate].balance.add(counter, line, cliff);
-        uint slope = divUp(amount, slopePeriod);
-        line = LibBrokenLine.Line(time, amount, slope);
-        accounts[account].locked.add(counter, line, cliff);
+        (uint96 stAmount, uint96 stSlope) = getLock(amount, slopePeriod, cliff);
+        LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope, cliff);
+        totalSupplyLine.add(counter, line);
+        accounts[_delegate].balance.add(counter, line);
+        uint96 slope = divUp(amount, slopePeriod);
+        line = LibBrokenLine.Line(time, amount, slope, cliff);
+        accounts[account].locked.add(counter, line);
         locks[counter].account = account;
         locks[counter].delegate = _delegate;
     }
 
-    function updateLines(address account, address _delegate, uint time) internal {
+    function updateLines(address account, address _delegate, uint32 time) internal {
         totalSupplyLine.update(time);
         accounts[_delegate].balance.update(time);
         accounts[account].locked.update(time);
@@ -168,27 +169,27 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
      *      + ST_FORMULA_SLOPE_MULTIPLIER * (slopePeriod - minSlopePeriod))/(MAX_SLOPE_PERIOD - minSlopePeriod)
      *      )) / ST_FORMULA_DIVIDER
      **/
-    function getLock(uint amount, uint slopePeriod, uint cliff) public view returns (uint lockAmount, uint lockSlope) {
+    function getLock(uint96 amount, uint32 slopePeriod, uint32 cliff) public view returns (uint96 lockAmount, uint96 lockSlope) {
         require(cliff >= minCliffPeriod, "cliff period < minimal lock period");
         require(slopePeriod >= minSlopePeriod, "slope period < minimal lock period");
 
-        uint cliffSide = (cliff - minCliffPeriod).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(MAX_CLIFF_PERIOD - minCliffPeriod);
-        uint slopeSide = (slopePeriod - minSlopePeriod).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(MAX_SLOPE_PERIOD - minSlopePeriod);
-        uint multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_CONST_MULTIPLIER);
+        uint96 cliffSide = uint96((cliff - minCliffPeriod)).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(MAX_CLIFF_PERIOD - minCliffPeriod);
+        uint96 slopeSide = uint96((slopePeriod - minSlopePeriod)).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(MAX_SLOPE_PERIOD - minSlopePeriod);
+        uint96 multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_CONST_MULTIPLIER);
 
         lockAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
         lockSlope = divUp(lockAmount, slopePeriod);
     }
 
-    function divUp(uint a, uint b) internal pure returns (uint) {
+    function divUp(uint96 a, uint96 b) internal pure returns (uint96) {
         return ((a.sub(1)).div(b)).add(1);
     }
     
-    function roundTimestamp(uint ts) view public returns (uint) {
+    function roundTimestamp(uint32 ts) view public returns (uint32) {
         if (ts < getEpochShift()) {
             return 0;
         }
-        uint shifted = ts.sub(getEpochShift());
+        uint32 shifted = ts.sub(getEpochShift());
         return shifted.div(WEEK).sub(startingPointWeek);
     }
 
@@ -198,7 +199,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
     * would start at about 11-35 UTC on Tuesday
     * we move it to 00-00 UTC Thursday by adding 10800 blocks (approx)
     */
-    function getEpochShift() internal view virtual returns (uint) {
+    function getEpochShift() internal view virtual returns (uint32) {
         return 10800;
     }
 
@@ -207,25 +208,25 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         require(account == msg.sender, "caller not a lock owner");
     }
 
-    function getBlockNumber() internal virtual view returns (uint) {
-        return block.number;
+    function getBlockNumber() internal virtual view returns (uint32) {
+        return uint32(block.number);
     }
 
-    function setStartingPointWeek(uint newStartingPointWeek) public notStopped notMigrating onlyOwner {
+    function setStartingPointWeek(uint32 newStartingPointWeek) public notStopped notMigrating onlyOwner {
         require(newStartingPointWeek < roundTimestamp(getBlockNumber()) , "wrong newStartingPointWeek");
         startingPointWeek = newStartingPointWeek;
 
         emit SetStartingPointWeek(newStartingPointWeek);
     } 
 
-    function setMinCliffPeriod(uint newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
+    function setMinCliffPeriod(uint32 newMinCliffPeriod) external  notStopped notMigrating onlyOwner {
         require(newMinCliffPeriod < MAX_CLIFF_PERIOD, "new cliff period > 2 years");
         minCliffPeriod = newMinCliffPeriod;
 
         emit SetMinCliffPeriod(newMinCliffPeriod);
     }
 
-    function setMinSlopePeriod(uint newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
+    function setMinSlopePeriod(uint32 newMinSlopePeriod) external  notStopped notMigrating onlyOwner {
         require(newMinSlopePeriod < MAX_SLOPE_PERIOD, "new slope period > 2 years");
         minSlopePeriod = newMinSlopePeriod;
 
@@ -253,22 +254,22 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         _;
     }
 
-    function updateAccountLines(address account, uint time) public notStopped notMigrating onlyOwner {
+    function updateAccountLines(address account, uint32 time) public notStopped notMigrating onlyOwner {
         accounts[account].balance.update(time);
         accounts[account].locked.update(time);
     }
 
-    function updateTotalSupplyLine(uint time) public notStopped notMigrating onlyOwner {
+    function updateTotalSupplyLine(uint32 time) public notStopped notMigrating onlyOwner {
         totalSupplyLine.update(time);
     }
 
-    function updateAccountLinesBlockNumber(address account, uint256 blockNumber) external notStopped notMigrating onlyOwner {
-        uint256 time = roundTimestamp(blockNumber);
+    function updateAccountLinesBlockNumber(address account, uint32 blockNumber) external notStopped notMigrating onlyOwner {
+        uint32 time = roundTimestamp(blockNumber);
         updateAccountLines(account, time);
     }
     
-    function updateTotalSupplyLineBlockNumber(uint256 blockNumber) external notStopped notMigrating onlyOwner {
-        uint256 time = roundTimestamp(blockNumber);
+    function updateTotalSupplyLineBlockNumber(uint32 blockNumber) external notStopped notMigrating onlyOwner {
+        uint32 time = roundTimestamp(blockNumber);
         updateTotalSupplyLine(time);
     }
 

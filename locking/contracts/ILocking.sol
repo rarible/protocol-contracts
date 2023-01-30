@@ -7,8 +7,8 @@ interface ILocking {
     function lock(
         address account,
         address delegate,
-        uint amount,
-        uint slope,
-        uint cliff
+        uint96 amount,
+        uint32 slope,
+        uint32 cliff
     ) external returns (uint);
 }
