@@ -10,20 +10,20 @@
   "sourceMap": "77:9444:72:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "77:9444:72:-:0;;;;;;;;",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.7.6;\npragma abicoder v2;\n\nlibrary LibSeaPort {\n    /**\n      * @dev For basic orders involving ETH / native / ERC20 <=> ERC721 / ERC1155\n      *      matching, a group of six functions may be called that only requires a\n      *      subset of the usual order arguments. Note the use of a \"basicOrderType\"\n      *      enum; this represents both the usual order type as well as the \"route\"\n      *      of the basic order (a simple derivation function for the basic order\n      *      type is `basicOrderType = orderType + (4 * basicOrderRoute)`.)\n      */\n    struct BasicOrderParameters {\n        address considerationToken; // 0x24\n        uint256 considerationIdentifier; // 0x44\n        uint256 considerationAmount; // 0x64\n        address payable offerer; // 0x84\n        address zone; // 0xa4\n        address offerToken; // 0xc4\n        uint256 offerIdentifier; // 0xe4\n        uint256 offerAmount; // 0x104\n        BasicOrderType basicOrderType; // 0x124\n        uint256 startTime; // 0x144\n        uint256 endTime; // 0x164\n        bytes32 zoneHash; // 0x184\n        uint256 salt; // 0x1a4\n        bytes32 offererConduitKey; // 0x1c4\n        bytes32 fulfillerConduitKey; // 0x1e4\n        uint256 totalOriginalAdditionalRecipients; // 0x204\n        AdditionalRecipient[] additionalRecipients; // 0x224\n        bytes signature; // 0x244\n    }\n    /**\n     * @dev Basic orders can supply any number of additional recipients, with the\n     *      implied assumption that they are supplied from the offered ETH (or other\n     *      native token) or ERC20 token for the order.\n     */\n    struct AdditionalRecipient {\n        uint256 amount;\n        address payable recipient;\n    }\n\n    // prettier-ignore\n    enum BasicOrderType {\n        // 0: no partial fills, anyone can execute\n        ETH_TO_ERC721_FULL_OPEN,\n\n        // 1: partial fills supported, anyone can execute\n        ETH_TO_ERC721_PARTIAL_OPEN,\n\n        // 2: no partial fills, only offerer or zone can execute\n        ETH_TO_ERC721_FULL_RESTRICTED,\n\n        // 3: partial fills supported, only offerer or zone can execute\n        ETH_TO_ERC721_PARTIAL_RESTRICTED,\n\n        // 4: no partial fills, anyone can execute\n        ETH_TO_ERC1155_FULL_OPEN,\n\n        // 5: partial fills supported, anyone can execute\n        ETH_TO_ERC1155_PARTIAL_OPEN,\n\n        // 6: no partial fills, only offerer or zone can execute\n        ETH_TO_ERC1155_FULL_RESTRICTED,\n\n        // 7: partial fills supported, only offerer or zone can execute\n        ETH_TO_ERC1155_PARTIAL_RESTRICTED,\n\n        // 8: no partial fills, anyone can execute\n        ERC20_TO_ERC721_FULL_OPEN,\n\n        // 9: partial fills supported, anyone can execute\n        ERC20_TO_ERC721_PARTIAL_OPEN,\n\n        // 10: no partial fills, only offerer or zone can execute\n        ERC20_TO_ERC721_FULL_RESTRICTED,\n\n        // 11: partial fills supported, only offerer or zone can execute\n        ERC20_TO_ERC721_PARTIAL_RESTRICTED,\n\n        // 12: no partial fills, anyone can execute\n        ERC20_TO_ERC1155_FULL_OPEN,\n\n        // 13: partial fills supported, anyone can execute\n        ERC20_TO_ERC1155_PARTIAL_OPEN,\n\n        // 14: no partial fills, only offerer or zone can execute\n        ERC20_TO_ERC1155_FULL_RESTRICTED,\n\n        // 15: partial fills supported, only offerer or zone can execute\n        ERC20_TO_ERC1155_PARTIAL_RESTRICTED,\n\n        // 16: no partial fills, anyone can execute\n        ERC721_TO_ERC20_FULL_OPEN,\n\n        // 17: partial fills supported, anyone can execute\n        ERC721_TO_ERC20_PARTIAL_OPEN,\n\n        // 18: no partial fills, only offerer or zone can execute\n        ERC721_TO_ERC20_FULL_RESTRICTED,\n\n        // 19: partial fills supported, only offerer or zone can execute\n        ERC721_TO_ERC20_PARTIAL_RESTRICTED,\n\n        // 20: no partial fills, anyone can execute\n        ERC1155_TO_ERC20_FULL_OPEN,\n\n        // 21: partial fills supported, anyone can execute\n        ERC1155_TO_ERC20_PARTIAL_OPEN,\n\n        // 22: no partial fills, only offerer or zone can execute\n        ERC1155_TO_ERC20_FULL_RESTRICTED,\n\n        // 23: partial fills supported, only offerer or zone can execute\n        ERC1155_TO_ERC20_PARTIAL_RESTRICTED\n    }\n\n     /**\n     * @dev The full set of order components, with the exception of the counter,\n     *      must be supplied when fulfilling more sophisticated orders or groups of\n     *      orders. The total number of original consideration items must also be\n     *      supplied, as the caller may specify additional consideration items.\n     */\n    struct OrderParameters {\n        address offerer; // 0x00\n        address zone; // 0x20\n        OfferItem[] offer; // 0x40\n        ConsiderationItem[] consideration; // 0x60\n        OrderType orderType; // 0x80\n        uint256 startTime; // 0xa0\n        uint256 endTime; // 0xc0\n        bytes32 zoneHash; // 0xe0\n        uint256 salt; // 0x100\n        bytes32 conduitKey; // 0x120\n        uint256 totalOriginalConsiderationItems; // 0x140\n        // offer.length                          // 0x160\n    }\n\n    /**\n     * @dev Orders require a signature in addition to the other order parameters.\n     */\n    struct Order {\n        OrderParameters parameters;\n        bytes signature;\n    }\n\n    struct AdvancedOrder {\n        OrderParameters parameters;\n        uint120 numerator;\n        uint120 denominator;\n        bytes signature;\n        bytes extraData;\n    }\n\n    struct OfferItem {\n        ItemType itemType;\n        address token;\n        uint256 identifierOrCriteria;\n        uint256 startAmount;\n        uint256 endAmount;\n    }\n\n    /**\n     * @dev A consideration item has the same five components as an offer item and\n     *      an additional sixth component designating the required recipient of the\n     *      item.\n     */\n    struct ConsiderationItem {\n        ItemType itemType;\n        address token;\n        uint256 identifierOrCriteria;\n        uint256 startAmount;\n        uint256 endAmount;\n        address payable recipient;\n    }\n\n    // prettier-ignore\n    enum OrderType {\n        // 0: no partial fills, anyone can execute\n        FULL_OPEN,\n\n        // 1: partial fills supported, anyone can execute\n        PARTIAL_OPEN,\n\n        // 2: no partial fills, only offerer or zone can execute\n        FULL_RESTRICTED,\n\n        // 3: partial fills supported, only offerer or zone can execute\n        PARTIAL_RESTRICTED\n    }\n\n    // prettier-ignore\n    enum ItemType {\n        // 0: ETH on mainnet, MATIC on polygon, etc.\n        NATIVE,\n\n        // 1: ERC20 items (ERC777 and ERC20 analogues could also technically work)\n        ERC20,\n\n        // 2: ERC721 items\n        ERC721,\n\n        // 3: ERC1155 items\n        ERC1155,\n\n        // 4: ERC721 items where a number of tokenIds are supported\n        ERC721_WITH_CRITERIA,\n\n        // 5: ERC1155 items where a number of ids are supported\n        ERC1155_WITH_CRITERIA\n    }\n\n    /**\n     * @dev A fulfillment is applied to a group of orders. It decrements a series of\n     *      offer and consideration items, then generates a single execution\n     *      element. A given fulfillment can be applied to as many offer and\n     *      consideration items as desired, but must contain at least one offer and\n     *      at least one consideration that match. The fulfillment must also remain\n     *      consistent on all key parameters across all offer items (same offerer,\n     *      token, type, tokenId, and conduit preference) as well as across all\n     *      consideration items (token, type, tokenId, and recipient).\n     */\n    struct Fulfillment {\n        FulfillmentComponent[] offerComponents;\n        FulfillmentComponent[] considerationComponents;\n    }\n\n    /**\n     * @dev Each fulfillment component contains one index referencing a specific\n     *      order and another referencing a specific offer or consideration item.\n     */\n    struct FulfillmentComponent {\n        uint256 orderIndex;\n        uint256 itemIndex;\n    }\n\n    /**\n     * @dev An execution is triggered once all consideration items have been zeroed\n     *      out. It sends the item in question from the offerer to the item's\n     *      recipient, optionally sourcing approvals from either this contract\n     *      directly or from the offerer's chosen conduit if one is specified. An\n     *      execution is not provided as an argument, but rather is derived via\n     *      orders, criteria resolvers, and fulfillments (where the total number of\n     *      executions will be less than or equal to the total number of indicated\n     *      fulfillments) and returned as part of `matchOrders`.\n     */\n    struct Execution {\n        ReceivedItem item;\n        address offerer;\n        bytes32 conduitKey;\n    }\n\n    /**\n * @dev A received item is translated from a utilized consideration item and has\n *      the same four components as a spent item, as well as an additional fifth\n *      component designating the required recipient of the item.\n */\n    struct ReceivedItem {\n        ItemType itemType;\n        address token;\n        uint256 identifier;\n        uint256 amount;\n        address payable recipient;\n    }\n\n    struct CriteriaResolver {\n        uint256 orderIndex;\n        Side side;\n        uint256 index;\n        uint256 identifier;\n        bytes32[] criteriaProof;\n    }\n\n    // prettier-ignore\n    enum Side {\n        // 0: Items that can be spent\n        OFFER,\n\n        // 1: Items that must be received\n        CONSIDERATION\n    }\n}\n",
-  "sourcePath": "/Users/ds/Documents/rarible/protocol-contracts/exchange-wrapper/contracts/libraries/LibSeaPort.sol",
+  "sourcePath": "/Users/vfadeev/Work/rarible/protocol/protocol-contracts/features/PT-2031/exchange-wrapper/contracts/libraries/LibSeaPort.sol",
   "ast": {
     "absolutePath": "project:/contracts/libraries/LibSeaPort.sol",
     "exportedSymbols": {
       "LibSeaPort": [
-        10081
+        10034
       ]
     },
-    "id": 10082,
+    "id": 10035,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 9889,
+        "id": 9842,
         "literals": [
           "solidity",
           "0.7",
@@ -33,7 +33,7 @@
         "src": "33:22:72"
       },
       {
-        "id": 9890,
+        "id": 9843,
         "literals": [
           "abicoder",
           "v2"
@@ -47,24 +47,24 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 10081,
+        "id": 10034,
         "linearizedBaseContracts": [
-          10081
+          10034
         ],
         "name": "LibSeaPort",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "LibSeaPort.BasicOrderParameters",
-            "id": 9928,
+            "id": 9881,
             "members": [
               {
                 "constant": false,
-                "id": 9892,
+                "id": 9845,
                 "mutability": "mutable",
                 "name": "considerationToken",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "649:26:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -73,7 +73,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9891,
+                  "id": 9844,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "649:7:72",
@@ -87,11 +87,11 @@
               },
               {
                 "constant": false,
-                "id": 9894,
+                "id": 9847,
                 "mutability": "mutable",
                 "name": "considerationIdentifier",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "693:31:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -100,7 +100,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9893,
+                  "id": 9846,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "693:7:72",
@@ -113,11 +113,11 @@
               },
               {
                 "constant": false,
-                "id": 9896,
+                "id": 9849,
                 "mutability": "mutable",
                 "name": "considerationAmount",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "742:27:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -126,7 +126,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9895,
+                  "id": 9848,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "742:7:72",
@@ -139,11 +139,11 @@
               },
               {
                 "constant": false,
-                "id": 9898,
+                "id": 9851,
                 "mutability": "mutable",
                 "name": "offerer",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "787:23:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -152,7 +152,7 @@
                   "typeString": "address payable"
                 },
                 "typeName": {
-                  "id": 9897,
+                  "id": 9850,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "787:15:72",
@@ -166,11 +166,11 @@
               },
               {
                 "constant": false,
-                "id": 9900,
+                "id": 9853,
                 "mutability": "mutable",
                 "name": "zone",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "828:12:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -179,7 +179,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9899,
+                  "id": 9852,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "828:7:72",
@@ -193,11 +193,11 @@
               },
               {
                 "constant": false,
-                "id": 9902,
+                "id": 9855,
                 "mutability": "mutable",
                 "name": "offerToken",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "858:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -206,7 +206,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9901,
+                  "id": 9854,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "858:7:72",
@@ -220,11 +220,11 @@
               },
               {
                 "constant": false,
-                "id": 9904,
+                "id": 9857,
                 "mutability": "mutable",
                 "name": "offerIdentifier",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "894:23:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -233,7 +233,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9903,
+                  "id": 9856,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "894:7:72",
@@ -246,11 +246,11 @@
               },
               {
                 "constant": false,
-                "id": 9906,
+                "id": 9859,
                 "mutability": "mutable",
                 "name": "offerAmount",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "935:19:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -259,7 +259,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9905,
+                  "id": 9858,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "935:7:72",
@@ -272,26 +272,26 @@
               },
               {
                 "constant": false,
-                "id": 9908,
+                "id": 9861,
                 "mutability": "mutable",
                 "name": "basicOrderType",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "973:29:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_BasicOrderType_$9958",
+                  "typeIdentifier": "t_enum$_BasicOrderType_$9911",
                   "typeString": "enum LibSeaPort.BasicOrderType"
                 },
                 "typeName": {
-                  "id": 9907,
+                  "id": 9860,
                   "name": "BasicOrderType",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 9958,
+                  "referencedDeclaration": 9911,
                   "src": "973:14:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_BasicOrderType_$9958",
+                    "typeIdentifier": "t_enum$_BasicOrderType_$9911",
                     "typeString": "enum LibSeaPort.BasicOrderType"
                   }
                 },
@@ -299,11 +299,11 @@
               },
               {
                 "constant": false,
-                "id": 9910,
+                "id": 9863,
                 "mutability": "mutable",
                 "name": "startTime",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1021:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -312,7 +312,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9909,
+                  "id": 9862,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1021:7:72",
@@ -325,11 +325,11 @@
               },
               {
                 "constant": false,
-                "id": 9912,
+                "id": 9865,
                 "mutability": "mutable",
                 "name": "endTime",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1057:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -338,7 +338,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9911,
+                  "id": 9864,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1057:7:72",
@@ -351,11 +351,11 @@
               },
               {
                 "constant": false,
-                "id": 9914,
+                "id": 9867,
                 "mutability": "mutable",
                 "name": "zoneHash",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1091:16:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -364,7 +364,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9913,
+                  "id": 9866,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "1091:7:72",
@@ -377,11 +377,11 @@
               },
               {
                 "constant": false,
-                "id": 9916,
+                "id": 9869,
                 "mutability": "mutable",
                 "name": "salt",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1126:12:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -390,7 +390,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9915,
+                  "id": 9868,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1126:7:72",
@@ -403,11 +403,11 @@
               },
               {
                 "constant": false,
-                "id": 9918,
+                "id": 9871,
                 "mutability": "mutable",
                 "name": "offererConduitKey",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1157:25:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -416,7 +416,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9917,
+                  "id": 9870,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "1157:7:72",
@@ -429,11 +429,11 @@
               },
               {
                 "constant": false,
-                "id": 9920,
+                "id": 9873,
                 "mutability": "mutable",
                 "name": "fulfillerConduitKey",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1201:27:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -442,7 +442,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9919,
+                  "id": 9872,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "1201:7:72",
@@ -455,11 +455,11 @@
               },
               {
                 "constant": false,
-                "id": 9922,
+                "id": 9875,
                 "mutability": "mutable",
                 "name": "totalOriginalAdditionalRecipients",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1247:41:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -468,7 +468,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9921,
+                  "id": 9874,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1247:7:72",
@@ -481,35 +481,35 @@
               },
               {
                 "constant": false,
-                "id": 9925,
+                "id": 9878,
                 "mutability": "mutable",
                 "name": "additionalRecipients",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1307:42:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_AdditionalRecipient_$9933_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_AdditionalRecipient_$9886_storage_$dyn_storage_ptr",
                   "typeString": "struct LibSeaPort.AdditionalRecipient[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 9923,
+                    "id": 9876,
                     "name": "AdditionalRecipient",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 9933,
+                    "referencedDeclaration": 9886,
                     "src": "1307:19:72",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_AdditionalRecipient_$9933_storage_ptr",
+                      "typeIdentifier": "t_struct$_AdditionalRecipient_$9886_storage_ptr",
                       "typeString": "struct LibSeaPort.AdditionalRecipient"
                     }
                   },
-                  "id": 9924,
+                  "id": 9877,
                   "nodeType": "ArrayTypeName",
                   "src": "1307:21:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_AdditionalRecipient_$9933_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_AdditionalRecipient_$9886_storage_$dyn_storage_ptr",
                     "typeString": "struct LibSeaPort.AdditionalRecipient[]"
                   }
                 },
@@ -517,11 +517,11 @@
               },
               {
                 "constant": false,
-                "id": 9927,
+                "id": 9880,
                 "mutability": "mutable",
                 "name": "signature",
                 "nodeType": "VariableDeclaration",
-                "scope": 9928,
+                "scope": 9881,
                 "src": "1368:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -530,7 +530,7 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 9926,
+                  "id": 9879,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
                   "src": "1368:5:72",
@@ -544,21 +544,21 @@
             ],
             "name": "BasicOrderParameters",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "611:788:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.AdditionalRecipient",
-            "id": 9933,
+            "id": 9886,
             "members": [
               {
                 "constant": false,
-                "id": 9930,
+                "id": 9883,
                 "mutability": "mutable",
                 "name": "amount",
                 "nodeType": "VariableDeclaration",
-                "scope": 9933,
+                "scope": 9886,
                 "src": "1680:14:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -567,7 +567,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9929,
+                  "id": 9882,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1680:7:72",
@@ -580,11 +580,11 @@
               },
               {
                 "constant": false,
-                "id": 9932,
+                "id": 9885,
                 "mutability": "mutable",
                 "name": "recipient",
                 "nodeType": "VariableDeclaration",
-                "scope": 9933,
+                "scope": 9886,
                 "src": "1704:25:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -593,7 +593,7 @@
                   "typeString": "address payable"
                 },
                 "typeName": {
-                  "id": 9931,
+                  "id": 9884,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "1704:15:72",
@@ -608,154 +608,154 @@
             ],
             "name": "AdditionalRecipient",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "1643:93:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.BasicOrderType",
-            "id": 9958,
+            "id": 9911,
             "members": [
               {
-                "id": 9934,
+                "id": 9887,
                 "name": "ETH_TO_ERC721_FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "1846:23:72"
               },
               {
-                "id": 9935,
+                "id": 9888,
                 "name": "ETH_TO_ERC721_PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "1938:26:72"
               },
               {
-                "id": 9936,
+                "id": 9889,
                 "name": "ETH_TO_ERC721_FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "2040:29:72"
               },
               {
-                "id": 9937,
+                "id": 9890,
                 "name": "ETH_TO_ERC721_PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "2152:32:72"
               },
               {
-                "id": 9938,
+                "id": 9891,
                 "name": "ETH_TO_ERC1155_FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "2246:24:72"
               },
               {
-                "id": 9939,
+                "id": 9892,
                 "name": "ETH_TO_ERC1155_PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "2339:27:72"
               },
               {
-                "id": 9940,
+                "id": 9893,
                 "name": "ETH_TO_ERC1155_FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "2442:30:72"
               },
               {
-                "id": 9941,
+                "id": 9894,
                 "name": "ETH_TO_ERC1155_PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "2555:33:72"
               },
               {
-                "id": 9942,
+                "id": 9895,
                 "name": "ERC20_TO_ERC721_FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "2650:25:72"
               },
               {
-                "id": 9943,
+                "id": 9896,
                 "name": "ERC20_TO_ERC721_PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "2744:28:72"
               },
               {
-                "id": 9944,
+                "id": 9897,
                 "name": "ERC20_TO_ERC721_FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "2849:31:72"
               },
               {
-                "id": 9945,
+                "id": 9898,
                 "name": "ERC20_TO_ERC721_PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "2964:34:72"
               },
               {
-                "id": 9946,
+                "id": 9899,
                 "name": "ERC20_TO_ERC1155_FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "3061:26:72"
               },
               {
-                "id": 9947,
+                "id": 9900,
                 "name": "ERC20_TO_ERC1155_PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "3157:29:72"
               },
               {
-                "id": 9948,
+                "id": 9901,
                 "name": "ERC20_TO_ERC1155_FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "3263:32:72"
               },
               {
-                "id": 9949,
+                "id": 9902,
                 "name": "ERC20_TO_ERC1155_PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "3379:35:72"
               },
               {
-                "id": 9950,
+                "id": 9903,
                 "name": "ERC721_TO_ERC20_FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "3477:25:72"
               },
               {
-                "id": 9951,
+                "id": 9904,
                 "name": "ERC721_TO_ERC20_PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "3572:28:72"
               },
               {
-                "id": 9952,
+                "id": 9905,
                 "name": "ERC721_TO_ERC20_FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "3677:31:72"
               },
               {
-                "id": 9953,
+                "id": 9906,
                 "name": "ERC721_TO_ERC20_PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "3792:34:72"
               },
               {
-                "id": 9954,
+                "id": 9907,
                 "name": "ERC1155_TO_ERC20_FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "3889:26:72"
               },
               {
-                "id": 9955,
+                "id": 9908,
                 "name": "ERC1155_TO_ERC20_PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "3985:29:72"
               },
               {
-                "id": 9956,
+                "id": 9909,
                 "name": "ERC1155_TO_ERC20_FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "4091:32:72"
               },
               {
-                "id": 9957,
+                "id": 9910,
                 "name": "ERC1155_TO_ERC20_PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "4207:35:72"
@@ -767,15 +767,15 @@
           },
           {
             "canonicalName": "LibSeaPort.OrderParameters",
-            "id": 9983,
+            "id": 9936,
             "members": [
               {
                 "constant": false,
-                "id": 9960,
+                "id": 9913,
                 "mutability": "mutable",
                 "name": "offerer",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4631:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -784,7 +784,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9959,
+                  "id": 9912,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "4631:7:72",
@@ -798,11 +798,11 @@
               },
               {
                 "constant": false,
-                "id": 9962,
+                "id": 9915,
                 "mutability": "mutable",
                 "name": "zone",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4664:12:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -811,7 +811,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9961,
+                  "id": 9914,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "4664:7:72",
@@ -825,35 +825,35 @@
               },
               {
                 "constant": false,
-                "id": 9965,
+                "id": 9918,
                 "mutability": "mutable",
                 "name": "offer",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4694:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_OfferItem_$10010_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_OfferItem_$9963_storage_$dyn_storage_ptr",
                   "typeString": "struct LibSeaPort.OfferItem[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 9963,
+                    "id": 9916,
                     "name": "OfferItem",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 10010,
+                    "referencedDeclaration": 9963,
                     "src": "4694:9:72",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_OfferItem_$10010_storage_ptr",
+                      "typeIdentifier": "t_struct$_OfferItem_$9963_storage_ptr",
                       "typeString": "struct LibSeaPort.OfferItem"
                     }
                   },
-                  "id": 9964,
+                  "id": 9917,
                   "nodeType": "ArrayTypeName",
                   "src": "4694:11:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_OfferItem_$10010_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_OfferItem_$9963_storage_$dyn_storage_ptr",
                     "typeString": "struct LibSeaPort.OfferItem[]"
                   }
                 },
@@ -861,35 +861,35 @@
               },
               {
                 "constant": false,
-                "id": 9968,
+                "id": 9921,
                 "mutability": "mutable",
                 "name": "consideration",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4729:33:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_ConsiderationItem_$10023_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_ConsiderationItem_$9976_storage_$dyn_storage_ptr",
                   "typeString": "struct LibSeaPort.ConsiderationItem[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 9966,
+                    "id": 9919,
                     "name": "ConsiderationItem",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 10023,
+                    "referencedDeclaration": 9976,
                     "src": "4729:17:72",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_ConsiderationItem_$10023_storage_ptr",
+                      "typeIdentifier": "t_struct$_ConsiderationItem_$9976_storage_ptr",
                       "typeString": "struct LibSeaPort.ConsiderationItem"
                     }
                   },
-                  "id": 9967,
+                  "id": 9920,
                   "nodeType": "ArrayTypeName",
                   "src": "4729:19:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_ConsiderationItem_$10023_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_ConsiderationItem_$9976_storage_$dyn_storage_ptr",
                     "typeString": "struct LibSeaPort.ConsiderationItem[]"
                   }
                 },
@@ -897,26 +897,26 @@
               },
               {
                 "constant": false,
-                "id": 9970,
+                "id": 9923,
                 "mutability": "mutable",
                 "name": "orderType",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4780:19:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_OrderType_$10028",
+                  "typeIdentifier": "t_enum$_OrderType_$9981",
                   "typeString": "enum LibSeaPort.OrderType"
                 },
                 "typeName": {
-                  "id": 9969,
+                  "id": 9922,
                   "name": "OrderType",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 10028,
+                  "referencedDeclaration": 9981,
                   "src": "4780:9:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_OrderType_$10028",
+                    "typeIdentifier": "t_enum$_OrderType_$9981",
                     "typeString": "enum LibSeaPort.OrderType"
                   }
                 },
@@ -924,11 +924,11 @@
               },
               {
                 "constant": false,
-                "id": 9972,
+                "id": 9925,
                 "mutability": "mutable",
                 "name": "startTime",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4817:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -937,7 +937,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9971,
+                  "id": 9924,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "4817:7:72",
@@ -950,11 +950,11 @@
               },
               {
                 "constant": false,
-                "id": 9974,
+                "id": 9927,
                 "mutability": "mutable",
                 "name": "endTime",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4852:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -963,7 +963,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9973,
+                  "id": 9926,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "4852:7:72",
@@ -976,11 +976,11 @@
               },
               {
                 "constant": false,
-                "id": 9976,
+                "id": 9929,
                 "mutability": "mutable",
                 "name": "zoneHash",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4885:16:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -989,7 +989,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9975,
+                  "id": 9928,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "4885:7:72",
@@ -1002,11 +1002,11 @@
               },
               {
                 "constant": false,
-                "id": 9978,
+                "id": 9931,
                 "mutability": "mutable",
                 "name": "salt",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4919:12:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1015,7 +1015,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9977,
+                  "id": 9930,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "4919:7:72",
@@ -1028,11 +1028,11 @@
               },
               {
                 "constant": false,
-                "id": 9980,
+                "id": 9933,
                 "mutability": "mutable",
                 "name": "conduitKey",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4950:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1041,7 +1041,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9979,
+                  "id": 9932,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "4950:7:72",
@@ -1054,11 +1054,11 @@
               },
               {
                 "constant": false,
-                "id": 9982,
+                "id": 9935,
                 "mutability": "mutable",
                 "name": "totalOriginalConsiderationItems",
                 "nodeType": "VariableDeclaration",
-                "scope": 9983,
+                "scope": 9936,
                 "src": "4987:39:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1067,7 +1067,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9981,
+                  "id": 9934,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "4987:7:72",
@@ -1081,36 +1081,36 @@
             ],
             "name": "OrderParameters",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "4598:502:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.Order",
-            "id": 9988,
+            "id": 9941,
             "members": [
               {
                 "constant": false,
-                "id": 9985,
+                "id": 9938,
                 "mutability": "mutable",
                 "name": "parameters",
                 "nodeType": "VariableDeclaration",
-                "scope": 9988,
+                "scope": 9941,
                 "src": "5227:26:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_OrderParameters_$9983_storage_ptr",
+                  "typeIdentifier": "t_struct$_OrderParameters_$9936_storage_ptr",
                   "typeString": "struct LibSeaPort.OrderParameters"
                 },
                 "typeName": {
-                  "id": 9984,
+                  "id": 9937,
                   "name": "OrderParameters",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 9983,
+                  "referencedDeclaration": 9936,
                   "src": "5227:15:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_OrderParameters_$9983_storage_ptr",
+                    "typeIdentifier": "t_struct$_OrderParameters_$9936_storage_ptr",
                     "typeString": "struct LibSeaPort.OrderParameters"
                   }
                 },
@@ -1118,11 +1118,11 @@
               },
               {
                 "constant": false,
-                "id": 9987,
+                "id": 9940,
                 "mutability": "mutable",
                 "name": "signature",
                 "nodeType": "VariableDeclaration",
-                "scope": 9988,
+                "scope": 9941,
                 "src": "5263:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1131,7 +1131,7 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 9986,
+                  "id": 9939,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
                   "src": "5263:5:72",
@@ -1145,36 +1145,36 @@
             ],
             "name": "Order",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "5204:81:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.AdvancedOrder",
-            "id": 9999,
+            "id": 9952,
             "members": [
               {
                 "constant": false,
-                "id": 9990,
+                "id": 9943,
                 "mutability": "mutable",
                 "name": "parameters",
                 "nodeType": "VariableDeclaration",
-                "scope": 9999,
+                "scope": 9952,
                 "src": "5322:26:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_OrderParameters_$9983_storage_ptr",
+                  "typeIdentifier": "t_struct$_OrderParameters_$9936_storage_ptr",
                   "typeString": "struct LibSeaPort.OrderParameters"
                 },
                 "typeName": {
-                  "id": 9989,
+                  "id": 9942,
                   "name": "OrderParameters",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 9983,
+                  "referencedDeclaration": 9936,
                   "src": "5322:15:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_OrderParameters_$9983_storage_ptr",
+                    "typeIdentifier": "t_struct$_OrderParameters_$9936_storage_ptr",
                     "typeString": "struct LibSeaPort.OrderParameters"
                   }
                 },
@@ -1182,11 +1182,11 @@
               },
               {
                 "constant": false,
-                "id": 9992,
+                "id": 9945,
                 "mutability": "mutable",
                 "name": "numerator",
                 "nodeType": "VariableDeclaration",
-                "scope": 9999,
+                "scope": 9952,
                 "src": "5358:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1195,7 +1195,7 @@
                   "typeString": "uint120"
                 },
                 "typeName": {
-                  "id": 9991,
+                  "id": 9944,
                   "name": "uint120",
                   "nodeType": "ElementaryTypeName",
                   "src": "5358:7:72",
@@ -1208,11 +1208,11 @@
               },
               {
                 "constant": false,
-                "id": 9994,
+                "id": 9947,
                 "mutability": "mutable",
                 "name": "denominator",
                 "nodeType": "VariableDeclaration",
-                "scope": 9999,
+                "scope": 9952,
                 "src": "5385:19:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1221,7 +1221,7 @@
                   "typeString": "uint120"
                 },
                 "typeName": {
-                  "id": 9993,
+                  "id": 9946,
                   "name": "uint120",
                   "nodeType": "ElementaryTypeName",
                   "src": "5385:7:72",
@@ -1234,11 +1234,11 @@
               },
               {
                 "constant": false,
-                "id": 9996,
+                "id": 9949,
                 "mutability": "mutable",
                 "name": "signature",
                 "nodeType": "VariableDeclaration",
-                "scope": 9999,
+                "scope": 9952,
                 "src": "5414:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1247,7 +1247,7 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 9995,
+                  "id": 9948,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
                   "src": "5414:5:72",
@@ -1260,11 +1260,11 @@
               },
               {
                 "constant": false,
-                "id": 9998,
+                "id": 9951,
                 "mutability": "mutable",
                 "name": "extraData",
                 "nodeType": "VariableDeclaration",
-                "scope": 9999,
+                "scope": 9952,
                 "src": "5439:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1273,7 +1273,7 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 9997,
+                  "id": 9950,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
                   "src": "5439:5:72",
@@ -1287,36 +1287,36 @@
             ],
             "name": "AdvancedOrder",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "5291:170:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.OfferItem",
-            "id": 10010,
+            "id": 9963,
             "members": [
               {
                 "constant": false,
-                "id": 10001,
+                "id": 9954,
                 "mutability": "mutable",
                 "name": "itemType",
                 "nodeType": "VariableDeclaration",
-                "scope": 10010,
+                "scope": 9963,
                 "src": "5494:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_ItemType_$10035",
+                  "typeIdentifier": "t_enum$_ItemType_$9988",
                   "typeString": "enum LibSeaPort.ItemType"
                 },
                 "typeName": {
-                  "id": 10000,
+                  "id": 9953,
                   "name": "ItemType",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 10035,
+                  "referencedDeclaration": 9988,
                   "src": "5494:8:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_ItemType_$10035",
+                    "typeIdentifier": "t_enum$_ItemType_$9988",
                     "typeString": "enum LibSeaPort.ItemType"
                   }
                 },
@@ -1324,11 +1324,11 @@
               },
               {
                 "constant": false,
-                "id": 10003,
+                "id": 9956,
                 "mutability": "mutable",
                 "name": "token",
                 "nodeType": "VariableDeclaration",
-                "scope": 10010,
+                "scope": 9963,
                 "src": "5521:13:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1337,7 +1337,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 10002,
+                  "id": 9955,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "5521:7:72",
@@ -1351,11 +1351,11 @@
               },
               {
                 "constant": false,
-                "id": 10005,
+                "id": 9958,
                 "mutability": "mutable",
                 "name": "identifierOrCriteria",
                 "nodeType": "VariableDeclaration",
-                "scope": 10010,
+                "scope": 9963,
                 "src": "5544:28:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1364,7 +1364,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10004,
+                  "id": 9957,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "5544:7:72",
@@ -1377,11 +1377,11 @@
               },
               {
                 "constant": false,
-                "id": 10007,
+                "id": 9960,
                 "mutability": "mutable",
                 "name": "startAmount",
                 "nodeType": "VariableDeclaration",
-                "scope": 10010,
+                "scope": 9963,
                 "src": "5582:19:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1390,7 +1390,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10006,
+                  "id": 9959,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "5582:7:72",
@@ -1403,11 +1403,11 @@
               },
               {
                 "constant": false,
-                "id": 10009,
+                "id": 9962,
                 "mutability": "mutable",
                 "name": "endAmount",
                 "nodeType": "VariableDeclaration",
-                "scope": 10010,
+                "scope": 9963,
                 "src": "5611:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1416,7 +1416,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10008,
+                  "id": 9961,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "5611:7:72",
@@ -1430,36 +1430,36 @@
             ],
             "name": "OfferItem",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "5467:168:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.ConsiderationItem",
-            "id": 10023,
+            "id": 9976,
             "members": [
               {
                 "constant": false,
-                "id": 10012,
+                "id": 9965,
                 "mutability": "mutable",
                 "name": "itemType",
                 "nodeType": "VariableDeclaration",
-                "scope": 10023,
+                "scope": 9976,
                 "src": "5877:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_ItemType_$10035",
+                  "typeIdentifier": "t_enum$_ItemType_$9988",
                   "typeString": "enum LibSeaPort.ItemType"
                 },
                 "typeName": {
-                  "id": 10011,
+                  "id": 9964,
                   "name": "ItemType",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 10035,
+                  "referencedDeclaration": 9988,
                   "src": "5877:8:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_ItemType_$10035",
+                    "typeIdentifier": "t_enum$_ItemType_$9988",
                     "typeString": "enum LibSeaPort.ItemType"
                   }
                 },
@@ -1467,11 +1467,11 @@
               },
               {
                 "constant": false,
-                "id": 10014,
+                "id": 9967,
                 "mutability": "mutable",
                 "name": "token",
                 "nodeType": "VariableDeclaration",
-                "scope": 10023,
+                "scope": 9976,
                 "src": "5904:13:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1480,7 +1480,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 10013,
+                  "id": 9966,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "5904:7:72",
@@ -1494,11 +1494,11 @@
               },
               {
                 "constant": false,
-                "id": 10016,
+                "id": 9969,
                 "mutability": "mutable",
                 "name": "identifierOrCriteria",
                 "nodeType": "VariableDeclaration",
-                "scope": 10023,
+                "scope": 9976,
                 "src": "5927:28:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1507,7 +1507,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10015,
+                  "id": 9968,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "5927:7:72",
@@ -1520,11 +1520,11 @@
               },
               {
                 "constant": false,
-                "id": 10018,
+                "id": 9971,
                 "mutability": "mutable",
                 "name": "startAmount",
                 "nodeType": "VariableDeclaration",
-                "scope": 10023,
+                "scope": 9976,
                 "src": "5965:19:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1533,7 +1533,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10017,
+                  "id": 9970,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "5965:7:72",
@@ -1546,11 +1546,11 @@
               },
               {
                 "constant": false,
-                "id": 10020,
+                "id": 9973,
                 "mutability": "mutable",
                 "name": "endAmount",
                 "nodeType": "VariableDeclaration",
-                "scope": 10023,
+                "scope": 9976,
                 "src": "5994:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1559,7 +1559,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10019,
+                  "id": 9972,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "5994:7:72",
@@ -1572,11 +1572,11 @@
               },
               {
                 "constant": false,
-                "id": 10022,
+                "id": 9975,
                 "mutability": "mutable",
                 "name": "recipient",
                 "nodeType": "VariableDeclaration",
-                "scope": 10023,
+                "scope": 9976,
                 "src": "6021:25:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1585,7 +1585,7 @@
                   "typeString": "address payable"
                 },
                 "typeName": {
-                  "id": 10021,
+                  "id": 9974,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "6021:15:72",
@@ -1600,34 +1600,34 @@
             ],
             "name": "ConsiderationItem",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "5842:211:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.OrderType",
-            "id": 10028,
+            "id": 9981,
             "members": [
               {
-                "id": 10024,
+                "id": 9977,
                 "name": "FULL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "6158:9:72"
               },
               {
-                "id": 10025,
+                "id": 9978,
                 "name": "PARTIAL_OPEN",
                 "nodeType": "EnumValue",
                 "src": "6236:12:72"
               },
               {
-                "id": 10026,
+                "id": 9979,
                 "name": "FULL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "6324:15:72"
               },
               {
-                "id": 10027,
+                "id": 9980,
                 "name": "PARTIAL_RESTRICTED",
                 "nodeType": "EnumValue",
                 "src": "6422:18:72"
@@ -1639,40 +1639,40 @@
           },
           {
             "canonicalName": "LibSeaPort.ItemType",
-            "id": 10035,
+            "id": 9988,
             "members": [
               {
-                "id": 10029,
+                "id": 9982,
                 "name": "NATIVE",
                 "nodeType": "EnumValue",
                 "src": "6552:6:72"
               },
               {
-                "id": 10030,
+                "id": 9983,
                 "name": "ERC20",
                 "nodeType": "EnumValue",
                 "src": "6652:5:72"
               },
               {
-                "id": 10031,
+                "id": 9984,
                 "name": "ERC721",
                 "nodeType": "EnumValue",
                 "src": "6695:6:72"
               },
               {
-                "id": 10032,
+                "id": 9985,
                 "name": "ERC1155",
                 "nodeType": "EnumValue",
                 "src": "6740:7:72"
               },
               {
-                "id": 10033,
+                "id": 9986,
                 "name": "ERC721_WITH_CRITERIA",
                 "nodeType": "EnumValue",
                 "src": "6826:20:72"
               },
               {
-                "id": 10034,
+                "id": 9987,
                 "name": "ERC1155_WITH_CRITERIA",
                 "nodeType": "EnumValue",
                 "src": "6921:21:72"
@@ -1684,39 +1684,39 @@
           },
           {
             "canonicalName": "LibSeaPort.Fulfillment",
-            "id": 10042,
+            "id": 9995,
             "members": [
               {
                 "constant": false,
-                "id": 10038,
+                "id": 9991,
                 "mutability": "mutable",
                 "name": "offerComponents",
                 "nodeType": "VariableDeclaration",
-                "scope": 10042,
+                "scope": 9995,
                 "src": "7640:38:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10047_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10000_storage_$dyn_storage_ptr",
                   "typeString": "struct LibSeaPort.FulfillmentComponent[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 10036,
+                    "id": 9989,
                     "name": "FulfillmentComponent",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 10047,
+                    "referencedDeclaration": 10000,
                     "src": "7640:20:72",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FulfillmentComponent_$10047_storage_ptr",
+                      "typeIdentifier": "t_struct$_FulfillmentComponent_$10000_storage_ptr",
                       "typeString": "struct LibSeaPort.FulfillmentComponent"
                     }
                   },
-                  "id": 10037,
+                  "id": 9990,
                   "nodeType": "ArrayTypeName",
                   "src": "7640:22:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10047_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10000_storage_$dyn_storage_ptr",
                     "typeString": "struct LibSeaPort.FulfillmentComponent[]"
                   }
                 },
@@ -1724,35 +1724,35 @@
               },
               {
                 "constant": false,
-                "id": 10041,
+                "id": 9994,
                 "mutability": "mutable",
                 "name": "considerationComponents",
                 "nodeType": "VariableDeclaration",
-                "scope": 10042,
+                "scope": 9995,
                 "src": "7688:46:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10047_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10000_storage_$dyn_storage_ptr",
                   "typeString": "struct LibSeaPort.FulfillmentComponent[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 10039,
+                    "id": 9992,
                     "name": "FulfillmentComponent",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 10047,
+                    "referencedDeclaration": 10000,
                     "src": "7688:20:72",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_FulfillmentComponent_$10047_storage_ptr",
+                      "typeIdentifier": "t_struct$_FulfillmentComponent_$10000_storage_ptr",
                       "typeString": "struct LibSeaPort.FulfillmentComponent"
                     }
                   },
-                  "id": 10040,
+                  "id": 9993,
                   "nodeType": "ArrayTypeName",
                   "src": "7688:22:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10047_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_FulfillmentComponent_$10000_storage_$dyn_storage_ptr",
                     "typeString": "struct LibSeaPort.FulfillmentComponent[]"
                   }
                 },
@@ -1761,21 +1761,21 @@
             ],
             "name": "Fulfillment",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "7611:130:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.FulfillmentComponent",
-            "id": 10047,
+            "id": 10000,
             "members": [
               {
                 "constant": false,
-                "id": 10044,
+                "id": 9997,
                 "mutability": "mutable",
                 "name": "orderIndex",
                 "nodeType": "VariableDeclaration",
-                "scope": 10047,
+                "scope": 10000,
                 "src": "7964:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1784,7 +1784,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10043,
+                  "id": 9996,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "7964:7:72",
@@ -1797,11 +1797,11 @@
               },
               {
                 "constant": false,
-                "id": 10046,
+                "id": 9999,
                 "mutability": "mutable",
                 "name": "itemIndex",
                 "nodeType": "VariableDeclaration",
-                "scope": 10047,
+                "scope": 10000,
                 "src": "7992:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1810,7 +1810,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10045,
+                  "id": 9998,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "7992:7:72",
@@ -1824,36 +1824,36 @@
             ],
             "name": "FulfillmentComponent",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "7926:90:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.Execution",
-            "id": 10054,
+            "id": 10007,
             "members": [
               {
                 "constant": false,
-                "id": 10049,
+                "id": 10002,
                 "mutability": "mutable",
                 "name": "item",
                 "nodeType": "VariableDeclaration",
-                "scope": 10054,
+                "scope": 10007,
                 "src": "8700:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_ReceivedItem_$10065_storage_ptr",
+                  "typeIdentifier": "t_struct$_ReceivedItem_$10018_storage_ptr",
                   "typeString": "struct LibSeaPort.ReceivedItem"
                 },
                 "typeName": {
-                  "id": 10048,
+                  "id": 10001,
                   "name": "ReceivedItem",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 10065,
+                  "referencedDeclaration": 10018,
                   "src": "8700:12:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_ReceivedItem_$10065_storage_ptr",
+                    "typeIdentifier": "t_struct$_ReceivedItem_$10018_storage_ptr",
                     "typeString": "struct LibSeaPort.ReceivedItem"
                   }
                 },
@@ -1861,11 +1861,11 @@
               },
               {
                 "constant": false,
-                "id": 10051,
+                "id": 10004,
                 "mutability": "mutable",
                 "name": "offerer",
                 "nodeType": "VariableDeclaration",
-                "scope": 10054,
+                "scope": 10007,
                 "src": "8727:15:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1874,7 +1874,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 10050,
+                  "id": 10003,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "8727:7:72",
@@ -1888,11 +1888,11 @@
               },
               {
                 "constant": false,
-                "id": 10053,
+                "id": 10006,
                 "mutability": "mutable",
                 "name": "conduitKey",
                 "nodeType": "VariableDeclaration",
-                "scope": 10054,
+                "scope": 10007,
                 "src": "8752:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1901,7 +1901,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 10052,
+                  "id": 10005,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "8752:7:72",
@@ -1915,36 +1915,36 @@
             ],
             "name": "Execution",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "8673:104:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.ReceivedItem",
-            "id": 10065,
+            "id": 10018,
             "members": [
               {
                 "constant": false,
-                "id": 10056,
+                "id": 10009,
                 "mutability": "mutable",
                 "name": "itemType",
                 "nodeType": "VariableDeclaration",
-                "scope": 10065,
+                "scope": 10018,
                 "src": "9053:17:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_ItemType_$10035",
+                  "typeIdentifier": "t_enum$_ItemType_$9988",
                   "typeString": "enum LibSeaPort.ItemType"
                 },
                 "typeName": {
-                  "id": 10055,
+                  "id": 10008,
                   "name": "ItemType",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 10035,
+                  "referencedDeclaration": 9988,
                   "src": "9053:8:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_ItemType_$10035",
+                    "typeIdentifier": "t_enum$_ItemType_$9988",
                     "typeString": "enum LibSeaPort.ItemType"
                   }
                 },
@@ -1952,11 +1952,11 @@
               },
               {
                 "constant": false,
-                "id": 10058,
+                "id": 10011,
                 "mutability": "mutable",
                 "name": "token",
                 "nodeType": "VariableDeclaration",
-                "scope": 10065,
+                "scope": 10018,
                 "src": "9080:13:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1965,7 +1965,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 10057,
+                  "id": 10010,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "9080:7:72",
@@ -1979,11 +1979,11 @@
               },
               {
                 "constant": false,
-                "id": 10060,
+                "id": 10013,
                 "mutability": "mutable",
                 "name": "identifier",
                 "nodeType": "VariableDeclaration",
-                "scope": 10065,
+                "scope": 10018,
                 "src": "9103:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -1992,7 +1992,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10059,
+                  "id": 10012,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "9103:7:72",
@@ -2005,11 +2005,11 @@
               },
               {
                 "constant": false,
-                "id": 10062,
+                "id": 10015,
                 "mutability": "mutable",
                 "name": "amount",
                 "nodeType": "VariableDeclaration",
-                "scope": 10065,
+                "scope": 10018,
                 "src": "9131:14:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -2018,7 +2018,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10061,
+                  "id": 10014,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "9131:7:72",
@@ -2031,11 +2031,11 @@
               },
               {
                 "constant": false,
-                "id": 10064,
+                "id": 10017,
                 "mutability": "mutable",
                 "name": "recipient",
                 "nodeType": "VariableDeclaration",
-                "scope": 10065,
+                "scope": 10018,
                 "src": "9155:25:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -2044,7 +2044,7 @@
                   "typeString": "address payable"
                 },
                 "typeName": {
-                  "id": 10063,
+                  "id": 10016,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "9155:15:72",
@@ -2059,21 +2059,21 @@
             ],
             "name": "ReceivedItem",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "9023:164:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.CriteriaResolver",
-            "id": 10077,
+            "id": 10030,
             "members": [
               {
                 "constant": false,
-                "id": 10067,
+                "id": 10020,
                 "mutability": "mutable",
                 "name": "orderIndex",
                 "nodeType": "VariableDeclaration",
-                "scope": 10077,
+                "scope": 10030,
                 "src": "9227:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -2082,7 +2082,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10066,
+                  "id": 10019,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "9227:7:72",
@@ -2095,26 +2095,26 @@
               },
               {
                 "constant": false,
-                "id": 10069,
+                "id": 10022,
                 "mutability": "mutable",
                 "name": "side",
                 "nodeType": "VariableDeclaration",
-                "scope": 10077,
+                "scope": 10030,
                 "src": "9255:9:72",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_Side_$10080",
+                  "typeIdentifier": "t_enum$_Side_$10033",
                   "typeString": "enum LibSeaPort.Side"
                 },
                 "typeName": {
-                  "id": 10068,
+                  "id": 10021,
                   "name": "Side",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 10080,
+                  "referencedDeclaration": 10033,
                   "src": "9255:4:72",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_Side_$10080",
+                    "typeIdentifier": "t_enum$_Side_$10033",
                     "typeString": "enum LibSeaPort.Side"
                   }
                 },
@@ -2122,11 +2122,11 @@
               },
               {
                 "constant": false,
-                "id": 10071,
+                "id": 10024,
                 "mutability": "mutable",
                 "name": "index",
                 "nodeType": "VariableDeclaration",
-                "scope": 10077,
+                "scope": 10030,
                 "src": "9274:13:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -2135,7 +2135,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10070,
+                  "id": 10023,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "9274:7:72",
@@ -2148,11 +2148,11 @@
               },
               {
                 "constant": false,
-                "id": 10073,
+                "id": 10026,
                 "mutability": "mutable",
                 "name": "identifier",
                 "nodeType": "VariableDeclaration",
-                "scope": 10077,
+                "scope": 10030,
                 "src": "9297:18:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -2161,7 +2161,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 10072,
+                  "id": 10025,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "9297:7:72",
@@ -2174,11 +2174,11 @@
               },
               {
                 "constant": false,
-                "id": 10076,
+                "id": 10029,
                 "mutability": "mutable",
                 "name": "criteriaProof",
                 "nodeType": "VariableDeclaration",
-                "scope": 10077,
+                "scope": 10030,
                 "src": "9325:23:72",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -2188,7 +2188,7 @@
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 10074,
+                    "id": 10027,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "9325:7:72",
@@ -2197,7 +2197,7 @@
                       "typeString": "bytes32"
                     }
                   },
-                  "id": 10075,
+                  "id": 10028,
                   "nodeType": "ArrayTypeName",
                   "src": "9325:9:72",
                   "typeDescriptions": {
@@ -2210,22 +2210,22 @@
             ],
             "name": "CriteriaResolver",
             "nodeType": "StructDefinition",
-            "scope": 10081,
+            "scope": 10034,
             "src": "9193:162:72",
             "visibility": "public"
           },
           {
             "canonicalName": "LibSeaPort.Side",
-            "id": 10080,
+            "id": 10033,
             "members": [
               {
-                "id": 10078,
+                "id": 10031,
                 "name": "OFFER",
                 "nodeType": "EnumValue",
                 "src": "9442:5:72"
               },
               {
-                "id": 10079,
+                "id": 10032,
                 "name": "CONSIDERATION",
                 "nodeType": "EnumValue",
                 "src": "9500:13:72"
@@ -2236,7 +2236,7 @@
             "src": "9384:135:72"
           }
         ],
-        "scope": 10082,
+        "scope": 10035,
         "src": "77:9444:72"
       }
     ],
@@ -2247,7 +2247,7 @@
       "absolutePath": "project:/contracts/libraries/LibSeaPort.sol",
       "exportedSymbols": {
         "LibSeaPort": [
-          10081
+          10034
         ]
       },
       "license": "MIT"
@@ -2261,7 +2261,7 @@
             ".6"
           ]
         },
-        "id": 9889,
+        "id": 9842,
         "name": "PragmaDirective",
         "src": "33:22:72"
       },
@@ -2272,7 +2272,7 @@
             "v2"
           ]
         },
-        "id": 9890,
+        "id": 9843,
         "name": "PragmaDirective",
         "src": "56:19:72"
       },
@@ -2288,17 +2288,17 @@
           "contractKind": "library",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            10081
+            10034
           ],
           "name": "LibSeaPort",
-          "scope": 10082
+          "scope": 10035
         },
         "children": [
           {
             "attributes": {
               "canonicalName": "LibSeaPort.BasicOrderParameters",
               "name": "BasicOrderParameters",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -2307,7 +2307,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "considerationToken",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2320,12 +2320,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9891,
+                    "id": 9844,
                     "name": "ElementaryTypeName",
                     "src": "649:7:72"
                   }
                 ],
-                "id": 9892,
+                "id": 9845,
                 "name": "VariableDeclaration",
                 "src": "649:26:72"
               },
@@ -2334,7 +2334,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "considerationIdentifier",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2346,12 +2346,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9893,
+                    "id": 9846,
                     "name": "ElementaryTypeName",
                     "src": "693:7:72"
                   }
                 ],
-                "id": 9894,
+                "id": 9847,
                 "name": "VariableDeclaration",
                 "src": "693:31:72"
               },
@@ -2360,7 +2360,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "considerationAmount",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2372,12 +2372,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9895,
+                    "id": 9848,
                     "name": "ElementaryTypeName",
                     "src": "742:7:72"
                   }
                 ],
-                "id": 9896,
+                "id": 9849,
                 "name": "VariableDeclaration",
                 "src": "742:27:72"
               },
@@ -2386,7 +2386,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerer",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address payable",
@@ -2399,12 +2399,12 @@
                       "stateMutability": "payable",
                       "type": "address payable"
                     },
-                    "id": 9897,
+                    "id": 9850,
                     "name": "ElementaryTypeName",
                     "src": "787:15:72"
                   }
                 ],
-                "id": 9898,
+                "id": 9851,
                 "name": "VariableDeclaration",
                 "src": "787:23:72"
               },
@@ -2413,7 +2413,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "zone",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2426,12 +2426,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9899,
+                    "id": 9852,
                     "name": "ElementaryTypeName",
                     "src": "828:7:72"
                   }
                 ],
-                "id": 9900,
+                "id": 9853,
                 "name": "VariableDeclaration",
                 "src": "828:12:72"
               },
@@ -2440,7 +2440,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerToken",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2453,12 +2453,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9901,
+                    "id": 9854,
                     "name": "ElementaryTypeName",
                     "src": "858:7:72"
                   }
                 ],
-                "id": 9902,
+                "id": 9855,
                 "name": "VariableDeclaration",
                 "src": "858:18:72"
               },
@@ -2467,7 +2467,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerIdentifier",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2479,12 +2479,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9903,
+                    "id": 9856,
                     "name": "ElementaryTypeName",
                     "src": "894:7:72"
                   }
                 ],
-                "id": 9904,
+                "id": 9857,
                 "name": "VariableDeclaration",
                 "src": "894:23:72"
               },
@@ -2493,7 +2493,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerAmount",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2505,12 +2505,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9905,
+                    "id": 9858,
                     "name": "ElementaryTypeName",
                     "src": "935:7:72"
                   }
                 ],
-                "id": 9906,
+                "id": 9859,
                 "name": "VariableDeclaration",
                 "src": "935:19:72"
               },
@@ -2519,7 +2519,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "basicOrderType",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "enum LibSeaPort.BasicOrderType",
@@ -2529,15 +2529,15 @@
                   {
                     "attributes": {
                       "name": "BasicOrderType",
-                      "referencedDeclaration": 9958,
+                      "referencedDeclaration": 9911,
                       "type": "enum LibSeaPort.BasicOrderType"
                     },
-                    "id": 9907,
+                    "id": 9860,
                     "name": "UserDefinedTypeName",
                     "src": "973:14:72"
                   }
                 ],
-                "id": 9908,
+                "id": 9861,
                 "name": "VariableDeclaration",
                 "src": "973:29:72"
               },
@@ -2546,7 +2546,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "startTime",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2558,12 +2558,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9909,
+                    "id": 9862,
                     "name": "ElementaryTypeName",
                     "src": "1021:7:72"
                   }
                 ],
-                "id": 9910,
+                "id": 9863,
                 "name": "VariableDeclaration",
                 "src": "1021:17:72"
               },
@@ -2572,7 +2572,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "endTime",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2584,12 +2584,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9911,
+                    "id": 9864,
                     "name": "ElementaryTypeName",
                     "src": "1057:7:72"
                   }
                 ],
-                "id": 9912,
+                "id": 9865,
                 "name": "VariableDeclaration",
                 "src": "1057:15:72"
               },
@@ -2598,7 +2598,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "zoneHash",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -2610,12 +2610,12 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9913,
+                    "id": 9866,
                     "name": "ElementaryTypeName",
                     "src": "1091:7:72"
                   }
                 ],
-                "id": 9914,
+                "id": 9867,
                 "name": "VariableDeclaration",
                 "src": "1091:16:72"
               },
@@ -2624,7 +2624,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "salt",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2636,12 +2636,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9915,
+                    "id": 9868,
                     "name": "ElementaryTypeName",
                     "src": "1126:7:72"
                   }
                 ],
-                "id": 9916,
+                "id": 9869,
                 "name": "VariableDeclaration",
                 "src": "1126:12:72"
               },
@@ -2650,7 +2650,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offererConduitKey",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -2662,12 +2662,12 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9917,
+                    "id": 9870,
                     "name": "ElementaryTypeName",
                     "src": "1157:7:72"
                   }
                 ],
-                "id": 9918,
+                "id": 9871,
                 "name": "VariableDeclaration",
                 "src": "1157:25:72"
               },
@@ -2676,7 +2676,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "fulfillerConduitKey",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -2688,12 +2688,12 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9919,
+                    "id": 9872,
                     "name": "ElementaryTypeName",
                     "src": "1201:7:72"
                   }
                 ],
-                "id": 9920,
+                "id": 9873,
                 "name": "VariableDeclaration",
                 "src": "1201:27:72"
               },
@@ -2702,7 +2702,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "totalOriginalAdditionalRecipients",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2714,12 +2714,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9921,
+                    "id": 9874,
                     "name": "ElementaryTypeName",
                     "src": "1247:7:72"
                   }
                 ],
-                "id": 9922,
+                "id": 9875,
                 "name": "VariableDeclaration",
                 "src": "1247:41:72"
               },
@@ -2728,7 +2728,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "additionalRecipients",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.AdditionalRecipient[]",
@@ -2743,20 +2743,20 @@
                       {
                         "attributes": {
                           "name": "AdditionalRecipient",
-                          "referencedDeclaration": 9933,
+                          "referencedDeclaration": 9886,
                           "type": "struct LibSeaPort.AdditionalRecipient"
                         },
-                        "id": 9923,
+                        "id": 9876,
                         "name": "UserDefinedTypeName",
                         "src": "1307:19:72"
                       }
                     ],
-                    "id": 9924,
+                    "id": 9877,
                     "name": "ArrayTypeName",
                     "src": "1307:21:72"
                   }
                 ],
-                "id": 9925,
+                "id": 9878,
                 "name": "VariableDeclaration",
                 "src": "1307:42:72"
               },
@@ -2765,7 +2765,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "signature",
-                  "scope": 9928,
+                  "scope": 9881,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -2777,17 +2777,17 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 9926,
+                    "id": 9879,
                     "name": "ElementaryTypeName",
                     "src": "1368:5:72"
                   }
                 ],
-                "id": 9927,
+                "id": 9880,
                 "name": "VariableDeclaration",
                 "src": "1368:15:72"
               }
             ],
-            "id": 9928,
+            "id": 9881,
             "name": "StructDefinition",
             "src": "611:788:72"
           },
@@ -2795,7 +2795,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.AdditionalRecipient",
               "name": "AdditionalRecipient",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -2804,7 +2804,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "amount",
-                  "scope": 9933,
+                  "scope": 9886,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2816,12 +2816,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9929,
+                    "id": 9882,
                     "name": "ElementaryTypeName",
                     "src": "1680:7:72"
                   }
                 ],
-                "id": 9930,
+                "id": 9883,
                 "name": "VariableDeclaration",
                 "src": "1680:14:72"
               },
@@ -2830,7 +2830,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "recipient",
-                  "scope": 9933,
+                  "scope": 9886,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address payable",
@@ -2843,17 +2843,17 @@
                       "stateMutability": "payable",
                       "type": "address payable"
                     },
-                    "id": 9931,
+                    "id": 9884,
                     "name": "ElementaryTypeName",
                     "src": "1704:15:72"
                   }
                 ],
-                "id": 9932,
+                "id": 9885,
                 "name": "VariableDeclaration",
                 "src": "1704:25:72"
               }
             ],
-            "id": 9933,
+            "id": 9886,
             "name": "StructDefinition",
             "src": "1643:93:72"
           },
@@ -2867,7 +2867,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC721_FULL_OPEN"
                 },
-                "id": 9934,
+                "id": 9887,
                 "name": "EnumValue",
                 "src": "1846:23:72"
               },
@@ -2875,7 +2875,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC721_PARTIAL_OPEN"
                 },
-                "id": 9935,
+                "id": 9888,
                 "name": "EnumValue",
                 "src": "1938:26:72"
               },
@@ -2883,7 +2883,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC721_FULL_RESTRICTED"
                 },
-                "id": 9936,
+                "id": 9889,
                 "name": "EnumValue",
                 "src": "2040:29:72"
               },
@@ -2891,7 +2891,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC721_PARTIAL_RESTRICTED"
                 },
-                "id": 9937,
+                "id": 9890,
                 "name": "EnumValue",
                 "src": "2152:32:72"
               },
@@ -2899,7 +2899,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC1155_FULL_OPEN"
                 },
-                "id": 9938,
+                "id": 9891,
                 "name": "EnumValue",
                 "src": "2246:24:72"
               },
@@ -2907,7 +2907,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC1155_PARTIAL_OPEN"
                 },
-                "id": 9939,
+                "id": 9892,
                 "name": "EnumValue",
                 "src": "2339:27:72"
               },
@@ -2915,7 +2915,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC1155_FULL_RESTRICTED"
                 },
-                "id": 9940,
+                "id": 9893,
                 "name": "EnumValue",
                 "src": "2442:30:72"
               },
@@ -2923,7 +2923,7 @@
                 "attributes": {
                   "name": "ETH_TO_ERC1155_PARTIAL_RESTRICTED"
                 },
-                "id": 9941,
+                "id": 9894,
                 "name": "EnumValue",
                 "src": "2555:33:72"
               },
@@ -2931,7 +2931,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC721_FULL_OPEN"
                 },
-                "id": 9942,
+                "id": 9895,
                 "name": "EnumValue",
                 "src": "2650:25:72"
               },
@@ -2939,7 +2939,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC721_PARTIAL_OPEN"
                 },
-                "id": 9943,
+                "id": 9896,
                 "name": "EnumValue",
                 "src": "2744:28:72"
               },
@@ -2947,7 +2947,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC721_FULL_RESTRICTED"
                 },
-                "id": 9944,
+                "id": 9897,
                 "name": "EnumValue",
                 "src": "2849:31:72"
               },
@@ -2955,7 +2955,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC721_PARTIAL_RESTRICTED"
                 },
-                "id": 9945,
+                "id": 9898,
                 "name": "EnumValue",
                 "src": "2964:34:72"
               },
@@ -2963,7 +2963,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC1155_FULL_OPEN"
                 },
-                "id": 9946,
+                "id": 9899,
                 "name": "EnumValue",
                 "src": "3061:26:72"
               },
@@ -2971,7 +2971,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC1155_PARTIAL_OPEN"
                 },
-                "id": 9947,
+                "id": 9900,
                 "name": "EnumValue",
                 "src": "3157:29:72"
               },
@@ -2979,7 +2979,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC1155_FULL_RESTRICTED"
                 },
-                "id": 9948,
+                "id": 9901,
                 "name": "EnumValue",
                 "src": "3263:32:72"
               },
@@ -2987,7 +2987,7 @@
                 "attributes": {
                   "name": "ERC20_TO_ERC1155_PARTIAL_RESTRICTED"
                 },
-                "id": 9949,
+                "id": 9902,
                 "name": "EnumValue",
                 "src": "3379:35:72"
               },
@@ -2995,7 +2995,7 @@
                 "attributes": {
                   "name": "ERC721_TO_ERC20_FULL_OPEN"
                 },
-                "id": 9950,
+                "id": 9903,
                 "name": "EnumValue",
                 "src": "3477:25:72"
               },
@@ -3003,7 +3003,7 @@
                 "attributes": {
                   "name": "ERC721_TO_ERC20_PARTIAL_OPEN"
                 },
-                "id": 9951,
+                "id": 9904,
                 "name": "EnumValue",
                 "src": "3572:28:72"
               },
@@ -3011,7 +3011,7 @@
                 "attributes": {
                   "name": "ERC721_TO_ERC20_FULL_RESTRICTED"
                 },
-                "id": 9952,
+                "id": 9905,
                 "name": "EnumValue",
                 "src": "3677:31:72"
               },
@@ -3019,7 +3019,7 @@
                 "attributes": {
                   "name": "ERC721_TO_ERC20_PARTIAL_RESTRICTED"
                 },
-                "id": 9953,
+                "id": 9906,
                 "name": "EnumValue",
                 "src": "3792:34:72"
               },
@@ -3027,7 +3027,7 @@
                 "attributes": {
                   "name": "ERC1155_TO_ERC20_FULL_OPEN"
                 },
-                "id": 9954,
+                "id": 9907,
                 "name": "EnumValue",
                 "src": "3889:26:72"
               },
@@ -3035,7 +3035,7 @@
                 "attributes": {
                   "name": "ERC1155_TO_ERC20_PARTIAL_OPEN"
                 },
-                "id": 9955,
+                "id": 9908,
                 "name": "EnumValue",
                 "src": "3985:29:72"
               },
@@ -3043,7 +3043,7 @@
                 "attributes": {
                   "name": "ERC1155_TO_ERC20_FULL_RESTRICTED"
                 },
-                "id": 9956,
+                "id": 9909,
                 "name": "EnumValue",
                 "src": "4091:32:72"
               },
@@ -3051,12 +3051,12 @@
                 "attributes": {
                   "name": "ERC1155_TO_ERC20_PARTIAL_RESTRICTED"
                 },
-                "id": 9957,
+                "id": 9910,
                 "name": "EnumValue",
                 "src": "4207:35:72"
               }
             ],
-            "id": 9958,
+            "id": 9911,
             "name": "EnumDefinition",
             "src": "1765:2483:72"
           },
@@ -3064,7 +3064,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.OrderParameters",
               "name": "OrderParameters",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -3073,7 +3073,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerer",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3086,12 +3086,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9959,
+                    "id": 9912,
                     "name": "ElementaryTypeName",
                     "src": "4631:7:72"
                   }
                 ],
-                "id": 9960,
+                "id": 9913,
                 "name": "VariableDeclaration",
                 "src": "4631:15:72"
               },
@@ -3100,7 +3100,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "zone",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3113,12 +3113,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9961,
+                    "id": 9914,
                     "name": "ElementaryTypeName",
                     "src": "4664:7:72"
                   }
                 ],
-                "id": 9962,
+                "id": 9915,
                 "name": "VariableDeclaration",
                 "src": "4664:12:72"
               },
@@ -3127,7 +3127,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offer",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.OfferItem[]",
@@ -3142,20 +3142,20 @@
                       {
                         "attributes": {
                           "name": "OfferItem",
-                          "referencedDeclaration": 10010,
+                          "referencedDeclaration": 9963,
                           "type": "struct LibSeaPort.OfferItem"
                         },
-                        "id": 9963,
+                        "id": 9916,
                         "name": "UserDefinedTypeName",
                         "src": "4694:9:72"
                       }
                     ],
-                    "id": 9964,
+                    "id": 9917,
                     "name": "ArrayTypeName",
                     "src": "4694:11:72"
                   }
                 ],
-                "id": 9965,
+                "id": 9918,
                 "name": "VariableDeclaration",
                 "src": "4694:17:72"
               },
@@ -3164,7 +3164,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "consideration",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.ConsiderationItem[]",
@@ -3179,20 +3179,20 @@
                       {
                         "attributes": {
                           "name": "ConsiderationItem",
-                          "referencedDeclaration": 10023,
+                          "referencedDeclaration": 9976,
                           "type": "struct LibSeaPort.ConsiderationItem"
                         },
-                        "id": 9966,
+                        "id": 9919,
                         "name": "UserDefinedTypeName",
                         "src": "4729:17:72"
                       }
                     ],
-                    "id": 9967,
+                    "id": 9920,
                     "name": "ArrayTypeName",
                     "src": "4729:19:72"
                   }
                 ],
-                "id": 9968,
+                "id": 9921,
                 "name": "VariableDeclaration",
                 "src": "4729:33:72"
               },
@@ -3201,7 +3201,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "orderType",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "enum LibSeaPort.OrderType",
@@ -3211,15 +3211,15 @@
                   {
                     "attributes": {
                       "name": "OrderType",
-                      "referencedDeclaration": 10028,
+                      "referencedDeclaration": 9981,
                       "type": "enum LibSeaPort.OrderType"
                     },
-                    "id": 9969,
+                    "id": 9922,
                     "name": "UserDefinedTypeName",
                     "src": "4780:9:72"
                   }
                 ],
-                "id": 9970,
+                "id": 9923,
                 "name": "VariableDeclaration",
                 "src": "4780:19:72"
               },
@@ -3228,7 +3228,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "startTime",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3240,12 +3240,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9971,
+                    "id": 9924,
                     "name": "ElementaryTypeName",
                     "src": "4817:7:72"
                   }
                 ],
-                "id": 9972,
+                "id": 9925,
                 "name": "VariableDeclaration",
                 "src": "4817:17:72"
               },
@@ -3254,7 +3254,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "endTime",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3266,12 +3266,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9973,
+                    "id": 9926,
                     "name": "ElementaryTypeName",
                     "src": "4852:7:72"
                   }
                 ],
-                "id": 9974,
+                "id": 9927,
                 "name": "VariableDeclaration",
                 "src": "4852:15:72"
               },
@@ -3280,7 +3280,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "zoneHash",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -3292,12 +3292,12 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9975,
+                    "id": 9928,
                     "name": "ElementaryTypeName",
                     "src": "4885:7:72"
                   }
                 ],
-                "id": 9976,
+                "id": 9929,
                 "name": "VariableDeclaration",
                 "src": "4885:16:72"
               },
@@ -3306,7 +3306,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "salt",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3318,12 +3318,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9977,
+                    "id": 9930,
                     "name": "ElementaryTypeName",
                     "src": "4919:7:72"
                   }
                 ],
-                "id": 9978,
+                "id": 9931,
                 "name": "VariableDeclaration",
                 "src": "4919:12:72"
               },
@@ -3332,7 +3332,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "conduitKey",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -3344,12 +3344,12 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9979,
+                    "id": 9932,
                     "name": "ElementaryTypeName",
                     "src": "4950:7:72"
                   }
                 ],
-                "id": 9980,
+                "id": 9933,
                 "name": "VariableDeclaration",
                 "src": "4950:18:72"
               },
@@ -3358,7 +3358,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "totalOriginalConsiderationItems",
-                  "scope": 9983,
+                  "scope": 9936,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3370,17 +3370,17 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9981,
+                    "id": 9934,
                     "name": "ElementaryTypeName",
                     "src": "4987:7:72"
                   }
                 ],
-                "id": 9982,
+                "id": 9935,
                 "name": "VariableDeclaration",
                 "src": "4987:39:72"
               }
             ],
-            "id": 9983,
+            "id": 9936,
             "name": "StructDefinition",
             "src": "4598:502:72"
           },
@@ -3388,7 +3388,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.Order",
               "name": "Order",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -3397,7 +3397,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "parameters",
-                  "scope": 9988,
+                  "scope": 9941,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.OrderParameters",
@@ -3407,15 +3407,15 @@
                   {
                     "attributes": {
                       "name": "OrderParameters",
-                      "referencedDeclaration": 9983,
+                      "referencedDeclaration": 9936,
                       "type": "struct LibSeaPort.OrderParameters"
                     },
-                    "id": 9984,
+                    "id": 9937,
                     "name": "UserDefinedTypeName",
                     "src": "5227:15:72"
                   }
                 ],
-                "id": 9985,
+                "id": 9938,
                 "name": "VariableDeclaration",
                 "src": "5227:26:72"
               },
@@ -3424,7 +3424,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "signature",
-                  "scope": 9988,
+                  "scope": 9941,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -3436,17 +3436,17 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 9986,
+                    "id": 9939,
                     "name": "ElementaryTypeName",
                     "src": "5263:5:72"
                   }
                 ],
-                "id": 9987,
+                "id": 9940,
                 "name": "VariableDeclaration",
                 "src": "5263:15:72"
               }
             ],
-            "id": 9988,
+            "id": 9941,
             "name": "StructDefinition",
             "src": "5204:81:72"
           },
@@ -3454,7 +3454,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.AdvancedOrder",
               "name": "AdvancedOrder",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -3463,7 +3463,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "parameters",
-                  "scope": 9999,
+                  "scope": 9952,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.OrderParameters",
@@ -3473,15 +3473,15 @@
                   {
                     "attributes": {
                       "name": "OrderParameters",
-                      "referencedDeclaration": 9983,
+                      "referencedDeclaration": 9936,
                       "type": "struct LibSeaPort.OrderParameters"
                     },
-                    "id": 9989,
+                    "id": 9942,
                     "name": "UserDefinedTypeName",
                     "src": "5322:15:72"
                   }
                 ],
-                "id": 9990,
+                "id": 9943,
                 "name": "VariableDeclaration",
                 "src": "5322:26:72"
               },
@@ -3490,7 +3490,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "numerator",
-                  "scope": 9999,
+                  "scope": 9952,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint120",
@@ -3502,12 +3502,12 @@
                       "name": "uint120",
                       "type": "uint120"
                     },
-                    "id": 9991,
+                    "id": 9944,
                     "name": "ElementaryTypeName",
                     "src": "5358:7:72"
                   }
                 ],
-                "id": 9992,
+                "id": 9945,
                 "name": "VariableDeclaration",
                 "src": "5358:17:72"
               },
@@ -3516,7 +3516,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "denominator",
-                  "scope": 9999,
+                  "scope": 9952,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint120",
@@ -3528,12 +3528,12 @@
                       "name": "uint120",
                       "type": "uint120"
                     },
-                    "id": 9993,
+                    "id": 9946,
                     "name": "ElementaryTypeName",
                     "src": "5385:7:72"
                   }
                 ],
-                "id": 9994,
+                "id": 9947,
                 "name": "VariableDeclaration",
                 "src": "5385:19:72"
               },
@@ -3542,7 +3542,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "signature",
-                  "scope": 9999,
+                  "scope": 9952,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -3554,12 +3554,12 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 9995,
+                    "id": 9948,
                     "name": "ElementaryTypeName",
                     "src": "5414:5:72"
                   }
                 ],
-                "id": 9996,
+                "id": 9949,
                 "name": "VariableDeclaration",
                 "src": "5414:15:72"
               },
@@ -3568,7 +3568,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "extraData",
-                  "scope": 9999,
+                  "scope": 9952,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -3580,17 +3580,17 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 9997,
+                    "id": 9950,
                     "name": "ElementaryTypeName",
                     "src": "5439:5:72"
                   }
                 ],
-                "id": 9998,
+                "id": 9951,
                 "name": "VariableDeclaration",
                 "src": "5439:15:72"
               }
             ],
-            "id": 9999,
+            "id": 9952,
             "name": "StructDefinition",
             "src": "5291:170:72"
           },
@@ -3598,7 +3598,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.OfferItem",
               "name": "OfferItem",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -3607,7 +3607,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "itemType",
-                  "scope": 10010,
+                  "scope": 9963,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "enum LibSeaPort.ItemType",
@@ -3617,15 +3617,15 @@
                   {
                     "attributes": {
                       "name": "ItemType",
-                      "referencedDeclaration": 10035,
+                      "referencedDeclaration": 9988,
                       "type": "enum LibSeaPort.ItemType"
                     },
-                    "id": 10000,
+                    "id": 9953,
                     "name": "UserDefinedTypeName",
                     "src": "5494:8:72"
                   }
                 ],
-                "id": 10001,
+                "id": 9954,
                 "name": "VariableDeclaration",
                 "src": "5494:17:72"
               },
@@ -3634,7 +3634,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "token",
-                  "scope": 10010,
+                  "scope": 9963,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3647,12 +3647,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 10002,
+                    "id": 9955,
                     "name": "ElementaryTypeName",
                     "src": "5521:7:72"
                   }
                 ],
-                "id": 10003,
+                "id": 9956,
                 "name": "VariableDeclaration",
                 "src": "5521:13:72"
               },
@@ -3661,7 +3661,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "identifierOrCriteria",
-                  "scope": 10010,
+                  "scope": 9963,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3673,12 +3673,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10004,
+                    "id": 9957,
                     "name": "ElementaryTypeName",
                     "src": "5544:7:72"
                   }
                 ],
-                "id": 10005,
+                "id": 9958,
                 "name": "VariableDeclaration",
                 "src": "5544:28:72"
               },
@@ -3687,7 +3687,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "startAmount",
-                  "scope": 10010,
+                  "scope": 9963,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3699,12 +3699,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10006,
+                    "id": 9959,
                     "name": "ElementaryTypeName",
                     "src": "5582:7:72"
                   }
                 ],
-                "id": 10007,
+                "id": 9960,
                 "name": "VariableDeclaration",
                 "src": "5582:19:72"
               },
@@ -3713,7 +3713,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "endAmount",
-                  "scope": 10010,
+                  "scope": 9963,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3725,17 +3725,17 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10008,
+                    "id": 9961,
                     "name": "ElementaryTypeName",
                     "src": "5611:7:72"
                   }
                 ],
-                "id": 10009,
+                "id": 9962,
                 "name": "VariableDeclaration",
                 "src": "5611:17:72"
               }
             ],
-            "id": 10010,
+            "id": 9963,
             "name": "StructDefinition",
             "src": "5467:168:72"
           },
@@ -3743,7 +3743,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.ConsiderationItem",
               "name": "ConsiderationItem",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -3752,7 +3752,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "itemType",
-                  "scope": 10023,
+                  "scope": 9976,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "enum LibSeaPort.ItemType",
@@ -3762,15 +3762,15 @@
                   {
                     "attributes": {
                       "name": "ItemType",
-                      "referencedDeclaration": 10035,
+                      "referencedDeclaration": 9988,
                       "type": "enum LibSeaPort.ItemType"
                     },
-                    "id": 10011,
+                    "id": 9964,
                     "name": "UserDefinedTypeName",
                     "src": "5877:8:72"
                   }
                 ],
-                "id": 10012,
+                "id": 9965,
                 "name": "VariableDeclaration",
                 "src": "5877:17:72"
               },
@@ -3779,7 +3779,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "token",
-                  "scope": 10023,
+                  "scope": 9976,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3792,12 +3792,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 10013,
+                    "id": 9966,
                     "name": "ElementaryTypeName",
                     "src": "5904:7:72"
                   }
                 ],
-                "id": 10014,
+                "id": 9967,
                 "name": "VariableDeclaration",
                 "src": "5904:13:72"
               },
@@ -3806,7 +3806,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "identifierOrCriteria",
-                  "scope": 10023,
+                  "scope": 9976,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3818,12 +3818,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10015,
+                    "id": 9968,
                     "name": "ElementaryTypeName",
                     "src": "5927:7:72"
                   }
                 ],
-                "id": 10016,
+                "id": 9969,
                 "name": "VariableDeclaration",
                 "src": "5927:28:72"
               },
@@ -3832,7 +3832,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "startAmount",
-                  "scope": 10023,
+                  "scope": 9976,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3844,12 +3844,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10017,
+                    "id": 9970,
                     "name": "ElementaryTypeName",
                     "src": "5965:7:72"
                   }
                 ],
-                "id": 10018,
+                "id": 9971,
                 "name": "VariableDeclaration",
                 "src": "5965:19:72"
               },
@@ -3858,7 +3858,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "endAmount",
-                  "scope": 10023,
+                  "scope": 9976,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3870,12 +3870,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10019,
+                    "id": 9972,
                     "name": "ElementaryTypeName",
                     "src": "5994:7:72"
                   }
                 ],
-                "id": 10020,
+                "id": 9973,
                 "name": "VariableDeclaration",
                 "src": "5994:17:72"
               },
@@ -3884,7 +3884,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "recipient",
-                  "scope": 10023,
+                  "scope": 9976,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address payable",
@@ -3897,17 +3897,17 @@
                       "stateMutability": "payable",
                       "type": "address payable"
                     },
-                    "id": 10021,
+                    "id": 9974,
                     "name": "ElementaryTypeName",
                     "src": "6021:15:72"
                   }
                 ],
-                "id": 10022,
+                "id": 9975,
                 "name": "VariableDeclaration",
                 "src": "6021:25:72"
               }
             ],
-            "id": 10023,
+            "id": 9976,
             "name": "StructDefinition",
             "src": "5842:211:72"
           },
@@ -3921,7 +3921,7 @@
                 "attributes": {
                   "name": "FULL_OPEN"
                 },
-                "id": 10024,
+                "id": 9977,
                 "name": "EnumValue",
                 "src": "6158:9:72"
               },
@@ -3929,7 +3929,7 @@
                 "attributes": {
                   "name": "PARTIAL_OPEN"
                 },
-                "id": 10025,
+                "id": 9978,
                 "name": "EnumValue",
                 "src": "6236:12:72"
               },
@@ -3937,7 +3937,7 @@
                 "attributes": {
                   "name": "FULL_RESTRICTED"
                 },
-                "id": 10026,
+                "id": 9979,
                 "name": "EnumValue",
                 "src": "6324:15:72"
               },
@@ -3945,12 +3945,12 @@
                 "attributes": {
                   "name": "PARTIAL_RESTRICTED"
                 },
-                "id": 10027,
+                "id": 9980,
                 "name": "EnumValue",
                 "src": "6422:18:72"
               }
             ],
-            "id": 10028,
+            "id": 9981,
             "name": "EnumDefinition",
             "src": "6082:364:72"
           },
@@ -3964,7 +3964,7 @@
                 "attributes": {
                   "name": "NATIVE"
                 },
-                "id": 10029,
+                "id": 9982,
                 "name": "EnumValue",
                 "src": "6552:6:72"
               },
@@ -3972,7 +3972,7 @@
                 "attributes": {
                   "name": "ERC20"
                 },
-                "id": 10030,
+                "id": 9983,
                 "name": "EnumValue",
                 "src": "6652:5:72"
               },
@@ -3980,7 +3980,7 @@
                 "attributes": {
                   "name": "ERC721"
                 },
-                "id": 10031,
+                "id": 9984,
                 "name": "EnumValue",
                 "src": "6695:6:72"
               },
@@ -3988,7 +3988,7 @@
                 "attributes": {
                   "name": "ERC1155"
                 },
-                "id": 10032,
+                "id": 9985,
                 "name": "EnumValue",
                 "src": "6740:7:72"
               },
@@ -3996,7 +3996,7 @@
                 "attributes": {
                   "name": "ERC721_WITH_CRITERIA"
                 },
-                "id": 10033,
+                "id": 9986,
                 "name": "EnumValue",
                 "src": "6826:20:72"
               },
@@ -4004,12 +4004,12 @@
                 "attributes": {
                   "name": "ERC1155_WITH_CRITERIA"
                 },
-                "id": 10034,
+                "id": 9987,
                 "name": "EnumValue",
                 "src": "6921:21:72"
               }
             ],
-            "id": 10035,
+            "id": 9988,
             "name": "EnumDefinition",
             "src": "6475:473:72"
           },
@@ -4017,7 +4017,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.Fulfillment",
               "name": "Fulfillment",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -4026,7 +4026,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerComponents",
-                  "scope": 10042,
+                  "scope": 9995,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.FulfillmentComponent[]",
@@ -4041,20 +4041,20 @@
                       {
                         "attributes": {
                           "name": "FulfillmentComponent",
-                          "referencedDeclaration": 10047,
+                          "referencedDeclaration": 10000,
                           "type": "struct LibSeaPort.FulfillmentComponent"
                         },
-                        "id": 10036,
+                        "id": 9989,
                         "name": "UserDefinedTypeName",
                         "src": "7640:20:72"
                       }
                     ],
-                    "id": 10037,
+                    "id": 9990,
                     "name": "ArrayTypeName",
                     "src": "7640:22:72"
                   }
                 ],
-                "id": 10038,
+                "id": 9991,
                 "name": "VariableDeclaration",
                 "src": "7640:38:72"
               },
@@ -4063,7 +4063,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "considerationComponents",
-                  "scope": 10042,
+                  "scope": 9995,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.FulfillmentComponent[]",
@@ -4078,25 +4078,25 @@
                       {
                         "attributes": {
                           "name": "FulfillmentComponent",
-                          "referencedDeclaration": 10047,
+                          "referencedDeclaration": 10000,
                           "type": "struct LibSeaPort.FulfillmentComponent"
                         },
-                        "id": 10039,
+                        "id": 9992,
                         "name": "UserDefinedTypeName",
                         "src": "7688:20:72"
                       }
                     ],
-                    "id": 10040,
+                    "id": 9993,
                     "name": "ArrayTypeName",
                     "src": "7688:22:72"
                   }
                 ],
-                "id": 10041,
+                "id": 9994,
                 "name": "VariableDeclaration",
                 "src": "7688:46:72"
               }
             ],
-            "id": 10042,
+            "id": 9995,
             "name": "StructDefinition",
             "src": "7611:130:72"
           },
@@ -4104,7 +4104,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.FulfillmentComponent",
               "name": "FulfillmentComponent",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -4113,7 +4113,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "orderIndex",
-                  "scope": 10047,
+                  "scope": 10000,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4125,12 +4125,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10043,
+                    "id": 9996,
                     "name": "ElementaryTypeName",
                     "src": "7964:7:72"
                   }
                 ],
-                "id": 10044,
+                "id": 9997,
                 "name": "VariableDeclaration",
                 "src": "7964:18:72"
               },
@@ -4139,7 +4139,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "itemIndex",
-                  "scope": 10047,
+                  "scope": 10000,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4151,17 +4151,17 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10045,
+                    "id": 9998,
                     "name": "ElementaryTypeName",
                     "src": "7992:7:72"
                   }
                 ],
-                "id": 10046,
+                "id": 9999,
                 "name": "VariableDeclaration",
                 "src": "7992:17:72"
               }
             ],
-            "id": 10047,
+            "id": 10000,
             "name": "StructDefinition",
             "src": "7926:90:72"
           },
@@ -4169,7 +4169,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.Execution",
               "name": "Execution",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -4178,7 +4178,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "item",
-                  "scope": 10054,
+                  "scope": 10007,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct LibSeaPort.ReceivedItem",
@@ -4188,15 +4188,15 @@
                   {
                     "attributes": {
                       "name": "ReceivedItem",
-                      "referencedDeclaration": 10065,
+                      "referencedDeclaration": 10018,
                       "type": "struct LibSeaPort.ReceivedItem"
                     },
-                    "id": 10048,
+                    "id": 10001,
                     "name": "UserDefinedTypeName",
                     "src": "8700:12:72"
                   }
                 ],
-                "id": 10049,
+                "id": 10002,
                 "name": "VariableDeclaration",
                 "src": "8700:17:72"
               },
@@ -4205,7 +4205,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "offerer",
-                  "scope": 10054,
+                  "scope": 10007,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -4218,12 +4218,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 10050,
+                    "id": 10003,
                     "name": "ElementaryTypeName",
                     "src": "8727:7:72"
                   }
                 ],
-                "id": 10051,
+                "id": 10004,
                 "name": "VariableDeclaration",
                 "src": "8727:15:72"
               },
@@ -4232,7 +4232,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "conduitKey",
-                  "scope": 10054,
+                  "scope": 10007,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -4244,17 +4244,17 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 10052,
+                    "id": 10005,
                     "name": "ElementaryTypeName",
                     "src": "8752:7:72"
                   }
                 ],
-                "id": 10053,
+                "id": 10006,
                 "name": "VariableDeclaration",
                 "src": "8752:18:72"
               }
             ],
-            "id": 10054,
+            "id": 10007,
             "name": "StructDefinition",
             "src": "8673:104:72"
           },
@@ -4262,7 +4262,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.ReceivedItem",
               "name": "ReceivedItem",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -4271,7 +4271,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "itemType",
-                  "scope": 10065,
+                  "scope": 10018,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "enum LibSeaPort.ItemType",
@@ -4281,15 +4281,15 @@
                   {
                     "attributes": {
                       "name": "ItemType",
-                      "referencedDeclaration": 10035,
+                      "referencedDeclaration": 9988,
                       "type": "enum LibSeaPort.ItemType"
                     },
-                    "id": 10055,
+                    "id": 10008,
                     "name": "UserDefinedTypeName",
                     "src": "9053:8:72"
                   }
                 ],
-                "id": 10056,
+                "id": 10009,
                 "name": "VariableDeclaration",
                 "src": "9053:17:72"
               },
@@ -4298,7 +4298,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "token",
-                  "scope": 10065,
+                  "scope": 10018,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -4311,12 +4311,12 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 10057,
+                    "id": 10010,
                     "name": "ElementaryTypeName",
                     "src": "9080:7:72"
                   }
                 ],
-                "id": 10058,
+                "id": 10011,
                 "name": "VariableDeclaration",
                 "src": "9080:13:72"
               },
@@ -4325,7 +4325,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "identifier",
-                  "scope": 10065,
+                  "scope": 10018,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4337,12 +4337,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10059,
+                    "id": 10012,
                     "name": "ElementaryTypeName",
                     "src": "9103:7:72"
                   }
                 ],
-                "id": 10060,
+                "id": 10013,
                 "name": "VariableDeclaration",
                 "src": "9103:18:72"
               },
@@ -4351,7 +4351,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "amount",
-                  "scope": 10065,
+                  "scope": 10018,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4363,12 +4363,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10061,
+                    "id": 10014,
                     "name": "ElementaryTypeName",
                     "src": "9131:7:72"
                   }
                 ],
-                "id": 10062,
+                "id": 10015,
                 "name": "VariableDeclaration",
                 "src": "9131:14:72"
               },
@@ -4377,7 +4377,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "recipient",
-                  "scope": 10065,
+                  "scope": 10018,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address payable",
@@ -4390,17 +4390,17 @@
                       "stateMutability": "payable",
                       "type": "address payable"
                     },
-                    "id": 10063,
+                    "id": 10016,
                     "name": "ElementaryTypeName",
                     "src": "9155:15:72"
                   }
                 ],
-                "id": 10064,
+                "id": 10017,
                 "name": "VariableDeclaration",
                 "src": "9155:25:72"
               }
             ],
-            "id": 10065,
+            "id": 10018,
             "name": "StructDefinition",
             "src": "9023:164:72"
           },
@@ -4408,7 +4408,7 @@
             "attributes": {
               "canonicalName": "LibSeaPort.CriteriaResolver",
               "name": "CriteriaResolver",
-              "scope": 10081,
+              "scope": 10034,
               "visibility": "public"
             },
             "children": [
@@ -4417,7 +4417,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "orderIndex",
-                  "scope": 10077,
+                  "scope": 10030,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4429,12 +4429,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10066,
+                    "id": 10019,
                     "name": "ElementaryTypeName",
                     "src": "9227:7:72"
                   }
                 ],
-                "id": 10067,
+                "id": 10020,
                 "name": "VariableDeclaration",
                 "src": "9227:18:72"
               },
@@ -4443,7 +4443,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "side",
-                  "scope": 10077,
+                  "scope": 10030,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "enum LibSeaPort.Side",
@@ -4453,15 +4453,15 @@
                   {
                     "attributes": {
                       "name": "Side",
-                      "referencedDeclaration": 10080,
+                      "referencedDeclaration": 10033,
                       "type": "enum LibSeaPort.Side"
                     },
-                    "id": 10068,
+                    "id": 10021,
                     "name": "UserDefinedTypeName",
                     "src": "9255:4:72"
                   }
                 ],
-                "id": 10069,
+                "id": 10022,
                 "name": "VariableDeclaration",
                 "src": "9255:9:72"
               },
@@ -4470,7 +4470,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "index",
-                  "scope": 10077,
+                  "scope": 10030,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4482,12 +4482,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10070,
+                    "id": 10023,
                     "name": "ElementaryTypeName",
                     "src": "9274:7:72"
                   }
                 ],
-                "id": 10071,
+                "id": 10024,
                 "name": "VariableDeclaration",
                 "src": "9274:13:72"
               },
@@ -4496,7 +4496,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "identifier",
-                  "scope": 10077,
+                  "scope": 10030,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -4508,12 +4508,12 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 10072,
+                    "id": 10025,
                     "name": "ElementaryTypeName",
                     "src": "9297:7:72"
                   }
                 ],
-                "id": 10073,
+                "id": 10026,
                 "name": "VariableDeclaration",
                 "src": "9297:18:72"
               },
@@ -4522,7 +4522,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "criteriaProof",
-                  "scope": 10077,
+                  "scope": 10030,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32[]",
@@ -4539,22 +4539,22 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 10074,
+                        "id": 10027,
                         "name": "ElementaryTypeName",
                         "src": "9325:7:72"
                       }
                     ],
-                    "id": 10075,
+                    "id": 10028,
                     "name": "ArrayTypeName",
                     "src": "9325:9:72"
                   }
                 ],
-                "id": 10076,
+                "id": 10029,
                 "name": "VariableDeclaration",
                 "src": "9325:23:72"
               }
             ],
-            "id": 10077,
+            "id": 10030,
             "name": "StructDefinition",
             "src": "9193:162:72"
           },
@@ -4568,7 +4568,7 @@
                 "attributes": {
                   "name": "OFFER"
                 },
-                "id": 10078,
+                "id": 10031,
                 "name": "EnumValue",
                 "src": "9442:5:72"
               },
@@ -4576,22 +4576,22 @@
                 "attributes": {
                   "name": "CONSIDERATION"
                 },
-                "id": 10079,
+                "id": 10032,
                 "name": "EnumValue",
                 "src": "9500:13:72"
               }
             ],
-            "id": 10080,
+            "id": 10033,
             "name": "EnumDefinition",
             "src": "9384:135:72"
           }
         ],
-        "id": 10081,
+        "id": 10034,
         "name": "ContractDefinition",
         "src": "77:9444:72"
       }
     ],
-    "id": 10082,
+    "id": 10035,
     "name": "SourceUnit",
     "src": "33:9489:72"
   },
@@ -4601,7 +4601,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.3",
-  "updatedAt": "2022-11-01T12:37:00.516Z",
+  "updatedAt": "2023-02-07T16:14:21.311Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
