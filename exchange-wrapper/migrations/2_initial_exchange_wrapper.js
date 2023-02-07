@@ -8,7 +8,8 @@ const rinkeby = {
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x0000000000000000000000000000000000000000", // is there x2y2 on rinkeby?
   looksRare: "0x1AA777972073Ff66DCFDeD85749bDD555C0665dA",
-  sudoSwap: "0x9ABDe410D7BA62fA11EF37984c0Faf2782FE39B5"
+  sudoSwap: "0x9ABDe410D7BA62fA11EF37984c0Faf2782FE39B5",
+  blurio: "0x000000000000Ad05Ccc4F10045630fb830B95127"
 }
 const mainnet = {
   exchangeV2: "0x9757F2d2b135150BBeb65308D4a91804107cd8D6",
@@ -16,7 +17,8 @@ const mainnet = {
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x59728544B08AB483533076417FbBB2fD0B17CE3a",
-  sudoSwap: "0x0000000000000000000000000000000000000000"
+  sudoSwap: "0x0000000000000000000000000000000000000000",
+  blurio: "0x275C7083ed6Bf125607c7B5BAfd141ABcB945Fe9"
 }
 
 const def = {
@@ -25,7 +27,8 @@ const def = {
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
-  sudoSwap: "0x0000000000000000000000000000000000000000"
+  sudoSwap: "0x0000000000000000000000000000000000000000",
+  blurio: "0x0000000000000000000000000000000000000000"
 }
 
 const dev = {
@@ -34,7 +37,8 @@ const dev = {
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
-  sudoSwap: "0x0000000000000000000000000000000000000000"
+  sudoSwap: "0x0000000000000000000000000000000000000000",
+  blurio: "0x0000000000000000000000000000000000000000"
 }
 
 let settings = {
@@ -58,7 +62,7 @@ module.exports = async function (deployer, network) {
   const settings = getSettings(network);
   let exchangeWrapper;
 
-  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, settings.exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, settings.blurio, { gas: 3000000 });
 
   exchangeWrapper = await RaribleExchangeWrapper.deployed()
 

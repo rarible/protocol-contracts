@@ -1,45 +1,36 @@
 {
-  "contractName": "LibLooksRare",
+  "contractName": "LibBlurIo",
   "abi": [],
-  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/libraries/LibLooksRare.sol\":\"LibLooksRare\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/libraries/LibLooksRare.sol\":{\"keccak256\":\"0x9eee8122eaf09e4341d5cd878e8ab5ba580a4391ec2d4caee7a02754aa877110\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://6f1ed48d7ab92fc4137750980e00b45e5a6997abd8541df6cf9bb7ff925fa617\",\"dweb:/ipfs/QmUUDnEsfS6bMf63HiUxi78qBvvXhwVJmCJ4BwdPiruHuf\"]}},\"version\":1}",
-  "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212209ca89c6691b20b5aadb19240828939e27f922dbbf8fcc4f20f1a06aa1312b83164736f6c63430007060033",
-  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212209ca89c6691b20b5aadb19240828939e27f922dbbf8fcc4f20f1a06aa1312b83164736f6c63430007060033",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/libraries/LibBlurIo.sol\":\"LibBlurIo\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/libraries/LibBlurIo.sol\":{\"keccak256\":\"0x7abd0fa8f9eac9eac08a21d89018f9779859e08442d57507b9446326eb729bf2\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9ebc3a8baeb17f29d461b257815b1fc38cd0b1b46b5523afafc1d9c46620ed0f\",\"dweb:/ipfs/QmYC7Lh8HDfgA1Ko2kWywm2ahnLbHDhrXnaachaNKrBTZU\"]}},\"version\":1}",
+  "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220ee69b262d8bac4294a2492f4f3105d626ed750fecc6477512fcb07f4a523b30664736f6c63430007060033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220ee69b262d8bac4294a2492f4f3105d626ed750fecc6477512fcb07f4a523b30664736f6c63430007060033",
   "immutableReferences": {},
   "generatedSources": [],
   "deployedGeneratedSources": [],
-  "sourceMap": "77:1441:72:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "77:1441:72:-:0;;;;;;;;",
-  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.7.6;\npragma abicoder v2;\n\nlibrary LibLooksRare {\n    struct MakerOrder {\n        bool isOrderAsk; // true --> ask / false --> bid\n        address signer; // signer of the maker order\n        address collection; // collection address\n        uint256 price; // price (used as )\n        uint256 tokenId; // id of the token\n        uint256 amount; // amount of tokens to sell/purchase (must be 1 for ERC721, 1+ for ERC1155)\n        address strategy; // strategy for trade execution (e.g., DutchAuction, StandardSaleForFixedPrice)\n        address currency; // currency (e.g., WETH)\n        uint256 nonce; // order nonce (must be unique unless new maker order is meant to override existing one e.g., lower ask price)\n        uint256 startTime; // startTime in timestamp\n        uint256 endTime; // endTime in timestamp\n        uint256 minPercentageToAsk; // slippage protection (9000 --> 90% of the final price must return to ask)\n        bytes params; // additional parameters\n        uint8 v; // v: parameter (27 or 28)\n        bytes32 r; // r: parameter\n        bytes32 s; // s: parameter\n    }\n\n    struct TakerOrder {\n        bool isOrderAsk; // true --> ask / false --> bid\n        address taker; // msg.sender\n        uint256 price; // final price for the purchase\n        uint256 tokenId;\n        uint256 minPercentageToAsk; // // slippage protection (9000 --> 90% of the final price must return to ask)\n        bytes params; // other params (e.g., tokenId)\n    }\n}\n",
-  "sourcePath": "/Users/vfadeev/Work/rarible/protocol/protocol-contracts/features/PT-2031/exchange-wrapper/contracts/libraries/LibLooksRare.sol",
+  "sourceMap": "56:976:71:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "56:976:71:-:0;;;;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity 0.7.6;\n\nlibrary LibBlurIo {\n    enum Side {\n        Buy,\n        Sell\n    }\n    enum SignatureVersion {\n        Single,\n        Bulk\n    }\n    enum AssetType {\n        ERC721,\n        ERC1155\n    }\n\n    struct Fee {\n        uint16 rate;\n        address payable recipient;\n    }\n\n    struct Order {\n        address trader;\n        Side side;\n        address matchingPolicy;\n        address collection;\n        uint256 tokenId;\n        uint256 amount;\n        address paymentToken;\n        uint256 price;\n        uint256 listingTime;\n        /* Order expiration timestamp - 0 for oracle cancellations. */\n        uint256 expirationTime;\n        Fee[] fees;\n        uint256 salt;\n        bytes extraParams;\n    }\n\n    struct Input {\n        Order order;\n        uint8 v;\n        bytes32 r;\n        bytes32 s;\n        bytes extraSignature;\n        SignatureVersion signatureVersion;\n        uint256 blockNumber;\n    }\n\n    struct Execution {\n        Input sell;\n        Input buy;\n    }\n}\n",
+  "sourcePath": "/Users/vfadeev/Work/rarible/protocol/protocol-contracts/features/PT-2031/exchange-wrapper/contracts/libraries/LibBlurIo.sol",
   "ast": {
-    "absolutePath": "project:/contracts/libraries/LibLooksRare.sol",
+    "absolutePath": "project:/contracts/libraries/LibBlurIo.sol",
     "exportedSymbols": {
-      "LibLooksRare": [
-        9905
+      "LibBlurIo": [
+        9855
       ]
     },
-    "id": 9906,
+    "id": 9856,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 9857,
+        "id": 9792,
         "literals": [
           "solidity",
           "0.7",
           ".6"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:22:72"
-      },
-      {
-        "id": 9858,
-        "literals": [
-          "abicoder",
-          "v2"
-        ],
-        "nodeType": "PragmaDirective",
-        "src": "56:19:72"
+        "src": "32:22:71"
       },
       {
         "abstract": false,
@@ -47,51 +38,152 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 9905,
+        "id": 9855,
         "linearizedBaseContracts": [
-          9905
+          9855
         ],
-        "name": "LibLooksRare",
+        "name": "LibBlurIo",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
-            "canonicalName": "LibLooksRare.MakerOrder",
-            "id": 9891,
+            "canonicalName": "LibBlurIo.Side",
+            "id": 9795,
+            "members": [
+              {
+                "id": 9793,
+                "name": "Buy",
+                "nodeType": "EnumValue",
+                "src": "100:3:71"
+              },
+              {
+                "id": 9794,
+                "name": "Sell",
+                "nodeType": "EnumValue",
+                "src": "113:4:71"
+              }
+            ],
+            "name": "Side",
+            "nodeType": "EnumDefinition",
+            "src": "80:43:71"
+          },
+          {
+            "canonicalName": "LibBlurIo.SignatureVersion",
+            "id": 9798,
+            "members": [
+              {
+                "id": 9796,
+                "name": "Single",
+                "nodeType": "EnumValue",
+                "src": "160:6:71"
+              },
+              {
+                "id": 9797,
+                "name": "Bulk",
+                "nodeType": "EnumValue",
+                "src": "176:4:71"
+              }
+            ],
+            "name": "SignatureVersion",
+            "nodeType": "EnumDefinition",
+            "src": "128:58:71"
+          },
+          {
+            "canonicalName": "LibBlurIo.AssetType",
+            "id": 9801,
+            "members": [
+              {
+                "id": 9799,
+                "name": "ERC721",
+                "nodeType": "EnumValue",
+                "src": "216:6:71"
+              },
+              {
+                "id": 9800,
+                "name": "ERC1155",
+                "nodeType": "EnumValue",
+                "src": "232:7:71"
+              }
+            ],
+            "name": "AssetType",
+            "nodeType": "EnumDefinition",
+            "src": "191:54:71"
+          },
+          {
+            "canonicalName": "LibBlurIo.Fee",
+            "id": 9806,
             "members": [
               {
                 "constant": false,
-                "id": 9860,
+                "id": 9803,
                 "mutability": "mutable",
-                "name": "isOrderAsk",
+                "name": "rate",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "132:15:72",
+                "scope": 9806,
+                "src": "272:11:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_bool",
-                  "typeString": "bool"
+                  "typeIdentifier": "t_uint16",
+                  "typeString": "uint16"
                 },
                 "typeName": {
-                  "id": 9859,
-                  "name": "bool",
+                  "id": 9802,
+                  "name": "uint16",
                   "nodeType": "ElementaryTypeName",
-                  "src": "132:4:72",
+                  "src": "272:6:71",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_bool",
-                    "typeString": "bool"
+                    "typeIdentifier": "t_uint16",
+                    "typeString": "uint16"
                   }
                 },
                 "visibility": "internal"
               },
               {
                 "constant": false,
-                "id": 9862,
+                "id": 9805,
                 "mutability": "mutable",
-                "name": "signer",
+                "name": "recipient",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "189:14:72",
+                "scope": 9806,
+                "src": "293:25:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address_payable",
+                  "typeString": "address payable"
+                },
+                "typeName": {
+                  "id": 9804,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "293:15:71",
+                  "stateMutability": "payable",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address_payable",
+                    "typeString": "address payable"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "Fee",
+            "nodeType": "StructDefinition",
+            "scope": 9855,
+            "src": "251:74:71",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "LibBlurIo.Order",
+            "id": 9834,
+            "members": [
+              {
+                "constant": false,
+                "id": 9808,
+                "mutability": "mutable",
+                "name": "trader",
+                "nodeType": "VariableDeclaration",
+                "scope": 9834,
+                "src": "354:14:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -99,10 +191,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9861,
+                  "id": 9807,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "189:7:72",
+                  "src": "354:7:71",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -113,12 +205,66 @@
               },
               {
                 "constant": false,
-                "id": 9864,
+                "id": 9810,
+                "mutability": "mutable",
+                "name": "side",
+                "nodeType": "VariableDeclaration",
+                "scope": 9834,
+                "src": "378:9:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_enum$_Side_$9795",
+                  "typeString": "enum LibBlurIo.Side"
+                },
+                "typeName": {
+                  "id": 9809,
+                  "name": "Side",
+                  "nodeType": "UserDefinedTypeName",
+                  "referencedDeclaration": 9795,
+                  "src": "378:4:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_enum$_Side_$9795",
+                    "typeString": "enum LibBlurIo.Side"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 9812,
+                "mutability": "mutable",
+                "name": "matchingPolicy",
+                "nodeType": "VariableDeclaration",
+                "scope": 9834,
+                "src": "397:22:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                },
+                "typeName": {
+                  "id": 9811,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "397:7:71",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 9814,
                 "mutability": "mutable",
                 "name": "collection",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "242:18:72",
+                "scope": 9834,
+                "src": "429:18:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -126,10 +272,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9863,
+                  "id": 9813,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "242:7:72",
+                  "src": "429:7:71",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -140,38 +286,12 @@
               },
               {
                 "constant": false,
-                "id": 9866,
-                "mutability": "mutable",
-                "name": "price",
-                "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "292:13:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint256",
-                  "typeString": "uint256"
-                },
-                "typeName": {
-                  "id": 9865,
-                  "name": "uint256",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "292:7:72",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 9868,
+                "id": 9816,
                 "mutability": "mutable",
                 "name": "tokenId",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "335:15:72",
+                "scope": 9834,
+                "src": "457:15:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -179,10 +299,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9867,
+                  "id": 9815,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "335:7:72",
+                  "src": "457:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -192,12 +312,12 @@
               },
               {
                 "constant": false,
-                "id": 9870,
+                "id": 9818,
                 "mutability": "mutable",
                 "name": "amount",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "379:14:72",
+                "scope": 9834,
+                "src": "482:14:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -205,10 +325,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9869,
+                  "id": 9817,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "379:7:72",
+                  "src": "482:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -218,12 +338,12 @@
               },
               {
                 "constant": false,
-                "id": 9872,
+                "id": 9820,
                 "mutability": "mutable",
-                "name": "strategy",
+                "name": "paymentToken",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "479:16:72",
+                "scope": 9834,
+                "src": "506:20:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -231,10 +351,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 9871,
+                  "id": 9819,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "479:7:72",
+                  "src": "506:7:71",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -245,39 +365,12 @@
               },
               {
                 "constant": false,
-                "id": 9874,
+                "id": 9822,
                 "mutability": "mutable",
-                "name": "currency",
+                "name": "price",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "585:16:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_address",
-                  "typeString": "address"
-                },
-                "typeName": {
-                  "id": 9873,
-                  "name": "address",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "585:7:72",
-                  "stateMutability": "nonpayable",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 9876,
-                "mutability": "mutable",
-                "name": "nonce",
-                "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "636:13:72",
+                "scope": 9834,
+                "src": "536:13:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -285,10 +378,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9875,
+                  "id": 9821,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "636:7:72",
+                  "src": "536:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -298,12 +391,12 @@
               },
               {
                 "constant": false,
-                "id": 9878,
+                "id": 9824,
                 "mutability": "mutable",
-                "name": "startTime",
+                "name": "listingTime",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "770:17:72",
+                "scope": 9834,
+                "src": "559:19:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -311,10 +404,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9877,
+                  "id": 9823,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "770:7:72",
+                  "src": "559:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -324,12 +417,12 @@
               },
               {
                 "constant": false,
-                "id": 9880,
+                "id": 9826,
                 "mutability": "mutable",
-                "name": "endTime",
+                "name": "expirationTime",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "823:15:72",
+                "scope": 9834,
+                "src": "659:22:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -337,10 +430,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9879,
+                  "id": 9825,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "823:7:72",
+                  "src": "659:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -350,12 +443,48 @@
               },
               {
                 "constant": false,
-                "id": 9882,
+                "id": 9829,
                 "mutability": "mutable",
-                "name": "minPercentageToAsk",
+                "name": "fees",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "872:26:72",
+                "scope": 9834,
+                "src": "691:10:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_Fee_$9806_storage_$dyn_storage_ptr",
+                  "typeString": "struct LibBlurIo.Fee[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 9827,
+                    "name": "Fee",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 9806,
+                    "src": "691:3:71",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Fee_$9806_storage_ptr",
+                      "typeString": "struct LibBlurIo.Fee"
+                    }
+                  },
+                  "id": 9828,
+                  "nodeType": "ArrayTypeName",
+                  "src": "691:5:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_Fee_$9806_storage_$dyn_storage_ptr",
+                    "typeString": "struct LibBlurIo.Fee[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 9831,
+                "mutability": "mutable",
+                "name": "salt",
+                "nodeType": "VariableDeclaration",
+                "scope": 9834,
+                "src": "711:12:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -363,10 +492,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 9881,
+                  "id": 9830,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "872:7:72",
+                  "src": "711:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -376,12 +505,12 @@
               },
               {
                 "constant": false,
-                "id": 9884,
+                "id": 9833,
                 "mutability": "mutable",
-                "name": "params",
+                "name": "extraParams",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "984:12:72",
+                "scope": 9834,
+                "src": "733:17:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -389,25 +518,63 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 9883,
+                  "id": 9832,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
-                  "src": "984:5:72",
+                  "src": "733:5:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes_storage_ptr",
                     "typeString": "bytes"
                   }
                 },
                 "visibility": "internal"
+              }
+            ],
+            "name": "Order",
+            "nodeType": "StructDefinition",
+            "scope": 9855,
+            "src": "331:426:71",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "LibBlurIo.Input",
+            "id": 9849,
+            "members": [
+              {
+                "constant": false,
+                "id": 9836,
+                "mutability": "mutable",
+                "name": "order",
+                "nodeType": "VariableDeclaration",
+                "scope": 9849,
+                "src": "786:11:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_Order_$9834_storage_ptr",
+                  "typeString": "struct LibBlurIo.Order"
+                },
+                "typeName": {
+                  "id": 9835,
+                  "name": "Order",
+                  "nodeType": "UserDefinedTypeName",
+                  "referencedDeclaration": 9834,
+                  "src": "786:5:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Order_$9834_storage_ptr",
+                    "typeString": "struct LibBlurIo.Order"
+                  }
+                },
+                "visibility": "internal"
               },
               {
                 "constant": false,
-                "id": 9886,
+                "id": 9838,
                 "mutability": "mutable",
                 "name": "v",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "1031:7:72",
+                "scope": 9849,
+                "src": "807:7:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -415,10 +582,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 9885,
+                  "id": 9837,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1031:5:72",
+                  "src": "807:5:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -428,12 +595,12 @@
               },
               {
                 "constant": false,
-                "id": 9888,
+                "id": 9840,
                 "mutability": "mutable",
                 "name": "r",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "1075:9:72",
+                "scope": 9849,
+                "src": "824:9:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -441,10 +608,10 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9887,
+                  "id": 9839,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1075:7:72",
+                  "src": "824:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -454,12 +621,12 @@
               },
               {
                 "constant": false,
-                "id": 9890,
+                "id": 9842,
                 "mutability": "mutable",
                 "name": "s",
                 "nodeType": "VariableDeclaration",
-                "scope": 9891,
-                "src": "1110:9:72",
+                "scope": 9849,
+                "src": "843:9:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -467,167 +634,25 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 9889,
+                  "id": 9841,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1110:7:72",
+                  "src": "843:7:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
                   }
                 },
                 "visibility": "internal"
-              }
-            ],
-            "name": "MakerOrder",
-            "nodeType": "StructDefinition",
-            "scope": 9905,
-            "src": "104:1038:72",
-            "visibility": "public"
-          },
-          {
-            "canonicalName": "LibLooksRare.TakerOrder",
-            "id": 9904,
-            "members": [
-              {
-                "constant": false,
-                "id": 9893,
-                "mutability": "mutable",
-                "name": "isOrderAsk",
-                "nodeType": "VariableDeclaration",
-                "scope": 9904,
-                "src": "1176:15:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_bool",
-                  "typeString": "bool"
-                },
-                "typeName": {
-                  "id": 9892,
-                  "name": "bool",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "1176:4:72",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_bool",
-                    "typeString": "bool"
-                  }
-                },
-                "visibility": "internal"
               },
               {
                 "constant": false,
-                "id": 9895,
+                "id": 9844,
                 "mutability": "mutable",
-                "name": "taker",
+                "name": "extraSignature",
                 "nodeType": "VariableDeclaration",
-                "scope": 9904,
-                "src": "1233:13:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_address",
-                  "typeString": "address"
-                },
-                "typeName": {
-                  "id": 9894,
-                  "name": "address",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "1233:7:72",
-                  "stateMutability": "nonpayable",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 9897,
-                "mutability": "mutable",
-                "name": "price",
-                "nodeType": "VariableDeclaration",
-                "scope": 9904,
-                "src": "1270:13:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint256",
-                  "typeString": "uint256"
-                },
-                "typeName": {
-                  "id": 9896,
-                  "name": "uint256",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "1270:7:72",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 9899,
-                "mutability": "mutable",
-                "name": "tokenId",
-                "nodeType": "VariableDeclaration",
-                "scope": 9904,
-                "src": "1325:15:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint256",
-                  "typeString": "uint256"
-                },
-                "typeName": {
-                  "id": 9898,
-                  "name": "uint256",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "1325:7:72",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 9901,
-                "mutability": "mutable",
-                "name": "minPercentageToAsk",
-                "nodeType": "VariableDeclaration",
-                "scope": 9904,
-                "src": "1350:26:72",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint256",
-                  "typeString": "uint256"
-                },
-                "typeName": {
-                  "id": 9900,
-                  "name": "uint256",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "1350:7:72",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 9903,
-                "mutability": "mutable",
-                "name": "params",
-                "nodeType": "VariableDeclaration",
-                "scope": 9904,
-                "src": "1465:12:72",
+                "scope": 9849,
+                "src": "862:20:71",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -635,37 +660,155 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 9902,
+                  "id": 9843,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1465:5:72",
+                  "src": "862:5:71",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes_storage_ptr",
                     "typeString": "bytes"
                   }
                 },
                 "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 9846,
+                "mutability": "mutable",
+                "name": "signatureVersion",
+                "nodeType": "VariableDeclaration",
+                "scope": 9849,
+                "src": "892:33:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_enum$_SignatureVersion_$9798",
+                  "typeString": "enum LibBlurIo.SignatureVersion"
+                },
+                "typeName": {
+                  "id": 9845,
+                  "name": "SignatureVersion",
+                  "nodeType": "UserDefinedTypeName",
+                  "referencedDeclaration": 9798,
+                  "src": "892:16:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_enum$_SignatureVersion_$9798",
+                    "typeString": "enum LibBlurIo.SignatureVersion"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 9848,
+                "mutability": "mutable",
+                "name": "blockNumber",
+                "nodeType": "VariableDeclaration",
+                "scope": 9849,
+                "src": "935:19:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 9847,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "935:7:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
               }
             ],
-            "name": "TakerOrder",
+            "name": "Input",
             "nodeType": "StructDefinition",
-            "scope": 9905,
-            "src": "1148:368:72",
+            "scope": 9855,
+            "src": "763:198:71",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "LibBlurIo.Execution",
+            "id": 9854,
+            "members": [
+              {
+                "constant": false,
+                "id": 9851,
+                "mutability": "mutable",
+                "name": "sell",
+                "nodeType": "VariableDeclaration",
+                "scope": 9854,
+                "src": "994:10:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_Input_$9849_storage_ptr",
+                  "typeString": "struct LibBlurIo.Input"
+                },
+                "typeName": {
+                  "id": 9850,
+                  "name": "Input",
+                  "nodeType": "UserDefinedTypeName",
+                  "referencedDeclaration": 9849,
+                  "src": "994:5:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Input_$9849_storage_ptr",
+                    "typeString": "struct LibBlurIo.Input"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 9853,
+                "mutability": "mutable",
+                "name": "buy",
+                "nodeType": "VariableDeclaration",
+                "scope": 9854,
+                "src": "1014:9:71",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_Input_$9849_storage_ptr",
+                  "typeString": "struct LibBlurIo.Input"
+                },
+                "typeName": {
+                  "id": 9852,
+                  "name": "Input",
+                  "nodeType": "UserDefinedTypeName",
+                  "referencedDeclaration": 9849,
+                  "src": "1014:5:71",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_Input_$9849_storage_ptr",
+                    "typeString": "struct LibBlurIo.Input"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "Execution",
+            "nodeType": "StructDefinition",
+            "scope": 9855,
+            "src": "967:63:71",
             "visibility": "public"
           }
         ],
-        "scope": 9906,
-        "src": "77:1441:72"
+        "scope": 9856,
+        "src": "56:976:71"
       }
     ],
-    "src": "33:1486:72"
+    "src": "32:1001:71"
   },
   "legacyAST": {
     "attributes": {
-      "absolutePath": "project:/contracts/libraries/LibLooksRare.sol",
+      "absolutePath": "project:/contracts/libraries/LibBlurIo.sol",
       "exportedSymbols": {
-        "LibLooksRare": [
-          9905
+        "LibBlurIo": [
+          9855
         ]
       },
       "license": "MIT"
@@ -679,20 +822,9 @@
             ".6"
           ]
         },
-        "id": 9857,
+        "id": 9792,
         "name": "PragmaDirective",
-        "src": "33:22:72"
-      },
-      {
-        "attributes": {
-          "literals": [
-            "abicoder",
-            "v2"
-          ]
-        },
-        "id": 9858,
-        "name": "PragmaDirective",
-        "src": "56:19:72"
+        "src": "32:22:71"
       },
       {
         "attributes": {
@@ -706,17 +838,98 @@
           "contractKind": "library",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            9905
+            9855
           ],
-          "name": "LibLooksRare",
-          "scope": 9906
+          "name": "LibBlurIo",
+          "scope": 9856
         },
         "children": [
           {
             "attributes": {
-              "canonicalName": "LibLooksRare.MakerOrder",
-              "name": "MakerOrder",
-              "scope": 9905,
+              "canonicalName": "LibBlurIo.Side",
+              "name": "Side"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "Buy"
+                },
+                "id": 9793,
+                "name": "EnumValue",
+                "src": "100:3:71"
+              },
+              {
+                "attributes": {
+                  "name": "Sell"
+                },
+                "id": 9794,
+                "name": "EnumValue",
+                "src": "113:4:71"
+              }
+            ],
+            "id": 9795,
+            "name": "EnumDefinition",
+            "src": "80:43:71"
+          },
+          {
+            "attributes": {
+              "canonicalName": "LibBlurIo.SignatureVersion",
+              "name": "SignatureVersion"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "Single"
+                },
+                "id": 9796,
+                "name": "EnumValue",
+                "src": "160:6:71"
+              },
+              {
+                "attributes": {
+                  "name": "Bulk"
+                },
+                "id": 9797,
+                "name": "EnumValue",
+                "src": "176:4:71"
+              }
+            ],
+            "id": 9798,
+            "name": "EnumDefinition",
+            "src": "128:58:71"
+          },
+          {
+            "attributes": {
+              "canonicalName": "LibBlurIo.AssetType",
+              "name": "AssetType"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "name": "ERC721"
+                },
+                "id": 9799,
+                "name": "EnumValue",
+                "src": "216:6:71"
+              },
+              {
+                "attributes": {
+                  "name": "ERC1155"
+                },
+                "id": 9800,
+                "name": "EnumValue",
+                "src": "232:7:71"
+              }
+            ],
+            "id": 9801,
+            "name": "EnumDefinition",
+            "src": "191:54:71"
+          },
+          {
+            "attributes": {
+              "canonicalName": "LibBlurIo.Fee",
+              "name": "Fee",
+              "scope": 9855,
               "visibility": "public"
             },
             "children": [
@@ -724,34 +937,74 @@
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "isOrderAsk",
-                  "scope": 9891,
+                  "name": "rate",
+                  "scope": 9806,
                   "stateVariable": false,
                   "storageLocation": "default",
-                  "type": "bool",
+                  "type": "uint16",
                   "visibility": "internal"
                 },
                 "children": [
                   {
                     "attributes": {
-                      "name": "bool",
-                      "type": "bool"
+                      "name": "uint16",
+                      "type": "uint16"
                     },
-                    "id": 9859,
+                    "id": 9802,
                     "name": "ElementaryTypeName",
-                    "src": "132:4:72"
+                    "src": "272:6:71"
                   }
                 ],
-                "id": 9860,
+                "id": 9803,
                 "name": "VariableDeclaration",
-                "src": "132:15:72"
+                "src": "272:11:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "signer",
-                  "scope": 9891,
+                  "name": "recipient",
+                  "scope": 9806,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "address payable",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "address",
+                      "stateMutability": "payable",
+                      "type": "address payable"
+                    },
+                    "id": 9804,
+                    "name": "ElementaryTypeName",
+                    "src": "293:15:71"
+                  }
+                ],
+                "id": 9805,
+                "name": "VariableDeclaration",
+                "src": "293:25:71"
+              }
+            ],
+            "id": 9806,
+            "name": "StructDefinition",
+            "src": "251:74:71"
+          },
+          {
+            "attributes": {
+              "canonicalName": "LibBlurIo.Order",
+              "name": "Order",
+              "scope": 9855,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "trader",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -764,21 +1017,75 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9861,
+                    "id": 9807,
                     "name": "ElementaryTypeName",
-                    "src": "189:7:72"
+                    "src": "354:7:71"
                   }
                 ],
-                "id": 9862,
+                "id": 9808,
                 "name": "VariableDeclaration",
-                "src": "189:14:72"
+                "src": "354:14:71"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "side",
+                  "scope": 9834,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "enum LibBlurIo.Side",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "Side",
+                      "referencedDeclaration": 9795,
+                      "type": "enum LibBlurIo.Side"
+                    },
+                    "id": 9809,
+                    "name": "UserDefinedTypeName",
+                    "src": "378:4:71"
+                  }
+                ],
+                "id": 9810,
+                "name": "VariableDeclaration",
+                "src": "378:9:71"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "matchingPolicy",
+                  "scope": 9834,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "address",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "address",
+                      "stateMutability": "nonpayable",
+                      "type": "address"
+                    },
+                    "id": 9811,
+                    "name": "ElementaryTypeName",
+                    "src": "397:7:71"
+                  }
+                ],
+                "id": 9812,
+                "name": "VariableDeclaration",
+                "src": "397:22:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "collection",
-                  "scope": 9891,
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -791,47 +1098,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9863,
+                    "id": 9813,
                     "name": "ElementaryTypeName",
-                    "src": "242:7:72"
+                    "src": "429:7:71"
                   }
                 ],
-                "id": 9864,
+                "id": 9814,
                 "name": "VariableDeclaration",
-                "src": "242:18:72"
-              },
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "price",
-                  "scope": 9891,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "uint256",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "uint256",
-                      "type": "uint256"
-                    },
-                    "id": 9865,
-                    "name": "ElementaryTypeName",
-                    "src": "292:7:72"
-                  }
-                ],
-                "id": 9866,
-                "name": "VariableDeclaration",
-                "src": "292:13:72"
+                "src": "429:18:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "tokenId",
-                  "scope": 9891,
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -843,21 +1124,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9867,
+                    "id": 9815,
                     "name": "ElementaryTypeName",
-                    "src": "335:7:72"
+                    "src": "457:7:71"
                   }
                 ],
-                "id": 9868,
+                "id": 9816,
                 "name": "VariableDeclaration",
-                "src": "335:15:72"
+                "src": "457:15:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "amount",
-                  "scope": 9891,
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -869,21 +1150,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9869,
+                    "id": 9817,
                     "name": "ElementaryTypeName",
-                    "src": "379:7:72"
+                    "src": "482:7:71"
                   }
                 ],
-                "id": 9870,
+                "id": 9818,
                 "name": "VariableDeclaration",
-                "src": "379:14:72"
+                "src": "482:14:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "strategy",
-                  "scope": 9891,
+                  "name": "paymentToken",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -896,48 +1177,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 9871,
+                    "id": 9819,
                     "name": "ElementaryTypeName",
-                    "src": "479:7:72"
+                    "src": "506:7:71"
                   }
                 ],
-                "id": 9872,
+                "id": 9820,
                 "name": "VariableDeclaration",
-                "src": "479:16:72"
+                "src": "506:20:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "currency",
-                  "scope": 9891,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "address",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "address",
-                      "stateMutability": "nonpayable",
-                      "type": "address"
-                    },
-                    "id": 9873,
-                    "name": "ElementaryTypeName",
-                    "src": "585:7:72"
-                  }
-                ],
-                "id": 9874,
-                "name": "VariableDeclaration",
-                "src": "585:16:72"
-              },
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "nonce",
-                  "scope": 9891,
+                  "name": "price",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -949,21 +1203,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9875,
+                    "id": 9821,
                     "name": "ElementaryTypeName",
-                    "src": "636:7:72"
+                    "src": "536:7:71"
                   }
                 ],
-                "id": 9876,
+                "id": 9822,
                 "name": "VariableDeclaration",
-                "src": "636:13:72"
+                "src": "536:13:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "startTime",
-                  "scope": 9891,
+                  "name": "listingTime",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -975,21 +1229,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9877,
+                    "id": 9823,
                     "name": "ElementaryTypeName",
-                    "src": "770:7:72"
+                    "src": "559:7:71"
                   }
                 ],
-                "id": 9878,
+                "id": 9824,
                 "name": "VariableDeclaration",
-                "src": "770:17:72"
+                "src": "559:19:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "endTime",
-                  "scope": 9891,
+                  "name": "expirationTime",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -1001,21 +1255,58 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9879,
+                    "id": 9825,
                     "name": "ElementaryTypeName",
-                    "src": "823:7:72"
+                    "src": "659:7:71"
                   }
                 ],
-                "id": 9880,
+                "id": 9826,
                 "name": "VariableDeclaration",
-                "src": "823:15:72"
+                "src": "659:22:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "minPercentageToAsk",
-                  "scope": 9891,
+                  "name": "fees",
+                  "scope": 9834,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "struct LibBlurIo.Fee[]",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "type": "struct LibBlurIo.Fee[]"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "Fee",
+                          "referencedDeclaration": 9806,
+                          "type": "struct LibBlurIo.Fee"
+                        },
+                        "id": 9827,
+                        "name": "UserDefinedTypeName",
+                        "src": "691:3:71"
+                      }
+                    ],
+                    "id": 9828,
+                    "name": "ArrayTypeName",
+                    "src": "691:5:71"
+                  }
+                ],
+                "id": 9829,
+                "name": "VariableDeclaration",
+                "src": "691:10:71"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "salt",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -1027,21 +1318,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 9881,
+                    "id": 9830,
                     "name": "ElementaryTypeName",
-                    "src": "872:7:72"
+                    "src": "711:7:71"
                   }
                 ],
-                "id": 9882,
+                "id": 9831,
                 "name": "VariableDeclaration",
-                "src": "872:26:72"
+                "src": "711:12:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "params",
-                  "scope": 9891,
+                  "name": "extraParams",
+                  "scope": 9834,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -1053,21 +1344,61 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 9883,
+                    "id": 9832,
                     "name": "ElementaryTypeName",
-                    "src": "984:5:72"
+                    "src": "733:5:71"
                   }
                 ],
-                "id": 9884,
+                "id": 9833,
                 "name": "VariableDeclaration",
-                "src": "984:12:72"
+                "src": "733:17:71"
+              }
+            ],
+            "id": 9834,
+            "name": "StructDefinition",
+            "src": "331:426:71"
+          },
+          {
+            "attributes": {
+              "canonicalName": "LibBlurIo.Input",
+              "name": "Input",
+              "scope": 9855,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "order",
+                  "scope": 9849,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "struct LibBlurIo.Order",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "Order",
+                      "referencedDeclaration": 9834,
+                      "type": "struct LibBlurIo.Order"
+                    },
+                    "id": 9835,
+                    "name": "UserDefinedTypeName",
+                    "src": "786:5:71"
+                  }
+                ],
+                "id": 9836,
+                "name": "VariableDeclaration",
+                "src": "786:11:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "v",
-                  "scope": 9891,
+                  "scope": 9849,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -1079,21 +1410,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 9885,
+                    "id": 9837,
                     "name": "ElementaryTypeName",
-                    "src": "1031:5:72"
+                    "src": "807:5:71"
                   }
                 ],
-                "id": 9886,
+                "id": 9838,
                 "name": "VariableDeclaration",
-                "src": "1031:7:72"
+                "src": "807:7:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "r",
-                  "scope": 9891,
+                  "scope": 9849,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -1105,21 +1436,21 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9887,
+                    "id": 9839,
                     "name": "ElementaryTypeName",
-                    "src": "1075:7:72"
+                    "src": "824:7:71"
                   }
                 ],
-                "id": 9888,
+                "id": 9840,
                 "name": "VariableDeclaration",
-                "src": "1075:9:72"
+                "src": "824:9:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "s",
-                  "scope": 9891,
+                  "scope": 9849,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -1131,165 +1462,21 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 9889,
+                    "id": 9841,
                     "name": "ElementaryTypeName",
-                    "src": "1110:7:72"
+                    "src": "843:7:71"
                   }
                 ],
-                "id": 9890,
+                "id": 9842,
                 "name": "VariableDeclaration",
-                "src": "1110:9:72"
-              }
-            ],
-            "id": 9891,
-            "name": "StructDefinition",
-            "src": "104:1038:72"
-          },
-          {
-            "attributes": {
-              "canonicalName": "LibLooksRare.TakerOrder",
-              "name": "TakerOrder",
-              "scope": 9905,
-              "visibility": "public"
-            },
-            "children": [
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "isOrderAsk",
-                  "scope": 9904,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "bool",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "bool",
-                      "type": "bool"
-                    },
-                    "id": 9892,
-                    "name": "ElementaryTypeName",
-                    "src": "1176:4:72"
-                  }
-                ],
-                "id": 9893,
-                "name": "VariableDeclaration",
-                "src": "1176:15:72"
+                "src": "843:9:71"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
-                  "name": "taker",
-                  "scope": 9904,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "address",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "address",
-                      "stateMutability": "nonpayable",
-                      "type": "address"
-                    },
-                    "id": 9894,
-                    "name": "ElementaryTypeName",
-                    "src": "1233:7:72"
-                  }
-                ],
-                "id": 9895,
-                "name": "VariableDeclaration",
-                "src": "1233:13:72"
-              },
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "price",
-                  "scope": 9904,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "uint256",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "uint256",
-                      "type": "uint256"
-                    },
-                    "id": 9896,
-                    "name": "ElementaryTypeName",
-                    "src": "1270:7:72"
-                  }
-                ],
-                "id": 9897,
-                "name": "VariableDeclaration",
-                "src": "1270:13:72"
-              },
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "tokenId",
-                  "scope": 9904,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "uint256",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "uint256",
-                      "type": "uint256"
-                    },
-                    "id": 9898,
-                    "name": "ElementaryTypeName",
-                    "src": "1325:7:72"
-                  }
-                ],
-                "id": 9899,
-                "name": "VariableDeclaration",
-                "src": "1325:15:72"
-              },
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "minPercentageToAsk",
-                  "scope": 9904,
-                  "stateVariable": false,
-                  "storageLocation": "default",
-                  "type": "uint256",
-                  "visibility": "internal"
-                },
-                "children": [
-                  {
-                    "attributes": {
-                      "name": "uint256",
-                      "type": "uint256"
-                    },
-                    "id": 9900,
-                    "name": "ElementaryTypeName",
-                    "src": "1350:7:72"
-                  }
-                ],
-                "id": 9901,
-                "name": "VariableDeclaration",
-                "src": "1350:26:72"
-              },
-              {
-                "attributes": {
-                  "constant": false,
-                  "mutability": "mutable",
-                  "name": "params",
-                  "scope": 9904,
+                  "name": "extraSignature",
+                  "scope": 9849,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -1301,29 +1488,149 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 9902,
+                    "id": 9843,
                     "name": "ElementaryTypeName",
-                    "src": "1465:5:72"
+                    "src": "862:5:71"
                   }
                 ],
-                "id": 9903,
+                "id": 9844,
                 "name": "VariableDeclaration",
-                "src": "1465:12:72"
+                "src": "862:20:71"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "signatureVersion",
+                  "scope": 9849,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "enum LibBlurIo.SignatureVersion",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "SignatureVersion",
+                      "referencedDeclaration": 9798,
+                      "type": "enum LibBlurIo.SignatureVersion"
+                    },
+                    "id": 9845,
+                    "name": "UserDefinedTypeName",
+                    "src": "892:16:71"
+                  }
+                ],
+                "id": 9846,
+                "name": "VariableDeclaration",
+                "src": "892:33:71"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "blockNumber",
+                  "scope": 9849,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "uint256",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "uint256",
+                      "type": "uint256"
+                    },
+                    "id": 9847,
+                    "name": "ElementaryTypeName",
+                    "src": "935:7:71"
+                  }
+                ],
+                "id": 9848,
+                "name": "VariableDeclaration",
+                "src": "935:19:71"
               }
             ],
-            "id": 9904,
+            "id": 9849,
             "name": "StructDefinition",
-            "src": "1148:368:72"
+            "src": "763:198:71"
+          },
+          {
+            "attributes": {
+              "canonicalName": "LibBlurIo.Execution",
+              "name": "Execution",
+              "scope": 9855,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "sell",
+                  "scope": 9854,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "struct LibBlurIo.Input",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "Input",
+                      "referencedDeclaration": 9849,
+                      "type": "struct LibBlurIo.Input"
+                    },
+                    "id": 9850,
+                    "name": "UserDefinedTypeName",
+                    "src": "994:5:71"
+                  }
+                ],
+                "id": 9851,
+                "name": "VariableDeclaration",
+                "src": "994:10:71"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "buy",
+                  "scope": 9854,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "struct LibBlurIo.Input",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "Input",
+                      "referencedDeclaration": 9849,
+                      "type": "struct LibBlurIo.Input"
+                    },
+                    "id": 9852,
+                    "name": "UserDefinedTypeName",
+                    "src": "1014:5:71"
+                  }
+                ],
+                "id": 9853,
+                "name": "VariableDeclaration",
+                "src": "1014:9:71"
+              }
+            ],
+            "id": 9854,
+            "name": "StructDefinition",
+            "src": "967:63:71"
           }
         ],
-        "id": 9905,
+        "id": 9855,
         "name": "ContractDefinition",
-        "src": "77:1441:72"
+        "src": "56:976:71"
       }
     ],
-    "id": 9906,
+    "id": 9856,
     "name": "SourceUnit",
-    "src": "33:1486:72"
+    "src": "32:1001:71"
   },
   "compiler": {
     "name": "solc",
@@ -1331,7 +1638,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.3",
-  "updatedAt": "2023-02-07T18:37:14.076Z",
+  "updatedAt": "2023-02-07T18:37:14.075Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

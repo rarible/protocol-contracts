@@ -132,7 +132,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       // creating seaport order
       const buyerLocal1 = accounts[2];
@@ -224,7 +224,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const buyerLocal1 = accounts[2];
       await erc721.mint(seller, tokenId)
@@ -286,7 +286,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const buyerLocal1 = accounts[2];
       await erc721.mint(seller, tokenId)
@@ -366,6 +366,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
   describe("purcahase Wywern orders", () => {
     it("Test bulkPurchase Wyvern (num orders = 3), 1 UpFee recipient, ERC721<->ETH", async () => {
+      const owner = accounts[0];
       const wyvernProtocolFeeAddress = accounts[9];
       const buyer = accounts[2];
       const seller1 = accounts[1];
@@ -398,7 +399,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.mint(seller3, erc721TokenIdLocal3);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -504,7 +505,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155.mint(seller3, erc1155TokenIdLocal3, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -607,7 +608,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
       await deployRarible()
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -695,7 +696,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
 
       await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
@@ -739,7 +740,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
 
       await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const encDataLeft = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
       const encDataRight = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
@@ -789,7 +790,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155.setApprovalForAll(transferProxy.address, true, {from: seller3});
 
       await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
@@ -918,7 +919,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.mint(seller2, erc721TokenIdLocal2);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller2), true, {from: seller2});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
       //for first order
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -992,7 +993,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155.mint(seller1, erc1155TokenIdLocal1, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller1), true, {from: seller1});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -1049,7 +1050,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const lr_strategy = await LooksRareTestHelper.new(0);
       await lr_executionManager.addStrategy(lr_strategy.address);
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS,ZERO_ADDRESS);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
@@ -1129,7 +1130,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const lr_strategy = await LooksRareTestHelper.new(0);
       await lr_executionManager.addStrategy(lr_strategy.address);
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS,ZERO_ADDRESS);
 
       await erc1155.mint(seller, tokenId, 10)
       await erc1155.setApprovalForAll(transferManagerERC1155.address, true, {from: seller});
@@ -1187,7 +1188,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc721delegate.address], [])
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -1272,7 +1273,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc1155delegate.address], [])
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       const amount = 5;
       await erc1155.mint(seller, tokenId, amount)
@@ -1371,7 +1372,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc721delegate.address], [])
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS,ZERO_ADDRESS);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -1500,7 +1501,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       ]
       const tradeData = PurchaseData(5, 1105, 0, await wrapperHelper.encodeSudoSwapCall(...input))
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address,ZERO_ADDRESS);
 
       const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1105})
 
@@ -1584,7 +1585,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
       const tradeData = PurchaseData(5, 1105, await encodeDataTypeAndFees(1, 1000, 0), dataPlusAdditionalRoyalties)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address, ZERO_ADDRES);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address,ZERO_ADDRESS);
 
       //2 different royalties recipients + return change Back, gas == 160307
       //1 royalties recipients, gas == 144025
@@ -1610,10 +1611,11 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
   describe ("blurio", () => {
     it("blurio 721 single", async () => {
+      const owner = accounts[0];
       const seller = accounts[1];
       const buyer = accounts[2];
       // weth 9
-      const weth = await WETH9.new()
+      const weth = await WETH9.new();
 
       // initialize policy
       const standardPolicyNoOracleERC721 = await StandardPolicyNoOracleERC721.new();
@@ -1632,14 +1634,62 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
       // blur exchange 
       const blurExchange = await BlurExchange.new();
-      await blurExchange.initialize(weth9.address, blurPool.address, executionDelegate.address, policyManager.address, owner.address, 125);
+      await blurExchange.initialize(weth.address, blurPool.address, executionDelegate.address, policyManager.address, owner, 125);
   
       await executionDelegate.approveContract(blurExchange.address);
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRES, ZERO_ADDRESS, ZERO_ADDRESS, blurExchange.address);
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, blurExchange.address);
 
       await erc721.mint(seller, tokenId)
-      await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
+      await erc721.setApprovalForAll(executionDelegate.address, true, {from: seller})
+
+      const sellOrder = {
+        order: {
+          trader: seller,
+          side: 1,
+          matchingPolicy: standardPolicyERC721.address,
+          collection: erc721.address,
+          tokenId: tokenId,
+          amount: 1,
+          paymentToken: weth.address,
+          fees: [],
+          salt: 0,
+          extraParams: '0x01',
+          price: "1000000000000000000",
+          listingTime: '100',
+          expirationTime: '16757909942000'
+        },
+        v: 27,
+        r: '0xd233a46410387ec0bc310b3d974606d643368ae73b88c48a0b971b573d534c60',
+        s: '0x6f532bbb29ca86832ee0cd56ba3cfb0483d90438eb2c0e3a9a4ac658ab6053ee',
+        extraSignature: '0x',
+        signatureVersion: 0,
+        blockNumber: 30
+      }
+
+      const buyOrder = {
+        order: {
+          trader: buyer,
+          side: 1,
+          matchingPolicy: standardPolicyERC721.address,
+          collection: erc721.address,
+          tokenId: tokenId,
+          amount: 1,
+          paymentToken: weth.address,
+          fees: [],
+          salt: 0,
+          extraParams: '0x01',
+          price: "1000000000000000000",
+          listingTime: '100',
+          expirationTime: '16757909942000'
+        },
+        v: 27,
+        r: '0xd233a46410387ec0bc310b3d974606d643368ae73b88c48a0b971b573d534c60',
+        s: '0x6f532bbb29ca86832ee0cd56ba3cfb0483d90438eb2c0e3a9a4ac658ab6053ee',
+        extraSignature: '0x',
+        signatureVersion: 0,
+        blockNumber: 30
+      }
 
       // await token.connect(seller).setApprovalForAll(executionDelegate.address, true);
       // await token.connect(buyer).setApprovalForAll(executionDelegate.address, true);
@@ -1647,12 +1697,12 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       // await weth9.connect(buyer).approve(executionDelegate.address, eth("10000"));
       // await weth9.connect(seller).approve("0x6c888f487a5a97768dee6303faf281c6efdc6203", 100000000);
 
-      // const tradeData = PurchaseData(3, 1000, 0, await wrapperHelper.encodeX2Y2Call(input))
+      const tradeData = PurchaseData(3, 1000, 0, await wrapperHelper.encodeBlurIo(input))
 
-      // const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1000})
+      const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1000})
 
       // console.log(tx.receipt.gasUsed)
-      // assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
+      assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
     })
   });
 
