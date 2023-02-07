@@ -17,7 +17,7 @@ import "./interfaces/IExchangeV2.sol";
 import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
-
+import "./interfaces/IBlurExchange.sol";
 import "./libraries/IsPausable.sol";
 
 contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
@@ -31,6 +31,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     address public immutable x2y2;
     address public immutable looksRare;
     address public immutable sudoswap;
+    address public immutable blurExchange;
 
     event Execution(bool result);
 
@@ -40,7 +41,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         SeaPort,
         X2Y2,
         LooksRareOrders,
-        SudoSwap
+        SudoSwap,
+        BlurIo
     }
 
     enum AdditionalDataTypes {
@@ -81,7 +83,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         address _seaPort,
         address _x2y2,
         address _looksRare,
-        address _sudoswap
+        address _sudoswap,
+        address _blurExchange
     ) {
         wyvernExchange = _wyvernExchange;
         exchangeV2 = _exchangeV2;
@@ -89,6 +92,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         x2y2 = _x2y2;
         looksRare = _looksRare;
         sudoswap = _sudoswap;
+        blurExchange = _blurExchange;
     }
 
     /**
@@ -250,6 +254,15 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
                 }
             } else {
                 require(success, "Purchase sudoswap failed");
+            }
+        } else if (purchaseDetails.marketId == Markets.BlurIo) {
+            (bool success,) = address(blurExchange).call{value : paymentAmount}(marketData);
+            if (allowFail) {
+                if (!success) {
+                    return (false, 0, 0);
+                }
+            } else {
+                require(success, "Purchase blurio failed");
             }
         } else {
             revert("Unknown purchase details");
