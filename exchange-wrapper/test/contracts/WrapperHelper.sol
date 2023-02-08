@@ -239,8 +239,8 @@ contract WrapperHelper {
         _data = abi.encodeWithSelector(ILSSVMRouter.swapETHForSpecificNFTs.selector, swapList, ethRecipient, nftRecipient, deadline);
     }
 
-    function encodeDataBlurIo(LibBlurIo.Order[] calldata data) external pure returns(bytes memory){
-        return abi.encode(data);
+    function encodeDataBlurIo(LibBlurIo.Input calldata buy, LibBlurIo.Input calldata sell) external pure returns(bytes memory){
+        return abi.encode(buy, sell);
     }
 
 }

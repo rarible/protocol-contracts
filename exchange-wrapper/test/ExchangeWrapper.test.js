@@ -1610,7 +1610,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
   })
 
   describe ("blurio", () => {
-    it("blurio 721 single", async () => {
+    it("blurio 721 single buy with token", async () => {
       const owner = accounts[0];
       const seller = accounts[1];
       const buyer = accounts[2];
@@ -1655,7 +1655,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
           fees: [],
           salt: 0,
           extraParams: '0x01',
-          price: "1000000000000000000",
+          price: "1000",
           listingTime: '100',
           expirationTime: '16757909942000'
         },
@@ -1670,7 +1670,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const buyOrder = {
         order: {
           trader: buyer,
-          side: 1,
+          side: 0,
           matchingPolicy: standardPolicyERC721.address,
           collection: erc721.address,
           tokenId: tokenId,
@@ -1679,7 +1679,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
           fees: [],
           salt: 0,
           extraParams: '0x01',
-          price: "1000000000000000000",
+          price: "1000",
           listingTime: '100',
           expirationTime: '16757909942000'
         },
@@ -1697,11 +1697,109 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       // await weth9.connect(buyer).approve(executionDelegate.address, eth("10000"));
       // await weth9.connect(seller).approve("0x6c888f487a5a97768dee6303faf281c6efdc6203", 100000000);
 
-      const tradeData = PurchaseData(3, 1000, 0, await wrapperHelper.encodeBlurIo(input))
-
-      const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1000})
-
+      // const tradeData = PurchaseData(6, 1000, 0, await wrapperHelper.encodeDataBlurIo(sellOrder, buyOrder))
+      // const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1000})
       // console.log(tx.receipt.gasUsed)
+      await blurExchange.execute(buyOrder, sellOrder, {from: buyer, value: 1000});
+
+      assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
+    })
+
+    it("blurio 721 single buy with eth", async () => {
+      const owner = accounts[0];
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      // weth 9
+      const weth = await WETH9.new();
+
+      // initialize policy
+      const standardPolicyNoOracleERC721 = await StandardPolicyNoOracleERC721.new();
+      const standardPolicyERC721 = await StandardPolicyERC721.new();
+      const safeCollectionBidPolicyERC721 = await SafeCollectionBidPolicyERC721.new();
+      const policyManager = await PolicyManager.new();
+      await policyManager.addPolicy(standardPolicyNoOracleERC721.address);
+      await policyManager.addPolicy(standardPolicyERC721.address);
+      await policyManager.addPolicy(safeCollectionBidPolicyERC721.address);
+
+      // execution delegate
+      const executionDelegate = await ExecutionDelegate.new();
+
+      // blur pool
+      const blurPool = await BlurPool.new();
+
+      // blur exchange 
+      const blurExchange = await BlurExchange.new();
+      await blurExchange.initialize(weth.address, blurPool.address, executionDelegate.address, policyManager.address, owner, 125);
+  
+      await executionDelegate.approveContract(blurExchange.address);
+
+      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, blurExchange.address);
+
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(executionDelegate.address, true, {from: seller})
+      await executionDelegate.approveContract(erc721.address);
+
+      const erc20 = ERC20.new();
+
+      const sellOrder = {
+        order: {
+          trader: seller,
+          side: 1,
+          matchingPolicy: standardPolicyERC721.address,
+          collection: erc721.address,
+          tokenId: tokenId,
+          amount: 1,
+          paymentToken: ZERO_ADDRESS,
+          fees: [],
+          salt: 0,
+          extraParams: '0x01',
+          price: "1000",
+          listingTime: '100',
+          expirationTime: '16757909942000'
+        },
+        v: 27,
+        r: '0xd233a46410387ec0bc310b3d974606d643368ae73b88c48a0b971b573d534c60',
+        s: '0x6f532bbb29ca86832ee0cd56ba3cfb0483d90438eb2c0e3a9a4ac658ab6053ee',
+        extraSignature: '0x',
+        signatureVersion: 0,
+        blockNumber: 30
+      }
+
+      const buyOrder = {
+        order: {
+          trader: buyer,
+          side: 0,
+          matchingPolicy: standardPolicyERC721.address,
+          collection: erc721.address,
+          tokenId: tokenId,
+          amount: 1,
+          paymentToken: ZERO_ADDRESS,
+          fees: [],
+          salt: 0,
+          extraParams: '0x01',
+          price: "1000",
+          listingTime: '100',
+          expirationTime: '16757909942000'
+        },
+        v: 27,
+        r: '0xd233a46410387ec0bc310b3d974606d643368ae73b88c48a0b971b573d534c60',
+        s: '0x6f532bbb29ca86832ee0cd56ba3cfb0483d90438eb2c0e3a9a4ac658ab6053ee',
+        extraSignature: '0x',
+        signatureVersion: 0,
+        blockNumber: 30
+      }
+
+      // await token.connect(seller).setApprovalForAll(executionDelegate.address, true);
+      // await token.connect(buyer).setApprovalForAll(executionDelegate.address, true);
+      // await weth9.connect(seller).approve(executionDelegate.address, eth("10000"));
+      // await weth9.connect(buyer).approve(executionDelegate.address, eth("10000"));
+      // await weth9.connect(seller).approve("0x6c888f487a5a97768dee6303faf281c6efdc6203", 100000000);
+
+      // const tradeData = PurchaseData(6, 1000, 0, await wrapperHelper.encodeDataBlurIo(sellOrder, buyOrder))
+      // const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1000})
+      // console.log(tx.receipt.gasUsed)
+      await blurExchange.execute(buyOrder, sellOrder, {from: buyer, value: 1000});
+
       assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
     })
   });
