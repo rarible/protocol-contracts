@@ -9,14 +9,16 @@ const mainnet = {
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x74312363e45DCaBA76c59ec49a7Aa8A65a67EeD3",
   looksRare: "0x59728544B08AB483533076417FbBB2fD0B17CE3a",
-  sudoSwap: "0x2b2e8cda09bba9660dca5cb6233787738ad68329"
+  sudoSwap: "0x2b2e8cda09bba9660dca5cb6233787738ad68329",
+  blurio: "0x000000000000Ad05Ccc4F10045630fb830B95127"
 }
 const goerli = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
   seaPort: "0x00000000006c3852cbEf3e08E8dF289169EdE581",
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0xD112466471b5438C1ca2D218694200e49d81D047",
-  sudoSwap: "0x25b4EfC43c9dCAe134233CD577fFca7CfAd6748F"
+  sudoSwap: "0x25b4EfC43c9dCAe134233CD577fFca7CfAd6748F",
+  blurio: "0x275C7083ed6Bf125607c7B5BAfd141ABcB945Fe9"
 }
 const ropsten = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
@@ -101,7 +103,7 @@ module.exports = async function (deployer, network) {
     exchangeV2 = (await ExchangeV2.deployed()).address;
   }
 
-  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, { gas: 3000000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort, settings.x2y2,  settings.looksRare, settings.sudoSwap, settings.blurio, { gas: 3000000 });
 
   exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
