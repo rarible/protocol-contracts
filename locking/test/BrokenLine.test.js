@@ -410,9 +410,7 @@ contract("BrokenLine", accounts => {
       biasBackTime = await forTest.getActualValue.call(10); //what about 14 week ago
     	assert.equal(biasBackTime, 0);  //bias
 
-			await expectThrow(
-    		forTest.getActualValue(0)
-    	);
+    	assert.equal(await forTest.getActualValue.call(0), 0);
   		});
 
     it("Test3. One cliff + slope+tail line slope only added to tail, back values detect from slope", async () => {

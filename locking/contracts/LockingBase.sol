@@ -141,16 +141,18 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         minSlopePeriod = _minSlopePeriod;
     }
 
-    function addLines(address account, address _delegate, uint96 amount, uint32 slopePeriod, uint32 cliff, uint32 time) internal {
+    function addLines(address account, address _delegate, uint96 amount, uint32 slopePeriod, uint32 cliff, uint32 time, uint32 currentBlock) internal {
         require(slopePeriod <= amount, "Wrong value slopePeriod");
         updateLines(account, _delegate, time);
         (uint96 stAmount, uint96 stSlope) = getLock(amount, slopePeriod, cliff);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, stAmount, stSlope, cliff);
-        totalSupplyLine.add(counter, line);
-        accounts[_delegate].balance.add(counter, line);
-        uint96 slope = divUp(amount, slopePeriod);
-        line = LibBrokenLine.Line(time, amount, slope, cliff);
-        accounts[account].locked.add(counter, line);
+        totalSupplyLine.addOneLine(counter, line, currentBlock);
+        accounts[_delegate].balance.addOneLine(counter, line, currentBlock);
+        {
+            uint96 slope = divUp(amount, slopePeriod);
+            line = LibBrokenLine.Line(time, amount, slope, cliff);
+        }
+        accounts[account].locked.addOneLine(counter, line, currentBlock);
         locks[counter].account = account;
         locks[counter].delegate = _delegate;
     }

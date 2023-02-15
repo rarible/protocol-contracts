@@ -13,7 +13,8 @@ abstract contract LockingRelock is LockingBase {
 
     function relock(uint id, address newDelegate, uint96 newAmount, uint32 newSlopePeriod, uint32 newCliff) external notStopped notMigrating returns (uint) {
         address account = verifyLockOwner(id);
-        uint32 time = roundTimestamp(getBlockNumber());
+        uint32 currentBlock = getBlockNumber();
+        uint32 time = roundTimestamp(currentBlock);
         verification(account, id, newAmount, newSlopePeriod, newCliff, time);
 
         address _delegate = locks[id].delegate;
@@ -23,13 +24,8 @@ abstract contract LockingRelock is LockingBase {
 
         counter++;
 
-        addLines(account, newDelegate, newAmount, newSlopePeriod, newCliff, time);
+        addLines(account, newDelegate, newAmount, newSlopePeriod, newCliff, time, currentBlock);
         emit Relock(id, account, newDelegate, counter, time, newAmount, newSlopePeriod, newCliff);
-
-        // IVotesUpgradeable events
-        emit DelegateChanged(account, _delegate, newDelegate);
-        emit DelegateVotesChanged(_delegate, 0, accounts[_delegate].balance.actualValue(time));
-        emit DelegateVotesChanged(newDelegate, 0, accounts[newDelegate].balance.actualValue(time));
 
         return counter;
     }
@@ -66,9 +62,10 @@ abstract contract LockingRelock is LockingBase {
 
     function removeLines(uint id, address account, address delegate, uint32 toTime) internal returns (uint96 residue) {
         updateLines(account, delegate, toTime);
-        accounts[delegate].balance.remove(id, toTime);
-        totalSupplyLine.remove(id, toTime);
-        (residue,,) = accounts[account].locked.remove(id, toTime);
+        uint32 currentBlock = getBlockNumber();
+        accounts[delegate].balance.remove(id, toTime, currentBlock);
+        totalSupplyLine.remove(id, toTime, currentBlock);
+        (residue,,) = accounts[account].locked.remove(id, toTime, currentBlock);
     }
 
     function rebalance(uint id, address account, uint96 bias, uint96 residue, uint96 newAmount) internal {

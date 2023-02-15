@@ -44,25 +44,6 @@ contract("Locking", accounts => {
 			const lockTx = await locking.lock(user, user, 3000, 3, 0, { from: user }); //address account, address delegate, uint amount, uint slopePeriod, uint cliff
 			const lockId = await locking.counter()
 
-			//checking events
-			//DelegateChanged event
-			const DelegateChangedFromLockTx = (await locking.getPastEvents("DelegateChanged", {
-				fromBlock: lockTx.receipt.blockNumber,
-				toBlock: lockTx.receipt.blockNumber
-			}));
-			assert.equal(DelegateChangedFromLockTx[0].args.delegator, user)
-			assert.equal(DelegateChangedFromLockTx[0].args.fromDelegate, zeroAddress)
-			assert.equal(DelegateChangedFromLockTx[0].args.toDelegate, user)
-
-			//DelegateVotesChanged event
-			const DelegateVotesChangedFromLockTx = (await locking.getPastEvents("DelegateVotesChanged", {
-				fromBlock: lockTx.receipt.blockNumber,
-				toBlock: lockTx.receipt.blockNumber
-			}));
-			assert.equal(DelegateVotesChangedFromLockTx[0].args.delegate, user)
-			assert.equal(DelegateVotesChangedFromLockTx[0].args.previousBalance, 0)
-			assert.equal(DelegateVotesChangedFromLockTx[0].args.newBalance, 634)
-
 			//checking balances
 			assert.equal(await token.balanceOf(locking.address), 3000);
 			assert.equal(await locking.balanceOf(user), 634);
@@ -80,28 +61,6 @@ contract("Locking", accounts => {
 
 			//redelegating the lock
 			const txDelegateTo = await locking.delegateTo(lockId, delegate, { from: user })
-
-			//DelegateChanged event
-			const DelegateChangedFromDelegateToTx = (await locking.getPastEvents("DelegateChanged", {
-				fromBlock: txDelegateTo.receipt.blockNumber,
-				toBlock: txDelegateTo.receipt.blockNumber
-			}));
-			assert.equal(DelegateChangedFromDelegateToTx[0].args.delegator, user)
-			assert.equal(DelegateChangedFromDelegateToTx[0].args.fromDelegate, user)
-			assert.equal(DelegateChangedFromDelegateToTx[0].args.toDelegate, delegate)
-
-			//DelegateVotesChanged event
-			const DelegateVotesChangedFromelegateToTx = (await locking.getPastEvents("DelegateVotesChanged", {
-				fromBlock: txDelegateTo.receipt.blockNumber,
-				toBlock: txDelegateTo.receipt.blockNumber
-			}));
-			assert.equal(DelegateVotesChangedFromelegateToTx[0].args.delegate, user)
-			assert.equal(DelegateVotesChangedFromelegateToTx[0].args.previousBalance, 0)
-			assert.equal(DelegateVotesChangedFromelegateToTx[0].args.newBalance, 0)
-
-			assert.equal(DelegateVotesChangedFromelegateToTx[1].args.delegate, delegate)
-			assert.equal(DelegateVotesChangedFromelegateToTx[1].args.previousBalance, 0)
-			assert.equal(DelegateVotesChangedFromelegateToTx[1].args.newBalance, 422)
 
 			assert.equal(await locking.balanceOf(user), 0);
 			assert.equal(await locking.getVotes(user), 634)
@@ -125,28 +84,7 @@ contract("Locking", accounts => {
 			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 422)
 
 			const txReLock = await locking.relock(lockId, reLockDelegate, 4000, 4, 0, { from: user })
-			//DelegateChanged event
-			const DelegateChangedFromReLockTx = (await locking.getPastEvents("DelegateChanged", {
-				fromBlock: txReLock.receipt.blockNumber,
-				toBlock: txReLock.receipt.blockNumber
-			}));
-			assert.equal(DelegateChangedFromReLockTx[0].args.delegator, user)
-			assert.equal(DelegateChangedFromReLockTx[0].args.fromDelegate, delegate)
-			assert.equal(DelegateChangedFromReLockTx[0].args.toDelegate, reLockDelegate)
-
-			//DelegateVotesChanged event
-			const DelegateVotesChangedFromReLockTx = (await locking.getPastEvents("DelegateVotesChanged", {
-				fromBlock: txReLock.receipt.blockNumber,
-				toBlock: txReLock.receipt.blockNumber
-			}));
-			assert.equal(DelegateVotesChangedFromReLockTx[0].args.delegate, delegate)
-			assert.equal(DelegateVotesChangedFromReLockTx[0].args.previousBalance, 0)
-			assert.equal(DelegateVotesChangedFromReLockTx[0].args.newBalance, 0)
-
-			assert.equal(DelegateVotesChangedFromReLockTx[1].args.delegate, reLockDelegate)
-			assert.equal(DelegateVotesChangedFromReLockTx[1].args.previousBalance, 0)
-			assert.equal(DelegateVotesChangedFromReLockTx[1].args.newBalance, 861)
-
+			
 			assert.equal(await token.balanceOf(locking.address), 4000);
 			assert.equal(await locking.balanceOf(user), 0);
 			assert.equal(await locking.getVotes(user), 0)

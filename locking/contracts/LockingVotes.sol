@@ -12,8 +12,9 @@ contract LockingVotes is LockingBase {
      * @dev Returns the current amount of votes that `account` has.
      */
     function getVotes(address account) external override view returns (uint256) {
-        uint32 currentWeek = roundTimestamp(getBlockNumber());
-        return accounts[account].balance.actualValue(currentWeek - 1);
+        uint32 currentBlock = getBlockNumber();
+        uint32 currentWeek = roundTimestamp(currentBlock);
+        return accounts[account].balance.actualValue(currentWeek, currentBlock);
     }
 
     /**
@@ -24,7 +25,7 @@ contract LockingVotes is LockingBase {
         uint32 currentWeek = roundTimestamp(uint32(blockNumber));
         require(blockNumber < getBlockNumber() && currentWeek > 0, "block not yet mined");
 
-        return accounts[account].balance.actualValue(currentWeek - 1);
+        return accounts[account].balance.actualValue(currentWeek, uint32(blockNumber));
     }
 
     /**
@@ -35,7 +36,7 @@ contract LockingVotes is LockingBase {
         uint32 currentWeek = roundTimestamp(uint32(blockNumber));
         require(blockNumber < getBlockNumber() && currentWeek > 0, "block not yet mined");
 
-        return totalSupplyLine.actualValue(currentWeek - 1);
+        return totalSupplyLine.actualValue(currentWeek, uint32(blockNumber));
     }
 
     /**

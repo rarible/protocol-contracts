@@ -43,17 +43,14 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
 
         counter++;
 
-        uint32 time = roundTimestamp(getBlockNumber());
-        addLines(account, _delegate, amount, slopePeriod, cliff, time);
+        uint32 currentBlock = getBlockNumber();
+        uint32 time = roundTimestamp(currentBlock);
+        addLines(account, _delegate, amount, slopePeriod, cliff, time, currentBlock);
         accounts[account].amount = accounts[account].amount.add(amount);
 
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
         emit LockCreate(counter, account, _delegate, time, amount, slopePeriod, cliff);
-
-        // IVotesUpgradeable events
-        emit DelegateChanged(account, address(0), _delegate);
-        emit DelegateVotesChanged(_delegate, 0, accounts[_delegate].balance.actualValue(time));
         return counter;
     }
 
@@ -70,8 +67,9 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
     function getAvailableForWithdraw(address account) public view returns (uint96) {
         uint96 value = accounts[account].amount;
         if (!stopped) {
-            uint32 time = roundTimestamp(getBlockNumber());
-            uint96 bias = accounts[account].locked.actualValue(time);
+            uint32 currentBlock = getBlockNumber();
+            uint32 time = roundTimestamp(currentBlock);
+            uint96 bias = accounts[account].locked.actualValue(time, currentBlock);
             value = value.sub(bias);
         }
         return value;
@@ -96,42 +94,42 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
     function delegateTo(uint id, address newDelegate) external notStopped notMigrating {
         address account = verifyLockOwner(id);
         address _delegate = locks[id].delegate;
-        uint32 time = roundTimestamp(getBlockNumber());
+        uint32 currentBlock = getBlockNumber();
+        uint32 time = roundTimestamp(currentBlock);
         accounts[_delegate].balance.update(time);
-        (uint96 bias, uint96 slope, uint32 cliff) = accounts[_delegate].balance.remove(id, time);
+        (uint96 bias, uint96 slope, uint32 cliff) = accounts[_delegate].balance.remove(id, time, currentBlock);
         LibBrokenLine.Line memory line = LibBrokenLine.Line(time, bias, slope, cliff);
         accounts[newDelegate].balance.update(time);
-        accounts[newDelegate].balance.add(id, line);
+        accounts[newDelegate].balance.addOneLine(id, line, currentBlock);
         locks[id].delegate = newDelegate;
         emit Delegate(id, account, newDelegate, time);
 
-        // IVotesUpgradeable events
-        emit DelegateChanged(account, _delegate, newDelegate);
-        emit DelegateVotesChanged(_delegate, 0, accounts[_delegate].balance.actualValue(time));
-        emit DelegateVotesChanged(newDelegate, 0, accounts[newDelegate].balance.actualValue(time));
     }
 
     function totalSupply() external view returns (uint) {
         if ((totalSupplyLine.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint32 time = roundTimestamp(getBlockNumber());
-        return totalSupplyLine.actualValue(time);
+        uint32 currentBlock = getBlockNumber();
+        uint32 time = roundTimestamp(currentBlock);
+        return totalSupplyLine.actualValue(time, currentBlock);
     }
 
     function balanceOf(address account) external view returns (uint) {
         if ((accounts[account].balance.initial.bias == 0) || (stopped)) {
             return 0;
         }
-        uint32 time = roundTimestamp(getBlockNumber());
-        return accounts[account].balance.actualValue(time);
+        uint32 currentBlock = getBlockNumber();
+        uint32 time = roundTimestamp(currentBlock);
+        return accounts[account].balance.actualValue(time, currentBlock);
     }
 
     function migrate(uint[] memory id) external {
         if (migrateTo == address(0)) {
             return;
         }
-        uint32 time = roundTimestamp(getBlockNumber());
+        uint32 currentBlock = getBlockNumber();
+        uint32 time = roundTimestamp(currentBlock);
         INextVersionLock nextVersionLock = INextVersionLock(migrateTo);
         for (uint256 i = 0; i < id.length; ++i) {
             address account = verifyLockOwner(id[i]);
@@ -139,12 +137,12 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
             updateLines(account, _delegate, time);
             //save data Line before remove
             LibBrokenLine.Line memory line = accounts[account].locked.initiatedLines[id[i]];
-            (uint96 residue,,) = accounts[account].locked.remove(id[i], time);
+            (uint96 residue,,) = accounts[account].locked.remove(id[i], time, currentBlock);
 
             accounts[account].amount = accounts[account].amount.sub(residue);
 
-            accounts[_delegate].balance.remove(id[i], time);
-            totalSupplyLine.remove(id[i], time);
+            accounts[_delegate].balance.remove(id[i], time, currentBlock);
+            totalSupplyLine.remove(id[i], time, currentBlock);
             nextVersionLock.initiateData(id[i], line, account, _delegate);
 
             require(token.transfer(migrateTo, residue), "transfer failed");
