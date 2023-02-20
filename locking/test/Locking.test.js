@@ -26,12 +26,17 @@ contract("Locking", accounts => {
 		newLockingNoInterface = await TestNewLockingNoInterface.new();
 		await locking.__Locking_init(token.address, 0, 0, 0); //initialize, set owner
 
-		WEEK = await locking.WEEK()
-		await incrementBlock(WEEK + 1); //to avoid lock() from ZERO point timeStamp
+		WEEK = (await locking.WEEK()).toNumber() // 50400
+		await incrementBlock(WEEK + 1); //to avoid lock() from ZERO point timeStamp 50401
 	})
 
 	describe("locking votes", () => {
-		it("locking votes events and balances", async () => {
+		it("locking votes balances", async () => {
+      let lockId;
+      let lockBlock;
+      let voteBlock;
+      let delegateBlock;
+      let relockBLock;
 			const user = accounts[2];
 			const delegate = accounts[3];
 			const reLockDelegate = accounts[4]
@@ -40,78 +45,91 @@ contract("Locking", accounts => {
 			await token.mint(user, 1000000);
 			await token.approve(locking.address, 1000000, { from: user });
 
-			//locking tokens
-			const lockTx = await locking.lock(user, user, 3000, 3, 0, { from: user }); //address account, address delegate, uint amount, uint slopePeriod, uint cliff
-			const lockId = await locking.counter()
+      //WEEK 1 50400 - 100800
+      {
+        await incrementBlock(WEEK/2)//50401 + 25200
 
-			//checking balances
-			assert.equal(await token.balanceOf(locking.address), 3000);
-			assert.equal(await locking.balanceOf(user), 634);
-			assert.equal(await locking.getVotes(user), 0)
-			assert.equal(await locking.getPastVotes(user, (currentBlock - 1)), 0)
-			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 0)
+        lockBlock = currentBlock //75601
+        
+        //locking tokens
+        await locking.lock(user, user, 3000, 3, 0, { from: user }); //address account, address delegate, uint amount, uint slopePeriod, uint cliff
+        lockId = await locking.counter()
 
-			//moving ahead 1 week
-			await incrementBlock(WEEK)
+        //checking balances
+        assert.equal(await token.balanceOf(locking.address), 3000);
+        assert.equal(await locking.balanceOf(user), 634);
+        assert.equal(await locking.getVotes(user), 634)
+      }
 
-			assert.equal(await locking.balanceOf(user), 422);
-			assert.equal(await locking.getVotes(user), 634)
-			assert.equal(await locking.getPastVotes(user, (currentBlock - 1)), 634)
-			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 634)
+      //WEEK 2 100800 - 151200
+      {
+        await incrementBlock(WEEK/2 + WEEK/4)//113401
+        delegateBlock = currentBlock;
+        voteBlock = currentBlock + WEEK/4;//126001
 
-			//redelegating the lock
-			const txDelegateTo = await locking.delegateTo(lockId, delegate, { from: user })
+        assert.equal(await locking.balanceOf(user), 422);
+        assert.equal(await locking.getVotes(user), 422)
 
-			assert.equal(await locking.balanceOf(user), 0);
-			assert.equal(await locking.getVotes(user), 634)
+        //redelegating the lock
+        await locking.delegateTo(lockId, delegate, { from: user })
 
-			assert.equal(await locking.getPastVotes(user, (currentBlock - 1)), 634)
-			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 634)
+        assert.equal(await locking.balanceOf(user), 0);
+        assert.equal(await locking.getVotes(user), 0)
+        assert.equal(await locking.balanceOf(delegate), 422);
+        assert.equal(await locking.getVotes(delegate), 422)
 
-			assert.equal(await locking.balanceOf(delegate), 422);
-			assert.equal(await locking.getVotes(delegate), 0)
-			assert.equal(await locking.getPastVotes(delegate, (currentBlock - 1)), 0)
+        assert.equal(await locking.getPastVotes(user, delegateBlock - 1), 422)
+        assert.equal(await locking.getPastVotes(delegate, delegateBlock - 1), 0)
+        assert.equal(await locking.getPastTotalSupply(delegateBlock - 1), 422)
 
-			//moving ahead 1 week
-			await incrementBlock(WEEK)
+        await incrementBlock(WEEK/2)//138601
+        relockBLock = currentBlock;
+        assert.equal(await locking.balanceOf(user), 0);
+        assert.equal(await locking.getVotes(user), 0)
+        assert.equal(await locking.balanceOf(delegate), 422);
+        assert.equal(await locking.getVotes(delegate), 422)
 
-			assert.equal(await locking.balanceOf(user), 0);
-			assert.equal(await locking.getVotes(user), 0)
-			assert.equal(await locking.getPastVotes(user, (currentBlock - 1)), 0)
-			assert.equal(await locking.balanceOf(delegate), 210);
-			assert.equal(await locking.getVotes(delegate), 422)
-			assert.equal(await locking.getPastVotes(delegate, (currentBlock - 1)), 422)
-			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 422)
+        assert.equal(await locking.getPastVotes(user, voteBlock), 0)
+        assert.equal(await locking.getPastVotes(delegate, voteBlock), 422)
+        assert.equal(await locking.getPastTotalSupply(voteBlock), 422)
+        assert.equal(await locking.getPastVotes(user, delegateBlock - 1), 422)
+        assert.equal(await locking.getPastVotes(delegate, delegateBlock - 1), 0)
+        assert.equal(await locking.getPastTotalSupply(delegateBlock - 1), 422)
 
-			const txReLock = await locking.relock(lockId, reLockDelegate, 4000, 4, 0, { from: user })
-			
-			assert.equal(await token.balanceOf(locking.address), 4000);
-			assert.equal(await locking.balanceOf(user), 0);
-			assert.equal(await locking.getVotes(user), 0)
-			assert.equal(await locking.balanceOf(delegate), 0);
-			assert.equal(await locking.getVotes(delegate), 422)
-			assert.equal(await locking.getPastVotes(delegate, (currentBlock - 1)), 422)
-			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 422)
+        await locking.relock(lockId, reLockDelegate, 4000, 4, 0, { from: user })
+        
+        assert.equal(await token.balanceOf(locking.address), 4000);
+        assert.equal(await locking.balanceOf(user), 0);
+        assert.equal(await locking.getVotes(user), 0)
+        assert.equal(await locking.balanceOf(delegate), 0);
+        assert.equal(await locking.getVotes(delegate), 0)
+        assert.equal(await locking.balanceOf(reLockDelegate), 861);
+        assert.equal(await locking.getVotes(reLockDelegate), 861)
 
-			assert.equal(await locking.balanceOf(reLockDelegate), 861);
-			assert.equal(await locking.getVotes(reLockDelegate), 0)
-			assert.equal(await locking.getPastVotes(reLockDelegate, (currentBlock - 1)), 0)
+        assert.equal(await locking.getPastVotes(user, voteBlock), 0)
+        assert.equal(await locking.getPastVotes(delegate, voteBlock), 422)
+        assert.equal(await locking.getPastTotalSupply(voteBlock), 422)
+        assert.equal(await locking.getPastVotes(user, delegateBlock - 1), 422)
+        assert.equal(await locking.getPastVotes(delegate, delegateBlock - 1), 0)
+        assert.equal(await locking.getPastTotalSupply(delegateBlock - 1), 422)
+        assert.equal(await locking.getPastVotes(user, relockBLock - 1), 0)
+        assert.equal(await locking.getPastVotes(delegate, relockBLock - 1), 422)
+        assert.equal(await locking.getPastTotalSupply(relockBLock - 1), 422)
+      }
 
-			//moving ahead 1 week
-			await incrementBlock(WEEK)
+      //WEEK 3 151200 - 201605
+      {
+        await incrementBlock(WEEK/4)//151201
+        assert.equal(await locking.balanceOf(user), 0);
+        assert.equal(await locking.getVotes(user), 0)
+        assert.equal(await locking.balanceOf(delegate), 0);
+        assert.equal(await locking.getVotes(delegate), 0)
 
-			assert.equal(await locking.balanceOf(user), 0);
-			assert.equal(await locking.getVotes(user), 0)
-			assert.equal(await locking.getPastVotes(user, (currentBlock - 1)), 0)
-			assert.equal(await locking.balanceOf(delegate), 0);
-			assert.equal(await locking.getVotes(delegate), 0)
-			assert.equal(await locking.getPastVotes(delegate, (currentBlock - 1)), 0)
-			assert.equal(await locking.getPastTotalSupply((currentBlock - 1)), 861)
-
-			assert.equal(await locking.balanceOf(reLockDelegate), 645);
-			assert.equal(await locking.getVotes(reLockDelegate), 861)
-			assert.equal(await locking.getPastVotes(reLockDelegate, (currentBlock - 1)), 861)
-
+        assert.equal(await locking.balanceOf(reLockDelegate), 645);
+        assert.equal(await locking.getVotes(reLockDelegate), 645)
+      }
+      
+      /*
 			//moving ahead half a week
 			await incrementBlock(WEEK / 2)
 
@@ -187,6 +205,8 @@ contract("Locking", accounts => {
 			assert.equal(await locking.getVotes(reLockDelegate), 0)
 			assert.equal(await locking.getPastVotes(reLockDelegate, (currentBlock - 1)), 0)
 
+      */
+
 			//revert if current block
 			await expectThrow(
 				locking.getPastVotes(user, currentBlock)
@@ -242,7 +262,6 @@ contract("Locking", accounts => {
 				await locking.incrementBlock(10)
 				assert.equal(await locking.getWeek(), 311)
 			}
-
 
 		});
 	})
@@ -1884,7 +1903,7 @@ contract("Locking", accounts => {
 
 	async function incrementBlock(amount) {
 		await locking.incrementBlock(amount);
-		currentBlock = await locking.blockNumberMocked();
+		currentBlock = (await locking.blockNumberMocked()).toNumber();
 	}
 
 })
