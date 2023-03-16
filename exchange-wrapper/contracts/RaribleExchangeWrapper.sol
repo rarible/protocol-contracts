@@ -27,20 +27,22 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
 
     address public immutable wyvernExchange;
     address public immutable exchangeV2;
-    address public immutable seaPort;
+    address public immutable seaPort_1_1;
     address public immutable x2y2;
     address public immutable looksRare;
     address public immutable sudoswap;
+    address public immutable seaPort_1_4;
 
     event Execution(bool result);
 
     enum Markets {
         ExchangeV2,
         WyvernExchange,
-        SeaPort,
+        SeaPort_1_1,
         X2Y2,
         LooksRareOrders,
-        SudoSwap
+        SudoSwap,
+        SeaPort_1_4
     }
 
     enum AdditionalDataTypes {
@@ -78,17 +80,19 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     constructor(
         address _wyvernExchange,
         address _exchangeV2,
-        address _seaPort,
+        address _seaPort_1_1,
         address _x2y2,
         address _looksRare,
-        address _sudoswap
+        address _sudoswap,
+        address _seaPort_1_4
     ) {
         wyvernExchange = _wyvernExchange;
         exchangeV2 = _exchangeV2;
-        seaPort = _seaPort;
+        seaPort_1_1 = _seaPort_1_1;
         x2y2 = _x2y2;
         looksRare = _looksRare;
         sudoswap = _sudoswap;
+        seaPort_1_4 = _seaPort_1_4;
     }
 
     /**
@@ -153,14 +157,14 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     function purchase(PurchaseDetails memory purchaseDetails, bool allowFail) internal returns(bool, uint, uint) {
         (bytes memory marketData, uint[] memory additionalRoyalties) = getDataAndAdditionalData (purchaseDetails.data, purchaseDetails.fees, purchaseDetails.marketId);
         uint paymentAmount = purchaseDetails.amount;
-        if (purchaseDetails.marketId == Markets.SeaPort){
-            (bool success,) = address(seaPort).call{value : paymentAmount}(marketData);
+        if (purchaseDetails.marketId == Markets.SeaPort_1_1){
+            (bool success,) = address(seaPort_1_1).call{value : paymentAmount}(marketData);
             if (allowFail) {
                 if (!success) {
                     return (false, 0, 0);
                 }
             } else {
-                require(success, "Purchase SeaPort failed");
+                require(success, "Purchase SeaPort_1_1 failed");
             }
         } else if (purchaseDetails.marketId == Markets.WyvernExchange) {
             (bool success,) = address(wyvernExchange).call{value : paymentAmount}(marketData);
@@ -250,6 +254,15 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
                 }
             } else {
                 require(success, "Purchase sudoswap failed");
+            }
+        } else if (purchaseDetails.marketId == Markets.SeaPort_1_4){
+            (bool success,) = address(seaPort_1_4).call{value : paymentAmount}(marketData);
+            if (allowFail) {
+                if (!success) {
+                    return (false, 0, 0);
+                }
+            } else {
+                require(success, "Purchase SeaPort_1_4 failed");
             }
         } else {
             revert("Unknown purchase details");

@@ -72,6 +72,7 @@ module.exports = {
     etherscan: getScanApiKey('etherscan'),
     polygonscan: getScanApiKey('polygonscan'),
     polygon_mumbai: getScanApiKey('polygonscan'),
+    optimistic_etherscan: getScanApiKey('optimisticscan')
   },
 
   plugins: [

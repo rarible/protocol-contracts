@@ -104,8 +104,6 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
     royaltiesRegistry = await RoyaltiesRegistry.new()
     await royaltiesRegistry.__RoyaltiesRegistry_init()
-    
-    bulkExchange = await ExchangeBulkV2.deployed();
   })
 
   beforeEach(async () => {    
@@ -172,7 +170,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
     await factorySudoSwap.setBondingCurveAllowed(lin.address, true)
 
     // deploying wrapper
-    bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address, routerSudoSwap.address)
+    bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address, routerSudoSwap.address, seaport.address)
   });
   
   describe ("batch orders", () => {

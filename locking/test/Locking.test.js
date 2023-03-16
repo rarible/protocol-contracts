@@ -1653,9 +1653,7 @@ contract("Locking", accounts => {
 			let idLock = 1;
 
 			await locking.startMigration(newLockingNoInterface.address);    //Start migration!!!, only owner
-			await expectThrow(
-				locking.migrate([idLock], { from: accounts[2] })              //migrate, addres
-			);
+			await truffleAssert.reverts(locking.migrate([idLock], { from: accounts[2] }));
 		});
 
 		it("Test5. startMigration() from not owner, throw", async () => {
