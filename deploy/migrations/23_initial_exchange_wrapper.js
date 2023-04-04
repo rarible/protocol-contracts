@@ -1,6 +1,7 @@
 const RaribleExchangeWrapper = artifacts.require('RaribleExchangeWrapper');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
+const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
 
 const { getSettings } = require("./config.js")
 
@@ -10,7 +11,9 @@ const mainnet = {
   x2y2: "0x74312363e45DCaBA76c59ec49a7Aa8A65a67EeD3",
   looksRare: "0x59728544B08AB483533076417FbBB2fD0B17CE3a",
   sudoSwap: "0x2b2e8cda09bba9660dca5cb6233787738ad68329",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  transferProxies: [],
 }
 const goerli = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
@@ -18,7 +21,9 @@ const goerli = {
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0xD112466471b5438C1ca2D218694200e49d81D047",
   sudoSwap: "0x25b4EfC43c9dCAe134233CD577fFca7CfAd6748F",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+  transferProxies: [],
 }
 const def = {
   wyvernExchange: "0x0000000000000000000000000000000000000000",
@@ -26,7 +31,9 @@ const def = {
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
   sudoSwap: "0x0000000000000000000000000000000000000000",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0x0000000000000000000000000000000000000000",
+  transferProxies: [],
 }
 
 const dev = {
@@ -35,7 +42,9 @@ const dev = {
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
   sudoSwap: "0xc64E5D291CaEdF42b77fa9E50d5Fd46113227857",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0x0000000000000000000000000000000000000000",
+  transferProxies: [],
 }
 
 const staging = {
@@ -44,7 +53,9 @@ const staging = {
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
   sudoSwap: "0xE27A07e9B293dC677e34aB5fF726073ECbeCA842",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0x0000000000000000000000000000000000000000",
+  transferProxies: [],
 }
 
 const polygon_staging = {
@@ -53,7 +64,9 @@ const polygon_staging = {
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
   sudoSwap: "0x55eB2809896aB7414706AaCDde63e3BBb26e0BC6",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0x0000000000000000000000000000000000000000",
+  transferProxies: [],
 }
 
 const polygon_mumbai = {
@@ -62,7 +75,9 @@ const polygon_mumbai = {
   x2y2: "0x0000000000000000000000000000000000000000",
   looksRare: "0x0000000000000000000000000000000000000000",
   sudoSwap: "0x0000000000000000000000000000000000000000",
-  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6"
+  seaport_1_4: "0x00000000000001ad428e4906aE43D8F9852d0dD6",
+  weth: "0xa6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa",
+  transferProxies: [],
 }
 
 let settings = {
@@ -85,7 +100,7 @@ function getWrapperSettings(network) {
 }
 
 module.exports = async function (deployer, network) {
-  const settings = getWrapperSettings(network);
+  let settings = getWrapperSettings(network);
   let exchangeWrapper;
 
   const { deploy_meta, deploy_non_meta } = getSettings(network);
@@ -99,7 +114,12 @@ module.exports = async function (deployer, network) {
     exchangeV2 = (await ExchangeV2.deployed()).address;
   }
 
-  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort_1_1, settings.x2y2,  settings.looksRare, settings.sudoSwap, settings.seaport_1_4, { gas: 3000000 });
+  const erc20TransferProxy = await ERC20TransferProxy.deployed();
+  settings.transferProxies.push(erc20TransferProxy.address)
+  settings.transferProxies.push(settings.seaport_1_4)
+  settings.transferProxies.push(settings.seaPort_1_1)
+
+  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort_1_1, settings.x2y2,  settings.looksRare, settings.sudoSwap, settings.seaport_1_4, settings.weth, settings.transferProxies, { gas: 3500000 });
 
   exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)

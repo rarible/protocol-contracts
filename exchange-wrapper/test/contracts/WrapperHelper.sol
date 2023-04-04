@@ -215,6 +215,10 @@ contract WrapperHelper {
         return (uint(uint16(dataType)) << 32) + (uint(uint16(first)) << 16) + uint(uint16(second));
     }
 
+    function encodeCurrencyAndDataTypeAndFees(uint currency, uint dataType, uint first, uint second) external pure returns(uint){
+        return (uint(uint16(currency)) << 48) + (uint(uint16(dataType)) << 32) + (uint(uint16(first)) << 16) + uint(uint16(second));
+    }
+
     function encodeDataPlusRoyalties(AdditionalData calldata data) external pure returns(bytes memory) {
         return abi.encode(data);
     }
