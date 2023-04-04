@@ -119,7 +119,7 @@ module.exports = async function (deployer, network) {
   settings.transferProxies.push(settings.seaport_1_4)
   settings.transferProxies.push(settings.seaPort_1_1)
 
-  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort_1_1, settings.x2y2,  settings.looksRare, settings.sudoSwap, settings.seaport_1_4, settings.weth, settings.transferProxies, { gas: 3500000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.wyvernExchange, exchangeV2, settings.seaPort_1_1, settings.x2y2,  settings.looksRare, settings.sudoSwap, settings.seaport_1_4, settings.weth, settings.transferProxies, { gas: 4000000 });
 
   exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
