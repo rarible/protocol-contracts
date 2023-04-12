@@ -55,7 +55,6 @@ const LooksRareProtocol = artifacts.require("LooksRareProtocol");
 const TransferManager = artifacts.require("TransferManager");
 const StrategyCollectionOffer = artifacts.require("StrategyCollectionOffer");
 
-
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const truffleAssert = require('truffle-assertions');
 

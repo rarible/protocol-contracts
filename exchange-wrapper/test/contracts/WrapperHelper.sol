@@ -242,4 +242,8 @@ contract WrapperHelper {
         _data = abi.encodeWithSelector(ILSSVMRouter.swapETHForSpecificNFTs.selector, swapList, ethRecipient, nftRecipient, deadline);
     }
 
+    function encodeLooksRareV2Call(LibLooksRare.Taker calldata takerBid, LibLooksRare.Maker calldata makerAsk, bytes calldata makerSignature, LibLooksRare.MerkleTree calldata merkleTree, address affiliate) external pure returns (bytes memory _data) {
+        _data = abi.encodeWithSelector(ILooksRare.executeTakerBid.selector, takerBid, makerAsk, makerSignature, merkleTree, affiliate);
+    }
+
 }

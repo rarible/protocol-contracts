@@ -21,7 +21,6 @@ import "./interfaces/ILooksRare.sol";
 
 import "./libraries/IsPausable.sol";
 
-
 contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausable {
     using LibTransfer for address;
     using BpLibrary for uint;
@@ -35,6 +34,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     address public immutable looksRare;
     address public immutable sudoswap;
     address public immutable seaPort_1_4;
+    address public immutable looksRareV2;
 
     //currencties
     address public immutable weth;
@@ -51,7 +51,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         X2Y2,
         LooksRareOrders,
         SudoSwap,
-        SeaPort_1_4
+        SeaPort_1_4,
+        LooksRareV2
     }
 
     enum AdditionalDataTypes {
@@ -93,23 +94,27 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     }
 
     constructor(
-        address _wyvernExchange,
-        address _exchangeV2,
-        address _seaPort_1_1,
-        address _x2y2,
-        address _looksRare,
-        address _sudoswap,
-        address _seaPort_1_4,
+        address[8] memory marketplaces,
+        //address _wyvernExchange, 0
+        //address _exchangeV2, 1
+        //address _seaPort_1_1, 2
+        //address _x2y2, 3
+        //address _looksRare, 4
+        //address _sudoswap, 5
+        //address _seaPort_1_4, 6
+        //address _looksRareV2, 7
         address _weth,
         address[] memory transferProxies
     ) {
-        wyvernExchange = _wyvernExchange;
-        exchangeV2 = _exchangeV2;
-        seaPort_1_1 = _seaPort_1_1;
-        x2y2 = _x2y2;
-        looksRare = _looksRare;
-        sudoswap = _sudoswap;
-        seaPort_1_4 = _seaPort_1_4;
+        wyvernExchange = marketplaces[0];
+        exchangeV2 = marketplaces[1];
+        seaPort_1_1 = marketplaces[2];
+        x2y2 = marketplaces[3];
+        looksRare = marketplaces[4];
+        sudoswap = marketplaces[5];
+        seaPort_1_4 = marketplaces[6];
+        looksRareV2 = marketplaces[7];
+
         weth = _weth;
 
         for (uint i = 0; i < transferProxies.length; ++i) {
@@ -349,7 +354,16 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
             } else {
                 require(success, "Purchase SeaPort_1_4 failed");
             }
-        } else {
+        } else if (purchaseDetails.marketId == Markets.LooksRareV2){
+            (bool success,) = address(looksRareV2).call{value : paymentAmount}(marketData);
+            if (allowFail) {
+                if (!success) {
+                    return (false, 0, 0);
+                }
+            } else {
+                require(success, "Purchase LooksRareV2 failed");
+            }
+        } else{
             revert("Unknown marketId ETH");
         }
 
@@ -555,12 +569,14 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         @notice returns true if this contract supports additional royalties for the marketplace;
         now royalties are supported for:
           1. SudoSwap
-          2. LooksRare
+          2. LooksRare old
+          3. LooksRare V2
     */
     function supportsRoyalties(Markets marketId) internal pure returns (bool){
         if (
             marketId == Markets.SudoSwap ||
-            marketId == Markets.LooksRareOrders
+            marketId == Markets.LooksRareOrders ||
+            marketId == Markets.LooksRareV2
         ) {
             return true;
         }
