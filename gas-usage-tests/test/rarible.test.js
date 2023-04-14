@@ -104,7 +104,6 @@ contract("rarible only gas usage tests", accounts => {
     const left = Order(seller, Asset(ERC721, _nftSellAssetData, nftAmount), zeroAddress, Asset(ETH, _nftPurchaseAssetData, price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
 
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[seller, 1000]]);
-
     const signature = await getSignature(exchangeV2, left, seller);
 
     var directPurchaseParams = {
