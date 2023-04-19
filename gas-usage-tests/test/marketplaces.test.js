@@ -1221,8 +1221,8 @@ it("blur V2 ETH", async () => {
   const nftGetter = accounts[5];
   const buyer = accounts[6]
   
-  const protocolFeeRecipient = accounts[8]
-
+  const feeFromSeller = accounts[8]
+  const feeFromBuyer = accounts[9]
   //deploy and setup contracts
   const executionDelegate = await ExecutionDelegate.new()
   const policyManager = await PolicyManager.new()
@@ -1255,8 +1255,8 @@ it("blur V2 ETH", async () => {
         "expirationTime": "16814068278",
         "fees": [
           {
-            "rate": 1000,
-            "recipient": protocolFeeRecipient
+            "rate": 2000,
+            "recipient": feeFromSeller
           }
         ],
         "salt": "65994309200663161530037748276946816666",
@@ -1281,7 +1281,12 @@ it("blur V2 ETH", async () => {
         "price": 1000,
         "listingTime": "168181880",
         "expirationTime": "16813091771",
-        "fees": [],
+        "fees": [
+          {
+            "rate": 1000,
+            "recipient": feeFromBuyer
+          }
+        ],
         "salt": "261913853562470622716597177488189472368",
         "extraParams": "0x01"
       },
@@ -1294,17 +1299,17 @@ it("blur V2 ETH", async () => {
     }
   }
 
-  await verifyBalanceChange(seller, -900, async () =>
-      verifyBalanceChange(buyer, 1000, async () =>
-        verifyBalanceChange(protocolFeeRecipient, -100, async () =>
+  await verifyBalanceChange(seller, -800, async () =>
+    verifyBalanceChange(buyer, 1100, async () =>
+      verifyBalanceChange(feeFromBuyer, -100, async () =>
+        verifyBalanceChange(feeFromSeller, -200, async () =>
           blurExchange.execute(input.sell, input.buy, {from: buyer, value: 2000, gasPrice: 0 } )
         )
       )
     )
+  )
 
   assert.equal(await token.ownerOf(tokenId), buyer, "getter has token")
-
-
 
 })
 

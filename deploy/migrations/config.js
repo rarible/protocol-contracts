@@ -102,7 +102,7 @@ const def = {
   deploy_CryptoPunks: true,
   deploy_meta: true,
   deploy_non_meta: true,
-  deploy_WETH: false,
+  deploy_WETH: true,
   deploy_test_erc20: true
 }
 const goerli = {

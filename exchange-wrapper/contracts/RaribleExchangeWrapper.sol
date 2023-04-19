@@ -18,6 +18,7 @@ import "./interfaces/IExchangeV2.sol";
 import "./interfaces/ISeaPort.sol";
 import "./interfaces/Ix2y2.sol";
 import "./interfaces/ILooksRare.sol";
+import "./interfaces/IBlur.sol";
 
 import "./libraries/IsPausable.sol";
 
@@ -35,6 +36,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     address public immutable sudoswap;
     address public immutable seaPort_1_4;
     address public immutable looksRareV2;
+    address public immutable blur;
 
     //currencties
     address public immutable weth;
@@ -52,7 +54,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         LooksRareOrders,
         SudoSwap,
         SeaPort_1_4,
-        LooksRareV2
+        LooksRareV2,
+        Blur
     }
 
     enum AdditionalDataTypes {
@@ -94,7 +97,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     }
 
     constructor(
-        address[8] memory marketplaces,
+        address[9] memory marketplaces,
         //address _wyvernExchange, 0
         //address _exchangeV2, 1
         //address _seaPort_1_1, 2
@@ -103,6 +106,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         //address _sudoswap, 5
         //address _seaPort_1_4, 6
         //address _looksRareV2, 7
+        //address _blur, 8
         address _weth,
         address[] memory transferProxies
     ) {
@@ -114,6 +118,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         sudoswap = marketplaces[5];
         seaPort_1_4 = marketplaces[6];
         looksRareV2 = marketplaces[7];
+        blur = marketplaces[8];
 
         weth = _weth;
 
@@ -363,7 +368,24 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
             } else {
                 require(success, "Purchase LooksRareV2 failed");
             }
-        } else{
+        } else if (purchaseDetails.marketId == Markets.Blur){
+            (IBlur.Input memory sell, IBlur.Input memory buy, bytes4 typeNft) = abi.decode(marketData, (IBlur.Input, IBlur.Input, bytes4));
+            if (allowFail) {
+                try IBlur(blur).execute{value : paymentAmount}(sell, buy) {
+                }   catch {
+                    return (false, 0, 0);
+                }
+            } else {
+                IBlur(blur).execute{value : paymentAmount}(sell, buy);
+            }
+            if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
+                IERC721Upgradeable(sell.order.collection).safeTransferFrom(address(this), _msgSender(), sell.order.tokenId);
+            } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
+                IERC1155Upgradeable(sell.order.collection).safeTransferFrom(address(this), _msgSender(), sell.order.tokenId, sell.order.amount, "");
+            } else {
+                revert("Unknown token type");
+            }
+        } else {
             revert("Unknown marketId ETH");
         }
 
