@@ -50,6 +50,17 @@ const LSSVMRouter = artifacts.require("LSSVMRouter.sol");
 const LinearCurve = artifacts.require("LinearCurve.sol");
 const ExponentialCurve = artifacts.require("ExponentialCurve.sol");
 
+//LOOKSRARE-V2
+const LooksRareProtocol = artifacts.require("LooksRareProtocol");
+const TransferManager = artifacts.require("TransferManager");
+const StrategyCollectionOffer = artifacts.require("StrategyCollectionOffer");
+
+//BLUR
+const ExecutionDelegate = artifacts.require("ExecutionDelegate");
+const PolicyManager = artifacts.require("PolicyManager");
+const StandardPolicyERC721 = artifacts.require("StandardPolicyERC721");
+const BlurExchange = artifacts.require("BlurExchange");
+
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const truffleAssert = require('truffle-assertions');
 
@@ -1040,16 +1051,6 @@ contract("Test gas usage for marketplaces", accounts => {
 
     const nftGetter = accounts[5];
 
-    /*
-    ERC721 _nft,
-        ICurve _bondingCurve,
-        address payable _assetRecipient,
-        LSSVMPair.PoolType _poolType,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] calldata _initialNFTIDs
-    */
     const inpput = [
       token.address,
       lin.address,
@@ -1085,6 +1086,232 @@ contract("Test gas usage for marketplaces", accounts => {
     )
     assert.equal(await token.ownerOf(tokenId), nftGetter, "pair has token")
   })
+
+  it("looksrare V2 ETH", async () => {
+
+    const seller = accounts[4];
+    const nftGetter = accounts[5];
+    const buyer = accounts[6]
+    
+    const owner = accounts[0]
+    const protocolFeeRecipient = accounts[8]
+
+    //deploy contracts
+    const transferManager = await TransferManager.new(owner);
+
+    const strategyCollectionOffer = await StrategyCollectionOffer.new()
+
+    const weth = await WETH9.new()
+
+    const looksRareProtocol = await LooksRareProtocol.new(owner, protocolFeeRecipient, transferManager.address, weth.address)
+
+    //setup contracts
+    await transferManager.allowOperator(looksRareProtocol.address);
+    
+    await looksRareProtocol.updateCurrencyStatus(zeroAddress, true)
+    await looksRareProtocol.updateCurrencyStatus(weth.address, true)
+
+    await looksRareProtocol.addStrategy(50, 50, 200, "0x84ad8c47", true, strategyCollectionOffer.address)
+    await looksRareProtocol.addStrategy(50, 50, 200, "0x7e897147", true, strategyCollectionOffer.address)
+
+    //mint NFT
+    const token = await TestERC721.new();
+    await token.mint(seller, tokenId)
+    await token.setApprovalForAll(transferManager.address, true, {from: seller})
+    await transferManager.grantApprovals([looksRareProtocol.address], {from: seller})
+
+    //sale 1
+    const data1 = {
+      "takerBid": {
+        "recipient": nftGetter,
+        "additionalParameters": "0x"
+      },
+      "makerAsk": {
+        "quoteType": "1",
+        "globalNonce": "0",
+        "subsetNonce": "0",
+        "orderNonce": "0",
+        "strategyId": "0",
+        "collectionType": "0",
+        "collection": token.address,
+        "currency": zeroAddress,
+        "signer":seller,
+        "startTime": "168076455",
+        "endTime": "16808792846",
+        "price": "1000",
+        "itemIds": [
+          tokenId
+        ],
+        "amounts": [
+          "1"
+        ],
+        "additionalParameters": "0x"
+      },
+      "makerSignature": "0x50d88229949c5884c15f3a71d9127aeb7c9ef9f9b301ce72c6b87076d0a38447335d8f19355f5ec1e9a6063c10ed019234cd8d522839e808d041082dd75c3ee01c",
+      "merkleTree": {
+        "root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "proof": []
+      },
+      "affiliate": zeroAddress
+    }
+
+    await verifyBalanceChange(seller, -995, async () =>
+      verifyBalanceChange(buyer, 1001, async () =>
+        verifyBalanceChange(protocolFeeRecipient, -5, async () =>
+          looksRareProtocol.executeTakerBid(data1.takerBid, data1.makerAsk, data1.makerSignature, data1.merkleTree, data1.affiliate, {from: buyer, value: 2000, gasPrice: 0 } )
+        )
+      )
+    )
+
+    assert.equal(await token.ownerOf(tokenId), nftGetter, "getter has token")
+
+    //sale 2
+    await token.setApprovalForAll(transferManager.address, true, {from: nftGetter})
+    await transferManager.grantApprovals([looksRareProtocol.address], {from: nftGetter})
+
+    const data2 = {
+      "takerBid": {
+        "recipient": buyer,
+        "additionalParameters": "0x"
+      },
+      "makerAsk": {
+        "quoteType": "1",
+        "globalNonce": "0",
+        "subsetNonce": "0",
+        "orderNonce": "0",
+        "strategyId": "0",
+        "collectionType": "0",
+        "collection": token.address,
+        "currency": zeroAddress,
+        "signer":nftGetter,
+        "startTime": "168076455",
+        "endTime": "16808792846",
+        "price": "1000",
+        "itemIds": [
+          tokenId
+        ],
+        "amounts": [
+          "1"
+        ],
+        "additionalParameters": "0x"
+      },
+      "makerSignature": "0x50d88229949c5884c15f3a71d9127aeb7c9ef9f9b301ce72c6b87076d0a38447335d8f19355f5ec1e9a6063c10ed019234cd8d522839e808d041082dd75c3ee01c",
+      "merkleTree": {
+        "root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "proof": []
+      },
+      "affiliate": zeroAddress
+    }
+
+    await verifyBalanceChange(nftGetter, -995, async () =>
+      verifyBalanceChange(buyer, 1000, async () =>
+        verifyBalanceChange(protocolFeeRecipient, -5, async () =>
+          looksRareProtocol.executeTakerBid(data2.takerBid, data2.makerAsk, data2.makerSignature, data2.merkleTree, data2.affiliate, {from: buyer, value: 2000, gasPrice: 0 } )
+        )
+      )
+    )
+
+    assert.equal(await token.ownerOf(tokenId), buyer, "getter has token")
+  })
+
+
+it("blur V2 ETH", async () => {
+
+  const seller = accounts[4];
+  const nftGetter = accounts[5];
+  const buyer = accounts[6]
+  
+  const feeFromSeller = accounts[8]
+  const feeFromBuyer = accounts[9]
+  //deploy and setup contracts
+  const executionDelegate = await ExecutionDelegate.new()
+  const policyManager = await PolicyManager.new()
+  const standardPolicyERC721 = await StandardPolicyERC721.new()
+
+  await policyManager.addPolicy(standardPolicyERC721.address)
+
+  const blurExchange = await BlurExchange.new()
+  await blurExchange.initialize(executionDelegate.address, policyManager.address, zeroAddress, 50)
+
+  await executionDelegate.approveContract(blurExchange.address)
+
+  //mint NFT
+  const token = await TestERC721.new();
+  await token.mint(seller, tokenId)
+  await token.setApprovalForAll(executionDelegate.address, true, {from: seller})
+
+  const input = {
+    "sell": {
+      "order": {
+        "trader": seller,
+        "side": 1,
+        "matchingPolicy": standardPolicyERC721.address,
+        "collection": token.address,
+        "tokenId": tokenId,
+        "amount": "1",
+        "paymentToken": "0x0000000000000000000000000000000000000000",
+        "price": 1000,
+        "listingTime": "168381879",
+        "expirationTime": "16814068278",
+        "fees": [
+          {
+            "rate": 2000,
+            "recipient": feeFromSeller
+          }
+        ],
+        "salt": "65994309200663161530037748276946816666",
+        "extraParams": "0x01"
+      },
+      "v": 27,
+      "r": "0x5b93882de02b8f11485053f2487586e2dcef8843d1cdf4077caa6da821c2596b",
+      "s": "0x0b0460243d87d8e53d85ea1615b200c85bb9a50ad7387e1a8915e5a3c7d631bb",
+      "extraSignature": "0x000000000000000000000000000000000000000000000000000000000000001b7fd6e717aed61bfb988ac35b0b07a3c81b2a7834f9314ccd8c9bcf4201d714c35657cd9099297524e93874b62fee5671aaed42d3795a86d6ebe93daf0e7dae9d",
+      "signatureVersion": 0,
+      "blockNumber": "17038489"
+    },
+    "buy": {
+      "order": {
+        "trader": buyer,
+        "side": 0,
+        "matchingPolicy": standardPolicyERC721.address,
+        "collection": token.address,
+        "tokenId": tokenId,
+        "amount": "1",
+        "paymentToken": "0x0000000000000000000000000000000000000000",
+        "price": 1000,
+        "listingTime": "168181880",
+        "expirationTime": "16813091771",
+        "fees": [
+          {
+            "rate": 1000,
+            "recipient": feeFromBuyer
+          }
+        ],
+        "salt": "261913853562470622716597177488189472368",
+        "extraParams": "0x01"
+      },
+      "v": 0,
+      "r": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "s": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "extraSignature": "0x000000000000000000000000000000000000000000000000000000000000001cd474b10997153521d1b3571c148d6b7d813da537f8b8f9cc0f0959677fca93a30b1ebf4a15c0ed01d692b9dcfef6d251b147b259b20f14d8f383324d35414994",
+      "signatureVersion": 0,
+      "blockNumber": "17038489"
+    }
+  }
+
+  await verifyBalanceChange(seller, -800, async () =>
+    verifyBalanceChange(buyer, 1100, async () =>
+      verifyBalanceChange(feeFromBuyer, -100, async () =>
+        verifyBalanceChange(feeFromSeller, -200, async () =>
+          blurExchange.execute(input.sell, input.buy, {from: buyer, value: 2000, gasPrice: 0 } )
+        )
+      )
+    )
+  )
+
+  assert.equal(await token.ownerOf(tokenId), buyer, "getter has token")
+
+})
 
   async function getOpenSeaMatchDataMerkleValidator(
     exchange, 
