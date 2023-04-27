@@ -170,7 +170,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
     await factorySudoSwap.setBondingCurveAllowed(lin.address, true)
 
     // deploying wrapper
-    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address, routerSudoSwap.address, seaport.address, ZERO_ADDRESS], ZERO_ADDRESS, [])
+    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address, routerSudoSwap.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, [])
   });
   
   describe ("batch orders", () => {

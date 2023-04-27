@@ -17,6 +17,7 @@ import {Ix2y2} from "../../contracts/interfaces/Ix2y2.sol";
 import {LibLooksRare} from "../../contracts/libraries/LibLooksRare.sol";
 import {ILooksRare} from "../../contracts/interfaces/ILooksRare.sol";
 import {ILSSVMRouter} from "../../contracts/interfaces/ILSSVMRouter.sol";
+import {IBlur} from "../../contracts/interfaces/IBlur.sol";
 
 interface IERC1155 {
     function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
@@ -244,6 +245,10 @@ contract WrapperHelper {
 
     function encodeLooksRareV2Call(LibLooksRare.Taker calldata takerBid, LibLooksRare.Maker calldata makerAsk, bytes calldata makerSignature, LibLooksRare.MerkleTree calldata merkleTree, address affiliate) external pure returns (bytes memory _data) {
         _data = abi.encodeWithSelector(ILooksRare.executeTakerBid.selector, takerBid, makerAsk, makerSignature, merkleTree, affiliate);
+    }
+
+    function encodeBlurData(IBlur.Input memory sell, IBlur.Input memory buy, bytes4 typeNft) external pure returns(bytes memory _data) {
+        _data = abi.encode(sell, buy, typeNft);
     }
 
 }
