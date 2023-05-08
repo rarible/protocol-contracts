@@ -18,6 +18,7 @@ const mainnet = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     "0x0000000000e655fae4d56241588680f86e3b2377", // looksRareV2
     "0x000000000000Ad05Ccc4F10045630fb830B95127", // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -34,6 +35,7 @@ const goerli = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     "0x35C2215F2FFe8917B06454eEEaba189877F200cf", // looksRareV2
     zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
@@ -50,6 +52,7 @@ const def = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     zeroAddress, // looksRareV2
     zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: zeroAddress,
@@ -67,6 +70,7 @@ const dev = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     zeroAddress, // looksRareV2
     zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: zeroAddress,
@@ -84,6 +88,7 @@ const staging = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     zeroAddress, // looksRareV2
     zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: zeroAddress,
@@ -101,6 +106,7 @@ const polygon_staging = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     zeroAddress, // looksRareV2
     zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: zeroAddress,
@@ -118,6 +124,7 @@ const polygon_mumbai = {
     "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
     zeroAddress, // looksRareV2
     zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
   ],
 
   weth: "0xa6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa",
@@ -167,8 +174,7 @@ module.exports = async function (deployer, network) {
   //settings.transferProxies.push(settings.marketplaces[2]) // seaPort_1_1
   //settings.transferProxies.push(settings.marketplaces[6]) // seaport_1_4
 
-  console.log(settings)
-  await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4000000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 });
 
   const exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
