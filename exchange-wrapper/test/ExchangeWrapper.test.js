@@ -53,6 +53,17 @@ const LSSVMRouter = artifacts.require("LSSVMRouter.sol");
 const LinearCurve = artifacts.require("LinearCurve.sol");
 const ExponentialCurve = artifacts.require("ExponentialCurve.sol");
 
+//LOOKSRARE-V2
+const LooksRareProtocol = artifacts.require("LooksRareProtocol");
+const TransferManager = artifacts.require("TransferManager");
+const StrategyCollectionOffer = artifacts.require("StrategyCollectionOffer");
+
+//BLUR
+const ExecutionDelegate = artifacts.require("ExecutionDelegate");
+const PolicyManager = artifacts.require("PolicyManager");
+const StandardPolicyERC721 = artifacts.require("StandardPolicyERC721");
+const BlurExchange = artifacts.require("BlurExchange");
+
 const { Order, Asset, sign } = require("../../scripts/order.js");
 
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
@@ -60,7 +71,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 
-contract("RaribleExchangeWrapper bulk cases", accounts => {
+contract("RaribleExchangeWrapper signle purchase cases", accounts => {
   let bulkExchange;
   let exchangeV2;
   let wrapperHelper;
@@ -117,13 +128,13 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
   });
-  
+
   describe ("libraries", () => {
     it("pausable", async () => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
 
       // creating seaport order
       const buyerLocal1 = accounts[2];
@@ -215,11 +226,12 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
 
       const buyerLocal1 = accounts[2];
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(seaport.address, true, {from: seller})
+      
       const considerationItemLeft = {
         itemType: 0,
         token: '0x0000000000000000000000000000000000000000',
@@ -277,7 +289,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
 
       const buyerLocal1 = accounts[2];
       await erc721.mint(seller, tokenId)
@@ -361,7 +373,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
 
       const buyerLocal1 = accounts[2];
       await erc721.mint(seller, tokenId)
@@ -423,7 +435,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const conduitController = await ConduitController.new();
       const seaport = await Seaport.new(conduitController.address)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
 
       const buyerLocal1 = accounts[2];
       await erc721.mint(seller, tokenId)
@@ -501,6 +513,152 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
     })
   });
 
+  describe("purcahase Seaport1.5 orders", () => {
+
+    it("wrapper seaport1.5 (fulfillAdvancedOrder through data selector, method fulfillAdvancedOrder) ERC721<->ETH", async () => {
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
+
+      const buyerLocal1 = accounts[2];
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(seaport.address, true, {from: seller})
+      const considerationItemLeft = {
+        itemType: 0,
+        token: '0x0000000000000000000000000000000000000000',
+        identifierOrCriteria: 0,
+        startAmount: 100,
+        endAmount: 100,
+        recipient: seller
+      }
+
+      const offerItemLeft = {
+        itemType: 2, // 2: ERC721 items
+        token: erc721.address,
+        identifierOrCriteria: '0x3039',
+        startAmount: 1,
+        endAmount: 1
+      }
+
+      const OrderParametersLeft = {
+        offerer: seller,// 0x00
+        zone: zoneAddr, // 0x20
+        offer: [offerItemLeft], // 0x40
+        consideration: [considerationItemLeft], // 0x60
+        orderType: 0, // 0: no partial fills, anyone can execute
+        startTime: 0, //
+        endTime: '0xff00000000000000000000000000', // 0xc0
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // 0xe0
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885', // 0x100
+        conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000', // 0x120
+        totalOriginalConsiderationItems: 1 // 0x140
+        // offer.length                          // 0x160
+      }
+
+      const _advancedOrder = {
+        parameters: OrderParametersLeft,
+        numerator: 1,
+        denominator: 1,
+        signature: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1b',
+        extraData: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1c'
+      }
+
+      const _criteriaResolvers = [];
+      const _fulfillerConduitKey = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const _recipient = buyerLocal1;
+
+      let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
+      const tradeDataSeaPort = PurchaseData(9, 100, 0, dataForSeaportWithSelector);
+
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 100})
+      console.log("wrapper seaport (fulfillAdvancedOrder() by call : ETH <=> ERC721", tx.receipt.gasUsed)
+      assert.equal(await erc721.balanceOf(seller), 0);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 1);
+    })
+
+    it("wrapper seaport1.5 (fulfillAvalibleAdvancedOrder through data selector, method ) ERC721<->ETH", async () => {
+      const conduitController = await ConduitController.new();
+      const seaport = await Seaport.new(conduitController.address)
+
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, []);
+
+      const buyerLocal1 = accounts[2];
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(seaport.address, true, {from: seller})
+
+      const considerationItemLeft = {
+        itemType: 0,
+        token: '0x0000000000000000000000000000000000000000',
+        identifierOrCriteria: 0,
+        startAmount: 100,
+        endAmount: 100,
+        recipient: seller
+      }
+
+      const offerItemLeft = {
+        itemType: 2, // 2: ERC721 items
+        token: erc721.address,
+        identifierOrCriteria: '0x3039',
+        startAmount: 1,
+        endAmount: 1
+      }
+
+      const OrderParametersLeft = {
+        offerer: seller,// 0x00
+        zone: zoneAddr, // 0x20
+        offer: [offerItemLeft], // 0x40
+        consideration: [considerationItemLeft], // 0x60
+        orderType: 0, // 0: no partial fills, anyone can execute
+        startTime: 0, //
+        endTime: '0xff00000000000000000000000000', // 0xc0
+        zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // 0xe0
+        salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885', // 0x100
+        conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000', // 0x120
+        totalOriginalConsiderationItems: 1 // 0x140
+        // offer.length                          // 0x160
+      }
+
+      const _advancedOrder = {
+        parameters: OrderParametersLeft,
+        numerator: 1,
+        denominator: 1,
+        signature: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1b',
+        extraData: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1c'
+      }
+
+      const _advancedOrders = [_advancedOrder];
+      const _criteriaResolvers = [];
+      const _fulfillerConduitKey = '0x0000000000000000000000000000000000000000000000000000000000000000';
+      const _recipient = buyerLocal1;
+      const _maximumFulfilled = 1;
+
+      const offerFulfillments = [
+        [ { orderIndex: 0, itemIndex: 0 } ]
+      ]
+
+      const considerationFulfillments = [
+        [ { orderIndex: 0, itemIndex: 0 } ]
+      ]
+
+      let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAvailableAdvancedOrders(
+        _advancedOrders,
+        _criteriaResolvers,
+        offerFulfillments,
+        considerationFulfillments,
+        _fulfillerConduitKey,
+        _recipient,
+        _maximumFulfilled);
+
+      const tradeDataSeaPort = PurchaseData(9, 100, 0, dataForSeaportWithSelector);
+
+      const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 100})
+      console.log("SEAPORT fulfillAvalibleAdvancedOrder, by wrapper: ETH <=> ERC721", tx.receipt.gasUsed)
+      assert.equal(await erc721.balanceOf(seller), 0);
+      assert.equal(await erc721.balanceOf(buyerLocal1), 1);
+    })
+  });
+
   describe("purcahase Wywern orders", () => {
     it("Test bulkPurchase Wyvern (num orders = 3), 1 UpFee recipient, ERC721<->ETH", async () => {
       const wyvernProtocolFeeAddress = accounts[9];
@@ -535,7 +693,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.mint(seller3, erc721TokenIdLocal3);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -641,7 +799,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155.mint(seller3, erc1155TokenIdLocal3, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller3), true, {from: seller3});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -744,7 +902,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
       await deployRarible()
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([openSea.address, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -832,7 +990,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
 
       await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
@@ -876,7 +1034,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
 
       await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const encDataLeft = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
       const encDataRight = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
@@ -926,7 +1084,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155.setApprovalForAll(transferProxy.address, true, {from: seller3});
 
       await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       //NB!!! set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
@@ -1055,7 +1213,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721.mint(seller2, erc721TokenIdLocal2);
       await erc721.setApprovalForAll(await wyvernProxyRegistry.proxies(seller2), true, {from: seller2});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
       //for first order
       const matchData = (await getOpenSeaMatchDataMerkleValidator(
         openSea.address,
@@ -1129,7 +1287,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155.mint(seller1, erc1155TokenIdLocal1, 10);
       await erc1155.setApprovalForAll(await wyvernProxyRegistry.proxies(seller1), true, {from: seller1});
 
-      bulkExchange = await ExchangeBulkV2.new(openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([openSea.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const matchData = (await getOpenSeaMatchDataMerkleValidator1155(
         openSea.address,
@@ -1186,7 +1344,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const lr_strategy = await LooksRareTestHelper.new(0);
       await lr_executionManager.addStrategy(lr_strategy.address);
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(transferManagerERC721.address, true, {from: seller});
@@ -1266,7 +1424,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       const lr_strategy = await LooksRareTestHelper.new(0);
       await lr_executionManager.addStrategy(lr_strategy.address);
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareExchange.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       await erc1155.mint(seller, tokenId, 10)
       await erc1155.setApprovalForAll(transferManagerERC1155.address, true, {from: seller});
@@ -1324,7 +1482,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc721delegate.address], [])
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -1409,7 +1567,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc1155delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc1155delegate.address], [])
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const amount = 5;
       await erc1155.mint(seller, tokenId, amount)
@@ -1508,7 +1666,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
       await x2y2.updateDelegates([erc721delegate.address], [])
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, x2y2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       await erc721.mint(seller, tokenId)
       await erc721.setApprovalForAll(erc721delegate.address, true, {from: seller})
@@ -1637,7 +1795,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       ]
       const tradeData = PurchaseData(5, 1105, 0, await wrapperHelper.encodeSudoSwapCall(...input))
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       const tx = await bulkExchange.singlePurchase(tradeData, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyer, value: 1105})
 
@@ -1721,7 +1879,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
 
       const tradeData = PurchaseData(5, 1105, await encodeDataTypeAndFees(1, 1000, 0), dataPlusAdditionalRoyalties)
 
-      bulkExchange = await ExchangeBulkV2.new(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address, ZERO_ADDRESS);
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, router.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
       //2 different royalties recipients + return change Back, gas == 160307
       //1 royalties recipients, gas == 144025
@@ -1742,6 +1900,203 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
       );
       assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
 
+    })
+  })
+
+  describe ("looksrareV2", () => {
+    it("looksrareV2 single", async () => {
+      const owner = accounts[0]
+
+      const feeFirst = accounts[6]
+      const feeSecond = accounts[7]
+
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const protocolFeeRecipient = accounts[8]
+
+      //deploy contracts
+      const transferManager = await TransferManager.new(owner);
+
+      const strategyCollectionOffer = await StrategyCollectionOffer.new()
+
+      const weth = await WETH9.new()
+
+      const looksRareProtocol = await LooksRareProtocol.new(owner, protocolFeeRecipient, transferManager.address, weth.address)
+
+      //setup contracts
+      await transferManager.allowOperator(looksRareProtocol.address);
+      
+      await looksRareProtocol.updateCurrencyStatus(ZERO_ADDRESS, true)
+      await looksRareProtocol.updateCurrencyStatus(weth.address, true)
+
+      await looksRareProtocol.addStrategy(50, 50, 200, "0x84ad8c47", true, strategyCollectionOffer.address)
+      await looksRareProtocol.addStrategy(50, 50, 200, "0x7e897147", true, strategyCollectionOffer.address)
+      
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(transferManager.address, true, {from: seller})
+      await transferManager.grantApprovals([looksRareProtocol.address], {from: seller})
+
+      const input = {
+        "takerBid": {
+          "recipient": buyer,
+          "additionalParameters": "0x"
+        },
+        "makerAsk": {
+          "quoteType": "1",
+          "globalNonce": "0",
+          "subsetNonce": "0",
+          "orderNonce": "0",
+          "strategyId": "0",
+          "collectionType": "0",
+          "collection": erc721.address,
+          "currency": ZERO_ADDRESS,
+          "signer":seller,
+          "startTime": "168076455",
+          "endTime": "16808792846",
+          "price": "1000",
+          "itemIds": [
+            tokenId
+          ],
+          "amounts": [
+            "1"
+          ],
+          "additionalParameters": "0x"
+        },
+        "makerSignature": "0x50d88229949c5884c15f3a71d9127aeb7c9ef9f9b301ce72c6b87076d0a38447335d8f19355f5ec1e9a6063c10ed019234cd8d522839e808d041082dd75c3ee01c",
+        "merkleTree": {
+          "root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "proof": []
+        },
+        "affiliate": ZERO_ADDRESS
+      }
+
+      const data = await wrapperHelper.encodeLooksRareV2Call(input.takerBid, input.makerAsk, input.makerSignature, input.merkleTree, input.affiliate)
+
+      const tradeData = PurchaseData(7, 1000, await encodeCurrencyAndDataTypeAndFees(0, 0, 1500, 500), data)
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareProtocol.address, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
+
+      await verifyBalanceChange(buyer, 1200, async () =>
+        verifyBalanceChange(seller, -995, async () =>
+          verifyBalanceChange(protocolFeeRecipient, -5, async () =>
+            verifyBalanceChange(feeFirst, -150, async () =>
+              verifyBalanceChange(feeSecond, -50, async () =>
+                bulkExchange.singlePurchase(tradeData, feeFirst, feeSecond, {from: buyer, value: 2000, gasPrice: 0 })
+              )
+            )
+          )
+        )
+      );
+
+      assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
+      
+    })
+  })
+
+  describe ("blur", () => {
+    it("blur single", async () => {
+
+      const seller = accounts[1];
+      const buyer = accounts[2];
+      const feeFromSeller = accounts[8]
+      const feeFromBuyer = accounts[9]
+
+      const feeFirst = accounts[6]
+      const feeSecond = accounts[7]
+
+      //deploy and setup contracts 
+      const executionDelegate = await ExecutionDelegate.new()
+      const policyManager = await PolicyManager.new()
+      const standardPolicyERC721 = await StandardPolicyERC721.new()
+
+      await policyManager.addPolicy(standardPolicyERC721.address)
+
+      const blurExchange = await BlurExchange.new()
+      await blurExchange.initialize(executionDelegate.address, policyManager.address, ZERO_ADDRESS, 50)
+
+      await executionDelegate.approveContract(blurExchange.address)
+      
+      //deploy wrapper
+      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, blurExchange.address, ZERO_ADDRESS], ZERO_ADDRESS, []);
+
+      //mint NFT
+      await erc721.mint(seller, tokenId)
+      await erc721.setApprovalForAll(executionDelegate.address, true, {from: seller})
+      
+      const input = {
+        "sell": {
+          "order": {
+            "trader": seller,
+            "side": 1,
+            "matchingPolicy": standardPolicyERC721.address,
+            "collection": erc721.address,
+            "tokenId": tokenId,
+            "amount": "1",
+            "paymentToken": "0x0000000000000000000000000000000000000000",
+            "price": 1000,
+            "listingTime": "168381879",
+            "expirationTime": "16814068278",
+            "fees": [
+              {
+                "rate": 2000,
+                "recipient": feeFromSeller
+              }
+            ],
+            "salt": "65994309200663161530037748276946816666",
+            "extraParams": "0x01"
+          },
+          "v": 27,
+          "r": "0x5b93882de02b8f11485053f2487586e2dcef8843d1cdf4077caa6da821c2596b",
+          "s": "0x0b0460243d87d8e53d85ea1615b200c85bb9a50ad7387e1a8915e5a3c7d631bb",
+          "extraSignature": "0x000000000000000000000000000000000000000000000000000000000000001b7fd6e717aed61bfb988ac35b0b07a3c81b2a7834f9314ccd8c9bcf4201d714c35657cd9099297524e93874b62fee5671aaed42d3795a86d6ebe93daf0e7dae9d",
+          "signatureVersion": 0,
+          "blockNumber": "17038489"
+        },
+        "buy": {
+          "order": {
+            "trader": bulkExchange.address,
+            "side": 0,
+            "matchingPolicy": standardPolicyERC721.address,
+            "collection": erc721.address,
+            "tokenId": tokenId,
+            "amount": "1",
+            "paymentToken": "0x0000000000000000000000000000000000000000",
+            "price": 1000,
+            "listingTime": "168181880",
+            "expirationTime": "16813091771",
+            "fees": [
+            ],
+            "salt": "261913853562470622716597177488189472368",
+            "extraParams": "0x01"
+          },
+          "v": 0,
+          "r": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "s": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "extraSignature": "0x000000000000000000000000000000000000000000000000000000000000001cd474b10997153521d1b3571c148d6b7d813da537f8b8f9cc0f0959677fca93a30b1ebf4a15c0ed01d692b9dcfef6d251b147b259b20f14d8f383324d35414994",
+          "signatureVersion": 0,
+          "blockNumber": "17038489"
+        }
+      }
+
+      const data = await wrapperHelper.encodeBlurData(input.sell, input.buy, ERC721)
+
+      const tradeData = PurchaseData(8, 1000, await encodeCurrencyAndDataTypeAndFees(0, 0, 1500, 500), data)
+      
+      await verifyBalanceChange(seller, -800, async () =>
+        verifyBalanceChange(buyer, 1200, async () =>
+          verifyBalanceChange(feeFromBuyer, 0, async () =>
+            verifyBalanceChange(feeFromSeller, -200, async () =>
+              verifyBalanceChange(feeFirst, -150, async () =>
+                verifyBalanceChange(feeSecond, -50, async () =>
+                  bulkExchange.singlePurchase(tradeData, feeFirst, feeSecond, {from: buyer, value: 2000, gasPrice: 0 })
+                )
+              )
+            )
+          )
+        )
+      )
+
+      assert.equal(await erc721.ownerOf(tokenId), buyer, "buyer has tokenId");
+      
     })
   })
 
@@ -1996,7 +2351,7 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
     return helper.encodeV3_BUY(tuple);
   }
 
-  async function LibPartToUint(account = zeroAddress, value = 0) {
+  async function LibPartToUint(account = ZERO_ADDRESS, value = 0) {
     return await helper.encodeOriginFeeIntoUint(account, value);
   }
 
@@ -2047,6 +2402,11 @@ contract("RaribleExchangeWrapper bulk cases", accounts => {
     }
 
     return orderItem;
+  }
+
+  async function encodeCurrencyAndDataTypeAndFees(currency = 0, dataType = 0, first = 0, second = 0) {
+    const result = await wrapperHelper.encodeCurrencyAndDataTypeAndFees(currency, dataType, first, second);
+    return result.toString()
   }
 
 });
