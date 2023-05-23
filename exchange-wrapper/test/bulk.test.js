@@ -44,12 +44,11 @@ const LinearCurve = artifacts.require("LinearCurve.sol");
 const ExponentialCurve = artifacts.require("ExponentialCurve.sol");
 
 const { Order, Asset, sign } = require("../../scripts/order.js");
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 
-const BN = web3.utils.BN;
-
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
@@ -440,12 +439,12 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       ]
       const tradeDataSudo = PurchaseData(5, 1105, 0, await wrapperHelper.encodeSudoSwapCall(...inputSudo))
 
-      const tx = await verifyBalanceChangeReturnTx(buyer, 1680, async () =>
-        verifyBalanceChangeReturnTx(seller, -1500, async () =>
-          verifyBalanceChangeReturnTx(feeRecipienterUP, -25, () =>
-            verifyBalanceChangeReturnTx(feeRecipientSecond, -50, () =>
-              verifyBalanceChangeReturnTx(factorySudoSwap.address, -5, () =>
-                bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 1680, gasPrice: 0 })
+      const tx = await verifyBalanceChangeReturnTx(web3, buyer, 1680, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -1500, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -25, () =>
+            verifyBalanceChangeReturnTx(web3, feeRecipientSecond, -50, () =>
+              verifyBalanceChangeReturnTx(web3, factorySudoSwap.address, -5, () =>
+                bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 1680 })
               ) 
             )
           )
@@ -731,15 +730,15 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       //fails with allowFail = false
       await expectThrow(
-        bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 1580, gasPrice: 0 })
+        bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 1580 })
       );
    
-      const tx = await verifyBalanceChangeReturnTx(buyer, 1565, async () =>
-        verifyBalanceChangeReturnTx(seller, -1400, async () =>
-          verifyBalanceChangeReturnTx(feeRecipienterUP, -20, () =>
-            verifyBalanceChangeReturnTx(feeRecipientSecond, -40, () =>
-              verifyBalanceChangeReturnTx(factorySudoSwap.address, -5, () =>
-              bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1565, gasPrice: 0 })
+      const tx = await verifyBalanceChangeReturnTx(web3, buyer, 1565, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -1400, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -20, () =>
+            verifyBalanceChangeReturnTx(web3, feeRecipientSecond, -40, () =>
+              verifyBalanceChangeReturnTx(web3, factorySudoSwap.address, -5, () =>
+              bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1565 })
               ) 
             )
           )
@@ -1025,7 +1024,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       //fails with allowFail = true
       await expectThrow(
-        bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680, gasPrice: 0 })
+        bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680 })
       );
 
       //adding working order 
@@ -1049,11 +1048,11 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       });
       const tradeDataNew = PurchaseData(0, 100, await encodeFees(500, 1000), dataNew);
 
-      const tx = await verifyBalanceChangeReturnTx(buyer, 115, async () =>
-        verifyBalanceChangeReturnTx(seller, -100, async () =>
-          verifyBalanceChangeReturnTx(feeRecipienterUP, -5, () =>
-            verifyBalanceChangeReturnTx(feeRecipientSecond, -10, () =>
-              bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo, tradeDataNew], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680, gasPrice: 0 })
+      const tx = await verifyBalanceChangeReturnTx(web3, buyer, 115, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -100, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -5, () =>
+            verifyBalanceChangeReturnTx(web3, feeRecipientSecond, -10, () =>
+              bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo, tradeDataNew], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680 })
             )
           )
         )
@@ -1326,12 +1325,12 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       ]
       const tradeDataSudo = PurchaseData(5, 1105, 0, await wrapperHelper.encodeSudoSwapCall(...inputSudo))
 
-      const tx = await verifyBalanceChangeReturnTx(buyer, 1650, async () =>
-        verifyBalanceChangeReturnTx(seller, -1500, async () =>
-          verifyBalanceChangeReturnTx(feeRecipienterUP, -15, () =>
-            verifyBalanceChangeReturnTx(feeRecipientSecond, -30, () =>
-              verifyBalanceChangeReturnTx(factorySudoSwap.address, -5, () =>
-                bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 1650, gasPrice: 0 })
+      const tx = await verifyBalanceChangeReturnTx(web3, buyer, 1650, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -1500, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -15, () =>
+            verifyBalanceChangeReturnTx(web3, feeRecipientSecond, -30, () =>
+              verifyBalanceChangeReturnTx(web3, factorySudoSwap.address, -5, () =>
+                bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 1650 })
               )
             )
           )
@@ -1627,14 +1626,14 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       const tradeDataSudo = PurchaseData(5, 1105, await encodeDataTypeAndFees(1, 500, 1000), dataPlusAdditionalRoyalties)
 
-      const tx = await verifyBalanceChangeReturnTx(buyer, 575, async () =>
-        verifyBalanceChangeReturnTx(seller, -400, async () =>
-          verifyBalanceChangeReturnTx(feeRecipienterUP, -25, () =>
-            verifyBalanceChangeReturnTx(feeRecipientSecond, -50, () =>
-              verifyBalanceChangeReturnTx(factorySudoSwap.address, 0, () =>
-                verifyBalanceChangeReturnTx(royaltyAccount1, 0, () =>
-                  verifyBalanceChangeReturnTx(royaltyAccount2, 0, () =>
-                    bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680, gasPrice: 0 })
+      const tx = await verifyBalanceChangeReturnTx(web3, buyer, 575, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -400, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -25, () =>
+            verifyBalanceChangeReturnTx(web3, feeRecipientSecond, -50, () =>
+              verifyBalanceChangeReturnTx(web3, factorySudoSwap.address, 0, () =>
+                verifyBalanceChangeReturnTx(web3, royaltyAccount1, 0, () =>
+                  verifyBalanceChangeReturnTx(web3, royaltyAccount2, 0, () =>
+                    bulkExchange.bulkPurchase([tradeData, tradeData1, tradeDataSeaPort, tradeDataLooksRare, tradeDataX2y2, tradeDataSudo], feeRecipienterUP, feeRecipientSecond, true, { from: buyer, value: 1680 })
                   ) 
                 )
               )
@@ -1705,17 +1704,6 @@ contract("RaribleExchangeWrapper default cases", accounts => {
     await transferProxy.addOperator(exchangeV2.address)
     await erc20TransferProxy.addOperator(exchangeV2.address)
 
-  }
-
-  async function verifyBalanceChangeReturnTx(account, change, todo) {
-    let before = new BN(await web3.eth.getBalance(account));
-    const tx = await todo();
-
-    let after = new BN(await web3.eth.getBalance(account));
-    let actual = before.sub(after);
-    assert.equal(change, actual);
-
-    return tx;
   }
 
   async function checkExecutions(tx, result) {

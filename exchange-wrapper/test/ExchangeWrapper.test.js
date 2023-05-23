@@ -1,4 +1,4 @@
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 
 const ExchangeBulkV2 = artifacts.require("RaribleExchangeWrapper.sol");
@@ -67,6 +67,8 @@ const BlurExchange = artifacts.require("BlurExchange");
 const { Order, Asset, sign } = require("../../scripts/order.js");
 
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
@@ -749,14 +751,14 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
 
       const feeRecipientSecond = accounts[8]
 
-      await verifyBalanceChange(buyer, 330, async () =>
-        verifyBalanceChange(seller1, -90, async () =>
-          verifyBalanceChange(seller2, -90, async () =>
-            verifyBalanceChange(seller3, -90, async () =>
-      	      verifyBalanceChange(feeRecipienter, -30, () =>
-      	        verifyBalanceChange(feeRecipienterUP, -20, () =>
-                  verifyBalanceChange(feeRecipientSecond, -10, () =>
-                    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 400, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, buyer, 330, async () =>
+        verifyBalanceChangeReturnTx(web3, seller1, -90, async () =>
+          verifyBalanceChangeReturnTx(web3, seller2, -90, async () =>
+            verifyBalanceChangeReturnTx(web3, seller3, -90, async () =>
+      	      verifyBalanceChangeReturnTx(web3, feeRecipienter, -30, () =>
+      	        verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -20, () =>
+                  verifyBalanceChangeReturnTx(web3, feeRecipientSecond, -10, () =>
+                    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, feeRecipientSecond, false, { from: buyer, value: 400 })
                   )
                 )
               )
@@ -857,7 +859,7 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       let dataForWyvernCall3 = await wrapperHelper.getDataWyvernAtomicMatch(buySellOrders3);
       const tradeData3 = PurchaseData(1, 100, await encodeFees(500), dataForWyvernCall3);
 
-      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 });
+      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400 });
 
       console.log("Bulk2 Wyvern orders, ERC1155<->ETH (num = 3), by tradeData, Gas consumption :", tx.receipt.gasUsed);
       assert.equal(await erc1155.balanceOf(seller1, erc1155TokenIdLocal1), 2);
@@ -968,7 +970,7 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       let dataForWyvernCall3 = await wrapperHelper.getDataWyvernAtomicMatch(buySellOrders3);
       const tradeData3 = PurchaseData(1, 100, await encodeFees(1500), dataForWyvernCall3);
 
-      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 });
+      let tx = await bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400 });
 
       console.log("Bulk2 Wyvern and Rarible mixed orders, ERC1155<->ETH (num = 3), by tradeData, Gas consumption :", tx.receipt.gasUsed);
       assert.equal(await erc1155.balanceOf(seller1, erc1155TokenIdLocal1), 2);
@@ -1020,7 +1022,7 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData1 = PurchaseData(0, 100, await encodeFees(0, 1500), dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      const tx = await bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, feeRecipienterUP, { from: buyer, value: 400, gasPrice: 0 })
+      const tx = await bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, feeRecipienterUP, { from: buyer, value: 400 })
       console.log("rarible V2 721 1 order 1 comission", tx.receipt.gasUsed)
       assert.equal(await erc721.balanceOf(seller1), 0);
       assert.equal(await erc721.balanceOf(buyer), 1);
@@ -1064,7 +1066,7 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData1 = PurchaseData(0, 100, await encodeFees(0, 1500), dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      const tx = await bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, feeRecipienterUP, { from: buyer, value: 400, gasPrice: 0 })
+      const tx = await bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, feeRecipienterUP, { from: buyer, value: 400 })
       console.log("rarible V3 721 1 order 1 comission", tx.receipt.gasUsed)
       assert.equal(await erc721.balanceOf(seller1), 0);
       assert.equal(await erc721.balanceOf(buyer), 1);
@@ -1164,12 +1166,12 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams3);
       const tradeData3 = PurchaseData(0, 100,  await encodeFees(1500), dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-    	await verifyBalanceChange(buyer, 276, async () =>
-    		verifyBalanceChange(seller1, -60, async () =>
-    		  verifyBalanceChange(seller2, -80, async () =>
-    		    verifyBalanceChange(seller3, -100, async () =>
-    			    verifyBalanceChange(feeRecipienterUP, -36, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 })
+    	await verifyBalanceChangeReturnTx(web3, buyer, 276, async () =>
+    		verifyBalanceChangeReturnTx(web3, seller1, -60, async () =>
+    		  verifyBalanceChangeReturnTx(web3, seller2, -80, async () =>
+    		    verifyBalanceChangeReturnTx(web3, seller3, -100, async () =>
+    			    verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -36, () =>
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400 })
     				  )
     				)
     			)
@@ -1250,18 +1252,18 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       let dataForWyvernCall2 = await wrapperHelper.getDataWyvernAtomicMatch(buySellOrders2);
       const tradeData2 = PurchaseData(1, 100, await encodeFees(1500), dataForWyvernCall2);
 
-      await verifyBalanceChange(buyer, 115, async () =>
-      	verifyBalanceChange(seller2, -90, async () =>
-      		verifyBalanceChange(feeRecipienter, -10, () =>
-      		  verifyBalanceChange(feeRecipienterUP, -15, () =>
-      		    bulkExchange.singlePurchase(tradeData2, feeRecipienterUP, ZERO_ADDRESS, { from: buyer, value: 400, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, buyer, 115, async () =>
+      	verifyBalanceChangeReturnTx(web3, seller2, -90, async () =>
+      		verifyBalanceChangeReturnTx(web3, feeRecipienter, -10, () =>
+      		  verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -15, () =>
+      		    bulkExchange.singlePurchase(tradeData2, feeRecipienterUP, ZERO_ADDRESS, { from: buyer, value: 400 })
       		  )
       		)
       	)
       );
       //exception if wrong method
       await expectThrow(
-        bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, ZERO_ADDRESS, { from: buyer, value: 400, gasPrice: 0 })
+        bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, ZERO_ADDRESS, { from: buyer, value: 400 })
       );
       assert.equal(await erc721.balanceOf(buyer), 1);
     })
@@ -1309,11 +1311,11 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       const tradeData1 = PurchaseData(1, 100, await encodeFees(1500), dataForWyvernCall1);
 
       //enough ETH for purchase
-      await verifyBalanceChange(buyer, 115, async () =>
-      	verifyBalanceChange(seller1, -90, async () =>
-      		verifyBalanceChange(feeRecipienter, -10, () =>
-      		  verifyBalanceChange(feeRecipienterUP, -15, () =>
-      		    bulkExchange.singlePurchase(tradeData1, feeRecipienterUP, ZERO_ADDRESS, { from: buyer, value: 400, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, buyer, 115, async () =>
+      	verifyBalanceChangeReturnTx(web3, seller1, -90, async () =>
+      		verifyBalanceChangeReturnTx(web3, feeRecipienter, -10, () =>
+      		  verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -15, () =>
+      		    bulkExchange.singlePurchase(tradeData1, feeRecipienterUP, ZERO_ADDRESS, { from: buyer, value: 400 })
       		  )
       		)
       	)
@@ -1394,10 +1396,10 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
 
       const tradeDataSeaPort = PurchaseData(4, 10000, dataTypePlusFees, dataPlusAdditionalRoyalties);
 
-      await verifyBalanceChange(buyerLocal1, 13000, () =>
-        verifyBalanceChange(royaltyAccount1, -1000, () =>
-          verifyBalanceChange(royaltyAccount2, -2000, () =>
-            bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 13000, gasPrice: 0})
+      await verifyBalanceChangeReturnTx(web3, buyerLocal1, 13000, () =>
+        verifyBalanceChangeReturnTx(web3, royaltyAccount1, -1000, () =>
+          verifyBalanceChangeReturnTx(web3, royaltyAccount2, -2000, () =>
+            bulkExchange.singlePurchase(tradeDataSeaPort, ZERO_ADDRESS, ZERO_ADDRESS, {from: buyerLocal1, value: 13000})
           )
         )
       );
@@ -1883,14 +1885,14 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
 
       //2 different royalties recipients + return change Back, gas == 160307
       //1 royalties recipients, gas == 144025
-      await verifyBalanceChange(buyer, 1546, async () =>
-      	verifyBalanceChange(seller, -1100, async () =>
-      		verifyBalanceChange(royaltyAccount1, -110, () =>
-      		  verifyBalanceChange(royaltyAccount2, -221, () =>
-              verifyBalanceChange(feeRecipienterUP, -110, () =>
-                verifyBalanceChange(factory.address, -5, () =>
-                  verifyBalanceChange(bulkExchange.address, 0, () =>
-                    bulkExchange.singlePurchase(tradeData, feeRecipienterUP, ZERO_ADDRESS, {from: buyer, value: 1546, gasPrice: 0})
+      await verifyBalanceChangeReturnTx(web3, buyer, 1546, async () =>
+      	verifyBalanceChangeReturnTx(web3, seller, -1100, async () =>
+      		verifyBalanceChangeReturnTx(web3, royaltyAccount1, -110, () =>
+      		  verifyBalanceChangeReturnTx(web3, royaltyAccount2, -221, () =>
+              verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -110, () =>
+                verifyBalanceChangeReturnTx(web3, factory.address, -5, () =>
+                  verifyBalanceChangeReturnTx(web3, bulkExchange.address, 0, () =>
+                    bulkExchange.singlePurchase(tradeData, feeRecipienterUP, ZERO_ADDRESS, {from: buyer, value: 1546})
                   )
                 )
               )
@@ -1975,12 +1977,12 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       const tradeData = PurchaseData(7, 1000, await encodeCurrencyAndDataTypeAndFees(0, 0, 1500, 500), data)
       bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, looksRareProtocol.address, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
 
-      await verifyBalanceChange(buyer, 1200, async () =>
-        verifyBalanceChange(seller, -995, async () =>
-          verifyBalanceChange(protocolFeeRecipient, -5, async () =>
-            verifyBalanceChange(feeFirst, -150, async () =>
-              verifyBalanceChange(feeSecond, -50, async () =>
-                bulkExchange.singlePurchase(tradeData, feeFirst, feeSecond, {from: buyer, value: 2000, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, buyer, 1200, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -995, async () =>
+          verifyBalanceChangeReturnTx(web3, protocolFeeRecipient, -5, async () =>
+            verifyBalanceChangeReturnTx(web3, feeFirst, -150, async () =>
+              verifyBalanceChangeReturnTx(web3, feeSecond, -50, async () =>
+                bulkExchange.singlePurchase(tradeData, feeFirst, feeSecond, {from: buyer, value: 2000 })
               )
             )
           )
@@ -2081,13 +2083,13 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
 
       const tradeData = PurchaseData(8, 1000, await encodeCurrencyAndDataTypeAndFees(0, 0, 1500, 500), data)
       
-      await verifyBalanceChange(seller, -800, async () =>
-        verifyBalanceChange(buyer, 1200, async () =>
-          verifyBalanceChange(feeFromBuyer, 0, async () =>
-            verifyBalanceChange(feeFromSeller, -200, async () =>
-              verifyBalanceChange(feeFirst, -150, async () =>
-                verifyBalanceChange(feeSecond, -50, async () =>
-                  bulkExchange.singlePurchase(tradeData, feeFirst, feeSecond, {from: buyer, value: 2000, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, seller, -800, async () =>
+        verifyBalanceChangeReturnTx(web3, buyer, 1200, async () =>
+          verifyBalanceChangeReturnTx(web3, feeFromBuyer, 0, async () =>
+            verifyBalanceChangeReturnTx(web3, feeFromSeller, -200, async () =>
+              verifyBalanceChangeReturnTx(web3, feeFirst, -150, async () =>
+                verifyBalanceChangeReturnTx(web3, feeSecond, -50, async () =>
+                  bulkExchange.singlePurchase(tradeData, feeFirst, feeSecond, {from: buyer, value: 2000 })
                 )
               )
             )

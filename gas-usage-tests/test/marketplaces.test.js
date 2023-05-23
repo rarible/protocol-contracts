@@ -68,6 +68,7 @@ const truffleAssert = require('truffle-assertions');
 const { Order, Asset, sign } = require("../../scripts/order.js");
 
 const BN = web3.utils.BN;
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f13";
@@ -544,10 +545,10 @@ contract("Test gas usage for marketplaces", accounts => {
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataRight);
     
     console.log("OLD RARIBLE: match ETH <=> ERC721")
-    await verifyBalanceChange(buyer, 1030, async () =>
-      verifyBalanceChange(protocol, -60, async () =>
-        verifyBalanceChange(seller, -970, async () =>
-          exchangeV2.matchOrders(left, "0x", right, await getSignature(exchangeV2, right, seller), { from: buyer, value: 1030, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 1030, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, -60, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -970, async () =>
+          exchangeV2.matchOrders(left, "0x", right, await getSignature(exchangeV2, right, seller), { from: buyer, value: 1030})
         )
       )
     )
@@ -563,10 +564,10 @@ contract("Test gas usage for marketplaces", accounts => {
 		const right1 = Order(seller, Asset(ERC721, enc( token.address, tokenid1), 1), zeroAddress, Asset(ETH, "0x", 1000), 2, 0, 0, ORDER_DATA_V2, encDataRight);
     
     console.log("OLD RARIBLE: match ETH <=> ERC721 (second token of collection)")
-    await verifyBalanceChange(buyer, 1030, async () =>
-      verifyBalanceChange(protocol, -60, async () =>
-        verifyBalanceChange(seller, -970, async () =>
-          exchangeV2.matchOrders(left1, "0x", right1, await getSignature(exchangeV2, right1, seller), { from: buyer, value: 1100, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 1030, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, -60, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -970, async () =>
+          exchangeV2.matchOrders(left1, "0x", right1, await getSignature(exchangeV2, right1, seller), { from: buyer, value: 1100})
         )
       )
     )
@@ -764,10 +765,10 @@ contract("Test gas usage for marketplaces", accounts => {
       ]
     }
     console.log("SEAPORT: ETH <=> ERC721")
-    await verifyBalanceChange(buyer, 110, async () =>
-      verifyBalanceChange(protocol, -10, async () =>
-        verifyBalanceChange(seller, -100, async () =>
-          seaport.fulfillBasicOrder(basicOrder, {from: buyer, value: "110", gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 110, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, -10, async () =>
+        verifyBalanceChangeReturnTx(web3, seller, -100, async () =>
+          seaport.fulfillBasicOrder(basicOrder, {from: buyer, value: "110"})
         )
       )
     )
@@ -1077,10 +1078,10 @@ contract("Test gas usage for marketplaces", accounts => {
     const Pair = await LSSVMPairMissingEnumerableETH.at(pair)
     //console.log(await Pair.getBuyNFTQuote(1))
     console.log("SUDOSWAP: ETH <=> ERC721")
-    await verifyBalanceChange(seller, -1100, async () =>
-      verifyBalanceChange(factory.address, -5, async () =>
-        verifyBalanceChange(buyer, 1105, async () =>
-          router.swapETHForSpecificNFTs( [ {pair: pair, nftIds: [ tokenId ] } ], buyer, nftGetter, "99999999999999", { from: buyer, value: 1105, gasPrice: 0 } )
+    await verifyBalanceChangeReturnTx(web3, seller, -1100, async () =>
+      verifyBalanceChangeReturnTx(web3, factory.address, -5, async () =>
+        verifyBalanceChangeReturnTx(web3, buyer, 1105, async () =>
+          router.swapETHForSpecificNFTs( [ {pair: pair, nftIds: [ tokenId ] } ], buyer, nftGetter, "99999999999999", { from: buyer, value: 1105} )
         )
       )
     )
@@ -1155,10 +1156,10 @@ contract("Test gas usage for marketplaces", accounts => {
       "affiliate": zeroAddress
     }
 
-    await verifyBalanceChange(seller, -995, async () =>
-      verifyBalanceChange(buyer, 1001, async () =>
-        verifyBalanceChange(protocolFeeRecipient, -5, async () =>
-          looksRareProtocol.executeTakerBid(data1.takerBid, data1.makerAsk, data1.makerSignature, data1.merkleTree, data1.affiliate, {from: buyer, value: 2000, gasPrice: 0 } )
+    await verifyBalanceChangeReturnTx(web3, seller, -995, async () =>
+      verifyBalanceChangeReturnTx(web3, buyer, 1001, async () =>
+        verifyBalanceChangeReturnTx(web3, protocolFeeRecipient, -5, async () =>
+          looksRareProtocol.executeTakerBid(data1.takerBid, data1.makerAsk, data1.makerSignature, data1.merkleTree, data1.affiliate, {from: buyer, value: 2000} )
         )
       )
     )
@@ -1203,10 +1204,10 @@ contract("Test gas usage for marketplaces", accounts => {
       "affiliate": zeroAddress
     }
 
-    await verifyBalanceChange(nftGetter, -995, async () =>
-      verifyBalanceChange(buyer, 1000, async () =>
-        verifyBalanceChange(protocolFeeRecipient, -5, async () =>
-          looksRareProtocol.executeTakerBid(data2.takerBid, data2.makerAsk, data2.makerSignature, data2.merkleTree, data2.affiliate, {from: buyer, value: 2000, gasPrice: 0 } )
+    await verifyBalanceChangeReturnTx(web3, nftGetter, -995, async () =>
+      verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+        verifyBalanceChangeReturnTx(web3, protocolFeeRecipient, -5, async () =>
+          looksRareProtocol.executeTakerBid(data2.takerBid, data2.makerAsk, data2.makerSignature, data2.merkleTree, data2.affiliate, {from: buyer, value: 2000} )
         )
       )
     )
@@ -1299,11 +1300,11 @@ it("blur V2 ETH", async () => {
     }
   }
 
-  await verifyBalanceChange(seller, -800, async () =>
-    verifyBalanceChange(buyer, 1100, async () =>
-      verifyBalanceChange(feeFromBuyer, -100, async () =>
-        verifyBalanceChange(feeFromSeller, -200, async () =>
-          blurExchange.execute(input.sell, input.buy, {from: buyer, value: 2000, gasPrice: 0 } )
+  await verifyBalanceChangeReturnTx(web3, seller, -800, async () =>
+    verifyBalanceChangeReturnTx(web3, buyer, 1100, async () =>
+      verifyBalanceChangeReturnTx(web3, feeFromBuyer, -100, async () =>
+        verifyBalanceChangeReturnTx(web3, feeFromSeller, -200, async () =>
+          blurExchange.execute(input.sell, input.buy, {from: buyer, value: 2000} )
         )
       )
     )
@@ -1525,16 +1526,5 @@ it("blur V2 ETH", async () => {
   async function getSignature(exchangeV2, order, signer) {
 		return sign(order, signer, exchangeV2.address);
 	}
-
-  async function verifyBalanceChange(account, change, todo) {
-    let before = new BN(await web3.eth.getBalance(account));
-    const tx = await todo();
-    if (!!tx && !!tx.receipt) {
-      console.log(tx.receipt.gasUsed)
-    }
-    let after = new BN(await web3.eth.getBalance(account));
-    let actual = before.sub(after);
-    assert.equal(change, actual);
-  }
 
 });

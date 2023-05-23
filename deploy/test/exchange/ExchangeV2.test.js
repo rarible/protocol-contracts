@@ -23,10 +23,12 @@ const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
 const { Order, Asset, sign } = require("../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f11";
+
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   let exchangeV2;
@@ -224,13 +226,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
-      await verifyBalanceChange(makerRight, 100, async () =>
-        verifyBalanceChange(makerLeft, -93, async () =>
-          verifyBalanceChange(protocol, 0, () =>
-            verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
-              verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
-                verifyBalanceChange(accounts[7], -1, () =>  //royalties
-                  exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,makerLeft, -93, async () =>
+          verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -3, () =>      //OriginLeft
+              verifyBalanceChangeReturnTx(web3,accounts[5], -3, () =>    //OriginRight
+                verifyBalanceChangeReturnTx(web3,accounts[7], -1, () =>  //royalties
+                  exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200})
                 )
               )
             )
@@ -332,13 +334,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       assert.equal(await erc1155.balanceOf(makerLeft, erc1155TokenId1), 10);
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 0);
-      await verifyBalanceChange(makerRight, 100, async () =>
-        verifyBalanceChange(makerLeft, -93, async () =>
-          verifyBalanceChange(protocol, 0, () =>
-            verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
-              verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
-                verifyBalanceChange(accounts[7], -1, () =>  //royalties
-                  exchangeV2.directPurchase(directPurchaseParams,{ from: makerRight, value:200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,makerLeft, -93, async () =>
+          verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -3, () =>      //OriginLeft
+              verifyBalanceChangeReturnTx(web3,accounts[5], -3, () =>    //OriginRight
+                verifyBalanceChangeReturnTx(web3,accounts[7], -1, () =>  //royalties
+                  exchangeV2.directPurchase(directPurchaseParams,{ from: makerRight, value:200})
                 )
               )
             )
@@ -593,13 +595,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       assert.equal(await erc721.balanceOf(makerLeft), 1);
       assert.equal(await erc721.balanceOf(makerRight), 0);
-      await verifyBalanceChange(makerRight, 103, async () =>
-        verifyBalanceChange(makerLeft, -96, async () =>
-          verifyBalanceChange(protocol, 0, () =>
-            verifyBalanceChange(accounts[6], -3, () =>      //OriginLeft
-              verifyBalanceChange(accounts[5], -3, () =>    //OriginRight
-                verifyBalanceChange(accounts[7], -1, () =>  //royalties
-                  exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 103, async () =>
+        verifyBalanceChangeReturnTx(web3,makerLeft, -96, async () =>
+          verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -3, () =>      //OriginLeft
+              verifyBalanceChangeReturnTx(web3,accounts[5], -3, () =>    //OriginRight
+                verifyBalanceChangeReturnTx(web3,accounts[7], -1, () =>  //royalties
+                  exchangeV2.directPurchase(directPurchaseParams, { from: makerRight, value:200})
                 )
               )
             )
@@ -811,10 +813,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
 
       const signature = await getSignature(right, makerRight);
-      await verifyBalanceChange(makerRight, -200, async () =>
-        verifyBalanceChange(makerLeft, 200, async () =>
-          verifyBalanceChange(protocol, 0, () =>
-            exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, -200, async () =>
+        verifyBalanceChangeReturnTx(web3,makerLeft, 200, async () =>
+          verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+            exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: 300})
           )
         )
       );
@@ -831,10 +833,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const signatureLeft = await getSignature(left, makerLeft);
       const signatureRight = await getSignature(right, makerRight);
 
-      await verifyBalanceChange(accounts[7], 200, async () =>
-        verifyBalanceChange(makerLeft, -200, async () =>
-          verifyBalanceChange(protocol, 0, () =>
-            exchangeV2.matchOrders(left, signatureLeft, right, signatureRight, { from: accounts[7], value: 200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,accounts[7], 200, async () =>
+        verifyBalanceChangeReturnTx(web3,makerLeft, -200, async () =>
+          verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+            exchangeV2.matchOrders(left, signatureLeft, right, signatureRight, { from: accounts[7], value: 200})
           )
         )
       )
@@ -850,7 +852,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const right = Order(makerRight, Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, "0xffffffff", "0x");
 
       await expectThrow(
-        exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: accounts[7], value: 300, gasPrice: 0 })
+        exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: accounts[7], value: 300})
       );
     })
 
@@ -1028,15 +1030,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft);
 
-      await verifyBalanceChange(makerRight, 222, async () =>			//200+6buyerFee+ (10+12 origin left) (72back)
-        verifyBalanceChange(makerLeft, -172, async () =>				//200 -6seller - (6+8royalties) - 14originright
-          verifyBalanceChange(accounts[3], -6, async () =>
-            verifyBalanceChange(accounts[4], -8, async () =>
-              verifyBalanceChange(accounts[5], -10, async () =>
-                verifyBalanceChange(accounts[6], -12, async () =>
-                  verifyBalanceChange(accounts[7], -14, async () =>
-                    verifyBalanceChange(protocol, 0, () =>
-                      exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 222, async () =>			//200+6buyerFee+ (10+12 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -172, async () =>				//200 -6seller - (6+8royalties) - 14originright
+          verifyBalanceChangeReturnTx(web3,accounts[3], -6, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[4], -8, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+                verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+                  verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                    verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                      exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                     )
                   )
                 )
@@ -1063,13 +1065,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft);
 
-      await verifyBalanceChange(makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
-        verifyBalanceChange(makerLeft, -186, async () =>				//200 -6seller - 14 originright
-          verifyBalanceChange(accounts[5], -10, async () =>
-            verifyBalanceChange(accounts[6], -12, async () =>
-              verifyBalanceChange(accounts[7], -14, async () =>
-                verifyBalanceChange(protocol, 0, () =>
-                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -186, async () =>				//200 -6seller - 14 originright
+          verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                 )
               )
             )
@@ -1094,13 +1096,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft);
 
-      await verifyBalanceChange(makerRight, 200, async () =>			//200+6buyerFee+  (94back)
-        verifyBalanceChange(makerLeft, -164, async () =>				//200 -6seller - (10+ 12+ 14) originright
-          verifyBalanceChange(accounts[5], -10, async () =>
-            verifyBalanceChange(accounts[6], -12, async () =>
-              verifyBalanceChange(accounts[7], -14, async () =>
-                verifyBalanceChange(protocol, 0, () =>
-                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 200, async () =>			//200+6buyerFee+  (94back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -164, async () =>				//200 -6seller - (10+ 12+ 14) originright
+          verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                 )
               )
             )
@@ -1126,13 +1128,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft);
 
-      await verifyBalanceChange(makerRight, 236, async () =>			//200+6buyerFee+ (10 +12 +14 origin left) (72back)
-        verifyBalanceChange(makerLeft, -200, async () =>				//200 -6seller -
-          verifyBalanceChange(accounts[5], -10, async () =>
-            verifyBalanceChange(accounts[6], -12, async () =>
-              verifyBalanceChange(accounts[7], -14, async () =>
-                verifyBalanceChange(protocol, 0, () =>
-                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 236, async () =>			//200+6buyerFee+ (10 +12 +14 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -200, async () =>				//200 -6seller -
+          verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                 )
               )
             )
@@ -1156,7 +1158,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const right = Order(makerRight, Asset(ETH, "0x", 200), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V1, encDataLeft);
 
       await expectThrow(
-        exchangeV2.matchOrders(left, "0x", right, await getSignature(right, makerRight), { from: makerLeft, value: 300, gasPrice: 0 })
+        exchangeV2.matchOrders(left, "0x", right, await getSignature(right, makerRight), { from: makerLeft, value: 300})
       );
     })
 
@@ -1174,14 +1176,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(right, makerRight)
 
-      await verifyBalanceChange(makerLeft, 200, async () =>			//200+6buyerFee+
-        verifyBalanceChange(makerRight, 0, async () =>				//200 -6seller -(180 + 10 + 12(really 10) + 14(really 0) origin left)
-          verifyBalanceChange(accounts[3], -180, async () =>
-            verifyBalanceChange(accounts[5], -10, async () =>
-              verifyBalanceChange(accounts[6], -10, async () =>
-                verifyBalanceChange(accounts[7], 0, async () =>
-                  verifyBalanceChange(protocol, 0, () =>
-                    exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, 200, async () =>			//200+6buyerFee+
+        verifyBalanceChangeReturnTx(web3,makerRight, 0, async () =>				//200 -6seller -(180 + 10 + 12(really 10) + 14(really 0) origin left)
+          verifyBalanceChangeReturnTx(web3,accounts[3], -180, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[6], -10, async () =>
+                verifyBalanceChangeReturnTx(web3,accounts[7], 0, async () =>
+                  verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                    exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: 300})
                   )
                 )
               )
@@ -1281,14 +1283,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft)
 
-      await verifyBalanceChange(makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
-        verifyBalanceChange(accounts[3], -93, async () =>				//200 -6seller - 14 originright *50%
-          verifyBalanceChange(makerLeft, -93, async () =>				//200 -6seller - 14 originright *50%
-            verifyBalanceChange(accounts[5], -10, async () =>
-              verifyBalanceChange(accounts[6], -12, async () =>
-                verifyBalanceChange(accounts[7], -14, async () =>
-                  verifyBalanceChange(protocol, 0, () =>
-                    exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,accounts[3], -93, async () =>				//200 -6seller - 14 originright *50%
+          verifyBalanceChangeReturnTx(web3,makerLeft, -93, async () =>				//200 -6seller - 14 originright *50%
+            verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+                verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                  verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                    exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                   )
                 )
               )
@@ -1314,13 +1316,13 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft)
 
-      await verifyBalanceChange(makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
-        verifyBalanceChange(makerLeft, -186, async () =>				//200 -6seller - 14 originright *100%
-          verifyBalanceChange(accounts[5], -10, async () =>
-            verifyBalanceChange(accounts[6], -12, async () =>
-              verifyBalanceChange(accounts[7], -14, async () =>
-                verifyBalanceChange(protocol, 0, () =>
-                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -186, async () =>				//200 -6seller - 14 originright *100%
+          verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                  exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                 )
               )
             )
@@ -1349,15 +1351,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft)
 
-      await verifyBalanceChange(makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
-        verifyBalanceChange(makerLeft, -156, async () =>				//200 -6seller - 14 originright
-          verifyBalanceChange(accounts[3], -10, async () =>
-            verifyBalanceChange(accounts[4], -20, async () =>
-              verifyBalanceChange(accounts[5], -10, async () =>
-                verifyBalanceChange(accounts[6], -12, async () =>
-                  verifyBalanceChange(accounts[7], -14, async () =>
-                    verifyBalanceChange(protocol, 0, () =>
-                      exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -156, async () =>				//200 -6seller - 14 originright
+          verifyBalanceChangeReturnTx(web3,accounts[3], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[4], -20, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+                verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+                  verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                    verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                      exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                     )
                   )
                 )
@@ -1383,15 +1385,15 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft)
 
-      await verifyBalanceChange(makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
-        verifyBalanceChange(makerLeft, -156, async () =>				//200 -6seller - 14 originright
-          verifyBalanceChange(accounts[3], -10, async () =>
-            verifyBalanceChange(accounts[4], -20, async () =>
-              verifyBalanceChange(accounts[5], -10, async () =>
-                verifyBalanceChange(accounts[6], -12, async () =>
-                  verifyBalanceChange(accounts[7], -14, async () =>
-                    verifyBalanceChange(protocol, 0, () =>
-                      exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 222, async () =>			//200+6buyerFee+ (10 +12 origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -156, async () =>				//200 -6seller - 14 originright
+          verifyBalanceChangeReturnTx(web3,accounts[3], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[4], -20, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+                verifyBalanceChangeReturnTx(web3,accounts[6], -12, async () =>
+                  verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                    verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                      exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                     )
                   )
                 )
@@ -1422,14 +1424,14 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
       const signature = await getSignature(left, makerLeft)
 
-      await verifyBalanceChange(makerRight, 210, async () =>			//200+6buyerFee+ (10  origin left) (72back)
-        verifyBalanceChange(makerLeft, -156, async () =>				//200 -6seller - 14 originright
-          verifyBalanceChange(accounts[3], -10, async () =>
-            verifyBalanceChange(accounts[4], -20, async () =>
-              verifyBalanceChange(accounts[5], -10, async () =>
-                verifyBalanceChange(accounts[7], -14, async () =>
-                  verifyBalanceChange(protocol, 0, () =>
-                    exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerRight, 210, async () =>			//200+6buyerFee+ (10  origin left) (72back)
+        verifyBalanceChangeReturnTx(web3,makerLeft, -156, async () =>				//200 -6seller - 14 originright
+          verifyBalanceChangeReturnTx(web3,accounts[3], -10, async () =>
+            verifyBalanceChangeReturnTx(web3,accounts[4], -20, async () =>
+              verifyBalanceChangeReturnTx(web3,accounts[5], -10, async () =>
+                verifyBalanceChangeReturnTx(web3,accounts[7], -14, async () =>
+                  verifyBalanceChangeReturnTx(web3,protocol, 0, () =>
+                    exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 300})
                   )
                 )
               )
@@ -1454,9 +1456,9 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(makerRight, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
-      await verifyBalanceChange(makerLeft, -500, async () =>
-        verifyBalanceChange(makerRight, 500, async () =>
-          exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: 600, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, -500, async () =>
+        verifyBalanceChangeReturnTx(web3,makerRight, 500, async () =>
+          exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: 600})
         )
       )
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 100);
@@ -1470,9 +1472,9 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const leferc20 = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 600), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const righerc20 = Order(buyer1, Asset(ETH, "0x", 300), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
-      await verifyBalanceChange(makerLeft, -300, async () =>
-        verifyBalanceChange(buyer1, 300, async () =>
-          exchangeV2.matchOrders(leferc20, await getSignature(leferc20, makerLeft), righerc20, "0x", { from: buyer1, value: 600, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, -300, async () =>
+        verifyBalanceChangeReturnTx(web3,buyer1, 300, async () =>
+          exchangeV2.matchOrders(leferc20, await getSignature(leferc20, makerLeft), righerc20, "0x", { from: buyer1, value: 600})
         )
       )
       assert.equal(await exchangeV2.fills(leftOrderHash), 200, "left fill make side 1")
@@ -1491,9 +1493,9 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(makerRight, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
-      await verifyBalanceChange(makerLeft, -500, async () =>
-        verifyBalanceChange(makerRight, 500, async () =>
-          exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: 600, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, -500, async () =>
+        verifyBalanceChangeReturnTx(web3,makerRight, 500, async () =>
+          exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: 600})
         )
       )
       assert.equal(await erc1155.balanceOf(makerRight, erc1155TokenId1), 100);
@@ -1505,9 +1507,9 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const leferc20 = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 2000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const righerc20 = Order(buyer1, Asset(ETH, "0x", 1000), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
-      await verifyBalanceChange(makerLeft, -1000, async () =>
-        verifyBalanceChange(buyer1, 1000, async () =>
-          exchangeV2.matchOrders(leferc20, await getSignature(leferc20, makerLeft), righerc20, "0x", { from: buyer1, value: 1100, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, -1000, async () =>
+        verifyBalanceChangeReturnTx(web3,buyer1, 1000, async () =>
+          exchangeV2.matchOrders(leferc20, await getSignature(leferc20, makerLeft), righerc20, "0x", { from: buyer1, value: 1100})
         )
       )
 
@@ -1527,10 +1529,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const left = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const right = Order(makerRight, Asset(ETH, "0x", 500), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
-      await verifyBalanceChange(makerLeft, -450, async () =>
-        verifyBalanceChange(makerRight, 500, async () =>
-          verifyBalanceChange(accounts[5], -50, async () =>
-            exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: 600, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, -450, async () =>
+        verifyBalanceChangeReturnTx(web3,makerRight, 500, async () =>
+          verifyBalanceChangeReturnTx(web3,accounts[5], -50, async () =>
+            exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, "0x", { from: makerRight, value: 600})
           )
         )
       )
@@ -1545,10 +1547,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const leferc20 = Order(makerLeft, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 200), ZERO, Asset(ETH, "0x", 600), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       const righerc20 = Order(buyer1, Asset(ETH, "0x", 300), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 100), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
-      await verifyBalanceChange(makerLeft, -270, async () =>
-        verifyBalanceChange(buyer1, 300, async () =>
-          verifyBalanceChange(accounts[5], -30, async () =>
-            exchangeV2.matchOrders(leferc20, await getSignature(leferc20, makerLeft), righerc20, "0x", { from: buyer1, value: 600, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,makerLeft, -270, async () =>
+        verifyBalanceChangeReturnTx(web3,buyer1, 300, async () =>
+          verifyBalanceChangeReturnTx(web3,accounts[5], -30, async () =>
+            exchangeV2.matchOrders(leferc20, await getSignature(leferc20, makerLeft), righerc20, "0x", { from: buyer1, value: 600})
           )
         )
       )

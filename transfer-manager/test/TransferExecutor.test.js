@@ -11,7 +11,7 @@ const order = require("../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const tests = require("@daonomic/tests-common");
 const expectThrow = tests.expectThrow;
-const verifyBalanceChange = tests.verifyBalanceChange;
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
 const { ETH, ERC20, ERC721, ERC1155, enc } = require("../../scripts/assets.js");
 
 contract("TransferExecutor", accounts => {
@@ -36,9 +36,9 @@ contract("TransferExecutor", accounts => {
 	});
 
 	it("should support ETH transfers", async () => {
-		await verifyBalanceChange(accounts[0], 500, () =>
-			verifyBalanceChange(accounts[5], -500, () =>
-    		testing.transferTest(order.Asset(ETH, "0x", 500), ZERO, accounts[5], { value: 500, gasPrice: "0" })
+		await verifyBalanceChangeReturnTx(web3, accounts[0], 500, () =>
+			verifyBalanceChangeReturnTx(web3, accounts[5], -500, () =>
+    		testing.transferTest(order.Asset(ETH, "0x", 500), ZERO, accounts[5], { value: 500 })
     	)
 		);
 	})

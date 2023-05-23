@@ -8,8 +8,9 @@ const LibOrderTest = artifacts.require("LibOrderTest.sol");
 
 const { Order, Asset, sign } = require("../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 const { ETH, ERC20, enc } = require("../../scripts/assets.js");
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
 
 contract("ExchangeSimpleV2", accounts => {
   let testing;
@@ -55,9 +56,9 @@ contract("ExchangeSimpleV2", accounts => {
         testing.matchOrders(left, signature, right, "0x", { from: accounts[2], value: 199 })
       );
 
-      await verifyBalanceChange(accounts[2], 200, async () =>
-        verifyBalanceChange(accounts[1], -200, async () =>
-          testing.matchOrders(left, signature, right, "0x", { from: accounts[2], value: 200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, accounts[2], 200, async () =>
+        verifyBalanceChangeReturnTx(web3, accounts[1], -200, async () =>
+          testing.matchOrders(left, signature, right, "0x", { from: accounts[2], value: 200})
         )
       )
       assert.equal(await t1.balanceOf(accounts[1]), 0);
@@ -77,9 +78,9 @@ contract("ExchangeSimpleV2", accounts => {
       await expectThrow(
         testing.matchOrders(left, "0x", right, signature, { from: accounts[2], value: 199 })
       );
-      await verifyBalanceChange(accounts[2], 200, async () =>
-        verifyBalanceChange(accounts[1], -200, async () =>
-          testing.matchOrders(left, "0x", right, signature, { from: accounts[2], value: 200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3, accounts[2], 200, async () =>
+        verifyBalanceChangeReturnTx(web3, accounts[1], -200, async () =>
+          testing.matchOrders(left, "0x", right, signature, { from: accounts[2], value: 200})
         )
       )
       assert.equal(await t1.balanceOf(accounts[1]), 0);

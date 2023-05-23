@@ -10,9 +10,10 @@ const TransferProxy = artifacts.require("TransferProxy.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 
 const { Order, Asset, sign } = require("../../../scripts/order.js");
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../../../scripts/assets");
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let bulkExchange;
@@ -142,12 +143,12 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams3);
       const tradeData3 = PurchaseData(0, 100,  await encodeFees(1500), dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-    	await verifyBalanceChange(buyer, 345, async () =>
-    		verifyBalanceChange(seller1, -100, async () =>
-    		  verifyBalanceChange(seller2, -100, async () =>
-    		    verifyBalanceChange(seller3, -100, async () =>
-    			    verifyBalanceChange(feeRecipienterUP, -45, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 })
+    	await verifyBalanceChangeReturnTx(web3, buyer, 345, async () =>
+    		verifyBalanceChangeReturnTx(web3, seller1, -100, async () =>
+    		  verifyBalanceChangeReturnTx(web3, seller2, -100, async () =>
+    		    verifyBalanceChangeReturnTx(web3, seller3, -100, async () =>
+    			    verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -45, () =>
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400})
     				  )
     				)
     			)
@@ -252,12 +253,12 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
       let dataForExchCall3 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams3);
       const tradeData3 = PurchaseData(0, 100,  await encodeFees(1500), dataForExchCall3); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-    	await verifyBalanceChange(buyer, 276, async () =>
-    		verifyBalanceChange(seller1, -60, async () =>
-    		  verifyBalanceChange(seller2, -80, async () =>
-    		    verifyBalanceChange(seller3, -100, async () =>
-    			    verifyBalanceChange(feeRecipienterUP, -36, () =>
-    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400, gasPrice: 0 })
+    	await verifyBalanceChangeReturnTx(web3, buyer, 276, async () =>
+    		verifyBalanceChangeReturnTx(web3, seller1, -60, async () =>
+    		  verifyBalanceChangeReturnTx(web3, seller2, -80, async () =>
+    		    verifyBalanceChangeReturnTx(web3, seller3, -100, async () =>
+    			    verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -36, () =>
+    				    bulkExchange.bulkPurchase([tradeData1, tradeData2, tradeData3], feeRecipienterUP, ZERO_ADDRESS, false, { from: buyer, value: 400})
     				  )
     				)
     			)
