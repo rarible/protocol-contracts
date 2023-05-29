@@ -1,4 +1,4 @@
-const { expectThrow, verifyBalanceChange, assertEq } = require("@daonomic/tests-common");
+const { expectThrow, assertEq } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 
 const ExchangeBulkV2 = artifacts.require("RaribleExchangeWrapper.sol");
@@ -23,6 +23,8 @@ const Seaport = artifacts.require("Seaport.sol");
 const { Order, Asset, sign } = require("../../scripts/order.js");
 
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
@@ -550,11 +552,11 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
 
     const tradeDataRarible2 = PurchaseData(0, 100, await encodeCurrencyAndDataTypeAndFees(0, 0, 1500, 500), dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-    await verifyBalanceChange(buyer, 240, async () =>
-      verifyBalanceChange(seller, -200, async () =>
-        verifyBalanceChange(feeRecipient1, -30, async () =>
-          verifyBalanceChange(feeRecipient2, -10, async () =>
-            bulkExchange.bulkPurchase([tradeDataSeaPort1, tradeDataRarible1, tradeDataSeaPort2, tradeDataRarible2] , feeRecipient1, feeRecipient2, true, { from: buyer, value: 240, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 240, async () =>
+      verifyBalanceChangeReturnTx(web3, seller, -200, async () =>
+        verifyBalanceChangeReturnTx(web3, feeRecipient1, -30, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipient2, -10, async () =>
+            bulkExchange.bulkPurchase([tradeDataSeaPort1, tradeDataRarible1, tradeDataSeaPort2, tradeDataRarible2] , feeRecipient1, feeRecipient2, true, { from: buyer, value: 240 })
           )
         )
       )
@@ -747,11 +749,11 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
 
     const tradeDataRarible2 = PurchaseData(0, 100, await encodeCurrencyAndDataTypeAndFees(0, 0, 1500, 500), dataForExchCall2); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-    await verifyBalanceChange(buyer, 120, async () =>
-      verifyBalanceChange(seller, -100, async () =>
-        verifyBalanceChange(feeRecipient1, -15, async () =>
-          verifyBalanceChange(feeRecipient2, -5, async () =>
-            bulkExchange.bulkPurchase([tradeDataSeaPort1, tradeDataRarible1, tradeDataSeaPort2, tradeDataRarible2] , feeRecipient1, feeRecipient2, true, { from: buyer, value: 240, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 120, async () =>
+      verifyBalanceChangeReturnTx(web3, seller, -100, async () =>
+        verifyBalanceChangeReturnTx(web3, feeRecipient1, -15, async () =>
+          verifyBalanceChangeReturnTx(web3, feeRecipient2, -5, async () =>
+            bulkExchange.bulkPurchase([tradeDataSeaPort1, tradeDataRarible1, tradeDataSeaPort2, tradeDataRarible2] , feeRecipient1, feeRecipient2, true, { from: buyer, value: 240 })
           )
         )
       )

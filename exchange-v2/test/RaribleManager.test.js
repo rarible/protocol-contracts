@@ -20,8 +20,9 @@ const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferP
 
 const { Order, Asset } = require("../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
-const { expectThrow, verifyBalanceChange } = require("@daonomic/tests-common");
+const { expectThrow } = require("@daonomic/tests-common");
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNK, COLLECTION, enc, encDataV2, id } = require("../../scripts/assets.js");
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
   let RTM;
@@ -54,11 +55,11 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const left = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(ERC1155, enc(erc1155.address, erc1155TokenId1), 7), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 
-      await verifyBalanceChange(accounts[0], 100, () =>
-        verifyBalanceChange(accounts[2], -100, () =>
-          verifyBalanceChange(protocol, 0, () =>
+      await verifyBalanceChangeReturnTx(web3, accounts[0], 100, () =>
+        verifyBalanceChangeReturnTx(web3, accounts[2], -100, () =>
+          verifyBalanceChangeReturnTx(web3, protocol, 0, () =>
             RTM.doTransfersExternal(left, right,
-              { value: 100, from: accounts[0], gasPrice: 0 }
+              { value: 100, from: accounts[0]}
             )
           )
         )
@@ -308,13 +309,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const left = Order(accounts[1], Asset(ETH, "0x", 100), ZERO, Asset(id("ERC721_LAZY"), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(id("ERC721_LAZY"), encodedMintData, 1), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 
-      await verifyBalanceChange(accounts[1], 100, () =>
-        verifyBalanceChange(accounts[2], -70, () =>
-          verifyBalanceChange(accounts[5], -20, () =>
-            verifyBalanceChange(accounts[6], -10, () =>
-              verifyBalanceChange(protocol, 0, () =>
+      await verifyBalanceChangeReturnTx(web3, accounts[1], 100, () =>
+        verifyBalanceChangeReturnTx(web3, accounts[2], -70, () =>
+          verifyBalanceChangeReturnTx(web3, accounts[5], -20, () =>
+            verifyBalanceChangeReturnTx(web3, accounts[6], -10, () =>
+              verifyBalanceChangeReturnTx(web3, protocol, 0, () =>
                 RTM.doTransfersExternal(left, right,
-                  { value: 100, from: accounts[1], gasPrice: 0 }
+                  { value: 100, from: accounts[1]}
                 )
               )
             )
@@ -335,13 +336,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const left = Order(accounts[1], Asset(ETH, "0x", 100), ZERO, Asset(id("ERC1155_LAZY"), encodedMintData, 5), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[2], Asset(id("ERC1155_LAZY"), encodedMintData, 5), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 
-      await verifyBalanceChange(accounts[1], 100, () =>
-        verifyBalanceChange(accounts[2], -70, () =>
-          verifyBalanceChange(accounts[5], -20, () =>
-            verifyBalanceChange(accounts[6], -10, () =>
-              verifyBalanceChange(protocol, 0, () =>
+      await verifyBalanceChangeReturnTx(web3, accounts[1], 100, () =>
+        verifyBalanceChangeReturnTx(web3, accounts[2], -70, () =>
+          verifyBalanceChangeReturnTx(web3, accounts[5], -20, () =>
+            verifyBalanceChangeReturnTx(web3, accounts[6], -10, () =>
+              verifyBalanceChangeReturnTx(web3, protocol, 0, () =>
                 RTM.doTransfersExternal(left, right,
-                  { value: 100, from: accounts[1], gasPrice: 0 }
+                  { value: 100, from: accounts[1]}
                 )
               )
             )
@@ -464,13 +465,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const left = Order(accounts[0], Asset(ETH, "0x", 100), ZERO, Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 7), 1, 0, 0, "0xffffffff", "0x");
       const right = Order(accounts[1], Asset(ERC1155, enc(erc1155V2.address, erc1155TokenId1), 7), ZERO, Asset(ETH, "0x", 100), 1, 0, 0, "0xffffffff", "0x");
 
-      await verifyBalanceChange(accounts[0], 100, () =>
-        verifyBalanceChange(accounts[1], -85, () =>
-          verifyBalanceChange(accounts[2], -10, () =>
-            verifyBalanceChange(accounts[3], -5, () =>
-              verifyBalanceChange(protocol, 0, () =>
+      await verifyBalanceChangeReturnTx(web3, accounts[0], 100, () =>
+        verifyBalanceChangeReturnTx(web3, accounts[1], -85, () =>
+          verifyBalanceChangeReturnTx(web3, accounts[2], -10, () =>
+            verifyBalanceChangeReturnTx(web3, accounts[3], -5, () =>
+              verifyBalanceChangeReturnTx(web3, protocol, 0, () =>
                 RTM.doTransfersExternal(left, right,
-                  { value: 100, from: accounts[0], gasPrice: 0 }
+                  { value: 100, from: accounts[0]}
                 )
               )
             )
