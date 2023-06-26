@@ -13,7 +13,7 @@ contract TestERC721 is ERC721Upgradeable {
         _mint(to, tokenId);
     }
 
-    function setBaseUri(string calldata baseUri) external {
+    function setBaseURI(string calldata baseUri) external {
 
     }
 }
