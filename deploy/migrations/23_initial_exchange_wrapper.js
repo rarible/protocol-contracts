@@ -24,6 +24,23 @@ const mainnet = {
   weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
   transferProxies: [],
 }
+const polygon_mainnet = {
+  marketplaces: [
+    zeroAddress, // wyvernExchange
+    "", //rarible exchangeV2 palceholder
+    "0x00000000006c3852cbef3e08e8df289169ede581", // seaPort_1_1
+    zeroAddress, // x2y2
+    zeroAddress, // looksRare
+    zeroAddress, // sudoSwap
+    "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
+    zeroAddress, // looksRareV2
+    zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+  ],
+
+  weth: "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+  transferProxies: [],
+}
 const goerli = {
   marketplaces: [
     zeroAddress, // wyvernExchange
@@ -139,7 +156,8 @@ let settings = {
   "dev": dev,
   "staging": staging,
   "polygon_staging": polygon_staging,
-  "polygon_mumbai": polygon_mumbai
+  "polygon_mumbai": polygon_mumbai,
+  "polygon_mainnet": polygon_mainnet
 };
 
 function getWrapperSettings(network) {
@@ -174,7 +192,7 @@ module.exports = async function (deployer, network) {
   //settings.transferProxies.push(settings.marketplaces[2]) // seaPort_1_1
   //settings.transferProxies.push(settings.marketplaces[6]) // seaport_1_4
 
-  await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 });
+  await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000, nonce: 141 });
 
   const exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
