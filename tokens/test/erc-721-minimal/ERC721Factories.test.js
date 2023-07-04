@@ -50,7 +50,7 @@ contract("Test factories minimal", accounts => {
 	it("test check don`t add operators while create token create erc721 private from factory, getAddress works correctly", async () => {
     let proxy;
     const operator1 = accounts[7];
-		const resultCreateToken = await factory.createToken("name", "RARI2", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [operator1], salt, {from: tokenOwner, gasPrice: 0});
+		const resultCreateToken = await factory.createToken("name", "RARI2", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [operator1], salt, {from: tokenOwner});
       truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleUserProxy', (ev) => {
         proxy = ev.proxy;
         return true;

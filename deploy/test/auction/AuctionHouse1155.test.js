@@ -13,7 +13,7 @@ const AuctionTestHelper = artifacts.require("AuctionTestHelper");
 
 const truffleAssert = require('truffle-assertions');
 
-const { verifyBalanceChange } = require("@daonomic/tests-common");
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 const { id } = require("../../../scripts/assets.js");
 
 const { increaseTime } = require("@daonomic/tests-common");
@@ -232,12 +232,12 @@ contract("AuctionHouse1155", accounts => {
       let bidFees = await OriginFee();
       let bidDataV1 = await bidEncDataV1([bidFees]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await verifyBalanceChange(buyer, 100, async () =>
-        verifyBalanceChange(testAuctionHouse.address, 0, async () =>
-          verifyBalanceChange(seller, -90, async () =>
-            verifyBalanceChange(protocol, 0, async () =>
-              verifyBalanceChange(community, -10, async () =>
-                testAuctionHouse.putBid(auctionId, bid, { from: buyer, value: 200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,buyer, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,testAuctionHouse.address, 0, async () =>
+          verifyBalanceChangeReturnTx(web3,seller, -90, async () =>
+            verifyBalanceChangeReturnTx(web3,protocol, 0, async () =>
+              verifyBalanceChangeReturnTx(web3,community, -10, async () =>
+                testAuctionHouse.putBid(auctionId, bid, { from: buyer, value: 200 })
               )
             )
           )
@@ -311,11 +311,11 @@ contract("AuctionHouse1155", accounts => {
       let bidFees = await OriginFee();
       let bidDataV1 = await bidEncDataV1([bidFees]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await verifyBalanceChange(buyer, 100, async () =>
-        verifyBalanceChange(seller, -93, async () =>
-          verifyBalanceChange(accounts[3], -7, async () =>
-            verifyBalanceChange(protocol, 0, async () =>
-              testAuctionHouse.buyOut(auctionId, bid, { from: buyer, value: 200, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,buyer, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,seller, -93, async () =>
+          verifyBalanceChangeReturnTx(web3,accounts[3], -7, async () =>
+            verifyBalanceChangeReturnTx(web3,protocol, 0, async () =>
+              testAuctionHouse.buyOut(auctionId, bid, { from: buyer, value: 200 })
             )
           )
         )
@@ -337,7 +337,7 @@ contract("AuctionHouse1155", accounts => {
       const bidDataV1 = await bidEncDataV1([await OriginFee()]);
       const bid1 = { amount: 90, dataType: V1, data: bidDataV1 };
 
-      const txBid1 = await helper.putBidTime(testAuctionHouse.address, auctionId, bid1, { from: buyer, value: 90, gasPrice: 0 })
+      const txBid1 = await helper.putBidTime(testAuctionHouse.address, auctionId, bid1, { from: buyer, value: 90 })
 
       const BidPlaced1 = await testAuctionHouse.getPastEvents("BidPlaced", {
         fromBlock: txBid1.receipt.blockNumber,
@@ -355,7 +355,7 @@ contract("AuctionHouse1155", accounts => {
 
       const helper2 = await AuctionTestHelper.new()
       const bid2 = { amount: 91, dataType: V1, data: bidDataV1 };
-      const txBid2 = await helper2.putBidTime(testAuctionHouse.address, auctionId, bid2, { from: accounts[3], value: 91, gasPrice: 0 })
+      const txBid2 = await helper2.putBidTime(testAuctionHouse.address, auctionId, bid2, { from: accounts[3], value: 91 })
       const BidPlaced2 = await testAuctionHouse.getPastEvents("BidPlaced", {
         fromBlock: txBid2.receipt.blockNumber,
         toBlock: txBid2.receipt.blockNumber
@@ -559,16 +559,16 @@ contract("AuctionHouse1155", accounts => {
       let bidFees = await OriginFee();
       let bidDataV1 = await bidEncDataV1([bidFees]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
-      await verifyBalanceChange(buyer, 100, async () =>
-        verifyBalanceChange(testAuctionHouse.address, -100, async () =>
-          testAuctionHouse.putBid(auctionId, bid, { from: buyer, value: 150, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,buyer, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,testAuctionHouse.address, -100, async () =>
+          testAuctionHouse.putBid(auctionId, bid, { from: buyer, value: 150 })
         )
       )
       await increaseTime(1075);
-      await verifyBalanceChange(testAuctionHouse.address, 100, async () =>
-        verifyBalanceChange(seller, -97, async () =>
-          verifyBalanceChange(accounts[6], -3, async () =>
-            verifyBalanceChange(protocol, 0, async () =>
+      await verifyBalanceChangeReturnTx(web3,testAuctionHouse.address, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,seller, -97, async () =>
+          verifyBalanceChangeReturnTx(web3,accounts[6], -3, async () =>
+            verifyBalanceChangeReturnTx(web3,protocol, 0, async () =>
               testAuctionHouse.finishAuction(auctionId, { from: accounts[0] })
             )
           )
@@ -680,12 +680,12 @@ contract("AuctionHouse1155", accounts => {
       let dataV1 = await encDataV1([await OriginFee(), 1000, 0, 0]); //originFees, duration, startTime, buyOutPrice
 
       await truffleAssert.fails(
-        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, { from: buyer, gasPrice: 0 }),
+        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, { from: buyer }),
         truffleAssert.ErrorType.REVERT,
         "nothing to withdraw"
       )
       await truffleAssert.fails(
-        testAuctionHouse.withdrawFaultyBid(addressToReturn, { from: buyer, gasPrice: 0 }),
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, { from: buyer }),
         truffleAssert.ErrorType.REVERT,
         "nothing to withdraw"
       )
@@ -696,44 +696,44 @@ contract("AuctionHouse1155", accounts => {
       let bidDataV1 = await bidEncDataV1([await OriginFee()]);
       let bid = { amount: 100, dataType: V1, data: bidDataV1 };
 
-      await verifyBalanceChange(buyer, 100, async () =>
-        verifyBalanceChange(testAuctionHouse.address, -100, async () =>
-          faultyBidder.faultyBid(testAuctionHouse.address, auctionId, bid, { from: buyer, value: 100, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,buyer, 100, async () =>
+        verifyBalanceChangeReturnTx(web3,testAuctionHouse.address, -100, async () =>
+          faultyBidder.faultyBid(testAuctionHouse.address, auctionId, bid, { from: buyer, value: 100 })
         )
       )
 
       const buyer2 = accounts[5]
       bid.amount = 150;
 
-      await verifyBalanceChange(buyer2, 150, async () =>
-        verifyBalanceChange(testAuctionHouse.address, -150, async () =>
-          verifyBalanceChange(buyer, 0, async () =>
-            testAuctionHouse.putBid(auctionId, bid, { from: buyer2, value: 150, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,buyer2, 150, async () =>
+        verifyBalanceChangeReturnTx(web3,testAuctionHouse.address, -150, async () =>
+          verifyBalanceChangeReturnTx(web3,buyer, 0, async () =>
+            testAuctionHouse.putBid(auctionId, bid, { from: buyer2, value: 150 })
           )
         )
       )
 
       await truffleAssert.fails(
-        testAuctionHouse.withdrawFaultyBid(addressToReturn, { from: buyer, gasPrice: 0 }),
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, { from: buyer }),
         truffleAssert.ErrorType.REVERT,
         "nothing to withdraw"
       )
 
-      await verifyBalanceChange(addressToReturn, -100, async () =>
-        verifyBalanceChange(testAuctionHouse.address, 100, async () =>
-          verifyBalanceChange(faultyBidder.address, 0, async () =>
-            faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, { from: buyer, gasPrice: 0 })
+      await verifyBalanceChangeReturnTx(web3,addressToReturn, -100, async () =>
+        verifyBalanceChangeReturnTx(web3,testAuctionHouse.address, 100, async () =>
+          verifyBalanceChangeReturnTx(web3,faultyBidder.address, 0, async () =>
+            faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, { from: buyer })
           )
         )
       )
 
       await truffleAssert.fails(
-        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, { from: buyer, gasPrice: 0 }),
+        faultyBidder.withdrawFaultyBid(testAuctionHouse.address, addressToReturn, { from: buyer }),
         truffleAssert.ErrorType.REVERT,
         "nothing to withdraw"
       )
       await truffleAssert.fails(
-        testAuctionHouse.withdrawFaultyBid(addressToReturn, { from: buyer, gasPrice: 0 }),
+        testAuctionHouse.withdrawFaultyBid(addressToReturn, { from: buyer }),
         truffleAssert.ErrorType.REVERT,
         "nothing to withdraw"
       )

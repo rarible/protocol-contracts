@@ -21,6 +21,8 @@ const zeroAddress = "0x0000000000000000000000000000000000000000";
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa6";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa7";
 
+const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../scripts/assets.js");
 
 contract("rarible only gas usage tests", accounts => {
@@ -125,12 +127,12 @@ contract("rarible only gas usage tests", accounts => {
     };
 
     console.log("RARIBLE NEW: direct buy ETH <=> ERC721 ROYALTIES = SELLER");
-    await verifyBalanceChange(buyer, 1000, async () =>
-      verifyBalanceChange(protocol, 0, async () =>
-        verifyBalanceChange(origin1, -60, async () =>
-          verifyBalanceChange(additionalRoyalties, 0, async () =>
-            verifyBalanceChange(seller, -940, async () =>
-              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
+        verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
+          verifyBalanceChangeReturnTx(web3, additionalRoyalties, 0, async () =>
+            verifyBalanceChangeReturnTx(web3, seller, -940, async () =>
+              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price})
             )
           )
         )
@@ -179,12 +181,12 @@ contract("rarible only gas usage tests", accounts => {
     };
 
     console.log("RARIBLE NEW: direct buy ETH <=> ERC721 ROYALTIES != SELLER:");
-    await verifyBalanceChange(buyer, 1000, async () =>
-      verifyBalanceChange(protocol, 0, async () =>
-        verifyBalanceChange(origin1, -60, async () =>
-          verifyBalanceChange(additionalRoyalties, -100, async () =>
-            verifyBalanceChange(seller, -840, async () =>
-              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
+        verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
+          verifyBalanceChangeReturnTx(web3, additionalRoyalties, -100, async () =>
+            verifyBalanceChangeReturnTx(web3, seller, -840, async () =>
+              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price})
             )
           )
         )
@@ -213,12 +215,12 @@ contract("rarible only gas usage tests", accounts => {
     const signature = await getSignature(exchangeV2, left, seller);
 
     console.log("RARIBLE NEW: matchOrders ETH <=> ERC721 ROYALTIES != SELLER:");
-    await verifyBalanceChange(buyer, 1000, async () =>
-      verifyBalanceChange(protocol, 0, async () =>
-        verifyBalanceChange(origin1, -60, async () =>
-          verifyBalanceChange(additionalRoyalties, -100, async () =>
-            verifyBalanceChange(seller, -840, async () =>
-              exchangeV2.matchOrders(left, signature, right, "0x", { from: buyer, value: price, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
+        verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
+          verifyBalanceChangeReturnTx(web3, additionalRoyalties, -100, async () =>
+            verifyBalanceChangeReturnTx(web3, seller, -840, async () =>
+              exchangeV2.matchOrders(left, signature, right, "0x", { from: buyer, value: price})
             )
           )
         )
@@ -242,12 +244,12 @@ contract("rarible only gas usage tests", accounts => {
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[seller, 1000]]);
 
     console.log("OLD RARIBLE: match ETH <=> ERC72")
-    await verifyBalanceChange(buyer, 1030, async () =>
-      verifyBalanceChange(protocol, 0, async () =>
-        verifyBalanceChange(origin1, -60, async () =>
-          verifyBalanceChange(additionalRoyalties, 0, async () =>
-            verifyBalanceChange(seller, -970, async () =>
-              exchangeV2OLD.matchOrders(left, "0x", right, await getSignature(exchangeV2OLD, right, seller), { from: buyer, value: 2000, gasPrice: 0 })
+    await verifyBalanceChangeReturnTx(web3, buyer, 1030, async () =>
+      verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
+        verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
+          verifyBalanceChangeReturnTx(web3, additionalRoyalties, 0, async () =>
+            verifyBalanceChangeReturnTx(web3, seller, -970, async () =>
+              exchangeV2OLD.matchOrders(left, "0x", right, await getSignature(exchangeV2OLD, right, seller), { from: buyer, value: 2000})
             )
           )
         )
@@ -415,17 +417,6 @@ contract("rarible only gas usage tests", accounts => {
 
   async function getSignature(exchangeV2, order, signer) {
     return sign(order, signer, exchangeV2.address);
-  }
-
-  async function verifyBalanceChange(account, change, todo) {
-    let before = new BN(await web3.eth.getBalance(account));
-    const tx = await todo();
-    if (!!tx && !!tx.receipt) {
-      console.log(tx.receipt.gasUsed)
-    }
-    let after = new BN(await web3.eth.getBalance(account));
-    let actual = before.sub(after);
-    assert.equal(change, actual);
   }
 
 });
