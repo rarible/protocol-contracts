@@ -192,7 +192,12 @@ module.exports = async function (deployer, network) {
   //settings.transferProxies.push(settings.marketplaces[2]) // seaPort_1_1
   //settings.transferProxies.push(settings.marketplaces[6]) // seaport_1_4
 
-  await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000, nonce: 141 });
+  if (network === "polygon_mainnet") {
+    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000, nonce: 141 });
+  } else {
+    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 });
+  }
+  
 
   const exchangeWrapper = await RaribleExchangeWrapper.deployed()
   console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)

@@ -939,7 +939,7 @@ contract("AuctionHouse721", accounts => {
 
   async function prepareERC721(user = seller, tokenId = erc721TokenId1, deployNew = true) {
     if (!!deployNew) {
-      erc721 = await TestERC721.new("https://ipfs.rarible.com");
+      erc721 = await TestERC721.new("Rarible", "RARI");
     }
     await erc721.mint(user, tokenId);
     await erc721.setApprovalForAll(transferProxy.address, true, { from: user });
