@@ -16,7 +16,9 @@ function createNetwork(name) {
   try {
     var json = require(path.join(getConfigPath(), name + ".json"));
     var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
-
+    // for mantle_tesnet we use wei
+    // for all other networks we use gwei
+    gasPrice = (name !== "mantle_testnet") ? gasPrice + "000000000" : gasPrice;
     return {
       provider: () => {
         const { estimate } = require("@rarible/estimate-middleware")
@@ -31,7 +33,7 @@ function createNetwork(name) {
       },
       from: json.address,
       gas: 8000000,
-      gasPrice: gasPrice + "000000000",
+      gasPrice: gasPrice,
       network_id: json.network_id,
       skipDryRun: true,
       networkCheckTimeout: 500000
@@ -94,7 +96,8 @@ module.exports = {
     staging: createNetwork("staging"),
     polygon_staging: createNetwork("polygon_staging"),
     optimism_mainnet: createNetwork("optimism_mainnet"),
-    optimism_goerli: createNetwork("optimism_goerli")
+    optimism_goerli: createNetwork("optimism_goerli"),
+    mantle_testnet: createNetwork("mantle_testnet"),
   },
 
   compilers: {
