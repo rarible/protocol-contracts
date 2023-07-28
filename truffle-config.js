@@ -2,6 +2,7 @@ const fs = require("fs");
 const os = require('os');
 const path = require('path');
 require('dotenv').config();
+const Web3 = require('web3');
 
 function getConfigPath() {
   const configPath = process.env["NETWORK_CONFIG_PATH"];
@@ -26,13 +27,13 @@ function createNetwork(name) {
           provider.send = provider.sendAsync
           return provider
         } else {
-          return createProvider(json.address, json.key, json.url)
+          return createProvider(json.address, json.key, json.url, json.network_id)
         }
       },
       from: json.address,
       gas: 8000000,
       gasPrice: gasPrice + "000000000",
-      network_id: json.network_id,
+      network_id: "*",
       skipDryRun: true,
       networkCheckTimeout: 500000
     };
@@ -41,11 +42,23 @@ function createNetwork(name) {
   }
 }
 
-function createProvider(address, key, url) {
+function createProvider(address, key, url, network_id) {
   console.log("creating provider for address: " + address);
   var HDWalletProvider = require("@truffle/hdwallet-provider");
-  return new HDWalletProvider(key, url);
+  return new HDWalletProvider(key, url, 0, 1, network_id);
 }
+
+// function createProvider(address, key, url) {
+//   const Web3 = require('web3');
+//   const web3 = new Web3();
+//   console.log("creating provider for address: " + address);
+//   const account = web3.eth.accounts.privateKeyToAccount('0x' + key);
+//   web3.eth.accounts.wallet.add(account);
+//   web3.eth.defaultAccount = account.address;
+//   return new web3.providers.HttpProvider(url)
+// }
+
+
 
 function getScanApiKey(name) {
   let apiKey = "UNKNOWN"
