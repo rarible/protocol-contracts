@@ -141,6 +141,14 @@ const mantle_testnet = {
   deploy_test_erc20: true
 }
 
+const mantle_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -161,6 +169,7 @@ let settings = {
   "optimism_mainnet": optimism_mainnet,
   "optimism_goerli": optimism_goerli,
   "mantle_testnet": mantle_testnet,
+  "mantle_mainnet": mantle_mainnet,
 };
 
 function getSettings(network) {
