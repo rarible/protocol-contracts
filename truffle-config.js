@@ -45,7 +45,7 @@ function createNetworkMantelTest(name) {
     var json = require(path.join(getConfigPath(), name + ".json"));
     // for mantle_tesnet we use wei
     // for all other networks we use gwei
-    var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
+    var gasPrice = name.startsWith("mantle") ? (json.gasPrice) : (json.gasPrice != null ? json.gasPrice : 2000000000);
     return {
       provider: () => {
         const { estimate } = require("@rarible/estimate-middleware")
