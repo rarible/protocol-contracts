@@ -42,8 +42,4 @@ async function updateERC1155(erc1155toDeploy, beacon, transferProxy, erc1155Lazy
   //upgrading 1155 beacon
   const beacon1155 = await beacon.deployed();
   await updateImplementation(beacon1155, erc1155)
-  
-  //deploying new factory
-  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 2500000 });
-  console.log(`deployed factory1155 at ${factory1155.address}`)
 }
