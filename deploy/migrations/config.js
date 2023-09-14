@@ -26,6 +26,10 @@ const mainnet = {
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
   deploy_non_meta: true,
+  deployArtblockV2Provider: true,
+  artBlocksV2Collections: [
+    "0x99a9b7c1116f9ceeb1652de04d5969cce509b069"
+  ]
 }
 const ropsten = {
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
