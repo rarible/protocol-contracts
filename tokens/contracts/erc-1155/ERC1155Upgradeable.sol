@@ -59,7 +59,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         __ERC1155_init_unchained(uri_);
     }
 
-    function __ERC1155_init_unchained(string memory uri_) internal initializer {
+    function __ERC1155_init_unchained(string memory uri_) internal {
         _setURI(uri_);
 
         // register the supported interfaces to conform to ERC1155 via ERC165

@@ -9,7 +9,9 @@ import "./ERC721DefaultApprovalMinimal.sol";
 import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
 
-abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
+import "../operator-filter-registry/OperatorFiltererUpgradeable.sol";
+
+abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI, OperatorFiltererUpgradeable {
     event BaseUriChanged(string newBaseURI);
 
     function _isApprovedOrOwner(address spender, uint256 tokenId) internal virtual override(ERC721UpgradeableMinimal, ERC721DefaultApprovalMinimal) view returns (bool) {
@@ -40,6 +42,50 @@ abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApproval
         super._setBaseURI(newBaseURI);
 
         emit BaseUriChanged(newBaseURI);
+    }
+
+    /**
+     * @dev See {IERC721-setApprovalForAll}.
+     *      Added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
+     */
+    function setApprovalForAll(address operator, bool approved) public override(ERC721UpgradeableMinimal, IERC721Upgradeable) onlyAllowedOperatorApproval(operator) {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @dev See {IERC721-approve}.
+     *      Added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
+     */
+    function approve(address operator, uint256 tokenId) public override(ERC721UpgradeableMinimal, IERC721Upgradeable) onlyAllowedOperatorApproval(operator) {
+        super.approve(operator, tokenId);
+    }
+
+    /**
+     * @dev See {IERC721-transferFrom}.
+     *      Added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
+     */
+    function transferFrom(address from, address to, uint256 tokenId) public override(ERC721UpgradeableMinimal, IERC721Upgradeable) onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /**
+     * @dev See {IERC721-safeTransferFrom}.
+     *      Added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
+     */
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override(ERC721UpgradeableMinimal, IERC721Upgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /**
+     * @dev See {IERC721-safeTransferFrom}.
+     *      Added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
+     */
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
+        public
+        override(ERC721UpgradeableMinimal, IERC721Upgradeable)
+        onlyAllowedOperator(from)
+    {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     uint256[50] private __gap;

@@ -1,10 +1,13 @@
-const Testing = artifacts.require("ERC1155Rarible.sol");
+const Testing = artifacts.require("ERC1155RaribleTest.sol");
 const ERC1271 = artifacts.require("TestERC1271.sol");
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
 const BeaconProxy = artifacts.require("BeaconProxy.sol");
 const ERC1155RaribleFactoryC2 = artifacts.require("ERC1155RaribleFactoryC2.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxyTest.sol");
+
+const OperatorFilterRegistryTest = artifacts.require("OperatorFilterRegistryTest.sol");
+
 const truffleAssert = require('truffle-assertions');
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require("../../../scripts/mint1155.js");
@@ -18,19 +21,34 @@ contract("ERC1155Rarible", accounts => {
   let proxy;
   let proxyLazy;
   let whiteListProxy = accounts[5];
+  let OFR;
+
+  const subscribeTo = accounts[7];
+  const bannedOperator = accounts[8]
   
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const name = 'FreeMintable';
-  const ZERO = "0x0000000000000000000000000000000000000000";
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
 
   before(async () => {
     proxyLazy = await ERC1155LazyMintTransferProxy.new();
     erc1271 = await ERC1271.new();
+
+    //setting operator filter registry
+    OFR = await OperatorFilterRegistryTest.new();
+    await OFR.register(subscribeTo, { from: subscribeTo });
+    await OFR.updateOperator(subscribeTo, bannedOperator, true, { from: subscribeTo })
   });
 
   beforeEach(async () => {
     token = await Testing.new();
-    await token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, proxyLazy.address, {from: tokenOwner});
+
+    //setting OFR
+    await token.setOFR(OFR.address)
+    assert.equal(await token.OPERATOR_FILTER_REGISTRY(), OFR.address, "OFR set")
+
+    //then initialising
+    await token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, proxyLazy.address, subscribeTo, {from: tokenOwner});
   });
 
   describe("burnBatch  ()", () => {
@@ -682,10 +700,47 @@ contract("ERC1155Rarible", accounts => {
   });
 
   describe("Mint and transfer  ()", () => {
+    it("Collection can't be initialised second time", async () => {
+      await truffleAssert.fails(
+        token.__ERC1155Rarible_init(name, "TST", "ipfs:/", "ipfs:/", whiteListProxy, proxyLazy.address, subscribeTo, {from: tokenOwner}),
+        truffleAssert.ErrorType.REVERT,
+        "Initializable: contract is already initialized"
+      )
+    });
+
+    it("Raribe 1155 token: OFR subscription blacklist works", async () => {
+      const minter = tokenOwner;
+      let transferTo = accounts[2];
+  
+      const tokenId = minter + "b00000000000000000000001";
+      const tokenURI = "//uri";
+      let supply = 10;
+      let mint = 5;
+      await token.mintAndTransfer([tokenId, tokenURI, supply, creators([minter]), [], [zeroWord]], transferTo, mint, {from: minter});
+  
+      await truffleAssert.fails(
+        token.setApprovalForAll(bannedOperator, true,{ from: transferTo }),
+        truffleAssert.ErrorType.REVERT,
+        "OperatorNotAllowed"
+      )
+
+      await truffleAssert.fails(
+        token.safeTransferFrom(transferTo, bannedOperator, tokenId, 1, "0x00", { from: bannedOperator }),
+        truffleAssert.ErrorType.REVERT,
+        "OperatorNotAllowed"
+      )
+  
+      await truffleAssert.fails(
+        token.safeBatchTransferFrom(transferTo, bannedOperator, [tokenId], [1], "0x00", { from: bannedOperator }),
+        truffleAssert.ErrorType.REVERT,
+        "OperatorNotAllowed"
+      )
+    });
+
     it("mint and transfer by minter, token create by Factory", async () => {
       transferProxy = await TransferProxyTest.new();
       beacon = await UpgradeableBeacon.new(token.address);
-      factory = await ERC1155RaribleFactoryC2.new(beacon.address, transferProxy.address, proxyLazy.address);
+      factory = await ERC1155RaribleFactoryC2.new(beacon.address, transferProxy.address, proxyLazy.address, subscribeTo);
       const salt = 3;
 
       const addressBeforeDeploy = await factory.getAddress(name, "TSA", "ipfs:/", "ipfs:/", salt)
@@ -720,6 +775,10 @@ contract("ERC1155Rarible", accounts => {
 
       tokenByProxy = await Testing.at(proxy);
 
+      //setting OFR
+      await tokenByProxy.setOFR(OFR.address)
+      assert.equal(await tokenByProxy.OPERATOR_FILTER_REGISTRY(), OFR.address, "OFR set")
+
       let minter = tokenOwner;
       let transferTo = minter;
 
@@ -736,11 +795,19 @@ contract("ERC1155Rarible", accounts => {
       assert.equal(TransferSingle.length, 1, "TransferSingle.length")
       assert.equal(await tokenByProxy.uri(tokenId), "ipfs:/" + tokenURI);
       assert.equal(await tokenByProxy.balanceOf(transferTo, tokenId), mint);
+
+      await OFR.registerAndSubscribe(tokenByProxy.address, subscribeTo)
+
+      await truffleAssert.fails(
+        tokenByProxy.setApprovalForAll(bannedOperator, true,{ from: tokenOwner }),
+        truffleAssert.ErrorType.REVERT,
+        "OperatorNotAllowed"
+      )
     });
 
     it("checkPrefix should work correctly, checks for duplicating of the base part of the uri ", async () => {
       beacon = await UpgradeableBeacon.new(token.address);
-      factory = await ERC1155RaribleFactoryC2.new(beacon.address, transferProxy.address, proxyLazy.address);
+      factory = await ERC1155RaribleFactoryC2.new(beacon.address, transferProxy.address, proxyLazy.address, subscribeTo);
       const baseURI = "https://ipfs.rarible.com"
       const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", baseURI, "https://ipfs.rarible.com", 1, {from: tokenOwner});
       truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {

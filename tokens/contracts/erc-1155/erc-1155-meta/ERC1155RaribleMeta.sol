@@ -12,8 +12,8 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
     event CreateERC1155Rarible(address owner, string name, string symbol);
     event CreateERC1155RaribleUser(address owner, string name, string symbol);
 
-    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy) external {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+    function __ERC1155RaribleUser_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy, address subscribeTo) external {
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy, subscribeTo);
 
         __MetaTransaction_init_unchained("ERC1155RaribleUserMeta", "1");
         
@@ -22,8 +22,8 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
     }
     
-    function __ERC1155Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+    function __ERC1155Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy, address subscribeTo) external {
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy, subscribeTo);
 
         __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
 
@@ -36,7 +36,7 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         return super._msgSender();
     }
 
-    function __ERC1155Rarible_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) internal initializer {
+    function __ERC1155Rarible_init_unchained(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy, address subscribeTo) internal initializer {
         __Ownable_init_unchained();
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();
@@ -49,6 +49,7 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         __ERC1155Base_init_unchained(_name, _symbol);
         __MinterAccessControl_init_unchained();
         _setBaseURI(baseURI);
+        __OperatorFilterer_init_unchained(subscribeTo);
 
         //setting default approver for transferProxies
         _setDefaultApproval(transferProxy, true);

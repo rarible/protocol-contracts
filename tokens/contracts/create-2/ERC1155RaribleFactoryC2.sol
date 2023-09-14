@@ -14,17 +14,19 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *
  */
 contract ERC1155RaribleFactoryC2 is Ownable{
-    address public beacon;
-    address transferProxy;
-    address lazyTransferProxy;
+    address public immutable beacon;
+    address immutable transferProxy;
+    address immutable lazyTransferProxy;
+    address public immutable operatorFilterRegistrySubscriptionAddress;
 
     event Create1155RaribleProxy(address proxy);
     event Create1155RaribleUserProxy(address proxy);
 
-    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy) {
+    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy, address _operatorFilterRegistrySubscriptionAddress) {
         beacon = _beacon;
         transferProxy = _transferProxy;
         lazyTransferProxy = _lazyTransferProxy;
+        operatorFilterRegistrySubscriptionAddress = _operatorFilterRegistrySubscriptionAddress;
     }
 
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {        
@@ -75,7 +77,7 @@ contract ERC1155RaribleFactoryC2 is Ownable{
     }
 
     function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy, operatorFilterRegistrySubscriptionAddress);
     }
 
     //returns address that contract with such arguments will be deployed on
@@ -94,7 +96,7 @@ contract ERC1155RaribleFactoryC2 is Ownable{
     }
 
     function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
+        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy, operatorFilterRegistrySubscriptionAddress);
     }
 
 }
