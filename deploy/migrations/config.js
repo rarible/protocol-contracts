@@ -28,7 +28,9 @@ const mainnet = {
   deploy_non_meta: true,
   deployArtblockV2Provider: true,
   artBlocksV2Collections: [
-    "0x99a9b7c1116f9ceeb1652de04d5969cce509b069"
+    "0x99a9b7c1116f9ceeb1652de04d5969cce509b069",
+    "0x942bc2d3e7a589fe5bd4a5c6ef9727dfd82f5c8a",
+    "0xea698596b6009a622c3ed00dd5a8b5d1cae4fc36"
   ]
 }
 const ropsten = {
