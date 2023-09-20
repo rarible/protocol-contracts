@@ -1,0 +1,1 @@
+slither ../../../../tokens/contracts/operator-filter-registry/OperatorFiltererUpgradeable.sol --solc-remaps @=../../../../node_modules/@ --checklist > OperatorFiltererUpgradeable.md

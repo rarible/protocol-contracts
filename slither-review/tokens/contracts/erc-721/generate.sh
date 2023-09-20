@@ -1,0 +1,1 @@
+slither ../../../../tokens/contracts/erc-721/ERC721Rarible.sol --solc-remaps @=../../../../node_modules/@ --checklist > ERC721Rariblel.md
