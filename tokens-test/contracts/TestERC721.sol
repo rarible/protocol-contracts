@@ -16,4 +16,14 @@ contract TestERC721 is ERC721Upgradeable {
     function setBaseURI(string calldata uri) external {
 
     }
+
+    function reveal(uint256 _index) external {
+        emit TokenURIRevealed(_index, "test");
+    }
+
+    function getBatchIdAtIndex(uint256 _index) external view returns (uint256) {
+        return 10;
+    }
+
+    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 }
