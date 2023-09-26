@@ -23,3 +23,4 @@ import {ERC1155RaribleBeaconMeta} from "@rarible/tokens/contracts/beacons/ERC115
 import {ERC721RaribleMinimalBeaconMeta} from "@rarible/tokens/contracts/beacons/ERC721RaribleMinimalBeaconMeta.sol";
 
 import { TestERC20 } from "@rarible/test/contracts/TestERC20.sol";
+import { TestERC721 } from "@rarible/test/contracts/TestERC721.sol";
