@@ -6,9 +6,8 @@ const truffleAssert = require('truffle-assertions');
 
 const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
 
-const zeroAddress = "0x0000000000000000000000000000000000000000";
 
-contract("AuctionHouse721", accounts => {
+contract("NFTLottery", accounts => {
   let nftLottery;
   let erc721;
 
