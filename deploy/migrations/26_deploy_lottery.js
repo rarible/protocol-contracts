@@ -3,7 +3,7 @@ const NFTLottery = artifacts.require('NFTLottery');
 
 
 module.exports = async function (deployer, network) {
-  await deployer.deploy(TestERC721, { gas: 2500000 });
+  await deployer.deploy(TestERC721, "test", "TST", { gas: 2500000 });
   const testerc721 = await TestERC721.deployed();
 
   console.log("test erc721 deployed on", network, "at:", testerc721.address)
