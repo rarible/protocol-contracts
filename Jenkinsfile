@@ -1,6 +1,8 @@
 @Library('shared-library') _
 
-withCredentials([
-]) {
-  pipelinePackageRelease()
-}
+def pipelineConfig = [
+  "JSpublicLibrary": "true",
+  "pkgRepoName": "npmjs-org"
+]
+
+pipelinePackageRelease(pipelineConfig)
