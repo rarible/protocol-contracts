@@ -4,13 +4,13 @@ pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract TestERC1155 is ERC1155 {
-
+contract TestERC1155 is ERC1155, Pausable {
     constructor() ERC1155("uri"){
 
     }
-    
+
     function mint(address to, uint tokenId, uint amount) external {
         _mint(to, tokenId, amount, "");
     }
@@ -30,4 +30,11 @@ contract TestERC1155 is ERC1155 {
         }
     }
 
+    function emitPauseEvent(bool paused) external {
+        if (paused) {
+            emit Paused(address(0));
+        } else {
+            emit Unpaused(address(0));
+        }
+    }
 }
