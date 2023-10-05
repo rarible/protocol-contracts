@@ -133,6 +133,7 @@ module.exports = {
     optimism_goerli: createNetwork("optimism_goerli"),
     mantle_testnet: createNetworkMantelTest("mantle_testnet"),
     mantle_mainnet: createNetworkMantelTest("mantle_mainnet"),
+    arbitrum_goerli: createNetwork("arbitrum_goerli"),
   },
 
   compilers: {
