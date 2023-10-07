@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.12](https://github.com/rariblecom/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
+
+**Note:** Version bump only for package @rarible/deploy
+
+
+
+
+
 ## [0.7.11](https://github.com/rariblecom/protocol-contracts/compare/v0.7.10...v0.7.11) (2023-10-07)
 
 

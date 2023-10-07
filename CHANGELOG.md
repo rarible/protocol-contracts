@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.12](https://github.com/rarible/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
+
+
+### Features
+
+* add repo props ([fd49258](https://github.com/rarible/protocol-contracts/commit/fd492580d31660b34fdefed29131a54680350d05))
+
+
+
+
+
 ## [0.7.11](https://github.com/rarible/protocol-contracts/compare/v0.7.10...v0.7.11) (2023-10-07)
 
 
