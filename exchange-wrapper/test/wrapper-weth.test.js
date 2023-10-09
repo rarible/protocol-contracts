@@ -107,7 +107,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     await prepareWETH(buyer)
 
     //prepare ERC-721
-    erc721 = await TestERC721.new();
+    erc721 = await TestERC721.new("Rarible", "RARI");
     await erc721.mint(seller, erc721TokenId1);
     await erc721.setApprovalForAll(transferProxy.address, true, { from: seller });
 
@@ -162,7 +162,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     await prepareWETH(buyer)
 
     //prepare ERC-721
-    erc721 = await TestERC721.new();
+    erc721 = await TestERC721.new("Rarible", "RARI");
     await erc721.mint(seller, erc721TokenId1);
     await erc721.setApprovalForAll(seaport.address, true, { from: seller });
 
@@ -236,7 +236,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     await prepareWETH(buyer)
 
     //prepare ERC-721
-    erc721 = await TestERC721.new();
+    erc721 = await TestERC721.new("Rarible", "RARI");
     await erc721.mint(seller, erc721TokenId1);
     await erc721.setApprovalForAll(seaport.address, true, { from: seller });
 
@@ -310,7 +310,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     await prepareWETH(buyer)
 
     //prepare ERC-721
-    erc721 = await TestERC721.new();
+    erc721 = await TestERC721.new("Rarible", "RARI");
     await erc721.mint(seller, erc721TokenId1);
     await erc721.setApprovalForAll(seaport.address, true, { from: seller });
 
@@ -384,7 +384,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     await prepareWETH(buyer)
 
     //prepare ERC-721
-    erc721 = await TestERC721.new();
+    erc721 = await TestERC721.new("Rarible", "RARI");
     await erc721.mint(seller, erc721TokenId1);
     await erc721.setApprovalForAll(seaport.address, true, { from: seller });
 
@@ -581,7 +581,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     await prepareWETH(buyer)
 
     //prepare ERC-721
-    erc721 = await TestERC721.new();
+    erc721 = await TestERC721.new("Rarible", "RARI");
     await erc721.mint(seller, erc721TokenId1);
     await erc721.setApprovalForAll(seaport.address, true, { from: seller });
 

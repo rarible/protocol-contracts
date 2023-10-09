@@ -15,8 +15,7 @@ function getConfigPath() {
 function createNetwork(name) {
   try {
     var json = require(path.join(getConfigPath(), name + ".json"));
-    var gasPrice = json.gasPrice != null ? json.gasPrice : 2000000000;
-
+    var gasPrice = json.gasPrice != null ? json.gasPrice + "000000000" : 2000000000;
     return {
       provider: () => {
         const { estimate } = require("@rarible/estimate-middleware")
@@ -31,7 +30,7 @@ function createNetwork(name) {
       },
       from: json.address,
       gas: 8000000,
-      gasPrice: gasPrice + "000000000",
+      gasPrice: gasPrice,
       network_id: json.network_id,
       skipDryRun: true,
       networkCheckTimeout: 500000
@@ -40,6 +39,43 @@ function createNetwork(name) {
     return null;
   }
 }
+
+function createNetworkMantelTest(name) {
+  try {
+    var json = require(path.join(getConfigPath(), name + ".json"));
+    // for mantle_tesnet we use wei
+    // for all other networks we use gwei
+    var gasPrice = name.startsWith("mantle") ? (json.gasPrice) : (json.gasPrice != null ? json.gasPrice : 2000000000);
+    return {
+      provider: () => {
+        const { estimate } = require("@rarible/estimate-middleware")
+        if (json.path != null) {
+          const { createProvider: createTrezorProvider } = require("@rarible/trezor-provider")
+          const provider = createTrezorProvider({ url: json.url, path: json.path, chainId: json.network_id })
+          provider.send = provider.sendAsync
+          return provider
+        } else {
+          return createProvider(json.address, json.key, json.url)
+        }
+      },
+      from: json.address,
+      gas: 8000000,
+      gasPrice: gasPrice,
+      network_id: json.network_id,
+      skipDryRun: true,
+      networkCheckTimeout: 500000,
+      verify: {
+        apiUrl: 'https://explorer.testnet.mantle.xyz/api',
+        apiKey: 'xyz',
+        explorerUrl: 'https://explorer.testnet.mantle.xyz',
+      }
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+
 
 function createProvider(address, key, url) {
   console.log("creating provider for address: " + address);
@@ -94,7 +130,10 @@ module.exports = {
     staging: createNetwork("staging"),
     polygon_staging: createNetwork("polygon_staging"),
     optimism_mainnet: createNetwork("optimism_mainnet"),
-    optimism_goerli: createNetwork("optimism_goerli")
+    optimism_goerli: createNetwork("optimism_goerli"),
+    mantle_testnet: createNetworkMantelTest("mantle_testnet"),
+    mantle_mainnet: createNetworkMantelTest("mantle_mainnet"),
+    arbitrum_goerli: createNetwork("arbitrum_goerli"),
   },
 
   compilers: {

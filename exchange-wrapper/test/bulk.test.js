@@ -107,7 +107,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
   beforeEach(async () => {    
     /*ERC721 */
-    erc721 = await TestERC721.new("Rarible", "RARI", "https://ipfs.rarible.com");
+    erc721 = await TestERC721.new("Rarible", "RARI");
     /*ERC1155*/
     erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
 
