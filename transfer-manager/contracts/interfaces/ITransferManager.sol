@@ -6,7 +6,6 @@ pragma abicoder v2;
 import "../lib/LibDeal.sol";
 import "./ITransferExecutor.sol";
 
-
 abstract contract ITransferManager is ITransferExecutor {
 
     function doTransfers(
