@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.13](https://github.com/rarible/protocol-contracts/compare/v0.7.12-beta.3...v0.7.13) (2023-10-09)
+
+**Note:** Version bump only for package @rarible/gas-usage-tests
+
+
+
+
+
 ## [0.7.12](https://github.com/rarible/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
 
 **Note:** Version bump only for package @rarible/gas-usage-tests

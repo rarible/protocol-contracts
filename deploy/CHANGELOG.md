@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.13](https://github.com/rariblecom/protocol-contracts/compare/v0.7.12-beta.3...v0.7.13) (2023-10-09)
+
+
+### Features
+
+* add build update ([84026b0](https://github.com/rariblecom/protocol-contracts/commit/84026b0568153f9d2c1e1b0038b59e5f429c7281))
+* add mantle mainnet support ([8f7b066](https://github.com/rariblecom/protocol-contracts/commit/8f7b066e58ec4d0603a6601d129c7e6ec73a6398))
+* PT-3387 deploy contract on mantle testnet ([381ea93](https://github.com/rariblecom/protocol-contracts/commit/381ea93177151edf66390c0ca0a035417accc7e0))
+* PT-3896 support arbitrum goerli ([13b30c1](https://github.com/rariblecom/protocol-contracts/commit/13b30c1424109ccea527da23c4a7117330f64044))
+
+
+
+
+
 ## [0.7.12](https://github.com/rariblecom/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
 
 **Note:** Version bump only for package @rarible/deploy

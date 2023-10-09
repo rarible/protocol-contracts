@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.13](https://github.com/rarible/protocol-contracts/compare/v0.7.12-beta.3...v0.7.13) (2023-10-09)
+
+
+### Features
+
+* rollback ([e316891](https://github.com/rarible/protocol-contracts/commit/e31689183da4619e8456a887da6ae9e80d28720c))
+
+
+
+
+
 ## [0.7.12](https://github.com/rarible/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
 
 

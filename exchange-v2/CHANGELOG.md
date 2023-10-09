@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.13](https://github.com/rarible/protocol-contracts/compare/v0.7.12-beta.3...v0.7.13) (2023-10-09)
+
+
+### Features
+
+* add latest changes ([167a37b](https://github.com/rarible/protocol-contracts/commit/167a37bda612404e8ef0feb0f3edf3d669e869bf))
+
+
+
+
+
 ## [0.7.12](https://github.com/rarible/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
 
 **Note:** Version bump only for package @rarible/exchange-v2

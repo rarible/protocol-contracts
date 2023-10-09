@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.13](https://github.com/rarible/protocol-contracts/compare/v0.7.12-beta.3...v0.7.13) (2023-10-09)
+
+
+### Features
+
+* add build update ([84026b0](https://github.com/rarible/protocol-contracts/commit/84026b0568153f9d2c1e1b0038b59e5f429c7281))
+* add latest changes ([167a37b](https://github.com/rarible/protocol-contracts/commit/167a37bda612404e8ef0feb0f3edf3d669e869bf))
+* add mantle mainnet support ([8f7b066](https://github.com/rarible/protocol-contracts/commit/8f7b066e58ec4d0603a6601d129c7e6ec73a6398))
+* add mantle verify settings ([33c97a2](https://github.com/rarible/protocol-contracts/commit/33c97a21dd81aa5f88a9eba082c9a5b1a0534331))
+* PT-3387 deploy contract on mantle testnet ([381ea93](https://github.com/rarible/protocol-contracts/commit/381ea93177151edf66390c0ca0a035417accc7e0))
+* PT-3896 support arbitrum goerli ([13b30c1](https://github.com/rarible/protocol-contracts/commit/13b30c1424109ccea527da23c4a7117330f64044))
+* rollback ([e316891](https://github.com/rarible/protocol-contracts/commit/e31689183da4619e8456a887da6ae9e80d28720c))
+* **PT-3844:** methods for reveal test ([#244](https://github.com/rarible/protocol-contracts/issues/244)) ([012bc35](https://github.com/rarible/protocol-contracts/commit/012bc350003becc66eac63e0714f2711dc2727f7))
+
+
+
+
+
 ## [0.7.12](https://github.com/rarible/protocol-contracts/compare/v0.7.11...v0.7.12) (2023-10-07)
 
 
