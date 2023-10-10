@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.15](https://github.com/rarible/protocol-contracts/compare/v0.7.14-beta.3...v0.7.15) (2023-10-10)
+
+**Note:** Version bump only for package root
+
+
+
+
+
 ## [0.7.14-beta.2](https://github.com/rarible/protocol-contracts/compare/v0.7.14-beta.1...v0.7.14-beta.2) (2023-10-10)
 
 
