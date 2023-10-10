@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.14-beta.2](https://github.com/rariblecom/protocol-contracts/compare/v0.7.14-beta.1...v0.7.14-beta.2) (2023-10-10)
+
+
+### Features
+
+* add build & remove genrated src ([3854f0c](https://github.com/rariblecom/protocol-contracts/commit/3854f0c2581a721e079215ad0cdcec4680bca9fd))
+
+
+
+
+
 ## [0.7.14-beta.1](https://github.com/rariblecom/protocol-contracts/compare/v0.7.14-beta.0...v0.7.14-beta.1) (2023-10-09)
 
 **Note:** Version bump only for package @rarible/custom-matchers
