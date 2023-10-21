@@ -96,15 +96,13 @@ function createNetworkZKatanaTest(name) {
       from: json.address,
       gas: 8000000,
       gasPrice: gasPrice,
-      network_id: 1261120,
-      chainId: 1261120,
+      network_id: json.network_id,
       skipDryRun: true,
       networkCheckTimeout: 500000,
       verify: {
-        apiUrl: 'https://zkatana.blockscout.com/api/v2',
+        apiUrl: 'https://zkatana.blockscout.com/api',
         apiKey: 'xyz',
-        explorerUrl: 'https://zkatana.blockscout.com',
-        chainId: 1261120
+        explorerUrl: 'https://zkatana.blockscout.com'
       }
     };
   } catch (e) {
