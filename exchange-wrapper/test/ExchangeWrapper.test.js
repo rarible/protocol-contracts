@@ -128,7 +128,7 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
     /*ERC721 */
     erc721 = await TestERC721.new("Rarible", "RARI");
     /*ERC1155*/
-    erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+    erc1155 = await TestERC1155.new();
   });
 
   describe ("libraries", () => {

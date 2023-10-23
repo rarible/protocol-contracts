@@ -189,6 +189,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 address(this)
             ), 
             LibDeal.DealData(
+                0,
                 MAX_FEE_BASE_POINT,
                 LibFeeSide.FeeSide.RIGHT
             )
@@ -302,6 +303,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 from
             ), 
             LibDeal.DealData(
+                0,
                 MAX_FEE_BASE_POINT,
                 LibFeeSide.FeeSide.RIGHT
             )

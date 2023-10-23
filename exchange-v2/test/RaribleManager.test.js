@@ -36,7 +36,6 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
   const erc721TokenId1 = 53;
   const erc1155TokenId1 = 54;
   const erc1155TokenId2 = 55;
-  const protocolCommission = 300;
 
   before(async () => {
     transferProxy = await TransferProxyTest.new();
@@ -44,7 +43,7 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
     RTM = await RaribleTransferManagerTest.new();
     royaltiesRegistry = await TestRoyaltiesRegistry.new();
 
-    await RTM.init____(transferProxy.address, erc20TransferProxy.address, protocolCommission, community, royaltiesRegistry.address);
+    await RTM.init____(transferProxy.address, erc20TransferProxy.address, 0, ZERO, royaltiesRegistry.address);
   });
 
   describe("Check doTransfersExternal()", () => {
@@ -526,6 +525,47 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
   })
 
+  describe("Protocol Fee", () => {
+
+    it("protocol fee in V2 order", async () => {
+
+      const makerLeft = accounts[1]
+      const makerRight = accounts[2]
+      // minting NFT
+      const erc721 = await prepareERC721(makerLeft);
+
+      //setting protocol fee
+      assert.equal(await RTM.protocolFee(), 0)
+
+      await RTM.setProtocolFee(300)
+      assert.equal(await RTM.protocolFee(), 300)
+
+      //setting fee reciever
+      assert.equal(await RTM.defaultFeeReceiver(), ZERO)
+
+      await RTM.setDefaultFeeReceiver(protocol)
+      assert.equal(await RTM.defaultFeeReceiver(), protocol)
+
+      const encDataLeft = await RTM.encodeV2([[], [], true]);
+      const encDataRight = await RTM.encodeV2([[], [], false]);
+
+      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const right = Order(makerRight, Asset(ETH, "0x", 1000), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V2, encDataRight);
+
+      await verifyBalanceChangeReturnTx(web3, makerRight, 1030, () =>
+        verifyBalanceChangeReturnTx(web3, makerLeft, -1000, () =>
+          verifyBalanceChangeReturnTx(web3, protocol, -30, () =>
+            RTM.doTransfersExternal(left, right,
+              { value: 1030, from: makerRight}
+            )
+          )
+        )
+      );
+
+      assert.equal(await erc721.ownerOf(erc721TokenId1), makerRight);
+    })
+
+  })
   function encDataV1(tuple) {
     return RTM.encode(tuple)
   }

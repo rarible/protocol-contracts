@@ -808,7 +808,7 @@ contract("AuctionHouse1155", accounts => {
 
   async function prepareERC1155Sell(user = seller, value = 100, tokenId = erc1155TokenId1, deployNew = true) {
     if (!!deployNew) {
-      erc1155 = await TestERC1155.new("https://ipfs.rarible.com");
+      erc1155 = await TestERC1155.new();
     }
     await erc1155.mint(user, tokenId, value);
     await erc1155.setApprovalForAll(transferProxy.address, true, { from: user });

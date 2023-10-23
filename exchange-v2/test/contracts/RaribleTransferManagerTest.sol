@@ -55,7 +55,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor 
         bytes4 rightDataType,
         LibOrderData.GenericOrderData memory leftOrderData,
         LibOrderData.GenericOrderData memory rightOrderData
-    ) internal pure returns(LibDeal.DealData memory dealData) {
+    ) internal view returns(LibDeal.DealData memory dealData) {
+        dealData.protocolFee = protocolFee;
         dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
         dealData.maxFeesBasePoint = getMaxFee(
             leftDataType,

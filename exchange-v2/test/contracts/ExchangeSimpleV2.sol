@@ -16,4 +16,8 @@ contract ExchangeSimpleV2 is ExchangeV2Core, SimpleTransferManager {
         __OrderValidator_init_unchained();
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
     }
+
+    function getProtocolFee() internal override view returns(uint) {
+        return 0;
+    }
 }

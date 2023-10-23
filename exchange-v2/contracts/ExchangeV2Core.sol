@@ -267,14 +267,16 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes4 rightDataType,
         LibOrderData.GenericOrderData memory leftOrderData,
         LibOrderData.GenericOrderData memory rightOrderData
-    ) internal pure returns(LibDeal.DealData memory dealData) {
+    ) internal view returns(LibDeal.DealData memory dealData) {
+        dealData.protocolFee = getProtocolFee();
         dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
         dealData.maxFeesBasePoint = getMaxFee(
             leftDataType,
             rightDataType,
             leftOrderData,
             rightOrderData,
-            dealData.feeSide
+            dealData.feeSide,
+            dealData.protocolFee
         );
     }
 
@@ -292,7 +294,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         bytes4 dataTypeRight,
         LibOrderData.GenericOrderData memory leftOrderData,
         LibOrderData.GenericOrderData memory rightOrderData,
-        LibFeeSide.FeeSide feeSide
+        LibFeeSide.FeeSide feeSide,
+        uint _protocolFee
     ) internal pure returns(uint) {
         if (
             dataTypeLeft != LibOrderDataV3.V3_SELL &&
@@ -303,7 +306,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             return 0;
         }
 
-        uint matchFees = getSumFees(leftOrderData.originFees, rightOrderData.originFees);
+        uint matchFees = getSumFees(_protocolFee, leftOrderData.originFees, rightOrderData.originFees);
         uint maxFee;
         if (feeSide == LibFeeSide.FeeSide.LEFT) {
             maxFee = rightOrderData.maxFeesBasePoint;
@@ -339,8 +342,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         @param originRight origin fees of the right order
         @return sum of all fees for the match (protcolFee + leftOrder.originFees + rightOrder.originFees)
      */
-    function getSumFees(LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
-        uint result = 0;
+    function getSumFees(uint _protocolFee, LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
+        uint result = _protocolFee;
 
         //adding left origin fees
         for (uint i; i < originLeft.length; i ++) {
@@ -438,6 +441,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
         return dataType;
     }
+
+    function getProtocolFee() internal virtual view returns(uint);
 
     uint256[49] private __gap;
 }
