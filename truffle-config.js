@@ -101,7 +101,7 @@ function createNetworkZKatanaTest(name) {
       networkCheckTimeout: 500000,
       verify: {
         apiUrl: 'https://zkatana.blockscout.com/api',
-        apiKey: 'xyz',
+        apiKey: '92600277-9ba3-45d2-8034-cc11f01aa8f3',
         explorerUrl: 'https://zkatana.blockscout.com'
       }
     };
