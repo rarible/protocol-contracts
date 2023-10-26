@@ -168,6 +168,7 @@ module.exports = {
     mantle_mainnet: createNetworkMantelTest("mantle_mainnet"),
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
     zkatana_testnet: createNetworkZKatanaTest("zkatana_testnet"),
+    chiliz_testnet: createNetworkMantelTest("chiliz_testnet"),
   },
 
   compilers: {
