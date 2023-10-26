@@ -164,7 +164,8 @@ const arbitrum_sepolia = {
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
   deploy_meta: false,
   deploy_non_meta: true,
-  deploy_test_erc20: true
+  deploy_test_erc20: true,
+  deploymentGasMultiplier: 4
 }
 
 let settings = {
@@ -244,7 +245,15 @@ async function updateImplementation(beacon, newImpl){
   }
 }
 
+function getGasMultiplier(network) {
+  const { deploymentGasMultiplier } = getSettings(network);
+  if (!!deploymentGasMultiplier) {
+    return deploymentGasMultiplier;
+  }
+  return 1;
+}
+
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation , getGasMultiplier};

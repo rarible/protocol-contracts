@@ -4,7 +4,7 @@ const adminJson = require("@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json
 const ProxyAdmin = contract(adminJson)
 ProxyAdmin.setProvider(web3.currentProvider)
 
-const { getProxyImplementation, getSettings, updateImplementation } = require("./config.js")
+const { getProxyImplementation, getSettings, updateImplementation, getGasMultiplier } = require("./config.js")
 
 const ERC1155RaribleBeacon = artifacts.require('ERC1155RaribleBeacon');
 const ERC1155RaribleBeaconMeta = artifacts.require('ERC1155RaribleBeaconMeta');
@@ -44,6 +44,6 @@ async function updateERC1155(erc1155toDeploy, beacon, transferProxy, erc1155Lazy
   await updateImplementation(beacon1155, erc1155)
   
   //deploying new factory
-  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 2500000 });
+  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 2500000 * getGasMultiplier(network) });
   console.log(`deployed factory1155 at ${factory1155.address}`)
 }
