@@ -158,6 +158,15 @@ const arbitrum_goerli = {
   deploy_test_erc20: true
 }
 
+const chiliz_testnet = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+}
+
 const arbitrum_sepolia = {
   communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
   deploy_CryptoPunks: false,
@@ -201,6 +210,7 @@ let settings = {
   "arbitrum_goerli": arbitrum_goerli,
   "arbitrum_sepolia": arbitrum_sepolia,
   "arbitrum_mainnet": arbitrum_mainnet,
+  "chiliz_testnet": chiliz_testnet
 };
 
 function getSettings(network) {
