@@ -168,6 +168,15 @@ const arbitrum_sepolia = {
   deploymentGasMultiplier: 4
 }
 
+const arbitrum_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploymentGasMultiplier: 4
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -191,6 +200,7 @@ let settings = {
   "mantle_mainnet": mantle_mainnet,
   "arbitrum_goerli": arbitrum_goerli,
   "arbitrum_sepolia": arbitrum_sepolia,
+  "arbitrum_mainnet": arbitrum_mainnet,
 };
 
 function getSettings(network) {

@@ -201,6 +201,7 @@ module.exports = {
     mantle_mainnet: createNetworkMantelTest("mantle_mainnet"),
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
     arbitrum_sepolia: createNetworkArbitrumSepolia("arbitrum_sepolia"), 
+    arbitrum_mainnet: createNetworkArbitrumSepolia("arbitrum_mainnet"),
     zkatana_testnet: createNetworkZKatanaTest("zkatana_testnet"),
   },
 
