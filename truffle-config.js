@@ -239,6 +239,7 @@ module.exports = {
     arbitrum_mainnet: createNetworkArbitrumSepolia("arbitrum_mainnet"),
     zkatana_testnet: createNetworkZKatanaTest("zkatana_testnet"),
     chiliz_testnet: createNetworkChilizTestnet("chiliz_testnet"),
+    chiliz_mainnet: createNetworkChilizTestnet("chiliz_mainnet"),
   },
 
   compilers: {
