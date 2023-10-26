@@ -110,6 +110,39 @@ function createNetworkZKatanaTest(name) {
   }
 }
 
+function createNetworkArbitrumSepolia(name) {
+  try {
+    var json = require(path.join(getConfigPath(), name + ".json"));
+    var gasPrice = json.gasPrice != null ? json.gasPrice + "000000000" : 2000000000;
+    return {
+      provider: () => {
+        const { estimate } = require("@rarible/estimate-middleware")
+        if (json.path != null) {
+          const { createProvider: createTrezorProvider } = require("@rarible/trezor-provider")
+          const provider = createTrezorProvider({ url: json.url, path: json.path, chainId: json.network_id })
+          provider.send = provider.sendAsync
+          return provider
+        } else {
+          return createProvider(json.address, json.key, json.url)
+        }
+      },
+      from: json.address,
+      gas: 8000000,
+      gasPrice: gasPrice,
+      network_id: json.network_id,
+      skipDryRun: true,
+      networkCheckTimeout: 500000,
+      verify: {
+        apiUrl: 'https://sepolia.arbiscan.io/api',
+        apiKey: 'UUP13U6I3JYQVCK4UHK5TM3RX9765IYKSR',
+        explorerUrl: 'https://sepolia.arbiscan.io/'
+      }
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 function createProvider(address, key, url) {
   console.log("creating provider for address: " + address);
   var HDWalletProvider = require("@truffle/hdwallet-provider");
@@ -167,7 +200,7 @@ module.exports = {
     mantle_testnet: createNetworkMantelTest("mantle_testnet"),
     mantle_mainnet: createNetworkMantelTest("mantle_mainnet"),
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
-    arbitrum_sepolia: createNetwork("arbitrum_sepolia"), 
+    arbitrum_sepolia: createNetworkArbitrumSepolia("arbitrum_sepolia"), 
     zkatana_testnet: createNetworkZKatanaTest("zkatana_testnet"),
   },
 
