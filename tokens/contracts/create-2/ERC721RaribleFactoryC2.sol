@@ -14,19 +14,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *
  */
 contract ERC721RaribleFactoryC2 is Ownable {
-    address public immutable beacon;
-    address immutable transferProxy;
-    address immutable lazyTransferProxy;
-    address public immutable operatorFilterRegistrySubscriptionAddress;
+    address public beacon;
+    address transferProxy;
+    address lazyTransferProxy;
 
     event Create721RaribleProxy(address proxy);
     event Create721RaribleUserProxy(address proxy);
 
-    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy, address _operatorFilterRegistrySubscriptionAddress) {
+    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy) {
         beacon = _beacon;
         transferProxy = _transferProxy;
         lazyTransferProxy = _lazyTransferProxy;
-        operatorFilterRegistrySubscriptionAddress = _operatorFilterRegistrySubscriptionAddress;
     }
 
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {
@@ -75,7 +73,7 @@ contract ERC721RaribleFactoryC2 is Ownable {
     }
 
     function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy, operatorFilterRegistrySubscriptionAddress);
+        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
     }
 
     //returns address that private contract with such arguments will be deployed on
@@ -94,6 +92,6 @@ contract ERC721RaribleFactoryC2 is Ownable {
     }
 
     function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy, operatorFilterRegistrySubscriptionAddress);
+        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
     }
 }

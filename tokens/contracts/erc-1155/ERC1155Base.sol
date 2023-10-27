@@ -9,9 +9,7 @@ import "./ERC1155DefaultApproval.sol";
 import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
 
-import "../operator-filter-registry/OperatorFiltererUpgradeable.sol";
-
-abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI, OperatorFiltererUpgradeable {
+abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
     string public name;
     string public symbol;
 
@@ -86,40 +84,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         super._setBaseURI(newBaseURI);
 
         emit BaseUriChanged(newBaseURI);
-    }
-
-    /**
-     * @dev See {IERC1155-setApprovalForAll}.
-     *      In this example the added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
-     */
-    function setApprovalForAll(address operator, bool approved) public override(ERC1155Upgradeable, IERC1155Upgradeable) onlyAllowedOperatorApproval(operator) {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /**
-     * @dev See {IERC1155-safeTransferFrom}.
-     *      In this example the added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
-     */
-    function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes memory data)
-        public
-        override(ERC1155Upgradeable, IERC1155Upgradeable) 
-        onlyAllowedOperator(from)
-    {
-        super.safeTransferFrom(from, to, tokenId, amount, data);
-    }
-
-    /**
-     * @dev See {IERC1155-safeBatchTransferFrom}.
-     *      In this example the added modifier ensures that the operator is allowed by the OperatorFilterRegistry.
-     */
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public virtual override(ERC1155Upgradeable, IERC1155Upgradeable)  onlyAllowedOperator(from) {
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     uint256[50] private __gap;

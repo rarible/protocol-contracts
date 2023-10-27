@@ -1,6 +1,5 @@
-const Testing = artifacts.require("ERC721MinimalRaribleTest.sol");
+const Testing = artifacts.require("ERC721RaribleMinimal.sol");
 const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
-const OperatorFilterRegistryTest = artifacts.require("OperatorFilterRegistryTest.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 const { sign } = require("../../../scripts/mint721.js");
@@ -14,74 +13,16 @@ contract("ERC721RaribleUser minimal", accounts => {
   const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const whiteListProxy = accounts[5];
-  let OFR;
-
-  const subscribeTo = accounts[7];
-  const bannedOperator = accounts[8]
 
   function fees(list) {
     const value = 500;
     return list.map(account => ({ account, value }))
   }
 
-  before(async () => {
-    //setting operator filter registry
-    OFR = await OperatorFilterRegistryTest.new();
-    await OFR.register(subscribeTo, { from: subscribeTo });
-    await OFR.updateOperator(subscribeTo, bannedOperator, true, { from: subscribeTo })
-  });
-
   beforeEach(async () => {
     token = await Testing.new();
-
-    //setting OFR
-    await token.setOFR(OFR.address)
-    assert.equal(await token.OPERATOR_FILTER_REGISTRY(), OFR.address, "OFR set")
-
-    //then initialising
-    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], zeroAddress, zeroAddress, subscribeTo, { from: tokenOwner });
+    await token.__ERC721RaribleUser_init(name, "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], zeroAddress, zeroAddress, { from: tokenOwner });
   });
-
-  it("RaribeUser 721 token: OFR subscription blacklist works", async () => {
-    const minter = tokenOwner;
-    let transferTo = accounts[2];
-
-    const tokenId = minter + "b00000000000000000000001";
-    const tokenURI = "//uri";
-
-    await token.mintAndTransfer([tokenId, tokenURI, creators([minter]), [], [zeroWord]], transferTo, {from: minter});
-
-    await truffleAssert.fails(
-      token.setApprovalForAll(bannedOperator, true,{ from: transferTo }),
-      truffleAssert.ErrorType.REVERT,
-      "OperatorNotAllowed"
-    )
-
-    await truffleAssert.fails(
-      token.approve(bannedOperator, tokenId,{ from: transferTo }),
-      truffleAssert.ErrorType.REVERT,
-      "OperatorNotAllowed"
-    )
-
-    await truffleAssert.fails(
-      token.transferFrom(transferTo, bannedOperator, tokenId,{ from: bannedOperator }),
-      truffleAssert.ErrorType.REVERT,
-      "OperatorNotAllowed"
-    )
-
-    await truffleAssert.fails(
-      token.safeTransferFrom(transferTo, bannedOperator, tokenId,{ from: bannedOperator }),
-      truffleAssert.ErrorType.REVERT,
-      "OperatorNotAllowed"
-    )
-
-    await truffleAssert.fails(
-      token.methods['safeTransferFrom(address,address,uint256,bytes)'](transferTo, bannedOperator, tokenId, "0x00", { from: bannedOperator }),
-      truffleAssert.ErrorType.REVERT,
-      "OperatorNotAllowed"
-    )
-  });
-
 
   it("check for ERC165 interface", async () => {
   	assert.equal(await token.supportsInterface("0x01ffc9a7"), true);

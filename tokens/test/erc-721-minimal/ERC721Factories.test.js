@@ -1,7 +1,6 @@
 const UpgradeableBeacon = artifacts.require("UpgradeableBeacon.sol");
-const ERC721MinimalRaribleTest = artifacts.require("ERC721MinimalRaribleTest.sol");
+const ERC721RaribleMinimal = artifacts.require("ERC721RaribleMinimal.sol");
 const ERC721RaribleFactoryC2 = artifacts.require("ERC721RaribleFactoryC2.sol");
-const OperatorFilterRegistryTest = artifacts.require("OperatorFilterRegistryTest.sol");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -12,22 +11,12 @@ contract("Test factories minimal", accounts => {
 
 	const tokenOwner = accounts[1];
   const salt = 3;
-  let OFR;
+
   let factory;
-
-  const subscribeTo = accounts[9];
-  const bannedOperator = accounts[8]
-
   before(async () => {
-		const impl = await ERC721MinimalRaribleTest.new();
+		const impl = await ERC721RaribleMinimal.new();
 		const beacon = await UpgradeableBeacon.new(impl.address);
-
-    //setting operator filter registry
-    OFR = await OperatorFilterRegistryTest.new();
-    await OFR.register(subscribeTo, { from: subscribeTo });
-    await OFR.updateOperator(subscribeTo, bannedOperator, true, { from: subscribeTo })
-
-		factory = await ERC721RaribleFactoryC2.new(beacon.address, zeroAddress, zeroAddress, subscribeTo);
+		factory = await ERC721RaribleFactoryC2.new(beacon.address, zeroAddress, zeroAddress);
 	})
 
 	it("should create erc721 private from factory, getAddress works correctly", async () => {
@@ -39,7 +28,7 @@ contract("Test factories minimal", accounts => {
         proxy = ev.proxy;
         return true;
       });
-		const token = await ERC721MinimalRaribleTest.at(proxy);
+		const token = await ERC721RaribleMinimal.at(proxy);
     const minter = tokenOwner;
     let transferTo = accounts[2];
 
@@ -66,26 +55,13 @@ contract("Test factories minimal", accounts => {
         proxy = ev.proxy;
         return true;
       });
-		const token = await ERC721MinimalRaribleTest.at(proxy);
-
-    //setting OFR
-    await token.setOFR(OFR.address)
-    assert.equal(await token.OPERATOR_FILTER_REGISTRY(), OFR.address, "OFR set")
-
+		const token = await ERC721RaribleMinimal.at(proxy);
 		assert.equal(await token.isApprovedForAll(factory.address, operator1), false);
 		assert.equal(await token.isApprovedForAll(tokenOwner, operator1), false);
 
 		await token.setApprovalForAll(operator1, true, {from: tokenOwner});
 		//only after tokenOwner call isApprovedForAll to operator1, operator1 is approved
 		assert.equal(await token.isApprovedForAll(tokenOwner, operator1), true);
-
-    await OFR.registerAndSubscribe(token.address, subscribeTo)
-
-    await truffleAssert.fails(
-      token.setApprovalForAll(bannedOperator, true,{ from: tokenOwner }),
-      truffleAssert.ErrorType.REVERT,
-      "OperatorNotAllowed"
-    )
 	})
 
   it("should create erc721 public from factory, getAddress works correctly", async () => {
@@ -97,7 +73,7 @@ contract("Test factories minimal", accounts => {
         proxy = ev.proxy;
         return true;
       });
-		const token = await ERC721MinimalRaribleTest.at(proxy);
+		const token = await ERC721RaribleMinimal.at(proxy);
     const minter = tokenOwner;
     let transferTo = accounts[2];
 
