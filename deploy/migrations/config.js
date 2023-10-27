@@ -230,11 +230,7 @@ async function updateImplementation(beacon, newImpl){
   }
 }
 
-function getOFRSubscriptionAddress() {
-  return "0x34E671dDFBEc90E6336854268795372D41029c9f";
-}
-
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation, getOFRSubscriptionAddress };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation };
