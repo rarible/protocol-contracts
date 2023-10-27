@@ -75,11 +75,9 @@ function createNetworkMantelTest(name) {
   }
 }
 
-function createNetworkZKatanaTest(name) {
+function createNetworkZKatanaTestnet(name) {
   try {
     var json = require(path.join(getConfigPath(), name + ".json"));
-    // for mantle_tesnet we use wei
-    // for all other networks we use gwei
     var gasPrice = json.gasPrice
     return {
       provider: () => {
@@ -237,7 +235,8 @@ module.exports = {
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
     arbitrum_sepolia: createNetworkArbitrumSepolia("arbitrum_sepolia"), 
     arbitrum_mainnet: createNetworkArbitrumSepolia("arbitrum_mainnet"),
-    zkatana_testnet: createNetworkZKatanaTest("zkatana_testnet"),
+    zkatana_testnet: createNetworkZKatanaTestnet("zkatana_testnet"),
+    zkatana_mainnet: createNetworkZKatanaTestnet("zkatana_mainnet"),
     chiliz_testnet: createNetworkChilizTestnet("chiliz_testnet"),
     chiliz_mainnet: createNetworkChilizTestnet("chiliz_mainnet"),
   },
