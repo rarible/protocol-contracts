@@ -200,6 +200,23 @@ const arbitrum_mainnet = {
   deploymentGasMultiplier: 4
 }
 
+const zkatana_testnet = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+}
+
+const zkatana_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -226,6 +243,8 @@ let settings = {
   "arbitrum_mainnet": arbitrum_mainnet,
   "chiliz_testnet": chiliz_testnet,
   "chiliz_mainnet": chiliz_mainnet,
+  "zkatana_testnet": zkatana_testnet,
+  "zkatana_mainnet": zkatana_mainnet,
 };
 
 function getSettings(network) {
