@@ -4,7 +4,7 @@ const adminJson = require("@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json
 const ProxyAdmin = contract(adminJson)
 ProxyAdmin.setProvider(web3.currentProvider)
 
-const { getProxyImplementation, getSettings, updateImplementation } = require("./config.js")
+const { getProxyImplementation, getSettings, getGasMultiplier } = require("./config.js")
 
 const ERC721RaribleMinimal = artifacts.require('ERC721RaribleMinimal');
 
@@ -43,10 +43,10 @@ async function deployERC721Minimal(erc721toDeploy, beacon, deployer, network) {
   const erc721minimal = await getProxyImplementation(erc721toDeploy, network, ProxyAdmin)
 
   //upgrading 721 beacon
-  await deployer.deploy(beacon, erc721minimal, { gas: 1000000 });
+  await deployer.deploy(beacon, erc721minimal, { gas: 1000000 * getGasMultiplier(network) });
   const beacon721Minimal = await beacon.deployed()
 
   //deploying factory
-  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721Minimal.address, transferProxy, erc721LazyMintTransferProxy, { gas: 2500000 });
+  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721Minimal.address, transferProxy, erc721LazyMintTransferProxy, { gas: 2500000 * getGasMultiplier(network) });
   console.log(`deployed factory721 minimal at ${factory721.address}`)
 }
