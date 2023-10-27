@@ -1,0 +1,1 @@
+yarn run build:test

@@ -155,6 +155,51 @@ const mantle_mainnet = {
   deploy_non_meta: true
 }
 
+const arbitrum_goerli = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true
+}
+
+const chiliz_testnet = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+}
+
+const chiliz_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+}
+
+const arbitrum_sepolia = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+  deploymentGasMultiplier: 4
+}
+
+const arbitrum_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploymentGasMultiplier: 4
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -176,6 +221,11 @@ let settings = {
   "optimism_goerli": optimism_goerli,
   "mantle_testnet": mantle_testnet,
   "mantle_mainnet": mantle_mainnet,
+  "arbitrum_goerli": arbitrum_goerli,
+  "arbitrum_sepolia": arbitrum_sepolia,
+  "arbitrum_mainnet": arbitrum_mainnet,
+  "chiliz_testnet": chiliz_testnet,
+  "chiliz_mainnet": chiliz_mainnet,
 };
 
 function getSettings(network) {
@@ -230,7 +280,15 @@ async function updateImplementation(beacon, newImpl){
   }
 }
 
+function getGasMultiplier(network) {
+  const { deploymentGasMultiplier } = getSettings(network);
+  if (!!deploymentGasMultiplier) {
+    return deploymentGasMultiplier;
+  }
+  return 1;
+}
+
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation , getGasMultiplier};

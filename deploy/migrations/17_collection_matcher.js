@@ -2,11 +2,11 @@ const AssetMatcherCollection = artifacts.require('AssetMatcherCollection');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
-const { id, getSettings } = require("./config.js");
+const { id, getSettings, getGasMultiplier } = require("./config.js");
 
 module.exports = async function (deployer, network) {
   //deploy asset matcher for collections
-  await deployer.deploy(AssetMatcherCollection, { gas: 1000000 });
+  await deployer.deploy(AssetMatcherCollection, { gas: 1000000 * getGasMultiplier(network) });
   const matcher = await AssetMatcherCollection.deployed();
   console.log("asset matcher for collections deployed at", matcher.address)
 

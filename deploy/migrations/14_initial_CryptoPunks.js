@@ -3,7 +3,7 @@ const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
-const { getSettings } = require("./config.js")
+const { getSettings, getGasMultiplier } = require("./config.js")
 const { CRYPTO_PUNKS } = require("../../scripts/assets.js");
 
 module.exports = async function (deployer, network) {
@@ -15,14 +15,14 @@ module.exports = async function (deployer, network) {
   }
 
   if (settings.deploy_CryptoPunks) {
-    await deployer.deploy(CryptoPunksMarket, { gas: 4500000 });
+    await deployer.deploy(CryptoPunksMarket, { gas: 4500000 * getGasMultiplier(network) });
     cryptoPunksMarket = await CryptoPunksMarket.deployed();
   } else {
     cryptoPunksMarket = await CryptoPunksMarket.at(settings.address_CryptoPunks);
   }
   console.log("cryptoPunksMarket address: ",  cryptoPunksMarket.address);
 
-  await deployer.deploy(PunkTransferProxy, { gas: 1500000 });
+  await deployer.deploy(PunkTransferProxy, { gas: 1500000 * getGasMultiplier(network) });
   const punkTransferProxy = await PunkTransferProxy.deployed();
   console.log("deployed punkTransferProxy: ", punkTransferProxy.address);
   await punkTransferProxy.__OperatorRole_init({ gas: 200000 });

@@ -1,7 +1,10 @@
-@Library('shared-library') _
+@Library('shared-library@feature/protocol-pipeline') _
 
 def pipelineConfig = [
-  "buildWith": "nodetruffle"
+  "JSpublicLibrary": "true",
+  "pkgRepoName": "npmjs-org",
+  "buildWith": "nodetruffle",
+  "baseImageTag": "16.20.2-bullseye"
 ]
 
-pipelineProtocolContracts(pipelineConfig)
+pipelinePackageRelease(pipelineConfig)
