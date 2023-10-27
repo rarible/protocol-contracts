@@ -1,1 +1,0 @@
-slither ../../../../tokens/contracts/erc-721-minimal/ERC721RaribleMinimal.sol --solc-remaps @=../../../../node_modules/@ --checklist > slither-ERC721RaribleMinimal.md
