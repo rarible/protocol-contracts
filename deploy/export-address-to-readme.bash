@@ -7,17 +7,18 @@ path="${HOME}/.ethereum/${NETWORK}.json"
 path_readme="networks/${NETWORK}.md"
 echo $path
 network_id=$(jq '.network_id' $path)
+explorer_url=$(jq '.verify.explorerUrl' $path)
 echo $network_id
 
 # Function to add a row to the table
 add_row() {
-  echo " $1 | $2 " >> $path_readme
+  echo " $1 | $2 | $3 " >> $path_readme
 }
 
 # Function to add the table header
 add_header() {
-  echo " $1 | $2 " > $path_readme
-  echo " --- | --- " >> $path_readme
+  echo " $1 | $2 | $3 " > $path_readme
+  echo " --- | --- | ---" >> $path_readme
 }
 
 # Check if README.md already exists; if not, create it
@@ -29,7 +30,7 @@ FILES="build/contracts/*"
 COUNTER=0
 VERIFIED=0
 NOT_VERIFIED=0
-add_header "Name" "Address"
+add_header "Name" "Address" "Url"
 for f in $FILES
 do
   echo "Processing $f file..."
@@ -47,8 +48,9 @@ do
     filename=$(basename -- "$f")
     contractname="${filename%.*}"
     echo "$filename" 
-    
-    add_row "$contractname" $address
+    formated_address=$(echo "$address" | tr -d "\"")
+    formated_explorer_url=$(echo "$explorer_url" | tr -d "\"")
+    add_row "$contractname" $formated_address $formated_explorer_url$formated_address
 
     sleep 1
   fi
