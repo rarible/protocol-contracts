@@ -50,7 +50,7 @@ do
     echo "$filename" 
     formated_address=$(echo "$address" | tr -d "\"")
     formated_explorer_url=$(echo "$explorer_url" | tr -d "\"")
-    add_row "$contractname" $formated_address $formated_explorer_url$formated_address
+    add_row "$contractname" $formated_address $formated_explorer_url"address/"$formated_address
 
     sleep 1
   fi
