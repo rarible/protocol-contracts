@@ -4,7 +4,7 @@ const adminJson = require("@openzeppelin/upgrades-core/artifacts/ProxyAdmin.json
 const ProxyAdmin = contract(adminJson)
 ProxyAdmin.setProvider(web3.currentProvider)
 
-const { getProxyImplementation, getSettings } = require("./config.js")
+const { getProxyImplementation, getSettings, getGasMultiplier } = require("./config.js")
 
 const ERC721Rarible = artifacts.require('ERC721Rarible');
 const ERC721RaribleBeacon = artifacts.require('ERC721RaribleBeacon');
@@ -42,7 +42,7 @@ module.exports = async function (deployer, network) {
   const erc721 = await getProxyImplementation(ERC721Rarible, network, ProxyAdmin)
 
   //deploying ERC721RaribleBeacon
-  const beacon721 = await deployer.deploy(ERC721RaribleBeacon, erc721, { gas: 1000000 });
+  const beacon721 = await deployer.deploy(ERC721RaribleBeacon, erc721, { gas: 1000000 * getGasMultiplier(network) });
 
 };
 
@@ -56,5 +56,5 @@ async function deployERC1155(erc1155toDeploy, beaconToDeploy, transferProxy, erc
   const erc1155 = await getProxyImplementation(erc1155toDeploy, network, ProxyAdmin)
 
   //deploying beacon
-  const beacon1155 = await deployer.deploy(beaconToDeploy, erc1155, { gas: 1000000 });
+  const beacon1155 = await deployer.deploy(beaconToDeploy, erc1155, { gas: 1000000 * getGasMultiplier(network) });
 }

@@ -26,6 +26,12 @@ const mainnet = {
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
   deploy_non_meta: true,
+  deployArtblockV2Provider: true,
+  artBlocksV2Collections: [
+    "0x99a9b7c1116f9ceeb1652de04d5969cce509b069",
+    "0x942bc2d3e7a589fe5bd4a5c6ef9727dfd82f5c8a",
+    "0xea698596b6009a622c3ed00dd5a8b5d1cae4fc36"
+  ]
 }
 const ropsten = {
   communityWallet: "0xe627243104a101ca59a2c629adbcd63a782e837f",
@@ -158,6 +164,59 @@ const arbitrum_goerli = {
   deploy_test_erc20: true
 }
 
+const chiliz_testnet = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+}
+
+const chiliz_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+}
+
+const arbitrum_sepolia = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+  deploymentGasMultiplier: 4
+}
+
+const arbitrum_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploymentGasMultiplier: 4
+}
+
+const zkatana_testnet = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+  deploy_test_erc20: true,
+}
+
+const zkatana_mainnet = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: false,
+  deploy_non_meta: true,
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -180,6 +239,12 @@ let settings = {
   "mantle_testnet": mantle_testnet,
   "mantle_mainnet": mantle_mainnet,
   "arbitrum_goerli": arbitrum_goerli,
+  "arbitrum_sepolia": arbitrum_sepolia,
+  "arbitrum_mainnet": arbitrum_mainnet,
+  "chiliz_testnet": chiliz_testnet,
+  "chiliz_mainnet": chiliz_mainnet,
+  "zkatana_testnet": zkatana_testnet,
+  "zkatana_mainnet": zkatana_mainnet,
 };
 
 function getSettings(network) {
@@ -234,7 +299,15 @@ async function updateImplementation(beacon, newImpl){
   }
 }
 
+function getGasMultiplier(network) {
+  const { deploymentGasMultiplier } = getSettings(network);
+  if (!!deploymentGasMultiplier) {
+    return deploymentGasMultiplier;
+  }
+  return 1;
+}
+
 const ERC721_LAZY = id("ERC721_LAZY");
 const ERC1155_LAZY = id("ERC1155_LAZY");
 
-module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation };
+module.exports = { getSettings, getProxyImplementation, ERC721_LAZY, ERC1155_LAZY, id, updateImplementation , getGasMultiplier};
