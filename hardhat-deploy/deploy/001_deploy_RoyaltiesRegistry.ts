@@ -12,13 +12,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //const RoyaltiesRegistry  = new RoyaltiesRegistry__factory(deployer)
   const RoyaltiesRegistry = await hre.ethers.getContractFactory("RoyaltiesRegistry") as RoyaltiesRegistry__factory;
   
-  const rr = await hre.upgrades.deployProxy(RoyaltiesRegistry, []) as RoyaltiesRegistry;
-  console.log(rr)
-  await rr.deployTransaction.wait(5)
-  // await rr.waitForDeployment();
-  // console.log(rr)
-  console.log("rr address:", await rr.address);
-  const royaltiesRegistry = RoyaltiesRegistry.attach(rr.address);
+  const royaltiesRegistry = await hre.upgrades.deployProxy(RoyaltiesRegistry, []) as RoyaltiesRegistry;
+
+  // verify
+  console.log("verify")
+  console.log("RoyaltiesRegistry address:", await royaltiesRegistry.address);
+  await royaltiesRegistry.deployTransaction.wait(20)
+  
+  await hre.run("verify:verify", {
+      address: royaltiesRegistry.address,
+      constructorArguments: [
+      ],
+  });
+  console.log("verify done")
   
   /*const {getNamedAccounts} = hre;
 

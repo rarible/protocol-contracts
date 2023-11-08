@@ -20,6 +20,39 @@ function getConfigPath() {
   }
 }
 
+function getNetworkApiKey(name: string): string {
+  const configPath = path.join(getConfigPath(), name + ".json");
+  if (fs.existsSync(configPath)) {
+    var json = require(configPath);
+    return json.verify.apiKey;
+  } else {
+    // File doesn't exist in path
+    return "xyz"
+  }
+}
+
+function getNetworkApiUrl(name: string): string {
+  const configPath = path.join(getConfigPath(), name + ".json");
+  if (fs.existsSync(configPath)) {
+    var json = require(configPath);
+    return json.verify.apiURL;
+  } else {
+    // File doesn't exist in path
+    return ""
+  }
+}
+
+function getNetworkExplorerUrl(name: string): string {
+  const configPath = path.join(getConfigPath(), name + ".json");
+  if (fs.existsSync(configPath)) {
+    var json = require(configPath);
+    return json.verify.explorerUrl;
+  } else {
+    // File doesn't exist in path
+    return ""
+  }
+}
+
 function createNetwork(name: string): HttpNetworkUserConfig {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
@@ -96,7 +129,36 @@ const config: HardhatUserConfig = {
     polygonMumbai: createNetwork("polygon_mumbai"),
     polygonStaging: createNetwork("polygon_staging"),
     staging: createNetwork("staging"),
+    mantle_mainnet: createNetwork("mantle_mainnet"),
+    mantle_testnet: createNetwork("mantle_testnet"),
   },
+  etherscan: {
+    apiKey: {
+    //   mainnet: getNetworkApiKey('mainnet'),
+    //   polygon: getNetworkApiKey('polygon_mainnet'),
+    //   mumbai: getNetworkApiKey('polygon_mumbai'),
+      mantle_mainnet: getNetworkApiKey('mantle_mainnet'),
+      mantle_testnet: getNetworkApiKey('mantle_testnet'),
+    },
+    customChains: [
+      {
+        network: "mantle_mainnet",
+        chainId: createNetwork("mantle_mainnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("mantle_mainnet"),
+          browserURL: getNetworkExplorerUrl("mantle_mainnet")
+        }
+      },
+      {
+        network: "mantle_testnet",
+        chainId: createNetwork("mantle_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("mantle_testnet"),
+          browserURL: getNetworkExplorerUrl("mantle_testnet")
+        }
+      }
+    ]
+  }
 };
 
 export default config;
