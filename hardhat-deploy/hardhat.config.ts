@@ -30,7 +30,8 @@ function createNetwork(name: string): HttpNetworkUserConfig {
       chainId: parseInt(json.network_id),
       url: json.url,
       accounts: [json.key],
-      gas: "auto"
+      gas: "auto",
+      saveDeployments: true,
     };
   } else {
     // File doesn't exist in path
