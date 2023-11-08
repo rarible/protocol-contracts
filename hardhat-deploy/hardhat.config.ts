@@ -35,7 +35,7 @@ function getNetworkApiUrl(name: string): string {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.apiURL;
+    return json.verify.apiUrl;
   } else {
     // File doesn't exist in path
     return ""
