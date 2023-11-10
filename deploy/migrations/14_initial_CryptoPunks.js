@@ -25,7 +25,7 @@ module.exports = async function (deployer, network) {
   await deployer.deploy(PunkTransferProxy, { gas: 1500000 * getGasMultiplier(network) });
   const punkTransferProxy = await PunkTransferProxy.deployed();
   console.log("deployed punkTransferProxy: ", punkTransferProxy.address);
-  await punkTransferProxy.__OperatorRole_init({ gas: 200000 });
+  await punkTransferProxy.__OperatorRole_init({ gas: 200000 * getGasMultiplier(network) });
 
   if (!!settings.deploy_meta) {
     const exchangeV2 = await ExchangeMetaV2.deployed();
