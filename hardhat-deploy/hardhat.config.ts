@@ -2,6 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import 'hardhat-deploy';
 import '@openzeppelin/hardhat-upgrades';
+import "@nomiclabs/hardhat-truffle5";
 
 import type { HttpNetworkUserConfig } from "hardhat/types";
 import * as dotenv from 'dotenv';
@@ -113,24 +114,26 @@ const config: HardhatUserConfig = {
     sources: 'src',
   },
   networks: {
-    hardhat: {
-      forking: {
-        url: "https://mainnet.infura.io/v3/23aeda901f4249e096e584b8be409743",
-        blockNumber: 16813952,
-      }
-    },
+    hardhat: {},
+    mainnet: createNetwork("mainnet"),
+    polygon_mumbai: createNetwork("polygon_mumbai"),
+    polygon_mainnet: createNetwork("polygon_mainnet"),
+    polygon_dev: createNetwork("polygon_dev"),
     dev: createNetwork("dev"),
     goerli: createNetwork("goerli"),
-    mainnet: createNetwork("mainnet"),
-    optimisticEthereum: createNetwork("optimism_mainnet"),
-    optimisticGoerli: createNetwork("optimism_goerli"),
-    polygonDev: createNetwork("polygon_dev"),
-    polygonMainnet: createNetwork("polygon_mainnet"),
-    polygonMumbai: createNetwork("polygon_mumbai"),
-    polygonStaging: createNetwork("polygon_staging"),
     staging: createNetwork("staging"),
-    mantle_mainnet: createNetwork("mantle_mainnet"),
+    polygon_staging: createNetwork("polygon_staging"),
+    optimism_mainnet: createNetwork("optimism_mainnet"),
+    optimism_goerli: createNetwork("optimism_goerli"),
     mantle_testnet: createNetwork("mantle_testnet"),
+    mantle_mainnet: createNetwork("mantle_mainnet"),
+    arbitrum_goerli: createNetwork("arbitrum_goerli"),
+    arbitrum_sepolia: createNetwork("arbitrum_sepolia"), 
+    arbitrum_mainnet: createNetwork("arbitrum_mainnet"),
+    zkatana_testnet: createNetwork("zkatana_testnet"),
+    zkatana_mainnet: createNetwork("zkatana_mainnet"),
+    chiliz_testnet: createNetwork("chiliz_testnet"),
+    chiliz_mainnet: createNetwork("chiliz_mainnet"),
   },
   etherscan: {
     apiKey: {

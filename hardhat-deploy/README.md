@@ -1,13 +1,18 @@
-# Sample Hardhat Project
+# Hardhat Deploy
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Network config must be created in [config folder](./utils/config/) for deployment
 
-Try running some of the following tasks:
-
+to deploy run:
 ```shell
-npx hardhat help
+npx hardhat deploy --network <network_name>
+```
+
+to verify after deploy run:
+```shell
+hardhat --network mainnet etherscan-verify [--api-key <etherscan-apikey>] [--api-url <url>]
+```
+
+to do integration tests of contracts to deploy:
+```shell
 npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
 ```
