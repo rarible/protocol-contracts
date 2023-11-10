@@ -8,16 +8,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   //deploying ERC721 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC721TokenAndeFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMeta");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMeta");
   } 
   
   if (!!deploy_non_meta){
-    await deployERC721TokenAndeFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeacon");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeacon");
   }
 
 };
 
-async function deployERC721TokenAndeFactory (hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
+async function deployERC721TokenAndFactory (hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const {deploy} = hre.deployments;
   const {deployer} = await hre.getNamedAccounts();
 

@@ -8,16 +8,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   //deploying ERC1155 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC1155TokenAndeFactory(hre, "ERC1155RaribleMeta", "ERC1155RaribleBeaconMeta");
+    await deployERC1155TokenAndFactory(hre, "ERC1155RaribleMeta", "ERC1155RaribleBeaconMeta");
   } 
   
   if (!!deploy_non_meta){
-    await deployERC1155TokenAndeFactory(hre, "ERC1155Rarible", "ERC1155RaribleBeacon");
+    await deployERC1155TokenAndFactory(hre, "ERC1155Rarible", "ERC1155RaribleBeacon");
   }
 
 };
 
-async function deployERC1155TokenAndeFactory (hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
+async function deployERC1155TokenAndFactory (hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const {deploy} = hre.deployments;
   const {deployer} = await hre.getNamedAccounts();
 
