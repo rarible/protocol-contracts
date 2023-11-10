@@ -29,7 +29,7 @@ function createNetwork(name) {
         }
       },
       from: json.address,
-      gas: 8000000,
+      gas: 50000000,
       gasPrice: gasPrice,
       network_id: json.network_id,
       skipDryRun: true,
