@@ -6,7 +6,7 @@ import { getConfig } from '../utils/utils'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
 
-  //deploying ExchangeV2 with meta support if needed
+  //deploying ERC1155 with meta support if needed
   if (!!deploy_meta) {
     await deployERC1155TokenAndeFactory(hre, "ERC1155RaribleMeta", "ERC1155RaribleBeaconMeta");
   } 
