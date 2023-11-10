@@ -1,5 +1,5 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
 
 import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig } from '../utils/utils'
 
@@ -18,16 +18,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploying ExchangeV2 with meta support if needed
   if (!!deploy_meta) {
     await deployAndSetupExchange(hre, "ExchangeMetaV2", transferProxy, erc20TransferProxy, erc721LazyMintTransferProxy, erc1155LazyMintTransferProxy);
-  } 
-  
-  if (!!deploy_non_meta){
+  }
+
+  if (!!deploy_non_meta) {
     await deployAndSetupExchange(hre, "ExchangeV2", transferProxy, erc20TransferProxy, erc721LazyMintTransferProxy, erc1155LazyMintTransferProxy);
   }
 };
 
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
-  const {deploy} = hre.deployments;
-  const {deployer} = await hre.getNamedAccounts();
+  const { deploy } = hre.deployments;
+  const { deployer } = await hre.getNamedAccounts();
 
   const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
 
@@ -59,7 +59,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
   //set 2 lazy transfer proxies in exchangeV2 contract (other 2 are set in initialiser)
   await (await exchangeV2.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address)).wait()
   await (await exchangeV2.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address)).wait()
-  
+
   //deploy and setup collection matcher
   const assetMatcherCollectionReceipt = await deploy("AssetMatcherCollection", {
     from: deployer,
@@ -71,8 +71,8 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
 }
 
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
-  const {deploy} = hre.deployments;
-  const {deployer} = await hre.getNamedAccounts();
+  const { deploy } = hre.deployments;
+  const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,

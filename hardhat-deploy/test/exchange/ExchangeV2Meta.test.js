@@ -1,4 +1,4 @@
-const {deployments} = require('hardhat');
+const { deployments } = require('hardhat');
 
 const ExchangeMetaV2 = artifacts.require("ExchangeMetaV2.sol");
 
@@ -162,6 +162,6 @@ contract("exchange v2 meta", accounts => {
   async function getSignature(order, signer) {
     return sign(order, signer, exchangeV2meta.address);
   }
-  
+
 });
-  
+

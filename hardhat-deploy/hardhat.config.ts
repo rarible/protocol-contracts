@@ -17,7 +17,7 @@ function getConfigPath() {
   if (configPath) {
     return configPath;
   } else {
-    return path.join(os.homedir(),  ".ethereum");
+    return path.join(os.homedir(), ".ethereum");
   }
 }
 
@@ -128,7 +128,7 @@ const config: HardhatUserConfig = {
     mantle_testnet: createNetwork("mantle_testnet"),
     mantle_mainnet: createNetwork("mantle_mainnet"),
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
-    arbitrum_sepolia: createNetwork("arbitrum_sepolia"), 
+    arbitrum_sepolia: createNetwork("arbitrum_sepolia"),
     arbitrum_mainnet: createNetwork("arbitrum_mainnet"),
     zkatana_testnet: createNetwork("zkatana_testnet"),
     zkatana_mainnet: createNetwork("zkatana_mainnet"),
@@ -137,9 +137,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-    //   mainnet: getNetworkApiKey('mainnet'),
-    //   polygon: getNetworkApiKey('polygon_mainnet'),
-    //   mumbai: getNetworkApiKey('polygon_mumbai'),
+      //   mainnet: getNetworkApiKey('mainnet'),
+      //   polygon: getNetworkApiKey('polygon_mainnet'),
+      //   mumbai: getNetworkApiKey('polygon_mumbai'),
       mantle_mainnet: getNetworkApiKey('mantle_mainnet'),
       mantle_testnet: getNetworkApiKey('mantle_testnet'),
     },

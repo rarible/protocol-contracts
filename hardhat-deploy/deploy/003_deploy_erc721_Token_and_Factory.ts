@@ -1,5 +1,5 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
 
 import { getConfig } from '../utils/utils'
 
@@ -9,17 +9,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploying ERC721 with meta support if needed
   if (!!deploy_meta) {
     await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMeta");
-  } 
-  
-  if (!!deploy_non_meta){
+  }
+
+  if (!!deploy_non_meta) {
     await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeacon");
   }
 
 };
 
-async function deployERC721TokenAndFactory (hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
-  const {deploy} = hre.deployments;
-  const {deployer} = await hre.getNamedAccounts();
+async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
+  const { deploy } = hre.deployments;
+  const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyyAddress = (await hre.deployments.get("TransferProxy")).address;
   const erc721LazyMintTransferProxyAddress = (await hre.deployments.get("ERC721LazyMintTransferProxy")).address;

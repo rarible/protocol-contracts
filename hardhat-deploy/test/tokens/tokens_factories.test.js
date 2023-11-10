@@ -1,4 +1,4 @@
-const {deployments} = require('hardhat');
+const { deployments } = require('hardhat');
 
 const ERC721RaribleMinimal = artifacts.require("ERC721RaribleMinimal.sol");
 const ERC721RaribleFactoryC2 = artifacts.require("ERC721RaribleFactoryC2.sol");
