@@ -42,7 +42,14 @@ async function sign(order, account, verifyingContract) {
 		chainId,
 		verifyingContract
 	}, 'Order', order, Types);
-	return (await EIP712.signTypedData(web3, account, data)).sig;
+
+  let result;
+  try {
+    result = (await EIP712.signTypedData(web3, account, data)).sig;
+  } catch (error) {
+    result = (await EIP712.signTypedData_v4(web3, account, data)).sig
+  }
+	return result;
 }
 
 module.exports = { AssetType, Asset, Order, sign }
