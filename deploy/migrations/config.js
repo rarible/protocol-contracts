@@ -197,7 +197,7 @@ const arbitrum_mainnet = {
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
   deploy_meta: false,
   deploy_non_meta: true,
-  deploymentGasMultiplier: 4
+  deploymentGasMultiplier: 8
 }
 
 const zkatana_testnet = {
