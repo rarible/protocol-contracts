@@ -111,6 +111,8 @@ module.exports = {
     zkatana_mainnet: createNetwork("zkatana_mainnet"),
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
+    lightlink_pegasus: createNetwork("lightlink_pegasus"),
+    lightlink_phoenix: createNetwork("lightlink_phoenix"),
   },
 
   compilers: {
