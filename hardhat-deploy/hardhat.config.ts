@@ -90,7 +90,7 @@ const config: HardhatUserConfig = {
           optimizer: {
             enabled: true,
             runs: 200,
-          },
+          }
         },
       },
       {
@@ -163,6 +163,7 @@ const config: HardhatUserConfig = {
       //   mainnet: getNetworkApiKey('mainnet'),
       //   polygon: getNetworkApiKey('polygon_mainnet'),
       //   mumbai: getNetworkApiKey('polygon_mumbai'),
+      goerli: getNetworkApiKey('goerli'),
       mantle_mainnet: getNetworkApiKey('mantle_mainnet'),
       mantle_testnet: getNetworkApiKey('mantle_testnet'),
       arbitrum_sepolia: getNetworkApiKey('arbitrum_sepolia'),
