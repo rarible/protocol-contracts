@@ -4,6 +4,7 @@ import path from 'path';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeploymentsExtension } from 'hardhat-deploy/types';
 import "hardhat-deploy";
+import { Console } from 'console';
 
 
 task(
@@ -22,11 +23,12 @@ task(
       const chainId = network.config.chainId!;
       const ARTIFACTS_PATH = path.resolve(taskArgs.artifacts);
       const artifacts = await fs.readdir(ARTIFACTS_PATH);
-
+      console.log(JSON.stringify(artifacts));
       const truffleDeployedAddresses = await Promise.all(
         artifacts.map(async (artifactPath) => {
           const file = await import(ARTIFACTS_PATH + '/' + artifactPath);
           const address = file.networks[chainId]?.address;
+          console.log( address);
           if (address) return [file.contractName, address];
           else return [];
         })
@@ -34,6 +36,7 @@ task(
 
       await Promise.all(
         truffleDeployedAddresses.map(async ([name, address]) => {
+            console.log(name, address)
           await save(name, {
             address,
             ...(await getExtendedArtifact(name))
