@@ -24,12 +24,13 @@ task(
       const ARTIFACTS_PATH = path.resolve(taskArgs.artifacts);
       const artifacts = await fs.readdir(ARTIFACTS_PATH);
       console.log(JSON.stringify(artifacts));
+      const ignoreList = ["CryptoPunksMarket", "ExchangeOrdersHolderV1", "ExchangeStateV1", "ExchangeV1", "Locking", "TransferProxyForDeprecated"];
       const truffleDeployedAddresses = await Promise.all(
         artifacts.map(async (artifactPath) => {
           const file = await import(ARTIFACTS_PATH + '/' + artifactPath);
           const address = file.networks[chainId]?.address;
           console.log( address);
-          if (address) return [file.contractName, address];
+          if (address && !ignoreList.includes(file.contractName)) return [file.contractName, address];
           else return [];
         })
       ).then((result) => result.filter((p) => p.length !== 0));
