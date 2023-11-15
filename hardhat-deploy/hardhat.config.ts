@@ -165,6 +165,7 @@ const config: HardhatUserConfig = {
       //   mumbai: getNetworkApiKey('polygon_mumbai'),
       mantle_mainnet: getNetworkApiKey('mantle_mainnet'),
       mantle_testnet: getNetworkApiKey('mantle_testnet'),
+      arbitrum_sepolia: getNetworkApiKey('arbitrum_sepolia'),
     },
     customChains: [
       {
@@ -181,6 +182,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("mantle_testnet"),
           browserURL: getNetworkExplorerUrl("mantle_testnet")
+        }
+      },
+      {
+        network: "arbitrum_sepolia",
+        chainId: createNetwork("arbitrum_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("arbitrum_sepolia"),
+          browserURL: getNetworkExplorerUrl("arbitrum_sepolia")
         }
       }
     ]
