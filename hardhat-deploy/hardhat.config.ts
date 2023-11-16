@@ -9,6 +9,7 @@ import * as dotenv from 'dotenv';
 import * as os from 'os';
 import * as path from 'path';
 import fs from 'fs';
+import './tasks'
 
 dotenv.config();
 
@@ -91,8 +92,30 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      }
+      },
+      {
+        version: "0.4.18",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          evmVersion: "byzantium"
+        },
+      },
     ],
+    overrides: {
+      "src/WETH9.sol": {
+        version: "0.4.18",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          evmVersion: "byzantium"
+         }
+      }
+    },
     settings: {
       metadata: {
         // Not including the metadata hash
@@ -137,11 +160,14 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      //   mainnet: getNetworkApiKey('mainnet'),
-      //   polygon: getNetworkApiKey('polygon_mainnet'),
-      //   mumbai: getNetworkApiKey('polygon_mumbai'),
+      mainnet: getNetworkApiKey('mainnet'),
+      polygon: getNetworkApiKey('polygon_mainnet'),
+      mumbai: getNetworkApiKey('polygon_mumbai'),
+      goerli: getNetworkApiKey('goerli'),
       mantle_mainnet: getNetworkApiKey('mantle_mainnet'),
       mantle_testnet: getNetworkApiKey('mantle_testnet'),
+      arbitrum_sepolia: getNetworkApiKey('arbitrum_sepolia'),
+      arbitrum_mainnet: getNetworkApiKey('arbitrum_mainnet'),
     },
     customChains: [
       {
@@ -158,6 +184,22 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("mantle_testnet"),
           browserURL: getNetworkExplorerUrl("mantle_testnet")
+        }
+      },
+      {
+        network: "arbitrum_sepolia",
+        chainId: createNetwork("arbitrum_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("arbitrum_sepolia"),
+          browserURL: getNetworkExplorerUrl("arbitrum_sepolia")
+        }
+      },
+      {
+        network: "arbitrum_mainnet",
+        chainId: createNetwork("arbitrum_mainnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("arbitrum_mainnet"),
+          browserURL: getNetworkExplorerUrl("arbitrum_mainnet")
         }
       }
     ]
