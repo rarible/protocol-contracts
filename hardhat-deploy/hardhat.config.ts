@@ -1,3 +1,7 @@
+import '@matterlabs/hardhat-zksync-deploy';
+import '@matterlabs/hardhat-zksync-solc';
+import '@matterlabs/hardhat-zksync-node';
+
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
@@ -5,7 +9,6 @@ import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 
 import type {
-  HardhatNetworkUserConfig,
   HttpNetworkUserConfig,
 } from "hardhat/types";
 import * as dotenv from "dotenv";
@@ -172,6 +175,7 @@ const config: HardhatUserConfig = {
     zkatana_mainnet: createNetwork("zkatana_mainnet"),
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
+    zksync_testnet: createNetwork("zksync_testnet"),
   },
   etherscan: {
     apiKey: {
@@ -183,6 +187,7 @@ const config: HardhatUserConfig = {
       mantle_testnet: getNetworkApiKey("mantle_testnet"),
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
+      zksync_testnet: getNetworkApiKey("zksync_testnet"),
     },
     customChains: [
       {
@@ -217,7 +222,26 @@ const config: HardhatUserConfig = {
           browserURL: getNetworkExplorerUrl("arbitrum_mainnet"),
         },
       },
+      {
+        network: "zksync_testnet",
+        chainId: createNetwork("zksync_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("zksync_testnet"),
+          browserURL: getNetworkExplorerUrl("zksync_testnet"),
+        },
+      },
     ],
+  },
+  zksolc: {
+    compilerSource: 'binary',
+    settings: {
+      isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
+      forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
+      optimizer: {
+        enabled: true, // optional. True by default
+        mode: '3' // optional. 3 by default, z to optimize bytecode size
+      },
+    }
   },
 };
 
