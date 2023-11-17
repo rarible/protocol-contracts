@@ -4,7 +4,7 @@ const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
 const WETH9 = artifacts.require('WETH9');
 
-const { getSettings } = require("./config.js")
+const { getSettings, getGasMultiplier } = require("./config.js")
 
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const mainnet = {
@@ -193,9 +193,9 @@ module.exports = async function (deployer, network) {
   //settings.transferProxies.push(settings.marketplaces[6]) // seaport_1_4
 
   if (network === "polygon_mainnet") {
-    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000, nonce: 141 });
+    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network), nonce: 141 });
   } else {
-    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 });
+    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network) });
   }
   
 

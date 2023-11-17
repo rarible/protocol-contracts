@@ -8,6 +8,8 @@ const RoyaltiesProviderV2Legacy = artifacts.require("RoyaltiesProviderV2Legacy.s
 const TestERC721ArtBlocks = artifacts.require("TestERC721ArtBlocks.sol");
 const RoyaltiesProviderArtBlocks = artifacts.require("RoyaltiesProviderArtBlocks.sol");
 const TestERC721WithRoyaltiesV2981 = artifacts.require("TestERC721WithRoyaltyV2981.sol");
+const TestERC721ArtBlocksV2 = artifacts.require("TestERC721ArtBlocksV2.sol");
+const RoyaltiesProviderArtBlocksV2 = artifacts.require("RoyaltiesProviderArtBlocksV2.sol");
 
 const truffleAssert = require('truffle-assertions');
 
@@ -366,6 +368,36 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 			const royaltiesFromProvider4 = await provider.getRoyalties(token.address, erc721TokenId1);
 			assert.equal(royaltiesFromProvider4.length, 0, "should be 0 royalties")
 
+		})
+
+    it("using royaltiesProvider artBlocksV2", async () => {
+      const artistAdrr = accounts[2];
+
+      const tokenID = 455000355;
+      const recipients0 = "0x21E0106F464770F528A491383A1957569F886Dc7";
+      const recipients1 = "0xC40FD6D2A8e06ba753F6Fd3CB562835Eff990b51";
+
+      const bps0 = 1000;
+      const bps1 = 250;
+
+      const token = await TestERC721ArtBlocksV2.new("ArtBlockV2", "ABV2");
+      const provider = await RoyaltiesProviderArtBlocksV2.new();
+
+      //setting provider in registry
+      await royaltiesRegistry.setProviderByToken(token.address, provider.address);
+
+      //creating token and setting royalties
+			await token.mint(artistAdrr, tokenID);
+
+      await token.setRoyalties(tokenID, [recipients0, recipients1], [bps0, bps1])
+
+      const royaltiesFromProvider = await provider.getRoyalties(token.address, tokenID);
+      
+      assert.equal(royaltiesFromProvider[0].account, recipients0)
+      assert.equal(royaltiesFromProvider[1].account, recipients1)
+
+      assert.equal(royaltiesFromProvider[0].value, bps0)
+      assert.equal(royaltiesFromProvider[1].value, bps1)
 		})
 
 		it("SetProviderByToken, initialize by Owner", async () => {

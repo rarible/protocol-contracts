@@ -240,9 +240,9 @@ contract("RoyaltiesRegistry, royalties types test", accounts => {
   describe("upgrade checks", () => {
 
     it("check storage after upgrade", async () => {
-      const token = (await TestERC721.new()).address;
-      const token2 = (await TestERC721.new()).address;
-      const token3 = (await TestERC721.new()).address;
+      const token = (await TestERC721.new("Test", "TST")).address;
+      const token2 = (await TestERC721.new("Test", "TST")).address;
+      const token3 = (await TestERC721.new("Test", "TST")).address;
 
       const tokenId3 = 11234;
 
