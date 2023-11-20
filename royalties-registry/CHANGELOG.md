@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/rarible/protocol-contracts/compare/v0.7.15...v0.8.1) (2023-11-20)
+
+
+### Features
+
+* PT-3744 artblocksV2 royalties provider ([06ea3b3](https://github.com/rarible/protocol-contracts/commit/06ea3b335009a6f7006199c077f17a0b3141c989))
+* undeprecate protocol fee ([9c589a5](https://github.com/rarible/protocol-contracts/commit/9c589a57028b2f541245f0e96557c535d1740bf9))
+
+
+
+
+
+# [0.8.0](https://github.com/rarible/protocol-contracts/compare/v0.7.15...v0.8.0) (2023-11-20)
+
+
+### Features
+
+* PT-3744 artblocksV2 royalties provider ([06ea3b3](https://github.com/rarible/protocol-contracts/commit/06ea3b335009a6f7006199c077f17a0b3141c989))
+
+
+
+
+
 ## [0.7.15](https://github.com/rarible/protocol-contracts/compare/v0.7.14-beta.3...v0.7.15) (2023-10-10)
 
 **Note:** Version bump only for package @rarible/royalties-registry

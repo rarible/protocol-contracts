@@ -190,10 +190,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseBase1155 {
                 _getProxy(currentAuction.buyAsset),
                 address(this)
             ), 
-            LibDeal.DealData(
-                MAX_FEE_BASE_POINT,
-                LibFeeSide.FeeSide.RIGHT
-            )
+            LibFeeSide.FeeSide.RIGHT
         );
         deactivateAuction(_auctionId);
     }
@@ -301,10 +298,7 @@ contract AuctionHouse1155 is ERC1155HolderUpgradeable, AuctionHouseBase1155 {
                 proxy,
                 from
             ), 
-            LibDeal.DealData(
-                MAX_FEE_BASE_POINT,
-                LibFeeSide.FeeSide.RIGHT
-            )
+            LibFeeSide.FeeSide.RIGHT
         );
         
         deactivateAuction(_auctionId);

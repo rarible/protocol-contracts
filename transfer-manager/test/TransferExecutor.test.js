@@ -30,7 +30,7 @@ contract("TransferExecutor", accounts => {
 		testing = await TransferExecutorTest.new();
 		await testing.__TransferExecutorTest_init(transferProxy.address, erc20TransferProxy.address);
 		erc20Token = await TestERC20.new();
-		erc721Token = await TestERC721.new();
+		erc721Token = await TestERC721.new("Rarible", "RARI");
 		erc1155Token = await TestERC1155.new();
 		erc20ZRXToken = await TestERC20ZRX.new();
 	});
@@ -38,7 +38,7 @@ contract("TransferExecutor", accounts => {
 	it("should support ETH transfers", async () => {
 		await verifyBalanceChangeReturnTx(web3, accounts[0], 500, () =>
 			verifyBalanceChangeReturnTx(web3, accounts[5], -500, () =>
-    		testing.transferTest(order.Asset(ETH, "0x", 500), ZERO, accounts[5], { value: 500 })
+    		testing.transferTest(order.Asset(ETH, "0x", 500), ZERO, accounts[5], { value: 500, from: accounts[0] })
     	)
 		);
 	})

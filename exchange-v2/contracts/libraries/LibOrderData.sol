@@ -11,7 +11,6 @@ library LibOrderData {
         LibPart.Part[] payouts;
         LibPart.Part[] originFees;
         bool isMakeFill;
-        uint maxFeesBasePoint;
     } 
 
     function parse(LibOrder.Order memory order) pure internal returns (GenericOrderData memory dataOrder) {
@@ -24,17 +23,6 @@ library LibOrderData {
             dataOrder.payouts = data.payouts;
             dataOrder.originFees = data.originFees;
             dataOrder.isMakeFill = data.isMakeFill;
-        } else if (order.dataType == LibOrderDataV3.V3_SELL) {
-            LibOrderDataV3.DataV3_SELL memory data = abi.decode(order.data, (LibOrderDataV3.DataV3_SELL));
-            dataOrder.payouts = parsePayouts(data.payouts);
-            dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
-            dataOrder.isMakeFill = true;
-            dataOrder.maxFeesBasePoint = data.maxFeesBasePoint;
-        } else if (order.dataType == LibOrderDataV3.V3_BUY) {
-            LibOrderDataV3.DataV3_BUY memory data = abi.decode(order.data, (LibOrderDataV3.DataV3_BUY));
-            dataOrder.payouts = parsePayouts(data.payouts);
-            dataOrder.originFees = parseOriginFeeData(data.originFeeFirst, data.originFeeSecond);
-            dataOrder.isMakeFill = false;
         } else if (order.dataType == 0xffffffff) {
         } else {
             revert("Unknown Order data type");

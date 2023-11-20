@@ -82,7 +82,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             0,
             0,
             0,
-            getOtherOrderType(direct.sellOrderDataType),
+            direct.sellOrderDataType,
             direct.buyOrderData
         );
 
@@ -138,7 +138,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             0,
             0,
             0,
-            getOtherOrderType(direct.bidDataType),
+            direct.bidDataType,
             direct.sellOrderData
         );
 
@@ -209,14 +209,7 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 proxy: proxies[takeMatch.assetClass],
                 from: orderRight.maker
             }),
-            getDealData(
-                makeMatch.assetClass,
-                takeMatch.assetClass,
-                orderLeft.dataType,
-                orderRight.dataType,
-                leftOrderData,
-                rightOrderData
-            )
+            LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass)
         );
         if (makeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
@@ -258,101 +251,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             leftOrderData.isMakeFill,
             rightOrderData.isMakeFill
         );
-    }
-
-    function getDealData(
-        bytes4 makeMatchAssetClass,
-        bytes4 takeMatchAssetClass,
-        bytes4 leftDataType,
-        bytes4 rightDataType,
-        LibOrderData.GenericOrderData memory leftOrderData,
-        LibOrderData.GenericOrderData memory rightOrderData
-    ) internal pure returns(LibDeal.DealData memory dealData) {
-        dealData.feeSide = LibFeeSide.getFeeSide(makeMatchAssetClass, takeMatchAssetClass);
-        dealData.maxFeesBasePoint = getMaxFee(
-            leftDataType,
-            rightDataType,
-            leftOrderData,
-            rightOrderData,
-            dealData.feeSide
-        );
-    }
-
-    /**
-        @notice determines the max amount of fees for the match
-        @param dataTypeLeft data type of the left order
-        @param dataTypeRight data type of the right order
-        @param leftOrderData data of the left order
-        @param rightOrderData data of the right order
-        @param feeSide fee side of the match
-        @return max fee amount in base points
-    */
-    function getMaxFee(
-        bytes4 dataTypeLeft,
-        bytes4 dataTypeRight,
-        LibOrderData.GenericOrderData memory leftOrderData,
-        LibOrderData.GenericOrderData memory rightOrderData,
-        LibFeeSide.FeeSide feeSide
-    ) internal pure returns(uint) {
-        if (
-            dataTypeLeft != LibOrderDataV3.V3_SELL &&
-            dataTypeRight != LibOrderDataV3.V3_SELL &&
-            dataTypeLeft != LibOrderDataV3.V3_BUY &&
-            dataTypeRight != LibOrderDataV3.V3_BUY
-        ){
-            return 0;
-        }
-
-        uint matchFees = getSumFees(leftOrderData.originFees, rightOrderData.originFees);
-        uint maxFee;
-        if (feeSide == LibFeeSide.FeeSide.LEFT) {
-            maxFee = rightOrderData.maxFeesBasePoint;
-            require(
-                dataTypeLeft == LibOrderDataV3.V3_BUY &&
-                dataTypeRight == LibOrderDataV3.V3_SELL,
-                "wrong V3 type1"
-            );
-
-        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
-            maxFee = leftOrderData.maxFeesBasePoint;
-            require(
-                dataTypeRight == LibOrderDataV3.V3_BUY &&
-                dataTypeLeft == LibOrderDataV3.V3_SELL,
-                "wrong V3 type2"
-            );
-        } else {
-            return 0;
-        }
-        require(
-            maxFee > 0 &&
-            maxFee >= matchFees &&
-            maxFee <= 1000,
-            "wrong maxFee"
-        );
-
-        return maxFee;
-    }
-
-    /**
-        @notice calculates amount of fees for the match
-        @param originLeft origin fees of the left order
-        @param originRight origin fees of the right order
-        @return sum of all fees for the match (protcolFee + leftOrder.originFees + rightOrder.originFees)
-     */
-    function getSumFees(LibPart.Part[] memory originLeft, LibPart.Part[] memory originRight) internal pure returns(uint) {
-        uint result = 0;
-
-        //adding left origin fees
-        for (uint i; i < originLeft.length; i ++) {
-            result = result + originLeft[i].value;
-        }
-
-        //adding right origin fees
-        for (uint i; i < originRight.length; i ++) {
-            result = result + originRight[i].value;
-        }
-
-        return result;
     }
 
     /**
@@ -427,16 +325,6 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
             result.data = abi.encode(token);
         }
         return result;
-    }
-
-    function getOtherOrderType(bytes4 dataType) internal pure returns(bytes4) {
-        if (dataType == LibOrderDataV3.V3_SELL) {
-            return LibOrderDataV3.V3_BUY;
-        }
-        if (dataType == LibOrderDataV3.V3_BUY) {
-            return LibOrderDataV3.V3_SELL;
-        }
-        return dataType;
     }
 
     uint256[49] private __gap;

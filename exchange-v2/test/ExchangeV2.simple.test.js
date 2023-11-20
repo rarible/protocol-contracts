@@ -92,7 +92,7 @@ contract("ExchangeSimpleV2", accounts => {
       await expectThrow(
         testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[1] })
       )
-      testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[0] });
+      await testing.setTransferProxy("0x00112233", accounts[2], { from: accounts[0] });
     })
 
     it("simplest possible exchange works", async () => {

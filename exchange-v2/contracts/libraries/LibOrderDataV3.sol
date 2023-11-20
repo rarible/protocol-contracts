@@ -5,6 +5,7 @@ pragma abicoder v2;
 
 import "@rarible/lib-part/contracts/LibPart.sol";
 
+/// @dev deprecated
 library LibOrderDataV3 {
     bytes4 constant public V3_SELL = bytes4(keccak256("V3_SELL"));
     bytes4 constant public V3_BUY = bytes4(keccak256("V3_BUY"));
