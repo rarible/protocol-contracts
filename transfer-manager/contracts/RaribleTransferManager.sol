@@ -42,6 +42,12 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint48 sellerAmount;
     }
 
+    /**
+        @notice initialises RaribleTransferManager state
+        @param newProtocolFee deprecated
+        @param newDefaultFeeReceiver deprecated
+        @param newRoyaltiesProvider royaltiesRegistry contract address
+     */
     function __RaribleTransferManager_init_unchained(
         uint newProtocolFee,
         address newDefaultFeeReceiver,
