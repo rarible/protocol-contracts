@@ -217,6 +217,22 @@ const zkatana_mainnet = {
   deploy_non_meta: true,
 }
 
+const lightlink_pegasus = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: true,
+  deploy_non_meta: true,
+}
+
+const lightlink_phoenix = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: true,
+  deploy_non_meta: true,
+}
+
 let settings = {
   "default": def,
   "rinkeby": rinkeby,
@@ -245,6 +261,8 @@ let settings = {
   "chiliz_mainnet": chiliz_mainnet,
   "zkatana_testnet": zkatana_testnet,
   "zkatana_mainnet": zkatana_mainnet,
+  "lightlink_pegasus": lightlink_pegasus,
+  "lightlink_phoenix": lightlink_phoenix,
 };
 
 function getSettings(network) {
