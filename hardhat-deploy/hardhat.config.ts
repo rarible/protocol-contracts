@@ -177,9 +177,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      // mainnet: getNetworkApiKey('mainnet'),
-      // polygon: getNetworkApiKey('polygon_mainnet'),
-      // mumbai: getNetworkApiKey('polygon_mumbai'),
+      mainnet: getNetworkApiKey('mainnet'),
+      polygon: getNetworkApiKey('polygon_mainnet'),
+      mumbai: getNetworkApiKey('polygon_mumbai'),
       goerli: getNetworkApiKey("goerli"),
       mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
       mantle_testnet: getNetworkApiKey("mantle_testnet"),
