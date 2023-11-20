@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/rariblecom/protocol-contracts/compare/v0.7.15...v0.8.1) (2023-11-20)
+
+
+### Features
+
+* add arbitrum_mainnet config ([ba3d04a](https://github.com/rariblecom/protocol-contracts/commit/ba3d04aec3c5a91f600b279e39b5844e847e1566))
+* add chilis mainnet config ([dae6108](https://github.com/rariblecom/protocol-contracts/commit/dae6108373e592fa3bd3bbffe4209b508e10c2a1))
+* add gas multiplier for the arbitrum_seploia ([15fbab6](https://github.com/rariblecom/protocol-contracts/commit/15fbab6a584bfeb0ba465d4b85ffe63f56fa9bb0))
+* add missing deployment ([93b73f1](https://github.com/rariblecom/protocol-contracts/commit/93b73f184546ccf366a2f330bf12521649745a4c))
+* add missing deployment ([041bb69](https://github.com/rariblecom/protocol-contracts/commit/041bb690294ec14f29373174c1ee25ec86ecab7b))
+* deploy contracts on arbitrum_sepolia ([2c45266](https://github.com/rariblecom/protocol-contracts/commit/2c45266ee2067229045584a19a539232db46eb0b))
+* deployed on arbitrum (except tokens) ([11efcf2](https://github.com/rariblecom/protocol-contracts/commit/11efcf24de934f358222d91a73cd1ba758c5fd36))
+* deployed part of the contracts to arbitrum mainnet ([df0b102](https://github.com/rariblecom/protocol-contracts/commit/df0b1022e3c04de342bebeba1ede2fde50ac0a50))
+* deployment to chiliz ([6e012a7](https://github.com/rariblecom/protocol-contracts/commit/6e012a713804302775da782380038019984e9013))
+* fix verify ([ffa748b](https://github.com/rariblecom/protocol-contracts/commit/ffa748b2364fb279fd586ffc4d1183aa4f99be03))
+* plugin verify ([b2c7262](https://github.com/rariblecom/protocol-contracts/commit/b2c7262daaaed9fad799203932cee1ee22d4fc5d))
+* PT-3744 artblocksV2 royalties provider ([06ea3b3](https://github.com/rariblecom/protocol-contracts/commit/06ea3b335009a6f7006199c077f17a0b3141c989))
+* PT-4067-undeprecated protocol fee, deprecated V3 orders ([747e585](https://github.com/rariblecom/protocol-contracts/commit/747e585ff9dad2411af83014c4f5c9adbe2d8d61))
+* un-deprecate protocol fee (one side) ([2cc0b3a](https://github.com/rariblecom/protocol-contracts/commit/2cc0b3a086ebcf2ccdba34e9fa67158ae6d44532))
+* undeprecate protocol fee ([9c589a5](https://github.com/rariblecom/protocol-contracts/commit/9c589a57028b2f541245f0e96557c535d1740bf9))
+
+
+### Reverts
+
+* Revert "chore: update tokens on goerli" ([9a0071d](https://github.com/rariblecom/protocol-contracts/commit/9a0071d9361b2315dc0dd822cee401689e23fe2e))
+
+
+
+
+
 # [0.8.0](https://github.com/rariblecom/protocol-contracts/compare/v0.7.15...v0.8.0) (2023-11-20)
 
 
