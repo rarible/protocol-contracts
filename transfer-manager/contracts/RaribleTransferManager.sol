@@ -18,26 +18,35 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     using BpLibrary for uint;
     using SafeMathUpgradeable for uint;
 
-    uint public protocolFee;
+    ProtocolFeeData public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
 
-    address public defaultFeeReceiver;
+    //deprecated
+    address private defaultFeeReceiver;
     // deprecated
-    mapping(address => address) public feeReceivers;
+    mapping(address => address) private feeReceivers;
 
-    /// @dev event that's emitted when protocolFee changes
-    event ProtocolFeeChanged(uint oldValue, uint newValue);
+    /// @dev event that's emitted when ProtocolFeeData buyerAmount changes
+    event BuyerFeeAmountChanged(uint oldValue, uint newValue);
 
-    /// @dev event that's emitted when defaultFeeReceiver changes
+    /// @dev event that's emitted when ProtocolFeeData sellerAmount changes
+    event SellerFeeAmountChanged(uint oldValue, uint newValue);
+
+    /// @dev event that's emitted when ProtocolFeeData receiver changes
     event FeeReceiverChanged(address oldValue, address newValue);
+
+    /// @dev struct to store protocol fee - receiver address, buyer fee amount (in bp), seller fee amount (in bp)
+    struct ProtocolFeeData {
+        address receiver;
+        uint48 buyerAmount;
+        uint48 sellerAmount;
+    }
 
     function __RaribleTransferManager_init_unchained(
         uint newProtocolFee,
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider
     ) internal initializer {
-        protocolFee = newProtocolFee;
-        defaultFeeReceiver = newDefaultFeeReceiver;
         royaltiesRegistry = newRoyaltiesProvider;
     }
 
@@ -45,37 +54,48 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         royaltiesRegistry = newRoyaltiesRegistry;
     }
 
-    function setProtocolFee(uint64 _protocolFee) external onlyOwner {
-        emit ProtocolFeeChanged(protocolFee, _protocolFee);
-        protocolFee = _protocolFee;
+    function setPrtocolFeeReceiver(address _receiver) public onlyOwner {
+        emit FeeReceiverChanged(protocolFee.receiver, _receiver);
+        protocolFee.receiver = _receiver;
     }
 
-    function setDefaultFeeReceiver(address payable newDefaultFeeReceiver) external onlyOwner {
-        emit FeeReceiverChanged(defaultFeeReceiver, newDefaultFeeReceiver);
-        defaultFeeReceiver = newDefaultFeeReceiver;
+    function setPrtocolFeeBuyerAmount(uint48 _buyerAmount) public onlyOwner {
+        emit BuyerFeeAmountChanged(protocolFee.buyerAmount, _buyerAmount);
+        protocolFee.buyerAmount = _buyerAmount;
+    }
+
+    function setPrtocolFeeSellerAmount(uint48 _sellerAmount) public onlyOwner {
+        emit SellerFeeAmountChanged(protocolFee.sellerAmount, _sellerAmount);
+        protocolFee.sellerAmount = _sellerAmount;
+    }
+
+    function setAllProtocolFeeData(address _receiver, uint48 _buyerAmount, uint48 _sellerAmount) public onlyOwner {
+        setPrtocolFeeReceiver(_receiver);
+        setPrtocolFeeBuyerAmount(_buyerAmount);
+        setPrtocolFeeSellerAmount(_sellerAmount);
     }
 
     /**
         @notice executes transfers for 2 matched orders
         @param left DealSide from the left order (see LibDeal.sol)
         @param right DealSide from the right order (see LibDeal.sol)
-        @param dealData DealData of the match (see LibDeal.sol)
+        @param feeSide feeSide of the match
         @return totalLeftValue - total amount for the left order
         @return totalRightValue - total amout for the right order
     */
     function doTransfers(
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,
-        LibDeal.DealData memory dealData
+        LibFeeSide.FeeSide feeSide
     ) override internal returns (uint totalLeftValue, uint totalRightValue) {
         totalLeftValue = left.asset.value;
         totalRightValue = right.asset.value;
 
-        if (dealData.feeSide == LibFeeSide.FeeSide.LEFT) {
-            totalLeftValue = doTransfersWithFees(left, right, dealData.protocolFee, dealData.maxFeesBasePoint);
+        if (feeSide == LibFeeSide.FeeSide.LEFT) {
+            totalLeftValue = doTransfersWithFees(left, right, protocolFee);
             transferPayouts(right.asset.assetType, right.asset.value, right.from, left.payouts, right.proxy);
-        } else if (dealData.feeSide == LibFeeSide.FeeSide.RIGHT) {
-            totalRightValue = doTransfersWithFees(right, left, dealData.protocolFee, dealData.maxFeesBasePoint);
+        } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
+            totalRightValue = doTransfersWithFees(right, left,protocolFee);
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
         } else {
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
@@ -87,16 +107,15 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         @notice executes the fee-side transfers (payment + fees)
         @param paymentSide DealSide of the fee-side order
         @param nftSide  DealSide of the nft-side order
-        @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
+        @param _protocolFee protocol fee data
         @return totalAmount of fee-side asset
     */
     function doTransfersWithFees(
         LibDeal.DealSide memory paymentSide,
         LibDeal.DealSide memory nftSide,
-        uint _protocolFee,
-        uint maxFeesBasePoint
+        ProtocolFeeData memory _protocolFee
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(paymentSide.asset.value, _protocolFee, paymentSide.originFees, maxFeesBasePoint);
+        totalAmount = calculateTotalAmount(paymentSide.asset.value, _protocolFee, paymentSide.originFees);
         uint rest = transferProtocolFee(totalAmount, paymentSide.asset.value, paymentSide.from, _protocolFee, paymentSide.asset.assetType, paymentSide.proxy);
 
         rest = transferRoyalties(paymentSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, paymentSide.asset.value, paymentSide.from, paymentSide.proxy);
@@ -120,13 +139,13 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint totalAmount,
         uint amount,
         address from,
-        uint _protocolFee,
+        ProtocolFeeData memory _protocolFee,
         LibAsset.AssetType memory matchCalculate,
         address proxy
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, _protocolFee);
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, _protocolFee.buyerAmount + _protocolFee.sellerAmount);
         if (fee > 0) {
-            transfer(LibAsset.Asset(matchCalculate, fee), from, defaultFeeReceiver, proxy);
+            transfer(LibAsset.Asset(matchCalculate, fee), from, _protocolFee.receiver, proxy);
         }
         return rest;
     }
@@ -253,21 +272,17 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     /**
         @notice calculates total amount of fee-side asset that is going to be used in match
         @param amount fee-side order value
+        @param _protocolFee protocol fee
         @param orderOriginFees fee-side order's origin fee (it adds on top of the amount)
-        @param maxFeesBasePoint max fee for the sell-order (used and is > 0 for V3 orders only)
         @return total amount of fee-side asset
     */
     function calculateTotalAmount(
         uint amount,
-        uint feeOnTopBp,
-        LibPart.Part[] memory orderOriginFees,
-        uint maxFeesBasePoint
+        ProtocolFeeData memory _protocolFee,
+        LibPart.Part[] memory orderOriginFees
     ) internal pure returns (uint) {
-        if (maxFeesBasePoint > 0) {
-            return amount;
-        }
         
-        uint fees = feeOnTopBp;
+        uint fees = _protocolFee.buyerAmount;
         for (uint256 i = 0; i < orderOriginFees.length; ++i) {
             require(orderOriginFees[i].value <= 10000, "origin fee is too big");
             fees = fees + orderOriginFees[i].value;

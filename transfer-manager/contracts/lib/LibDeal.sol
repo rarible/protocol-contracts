@@ -15,10 +15,4 @@ library LibDeal {
         address proxy;
         address from;
     }
-
-    struct DealData {
-        uint protocolFee;
-        uint maxFeesBasePoint;
-        LibFeeSide.FeeSide feeSide;
-    }
 }

@@ -21,7 +21,4 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         __OrderValidator_init_unchained();
     }
 
-    function getProtocolFee() internal override view returns(uint) {
-        return protocolFee;
-    }
 }

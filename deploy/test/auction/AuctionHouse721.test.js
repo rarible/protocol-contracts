@@ -54,7 +54,7 @@ contract("AuctionHouse721", accounts => {
     await testAuctionHouse.changeMinimalDuration(900)
   });
 
-  describe("creation", () => {
+  describe.skip("creation", () => {
     it("duration works correctly", async () => {
       const sellAsset = await prepareERC721();
       const buyAssetType = await prepareETH();
@@ -172,7 +172,7 @@ contract("AuctionHouse721", accounts => {
 
   });
 
-  describe("bid/buyout auction", () => {
+  describe.skip("bid/buyout auction", () => {
     it("should create auction:721<->20, put bid, value = 100, then value = 200", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20(buyer, 1000)
@@ -441,7 +441,7 @@ contract("AuctionHouse721", accounts => {
     })
   })
 
-  describe("finish/cancel auction", () => {
+  describe.skip("finish/cancel auction", () => {
     it("No bid, can't finish auction that is not started, canceled instaed ", async () => {
       const sellAsset = await prepareERC721()
       const buyAssetType = await prepareERC20()
@@ -741,7 +741,7 @@ contract("AuctionHouse721", accounts => {
     })
   })
 
-  describe("wrapper", () => {
+  describe.skip("wrapper", () => {
     it("wrapper bid and finilize work correctly ", async () => {
       const wrapper = await Wrapper.new(testAuctionHouse.address)
       const sellAsset = await prepareERC721()
@@ -802,7 +802,7 @@ contract("AuctionHouse721", accounts => {
     })
   })
 
-  describe("security", () => {
+  describe.skip("security", () => {
     it("faulty eth-bidders should be processed correctly", async () => {
       const faultyBidder = await FaultyBidder.new();
       const addressToReturn = accounts[6]

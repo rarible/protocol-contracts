@@ -188,11 +188,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 _getProxy(currentAuction.buyAsset),
                 address(this)
             ), 
-            LibDeal.DealData(
-                0,
-                MAX_FEE_BASE_POINT,
-                LibFeeSide.FeeSide.RIGHT
-            )
+            LibFeeSide.FeeSide.RIGHT
         );
         deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);
     }
@@ -302,11 +298,7 @@ contract AuctionHouse721 is ERC721HolderUpgradeable, TokenToAuction, AuctionHous
                 proxy,
                 from
             ), 
-            LibDeal.DealData(
-                0,
-                MAX_FEE_BASE_POINT,
-                LibFeeSide.FeeSide.RIGHT
-            )
+            LibFeeSide.FeeSide.RIGHT
         );
 
         deactivateAuction(_auctionId, currentAuction.sellToken, currentAuction.sellTokenId);

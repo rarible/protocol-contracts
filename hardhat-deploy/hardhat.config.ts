@@ -26,7 +26,12 @@ function getNetworkApiKey(name: string): string {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.apiKey;
+    if (!!json.verify) {
+      return json.verify.apiKey;
+    }
+    else {
+      return "xyz"
+    }
   } else {
     // File doesn't exist in path
     return "xyz"

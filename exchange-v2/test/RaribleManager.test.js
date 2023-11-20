@@ -1,3 +1,5 @@
+const truffleAssert = require('truffle-assertions');
+
 const RaribleTransferManagerTest = artifacts.require("RaribleTransferManagerTest.sol");
 const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const TestRoyaltiesRegistry = artifacts.require("TestRoyaltiesRegistry.sol");
@@ -527,6 +529,94 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
 
   describe("Protocol Fee", () => {
 
+    it("protocol fee setting", async () => {
+
+      const makerLeft = accounts[1]
+      const makerRight = accounts[2]
+      // minting NFT
+
+      const feeZero1 = (await RTM.protocolFee())
+      
+      assert.equal(feeZero1.receiver, ZERO)
+      assert.equal(feeZero1.buyerAmount, 0)
+      assert.equal(feeZero1.sellerAmount, 0)
+
+      //fail because not owner calling
+      await truffleAssert.fails(
+        RTM.setAllProtocolFeeData(protocol, 100, 100, { from: makerLeft }),
+        truffleAssert.ErrorType.REVERT,
+        "Ownable: caller is not the owner"
+      )
+
+      //fail because not owner calling
+      await truffleAssert.fails(
+        RTM.setPrtocolFeeReceiver(protocol, { from: makerLeft }),
+        truffleAssert.ErrorType.REVERT,
+        "Ownable: caller is not the owner"
+      )
+
+      //fail because not owner calling
+      await truffleAssert.fails(
+        RTM.setPrtocolFeeBuyerAmount(100, { from: makerLeft }),
+        truffleAssert.ErrorType.REVERT,
+        "Ownable: caller is not the owner"
+      )
+
+      //fail because not owner calling
+      await truffleAssert.fails(
+        RTM.setPrtocolFeeSellerAmount(100, { from: makerLeft }),
+        truffleAssert.ErrorType.REVERT,
+        "Ownable: caller is not the owner"
+      )
+
+      //setting separately
+      const setReceiverTx = await RTM.setPrtocolFeeReceiver(protocol)
+      truffleAssert.eventEmitted(setReceiverTx, 'FeeReceiverChanged', (ev) => {
+        assert.equal(ev.oldValue, ZERO)
+        assert.equal(ev.newValue, protocol)
+        return true;
+      });
+
+      const setSellerTx = await RTM.setPrtocolFeeBuyerAmount(100)
+      truffleAssert.eventEmitted(setSellerTx, 'BuyerFeeAmountChanged', (ev) => {
+        assert.equal(ev.oldValue, 0)
+        assert.equal(ev.newValue, 100)
+        return true;
+      });
+
+      const setBuyerTx = await RTM.setPrtocolFeeSellerAmount(200)
+      truffleAssert.eventEmitted(setBuyerTx, 'SellerFeeAmountChanged', (ev) => {
+        assert.equal(ev.oldValue, 0)
+        assert.equal(ev.newValue, 200)
+        return true;
+      });
+      
+      //zeroing all by 1 tx
+      const zeroTx = await RTM.setAllProtocolFeeData(ZERO, 0, 0)
+      truffleAssert.eventEmitted(zeroTx, 'FeeReceiverChanged', (ev) => {
+        assert.equal(ev.oldValue, protocol)
+        assert.equal(ev.newValue, ZERO)
+        return true;
+      });
+      truffleAssert.eventEmitted(zeroTx, 'BuyerFeeAmountChanged', (ev) => {
+        assert.equal(ev.oldValue, 100)
+        assert.equal(ev.newValue, 0)
+        return true;
+      });
+      truffleAssert.eventEmitted(zeroTx, 'SellerFeeAmountChanged', (ev) => {
+        assert.equal(ev.oldValue, 200)
+        assert.equal(ev.newValue, 0)
+        return true;
+      });
+
+      //changing fee back to 0
+      const feeZero2 = (await RTM.protocolFee())
+
+      assert.equal(feeZero2.receiver, ZERO)
+      assert.equal(feeZero2.buyerAmount, 0)
+      assert.equal(feeZero2.sellerAmount, 0)
+    })
+
     it("protocol fee in V2 order", async () => {
 
       const makerLeft = accounts[1]
@@ -534,17 +624,13 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       // minting NFT
       const erc721 = await prepareERC721(makerLeft);
 
-      //setting protocol fee
-      assert.equal(await RTM.protocolFee(), 0)
+      await RTM.setAllProtocolFeeData(protocol, 300, 200)
 
-      await RTM.setProtocolFee(300)
-      assert.equal(await RTM.protocolFee(), 300)
+      const fee = (await RTM.protocolFee())
 
-      //setting fee reciever
-      assert.equal(await RTM.defaultFeeReceiver(), ZERO)
-
-      await RTM.setDefaultFeeReceiver(protocol)
-      assert.equal(await RTM.defaultFeeReceiver(), protocol)
+      assert.equal(fee.receiver, protocol)
+      assert.equal(fee.buyerAmount, 300)
+      assert.equal(fee.sellerAmount, 200)
 
       const encDataLeft = await RTM.encodeV2([[], [], true]);
       const encDataRight = await RTM.encodeV2([[], [], false]);
@@ -553,8 +639,8 @@ contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
       const right = Order(makerRight, Asset(ETH, "0x", 1000), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), 1, 0, 0, ORDER_DATA_V2, encDataRight);
 
       await verifyBalanceChangeReturnTx(web3, makerRight, 1030, () =>
-        verifyBalanceChangeReturnTx(web3, makerLeft, -1000, () =>
-          verifyBalanceChangeReturnTx(web3, protocol, -30, () =>
+        verifyBalanceChangeReturnTx(web3, makerLeft, -980, () =>
+          verifyBalanceChangeReturnTx(web3, protocol, -50, () =>
             RTM.doTransfersExternal(left, right,
               { value: 1030, from: makerRight}
             )
