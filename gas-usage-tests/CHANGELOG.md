@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/rarible/protocol-contracts/compare/v0.7.15...v0.8.0) (2023-11-20)
+
+
+### Bug Fixes
+
+* cleanup ([7113d79](https://github.com/rarible/protocol-contracts/commit/7113d7921da1a1dfec4883d73014a012d6ad01ef))
+
+
+### Features
+
+* add latest changes ([b4b454c](https://github.com/rarible/protocol-contracts/commit/b4b454c1f7e2ea2d86d3babe3e0294ea6d7baefd))
+* add zkatana testnet deploy ([b775102](https://github.com/rarible/protocol-contracts/commit/b775102209edc789e5a190438215b557c20cc421))
+* remove types ([26db2ce](https://github.com/rarible/protocol-contracts/commit/26db2cec680d566d4f12a3a56991a56ba895343e))
+
+
+
+
+
 ## [0.7.15](https://github.com/rarible/protocol-contracts/compare/v0.7.14-beta.3...v0.7.15) (2023-10-10)
 
 **Note:** Version bump only for package @rarible/gas-usage-tests
