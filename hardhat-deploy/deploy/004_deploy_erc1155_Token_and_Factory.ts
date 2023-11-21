@@ -19,7 +19,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
-  const { deployer } = await hre.getNamedAccounts();
+  const { getNamedAccounts} = hre;
+  const { deployer } = await getNamedAccounts();
 
   const transferProxyyAddress = (await hre.deployments.get("TransferProxy")).address;
   const erc1155LazyMintTransferProxyAddress = (await hre.deployments.get("ERC1155LazyMintTransferProxy")).address;
@@ -59,4 +60,4 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
 }
 
 export default func;
-func.tags = ['all'];
+func.tags = ['all', '4'];

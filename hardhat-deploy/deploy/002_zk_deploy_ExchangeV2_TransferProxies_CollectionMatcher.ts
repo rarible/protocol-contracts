@@ -24,8 +24,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
   const { deploy } = hre.deployments;
-  const { ethers } = hre;
-  const { deployer } = await hre.getNamedAccounts();
+  const { getNamedAccounts} = hre;
+  const { deployer } = await getNamedAccounts();
   const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
 
   // Deploy ExchangeV2
@@ -61,9 +61,10 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
 }
 
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
-  const { deploy } = hre.deployments;
   const { ethers } = hre;
-  const { deployer } = await hre.getNamedAccounts();
+  const { deploy } = hre.deployments;
+  const { getNamedAccounts} = hre;
+  const { deployer } = await getNamedAccounts();
 
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,

@@ -6,8 +6,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`deploying contracts on network ${hre.network.name}`)
 
   const { deploy } = hre.deployments;
-  const { deployer } = await hre.getNamedAccounts();
-
+  const { getNamedAccounts} = hre;
+  const { deployer } = await getNamedAccounts();
+  const sg = (await hre.ethers.getSigner(deployer))
+  const signer =await (await hre.ethers.getSigner(deployer)).getAddress()
+  console.log("signer signer signer:", signer);
   console.log("deploying contracts with the account:", deployer);
 
   await deploy('RoyaltiesRegistry', {
@@ -27,4 +30,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['all'];
+func.tags = ['all', "1"];

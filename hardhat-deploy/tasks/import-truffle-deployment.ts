@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeploymentsExtension } from 'hardhat-deploy/types';
-import "hardhat-deploy";
+import "hardhat-deploy-hardware-wallet";
 import { Console } from 'console';
 
 

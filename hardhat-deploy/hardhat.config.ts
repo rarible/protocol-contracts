@@ -1,10 +1,16 @@
+
 import '@matterlabs/hardhat-zksync-deploy';
 import '@matterlabs/hardhat-zksync-solc';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "hardhat-deploy";
+
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
+import "hardhat-deploy-hardware-wallet";
+
+import 'hardhat-gas-reporter';
+import '@typechain/hardhat';
+
 
 import type {
   HttpNetworkUserConfig,
@@ -39,6 +45,18 @@ function getNetworkApiKey(name: string): string {
   } else {
     // File doesn't exist in path
     return "xyz";
+  }
+}
+
+function getAccountHW(name: string): string | undefined {
+  const configPath = path.join(getConfigPath(), name + ".json");
+  if (fs.existsSync(configPath)) {
+    var json = require(configPath);
+    if (!!json.verify) {
+      return json.verify.hw;
+    }
+  } else {
+    return
   }
 }
 
@@ -152,7 +170,13 @@ const config: HardhatUserConfig = {
     },
   },
   namedAccounts: {
-    deployer: 0,
+    deployer: {
+      default: 0, // here this will by default take the first account as deployer
+      // "goerli": "ledger://m/44'/60'/1'/0/0:0x640338d48D9Aec7bE1E76eEF850A363AFf9C1c6a:",
+      // "polygon": "ledger://m/44'/60'/1'/0/0:0x640338d48D9Aec7bE1E76eEF850A363AFf9C1c6a:",
+      "goerli": getAccountHW("goerli"),
+      "polygon_mainnet": getAccountHW("polygon_mainnet")
+    },
   },
   paths: {
     sources: "src",
