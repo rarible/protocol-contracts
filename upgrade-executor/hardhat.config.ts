@@ -112,6 +112,24 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
+      },
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.2",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       }
     ],
     settings: {
@@ -135,7 +153,11 @@ const config: HardhatUserConfig = {
     sources: "src",
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+    forking: {
+      url: createNetwork("mainnet").url!,
+      blockNumber: 18663146
+    }},
     mainnet: createNetwork("mainnet"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
