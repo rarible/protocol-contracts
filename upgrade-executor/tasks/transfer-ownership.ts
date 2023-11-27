@@ -35,6 +35,9 @@ export async function transferOwnership(
       console.log(`Ownership of ${key} transferred successfully`);
     }
 
+
+    // TODO: Add Access control set Admin and remove Admin
+
     console.log("Ownership transfer complete.");
   } catch (error) {
     console.error("Error during ownership transfer:", error);
