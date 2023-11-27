@@ -5,6 +5,7 @@ export interface IContractsTransfer {
     adminProxy: string;
     contracts: { [key: string]: string };
     nonupgradable: { [key: string]: string };
+    accessControl: { [key: string]: string };
 }
 
 export async function loadContractsTransferSettings(filePath: string): Promise<IContractsTransfer> {
@@ -15,7 +16,8 @@ export async function loadContractsTransferSettings(filePath: string): Promise<I
         const settings: IContractsTransfer = {
             adminProxy: data.contracts.AdminProxy,
             contracts: { ...data.contracts.transparentProxies },
-            nonupgradable: { ...data.nonupgradable }
+            nonupgradable: { ...data.nonupgradable },
+            accessControl: { ...data.accessControl }
         };
 
         return settings;

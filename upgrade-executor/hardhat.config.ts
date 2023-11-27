@@ -157,6 +157,10 @@ const config: HardhatUserConfig = {
     forking: {
       url: createNetwork("mainnet").url!,
       blockNumber: 18663146
+    },
+    mining: {
+      auto: true,
+      interval: 1
     }},
     mainnet: createNetwork("mainnet"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
