@@ -5,6 +5,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
+import "./tasks";
 
 import type {
   HttpNetworkUserConfig,
