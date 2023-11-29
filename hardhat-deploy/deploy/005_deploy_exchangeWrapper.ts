@@ -1,10 +1,7 @@
-const RaribleExchangeWrapper = artifacts.require('RaribleExchangeWrapper');
-const ExchangeV2 = artifacts.require('ExchangeV2');
-const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
-const ERC20TransferProxy = artifacts.require('ERC20TransferProxy');
-const WETH9 = artifacts.require('WETH9');
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction } from 'hardhat-deploy/types';
 
-const { getSettings, getGasMultiplier } = require("./config.js")
+import { getConfig } from '../utils/utils'
 
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const mainnet = {
@@ -148,7 +145,7 @@ const polygon_mumbai = {
   transferProxies: [],
 }
 
-let settings = {
+let settings: any = {
   "default": def,
   "mainnet": mainnet,
   "mainnet-fork": mainnet,
@@ -160,7 +157,7 @@ let settings = {
   "polygon_mainnet": polygon_mainnet
 };
 
-function getWrapperSettings(network) {
+function getWrapperSettings(network: string) {
   if (settings[network] !== undefined) {
     return settings[network];
   } else {
@@ -168,38 +165,38 @@ function getWrapperSettings(network) {
   }
 }
 
-module.exports = async function (deployer, network) {
-  const { deploy_meta, deploy_non_meta } = getSettings(network);
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
+  const { deploy } = hre.deployments;
+  const { ethers } = hre;
+  const { deployer } = await hre.getNamedAccounts();
 
   let exchangeV2;
    if (!!deploy_meta) {
-    exchangeV2 = (await ExchangeMetaV2.deployed()).address;
+    exchangeV2 = (await hre.deployments.get("ExchangeMetaV2")).address;
   } 
 
   if (!!deploy_non_meta){
-    exchangeV2 = (await ExchangeV2.deployed()).address;
+    exchangeV2 = (await hre.deployments.get("ExchangeV2")).address;
   }
 
-  let settings = getWrapperSettings(network);
+  let settings = getWrapperSettings(hre.network.name);
   settings.marketplaces[1] = exchangeV2;
-
-  if (settings.weth === zeroAddress) {
-    settings.weth = (await WETH9.deployed()).address
-  }
-
-  const erc20TransferProxy = await ERC20TransferProxy.deployed();
-  settings.transferProxies.push(erc20TransferProxy.address)
-  //settings.transferProxies.push(settings.marketplaces[2]) // seaPort_1_1
-  //settings.transferProxies.push(settings.marketplaces[6]) // seaport_1_4
-
-  if (network === "polygon_mainnet") {
-    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network), nonce: 141 });
-  } else {
-    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network) });
-  }
   
+  if (settings.weth === zeroAddress) {
+    console.log(`using zero address WETH for exchangeWrapper`)
+  }
 
-  const exchangeWrapper = await RaribleExchangeWrapper.deployed()
-  console.log("Deployed contract exchangeWrapper at:", exchangeWrapper.address)
-  console.log("With settings:", settings)
+  const erc20TransferProxy = await hre.deployments.get("ERC20TransferProxy");
+  settings.transferProxies.push(erc20TransferProxy.address)
+
+  const deployment = await deploy('RaribleExchangeWrapper', {
+    from: deployer,
+    log: true,
+    autoMine: true,
+    args: [settings.marketplaces, settings.weth, settings.transferProxies]
+  });
 };
+
+export default func;
+func.tags = ['all', 'all_zk'];

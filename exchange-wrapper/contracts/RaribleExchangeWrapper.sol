@@ -127,7 +127,9 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         weth = _weth;
 
         for (uint i = 0; i < transferProxies.length; ++i) {
-            IERC20Upgradeable(_weth).approve(transferProxies[i], UINT256_MAX);
+            if (_weth != address(0)){
+                IERC20Upgradeable(_weth).approve(transferProxies[i], UINT256_MAX);
+            }
         }
     }
 

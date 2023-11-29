@@ -213,8 +213,24 @@ const zkatana_mainnet = {
   communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
-  deploy_meta: false,
-  deploy_non_meta: true,
+  deploy_meta: true,
+  deploy_non_meta: false,
+}
+
+const lightlink_pegasus = {
+  communityWallet: "0xc66d094ed928f7840a6b0d373c1cd825c97e3c7c",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: true,
+  deploy_non_meta: false,
+}
+
+const lightlink_phoenix = {
+  communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
+  deploy_CryptoPunks: false,
+  address_CryptoPunks: "0x0000000000000000000000000000000000000000",
+  deploy_meta: true,
+  deploy_non_meta: false,
 }
 
 const lightlink_pegasus = {

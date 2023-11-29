@@ -19,7 +19,7 @@ const ZERO = "0x0000000000000000000000000000000000000000";
 const mint721 = require("../../../scripts/mint721.js");
 const mint1155 = require("../../../scripts/mint1155.js");
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
 const { Order, Asset, sign } = require("../../../scripts/order.js");
 
 contract("Test factories and tokens", accounts => {
@@ -35,7 +35,7 @@ contract("Test factories and tokens", accounts => {
   let deployed;
 
   before(async () => {
-    deployed = await deployments.fixture()
+    deployed = await deployments.fixture(['all'])
   });
 
   describe("rarible collections", () => {
@@ -184,10 +184,10 @@ contract("Test factories and tokens", accounts => {
       //create sell order from maker != creator of nft
       const lazyData = await helper.encodeLazy721([tokenId, tokenURI, lazyCreators, lazyFees, [lazyMintSignature]], token.address)
 
-      const encDataLeft = await helper.encodeV3_SELL([0, 0, 0, 1000, zeroWord]);
-      const encDataRight = await helper.encodeV3_BUY([0, 0, 0, zeroWord]);
+      const encDataLeft = await helper.encodeV2([[], [], true]);
+      const encDataRight = await helper.encodeV2([[], [], false]);
 
-      let left = Order(seller, Asset(id("ERC721_LAZY"), lazyData, 1), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+      let left = Order(seller, Asset(id("ERC721_LAZY"), lazyData, 1), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
 
       let orderSignature = await sign(left, seller, exchangeV2.address);
 
@@ -202,7 +202,7 @@ contract("Test factories and tokens", accounts => {
         sellOrderSalt: 1,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft,
         sellOrderSignature: orderSignature,
         buyOrderPaymentAmount: buyPrice,
@@ -218,7 +218,7 @@ contract("Test factories and tokens", accounts => {
       )
 
       //making order with seller == creator
-      left = Order(creator, Asset(id("ERC721_LAZY"), lazyData, 1), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+      left = Order(creator, Asset(id("ERC721_LAZY"), lazyData, 1), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
       orderSignature = await sign(left, creator, exchangeV2.address);
       directPurchaseParams = {
         sellOrderMaker: creator,
@@ -230,7 +230,7 @@ contract("Test factories and tokens", accounts => {
         sellOrderSalt: 1,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft,
         sellOrderSignature: orderSignature,
         buyOrderPaymentAmount: buyPrice,
@@ -267,10 +267,10 @@ contract("Test factories and tokens", accounts => {
       //create sell order from maker != creator of nft
       const lazyData = await helper.encodeLazy1155([tokenId, tokenURI, supply, lazyCreators, lazyFees, [lazyMintSignature]], token.address)
 
-      const encDataLeft = await helper.encodeV3_SELL([0, 0, 0, 1000, zeroWord]);
-      const encDataRight = await helper.encodeV3_BUY([0, 0, 0, zeroWord]);
+      const encDataLeft = await helper.encodeV2([[], [], true]);
+      const encDataRight = await helper.encodeV2([[], [], false]);
 
-      let left = Order(seller, Asset(id("ERC1155_LAZY"), lazyData, supply), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+      let left = Order(seller, Asset(id("ERC1155_LAZY"), lazyData, supply), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
 
       let orderSignature = await sign(left, seller, exchangeV2.address);
 
@@ -285,7 +285,7 @@ contract("Test factories and tokens", accounts => {
         sellOrderSalt: 1,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft,
         sellOrderSignature: orderSignature,
         buyOrderPaymentAmount: buyPrice,
@@ -300,7 +300,7 @@ contract("Test factories and tokens", accounts => {
         "wrong order maker"
       )
 
-      left = Order(creator, Asset(id("ERC1155_LAZY"), lazyData, supply), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+      left = Order(creator, Asset(id("ERC1155_LAZY"), lazyData, supply), ZERO, Asset(ETH, "0x", buyPrice), 1, 0, 0, ORDER_DATA_V2, encDataLeft);
 
       orderSignature = await sign(left, creator, exchangeV2.address);
 
@@ -315,7 +315,7 @@ contract("Test factories and tokens", accounts => {
         sellOrderSalt: 1,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft,
         sellOrderSignature: orderSignature,
         buyOrderPaymentAmount: buyPrice,

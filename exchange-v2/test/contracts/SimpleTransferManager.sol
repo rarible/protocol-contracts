@@ -12,7 +12,7 @@ abstract contract SimpleTransferManager is ITransferManager {
     function doTransfers(
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,
-        LibDeal.DealData memory dealData
+        LibFeeSide.FeeSide feeSide
     ) override internal returns (uint totalMakeValue, uint totalTakeValue) {
         transfer(left.asset, left.from, right.from, left.proxy);
         transfer(right.asset, right.from, left.from, right.proxy);

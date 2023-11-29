@@ -100,7 +100,7 @@ contract("exchange v2 meta", accounts => {
   let chainId = 31337;
 
   before('before', async function () {
-    const deployed = await deployments.fixture()
+    const deployed = await deployments.fixture(['all'])
 
     salt = '0x' + (chainId).toString(16).padStart(64, '0');
     transferProxy = await TransferProxy.at(deployed["TransferProxy"].address)
