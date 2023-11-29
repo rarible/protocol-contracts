@@ -54,4 +54,4 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
 }
 
 export default func;
-func.tags = ['all'];
+func.tags = ['all_zk'];

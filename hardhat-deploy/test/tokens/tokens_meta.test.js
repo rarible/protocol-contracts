@@ -19,7 +19,7 @@ contract("Test factories and tokens", accounts => {
   let deployed;
 
   before(async () => {
-    deployed = await deployments.fixture()
+    deployed = await deployments.fixture(['all'])
   });
 
   it("rarible erc721 collection should be able to mint tokens", async () => {
