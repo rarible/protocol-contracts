@@ -184,13 +184,15 @@ module.exports = async function (deployer, network) {
   settings.marketplaces[1] = exchangeV2;
 
   if (settings.weth === zeroAddress) {
-    settings.weth = (await WETH9.deployed()).address
+    try {
+      settings.weth = (await WETH9.deployed()).address
+    } catch (error) {
+      console.log(`using zero address WETH for exchangeWrapper`)
+    }
   }
 
   const erc20TransferProxy = await ERC20TransferProxy.deployed();
   settings.transferProxies.push(erc20TransferProxy.address)
-  //settings.transferProxies.push(settings.marketplaces[2]) // seaPort_1_1
-  //settings.transferProxies.push(settings.marketplaces[6]) // seaport_1_4
 
   if (network === "polygon_mainnet") {
     await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network), nonce: 141 });
