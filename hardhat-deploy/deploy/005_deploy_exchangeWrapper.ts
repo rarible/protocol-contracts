@@ -145,11 +145,30 @@ const polygon_mumbai = {
   transferProxies: [],
 }
 
+const sepolia = {
+  marketplaces: [
+    zeroAddress, // wyvernExchange
+    "", //rarible exchangeV2 palceholder
+    "0x00000000006c3852cbEf3e08E8dF289169EdE581", // seaPort_1_1
+    zeroAddress, // x2y2
+    "0xD112466471b5438C1ca2D218694200e49d81D047", // looksRare
+    "0x25b4EfC43c9dCAe134233CD577fFca7CfAd6748F", // sudoSwap
+    "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
+    "0x35C2215F2FFe8917B06454eEEaba189877F200cf", // looksRareV2
+    zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+  ],
+
+  weth: "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+  transferProxies: [],
+}
+
 let settings: any = {
   "default": def,
   "mainnet": mainnet,
   "mainnet-fork": mainnet,
   "goerli": goerli,
+  "sepolia": sepolia,
   "dev": dev,
   "staging": staging,
   "polygon_staging": polygon_staging,
@@ -199,4 +218,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['all', 'all_zk'];
+func.tags = ['all', 'all_zk', 'wrapper'];
