@@ -173,7 +173,7 @@ const chiliz_testnet = {
   deploy_test_erc20: true,
 }
 
-const chiliz_mainnet = {
+const chiliz = {
   communityWallet: "0x424ACe4669579986D200eBeb3C75924282324a42",
   deploy_CryptoPunks: false,
   address_CryptoPunks: "0x0000000000000000000000000000000000000000",
@@ -274,7 +274,7 @@ let settings = {
   "arbitrum_sepolia": arbitrum_sepolia,
   "arbitrum_mainnet": arbitrum_mainnet,
   "chiliz_testnet": chiliz_testnet,
-  "chiliz_mainnet": chiliz_mainnet,
+  "chiliz": chiliz,
   "zkatana_testnet": zkatana_testnet,
   "zkatana_mainnet": zkatana_mainnet,
   "lightlink_pegasus": lightlink_pegasus,
