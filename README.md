@@ -3,6 +3,7 @@
 Consists of:
 
 * Exchange v2: responsible for sales, auctions etc.
+  * security audit was done by ChainSecurity: https://chainsecurity.com/security-audit/rarible-exchange-v2-smart-contracts/
 * Tokens: for storing information about NFTs
 * Specifications for on-chain royalties supported by Rarible
 

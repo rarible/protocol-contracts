@@ -10,6 +10,10 @@ Functionality is divided into parts (each responsible for the part of algorithm)
 
 Essentially, ExchangeV2 is a smart contract for decentralized exchange of any assets presented on Ethereum (or EVM compatible) blockchain.
 
+### Security Audit
+
+Security Audit was done by ChainSecurity: https://chainsecurity.com/security-audit/rarible-exchange-v2-smart-contracts/
+
 ### Algorithms
 
 Main function in the Exchange is matchOrders. It takes two orders (left and right), tries to match them and then fills if there is a match.
