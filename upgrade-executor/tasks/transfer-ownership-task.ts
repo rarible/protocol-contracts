@@ -8,6 +8,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import { transferOwnership } from "./transfer-ownership";
+import { getSigner } from "../utils/get-signer";
 
 // Define the task
 task("transferOwnership", "Transfers ownership of contracts")
@@ -20,9 +21,6 @@ task("transferOwnership", "Transfers ownership of contracts")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
     const { newOwner, settingsFile } = taskArgs;
     const settings = await loadContractsTransferSettings(settingsFile); // Load settings from the YAML file or define them here
-
-    const signers = await hre.ethers.getSigners();
-    const signer = signers[0]; // Using the first signer by default
-
+    const signer = await getSigner(hre)
     await transferOwnership(settings, newOwner, signer);
   });
