@@ -12,12 +12,11 @@ export async function loadContractsTransferSettings(filePath: string): Promise<I
     try {
         const fileContents = await fs.promises.readFile(filePath, 'utf8');
         const data = yaml.load(fileContents) as any;
-
         const settings: IContractsTransfer = {
             adminProxy: data.contracts.AdminProxy,
             contracts: { ...data.contracts.transparentProxies },
-            nonupgradable: { ...data.nonupgradable },
-            accessControl: { ...data.accessControl }
+            nonupgradable: { ...data.contracts.nonupgradable },
+            accessControl: { ...data.contracts.accessControl }
         };
 
         return settings;

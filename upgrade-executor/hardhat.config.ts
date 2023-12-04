@@ -184,6 +184,9 @@ const config: HardhatUserConfig = {
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
   },
+  mocha: {
+    timeout: 1000000
+  },
   etherscan: {
     apiKey: {
       mainnet: getNetworkApiKey('mainnet'),
