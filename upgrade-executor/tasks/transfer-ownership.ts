@@ -1,7 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from "ethers";
 import { IContractsTransfer } from "../utils/config";
-import { ProxyAdmin__factory } from "../typechain-types";
 import { Ownable__factory } from "../typechain-types";
 import { AccessControlUpgradeable__factory } from "../typechain-types";
 
@@ -11,17 +10,6 @@ export async function transferOwnership(
   signer: ethers.Signer
 ) {
   try {
-    // Transfer ownership of adminProxy
-    console.log(`Transfering ownership of adminProxy to ${newOwner}`);
-    const adminProxyContract = ProxyAdmin__factory.connect(
-      settings.adminProxy,
-      signer
-    );
-    const tx = await adminProxyContract.transferOwnership(newOwner);
-    console.log(`Transfering ownership wait 5 confirmations`);
-    await tx.wait(5)
-    console.log(`Ownership of adminProxy transferred successfully`);
-
     // Transfer ownership of each contract in contracts
     for (const [key, address] of Object.entries(settings.contracts)) {
       console.log(`Transfering ownership of ${key} to ${newOwner}`);
@@ -62,6 +50,7 @@ export async function transferOwnership(
     }
 
     console.log("Ownership transfer complete.");
+    console.log()
   } catch (error) {
     console.error("Error during ownership transfer:", error);
     throw error;
