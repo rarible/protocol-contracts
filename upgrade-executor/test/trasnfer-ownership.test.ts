@@ -128,9 +128,9 @@ describe("Transfer Ownership", function () {
 
     const queueReceipt = await queueTx.wait()
 
-    // suppose the current block has a timestamp of 01:00 PM
+    //move time
     await network.provider.send("evm_increaseTime", [360000])
-    await network.provider.send("evm_mine") // this one will have 02:00 PM as its timestamp
+    await network.provider.send("evm_mine")
 
     //execute proposal
     const executeTx = await governor['execute(address[],uint256[],bytes[],bytes32)'](
@@ -204,15 +204,7 @@ describe("Transfer Ownership", function () {
   ) {
 
     // Transfer ownership of each contract in contracts
-    for (const [key, address] of Object.entries(settings.contracts)) {
-      console.log(`Checking owner for ${key}`);
-      const contract = await ethers.getContractAt('Ownable', address)
-      const _newOwner = await contract.owner()
-      expect(_newOwner).to.equal(owner);
-    }
-
-    // Transfer ownership of each nonupgradable contract
-    for (const [key, address] of Object.entries(settings.nonupgradable)) {
+    for (const [key, address] of Object.entries(settings.ownable)) {
       console.log(`Checking owner for ${key}`);
       const contract = await ethers.getContractAt('Ownable', address)
       const _newOwner = await contract.owner()
@@ -244,7 +236,6 @@ describe("Transfer Ownership", function () {
     }
 
     for (const contractAddress of accessContolContracts) {
-      console.log("asd")
       const ownershipTransferData = await testHelper.encodeAdminshipTimelockCall(contractAddress, _newOwner)
       const actionCallData = await testHelper.encodeUpgradeActionCall(actionAdminAddress, ownershipTransferData)
       actionCalldatas.push(actionCallData)

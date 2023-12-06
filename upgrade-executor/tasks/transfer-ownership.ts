@@ -11,7 +11,7 @@ export async function transferOwnership(
 ) {
   try {
     // Transfer ownership of each contract in contracts
-    for (const [key, address] of Object.entries(settings.contracts)) {
+    for (const [key, address] of Object.entries(settings.ownable)) {
       console.log(`Transfering ownership of ${key} to ${newOwner}`);
       const contract = Ownable__factory.connect(address, signer);
       const tx = await contract.transferOwnership(newOwner);
@@ -20,16 +20,6 @@ export async function transferOwnership(
       console.log(`Ownership of ${key} transferred successfully`);
     }
 
-    // Transfer ownership of each nonupgradable contract
-    for (const [key, address] of Object.entries(settings.nonupgradable)) {
-      console.log(`Transfering ownership of ${key} to ${newOwner}`);
-      const contract = Ownable__factory.connect(address, signer);
-      const tx = await contract.transferOwnership(newOwner);
-      console.log(`Transfering ownership wait 5 confirmations`);
-      await tx.wait(5)
-      console.log(`Ownership of ${key} transferred successfully`);
-    }
-    
     // Transfer ownership of each access contract
     for (const [key, address] of Object.entries(settings.accessControl)) {
         console.log(`Add admin role of ${key} to ${newOwner}`);
