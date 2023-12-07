@@ -190,7 +190,8 @@ const config: HardhatUserConfig = {
       chainId: 324,
       timeout: 60000,
       ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
-      zksync: true
+      zksync: true,
+      gasPrice: 100000000
     },
   },
   etherscan: {
