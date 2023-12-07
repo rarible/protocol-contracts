@@ -185,6 +185,11 @@ const config: HardhatUserConfig = {
       chainId: 1890,
       timeout: 60000,
     },
+    zksync: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 324,
+      timeout: 60000,
+    },
   },
   etherscan: {
     apiKey: {
