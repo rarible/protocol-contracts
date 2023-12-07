@@ -185,6 +185,7 @@ const config: HardhatUserConfig = {
       chainId: 1890,
       timeout: 60000,
     },
+    lightlink_pegasus: createNetwork("lightlink_pegasus")
   },
   etherscan: {
     apiKey: {
