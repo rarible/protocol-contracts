@@ -180,6 +180,11 @@ const config: HardhatUserConfig = {
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
+    lightlink: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 1890,
+      timeout: 60000,
+    },
   },
   etherscan: {
     apiKey: {
