@@ -185,7 +185,15 @@ const config: HardhatUserConfig = {
       chainId: 1890,
       timeout: 60000,
     },
-    lightlink_pegasus: createNetwork("lightlink_pegasus")
+    lightlink_pegasus: createNetwork("lightlink_pegasus"),
+    zksync: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 324,
+      timeout: 60000,
+      ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
+      zksync: true,
+      gasPrice: 100000000
+    },
   },
   etherscan: {
     apiKey: {
