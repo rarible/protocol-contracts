@@ -9,7 +9,7 @@ npx hardhat deploy --network <network_name>
 
 to verify after deploy run:
 ```shell
-hardhat --network mainnet etherscan-verify [--api-key <etherscan-apikey>] [--api-url <url>]
+npx hardhat --network mainnet etherscan-verify [--api-key <etherscan-apikey>] [--api-url <url>]
 ```
 
 to do integration tests of contracts to deploy:

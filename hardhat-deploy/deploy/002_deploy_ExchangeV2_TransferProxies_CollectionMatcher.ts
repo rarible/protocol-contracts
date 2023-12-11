@@ -90,4 +90,4 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
 }
 
 export default func;
-func.tags = ['all'];
+func.tags = ['all', 'all-no-tokens'];

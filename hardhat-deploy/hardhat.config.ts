@@ -165,6 +165,7 @@ const config: HardhatUserConfig = {
     polygon_dev: createNetwork("polygon_dev"),
     dev: createNetwork("dev"),
     goerli: createNetwork("goerli"),
+    sepolia: createNetwork("sepolia"),
     staging: createNetwork("staging"),
     polygon_staging: createNetwork("polygon_staging"),
     optimism_mainnet: createNetwork("optimism_mainnet"),
@@ -179,6 +180,20 @@ const config: HardhatUserConfig = {
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
+    lightlink: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 1890,
+      timeout: 60000,
+    },
+    lightlink_pegasus: createNetwork("lightlink_pegasus"),
+    zksync: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 324,
+      timeout: 60000,
+      ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
+      zksync: true,
+      gasPrice: 100000000
+    },
   },
   etherscan: {
     apiKey: {
@@ -186,6 +201,7 @@ const config: HardhatUserConfig = {
       polygon: getNetworkApiKey('polygon_mainnet'),
       mumbai: getNetworkApiKey('polygon_mumbai'),
       goerli: getNetworkApiKey("goerli"),
+      sepolia: getNetworkApiKey("sepolia"),
       mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
       mantle_testnet: getNetworkApiKey("mantle_testnet"),
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
