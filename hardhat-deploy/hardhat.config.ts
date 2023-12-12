@@ -194,6 +194,7 @@ const config: HardhatUserConfig = {
       zksync: true,
       gasPrice: 100000000
     },
+    rari_testnet: createNetwork("rari_testnet"),
   },
   etherscan: {
     apiKey: {
