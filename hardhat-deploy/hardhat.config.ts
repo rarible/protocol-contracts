@@ -185,6 +185,7 @@ const config: HardhatUserConfig = {
       chainId: 1890,
       timeout: 60000,
     },
+    lightlink_pegasus: createNetwork("lightlink_pegasus"),
     zksync: {
       url: 'http://127.0.0.1:1248',
       chainId: 324,
@@ -193,6 +194,7 @@ const config: HardhatUserConfig = {
       zksync: true,
       gasPrice: 100000000
     },
+    rari_testnet: createNetwork("rari_testnet"),
   },
   etherscan: {
     apiKey: {
@@ -206,8 +208,17 @@ const config: HardhatUserConfig = {
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
+      rari_testnet: getNetworkApiKey("rari_testnet")
     },
     customChains: [
+      {
+        network: "rari_testnet",
+        chainId: createNetwork("rari_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("rari_testnet"),
+          browserURL: getNetworkExplorerUrl("rari_testnet"),
+        },
+      },
       {
         network: "mantle_mainnet",
         chainId: createNetwork("mantle_mainnet").chainId!,
@@ -262,5 +273,7 @@ const config: HardhatUserConfig = {
     }
   },
 };
+
+
 
 export default config;

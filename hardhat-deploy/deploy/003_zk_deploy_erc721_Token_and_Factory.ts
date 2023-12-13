@@ -54,4 +54,4 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
 }
 
 export default func;
-func.tags = ['all-zk'];
+func.tags = ['all-zk', 'tokens-zk'];
