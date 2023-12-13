@@ -208,8 +208,17 @@ const config: HardhatUserConfig = {
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
+      rari_testnet: getNetworkApiKey("rari_testnet")
     },
     customChains: [
+      {
+        network: "rari_testnet",
+        chainId: createNetwork("rari_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("rari_testnet"),
+          browserURL: getNetworkExplorerUrl("rari_testnet"),
+        },
+      },
       {
         network: "mantle_mainnet",
         chainId: createNetwork("mantle_mainnet").chainId!,
@@ -264,5 +273,7 @@ const config: HardhatUserConfig = {
     }
   },
 };
+
+
 
 export default config;
