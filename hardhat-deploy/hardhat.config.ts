@@ -268,7 +268,7 @@ const config: HardhatUserConfig = {
       forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
       optimizer: {
         enabled: true, // optional. True by default
-        mode: '3' // optional. 3 by default, z to optimize bytecode size
+        mode: 'z' // optional. 3 by default, z to optimize bytecode size
       },
     }
   },
