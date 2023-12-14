@@ -194,7 +194,8 @@ const config: HardhatUserConfig = {
       zksync: true
     },
     rari_testnet: createNetwork("rari_testnet"),
-    base_sepolia: createNetwork("base_sepolia")
+    base_sepolia: createNetwork("base_sepolia"),
+    zksync_sepolia: createNetwork("zksync_sepolia")
   },
   etherscan: {
     apiKey: {
