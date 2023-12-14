@@ -191,10 +191,10 @@ const config: HardhatUserConfig = {
       chainId: 324,
       timeout: 60000,
       ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
-      zksync: true,
-      gasPrice: 100000000
+      zksync: true
     },
     rari_testnet: createNetwork("rari_testnet"),
+    base_sepolia: createNetwork("base_sepolia")
   },
   etherscan: {
     apiKey: {
@@ -211,6 +211,14 @@ const config: HardhatUserConfig = {
       rari_testnet: getNetworkApiKey("rari_testnet")
     },
     customChains: [
+      {
+        network: "base_sepolia",
+        chainId: createNetwork("base_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("base_sepolia"),
+          browserURL: getNetworkExplorerUrl("base_sepolia"),
+        },
+      },
       {
         network: "rari_testnet",
         chainId: createNetwork("rari_testnet").chainId!,
