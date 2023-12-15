@@ -2,8 +2,14 @@
  --- | --- | ---
  AssetMatcherCollection | 0xb38C2f90dc854507042347D782fcdaD4228F58Fe | https://sepolia.explorer.zksync.io/address/0xb38C2f90dc854507042347D782fcdaD4228F58Fe 
  ERC1155LazyMintTransferProxy | 0x117c152C992e8c344Ce5a84100130cd87eF6bAE6 | https://sepolia.explorer.zksync.io/address/0x117c152C992e8c344Ce5a84100130cd87eF6bAE6 
+ ERC1155Rarible | 0xA01B190820112DF741D00BcEA10e57a933B669CF | https://sepolia.explorer.zksync.io/address/0xA01B190820112DF741D00BcEA10e57a933B669CF 
+ ERC1155RaribleBeacon | 0x6C2CFaA91A1d4b92FbCB10123365084412cEe4b1 | https://sepolia.explorer.zksync.io/address/0x6C2CFaA91A1d4b92FbCB10123365084412cEe4b1 
+ ERC1155RaribleFactoryC2 | 0xEda115D72EF1Dc96d0297278D1D241821F999927 | https://sepolia.explorer.zksync.io/address/0xEda115D72EF1Dc96d0297278D1D241821F999927 
  ERC20TransferProxy | 0x43b9B5221F513031acC62dc8B9788E608B293baD | https://sepolia.explorer.zksync.io/address/0x43b9B5221F513031acC62dc8B9788E608B293baD 
  ERC721LazyMintTransferProxy | 0x11983886da3c379E507A874649C96D7EEd086c32 | https://sepolia.explorer.zksync.io/address/0x11983886da3c379E507A874649C96D7EEd086c32 
+ ERC721RaribleFactoryC2 | 0x2abC8bD09c681702e2297F11fd759d9014664B33 | https://sepolia.explorer.zksync.io/address/0x2abC8bD09c681702e2297F11fd759d9014664B33 
+ ERC721RaribleMinimal | 0xb36603d6956bC855f5F246DFDb77979a2EB63b53 | https://sepolia.explorer.zksync.io/address/0xb36603d6956bC855f5F246DFDb77979a2EB63b53 
+ ERC721RaribleMinimalBeacon | 0x9301194711E0015316AA0d9e0F184dFB87f70582 | https://sepolia.explorer.zksync.io/address/0x9301194711E0015316AA0d9e0F184dFB87f70582 
  ExchangeV2 | 0x99bD7BA01f9872f034a35DC4bC737cFaaaC11D63 | https://sepolia.explorer.zksync.io/address/0x99bD7BA01f9872f034a35DC4bC737cFaaaC11D63 
  RaribleExchangeWrapper | 0x0148b11891C0E30Fb36a6D646E04C7bebE7969c8 | https://sepolia.explorer.zksync.io/address/0x0148b11891C0E30Fb36a6D646E04C7bebE7969c8 
  RoyaltiesRegistry | 0x16b1047570432d1DeCa5488CEe0d1d88E61Ff385 | https://sepolia.explorer.zksync.io/address/0x16b1047570432d1DeCa5488CEe0d1d88E61Ff385 
