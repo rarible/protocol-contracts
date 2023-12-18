@@ -191,9 +191,11 @@ const config: HardhatUserConfig = {
       chainId: 324,
       timeout: 60000,
       ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
-      zksync: true,
-      gasPrice: 100000000
+      zksync: true
     },
+    rari_testnet: createNetwork("rari_testnet"),
+    base_sepolia: createNetwork("base_sepolia"),
+    zksync_sepolia: createNetwork("zksync_sepolia")
   },
   etherscan: {
     apiKey: {
@@ -207,8 +209,25 @@ const config: HardhatUserConfig = {
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
+      rari_testnet: getNetworkApiKey("rari_testnet")
     },
     customChains: [
+      {
+        network: "base_sepolia",
+        chainId: createNetwork("base_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("base_sepolia"),
+          browserURL: getNetworkExplorerUrl("base_sepolia"),
+        },
+      },
+      {
+        network: "rari_testnet",
+        chainId: createNetwork("rari_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("rari_testnet"),
+          browserURL: getNetworkExplorerUrl("rari_testnet"),
+        },
+      },
       {
         network: "mantle_mainnet",
         chainId: createNetwork("mantle_mainnet").chainId!,
@@ -258,10 +277,12 @@ const config: HardhatUserConfig = {
       forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
       optimizer: {
         enabled: true, // optional. True by default
-        mode: '3' // optional. 3 by default, z to optimize bytecode size
+        mode: 'z' // optional. 3 by default, z to optimize bytecode size
       },
     }
   },
 };
+
+
 
 export default config;
