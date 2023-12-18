@@ -13,10 +13,7 @@ describe("Upgrade Executor", function () {
     
     //deploy upgradeExecutor
     const UpgradeExecutor = await ethers.getContractFactory('UpgradeExecutor');
-    upgradeExecutor = await UpgradeExecutor.deploy()
-
-    //initialize upgradeExecutor
-    await upgradeExecutor.initialize(signers[0].address, [signers[0].address]);
+    upgradeExecutor = await UpgradeExecutor.deploy([signers[0].address])
 
     //deploy testHelper
     const TestHelper = await ethers.getContractFactory('TestHelper');

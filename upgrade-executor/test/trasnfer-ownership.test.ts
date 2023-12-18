@@ -39,9 +39,7 @@ describe("Transfer Ownership", function () {
 
     //deploy upgradeExecutor
     const UpgradeExecutor = await ethers.getContractFactory('UpgradeExecutor');
-    upgradeExecutor = await UpgradeExecutor.deploy();
-    //initialize upgradeExecutor
-    await upgradeExecutor.initialize(upgradeExecutor.address, [settingsGovernance.accessControl.RariTimelockController]);
+    upgradeExecutor = await UpgradeExecutor.deploy([settingsGovernance.accessControl.RariTimelockController]);
 
     //deploy OwnershipTransferAction
     const OwnershipTransferAction = await ethers.getContractFactory('OwnershipTransferAction')
@@ -54,19 +52,19 @@ describe("Transfer Ownership", function () {
     //transfer ownerships
     //governance
     await transferOwnership(settingsGovernance, upgradeExecutor.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settingsGovernance, upgradeExecutor.address)
+    await cheсkOwner(settingsGovernance, upgradeExecutor.address)
 
     //locking
     await transferOwnership(settingsLocking, upgradeExecutor.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settingsLocking, upgradeExecutor.address)
+    await cheсkOwner(settingsLocking, upgradeExecutor.address)
 
     //protocol
     await transferOwnership(settingsProtocol, upgradeExecutor.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settingsProtocol, upgradeExecutor.address)
+    await cheсkOwner(settingsProtocol, upgradeExecutor.address)
 
     //admin proxies
     await transferOwnership(settingsAdminProxies, upgradeExecutor.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settingsAdminProxies, upgradeExecutor.address)
+    await cheсkOwner(settingsAdminProxies, upgradeExecutor.address)
 
     //prepare data for proposal
     const governor = new ethers.Contract("0x6552C8fb228f7776Fc0e4056AA217c139D4baDa1", RariGovernorABI, userSigner)
@@ -143,62 +141,62 @@ describe("Transfer Ownership", function () {
     const executeReceipt = await executeTx.wait()
 
     //check owners
-    await chekOwner(settingsGovernance, proxyAdminProtocolOwner)
-    await chekOwner(settingsLocking, proxyAdminProtocolOwner)
-    await chekOwner(settingsProtocol, proxyAdminProtocolOwner)
-    await chekOwner(settingsAdminProxies, proxyAdminProtocolOwner)
+    await cheсkOwner(settingsGovernance, proxyAdminProtocolOwner)
+    await cheсkOwner(settingsLocking, proxyAdminProtocolOwner)
+    await cheсkOwner(settingsProtocol, proxyAdminProtocolOwner)
+    await cheсkOwner(settingsAdminProxies, proxyAdminProtocolOwner)
   });
 
   it("should be able to transfer ownership for protocol contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/protocol-contracts.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, newOwner.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settings, newOwner.address)
+    await cheсkOwner(settings, newOwner.address)
   });
 
   it("should be able to transfer ownership back for protocol contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/protocol-contracts.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, proxyAdminProtocolOwnerSigner.address, newOwner)
-    await chekOwner(settings, proxyAdminProtocolOwnerSigner.address)
+    await cheсkOwner(settings, proxyAdminProtocolOwnerSigner.address)
   });
 
   it("should be able to transfer ownership for locking contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/locking-contracts.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, newOwner.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settings, newOwner.address)
+    await cheсkOwner(settings, newOwner.address)
   });
 
   it("should be able to transfer ownership back for locking contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/locking-contracts.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, proxyAdminProtocolOwnerSigner.address, newOwner)
-    await chekOwner(settings, proxyAdminProtocolOwnerSigner.address)
+    await cheсkOwner(settings, proxyAdminProtocolOwnerSigner.address)
   });
 
   it("should be able to transfer ownership for governance contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/governance-contracts.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, newOwner.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settings, newOwner.address)
+    await cheсkOwner(settings, newOwner.address)
   });
 
   it("should be able to transfer ownership back for governance contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/governance-contracts.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, proxyAdminProtocolOwnerSigner.address, newOwner)
-    await chekOwner(settings, proxyAdminProtocolOwnerSigner.address)
+    await cheсkOwner(settings, proxyAdminProtocolOwnerSigner.address)
   });
 
   it("should be able to transfer ownership for adminProxy contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/admin-proxies.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, newOwner.address, proxyAdminProtocolOwnerSigner)
-    await chekOwner(settings, newOwner.address)
+    await cheсkOwner(settings, newOwner.address)
   });
 
   it("should be able to transfer ownership back for adminProxy contracts", async function () {
     const settings = await loadContractsTransferSettings("utils/config/admin-proxies.yaml"); // Load settings from the YAML file or define them here
     await transferOwnership(settings, proxyAdminProtocolOwnerSigner.address, newOwner)
-    await chekOwner(settings, proxyAdminProtocolOwnerSigner.address)
+    await cheсkOwner(settings, proxyAdminProtocolOwnerSigner.address)
   });
 
 
-  async function chekOwner(
+  async function cheсkOwner(
     settings: IContractsTransfer,
     owner: string
   ) {

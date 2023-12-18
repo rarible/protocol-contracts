@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 /// @dev    We use these upgrade contracts as they allow multiple actions to take place in an upgrade
 ///         and for these actions to interact. However because we are delegatecalling into these upgrade
 ///         contracts, it's important that these upgrade contract do not touch or modify contract state.
-contract UpgradeExecutor is Initializable, AccessControlUpgradeable, ReentrancyGuard {
+contract UpgradeExecutor is AccessControl, ReentrancyGuard {
     using Address for address;
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -20,19 +20,16 @@ contract UpgradeExecutor is Initializable, AccessControlUpgradeable, ReentrancyG
     event UpgradeExecuted(address indexed upgrade, uint256 value, bytes data);
 
     /// @notice Initialise the upgrade executor
-    /// @param admin The admin who can update other roles, and itself - ADMIN_ROLE
     /// @param executors Can call the execute function - EXECUTOR_ROLE
-    function initialize(address admin, address[] memory executors) public initializer {
-        require(admin != address(0), "UpgradeExecutor: zero admin");
-
-        __AccessControl_init();
+    constructor(address[] memory executors) ReentrancyGuard() {
+        address admin = address(this);
 
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(EXECUTOR_ROLE, ADMIN_ROLE);
 
-        _setupRole(ADMIN_ROLE, admin);
+        _grantRole(ADMIN_ROLE, admin);
         for (uint256 i = 0; i < executors.length; ++i) {
-            _setupRole(EXECUTOR_ROLE, executors[i]);
+            _grantRole(EXECUTOR_ROLE, executors[i]);
         }
     }
 
