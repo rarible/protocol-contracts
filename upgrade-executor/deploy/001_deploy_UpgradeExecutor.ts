@@ -7,20 +7,19 @@ type NetworkSettings = {
 
 const mainnet : NetworkSettings = {
   executors: [
-    "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5"
+    "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5", //timelock
+    "" //todo: add security council 4/5
   ]
 }
-const goerli : NetworkSettings = {
-  executors: []
-}
 const def : NetworkSettings = {
-  executors: [],
+  executors: [
+    "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5", //timelock
+  ],
 }
 
 let settings: any = {
   "default": def,
-  "mainnet": mainnet,
-  "goerli": goerli
+  "mainnet": mainnet
 };
 
 function getSettings(network: string) : NetworkSettings {
@@ -40,6 +39,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("deploying contracts with the account:", deployer);
 
   let settings = getSettings(hre.network.name)
+  settings.executors.push(deployer)
   console.log(`using settings`, settings)
 
   const receipt = await deploy("UpgradeExecutor", {
@@ -51,4 +51,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['all'];
+func.tags = ['executor'];

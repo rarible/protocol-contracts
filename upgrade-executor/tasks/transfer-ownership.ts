@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import { IContractsTransfer } from "../utils/config";
 import { Ownable__factory } from "../typechain-types";
 import { AccessControlUpgradeable__factory } from "../typechain-types";
+import { expect } from "chai";
 
 export async function transferOwnership(
   settings: IContractsTransfer,
@@ -45,4 +46,45 @@ export async function transferOwnership(
     console.error("Error during ownership transfer:", error);
     throw error;
   }
+}
+
+export async function transferSingleContractOwnership(
+  contractAddress: string,
+  newOwner: string,
+  signer: ethers.Signer 
+) {
+  console.log(`Transfering ownership of contract (${contractAddress}) to newOwner=${newOwner}`);
+  const contract = Ownable__factory.connect(contractAddress, signer);
+  const tx = await contract.transferOwnership(newOwner);
+  await tx.wait()
+  expect(await contract.owner()).to.equal(newOwner);
+  console.log(`Ownership of contract (${contractAddress}) transferred successfully`)
+}
+
+export async function transferTimelockAdminRole(
+  contractAddress: string,
+  newOwner: string,
+  signer: ethers.Signer 
+) {
+  console.log(`Adding admin role in contract(${contractAddress}) to ${newOwner}`);
+  const contract = AccessControlUpgradeable__factory.connect(contractAddress, signer);
+  const TIMELOCK_ADMIN_ROLE = ethers.utils.id("TIMELOCK_ADMIN_ROLE");
+  const tx = await contract.grantRole(TIMELOCK_ADMIN_ROLE, newOwner)
+  await tx.wait()
+  expect(await contract.hasRole(TIMELOCK_ADMIN_ROLE, newOwner)).to.equal(true);
+  console.log(`Adding admin role in ${contractAddress} successfully`);
+}
+
+export async function renounceTimelockAdminRole(
+  contractAddress: string,
+  oldOwner: string,
+  signer: ethers.Signer 
+) {
+  console.log(`Renouncing admin role in ${contractAddress} from ${oldOwner}`);
+  const contract = AccessControlUpgradeable__factory.connect(contractAddress, signer);
+  const TIMELOCK_ADMIN_ROLE = ethers.utils.id("TIMELOCK_ADMIN_ROLE");
+  const tx = await contract.renounceRole(TIMELOCK_ADMIN_ROLE, oldOwner)
+  await tx.wait()
+  expect(await contract.hasRole(TIMELOCK_ADMIN_ROLE, oldOwner)).to.equal(false);
+  console.log(`Renouncing admin role in ${contractAddress} successfully`);
 }
