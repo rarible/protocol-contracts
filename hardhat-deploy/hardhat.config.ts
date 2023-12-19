@@ -195,6 +195,11 @@ const config: HardhatUserConfig = {
     },
     rari_testnet: createNetwork("rari_testnet"),
     base_sepolia: createNetwork("base_sepolia"),
+    base: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 8453,
+      timeout: 60000,
+    },
     zksync_sepolia: createNetwork("zksync_sepolia")
   },
   etherscan: {
