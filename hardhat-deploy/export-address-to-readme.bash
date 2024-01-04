@@ -6,9 +6,7 @@ NC='\033[0m' # No Color
 path="${HOME}/.ethereum/${NETWORK}.json"
 path_readme="networks/${NETWORK}.md"
 echo $path
-network_id=$(jq '.network_id' $path)
 explorer_url=$(jq '.verify.explorerUrl' $path)
-echo $network_id
 
 # Function to add a row to the table
 add_row() {
