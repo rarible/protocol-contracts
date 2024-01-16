@@ -1,20 +1,19 @@
 import { ethers, network } from "hardhat";
 import { expect } from "chai";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { TestHelper, UpgradeExecutor } from "../typechain-types";
 
 describe("Upgrade Executor", function () {
-  let upgradeExecutor: any;
-  let testHelper: any;
-  let signers: any;
+  let upgradeExecutor: UpgradeExecutor;
+  let testHelper: TestHelper;
+  let signers: SignerWithAddress[];
 
   before(async () => {
     signers = await ethers.getSigners();
     
     //deploy upgradeExecutor
     const UpgradeExecutor = await ethers.getContractFactory('UpgradeExecutor');
-    upgradeExecutor = await UpgradeExecutor.deploy()
-
-    //initialize upgradeExecutor
-    await upgradeExecutor.initialize(signers[0].address, [signers[0].address]);
+    upgradeExecutor = await UpgradeExecutor.deploy([signers[0].address])
 
     //deploy testHelper
     const TestHelper = await ethers.getContractFactory('TestHelper');

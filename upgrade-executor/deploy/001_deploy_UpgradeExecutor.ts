@@ -2,27 +2,24 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 type NetworkSettings = {
-  admin: string;
   executors: string[];
 }
 
 const mainnet : NetworkSettings = {
-  admin: "0x0000000000000000000000000000000000000000",
-  executors: []
-}
-const goerli : NetworkSettings = {
-  admin: "0x0000000000000000000000000000000000000000",
-  executors: []
+  executors: [
+    "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5", //timelock
+    "" //todo: add security council 4/5
+  ]
 }
 const def : NetworkSettings = {
-  admin: "0x0000000000000000000000000000000000000000",
-  executors: [],
+  executors: [
+    "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5", //timelock
+  ],
 }
 
 let settings: any = {
   "default": def,
-  "mainnet": mainnet,
-  "goerli": goerli
+  "mainnet": mainnet
 };
 
 function getSettings(network: string) : NetworkSettings {
@@ -42,23 +39,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("deploying contracts with the account:", deployer);
 
   let settings = getSettings(hre.network.name)
-  if (settings.admin === "0x0000000000000000000000000000000000000000") {
-    settings.admin = deployer;
-  }
+  settings.executors.push(deployer)
   console.log(`using settings`, settings)
 
   const receipt = await deploy("UpgradeExecutor", {
     from: deployer,
     log: true,
     autoMine: true,
+    args: [settings.executors]
   });
-
-  const UpgradeExecutor = await hre.ethers.getContractFactory("UpgradeExecutor");
-  const upgradeExecutor = await UpgradeExecutor.attach(receipt.address);
-
-  const initTx = await upgradeExecutor.initialize(settings.admin, settings.executors);
-  await initTx.wait()
 
 };
 export default func;
-func.tags = ['all'];
+func.tags = ['executor'];

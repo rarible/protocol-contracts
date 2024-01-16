@@ -112,6 +112,24 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
+      },
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.2",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       }
     ],
     settings: {
@@ -135,7 +153,15 @@ const config: HardhatUserConfig = {
     sources: "src",
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+    forking: {
+      url: createNetwork("mainnet").url!,
+      blockNumber: 18713700
+    },
+    mining: {
+      auto: true,
+      interval: 1
+    }},
     mainnet: createNetwork("mainnet"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
@@ -156,6 +182,9 @@ const config: HardhatUserConfig = {
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
+  },
+  mocha: {
+    timeout: 1000000
   },
   etherscan: {
     apiKey: {
