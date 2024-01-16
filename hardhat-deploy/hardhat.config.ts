@@ -159,7 +159,11 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {},
-    mainnet: createNetwork("mainnet"),
+    mainnet: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 1,
+      timeout: 60000,
+    },
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
     polygon_dev: createNetwork("polygon_dev"),
