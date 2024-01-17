@@ -8,7 +8,8 @@ type NetworkSettings = {
 const mainnet : NetworkSettings = {
   executors: [
     "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5", //timelock
-    "" //todo: add security council 4/5
+    "0xa5e4514145463385aEF763Fc8161CB42b92c74f2" //security council 4/5
+    //deployer address will be added too
   ]
 }
 const def : NetworkSettings = {
