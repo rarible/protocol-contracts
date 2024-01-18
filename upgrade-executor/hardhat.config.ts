@@ -67,7 +67,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    if (json.verify && json.verify.apiUrl.endsWith("/api")) {
+    if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
       json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
     }
     return {
