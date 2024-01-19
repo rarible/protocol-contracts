@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4-beta.1](https://github.com/rarible/protocol-contracts/compare/v0.8.3...v0.8.4-beta.1) (2024-01-19)
+
+### Bug Fixes
+
+- update base image ([0162b7a](https://github.com/rarible/protocol-contracts/commit/0162b7a4d1105539d1a4ca2792b321a75252183e))
+
 ## [0.8.3](https://github.com/rarible/protocol-contracts/compare/v0.8.2...v0.8.3) (2024-01-18)
 
 ### Features
