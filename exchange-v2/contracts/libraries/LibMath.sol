@@ -4,6 +4,8 @@ pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
+import "hardhat/console.sol";
+
 library LibMath {
     using SafeMathUpgradeable for uint;
 
@@ -14,10 +16,11 @@ library LibMath {
     /// @param target Value to calculate partial of.
     /// @return partialAmount value of target rounded down.
     function safeGetPartialAmountFloor(
-        uint256 numerator,
-        uint256 denominator,
-        uint256 target
+        uint256 numerator,//order.takeAsset.value
+        uint256 denominator,//order.makeAsset.value
+        uint256 target//makeValue - сколько осталось от make - 
     ) internal pure returns (uint256 partialAmount) {
+        console.log(numerator, denominator, target);
         if (isRoundingErrorFloor(numerator, denominator, target)) {
             revert("rounding error");
         }
