@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4-beta.2](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.1...v0.8.4-beta.2) (2024-01-19)
+
+### Bug Fixes
+
+- docker ([753ee2d](https://github.com/rarible/protocol-contracts/commit/753ee2d59356352f8a7797648cb9e99377fc640e))
+
 ## [0.8.4-beta.1](https://github.com/rarible/protocol-contracts/compare/v0.8.3...v0.8.4-beta.1) (2024-01-19)
 
 ### Bug Fixes
