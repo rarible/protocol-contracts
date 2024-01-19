@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4-beta.3](https://github.com/rariblecom/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
+
+### Bug Fixes
+
+- package lib-bp ([86681d2](https://github.com/rariblecom/protocol-contracts/commit/86681d29eb565bc287b1d57b8e5705ae7ed1fe25))
+
 ## [0.8.4-beta.2](https://github.com/rariblecom/protocol-contracts/compare/v0.8.4-beta.1...v0.8.4-beta.2) (2024-01-19)
 
 **Note:** Version bump only for package @rarible/lib-bp
