@@ -198,6 +198,11 @@ const config: HardhatUserConfig = {
       zksync: true
     },
     rari_testnet: createNetwork("rari_testnet"),
+    rari: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 1380012617,
+      timeout: 60000,
+    },
     base_sepolia: createNetwork("base_sepolia"),
     base: {
       url: 'http://127.0.0.1:1248',
