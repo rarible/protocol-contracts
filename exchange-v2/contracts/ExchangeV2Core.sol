@@ -273,20 +273,22 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         uint rightOrderFill = getOrderFill(orderRight.salt, rightOrderKeyHash);
         LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftMakeFill, rightMakeFill);
 
-        require(newFill.rightValue > 0 && newFill.leftValue > 0, "nothing to fill");
-
         if (orderLeft.salt != 0) {
             if (leftMakeFill) {
+                require(newFill.leftValue > 0, "nothing to fill");
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.leftValue);
             } else {
+                require(newFill.rightValue > 0, "nothing to fill");
                 fills[leftOrderKeyHash] = leftOrderFill.add(newFill.rightValue);
             }
         }
 
         if (orderRight.salt != 0) {
             if (rightMakeFill) {
+                require(newFill.rightValue > 0, "nothing to fill");
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.rightValue);
             } else {
+                require(newFill.leftValue > 0, "nothing to fill");
                 fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
             }
         }
