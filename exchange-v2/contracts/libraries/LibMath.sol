@@ -4,8 +4,6 @@ pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 library LibMath {
     using SafeMathUpgradeable for uint;
 
@@ -20,7 +18,6 @@ library LibMath {
         uint256 denominator,//order.makeAsset.value
         uint256 target//makeValue - сколько осталось от make - 
     ) internal pure returns (uint256 partialAmount) {
-        console.log(numerator, denominator, target);
         if (isRoundingErrorFloor(numerator, denominator, target)) {
             revert("rounding error");
         }
