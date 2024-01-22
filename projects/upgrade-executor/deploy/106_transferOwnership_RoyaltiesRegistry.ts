@@ -23,4 +23,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log()
 };
 export default func;
-func.tags = ['ownership-transfer', 'RoyaltiesRegistry'];
+func.tags = ['RoyaltiesRegistry'];

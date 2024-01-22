@@ -127,21 +127,21 @@ describe("Transfer Ownership", function () {
     //transfer ownerships
 
     //execute all migrations: deploy upgradeExecutor, ownership transfer and renouncement
-    const {UpgradeExecutor} = await deployments.fixture(['executor', 'ownership-transfer', 'ownership-renouncement'])
+    const {UpgradeExecutor} = await deployments.fixture(['executor', 'ownership-transfer', 'ownership-renouncement', 'RoyaltiesRegistry'])
     upgradeExecutorAddress = UpgradeExecutor.address;
 
     //check owners
-    await cheсkOwner(settings.Locking, upgradeExecutorAddress)
-    await cheсkOwner(settings.RariMineV3, upgradeExecutorAddress)
-    await cheсkOwner(settings.RariToken, upgradeExecutorAddress)
-    await cheсkOwner(settings.AdminProxyGovernance, upgradeExecutorAddress)
-    await cheсkOwner(settings.AdminProxyLockingProtocol, upgradeExecutorAddress)
-    await cheсkOwner(settings.RoyaltiesRegistry, upgradeExecutorAddress)
-    await cheсkOwner(settings.ExchangeV2, upgradeExecutorAddress)
-    await cheсkOwner(settings.ERC1155LazyMintTransferProxy, upgradeExecutorAddress)
-    await cheсkOwner(settings.ERC20TransferProxy, upgradeExecutorAddress)
-    await cheсkOwner(settings.ERC721LazyMintTransferProxy, upgradeExecutorAddress)
-    await cheсkOwner(settings.TransferProxy, upgradeExecutorAddress)
+    await checkOwner(settings.Locking, upgradeExecutorAddress)
+    await checkOwner(settings.RariMineV3, upgradeExecutorAddress)
+    await checkOwner(settings.RariToken, upgradeExecutorAddress)
+    await checkOwner(settings.AdminProxyGovernance, upgradeExecutorAddress)
+    await checkOwner(settings.AdminProxyLockingProtocol, upgradeExecutorAddress)
+    await checkOwner(settings.RoyaltiesRegistry, upgradeExecutorAddress)
+    await checkOwner(settings.ExchangeV2, upgradeExecutorAddress)
+    await checkOwner(settings.ERC1155LazyMintTransferProxy, upgradeExecutorAddress)
+    await checkOwner(settings.ERC20TransferProxy, upgradeExecutorAddress)
+    await checkOwner(settings.ERC721LazyMintTransferProxy, upgradeExecutorAddress)
+    await checkOwner(settings.TransferProxy, upgradeExecutorAddress)
 
     //check admin
     await checkAdmin(settings.RariTimelockController, upgradeExecutorAddress, proxyAdminProtocolOwner)
@@ -221,24 +221,24 @@ describe("Transfer Ownership", function () {
     const executeReceipt = await executeTx.wait()
 
     //check owners
-    await cheсkOwner(settings.Locking, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.RariMineV3, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.RariToken, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.AdminProxyGovernance, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.AdminProxyLockingProtocol, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.RoyaltiesRegistry, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.ExchangeV2, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.ERC1155LazyMintTransferProxy, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.ERC20TransferProxy, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.ERC721LazyMintTransferProxy, proxyAdminProtocolOwner)
-    await cheсkOwner(settings.TransferProxy, proxyAdminProtocolOwner)
+    await checkOwner(settings.Locking, proxyAdminProtocolOwner)
+    await checkOwner(settings.RariMineV3, proxyAdminProtocolOwner)
+    await checkOwner(settings.RariToken, proxyAdminProtocolOwner)
+    await checkOwner(settings.AdminProxyGovernance, proxyAdminProtocolOwner)
+    await checkOwner(settings.AdminProxyLockingProtocol, proxyAdminProtocolOwner)
+    await checkOwner(settings.RoyaltiesRegistry, proxyAdminProtocolOwner)
+    await checkOwner(settings.ExchangeV2, proxyAdminProtocolOwner)
+    await checkOwner(settings.ERC1155LazyMintTransferProxy, proxyAdminProtocolOwner)
+    await checkOwner(settings.ERC20TransferProxy, proxyAdminProtocolOwner)
+    await checkOwner(settings.ERC721LazyMintTransferProxy, proxyAdminProtocolOwner)
+    await checkOwner(settings.TransferProxy, proxyAdminProtocolOwner)
 
     //check admin
     await checkAdmin(settings.RariTimelockController, proxyAdminProtocolOwner, upgradeExecutorAddress)
 
   });
 
-  async function cheсkOwner(
+  async function checkOwner(
     contractAddress: string,
     owner: string
   ) {
