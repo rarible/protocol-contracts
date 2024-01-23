@@ -12,8 +12,8 @@ const TestERC20 = artifacts.require("TestERC20.sol");
 
 const web3Abi = require('web3-eth-abi');
 const sigUtil = require('eth-sig-util');
-const { Order, Asset, sign } = require("../../../scripts/order.js");
-const { ETH, ERC20, enc } = require("../../../scripts/assets.js");
+const { Order, Asset, sign } = require("../../../../scripts/order.js");
+const { ETH, ERC20, enc } = require("../../../../scripts/assets.js");
 const truffleAssert = require('truffle-assertions');
 
 const ZERO = "0x0000000000000000000000000000000000000000";

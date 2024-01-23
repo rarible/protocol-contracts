@@ -1,7 +1,7 @@
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 
-const order = require("../../scripts/order.js");
-const {ORDER_DATA_V1, ORDER_DATA_V2} = require("../../scripts/assets.js");
+const order = require("../../../scripts/order.js");
+const {ORDER_DATA_V1, ORDER_DATA_V2} = require("../../../scripts/assets.js");
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");

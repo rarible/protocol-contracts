@@ -7,12 +7,12 @@ const TestERC20ZRX = artifacts.require("TestERC20ZRX.sol");
 const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC1155 = artifacts.require("TestERC1155.sol");
 
-const order = require("../../scripts/order.js");
+const order = require("../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const tests = require("@daonomic/tests-common");
 const expectThrow = tests.expectThrow;
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
-const { ETH, ERC20, ERC721, ERC1155, enc } = require("../../scripts/assets.js");
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
+const { ETH, ERC20, ERC721, ERC1155, enc } = require("../../../scripts/assets.js");
 
 contract("TransferExecutor", accounts => {
 	let testing;

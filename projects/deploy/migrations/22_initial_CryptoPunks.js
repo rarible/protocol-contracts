@@ -4,7 +4,7 @@ const ExchangeV2 = artifacts.require('ExchangeV2');
 const ExchangeMetaV2 = artifacts.require('ExchangeMetaV2');
 
 const { getSettings, getGasMultiplier } = require("./config.js")
-const { CRYPTO_PUNKS } = require("../../scripts/assets.js");
+const { CRYPTO_PUNKS } = require("../../../scripts/assets.js");
 
 module.exports = async function (deployer, network) {
   const settings = getSettings(network);

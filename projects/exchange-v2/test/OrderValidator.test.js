@@ -1,6 +1,6 @@
 const OrderValidatorTest = artifacts.require("OrderValidatorTest.sol");
 const TestERC1271 = artifacts.require("TestERC1271.sol");
-const order = require("../../scripts/order.js");
+const order = require("../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
 

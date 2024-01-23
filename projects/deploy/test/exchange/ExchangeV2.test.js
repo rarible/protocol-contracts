@@ -20,15 +20,15 @@ const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 //Lazy
 const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
 
-const { Order, Asset, sign } = require("../../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../../scripts/assets.js");
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f11";
 
-const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
+const { verifyBalanceChangeReturnTx } = require("../../../../scripts/balance")
 
 contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   let exchangeV2;

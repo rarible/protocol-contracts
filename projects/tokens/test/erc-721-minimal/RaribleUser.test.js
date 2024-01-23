@@ -2,7 +2,7 @@ const Testing = artifacts.require("ERC721RaribleMinimal.sol");
 const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
-const { sign } = require("../../../scripts/mint721.js");
+const { sign } = require("../../../../scripts/mint721.js");
 const truffleAssert = require('truffle-assertions');
 
 contract("ERC721RaribleUser minimal", accounts => {

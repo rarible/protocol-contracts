@@ -1,7 +1,7 @@
 const RaribleSimpleTest = artifacts.require("RaribleSimpleTest.sol");
 
-const { AssetType } = require("../../scripts/order.js");
-const { id } = require("../../scripts/assets.js");
+const { AssetType } = require("../../../scripts/order.js");
+const { id } = require("../../../scripts/assets.js");
 
 contract("RaribleTSimpleTest:", accounts => {
 	let testing;

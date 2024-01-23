@@ -14,11 +14,11 @@ const truffleAssert = require('truffle-assertions');
 const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
 const ZERO = "0x0000000000000000000000000000000000000000";
 
-const mint721 = require("../../../scripts/mint721.js");
-const mint1155 = require("../../../scripts/mint1155.js");
+const mint721 = require("../../../../scripts/mint721.js");
+const mint1155 = require("../../../../scripts/mint1155.js");
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
-const { Order, Asset, sign } = require("../../../scripts/order.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../../scripts/assets.js");
+const { Order, Asset, sign } = require("../../../../scripts/order.js");
 
 contract("Test factories and tokens", accounts => {
 

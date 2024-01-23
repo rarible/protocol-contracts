@@ -3,8 +3,8 @@ const TestAssetMatcher = artifacts.require("TestAssetMatcher.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
 
-const order = require("../../scripts/order.js");
-const { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNKS, id } = require("../../scripts/assets.js");
+const order = require("../../../scripts/order.js");
+const { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNKS, id } = require("../../../scripts/assets.js");
 
 contract("AssetMatcher", accounts => {
 	let testing;

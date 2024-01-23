@@ -9,11 +9,11 @@ const TestERC1155 = artifacts.require("TestERC1155.sol");
 const TransferProxy = artifacts.require("TransferProxy.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 
-const { Order, Asset, sign } = require("../../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../../scripts/order.js");
 const { expectThrow } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../../../scripts/assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../../../../scripts/assets");
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
+const { verifyBalanceChangeReturnTx } = require("../../../../scripts/balance")
 
 contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let bulkExchange;

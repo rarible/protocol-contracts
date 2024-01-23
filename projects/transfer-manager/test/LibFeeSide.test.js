@@ -1,6 +1,6 @@
 const LibFeeSideTest = artifacts.require("LibFeeSideTest.sol");
 
-const {ETH, ERC20, ERC721, ERC1155} = require("../../scripts/assets.js");
+const {ETH, ERC20, ERC721, ERC1155} = require("../../../scripts/assets.js");
 
 const FEE_SIDE_NONE = 0;
 const FEE_SIDE_MAKE = 1;
