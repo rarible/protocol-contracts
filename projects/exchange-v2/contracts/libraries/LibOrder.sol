@@ -30,8 +30,16 @@ library LibOrder {
         bytes data;
     }
 
+    /**
+     * @dev Calculate remaining make and take values of the order (after partial filling real make and take decrease)
+     * @param order initial order to calculate remaining values for
+     * @param fill current fill of the left order (0 if order is unfilled)
+     * @param isMakeFill true if order fill is calculated from the make side, false if from the take side
+     * @return makeValue remaining make value of the order. if fill = 0 then it's order's make value
+     * @return takeValue remaining take value of the order. if fill = 0 then it's order's take value
+     */
     function calculateRemaining(Order memory order, uint fill, bool isMakeFill) internal pure returns (uint makeValue, uint takeValue) {
-        if (isMakeFill){
+        if (isMakeFill) {
             makeValue = order.makeAsset.value.sub(fill);
             takeValue = LibMath.safeGetPartialAmountFloor(order.takeAsset.value, order.makeAsset.value, makeValue);
         } else {

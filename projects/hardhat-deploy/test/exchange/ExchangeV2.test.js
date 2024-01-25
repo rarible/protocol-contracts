@@ -58,6 +58,26 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
   describe("gas estimation direct Purchase/AcceptBid", () => {
 
+    it("ERC721<->ETH(FREE), not same origin, not same royalties V2", async () => {
+      const price = 0;
+      const salt = 1;
+      const nftAmount = 1
+      const erc721 = await prepareERC721(makerLeft);
+
+      let addrOriginLeft = [[accounts[6], 300]];
+      let addrOriginRight = [[accounts[5], 300]];
+
+      let encDataLeft = await encDataV2([[], addrOriginLeft, true]);
+      let encDataRight = await encDataV2([[], addrOriginRight, false]);
+
+      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const right = Order(makerRight, Asset(ETH, "0x", price), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 0, 0, 0, ORDER_DATA_V2, encDataRight);
+      const signature = await getSignature(left, makerLeft);
+
+      const tx = await exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 0 });
+      console.log("ERC721<->ETH, not same origin, not same royalties V2:", tx.receipt.gasUsed);
+    })
+
     it("Direct buy ERC721_Lazy<->ETH, not same origin, not same royalties V2", async () => {
       const _priceSell = 100;
       const _pricePurchase = 100;
