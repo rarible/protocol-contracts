@@ -1,9 +1,9 @@
-FROM node:14.18.2 as base
+FROM node:18.19.0 as base
 WORKDIR /protocol
 RUN npm install -g truffle@5.4.17
 COPY . .
 RUN yarn install
-RUN yarn bootstrap
+RUN yarn build
 
 FROM base as deploy
 WORKDIR /protocol/deploy

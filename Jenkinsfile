@@ -4,7 +4,7 @@ def pipelineConfig = [
   "JSpublicLibrary": "true",
   "pkgRepoName": "npmjs-org",
   "buildWith": "nodetruffle",
-  "baseImageTag": "16.20.2-bullseye"
+  "baseImageTag": "18.19.0"
 ]
 
 pipelinePackageRelease(pipelineConfig)
