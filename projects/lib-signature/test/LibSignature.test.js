@@ -1,5 +1,5 @@
 const LibSignatureTest = artifacts.require("LibSignatureTest.sol");
-const {signPersonalMessage} = require("../../scripts/sign.js");
+const {signPersonalMessage} = require("../../../scripts/sign.js");
 const util = require('ethereumjs-util');
 
 contract("LibSignature", accounts => {

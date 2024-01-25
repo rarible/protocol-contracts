@@ -20,10 +20,10 @@ const WETH9 = artifacts.require('WETH9');
 const ConduitController = artifacts.require("ConduitController.sol");
 const Seaport = artifacts.require("Seaport.sol");
 
-const { Order, Asset, sign } = require("../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../scripts/order.js");
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../../scripts/assets");
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 

@@ -43,12 +43,12 @@ const LSSVMRouter = artifacts.require("LSSVMRouter.sol");
 const LinearCurve = artifacts.require("LinearCurve.sol");
 const ExponentialCurve = artifacts.require("ExponentialCurve.sol");
 
-const { Order, Asset, sign } = require("../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../scripts/order.js");
 const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../scripts/assets");
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../../scripts/assets");
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";

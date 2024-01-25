@@ -1,7 +1,7 @@
 const PunkTransferProxy = artifacts.require('PunkTransferProxy');
 const IExchangeV2 = artifacts.require('IExchangeV2');
 
-const { CRYPTO_PUNKS } = require("../../scripts/assets.js");
+const { CRYPTO_PUNKS } = require("../../../scripts/assets.js");
 
 const rinkeby = {
 	exchangeV2: "0xd4a57a3bD3657D0d46B4C5bAC12b3F156B9B886b",

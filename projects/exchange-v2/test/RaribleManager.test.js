@@ -20,11 +20,11 @@ const ERC1155LazyMintTest = artifacts.require("ERC1155LazyMintTest.sol");
 const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxyTest.sol")
 const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxyTest.sol")
 
-const { Order, Asset } = require("../../scripts/order.js");
+const { Order, Asset } = require("../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNK, COLLECTION, enc, encDataV2, id } = require("../../scripts/assets.js");
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNK, COLLECTION, enc, encDataV2, id } = require("../../../scripts/assets.js");
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 contract("RaribleTransferManagerTest:doTransferTest()", accounts => {
   let RTM;

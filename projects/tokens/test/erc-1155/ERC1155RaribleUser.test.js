@@ -5,7 +5,7 @@ const truffleAssert = require('truffle-assertions');
 const TestRoyaltyV2981Calculate = artifacts.require("TestRoyaltyV2981Calculate.sol");
 
 const { expectThrow } = require("@daonomic/tests-common");
-const { sign } = require("../../../scripts/mint1155.js");
+const { sign } = require("../../../../scripts/mint1155.js");
 
 contract("ERC1155RaribleUser", accounts => {
 

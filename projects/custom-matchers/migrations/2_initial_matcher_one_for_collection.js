@@ -1,7 +1,7 @@
 const AssetMatcherCollection = artifacts.require('AssetMatcherCollection');
 const IExchangeV2 = artifacts.require('IExchangeV2');
 
-const {COLLECTION} = require("../../scripts/assets.js");
+const {COLLECTION} = require("../../../scripts/assets.js");
 
 const rinkeby = {
 	exchangeV2: "0xd4a57a3bD3657D0d46B4C5bAC12b3F156B9B886b",

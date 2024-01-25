@@ -6,11 +6,11 @@ const TransferProxyTest = artifacts.require("TransferProxyTest.sol");
 const ERC20TransferProxyTest = artifacts.require("ERC20TransferProxyTest.sol");
 const LibOrderTest = artifacts.require("LibOrderTest.sol");
 
-const { Order, Asset, sign } = require("../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
-const { ETH, ERC20, enc } = require("../../scripts/assets.js");
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+const { ETH, ERC20, enc } = require("../../../scripts/assets.js");
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 contract("ExchangeSimpleV2", accounts => {
   let testing;

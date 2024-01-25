@@ -14,8 +14,8 @@ const AuctionTestHelper = artifacts.require("AuctionTestHelper");
 
 const truffleAssert = require('truffle-assertions');
 
-const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
-const { id } = require("../../../scripts/assets.js");
+const { verifyBalanceChangeReturnTx } = require("../../../../scripts/balance")
+const { id } = require("../../../../scripts/assets.js");
 
 const { increaseTime } = require("@daonomic/tests-common");
 const zeroAddress = "0x0000000000000000000000000000000000000000";

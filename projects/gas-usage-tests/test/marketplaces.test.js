@@ -65,16 +65,16 @@ const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const truffleAssert = require('truffle-assertions');
 
 // UTILS
-const { Order, Asset, sign } = require("../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../scripts/order.js");
 
 const BN = web3.utils.BN;
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f13";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f14";
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
 
 contract("Test gas usage for marketplaces", accounts => {
 

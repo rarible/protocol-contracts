@@ -13,7 +13,7 @@ const TestERC721 = artifacts.require("TestERC721.sol");
 const TestERC20 = artifacts.require("TestERC20.sol");
 
 // UTILS
-const { Order, Asset, sign } = require("../../scripts/order.js");
+const { Order, Asset, sign } = require("../../../scripts/order.js");
 
 const BN = web3.utils.BN;
 
@@ -21,9 +21,9 @@ const zeroAddress = "0x0000000000000000000000000000000000000000";
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa6";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2fa7";
 
-const { verifyBalanceChangeReturnTx } = require("../../scripts/balance")
+const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
 
 contract("rarible only gas usage tests", accounts => {
 

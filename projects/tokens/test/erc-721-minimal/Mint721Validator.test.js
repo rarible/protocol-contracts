@@ -2,7 +2,7 @@ const Mint721ValidatorTest = artifacts.require("Mint721ValidatorTest.sol");
 const TestERC1271 = artifacts.require("TestERC1271.sol");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
-const { sign } = require("../../../scripts/mint721.js");
+const { sign } = require("../../../../scripts/mint721.js");
 
 contract("Mint721Validator minimal", accounts => {
 	let testing;
