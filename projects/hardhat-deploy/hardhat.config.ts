@@ -209,7 +209,8 @@ const config: HardhatUserConfig = {
       chainId: 8453,
       timeout: 60000,
     },
-    zksync_sepolia: createNetwork("zksync_sepolia")
+    zksync_sepolia: createNetwork("zksync_sepolia"),
+    celo_alfajores_testnet: createNetwork("celo_alfajores_testnet")
   },
   etherscan: {
     apiKey: {

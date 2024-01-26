@@ -1,0 +1,17 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0x72d0Ee6B28553b048442a9c8DAD6eA33806e9357 | https://alfajores.celoscan.io/address/0x72d0Ee6B28553b048442a9c8DAD6eA33806e9357 
+ DefaultProxyAdmin | 0x73AEc342B748095Ad26b6B90038944a742a6151E | https://alfajores.celoscan.io/address/0x73AEc342B748095Ad26b6B90038944a742a6151E 
+ ERC1155LazyMintTransferProxy | 0x7Eabe83e0F99B6bf24Ec3F50994B972DC38D11dF | https://alfajores.celoscan.io/address/0x7Eabe83e0F99B6bf24Ec3F50994B972DC38D11dF 
+ ERC1155RaribleBeaconMeta | 0x0141aC79eFD8e4305cE7785B4483C54d5E968995 | https://alfajores.celoscan.io/address/0x0141aC79eFD8e4305cE7785B4483C54d5E968995 
+ ERC1155RaribleFactoryC2 | 0xC1e685AF493CcC473F22664151947CDA56Fae0A1 | https://alfajores.celoscan.io/address/0xC1e685AF493CcC473F22664151947CDA56Fae0A1 
+ ERC1155RaribleMeta | 0x6507d73CfDc67E045aEe8d449Ed4DEc530319bEe | https://alfajores.celoscan.io/address/0x6507d73CfDc67E045aEe8d449Ed4DEc530319bEe 
+ ERC20TransferProxy | 0xB02f8F8F3527e5b2C7dB72B7eE1Af244fA8B3BAE | https://alfajores.celoscan.io/address/0xB02f8F8F3527e5b2C7dB72B7eE1Af244fA8B3BAE 
+ ERC721LazyMintTransferProxy | 0xE3Baf1b17335bbf3AC3C2cFCe95eC1bfC463d0c8 | https://alfajores.celoscan.io/address/0xE3Baf1b17335bbf3AC3C2cFCe95eC1bfC463d0c8 
+ ERC721RaribleFactoryC2 | 0x48838abEAE900a2FC9fC4eC95a47F29a6c1B7647 | https://alfajores.celoscan.io/address/0x48838abEAE900a2FC9fC4eC95a47F29a6c1B7647 
+ ERC721RaribleMeta | 0xfb21AbF34Ad3e53071187663D54C05f19AD6e46b | https://alfajores.celoscan.io/address/0xfb21AbF34Ad3e53071187663D54C05f19AD6e46b 
+ ERC721RaribleMinimalBeaconMeta | 0x43162023C187662684abAF0b211dCCB96fa4eD8a | https://alfajores.celoscan.io/address/0x43162023C187662684abAF0b211dCCB96fa4eD8a 
+ ExchangeMetaV2 | 0xB4D34a10921347877B0AA7A9DB347871b20b19F5 | https://alfajores.celoscan.io/address/0xB4D34a10921347877B0AA7A9DB347871b20b19F5 
+ RaribleExchangeWrapper | 0x7D63585bEF6FA1D49d70558FF0616C99480FFA0F | https://alfajores.celoscan.io/address/0x7D63585bEF6FA1D49d70558FF0616C99480FFA0F 
+ RoyaltiesRegistry | 0x552dcDddEd58DAfC95AB1231A9a46E15c34E211A | https://alfajores.celoscan.io/address/0x552dcDddEd58DAfC95AB1231A9a46E15c34E211A 
+ TransferProxy | 0xf1dCB818F494Fb63358510b6d05Cc50096B8F06c | https://alfajores.celoscan.io/address/0xf1dCB818F494Fb63358510b6d05Cc50096B8F06c 
