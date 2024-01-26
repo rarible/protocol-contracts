@@ -1,22 +1,17 @@
  Name | Address | Url 
  --- | --- | ---
- AssetMatcherCollection | 0x799ac034128f89b2c785809087bc5C66c2EFEea4 | https://alfajores.celoscan.io/address/0x799ac034128f89b2c785809087bc5C66c2EFEea4 
- DefaultProxyAdmin | 0x3db982bBdBC7EDdD258B10Ed7AAE65C82Fdcc73c | https://alfajores.celoscan.io/address/0x3db982bBdBC7EDdD258B10Ed7AAE65C82Fdcc73c 
- ERC1155LazyMintTransferProxy | 0xa2eEBb837aEF89369Ad117568d75348e6174520e | https://alfajores.celoscan.io/address/0xa2eEBb837aEF89369Ad117568d75348e6174520e 
- ERC1155Rarible | 0x4492608238eB09c7AD036e9C089538a7286B8985 | https://alfajores.celoscan.io/address/0x4492608238eB09c7AD036e9C089538a7286B8985 
- ERC1155RaribleBeacon | 0x47154Bf9adAe348C77Ee6F4bda1FBfF882e34280 | https://alfajores.celoscan.io/address/0x47154Bf9adAe348C77Ee6F4bda1FBfF882e34280 
- ERC1155RaribleBeaconMeta | 0x509FD4cdAa29Be7B1fAD251d8Ea0fCA2Ca91eb60 | https://alfajores.celoscan.io/address/0x509FD4cdAa29Be7B1fAD251d8Ea0fCA2Ca91eb60 
- ERC1155RaribleFactoryC2 | 0xb140E9e76fEAd6240362e4692D94a87E69754F8C | https://alfajores.celoscan.io/address/0xb140E9e76fEAd6240362e4692D94a87E69754F8C 
- ERC1155RaribleMeta | 0x2eBecaBBbe8a8C629b99aB23ed154d74CD5d4342 | https://alfajores.celoscan.io/address/0x2eBecaBBbe8a8C629b99aB23ed154d74CD5d4342 
- ERC20TransferProxy | 0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af | https://alfajores.celoscan.io/address/0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af 
- ERC721LazyMintTransferProxy | 0xB8863180CAC2d0Ab665e5968C0De25298A1D8CEe | https://alfajores.celoscan.io/address/0xB8863180CAC2d0Ab665e5968C0De25298A1D8CEe 
- ERC721RaribleFactoryC2 | 0x4e045aBF1e239BfA224c8DCb8F889C3d447D3804 | https://alfajores.celoscan.io/address/0x4e045aBF1e239BfA224c8DCb8F889C3d447D3804 
- ERC721RaribleMeta | 0xc9eB416CDb5cc2aFC09bb75393AEc6dBA4E5C84a | https://alfajores.celoscan.io/address/0xc9eB416CDb5cc2aFC09bb75393AEc6dBA4E5C84a 
- ERC721RaribleMinimal | 0x3d3c8f3aCcf388c3618BbE80598692B6d15bd4D5 | https://alfajores.celoscan.io/address/0x3d3c8f3aCcf388c3618BbE80598692B6d15bd4D5 
- ERC721RaribleMinimalBeacon | 0x12B372153249F006F756d0668fCDBD8fbD8b0a15 | https://alfajores.celoscan.io/address/0x12B372153249F006F756d0668fCDBD8fbD8b0a15 
- ERC721RaribleMinimalBeaconMeta | 0x7d47126a2600E22eab9eD6CF0e515678727779A6 | https://alfajores.celoscan.io/address/0x7d47126a2600E22eab9eD6CF0e515678727779A6 
- ExchangeMetaV2 | 0x61512179F6a16bEC0D259d8010CC0485CE363868 | https://alfajores.celoscan.io/address/0x61512179F6a16bEC0D259d8010CC0485CE363868 
- ExchangeV2 | 0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa | https://alfajores.celoscan.io/address/0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa 
- RaribleExchangeWrapper | 0x5CF19eDb50C9EdF56EfEBe12DFa588E9E589514D | https://alfajores.celoscan.io/address/0x5CF19eDb50C9EdF56EfEBe12DFa588E9E589514D 
- RoyaltiesRegistry | 0xD1f689646861870D44B33dBBb413Fa7D06A2B52f | https://alfajores.celoscan.io/address/0xD1f689646861870D44B33dBBb413Fa7D06A2B52f 
- TransferProxy | 0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b | https://alfajores.celoscan.io/address/0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b 
+ AssetMatcherCollection | 0x72d0Ee6B28553b048442a9c8DAD6eA33806e9357 | https://alfajores.celoscan.io/address/0x72d0Ee6B28553b048442a9c8DAD6eA33806e9357 
+ DefaultProxyAdmin | 0x73AEc342B748095Ad26b6B90038944a742a6151E | https://alfajores.celoscan.io/address/0x73AEc342B748095Ad26b6B90038944a742a6151E 
+ ERC1155LazyMintTransferProxy | 0x7Eabe83e0F99B6bf24Ec3F50994B972DC38D11dF | https://alfajores.celoscan.io/address/0x7Eabe83e0F99B6bf24Ec3F50994B972DC38D11dF 
+ ERC1155RaribleBeaconMeta | 0x0141aC79eFD8e4305cE7785B4483C54d5E968995 | https://alfajores.celoscan.io/address/0x0141aC79eFD8e4305cE7785B4483C54d5E968995 
+ ERC1155RaribleFactoryC2 | 0xC1e685AF493CcC473F22664151947CDA56Fae0A1 | https://alfajores.celoscan.io/address/0xC1e685AF493CcC473F22664151947CDA56Fae0A1 
+ ERC1155RaribleMeta | 0x6507d73CfDc67E045aEe8d449Ed4DEc530319bEe | https://alfajores.celoscan.io/address/0x6507d73CfDc67E045aEe8d449Ed4DEc530319bEe 
+ ERC20TransferProxy | 0xB02f8F8F3527e5b2C7dB72B7eE1Af244fA8B3BAE | https://alfajores.celoscan.io/address/0xB02f8F8F3527e5b2C7dB72B7eE1Af244fA8B3BAE 
+ ERC721LazyMintTransferProxy | 0xE3Baf1b17335bbf3AC3C2cFCe95eC1bfC463d0c8 | https://alfajores.celoscan.io/address/0xE3Baf1b17335bbf3AC3C2cFCe95eC1bfC463d0c8 
+ ERC721RaribleFactoryC2 | 0x48838abEAE900a2FC9fC4eC95a47F29a6c1B7647 | https://alfajores.celoscan.io/address/0x48838abEAE900a2FC9fC4eC95a47F29a6c1B7647 
+ ERC721RaribleMeta | 0xfb21AbF34Ad3e53071187663D54C05f19AD6e46b | https://alfajores.celoscan.io/address/0xfb21AbF34Ad3e53071187663D54C05f19AD6e46b 
+ ERC721RaribleMinimalBeaconMeta | 0x43162023C187662684abAF0b211dCCB96fa4eD8a | https://alfajores.celoscan.io/address/0x43162023C187662684abAF0b211dCCB96fa4eD8a 
+ ExchangeMetaV2 | 0xB4D34a10921347877B0AA7A9DB347871b20b19F5 | https://alfajores.celoscan.io/address/0xB4D34a10921347877B0AA7A9DB347871b20b19F5 
+ RaribleExchangeWrapper | 0x7D63585bEF6FA1D49d70558FF0616C99480FFA0F | https://alfajores.celoscan.io/address/0x7D63585bEF6FA1D49d70558FF0616C99480FFA0F 
+ RoyaltiesRegistry | 0x552dcDddEd58DAfC95AB1231A9a46E15c34E211A | https://alfajores.celoscan.io/address/0x552dcDddEd58DAfC95AB1231A9a46E15c34E211A 
+ TransferProxy | 0xf1dCB818F494Fb63358510b6d05Cc50096B8F06c | https://alfajores.celoscan.io/address/0xf1dCB818F494Fb63358510b6d05Cc50096B8F06c 
