@@ -1,4 +1,8 @@
-@Library('shared-library@feature/protocol-pipeline') _
+@Library('shared-library') _
+
+parameters {
+  choice(name: "network", choices: ["chiliz-testnet", "mantle-testnet", "astarzkevm-testnet"])
+}
 
 def pipelineConfig = [
   "JSpublicLibrary": "true",
@@ -7,4 +11,6 @@ def pipelineConfig = [
   "baseImageTag": "18.19.0"
 ]
 
-pipelinePackageRelease(pipelineConfig)
+configFileProvider([configFile(fileId: "${network}", variable: 'NETWORK_SETTINGS')]) {
+  pipelinePackageRelease(pipelineConfig)
+}
