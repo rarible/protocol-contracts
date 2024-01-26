@@ -15,6 +15,6 @@ def pipelineConfig = [
   "baseImageTag": "18.19.0"
 ]
 
-configFileProvider([configFile(fileId: "${NETWORK}", variable: 'NETWORK_SETTINGS')]) {
+configFileProvider([configFile(fileId: "protocol-contracts-network-settings", variable: 'NETWORK_SETTINGS')]) {
   pipelinePackageRelease(pipelineConfig)
 }
