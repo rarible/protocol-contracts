@@ -1,12 +1,12 @@
+@Library('shared-library') _  
+
 properties(
   [
     parameters([
-      choice(name: "network", choices: ["chiliz-testnet", "mantle-testnet", "astarzkevm-testnet"])
+      choice(name: "NETWORK", choices: ["chiliz-testnet", "mantle-testnet", "astarzkevm-testnet"])
     ])   
   ]
 )
-
-@Library('shared-library') _  
 
 def pipelineConfig = [
   "JSpublicLibrary": "true",
@@ -15,6 +15,6 @@ def pipelineConfig = [
   "baseImageTag": "18.19.0"
 ]
 
-configFileProvider([configFile(fileId: "${network}", variable: 'NETWORK_SETTINGS')]) {
+configFileProvider([configFile(fileId: "${NETWORK}", variable: 'NETWORK_SETTINGS')]) {
   pipelinePackageRelease(pipelineConfig)
 }
