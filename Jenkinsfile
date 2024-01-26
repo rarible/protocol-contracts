@@ -1,8 +1,12 @@
-@Library('shared-library') _
+properties(
+  [
+    parameters([
+      choice(name: "network", choices: ["chiliz-testnet", "mantle-testnet", "astarzkevm-testnet"])
+    ])   
+  ]
+)
 
-parameters {
-  choice(name: "network", choices: ["chiliz-testnet", "mantle-testnet", "astarzkevm-testnet"])
-}
+@Library('shared-library') _  
 
 def pipelineConfig = [
   "JSpublicLibrary": "true",
