@@ -250,6 +250,48 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(makerLeft), 1);
     })
 
+    it("ETH<->ERC721, sell order has price, buy order doesn't", async () => {
+        const salt = 21;
+        const nftAmount = 1
+        const erc721 = await prepareERC721(makerRight);
+  
+        let addrOriginLeft = [[accounts[6], 300]];
+        let addrOriginRight = [[accounts[5], 300]];
+  
+        let encDataLeft = await encDataV2([[], addrOriginLeft, false]);
+        let encDataRight = await encDataV2([[], addrOriginRight, true]);
+  
+        const left = Order(makerLeft, Asset(ETH, "0x", 0), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 11, 0, 0, ORDER_DATA_V2, encDataLeft);
+  
+        const right = Order(makerRight, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", 100), salt, 0, 0, ORDER_DATA_V2, encDataRight);
+       
+        const signature = await getSignature(right, makerRight);
+
+        await expectThrow(
+            exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: 0 })
+        );
+      })
+
+    it("ERC721<->ETH, sell order has price, buy order doesn't", async () => {
+        const salt = 1;
+        const nftAmount = 1
+        const erc721 = await prepareERC721(makerLeft);
+  
+        let addrOriginLeft = [[accounts[6], 300]];
+        let addrOriginRight = [[accounts[5], 300]];
+  
+        let encDataLeft = await encDataV2([[], addrOriginLeft, true]);
+        let encDataRight = await encDataV2([[], addrOriginRight, false]);
+  
+        const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", 100), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+        const right = Order(makerRight, Asset(ETH, "0x", 0), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 0, 0, 0, ORDER_DATA_V2, encDataRight);
+        const signature = await getSignature(left, makerLeft);
+        
+        await expectThrow(
+            exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: 0 })
+        );
+      })
+
     it("Direct buy ERC1155(all)<->ETH, not same origin, not same royalties V2", async () => {
       const _priceSell = 100;
       const _pricePurchase = 100;
@@ -1628,7 +1670,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     })
   })
 
-  describe("protocol fee", () => {
+  describe("other", () => {
     it("protocol fee should work correctly with V2 orders", async () => {
       await exchangeV2.setAllProtocolFeeData(protocol, 0, 500)
 
@@ -1757,6 +1799,52 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(fee.buyerAmount, 0)
       assert.equal(fee.sellerAmount, 0)
     })
+
+    it("nothing to fill: already filled left order", async () => {
+        const price = 100
+        const salt = 1;
+        const nftAmount = 1
+        const erc721 = await prepareERC721(makerLeft);
+  
+        let encDataLeft = await encDataV2([[], [], true]);
+        let encDataRight = await encDataV2([[], [], false]);
+  
+        const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+        const right = Order(makerRight, Asset(ETH, "0x", price), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 0, 0, 0, ORDER_DATA_V2, encDataRight);
+        const signature = await getSignature(left, makerLeft);
+        
+        await exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: price })
+        
+        await erc721.safeTransferFrom(makerRight, makerLeft, erc721TokenId1, {from: makerRight});
+        
+        await expectThrow(
+            exchangeV2.matchOrders(left, signature, right, "0x", { from: makerRight, value: price })
+        );
+    })
+
+    it("nothing to fill: already filled right order", async () => {
+        const price = 100
+        const salt = 21;
+        const nftAmount = 1
+        const erc721 = await prepareERC721(makerRight);
+  
+        let encDataLeft = await encDataV2([[], [], false]);
+        let encDataRight = await encDataV2([[], [], true]);
+  
+        const left = Order(makerLeft, Asset(ETH, "0x", price), ZERO, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), 11, 0, 0, ORDER_DATA_V2, encDataLeft);
+  
+        const right = Order(makerRight, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V2, encDataRight);
+       
+        const signature = await getSignature(right, makerRight);
+        
+        await exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: price })
+
+        await erc721.safeTransferFrom(makerLeft, makerRight, erc721TokenId1, {from: makerLeft});
+
+        await expectThrow(
+            exchangeV2.matchOrders(left, "0x", right, signature, { from: makerLeft, value: price })
+        );
+      })
   })
 
   describe("integrity", () => {
