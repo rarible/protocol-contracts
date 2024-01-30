@@ -210,7 +210,8 @@ const config: HardhatUserConfig = {
       timeout: 60000,
     },
     zksync_sepolia: createNetwork("zksync_sepolia"),
-    celo_alfajores_testnet: createNetwork("celo_alfajores_testnet")
+    celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
+    mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet")
   },
   etherscan: {
     apiKey: {
@@ -224,7 +225,8 @@ const config: HardhatUserConfig = {
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
-      rari_testnet: getNetworkApiKey("rari_testnet")
+      rari_testnet: getNetworkApiKey("rari_testnet"),
+      mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet")
     },
     customChains: [
       {
@@ -241,6 +243,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("rari_testnet"),
           browserURL: getNetworkExplorerUrl("rari_testnet"),
+        },
+      },
+      {
+        network: "mantle_sepolia_testnet",
+        chainId: createNetwork("mantle_sepolia_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("mantle_sepolia_testnet"),
+          browserURL: getNetworkExplorerUrl("mantle_sepolia_testnet"),
         },
       },
       {
