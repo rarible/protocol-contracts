@@ -211,7 +211,8 @@ const config: HardhatUserConfig = {
     },
     zksync_sepolia: createNetwork("zksync_sepolia"),
     celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
-    mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet")
+    mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet"),
+    fief_playground_testnet: createNetwork("fief_playground_testnet")
   },
   etherscan: {
     apiKey: {
@@ -226,9 +227,18 @@ const config: HardhatUserConfig = {
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
       rari_testnet: getNetworkApiKey("rari_testnet"),
-      mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet")
+      mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
+      fief_playground_testnet: getNetworkApiKey("fief_playground_testnet")
     },
     customChains: [
+      {
+        network: "fief_playground_testnet",
+        chainId: createNetwork("fief_playground_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("fief_playground_testnet"),
+          browserURL: getNetworkExplorerUrl("fief_playground_testnet"),
+        },
+      },
       {
         network: "base_sepolia",
         chainId: createNetwork("base_sepolia").chainId!,
