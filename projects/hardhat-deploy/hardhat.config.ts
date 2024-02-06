@@ -124,6 +124,15 @@ const config: HardhatUserConfig = {
           evmVersion: "byzantium",
         },
       },
+      {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
     overrides: {
       "src/WETH9.sol": {
@@ -136,6 +145,15 @@ const config: HardhatUserConfig = {
           evmVersion: "byzantium",
         },
       },
+      "src/UpgradeExecutorImport.sol": {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      }
     },
     settings: {
       metadata: {
