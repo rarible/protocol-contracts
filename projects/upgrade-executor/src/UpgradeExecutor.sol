@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.16;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-sol08/access/AccessControl.sol";
+import "@openzeppelin/contracts-sol08/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-sol08/utils/Address.sol";
 
 /// @title  A root contract from which it execute upgrades
 /// @notice Does not contain upgrade logic itself, only the means to call upgrade contracts and execute them

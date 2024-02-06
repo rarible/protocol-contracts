@@ -30,7 +30,7 @@ library LibFill {
         (uint rightMakeValue, uint rightTakeValue) = LibOrder.calculateRemaining(rightOrder, rightOrderFill, rightIsMakeFill);
 
         //We have 3 cases here:
-        if (rightTakeValue > leftMakeValue || (rightTakeValue == rightTakeValue && leftMakeValue == 0)) { //1nd: left order should be fully filled
+        if (rightTakeValue > leftMakeValue || (rightTakeValue == leftMakeValue && leftMakeValue == 0)) { //1nd: left order should be fully filled
             return fillLeft(leftMakeValue, leftTakeValue, rightOrder.makeAsset.value, rightOrder.takeAsset.value);
         }//2st: right order should be fully filled or 3d: both should be fully filled if required values are the same
         return fillRight(leftOrder.makeAsset.value, leftOrder.takeAsset.value, rightMakeValue, rightTakeValue);
