@@ -1,3 +1,5 @@
+# * Deprecated migration in truffle
+# Current migrations are in [hardhat-deploy/](../hardhat-deploy/) package
 ## Rarible full migration
 - to enable migration for legacy contracts set property 
     - ```deploy_legacy: true```
