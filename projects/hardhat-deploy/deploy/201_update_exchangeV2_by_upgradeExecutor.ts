@@ -65,9 +65,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`using exchangeV2 proxy: ${exchangeV2ProxyAddress}`)
 
   const tx = await proxyUpgradeAction.populateTransaction.perform(adminAddress, exchangeV2ProxyAddress, address)
+  console.log(`address: ${proxyUpgradeAction.address}`)
   console.log(`calldata: ${tx.data}`)
-
-  await upgradeExecutor.execute(proxyUpgradeAction.address, tx.data)
 };
 
 export default func;
