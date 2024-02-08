@@ -230,7 +230,10 @@ const config: HardhatUserConfig = {
     zksync_sepolia: createNetwork("zksync_sepolia"),
     celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
     mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet"),
-    fief_playground_testnet: createNetwork("fief_playground_testnet")
+    fief_playground_testnet: createNetwork("fief_playground_testnet"),
+    oasis_sapphire_testnet: createNetwork("oasis_sapphire_testnet"),
+    xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
+
   },
   etherscan: {
     apiKey: {
@@ -246,9 +249,27 @@ const config: HardhatUserConfig = {
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
       rari_testnet: getNetworkApiKey("rari_testnet"),
       mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
-      fief_playground_testnet: getNetworkApiKey("fief_playground_testnet")
+      fief_playground_testnet: getNetworkApiKey("fief_playground_testnet"),
+      oasis_sapphire_testnet: getNetworkApiKey("oasis_sapphire_testnet"),
+      xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet")
     },
     customChains: [
+      {
+        network: "xai_sepolia_testnet",
+        chainId: createNetwork("xai_sepolia_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("xai_sepolia_testnet"),
+          browserURL: getNetworkExplorerUrl("xai_sepolia_testnet"),
+        },
+      },
+      {
+        network: "oasis_sapphire_testnet",
+        chainId: createNetwork("oasis_sapphire_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasis_sapphire_testnet"),
+          browserURL: getNetworkExplorerUrl("oasis_sapphire_testnet"),
+        },
+      },
       {
         network: "fief_playground_testnet",
         chainId: createNetwork("fief_playground_testnet").chainId!,
