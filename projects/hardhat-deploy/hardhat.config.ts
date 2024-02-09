@@ -229,10 +229,25 @@ const config: HardhatUserConfig = {
     },
     zksync_sepolia: createNetwork("zksync_sepolia"),
     celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
+    celo: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 42220,
+      timeout: 60000,
+    },
     mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet"),
     fief_playground_testnet: createNetwork("fief_playground_testnet"),
     oasis_sapphire_testnet: createNetwork("oasis_sapphire_testnet"),
+    oasis: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 23294,
+      timeout: 60000,
+    },
     xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
+    xai: {
+      url: 'http://127.0.0.1:1248',
+      chainId: 660279,
+      timeout: 60000,
+    },
 
   },
   etherscan: {
