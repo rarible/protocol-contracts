@@ -1,6 +1,6 @@
 # Deployed Addresses
 
-Deployed contracts' addresses for all supported networks can be found [here](./hardhat-deploy/networks/)
+Deployed contracts' addresses for all supported networks can be found [here](./projects/hardhat-deploy/networks/)
 # Smart contracts for Rarible Protocol
 
 Consists of:
