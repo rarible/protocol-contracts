@@ -43,25 +43,27 @@ function getNetworkApiKey(name: string): string {
 }
 
 function getNetworkApiUrl(name: string): string {
+  let result:string = "";
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.apiUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
+    if (json.verify && json.verify.apiUrl) {
+      result = json.verify.apiUrl;
+    }
   }
+  return result;
 }
 
 function getNetworkExplorerUrl(name: string): string {
+  let result:string = "";
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.explorerUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
+    if (json.verify && json.verify.explorerUrl) {
+      result = json.verify.explorerUrl;
+    }
   }
+  return result;
 }
 
 function createNetwork(name: string): HttpNetworkUserConfig {
