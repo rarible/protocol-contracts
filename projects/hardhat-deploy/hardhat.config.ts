@@ -88,6 +88,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
           }
         : null,
       zksync: json.zksync === true,
+      timeout: 60000
     } as HttpNetworkUserConfig;
   } else {
     // File doesn't exist in path
@@ -177,11 +178,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {},
-    mainnet: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1,
-      timeout: 60000,
-    },
+    mainnet: createNetwork("mainnet"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
     polygon_dev: createNetwork("polygon_dev"),
@@ -202,53 +199,26 @@ const config: HardhatUserConfig = {
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
-    lightlink: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1890,
-      timeout: 60000,
-    },
+    lightlink: createNetwork("lightlink"),
     lightlink_pegasus: createNetwork("lightlink_pegasus"),
     zksync: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 324,
-      timeout: 60000,
-      ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
+      ...createNetwork("zksync"),
+      ethNetwork: "mainnet",
       zksync: true
     },
     rari_testnet: createNetwork("rari_testnet"),
-    rari: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1380012617,
-      timeout: 60000,
-    },
+    rari: createNetwork("rari"),
     base_sepolia: createNetwork("base_sepolia"),
-    base: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 8453,
-      timeout: 60000,
-    },
+    base: createNetwork("base"),
     zksync_sepolia: createNetwork("zksync_sepolia"),
     celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
-    celo: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 42220,
-      timeout: 60000,
-    },
+    celo: createNetwork("celo"),
     mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet"),
     fief_playground_testnet: createNetwork("fief_playground_testnet"),
     oasis_sapphire_testnet: createNetwork("oasis_sapphire_testnet"),
-    oasis: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 23294,
-      timeout: 60000,
-    },
+    oasis: createNetwork("oasis"),
     xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
-    xai: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 660279,
-      timeout: 60000,
-    },
-
+    xai: createNetwork("xai"),
   },
   etherscan: {
     apiKey: {
@@ -266,9 +236,63 @@ const config: HardhatUserConfig = {
       mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
       fief_playground_testnet: getNetworkApiKey("fief_playground_testnet"),
       oasis_sapphire_testnet: getNetworkApiKey("oasis_sapphire_testnet"),
-      xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet")
+      xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet"),
+      base: getNetworkApiKey("base"),
+      celo: getNetworkApiKey("celo"),
+      lightlink: getNetworkApiKey("lightlink"),
+      oasis: getNetworkApiKey("oasis"),
+      rari: getNetworkApiKey("rari"),
+      xai: getNetworkApiKey("xai"),
     },
     customChains: [
+      {
+        network: "base",
+        chainId: createNetwork("base").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("base"),
+          browserURL: getNetworkExplorerUrl("base"),
+        },
+      },
+      {
+        network: "celo",
+        chainId: createNetwork("celo").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("celo"),
+          browserURL: getNetworkExplorerUrl("celo"),
+        },
+      },
+      {
+        network: "lightlink",
+        chainId: createNetwork("lightlink").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("lightlink"),
+          browserURL: getNetworkExplorerUrl("lightlink"),
+        },
+      },
+      {
+        network: "oasis",
+        chainId: createNetwork("oasis").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasis"),
+          browserURL: getNetworkExplorerUrl("oasis"),
+        },
+      },
+      {
+        network: "rari",
+        chainId: createNetwork("rari").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("rari"),
+          browserURL: getNetworkExplorerUrl("rari"),
+        },
+      },
+      {
+        network: "xai",
+        chainId: createNetwork("xai").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("xai"),
+          browserURL: getNetworkExplorerUrl("xai"),
+        },
+      },
       {
         network: "xai_sepolia_testnet",
         chainId: createNetwork("xai_sepolia_testnet").chainId!,
