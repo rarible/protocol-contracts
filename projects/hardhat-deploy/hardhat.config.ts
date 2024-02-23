@@ -248,6 +248,7 @@ const config: HardhatUserConfig = {
       chainId: 660279,
       timeout: 60000,
     },
+    kroma_sepolia: createNetwork("kroma_sepolia"),
 
   },
   etherscan: {
@@ -266,9 +267,18 @@ const config: HardhatUserConfig = {
       mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
       fief_playground_testnet: getNetworkApiKey("fief_playground_testnet"),
       oasis_sapphire_testnet: getNetworkApiKey("oasis_sapphire_testnet"),
-      xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet")
+      xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet"),
+      kroma_sepolia: getNetworkApiKey("kroma_sepolia")
     },
     customChains: [
+      {
+        network: "kroma_sepolia",
+        chainId: createNetwork("kroma_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("kroma_sepolia"),
+          browserURL: getNetworkExplorerUrl("kroma_sepolia"),
+        },
+      },
       {
         network: "xai_sepolia_testnet",
         chainId: createNetwork("xai_sepolia_testnet").chainId!,
