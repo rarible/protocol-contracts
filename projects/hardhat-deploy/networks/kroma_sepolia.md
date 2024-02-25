@@ -1,0 +1,17 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0xd786eBeD505D010D4f8127Cd825511E887c65A2A | https://blockscout.sepolia.kroma.network/address/0xd786eBeD505D010D4f8127Cd825511E887c65A2A 
+ DefaultProxyAdmin | 0x0a05C1027474f5c2a5F1f392DA7D0a7A3e04f496 | https://blockscout.sepolia.kroma.network/address/0x0a05C1027474f5c2a5F1f392DA7D0a7A3e04f496 
+ ERC1155LazyMintTransferProxy | 0xa90e536A492aef0d57e6d295FA17687c3ca93347 | https://blockscout.sepolia.kroma.network/address/0xa90e536A492aef0d57e6d295FA17687c3ca93347 
+ ERC1155RaribleBeaconMeta | 0x57B3f3b79F64c475a37E6c493BAA8E6E7C5F748e | https://blockscout.sepolia.kroma.network/address/0x57B3f3b79F64c475a37E6c493BAA8E6E7C5F748e 
+ ERC1155RaribleFactoryC2 | 0xc798B273FaF23932Cf11177402C10C9b44D30Da2 | https://blockscout.sepolia.kroma.network/address/0xc798B273FaF23932Cf11177402C10C9b44D30Da2 
+ ERC1155RaribleMeta | 0x18a2553ef1aaE12d9cd158821319e26A62feE90E | https://blockscout.sepolia.kroma.network/address/0x18a2553ef1aaE12d9cd158821319e26A62feE90E 
+ ERC20TransferProxy | 0xBc57D6e50fa760A01536A7c2EAEDD6fC9b2A4f9A | https://blockscout.sepolia.kroma.network/address/0xBc57D6e50fa760A01536A7c2EAEDD6fC9b2A4f9A 
+ ERC721LazyMintTransferProxy | 0xF1cb795B7eA59a9213a790f868104c11a14690Fa | https://blockscout.sepolia.kroma.network/address/0xF1cb795B7eA59a9213a790f868104c11a14690Fa 
+ ERC721RaribleFactoryC2 | 0x41407B447Fb5425187A9BCA3a062644EF2410F8D | https://blockscout.sepolia.kroma.network/address/0x41407B447Fb5425187A9BCA3a062644EF2410F8D 
+ ERC721RaribleMeta | 0x2FCE8435F0455eDc702199741411dbcD1B7606cA | https://blockscout.sepolia.kroma.network/address/0x2FCE8435F0455eDc702199741411dbcD1B7606cA 
+ ERC721RaribleMinimalBeaconMeta | 0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 | https://blockscout.sepolia.kroma.network/address/0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 
+ ExchangeMetaV2 | 0x0fE65B68Eb627c21EAF3cfe8183C4F946F3d48BD | https://blockscout.sepolia.kroma.network/address/0x0fE65B68Eb627c21EAF3cfe8183C4F946F3d48BD 
+ RaribleExchangeWrapper | 0x166F6180170f438Ddc38050a2B708d38c0890956 | https://blockscout.sepolia.kroma.network/address/0x166F6180170f438Ddc38050a2B708d38c0890956 
+ RoyaltiesRegistry | 0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b | https://blockscout.sepolia.kroma.network/address/0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b 
+ TransferProxy | 0x4f4cC63D7f2bC894078d41f284453062842Afa46 | https://blockscout.sepolia.kroma.network/address/0x4f4cC63D7f2bC894078d41f284453062842Afa46 

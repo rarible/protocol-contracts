@@ -221,6 +221,8 @@ const config: HardhatUserConfig = {
     oasis: createNetwork("oasis"),
     xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
     xai: createNetwork("xai"),
+    kroma_sepolia: createNetwork("kroma_sepolia"),
+
   },
   etherscan: {
     apiKey: {
@@ -245,6 +247,7 @@ const config: HardhatUserConfig = {
       oasis: getNetworkApiKey("oasis"),
       rari: getNetworkApiKey("rari"),
       xai: getNetworkApiKey("xai"),
+      kroma_sepolia: getNetworkApiKey("kroma_sepolia")
     },
     customChains: [
       {
@@ -293,6 +296,15 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("xai"),
           browserURL: getNetworkExplorerUrl("xai"),
+      
+    },
+    customChains: [
+      {
+        network: "kroma_sepolia",
+        chainId: createNetwork("kroma_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("kroma_sepolia"),
+          browserURL: getNetworkExplorerUrl("kroma_sepolia"),
         },
       },
       {
