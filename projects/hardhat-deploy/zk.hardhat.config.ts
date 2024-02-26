@@ -51,6 +51,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
             }
           : null,
         zksync: json.zksync === true,
+        timeout: 60000
       } as HttpNetworkUserConfig;
     } else {
       // File doesn't exist in path
@@ -136,6 +137,12 @@ const config: HardhatUserConfig = {
       ethNetwork: "sepolia",
       ...createNetwork("zksync_sepolia"),
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
+    },
+    zksync_testnet: createNetwork("zksync_testnet"),
+    zksync: {
+      ...createNetwork("zksync"),
+      ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
+      zksync: true
     },
   },
   etherscan: {

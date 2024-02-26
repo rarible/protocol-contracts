@@ -43,25 +43,27 @@ function getNetworkApiKey(name: string): string {
 }
 
 function getNetworkApiUrl(name: string): string {
+  let result:string = "";
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.apiUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
+    if (json.verify && json.verify.apiUrl) {
+      result = json.verify.apiUrl;
+    }
   }
+  return result;
 }
 
 function getNetworkExplorerUrl(name: string): string {
+  let result:string = "";
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.explorerUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
+    if (json.verify && json.verify.explorerUrl) {
+      result = json.verify.explorerUrl;
+    }
   }
+  return result;
 }
 
 function createNetwork(name: string): HttpNetworkUserConfig {
@@ -71,24 +73,34 @@ function createNetwork(name: string): HttpNetworkUserConfig {
     if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
       json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
     }
-    return {
-      from: json.address,
-      gasPrice: "auto",
-      chainId: parseInt(json.network_id),
-      url: json.url,
-      accounts: [json.key],
-      gas: "auto",
-      saveDeployments: true,
-      verify: json.verify
-        ? {
-            etherscan: {
-              apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
-              apiUrl: json.verify.apiUrl,
-            },
-          }
-        : null,
-      zksync: json.zksync === true,
-    } as HttpNetworkUserConfig;
+    //if frame
+    if (!json.key) {
+      return {
+        url: json.url || "",
+        chainId: json.network_id,
+        timeout: 60000,
+      }
+    } else {
+      // if not frame
+      return {
+        from: json.address,
+        gasPrice: "auto",
+        chainId: parseInt(json.network_id),
+        url: json.url || "",
+        accounts: [json.key],
+        gas: "auto",
+        saveDeployments: true,
+        verify: json.verify
+          ? {
+              etherscan: {
+                apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
+                apiUrl: json.verify.apiUrl,
+              },
+            }
+          : null,
+        zksync: json.zksync === true,
+      } as HttpNetworkUserConfig;
+    }
   } else {
     // File doesn't exist in path
     return {
@@ -177,11 +189,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {},
-    mainnet: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1,
-      timeout: 60000,
-    },
+    mainnet: createNetwork("mainnet"),
     polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
     polygon_dev: createNetwork("polygon_dev"),
@@ -202,54 +210,27 @@ const config: HardhatUserConfig = {
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
-    lightlink: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1890,
-      timeout: 60000,
-    },
+    lightlink: createNetwork("lightlink"),
     lightlink_pegasus: createNetwork("lightlink_pegasus"),
     zksync: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 324,
-      timeout: 60000,
-      ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
+      ...createNetwork("zksync"),
+      ethNetwork: "mainnet",
       zksync: true
     },
     rari_testnet: createNetwork("rari_testnet"),
-    rari: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1380012617,
-      timeout: 60000,
-    },
+    rari: createNetwork("rari"),
     base_sepolia: createNetwork("base_sepolia"),
-    base: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 8453,
-      timeout: 60000,
-    },
+    base: createNetwork("base"),
     zksync_sepolia: createNetwork("zksync_sepolia"),
     celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
-    celo: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 42220,
-      timeout: 60000,
-    },
+    celo: createNetwork("celo"),
     mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet"),
     fief_playground_testnet: createNetwork("fief_playground_testnet"),
     oasis_sapphire_testnet: createNetwork("oasis_sapphire_testnet"),
-    oasis: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 23294,
-      timeout: 60000,
-    },
+    oasis: createNetwork("oasis"),
     xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
-    xai: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 660279,
-      timeout: 60000,
-    },
+    xai: createNetwork("xai"),
     kroma_sepolia: createNetwork("kroma_sepolia"),
-
   },
   etherscan: {
     apiKey: {
@@ -268,9 +249,63 @@ const config: HardhatUserConfig = {
       fief_playground_testnet: getNetworkApiKey("fief_playground_testnet"),
       oasis_sapphire_testnet: getNetworkApiKey("oasis_sapphire_testnet"),
       xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet"),
+      base: getNetworkApiKey("base"),
+      celo: getNetworkApiKey("celo"),
+      lightlink: getNetworkApiKey("lightlink"),
+      oasis: getNetworkApiKey("oasis"),
+      rari: getNetworkApiKey("rari"),
+      xai: getNetworkApiKey("xai"),
       kroma_sepolia: getNetworkApiKey("kroma_sepolia")
     },
     customChains: [
+      {
+        network: "base",
+        chainId: createNetwork("base").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("base"),
+          browserURL: getNetworkExplorerUrl("base"),
+        },
+      },
+      {
+        network: "celo",
+        chainId: createNetwork("celo").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("celo"),
+          browserURL: getNetworkExplorerUrl("celo"),
+        },
+      },
+      {
+        network: "lightlink",
+        chainId: createNetwork("lightlink").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("lightlink"),
+          browserURL: getNetworkExplorerUrl("lightlink"),
+        },
+      },
+      {
+        network: "oasis",
+        chainId: createNetwork("oasis").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasis"),
+          browserURL: getNetworkExplorerUrl("oasis"),
+        },
+      },
+      {
+        network: "rari",
+        chainId: createNetwork("rari").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("rari"),
+          browserURL: getNetworkExplorerUrl("rari"),
+        },
+      },
+      {
+        network: "xai",
+        chainId: createNetwork("xai").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("xai"),
+          browserURL: getNetworkExplorerUrl("xai"),
+        },
+      },
       {
         network: "kroma_sepolia",
         chainId: createNetwork("kroma_sepolia").chainId!,
