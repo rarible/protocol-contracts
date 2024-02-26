@@ -73,25 +73,34 @@ function createNetwork(name: string): HttpNetworkUserConfig {
     if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
       json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
     }
-    return {
-      from: json.address,
-      gasPrice: "auto",
-      chainId: parseInt(json.network_id),
-      url: json.url,
-      accounts: [json.key],
-      gas: "auto",
-      saveDeployments: true,
-      verify: json.verify
-        ? {
-            etherscan: {
-              apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
-              apiUrl: json.verify.apiUrl,
-            },
-          }
-        : null,
-      zksync: json.zksync === true,
-      timeout: 60000
-    } as HttpNetworkUserConfig;
+    //if frame
+    if (!json.key) {
+      return {
+        url: json.url || "",
+        chainId: json.network_id,
+        timeout: 60000,
+      }
+    } else {
+      // if not frame
+      return {
+        from: json.address,
+        gasPrice: "auto",
+        chainId: parseInt(json.network_id),
+        url: json.url || "",
+        accounts: [json.key],
+        gas: "auto",
+        saveDeployments: true,
+        verify: json.verify
+          ? {
+              etherscan: {
+                apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
+                apiUrl: json.verify.apiUrl,
+              },
+            }
+          : null,
+        zksync: json.zksync === true,
+      } as HttpNetworkUserConfig;
+    }
   } else {
     // File doesn't exist in path
     return {
@@ -222,7 +231,6 @@ const config: HardhatUserConfig = {
     xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
     xai: createNetwork("xai"),
     kroma_sepolia: createNetwork("kroma_sepolia"),
-
   },
   etherscan: {
     apiKey: {
