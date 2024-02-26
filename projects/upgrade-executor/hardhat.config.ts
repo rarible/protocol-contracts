@@ -41,28 +41,6 @@ function getNetworkApiKey(name: string): string {
   }
 }
 
-function getNetworkApiUrl(name: string): string {
-  const configPath = path.join(getConfigPath(), name + ".json");
-  if (fs.existsSync(configPath)) {
-    var json = require(configPath);
-    return json.verify.apiUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
-  }
-}
-
-function getNetworkExplorerUrl(name: string): string {
-  const configPath = path.join(getConfigPath(), name + ".json");
-  if (fs.existsSync(configPath)) {
-    var json = require(configPath);
-    return json.verify.explorerUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
-  }
-}
-
 function createNetwork(name: string): HttpNetworkUserConfig {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
@@ -166,96 +144,15 @@ const config: HardhatUserConfig = {
       url: 'http://127.0.0.1:1248',
       chainId: 1,
       timeout: 60000,
-    },
-    polygon_mumbai: createNetwork("polygon_mumbai"),
-    polygon_mainnet: createNetwork("polygon_mainnet"),
-    polygon_dev: createNetwork("polygon_dev"),
-    dev: createNetwork("dev"),
-    goerli: createNetwork("goerli"),
-    staging: createNetwork("staging"),
-    polygon_staging: createNetwork("polygon_staging"),
-    optimism_mainnet: createNetwork("optimism_mainnet"),
-    optimism_goerli: createNetwork("optimism_goerli"),
-    mantle_testnet: createNetwork("mantle_testnet"),
-    mantle_mainnet: createNetwork("mantle_mainnet"),
-    arbitrum_goerli: createNetwork("arbitrum_goerli"),
-    arbitrum_sepolia: createNetwork("arbitrum_sepolia"),
-    arbitrum_mainnet: createNetwork("arbitrum_mainnet"),
-    zkatana_testnet: createNetwork("zkatana_testnet"),
-    zkatana_mainnet: createNetwork("zkatana_mainnet"),
-    chiliz_testnet: createNetwork("chiliz_testnet"),
-    chiliz_mainnet: createNetwork("chiliz_mainnet"),
-    zksync_testnet: createNetwork("zksync_testnet"),
-  },
-  mocha: {
-    timeout: 1000000
+    }
   },
   etherscan: {
     apiKey: {
       mainnet: getNetworkApiKey('mainnet'),
-      polygon: getNetworkApiKey('polygon_mainnet'),
-      mumbai: getNetworkApiKey('polygon_mumbai'),
-      goerli: getNetworkApiKey("goerli"),
-      mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
-      mantle_testnet: getNetworkApiKey("mantle_testnet"),
-      arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
-      arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
-      zksync_testnet: getNetworkApiKey("zksync_testnet"),
-    },
-    customChains: [
-      {
-        network: "mantle_mainnet",
-        chainId: createNetwork("mantle_mainnet").chainId!,
-        urls: {
-          apiURL: getNetworkApiUrl("mantle_mainnet"),
-          browserURL: getNetworkExplorerUrl("mantle_mainnet"),
-        },
-      },
-      {
-        network: "mantle_testnet",
-        chainId: createNetwork("mantle_testnet").chainId!,
-        urls: {
-          apiURL: getNetworkApiUrl("mantle_testnet"),
-          browserURL: getNetworkExplorerUrl("mantle_testnet"),
-        },
-      },
-      {
-        network: "arbitrum_sepolia",
-        chainId: createNetwork("arbitrum_sepolia").chainId!,
-        urls: {
-          apiURL: getNetworkApiUrl("arbitrum_sepolia"),
-          browserURL: getNetworkExplorerUrl("arbitrum_sepolia"),
-        },
-      },
-      {
-        network: "arbitrum_mainnet",
-        chainId: createNetwork("arbitrum_mainnet").chainId!,
-        urls: {
-          apiURL: getNetworkApiUrl("arbitrum_mainnet"),
-          browserURL: getNetworkExplorerUrl("arbitrum_mainnet"),
-        },
-      },
-      {
-        network: "zksync_testnet",
-        chainId: createNetwork("zksync_testnet").chainId!,
-        urls: {
-          apiURL: getNetworkApiUrl("zksync_testnet"),
-          browserURL: getNetworkExplorerUrl("zksync_testnet"),
-        },
-      },
-    ],
-  },
-  zksolc: {
-    compilerSource: 'binary',
-    settings: {
-      isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-      forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-      optimizer: {
-        enabled: true, // optional. True by default
-        mode: '3' // optional. 3 by default, z to optimize bytecode size
-      },
     }
   },
 };
+
+
 
 export default config;
