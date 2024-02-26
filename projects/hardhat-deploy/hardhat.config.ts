@@ -296,9 +296,8 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("xai"),
           browserURL: getNetworkExplorerUrl("xai"),
-      
-    },
-    customChains: [
+        },
+      },
       {
         network: "kroma_sepolia",
         chainId: createNetwork("kroma_sepolia").chainId!,
