@@ -1,0 +1,10 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0xF965237c6b3f89f8C62B45b94097899E3562A830 | https://blockscout.kroma.network/address/0xF965237c6b3f89f8C62B45b94097899E3562A830 
+ DefaultProxyAdmin | 0x077255EB0C9C43FE7121519AE23C32388fC2eE3d | https://blockscout.kroma.network/address/0x077255EB0C9C43FE7121519AE23C32388fC2eE3d 
+ ERC1155LazyMintTransferProxy | 0x8d5D3e1e6609A798B84160Ec9CC25198B9e4F177 | https://blockscout.kroma.network/address/0x8d5D3e1e6609A798B84160Ec9CC25198B9e4F177 
+ ERC20TransferProxy | 0x6C65a3C3AA67b126e43F86DA85775E0F5e9743F7 | https://blockscout.kroma.network/address/0x6C65a3C3AA67b126e43F86DA85775E0F5e9743F7 
+ ERC721LazyMintTransferProxy | 0x9f4CE147beF144a571c1372cd6e1DEB148742027 | https://blockscout.kroma.network/address/0x9f4CE147beF144a571c1372cd6e1DEB148742027 
+ ExchangeMetaV2 | 0x418f1b76448866CF072dd14d092138190CcdC9aF | https://blockscout.kroma.network/address/0x418f1b76448866CF072dd14d092138190CcdC9aF 
+ RoyaltiesRegistry | 0xF65eF65a95821A16E02973b1C2200FA58898e3c0 | https://blockscout.kroma.network/address/0xF65eF65a95821A16E02973b1C2200FA58898e3c0 
+ TransferProxy | 0x30fc6eed1d302F5f5C4a8aa58047d1a730b3Cc91 | https://blockscout.kroma.network/address/0x30fc6eed1d302F5f5C4a8aa58047d1a730b3Cc91 
