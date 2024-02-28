@@ -3,8 +3,15 @@
  AssetMatcherCollection | 0xF965237c6b3f89f8C62B45b94097899E3562A830 | https://blockscout.kroma.network/address/0xF965237c6b3f89f8C62B45b94097899E3562A830 
  DefaultProxyAdmin | 0x077255EB0C9C43FE7121519AE23C32388fC2eE3d | https://blockscout.kroma.network/address/0x077255EB0C9C43FE7121519AE23C32388fC2eE3d 
  ERC1155LazyMintTransferProxy | 0x8d5D3e1e6609A798B84160Ec9CC25198B9e4F177 | https://blockscout.kroma.network/address/0x8d5D3e1e6609A798B84160Ec9CC25198B9e4F177 
+ ERC1155RaribleBeaconMeta | 0x586cf2D379605BBA7f4D898F7eE9B5AA827DE611 | https://blockscout.kroma.network/address/0x586cf2D379605BBA7f4D898F7eE9B5AA827DE611 
+ ERC1155RaribleFactoryC2 | 0xbd426Ce20Ac84ad3a6FA6FF50cfe5fB325AB0e5d | https://blockscout.kroma.network/address/0xbd426Ce20Ac84ad3a6FA6FF50cfe5fB325AB0e5d 
+ ERC1155RaribleMeta | 0x39C41C685D26d0219D4717235C2bf6E56055fa4d | https://blockscout.kroma.network/address/0x39C41C685D26d0219D4717235C2bf6E56055fa4d 
  ERC20TransferProxy | 0x6C65a3C3AA67b126e43F86DA85775E0F5e9743F7 | https://blockscout.kroma.network/address/0x6C65a3C3AA67b126e43F86DA85775E0F5e9743F7 
  ERC721LazyMintTransferProxy | 0x9f4CE147beF144a571c1372cd6e1DEB148742027 | https://blockscout.kroma.network/address/0x9f4CE147beF144a571c1372cd6e1DEB148742027 
+ ERC721RaribleFactoryC2 | 0x24562E94332f06F1F0aEa79cAf283088F9e1B8A8 | https://blockscout.kroma.network/address/0x24562E94332f06F1F0aEa79cAf283088F9e1B8A8 
+ ERC721RaribleMeta | 0xd37DC0CD86Dfa9B2B57CD7DFA8B6AA0092a9517d | https://blockscout.kroma.network/address/0xd37DC0CD86Dfa9B2B57CD7DFA8B6AA0092a9517d 
+ ERC721RaribleMinimalBeaconMeta | 0x2A47f575D410cbF487a7A88F048d2bB53009769e | https://blockscout.kroma.network/address/0x2A47f575D410cbF487a7A88F048d2bB53009769e 
  ExchangeMetaV2 | 0x418f1b76448866CF072dd14d092138190CcdC9aF | https://blockscout.kroma.network/address/0x418f1b76448866CF072dd14d092138190CcdC9aF 
+ RaribleExchangeWrapper | 0x69Be0b6f5BB5e9F8DfAA1562F06427142fb0a10a | https://blockscout.kroma.network/address/0x69Be0b6f5BB5e9F8DfAA1562F06427142fb0a10a 
  RoyaltiesRegistry | 0xF65eF65a95821A16E02973b1C2200FA58898e3c0 | https://blockscout.kroma.network/address/0xF65eF65a95821A16E02973b1C2200FA58898e3c0 
  TransferProxy | 0x30fc6eed1d302F5f5C4a8aa58047d1a730b3Cc91 | https://blockscout.kroma.network/address/0x30fc6eed1d302F5f5C4a8aa58047d1a730b3Cc91 

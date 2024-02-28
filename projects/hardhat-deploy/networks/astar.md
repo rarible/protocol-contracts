@@ -3,8 +3,15 @@
  AssetMatcherCollection | 0x8d5D3e1e6609A798B84160Ec9CC25198B9e4F177 | https://astar-zkevm.explorer.startale.com/address/0x8d5D3e1e6609A798B84160Ec9CC25198B9e4F177 
  DefaultProxyAdmin | 0xe90da87Ec96DF89590A5CD00c0183E69a36330a9 | https://astar-zkevm.explorer.startale.com/address/0xe90da87Ec96DF89590A5CD00c0183E69a36330a9 
  ERC1155LazyMintTransferProxy | 0x1CC22424f2B84791cb99c141A68CD2a44Cf35398 | https://astar-zkevm.explorer.startale.com/address/0x1CC22424f2B84791cb99c141A68CD2a44Cf35398 
+ ERC1155RaribleBeaconMeta | 0xdA12E4Ab1d731F29bF4Bff8f971579D95f8DDD07 | https://astar-zkevm.explorer.startale.com/address/0xdA12E4Ab1d731F29bF4Bff8f971579D95f8DDD07 
+ ERC1155RaribleFactoryC2 | 0xF965237c6b3f89f8C62B45b94097899E3562A830 | https://astar-zkevm.explorer.startale.com/address/0xF965237c6b3f89f8C62B45b94097899E3562A830 
+ ERC1155RaribleMeta | 0x139608ABeE12Ff39FEDae39C493B571A25995E10 | https://astar-zkevm.explorer.startale.com/address/0x139608ABeE12Ff39FEDae39C493B571A25995E10 
  ERC20TransferProxy | 0x248B46BEB66b3078D771a9E7E5a0a0216d0d07ba | https://astar-zkevm.explorer.startale.com/address/0x248B46BEB66b3078D771a9E7E5a0a0216d0d07ba 
  ERC721LazyMintTransferProxy | 0xce4bf732f53A76C463aE8822be858017b02779c8 | https://astar-zkevm.explorer.startale.com/address/0xce4bf732f53A76C463aE8822be858017b02779c8 
+ ERC721RaribleFactoryC2 | 0x726f5DD8a1fFAa349bD57501Ba760AB5A03e91Ff | https://astar-zkevm.explorer.startale.com/address/0x726f5DD8a1fFAa349bD57501Ba760AB5A03e91Ff 
+ ERC721RaribleMeta | 0x519D6A81b2894FC5e0F2a8B900F6f5CdE1132dBB | https://astar-zkevm.explorer.startale.com/address/0x519D6A81b2894FC5e0F2a8B900F6f5CdE1132dBB 
+ ERC721RaribleMinimalBeaconMeta | 0xC699FB932c1bD7235C7ED19388f26A2428224AED | https://astar-zkevm.explorer.startale.com/address/0xC699FB932c1bD7235C7ED19388f26A2428224AED 
  ExchangeMetaV2 | 0x5faf16A85028BE138A7178B222DeC98092FEEF97 | https://astar-zkevm.explorer.startale.com/address/0x5faf16A85028BE138A7178B222DeC98092FEEF97 
+ RaribleExchangeWrapper | 0x0B7Acd053BC236fc95537e2aDD37C22968b48C1b | https://astar-zkevm.explorer.startale.com/address/0x0B7Acd053BC236fc95537e2aDD37C22968b48C1b 
  RoyaltiesRegistry | 0x250EB5d004d2001bA53f72b0034AA66330f7f220 | https://astar-zkevm.explorer.startale.com/address/0x250EB5d004d2001bA53f72b0034AA66330f7f220 
  TransferProxy | 0xF65eF65a95821A16E02973b1C2200FA58898e3c0 | https://astar-zkevm.explorer.startale.com/address/0xF65eF65a95821A16E02973b1C2200FA58898e3c0 
