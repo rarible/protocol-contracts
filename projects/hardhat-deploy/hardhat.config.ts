@@ -165,6 +165,15 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
+      },
+      "src/MDNT.sol": {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 20,
+          },
+        },
       }
     },
     settings: {
