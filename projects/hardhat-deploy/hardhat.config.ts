@@ -232,7 +232,9 @@ const config: HardhatUserConfig = {
     xai: createNetwork("xai"),
     kroma_sepolia: createNetwork("kroma_sepolia"),
     kroma: createNetwork("kroma"),
-    astar: createNetwork("astar")
+    astar: createNetwork("astar"),
+    oasys_testnet: createNetwork("oasys_testnet"),
+    oasys: createNetwork("oasys")
   },
   etherscan: {
     apiKey: {
@@ -259,9 +261,27 @@ const config: HardhatUserConfig = {
       xai: getNetworkApiKey("xai"),
       kroma_sepolia: getNetworkApiKey("kroma_sepolia"),
       kroma: getNetworkApiKey("kroma"),
-      astar: getNetworkApiKey("astar")
+      astar: getNetworkApiKey("astar"),
+      oasys_testnet: getNetworkApiKey("oasys_testnet"),
+      oasys: getNetworkApiKey("oasys")
     },
     customChains: [
+      {
+        network: "oasys",
+        chainId: createNetwork("oasys").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys"),
+          browserURL: getNetworkExplorerUrl("oasys"),
+        },
+      },
+      {
+        network: "oasys_testnet",
+        chainId: createNetwork("oasys_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys_testnet"),
+          browserURL: getNetworkExplorerUrl("oasys_testnet"),
+        },
+      },
       {
         network: "astar",
         chainId: createNetwork("astar").chainId!,
