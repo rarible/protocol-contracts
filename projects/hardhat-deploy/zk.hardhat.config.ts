@@ -28,17 +28,26 @@ function getConfigPath() {
 }
 
 function createNetwork(name: string): HttpNetworkUserConfig {
-    const configPath = path.join(getConfigPath(), name + ".json");
-    if (fs.existsSync(configPath)) {
-      var json = require(configPath);
-      if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
-        json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
+  const configPath = path.join(getConfigPath(), name + ".json");
+  if (fs.existsSync(configPath)) {
+    var json = require(configPath);
+    if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
+      json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
+    }
+    //if frame
+    if (!json.key) {
+      return {
+        url: json.url || "",
+        chainId: json.network_id,
+        timeout: 60000,
       }
+    } else {
+      // if not frame
       return {
         from: json.address,
         gasPrice: "auto",
         chainId: parseInt(json.network_id),
-        url: json.url,
+        url: json.url || "",
         accounts: [json.key],
         gas: "auto",
         saveDeployments: true,
@@ -51,24 +60,24 @@ function createNetwork(name: string): HttpNetworkUserConfig {
             }
           : null,
         zksync: json.zksync === true,
-        timeout: 60000
       } as HttpNetworkUserConfig;
-    } else {
-      // File doesn't exist in path
-      return {
-        from: "0x0000000000000000000000000000000000000000",
-        gas: 0,
-        chainId: 0,
-        url: "",
-        accounts: [],
-        gasPrice: 0,
-      };
     }
+  } else {
+    // File doesn't exist in path
+    return {
+      from: "0x0000000000000000000000000000000000000000",
+      gas: 0,
+      chainId: 0,
+      url: "",
+      accounts: [],
+      gasPrice: 0,
+    };
   }
+}
 
 const config: HardhatUserConfig = {
   zksolc: {
-    version: "1.3.22",
+    version: "1.3.18",
     settings: {
         isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
         forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
@@ -99,6 +108,15 @@ const config: HardhatUserConfig = {
           evmVersion: "byzantium",
         },
       },
+      {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
     overrides: {
       "src/WETH9.sol": {
@@ -111,6 +129,15 @@ const config: HardhatUserConfig = {
           evmVersion: "byzantium",
         },
       },
+      "src/UpgradeExecutorImport.sol": {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      }
     },
     settings: {
       metadata: {
@@ -126,7 +153,13 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  defaultNetwork: "zksync_sepolia",
+  defaultNetwork: "zksync",
+  namedAccounts: {
+    deployer: 0,
+  },
+  paths: {
+    sources: "src",
+  },
   networks: {
     sepolia: {
       zksync: false,
@@ -138,11 +171,23 @@ const config: HardhatUserConfig = {
       ...createNetwork("zksync_sepolia"),
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     },
-    zksync_testnet: createNetwork("zksync_testnet"),
     zksync: {
       ...createNetwork("zksync"),
       ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
       zksync: true
+    },
+    zkLinkGoerliTestnet: {
+      zksync: true,
+      ethNetwork: "goerli",
+      ...createNetwork("zkLinkGoerliTestnet"),
+      verifyURL: 'https://goerli.explorer.zklink.io/contracts/verify',
+      timeout: 120000
+    },
+    zkLink: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("zkLink"),
+      verifyURL: 'https://explorer.zklink.io/contracts/verify'
     },
   },
   etherscan: {
