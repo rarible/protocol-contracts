@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
-  const { ethers } = hre;
+  const { zksyncEthers } = hre;
   const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyAddress = (await hre.deployments.get("TransferProxy")).address;
@@ -33,7 +33,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   });
 
   // Manually call the initialization function
-  const erc1155Contract = await ethers.getContractAt(contractName, erc1155Receipt.address);
+  const erc1155Contract = await zksyncEthers.getContractAt(contractName, erc1155Receipt.address);
   await erc1155Contract.__ERC1155Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc1155LazyMintTransferProxyAddress);
 
   // Deploy beacon

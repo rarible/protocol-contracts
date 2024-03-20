@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
-  const { ethers } = hre;
+  const { zksyncEthers } = hre;
   const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyAddress = (await hre.deployments.get("TransferProxy")).address;
@@ -33,7 +33,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
   });
 
   // Manually call the initialization function
-  const erc721Contract = await ethers.getContractAt(contractName, erc721Receipt.address);
+  const erc721Contract = await zksyncEthers.getContractAt(contractName, erc721Receipt.address);
   await erc721Contract.__ERC721Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc721LazyMintTransferProxyAddress);
 
   // Deploy beacon
