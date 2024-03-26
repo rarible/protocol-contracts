@@ -76,7 +76,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
       gasPrice: "auto",
       chainId: parseInt(json.network_id),
       url: json.url,
-      accounts: [json.key],
+      accounts: [process.env.PRIVATE_KEY],
       gas: "auto",
       saveDeployments: true,
       verify: json.verify
@@ -115,25 +115,25 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.4.18",
+        version: "0.5.10",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 99999,
           },
-          evmVersion: "byzantium",
+          evmVersion: "petersburg",
         },
       },
     ],
     overrides: {
-      "src/WETH9.sol": {
-        version: "0.4.18",
+      "contracts/ImmutableCreate2Factory.sol": {
+        version: "0.5.10",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 99999,
           },
-          evmVersion: "byzantium",
+          evmVersion: "petersburg",
         },
       },
     },
