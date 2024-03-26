@@ -1,6 +1,4 @@
-/**
- *Submitted for verification at Etherscan.io on 2019-07-30
-*/
+// SPDX-License-Identifier: MIT
 
 pragma solidity 0.5.10; // optimization enabled, 99999 runs, evm: petersburg
 

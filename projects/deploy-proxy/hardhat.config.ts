@@ -68,9 +68,9 @@ function createNetwork(name: string): HttpNetworkUserConfig {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
-      json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
-    }
+    // if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
+    //   json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
+    // }
     return {
       from: json.address,
       gasPrice: "auto",
@@ -82,7 +82,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
       verify: json.verify
         ? {
             etherscan: {
-              apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
+              apiKey: json.verify.apiKey,
               apiUrl: json.verify.apiUrl,
             },
           }
@@ -164,7 +164,7 @@ const config: HardhatUserConfig = {
       chainId: 1,
       timeout: 60000,
     },
-    polygon_mumbai: createNetwork("polygon_mumbai"),
+    polygonMumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
     polygon_dev: createNetwork("polygon_dev"),
     dev: createNetwork("dev"),
@@ -215,7 +215,7 @@ const config: HardhatUserConfig = {
     apiKey: {
       mainnet: getNetworkApiKey('mainnet'),
       polygon: getNetworkApiKey('polygon_mainnet'),
-      mumbai: getNetworkApiKey('polygon_mumbai'),
+      polygonMumbai: getNetworkApiKey('polygon_mumbai'),
       goerli: getNetworkApiKey("goerli"),
       sepolia: getNetworkApiKey("sepolia"),
       mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
@@ -282,6 +282,14 @@ const config: HardhatUserConfig = {
           browserURL: getNetworkExplorerUrl("zksync_testnet"),
         },
       },
+      {
+        network: "polygonMumbai",
+        chainId: createNetwork("polygonMumbai").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("polygonMumbai"),
+          browserURL: getNetworkExplorerUrl("polygonMumbai"),
+        },
+      }
     ],
   },
   zksolc: {
