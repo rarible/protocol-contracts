@@ -24,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
   const { deploy } = hre.deployments;
-  const { zksyncEthers } = hre;
+  const { ethers } = hre;
   const { deployer } = await hre.getNamedAccounts();
   const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
 
@@ -35,7 +35,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     autoMine: true,
   });
   
-  const ExchangeV2 = await zksyncEthers.getContractFactory(contractName);
+  const ExchangeV2 = await ethers.getContractFactory(contractName);
   const exchangeV2 = ExchangeV2.attach(exchangeV2Receipt.address);
 
   // Initialize ExchangeV2 contract
@@ -62,7 +62,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
 
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
   const { deploy } = hre.deployments;
-  const { zksyncEthers } = hre;
+  const { ethers } = hre;
   const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyReceipt = await deploy(contractName, {
@@ -71,7 +71,7 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
     autoMine: true,
   });
 
-  const Proxy = await zksyncEthers.getContractFactory(contractName);
+  const Proxy = await ethers.getContractFactory(contractName);
   const proxy = await Proxy.attach(transferProxyReceipt.address);
 
   // Initialize the proxy
