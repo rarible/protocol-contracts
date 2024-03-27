@@ -234,7 +234,12 @@ const config: HardhatUserConfig = {
     kroma: createNetwork("kroma"),
     astar: createNetwork("astar"),
     oasys_testnet: createNetwork("oasys_testnet"),
-    oasys: createNetwork("oasys")
+    oasys: createNetwork("oasys"),
+    zkLink: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("zkLink"),
+    },
   },
   etherscan: {
     apiKey: {
@@ -263,7 +268,7 @@ const config: HardhatUserConfig = {
       kroma: getNetworkApiKey("kroma"),
       astar: getNetworkApiKey("astar"),
       oasys_testnet: getNetworkApiKey("oasys_testnet"),
-      oasys: getNetworkApiKey("oasys")
+      oasys: getNetworkApiKey("oasys"),
     },
     customChains: [
       {
@@ -445,7 +450,7 @@ const config: HardhatUserConfig = {
     ],
   },
   zksolc: {
-    compilerSource: 'binary',
+    version: "1.3.18",
     settings: {
       isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
       forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
