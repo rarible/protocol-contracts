@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { ImmutableCreate2Factory__factory } from "./ImmutableCreate2Factory__factory";
+export { TestDeployContract__factory } from "./TestDeployContract__factory";

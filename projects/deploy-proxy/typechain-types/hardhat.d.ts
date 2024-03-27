@@ -16,12 +16,21 @@ declare module "hardhat/types/runtime" {
       name: "ImmutableCreate2Factory",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ImmutableCreate2Factory__factory>;
+    getContractFactory(
+      name: "TestDeployContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TestDeployContract__factory>;
 
     getContractAt(
       name: "ImmutableCreate2Factory",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ImmutableCreate2Factory>;
+    getContractAt(
+      name: "TestDeployContract",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TestDeployContract>;
 
     // default types
     getContractFactory(

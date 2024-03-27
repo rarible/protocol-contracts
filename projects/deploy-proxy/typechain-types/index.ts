@@ -2,5 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { ImmutableCreate2Factory } from "./ImmutableCreate2Factory";
+export type { TestDeployContract } from "./TestDeployContract";
 export * as factories from "./factories";
 export { ImmutableCreate2Factory__factory } from "./factories/ImmutableCreate2Factory__factory";
+export { TestDeployContract__factory } from "./factories/TestDeployContract__factory";
