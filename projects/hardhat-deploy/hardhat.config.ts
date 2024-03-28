@@ -240,7 +240,8 @@ const config: HardhatUserConfig = {
       ethNetwork: "mainnet",
       ...createNetwork("zkLink"),
     },
-    astar_zkyoto_testnet: createNetwork("astar_zkyoto_testnet")
+    astar_zkyoto_testnet: createNetwork("astar_zkyoto_testnet"),
+    oasys_testnet_saakuru: createNetwork("oasys_testnet_saakuru")
   },
   etherscan: {
     apiKey: {
@@ -270,9 +271,18 @@ const config: HardhatUserConfig = {
       astar: getNetworkApiKey("astar"),
       oasys_testnet: getNetworkApiKey("oasys_testnet"),
       oasys: getNetworkApiKey("oasys"),
-      astar_zkyoto_testnet: getNetworkApiKey("astar_zkyoto_testnet")
+      astar_zkyoto_testnet: getNetworkApiKey("astar_zkyoto_testnet"),
+      oasys_testnet_saakuru: getNetworkApiKey("oasys_testnet_saakuru")
     },
     customChains: [
+      {
+        network: "oasys_testnet_saakuru",
+        chainId: createNetwork("oasys_testnet_saakuru").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys_testnet_saakuru"),
+          browserURL: getNetworkExplorerUrl("oasys_testnet_saakuru"),
+        },
+      },
       {
         network: "astar_zkyoto_testnet",
         chainId: createNetwork("astar_zkyoto_testnet").chainId!,
