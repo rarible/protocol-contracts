@@ -244,7 +244,8 @@ const config: HardhatUserConfig = {
     oasys_testnet_saakuru: createNetwork("oasys_testnet_saakuru"),
     saakuru: createNetwork("saakuru"),
     polygon_amoy_testnet: createNetwork("polygon_amoy_testnet"),
-    palm_testnet: createNetwork("palm_testnet")
+    palm_testnet: createNetwork("palm_testnet"),
+    match_testnet: createNetwork("match_testnet")
   },
   etherscan: {
     apiKey: {
@@ -278,9 +279,18 @@ const config: HardhatUserConfig = {
       oasys_testnet_saakuru: getNetworkApiKey("oasys_testnet_saakuru"),
       saakuru: getNetworkApiKey("saakuru"),
       polygon_amoy_testnet: getNetworkApiKey("polygon_amoy_testnet"),
-      palm_testnet: getNetworkApiKey("palm_testnet")
+      palm_testnet: getNetworkApiKey("palm_testnet"),
+      match_testnet: getNetworkApiKey("match_testnet")
     },
     customChains: [
+      {
+        network: "match_testnet",
+        chainId: createNetwork("match_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("match_testnet"),
+          browserURL: getNetworkExplorerUrl("match_testnet"),
+        },
+      },
       {
         network: "palm_testnet",
         chainId: createNetwork("palm_testnet").chainId!,
