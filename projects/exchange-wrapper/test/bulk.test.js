@@ -47,7 +47,7 @@ const { Order, Asset, sign } = require("../../../scripts/order.js");
 const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id, ORDER_DATA_V3_SELL } = require("../../../scripts/assets");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, enc, id } = require("../../../scripts/assets");
 const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -174,7 +174,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
   
   describe ("batch orders", () => {
     
-    it("batch all cases 5%+10% fees for all (raribleV2, RaribleV3, seaPort, x2y2, looksRare, sudoswap)", async () => {
+    it("batch all cases 5%+10% fees for all (raribleV2, RaribleV2, seaPort, x2y2, looksRare, sudoswap)", async () => {
       const seller = accounts[1];
       const buyer = accounts[2];
 
@@ -211,14 +211,11 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       const data = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData = PurchaseData(0, 100, await encodeFees(500, 1000), data);
 
-      //rarible V3 order
+      //rarible V2 order
       await erc721.mint(seller, erc721TokenId2);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-      const encDataLeft1 = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
-      const encDataRight1 = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
-
-      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V3_SELL, encDataLeft1);
+      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V2, encDataLeft);
 
       const directPurchaseParams1 = {
         sellOrderMaker: seller,
@@ -230,12 +227,12 @@ contract("RaribleExchangeWrapper default cases", accounts => {
         sellOrderSalt: 2,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
-        sellOrderData: encDataLeft1,
+        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderData: encDataLeft,
         sellOrderSignature: await getSignature(left1, seller, exchangeV2.address),
         buyOrderPaymentAmount: 100,
         buyOrderNftAmount: 1,
-        buyOrderData: encDataRight1
+        buyOrderData: encDataRight
       };
 
       const data1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams1);
@@ -499,14 +496,14 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       const data = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData = PurchaseData(0, 100, await encodeFees(500, 1000), data);
 
-      //rarible V3 order
+      //rarible 2 order
       await erc721.mint(seller, erc721TokenId2);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-      const encDataLeft1 = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
-      const encDataRight1 = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
+      const encDataLeft1 = await encDataV2([[], [], false]);
+      const encDataRight1 = await encDataV2([[[buyer, 10000]], [], false]);
 
-      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V3_SELL, encDataLeft1);
+      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V2, encDataLeft1);
 
       const directPurchaseParams1 = {
         sellOrderMaker: seller,
@@ -518,7 +515,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
         sellOrderSalt: 2,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft1,
         sellOrderSignature: await getSignature(left1, seller, exchangeV2.address),
         buyOrderPaymentAmount: 100,
@@ -794,14 +791,14 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       const data = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData = PurchaseData(0, 100, await encodeFees(500, 1000), data);
 
-      //rarible V3 order
+      //rarible V2 order
       await erc721.mint(seller, erc721TokenId2);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-      const encDataLeft1 = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
-      const encDataRight1 = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
+      const encDataLeft1 = await encDataV2([[], [], false]);
+      const encDataRight1 = await encDataV2([[[buyer, 10000]], [], false]);
 
-      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V3_SELL, encDataLeft1);
+      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V2, encDataLeft1);
 
       const directPurchaseParams1 = {
         sellOrderMaker: seller,
@@ -813,7 +810,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
         sellOrderSalt: 2,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft1,
         sellOrderSignature: "0x00",// making it fail
         buyOrderPaymentAmount: 100,
@@ -1096,14 +1093,14 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       const data = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData = PurchaseData(0, 100, 0, data);
 
-      //rarible V3 order
+      //rarible V2 order
       await erc721.mint(seller, erc721TokenId2);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-      const encDataLeft1 = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
-      const encDataRight1 = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
+      const encDataLeft1 = await encDataV2([[], [], false]);
+      const encDataRight1 = await encDataV2([[[buyer, 10000]], [], false]);
 
-      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V3_SELL, encDataLeft1);
+      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V2, encDataLeft1);
 
       const directPurchaseParams1 = {
         sellOrderMaker: seller,
@@ -1115,7 +1112,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
         sellOrderSalt: 2,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft1,
         sellOrderSignature: await getSignature(left1, seller, exchangeV2.address),
         buyOrderPaymentAmount: 100,
@@ -1386,14 +1383,14 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       const data = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
       const tradeData = PurchaseData(0, 100, await encodeFees(500, 1000), data);
 
-      //rarible V3 order
+      //rarible V2 order
       await erc721.mint(seller, erc721TokenId2);
       await erc721.setApprovalForAll(transferProxy.address, true, {from: seller});
 
-      const encDataLeft1 = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
-      const encDataRight1 = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
+      const encDataLeft1 = await encDataV2([[], [], false]);
+      const encDataRight1 = await encDataV2([[[buyer, 10000]], [], false]);
 
-      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V3_SELL, encDataLeft1);
+      const left1 = Order(seller, Asset(ERC721, enc(erc721.address, erc721TokenId2), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 2, 0, 0, ORDER_DATA_V2, encDataLeft1);
 
       const directPurchaseParams1 = {
         sellOrderMaker: seller,
@@ -1405,7 +1402,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
         sellOrderSalt: 2,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
+        sellOrderDataType: ORDER_DATA_V2,
         sellOrderData: encDataLeft1,
         sellOrderSignature: await getSignature(left1, seller, exchangeV2.address),
         buyOrderPaymentAmount: 100,
@@ -1659,15 +1656,6 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 	function encDataV2(tuple) {
     return helper.encodeV2(tuple);
   }
-
-  function encDataV1(tuple) {
-  	return helper.encode(tuple)
-  }
-
-  function encDataV3_SELL(tuple) {
-    return helper.encodeV3_SELL(tuple);
-  }
-
   function PurchaseData(marketId, amount, fees, data) {
     return {marketId, amount, fees, data};
   };
@@ -1676,13 +1664,6 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 		return sign(order, signer, exchangeContract);
 	}
 
-  function encDataV3_BUY(tuple) {
-    return helper.encodeV3_BUY(tuple);
-  }
-
-  async function LibPartToUint(account = zeroAddress, value = 0) {
-    return await helper.encodeOriginFeeIntoUint(account, value);
-  }
 
   async function encodeFees(first = 0, second = 0) {
     const result = await wrapperHelper.encodeFees(first, second);

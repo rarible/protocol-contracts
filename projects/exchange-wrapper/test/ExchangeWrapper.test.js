@@ -1028,50 +1028,6 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
       assert.equal(await erc721.balanceOf(buyer), 1);
     })
 
-    it("Test V3 order", async () => {
-      const buyer = accounts[2];
-      const seller1 = accounts[1];
-
-      await erc721.mint(seller1, erc721TokenId1);
-      await erc721.setApprovalForAll(transferProxy.address, true, {from: seller1});
-
-      await deployRarible()
-      bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS], ZERO_ADDRESS, []);
-
-      const encDataLeft = await encDataV3_SELL([0, 0, 0, 1000, MARKET_MARKER_SELL]);
-      const encDataRight = await encDataV3_BUY([await LibPartToUint(buyer, 10000), 0, 0, MARKET_MARKER_SELL]);
-
-      const left1 = Order(seller1, Asset(ERC721, enc(erc721.address, erc721TokenId1), 1), ZERO_ADDRESS, Asset(ETH, "0x", 100), 1, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
-
-      let signatureLeft1 = await getSignature(left1, seller1, exchangeV2.address);
-
-      const directPurchaseParams = {
-        sellOrderMaker: seller1,
-        sellOrderNftAmount: 1,
-        nftAssetClass: ERC721,
-        nftData: enc(erc721.address, erc721TokenId1),
-        sellOrderPaymentAmount: 100,
-        paymentToken: ZERO_ADDRESS,
-        sellOrderSalt: 1,
-        sellOrderStart: 0,
-        sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V3_SELL,
-        sellOrderData: encDataLeft,
-        sellOrderSignature: signatureLeft1,
-        buyOrderPaymentAmount: 100,
-        buyOrderNftAmount: 1,
-        buyOrderData: encDataRight
-      };
-
-      let dataForExchCall1 = await wrapperHelper.getDataDirectPurchase(directPurchaseParams);
-      const tradeData1 = PurchaseData(0, 100, await encodeFees(0, 1500), dataForExchCall1); //0 is Exch orders, 100 is amount + 0 protocolFee
-
-      const tx = await bulkExchange.singlePurchase(tradeData1, ZERO_ADDRESS, feeRecipienterUP, { from: buyer, value: 400 })
-      console.log("rarible V3 721 1 order 1 comission", tx.receipt.gasUsed)
-      assert.equal(await erc721.balanceOf(seller1), 0);
-      assert.equal(await erc721.balanceOf(buyer), 1);
-    })
-
     it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC1155<->ETH", async () => {
       const buyer = accounts[2];
       const seller1 = accounts[1];
