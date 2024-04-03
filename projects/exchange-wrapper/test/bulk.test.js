@@ -169,7 +169,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
     await factorySudoSwap.setBondingCurveAllowed(lin.address, true)
 
     // deploying wrapper
-    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address, routerSudoSwap.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], ZERO_ADDRESS, [])
+    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, x2y2.address, looksRareExchange.address, routerSudoSwap.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, seaport.address], ZERO_ADDRESS, [])
   });
   
   describe ("batch orders", () => {
@@ -288,7 +288,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
       
-      const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(10, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
       await erc721.mint(seller, erc721TokenId3);
@@ -577,7 +577,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
       
-      const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(10, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
       await erc721.mint(seller, erc721TokenId3);
@@ -871,7 +871,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
       
-      const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(10, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
       await erc721.mint(seller, erc721TokenId3);
@@ -1174,7 +1174,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
       
-      const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(10, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
       await erc721.mint(seller, erc721TokenId3);
@@ -1463,7 +1463,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
 
       let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
       
-      const tradeDataSeaPort = PurchaseData(2, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
+      const tradeDataSeaPort = PurchaseData(10, 100, await encodeFees(500, 1000), dataForSeaportWithSelector);
 
       //looksRareOrder
       await erc721.mint(seller, erc721TokenId3);

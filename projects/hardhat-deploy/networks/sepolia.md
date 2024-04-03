@@ -12,6 +12,6 @@
  ERC721RaribleMinimal | 0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 | https://sepolia.etherscan.io/address/0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 
  ERC721RaribleMinimalBeacon | 0x41407B447Fb5425187A9BCA3a062644EF2410F8D | https://sepolia.etherscan.io/address/0x41407B447Fb5425187A9BCA3a062644EF2410F8D 
  ExchangeV2 | 0x3e52D660b69d1bDacb6C513cE085D924F5Cb9c77 | https://sepolia.etherscan.io/address/0x3e52D660b69d1bDacb6C513cE085D924F5Cb9c77 
- RaribleExchangeWrapper | 0x7d47126a2600E22eab9eD6CF0e515678727779A6 | https://sepolia.etherscan.io/address/0x7d47126a2600E22eab9eD6CF0e515678727779A6 
+ RaribleExchangeWrapper | 0x1554aDA53194B961016931A2E86C80D09a816209 | https://sepolia.etherscan.io/address/0x1554aDA53194B961016931A2E86C80D09a816209 
  RoyaltiesRegistry | 0x4f4cC63D7f2bC894078d41f284453062842Afa46 | https://sepolia.etherscan.io/address/0x4f4cC63D7f2bC894078d41f284453062842Afa46 
  TransferProxy | 0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af | https://sepolia.etherscan.io/address/0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af 
