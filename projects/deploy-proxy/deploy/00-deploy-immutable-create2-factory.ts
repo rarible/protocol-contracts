@@ -6,8 +6,9 @@ const deployLock: DeployFunction = async (
 ) => {
     const { deploy } = hre.deployments;
     const { getNamedAccounts } = hre;
+    const na = await getNamedAccounts()
     const {deployer,} = await getNamedAccounts();
-    console.log('deployer', deployer)
+    console.log('deployer', deployer, JSON.stringify(na))
     const deployResult: DeployResult = await deploy("ImmutableCreate2Factory", {
         from: deployer,
         log: true,
@@ -20,4 +21,4 @@ const deployLock: DeployFunction = async (
 };
 
 export default deployLock;
-deployLock.tags = ["all", "Lock"];
+deployLock.tags = ["all", "ImmutableCreate2Factory"];
