@@ -88,7 +88,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
         chainId: parseInt(json.network_id),
         url: json.url || "",
         accounts: [json.key],
-        gas: "auto",
+        gas: 5000000,
         saveDeployments: true,
         verify: json.verify
           ? {
@@ -245,7 +245,8 @@ const config: HardhatUserConfig = {
     saakuru: createNetwork("saakuru"),
     polygon_amoy_testnet: createNetwork("polygon_amoy_testnet"),
     palm_testnet: createNetwork("palm_testnet"),
-    match_testnet: createNetwork("match_testnet")
+    match_testnet: createNetwork("match_testnet"),
+    "5ire_testnet": createNetwork("5ire_testnet")
   },
   etherscan: {
     apiKey: {
@@ -280,9 +281,18 @@ const config: HardhatUserConfig = {
       saakuru: getNetworkApiKey("saakuru"),
       polygon_amoy_testnet: getNetworkApiKey("polygon_amoy_testnet"),
       palm_testnet: getNetworkApiKey("palm_testnet"),
-      match_testnet: getNetworkApiKey("match_testnet")
+      match_testnet: getNetworkApiKey("match_testnet"),
+      "5ire_testnet": getNetworkApiKey("5ire_testnet")
     },
     customChains: [
+      {
+        network: "5ire_testnet",
+        chainId: createNetwork("5ire_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("5ire_testnet"),
+          browserURL: getNetworkExplorerUrl("5ire_testnet"),
+        },
+      },
       {
         network: "match_testnet",
         chainId: createNetwork("match_testnet").chainId!,

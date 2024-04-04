@@ -39,17 +39,17 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
   const exchangeV2 = ExchangeV2.attach(exchangeV2Receipt.address);
 
   // Initialize ExchangeV2 contract
-  await (await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, "0x0000000000000000000000000000000000000000", royaltiesRegistryAddress));
+  await (await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, "0x0000000000000000000000000000000000000000", royaltiesRegistryAddress)).wait();
 
   //add exchangeV2 as operator to all 4 transfer proxies
-  await (await transferProxy.addOperator(exchangeV2.address))
-  await (await erc20TransferProxy.addOperator(exchangeV2.address))
-  await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address))
-  await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address))
+  await (await transferProxy.addOperator(exchangeV2.address)).wait()
+  await (await erc20TransferProxy.addOperator(exchangeV2.address)).wait()
+  await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+  await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
 
   //set 2 lazy transfer proxies in exchangeV2 contract (other 2 are set in initialiser)
-  await (await exchangeV2.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address))
-  await (await exchangeV2.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address))
+  await (await exchangeV2.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address)).wait()
+  await (await exchangeV2.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address)).wait()
 
   //deploy and setup collection matcher
   const assetMatcherCollectionReceipt = await deploy("AssetMatcherCollection", {
@@ -57,7 +57,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     log: true,
     autoMine: true,
   });
-  await (await exchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollectionReceipt.address))
+  await (await exchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollectionReceipt.address)).wait()
 }
 
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
@@ -75,7 +75,7 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
   const proxy = await Proxy.attach(transferProxyReceipt.address);
 
   // Initialize the proxy
-  await (await proxy.__OperatorRole_init());
+  await (await proxy.__OperatorRole_init()).wait()
 
   return proxy;
 }
