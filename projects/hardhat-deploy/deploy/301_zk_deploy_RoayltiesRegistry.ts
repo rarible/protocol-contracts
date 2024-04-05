@@ -23,7 +23,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   // Call the __RoyaltiesRegistry_init function
   console.log("Initializing RoyaltiesRegistry");
-  await royaltiesRegistry.__RoyaltiesRegistry_init();
+  await (await royaltiesRegistry.__RoyaltiesRegistry_init()).wait();
 
   console.log("RoyaltiesRegistry deployed and initialized");
 };

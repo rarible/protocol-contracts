@@ -38,6 +38,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     address public immutable looksRareV2;
     address public immutable blur;
     address public immutable seaPort_1_5;
+    address public immutable seaPort_1_6;
 
     //currencties
     address public immutable weth;
@@ -48,16 +49,17 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     event Execution(bool result);
 
     enum Markets {
-        ExchangeV2,
-        WyvernExchange,
-        SeaPort_1_1,
-        X2Y2,
-        LooksRareOrders,
-        SudoSwap,
-        SeaPort_1_4,
-        LooksRareV2,
-        Blur,
-        SeaPort_1_5
+        ExchangeV2,//0
+        WyvernExchange,//1
+        SeaPort_1_1,//2
+        X2Y2,//3
+        LooksRareOrders,//4
+        SudoSwap,//5
+        SeaPort_1_4,//6
+        LooksRareV2,//7
+        Blur,//8
+        SeaPort_1_5,//9
+        SeaPort_1_6//10
     }
 
     enum AdditionalDataTypes {
@@ -99,7 +101,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     }
 
     constructor(
-        address[10] memory marketplaces,
+        address[11] memory marketplaces,
         //address _wyvernExchange, 0
         //address _exchangeV2, 1
         //address _seaPort_1_1, 2
@@ -110,6 +112,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         //address _looksRareV2, 7
         //address _blur, 8
         //address _seaPort_1_5, 9
+        //address _seaPort_1_6, 10
         address _weth,
         address[] memory transferProxies
     ) {
@@ -123,6 +126,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         looksRareV2 = marketplaces[7];
         blur = marketplaces[8];
         seaPort_1_5 = marketplaces[9];
+        seaPort_1_6 = marketplaces[10];
 
         weth = _weth;
 
@@ -400,6 +404,15 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
             } else {
                 require(success, "Purchase SeaPort_1_5 failed");
             }
+        } else if (purchaseDetails.marketId == Markets.SeaPort_1_6){
+            (bool success,) = address(seaPort_1_6).call{value : paymentAmount}(marketData);
+            if (allowFail) {
+                if (!success) {
+                    return (false, 0, 0);
+                }
+            } else {
+                require(success, "Purchase SeaPort_1_6 failed");
+            }
         } else {
             revert("Unknown marketId ETH");
         }
@@ -458,6 +471,15 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
                 }
             } else {
                 require(success, "Purchase SeaPort_1_5 failed WETH");
+            }
+        } else if (purchaseDetails.marketId == Markets.SeaPort_1_6){
+            (bool success,) = address(seaPort_1_6).call(marketData);
+            if (allowFail) {
+                if (!success) {
+                    return (false, 0, 0);
+                }
+            } else {
+                require(success, "Purchase SeaPort_1_6 failed WETH");
             }
         } else {
             revert("Unknown marketId WETH");

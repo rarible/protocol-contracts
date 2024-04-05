@@ -34,7 +34,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
 
   // Manually call the initialization function
   const erc721Contract = await ethers.getContractAt(contractName, erc721Receipt.address);
-  await erc721Contract.__ERC721Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc721LazyMintTransferProxyAddress);
+  await( await erc721Contract.__ERC721Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc721LazyMintTransferProxyAddress)).wait();
 
   // Deploy beacon
   const erc721BeaconReceipt = await deploy(beaconName, {
