@@ -1,5 +1,3 @@
-import '@matterlabs/hardhat-zksync-deploy';
-import '@matterlabs/hardhat-zksync-solc';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
@@ -43,52 +41,64 @@ function getNetworkApiKey(name: string): string {
 }
 
 function getNetworkApiUrl(name: string): string {
+  let result:string = "";
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.apiUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
+    if (json.verify && json.verify.apiUrl) {
+      result = json.verify.apiUrl;
+    }
   }
+  return result;
 }
 
 function getNetworkExplorerUrl(name: string): string {
+  let result:string = "";
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    return json.verify.explorerUrl;
-  } else {
-    // File doesn't exist in path
-    return "";
+    if (json.verify && json.verify.explorerUrl) {
+      result = json.verify.explorerUrl;
+    }
   }
+  return result;
 }
 
 function createNetwork(name: string): HttpNetworkUserConfig {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
-    // if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
-    //   json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
-    // }
-    return {
-      from: json.address,
-      gasPrice: "auto",
-      chainId: parseInt(json.network_id),
-      url: json.url,
-      accounts: [process.env.PRIVATE_KEY],
-      gas: "auto",
-      saveDeployments: true,
-      verify: json.verify
-        ? {
-            etherscan: {
-              apiKey: json.verify.apiKey,
-              apiUrl: json.verify.apiUrl,
-            },
-          }
-        : null,
-      zksync: json.zksync === true,
-    } as HttpNetworkUserConfig;
+    if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
+      json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
+    }
+    //if frame
+    if (!json.key) {
+      return {
+        url: json.url || "",
+        chainId: json.network_id,
+        timeout: 60000,
+      }
+    } else {
+      // if not frame
+      return {
+        from: json.address,
+        gasPrice: "auto",
+        chainId: parseInt(json.network_id),
+        url: json.url || "",
+        accounts: [json.key],
+        gas: "auto",
+        saveDeployments: true,
+        verify: json.verify
+          ? {
+              etherscan: {
+                apiKey: json.verify.apiKey,
+                apiUrl: json.verify.apiUrl,
+              },
+            }
+          : null,
+        zksync: json.zksync === true,
+      } as HttpNetworkUserConfig;
+    }
   } else {
     // File doesn't exist in path
     return {
@@ -124,6 +134,15 @@ const config: HardhatUserConfig = {
           evmVersion: "petersburg",
         },
       },
+      {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
     overrides: {
       "contracts/ImmutableCreate2Factory.sol": {
@@ -135,7 +154,7 @@ const config: HardhatUserConfig = {
           },
           evmVersion: "petersburg",
         },
-      },
+      }
     },
     settings: {
       metadata: {
@@ -159,19 +178,15 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {},
-    mainnet: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1,
-      timeout: 60000,
-    },
-    polygonMumbai: createNetwork("polygon_mumbai"),
+    mainnet: createNetwork("mainnet"),
+    polygon_mumbai: createNetwork("polygon_mumbai"),
     polygon_mainnet: createNetwork("polygon_mainnet"),
-    polygon_dev: createNetwork("polygon_dev"),
-    dev: createNetwork("dev"),
+    // polygon_dev: createNetwork("polygon_dev"),
+    // dev: createNetwork("dev"),
     goerli: createNetwork("goerli"),
     sepolia: createNetwork("sepolia"),
-    staging: createNetwork("staging"),
-    polygon_staging: createNetwork("polygon_staging"),
+    // staging: createNetwork("staging"),
+    // polygon_staging: createNetwork("polygon_staging"),
     optimism_mainnet: createNetwork("optimism_mainnet"),
     optimism_goerli: createNetwork("optimism_goerli"),
     mantle_testnet: createNetwork("mantle_testnet"),
@@ -184,38 +199,46 @@ const config: HardhatUserConfig = {
     chiliz_testnet: createNetwork("chiliz_testnet"),
     chiliz_mainnet: createNetwork("chiliz_mainnet"),
     zksync_testnet: createNetwork("zksync_testnet"),
-    lightlink: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1890,
-      timeout: 60000,
-    },
+    lightlink: createNetwork("lightlink"),
     lightlink_pegasus: createNetwork("lightlink_pegasus"),
-    zksync: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 324,
-      timeout: 60000,
-      ethNetwork: "mainnet", // The Ethereum Web3 RPC URL, or the identifier of the network (e.g. `mainnet` or `sepolia`)
-      zksync: true
-    },
     rari_testnet: createNetwork("rari_testnet"),
-    rari: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 1380012617,
-      timeout: 60000,
-    },
+    rari: createNetwork("rari"),
     base_sepolia: createNetwork("base_sepolia"),
-    base: {
-      url: 'http://127.0.0.1:1248',
-      chainId: 8453,
-      timeout: 60000,
+    base: createNetwork("base"),
+    zksync_sepolia: createNetwork("zksync_sepolia"),
+    celo_alfajores_testnet: createNetwork("celo_alfajores_testnet"),
+    celo: createNetwork("celo"),
+    mantle_sepolia_testnet: createNetwork("mantle_sepolia_testnet"),
+    fief_playground_testnet: createNetwork("fief_playground_testnet"),
+    oasis_sapphire_testnet: createNetwork("oasis_sapphire_testnet"),
+    oasis: createNetwork("oasis"),
+    xai_sepolia_testnet: createNetwork("xai_sepolia_testnet"),
+    xai: createNetwork("xai"),
+    kroma_sepolia: createNetwork("kroma_sepolia"),
+    kroma: createNetwork("kroma"),
+    astar: createNetwork("astar"),
+    oasys_testnet: createNetwork("oasys_testnet"),
+    oasys: createNetwork("oasys"),
+    zkLink: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("zkLink"),
     },
-    zksync_sepolia: createNetwork("zksync_sepolia")
+    astar_zkyoto_testnet: createNetwork("astar_zkyoto_testnet"),
+    oasys_testnet_saakuru: createNetwork("oasys_testnet_saakuru"),
+    saakuru: createNetwork("saakuru"),
+    polygon_amoy_testnet: createNetwork("polygon_amoy_testnet"),
+    palm_testnet: createNetwork("palm_testnet"),
+    match_testnet: createNetwork("match_testnet"),
+    "5ire_testnet": createNetwork("5ire_testnet"),
+    palm: createNetwork("palm"),
+    match: createNetwork("match")
   },
   etherscan: {
     apiKey: {
       mainnet: getNetworkApiKey('mainnet'),
       polygon: getNetworkApiKey('polygon_mainnet'),
-      polygonMumbai: getNetworkApiKey('polygon_mumbai'),
+      mumbai: getNetworkApiKey('polygon_mumbai'),
       goerli: getNetworkApiKey("goerli"),
       sepolia: getNetworkApiKey("sepolia"),
       mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
@@ -223,9 +246,217 @@ const config: HardhatUserConfig = {
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
       arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
-      rari_testnet: getNetworkApiKey("rari_testnet")
+      rari_testnet: getNetworkApiKey("rari_testnet"),
+      mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
+      fief_playground_testnet: getNetworkApiKey("fief_playground_testnet"),
+      oasis_sapphire_testnet: getNetworkApiKey("oasis_sapphire_testnet"),
+      xai_sepolia_testnet: getNetworkApiKey("xai_sepolia_testnet"),
+      base: getNetworkApiKey("base"),
+      celo: getNetworkApiKey("celo"),
+      lightlink: getNetworkApiKey("lightlink"),
+      oasis: getNetworkApiKey("oasis"),
+      rari: getNetworkApiKey("rari"),
+      xai: getNetworkApiKey("xai"),
+      kroma_sepolia: getNetworkApiKey("kroma_sepolia"),
+      kroma: getNetworkApiKey("kroma"),
+      astar: getNetworkApiKey("astar"),
+      oasys_testnet: getNetworkApiKey("oasys_testnet"),
+      oasys: getNetworkApiKey("oasys"),
+      astar_zkyoto_testnet: getNetworkApiKey("astar_zkyoto_testnet"),
+      oasys_testnet_saakuru: getNetworkApiKey("oasys_testnet_saakuru"),
+      saakuru: getNetworkApiKey("saakuru"),
+      polygon_amoy_testnet: getNetworkApiKey("polygon_amoy_testnet"),
+      palm_testnet: getNetworkApiKey("palm_testnet"),
+      match_testnet: getNetworkApiKey("match_testnet"),
+      "5ire_testnet": getNetworkApiKey("5ire_testnet"),
+      palm: getNetworkApiKey("palm"),
+      match: getNetworkApiKey("match")
     },
     customChains: [
+      {
+        network: "match",
+        chainId: createNetwork("match").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("match"),
+          browserURL: getNetworkExplorerUrl("match"),
+        },
+      },
+      {
+        network: "palm",
+        chainId: createNetwork("palm").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("palm"),
+          browserURL: getNetworkExplorerUrl("palm"),
+        },
+      },
+      {
+        network: "5ire_testnet",
+        chainId: createNetwork("5ire_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("5ire_testnet"),
+          browserURL: getNetworkExplorerUrl("5ire_testnet"),
+        },
+      },
+      {
+        network: "match_testnet",
+        chainId: createNetwork("match_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("match_testnet"),
+          browserURL: getNetworkExplorerUrl("match_testnet"),
+        },
+      },
+      {
+        network: "palm_testnet",
+        chainId: createNetwork("palm_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("palm_testnet"),
+          browserURL: getNetworkExplorerUrl("palm_testnet"),
+        },
+      },
+      {
+        network: "polygon_amoy_testnet",
+        chainId: createNetwork("polygon_amoy_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("polygon_amoy_testnet"),
+          browserURL: getNetworkExplorerUrl("polygon_amoy_testnet"),
+        },
+      },
+      {
+        network: "saakuru",
+        chainId: createNetwork("saakuru").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("saakuru"),
+          browserURL: getNetworkExplorerUrl("saakuru"),
+        },
+      },
+      {
+        network: "oasys_testnet_saakuru",
+        chainId: createNetwork("oasys_testnet_saakuru").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys_testnet_saakuru"),
+          browserURL: getNetworkExplorerUrl("oasys_testnet_saakuru"),
+        },
+      },
+      {
+        network: "astar_zkyoto_testnet",
+        chainId: createNetwork("astar_zkyoto_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("astar_zkyoto_testnet"),
+          browserURL: getNetworkExplorerUrl("astar_zkyoto_testnet"),
+        },
+      },
+      {
+        network: "oasys",
+        chainId: createNetwork("oasys").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys"),
+          browserURL: getNetworkExplorerUrl("oasys"),
+        },
+      },
+      {
+        network: "oasys_testnet",
+        chainId: createNetwork("oasys_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys_testnet"),
+          browserURL: getNetworkExplorerUrl("oasys_testnet"),
+        },
+      },
+      {
+        network: "astar",
+        chainId: createNetwork("astar").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("astar"),
+          browserURL: getNetworkExplorerUrl("astar"),
+        },
+      },
+      {
+        network: "kroma",
+        chainId: createNetwork("kroma").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("kroma"),
+          browserURL: getNetworkExplorerUrl("kroma"),
+        },
+      },
+      {
+        network: "base",
+        chainId: createNetwork("base").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("base"),
+          browserURL: getNetworkExplorerUrl("base"),
+        },
+      },
+      {
+        network: "celo",
+        chainId: createNetwork("celo").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("celo"),
+          browserURL: getNetworkExplorerUrl("celo"),
+        },
+      },
+      {
+        network: "lightlink",
+        chainId: createNetwork("lightlink").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("lightlink"),
+          browserURL: getNetworkExplorerUrl("lightlink"),
+        },
+      },
+      {
+        network: "oasis",
+        chainId: createNetwork("oasis").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasis"),
+          browserURL: getNetworkExplorerUrl("oasis"),
+        },
+      },
+      {
+        network: "rari",
+        chainId: createNetwork("rari").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("rari"),
+          browserURL: getNetworkExplorerUrl("rari"),
+        },
+      },
+      {
+        network: "xai",
+        chainId: createNetwork("xai").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("xai"),
+          browserURL: getNetworkExplorerUrl("xai"),
+        },
+      },
+      {
+        network: "kroma_sepolia",
+        chainId: createNetwork("kroma_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("kroma_sepolia"),
+          browserURL: getNetworkExplorerUrl("kroma_sepolia"),
+        },
+      },
+      {
+        network: "xai_sepolia_testnet",
+        chainId: createNetwork("xai_sepolia_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("xai_sepolia_testnet"),
+          browserURL: getNetworkExplorerUrl("xai_sepolia_testnet"),
+        },
+      },
+      {
+        network: "oasis_sapphire_testnet",
+        chainId: createNetwork("oasis_sapphire_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasis_sapphire_testnet"),
+          browserURL: getNetworkExplorerUrl("oasis_sapphire_testnet"),
+        },
+      },
+      {
+        network: "fief_playground_testnet",
+        chainId: createNetwork("fief_playground_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("fief_playground_testnet"),
+          browserURL: getNetworkExplorerUrl("fief_playground_testnet"),
+        },
+      },
       {
         network: "base_sepolia",
         chainId: createNetwork("base_sepolia").chainId!,
@@ -240,6 +471,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("rari_testnet"),
           browserURL: getNetworkExplorerUrl("rari_testnet"),
+        },
+      },
+      {
+        network: "mantle_sepolia_testnet",
+        chainId: createNetwork("mantle_sepolia_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("mantle_sepolia_testnet"),
+          browserURL: getNetworkExplorerUrl("mantle_sepolia_testnet"),
         },
       },
       {
@@ -282,27 +521,8 @@ const config: HardhatUserConfig = {
           browserURL: getNetworkExplorerUrl("zksync_testnet"),
         },
       },
-      {
-        network: "polygonMumbai",
-        chainId: createNetwork("polygonMumbai").chainId!,
-        urls: {
-          apiURL: getNetworkApiUrl("polygonMumbai"),
-          browserURL: getNetworkExplorerUrl("polygonMumbai"),
-        },
-      }
     ],
-  },
-  zksolc: {
-    compilerSource: 'binary',
-    settings: {
-      isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-      forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-      optimizer: {
-        enabled: true, // optional. True by default
-        mode: 'z' // optional. 3 by default, z to optimize bytecode size
-      },
-    }
-  },
+  }
 };
 
 
