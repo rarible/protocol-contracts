@@ -204,7 +204,7 @@ const config: HardhatUserConfig = {
     mantle_mainnet: createNetwork("mantle_mainnet"),
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
     arbitrum_sepolia: createNetwork("arbitrum_sepolia"),
-    arbitrum_mainnet: createNetwork("arbitrum_mainnet"),
+    arbitrum: createNetwork("arbitrum"),
     zkatana_testnet: createNetwork("zkatana_testnet"),
     zkatana_mainnet: createNetwork("zkatana_mainnet"),
     chiliz_testnet: createNetwork("chiliz_testnet"),
@@ -260,7 +260,7 @@ const config: HardhatUserConfig = {
       mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
       mantle_testnet: getNetworkApiKey("mantle_testnet"),
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
-      arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
+      arbitrum: getNetworkApiKey("arbitrum"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
       rari_testnet: getNetworkApiKey("rari_testnet"),
       mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
@@ -522,11 +522,11 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        network: "arbitrum_mainnet",
-        chainId: createNetwork("arbitrum_mainnet").chainId!,
+        network: "arbitrum",
+        chainId: createNetwork("arbitrum").chainId!,
         urls: {
-          apiURL: getNetworkApiUrl("arbitrum_mainnet"),
-          browserURL: getNetworkExplorerUrl("arbitrum_mainnet"),
+          apiURL: getNetworkApiUrl("arbitrum"),
+          browserURL: getNetworkExplorerUrl("arbitrum"),
         },
       },
       {
