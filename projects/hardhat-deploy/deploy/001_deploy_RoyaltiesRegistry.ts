@@ -27,4 +27,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['all', 'all-no-tokens'];
+func.tags = ['all', 'all-no-tokens', 'deploy-rr'];
