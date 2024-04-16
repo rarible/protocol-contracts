@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { prepareTransferOwnershipCalldata } from './help';
+import { prepareTransferOwnershipCalldata, getSalt } from './help';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -17,29 +17,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const ProxyAdmin = await hre.ethers.getContractFactory("@openzeppelin/contracts-sol08/proxy/transparent/ProxyAdmin.sol:ProxyAdmin");
   const dtxProxyAdmin = await ProxyAdmin.getDeployTransaction()
   //console.log("1.1.! bytecode for ProxyAdmin:",dtxProxyAdmin)
-
+  var fs = require('fs');
+  fs.writeFileSync('./ProxyAdmin_bytecode.txt', dtxProxyAdmin.data , 'utf-8');
   //predict address
-  const salt = hre.ethers.constants.HashZero;
+  const salt = getSalt();
   const expectedAddressProxyAdmin = await factory.getDeploymentAddress(dtxProxyAdmin.data, salt)
   const proxyAdmin = await hre.ethers.getContractAt('@openzeppelin/contracts-sol08/proxy/transparent/ProxyAdmin.sol:ProxyAdmin', expectedAddressProxyAdmin);
   console.log("1.2.! Predict address for ProxyAdmin: ", expectedAddressProxyAdmin)
 
   //prepare calldata to transferOwnership
-  const transferOwnershipTo = deployer;
-  console.log("transferring ownership to ", transferOwnershipTo)
   const calldata = await prepareTransferOwnershipCalldata(hre);
   console.log("1.3.! transfer ownership calldata for ProxyAdmin: ", calldata)
 
   //deploy ProxyAdmin
-  await( await factory.create(0, salt, dtxProxyAdmin.data, expectedAddressProxyAdmin, "", [calldata])).wait()
+  //await( await factory.create(0, salt, dtxProxyAdmin.data, expectedAddressProxyAdmin, "", [calldata])).wait()
 
   //check ProxyAdmin
-  console.log("ProxyAdmin owner:", await proxyAdmin.owner())
+  //console.log("ProxyAdmin owner:", await proxyAdmin.owner())
   await hre.deployments.save("DefaultProxyAdmin", {
     address: expectedAddressProxyAdmin,
     ...(await hre.deployments.getExtendedArtifact("@openzeppelin/contracts-sol08/proxy/transparent/ProxyAdmin.sol:ProxyAdmin"))
   })
+  
 
 };
 export default func;
-func.tags = ['oasys'];
+func.tags = ['oasys', "now"];

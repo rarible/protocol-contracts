@@ -4,6 +4,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {AccessControl} from "@openzeppelin/contracts-sol08/access/AccessControl.sol";
 import {Create2} from "@openzeppelin/contracts-sol08/utils/Create2.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts-sol08/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 /**
  * @title PermissionedContractFactory

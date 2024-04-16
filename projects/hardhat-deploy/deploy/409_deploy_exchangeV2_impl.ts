@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { prepareTransferOwnershipCalldata } from './help';
+import { prepareTransferOwnershipCalldata, getSalt } from './help';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(``)
@@ -15,19 +15,27 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const dtx = await ExchangeV2.getDeployTransaction();
   //console.dir(dtx, {depth:null})
   var fs = require('fs');
-  fs.writeFileSync('./ExchangeV2_bytecode.txt', dtx.data , 'utf-8');
+  fs.writeFileSync('./ExchangeV2_Implementation.txt', dtx.data , 'utf-8');
 
   //predict address
-  const salt = hre.ethers.constants.HashZero;
-  const expectedAddress = await factory.getDeploymentAddress(dtx.data, salt)
-  const exchangeV2 = await hre.ethers.getContractAt('ExchangeV2', expectedAddress);
+  const salt = getSalt();
+  let expectedAddress = await factory.getDeploymentAddress(dtx.data, salt)
+  let exchangeV2 = await hre.ethers.getContractAt('ExchangeV2', expectedAddress);
   console.log("7.2.! Predict address for exchangeV2: ", expectedAddress)
 
+  /*
   //deploy exchangeV2
-  await(await factory.create(0, salt, dtx.data, expectedAddress, "", [])).wait()
+  if (hre.network.name === "hardhat") {
+    exchangeV2 = await ExchangeV2.deploy();
+    await exchangeV2.deployed();
+    expectedAddress = exchangeV2.address;
+  } else {
+    //await(await factory.create(0, salt, dtx.data, expectedAddress, "", [])).wait()
+  }
+  */
 
   //check rrProxy
-  console.log("exchangeV2 owner:", await exchangeV2.owner())
+  //console.log("exchangeV2 owner:", await exchangeV2.owner())
 
   //save artifact
   await hre.deployments.save("ExchangeV2_Implementation", {
@@ -37,4 +45,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['oasys'];
+func.tags = ['oasys', "now"];

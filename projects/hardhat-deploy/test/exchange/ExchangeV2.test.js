@@ -42,7 +42,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   const erc1155TokenId1 = 54;
 
   before(async () => {
-    const deployed = await deployments.fixture(['all'])
+    const deployed = await deployments.fixture(['oasys'])
     //transfer proxes
     transferProxy = await TransferProxy.at(deployed["TransferProxy"].address);
     erc20TransferProxy = await ERC20TransferProxy.at(deployed["ERC20TransferProxy"].address);

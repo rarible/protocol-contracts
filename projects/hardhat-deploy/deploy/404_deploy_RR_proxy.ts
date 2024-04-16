@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { prepareTransferOwnershipCalldata } from './help';
+import { prepareTransferOwnershipCalldata, getSalt} from './help';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -14,12 +14,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //get bytecode to create TransparentUpgradeableProxy
   const implAddr = (await hre.deployments.get("RoyaltiesRegistry_Implementation")).address;
   const adminAddr = (await hre.deployments.get("DefaultProxyAdmin")).address;
-  const TransparentUpgradeableProxy = await hre.ethers.getContractFactory("@openzeppelin/contracts-sol08/proxy/transparent/TransparentUpgradeableProxy.sol:TransparentUpgradeableProxy");
+  const TransparentUpgradeableProxy = await hre.ethers.getContractFactory("TransparentUpgradeableProxy");
   const dtxTransparentUpgradeableProxy = await TransparentUpgradeableProxy.getDeployTransaction(implAddr, adminAddr, "0x")
   //console.log("3.1.! bytecode for rrProxy:",dtxTransparentUpgradeableProxy)
-
+  var fs = require('fs');
+  fs.writeFileSync('./RoyaltiesRegistry_Proxy.txt', dtxTransparentUpgradeableProxy.data , 'utf-8');
+  
   //predict address
-  const salt = hre.ethers.constants.HashZero;
+  const salt = getSalt();
   const expectedAddressTransparentUpgradeableProxy = await factory.getDeploymentAddress(dtxTransparentUpgradeableProxy.data, salt)
   const rrProxy = await hre.ethers.getContractAt('RoyaltiesRegistry', expectedAddressTransparentUpgradeableProxy);
   console.log("3.2.! Predict address for rrProxy: ", expectedAddressTransparentUpgradeableProxy)
@@ -33,17 +35,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("3.4.! init calldata for rrProxy: ", initCalldata)
 
   //deploy rrProxy
-  await( await factory.create(0, salt, dtxTransparentUpgradeableProxy.data, expectedAddressTransparentUpgradeableProxy, "", [initCalldata, ownershipCalldata])).wait()
+  //await( await factory.create(0, salt, dtxTransparentUpgradeableProxy.data, expectedAddressTransparentUpgradeableProxy, "", [initCalldata, ownershipCalldata])).wait()
 
   //check rrProxy
-  console.log("rrProxy owner:", await rrProxy.owner())
+  //console.log("rrProxy owner:", await rrProxy.owner())
 
   //save artifact
   await hre.deployments.save("RoyaltiesRegistry", {
     address: expectedAddressTransparentUpgradeableProxy,
-    ...(await hre.deployments.getExtendedArtifact("RoyaltiesRegistry"))
+    ...(await hre.deployments.getExtendedArtifact("TransparentUpgradeableProxy"))
   })
 
 };
 export default func;
-func.tags = ['oasys'];
+func.tags = ['oasys', 'now'];

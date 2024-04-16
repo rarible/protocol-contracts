@@ -39,7 +39,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", accounts => {
   let deployed;
 
   before(async () => {
-    deployed = await deployments.fixture(['all'])
+    deployed = await deployments.fixture(['oasys'])
     helper = await RaribleTestHelper.new();
     wrapperHelper = await WrapperHelper.new();
 

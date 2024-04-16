@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { prepareTransferOwnershipCalldata } from './help';
+import { prepareTransferOwnershipCalldata, getSalt } from './help';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(``)
@@ -14,9 +14,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const ERC721LazyMintTransferProxy = await hre.ethers.getContractFactory("ERC721LazyMintTransferProxy");
   const dtxTransferProxy = await ERC721LazyMintTransferProxy.getDeployTransaction();
   //console.log("4.1.! bytecode for erc721LazyMintTransferProxy:",dtxTransferProxy)
-
+  var fs = require('fs');
+  fs.writeFileSync('./ERC721LazyMintTransferProxy.txt', dtxTransferProxy.data , 'utf-8');
+  
   //predict address
-  const salt = hre.ethers.constants.HashZero;
+  const salt = getSalt();
   const expectedAddressTransferProxy = await factory.getDeploymentAddress(dtxTransferProxy.data, salt)
   const erc721LazyMintTransferProxy = await hre.ethers.getContractAt('ERC721LazyMintTransferProxy', expectedAddressTransferProxy);
   console.log("6.2.! Predict address for erc721LazyMintTransferProxy: ", expectedAddressTransferProxy)
@@ -30,10 +32,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("6.4.! init calldata for erc721LazyMintTransferProxy: ", initCalldata)
 
   //deploy erc721LazyMintTransferProxy
-  await(await factory.create(0, salt, dtxTransferProxy.data, expectedAddressTransferProxy, "", [initCalldata, ownershipCalldata])).wait()
+  //await(await factory.create(0, salt, dtxTransferProxy.data, expectedAddressTransferProxy, "", [initCalldata, ownershipCalldata])).wait()
 
   //check rrProxy
-  console.log("erc721LazyMintTransferProxy owner:", await erc721LazyMintTransferProxy.owner())
+  //console.log("erc721LazyMintTransferProxy owner:", await erc721LazyMintTransferProxy.owner())
 
   //save artifact
   await hre.deployments.save("ERC721LazyMintTransferProxy", {
@@ -43,4 +45,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['oasys'];
+func.tags = ['oasys', "now"];

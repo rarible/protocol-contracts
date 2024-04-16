@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { prepareTransferOwnershipCalldata } from './help';
+import { prepareTransferOwnershipCalldata, getSalt } from './help';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(``)
@@ -14,9 +14,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const TransferProxy = await hre.ethers.getContractFactory("TransferProxy");
   const dtxTransferProxy = await TransferProxy.getDeployTransaction();
   //console.log("4.1.! bytecode for transferProxy:",dtxTransferProxy)
-
+  var fs = require('fs');
+  fs.writeFileSync('./TransferProxy.txt', dtxTransferProxy.data , 'utf-8');
+  
   //predict address
-  const salt = hre.ethers.constants.HashZero;
+  const salt = getSalt();
   const expectedAddressTransferProxy = await factory.getDeploymentAddress(dtxTransferProxy.data, salt)
   const transferProxy = await hre.ethers.getContractAt('TransferProxy', expectedAddressTransferProxy);
   console.log("4.2.! Predict address for transferProxy: ", expectedAddressTransferProxy)
@@ -30,10 +32,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log("4.4.! init calldata for transferProxy: ", initCalldata)
 
   //deploy transferProxy
-  await(await factory.create(0, salt, dtxTransferProxy.data, expectedAddressTransferProxy, "", [initCalldata, ownershipCalldata])).wait()
+  ////await(await factory.create(0, salt, dtxTransferProxy.data, expectedAddressTransferProxy, "", [initCalldata, ownershipCalldata])).wait()
 
   //check rrProxy
-  console.log("transferProxy owner:", await transferProxy.owner())
+  //console.log("transferProxy owner:", await transferProxy.owner())
 
   //save artifact
   await hre.deployments.save("TransferProxy", {
@@ -43,4 +45,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['oasys'];
+func.tags = ['oasys', "now"];

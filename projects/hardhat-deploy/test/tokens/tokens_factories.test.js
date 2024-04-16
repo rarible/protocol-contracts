@@ -35,7 +35,7 @@ contract("Test factories and tokens", accounts => {
   let deployed;
 
   before(async () => {
-    deployed = await deployments.fixture(['all'])
+    deployed = await deployments.fixture(['oasys'])
   });
 
   describe("rarible collections", () => {
