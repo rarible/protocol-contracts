@@ -38,6 +38,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
     },
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 
   //deploy beacon
@@ -46,6 +47,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
     args: [erc721Receipt.implementation],
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 
   //deploy factory
@@ -54,6 +56,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
     args: [erc721BeaconReceipt.address, transferProxyyAddress, erc721LazyMintTransferProxyAddress],
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 }
 export default func;

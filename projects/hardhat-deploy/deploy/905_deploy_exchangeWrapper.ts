@@ -212,7 +212,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [settings.marketplaces, settings.weth, settings.transferProxies]
+    args: [settings.marketplaces, settings.weth, settings.transferProxies],
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 };
 

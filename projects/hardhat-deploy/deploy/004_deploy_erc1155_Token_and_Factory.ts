@@ -38,6 +38,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
     },
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 
   //deploy beacon
@@ -46,6 +47,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
     args: [erc1155Receipt.implementation],
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 
   //deploy factory
@@ -54,6 +56,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
     args: [erc1155BeaconReceipt.address, transferProxyyAddress, erc1155LazyMintTransferProxyAddress],
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 
 }

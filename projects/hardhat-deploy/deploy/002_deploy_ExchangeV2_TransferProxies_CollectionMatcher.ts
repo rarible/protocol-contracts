@@ -37,14 +37,16 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     proxy: {
       execute: {
         init: {
-          methodName: "__ExchangeV2_init",
-          args: [transferProxy.address, erc20TransferProxy.address, 0, hre.ethers.constants.AddressZero, royaltiesRegistryAddress],
+          methodName: "__ExchangeV2_init_proxy",
+          args: [transferProxy.address, erc20TransferProxy.address, 0, hre.ethers.constants.AddressZero, royaltiesRegistryAddress, deployer],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
     },
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
   const ExchangeV2 = await hre.ethers.getContractFactory(contractName);
@@ -76,18 +78,26 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
 
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,
+    proxy: {
+      execute: {
+        init: {
+          methodName: `__${contractName}_init_proxy`,
+          args: [deployer],
+        },
+      },
+      proxyContract: "OpenZeppelinTransparentProxy",
+    },
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
   const Proxy = await hre.ethers.getContractFactory(contractName);
-  const proxy = await Proxy.attach(transferProxyReceipt.address);
-
-  const initTx = await proxy.__OperatorRole_init();
-  await initTx.wait()
+  const proxy = Proxy.attach(transferProxyReceipt.address);
 
   return proxy;
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens'];
+func.tags = ['all', 'all-no-tokens', 'TransferProxies'];

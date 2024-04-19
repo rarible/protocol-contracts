@@ -1,8 +1,6 @@
-import '@matterlabs/hardhat-zksync-deploy';
-import '@matterlabs/hardhat-zksync-solc';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "hardhat-deploy";
+import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 
@@ -455,6 +453,17 @@ const config: HardhatUserConfig = {
       },
     }
   },
+  deterministicDeployment: {
+    '421614': {
+        factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
+    },
+    '5003': {
+      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
+    },
+    '11155111': {
+      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
+    }
+  }
 };
 
 

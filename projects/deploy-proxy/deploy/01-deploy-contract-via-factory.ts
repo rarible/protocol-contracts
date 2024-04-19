@@ -14,7 +14,7 @@ const deployLock: DeployFunction = async (
         log: true,
         args: [100, 200], // Unlock timestamp in seconds
         waitConfirmations: 1,
-        deterministicDeployment: true,
+        deterministicDeployment: "0x11111",
     });
     console.log("transactionHash", deployResult.transactionHash)
 };
