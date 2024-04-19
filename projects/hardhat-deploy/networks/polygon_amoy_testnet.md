@@ -12,6 +12,6 @@
  ERC721RaribleMeta | 0x41407B447Fb5425187A9BCA3a062644EF2410F8D | https://www.oklink.com/amoy/address/0x41407B447Fb5425187A9BCA3a062644EF2410F8D 
  ERC721RaribleMinimalBeaconMeta | 0xB020bA7fcF43DCc59eF0103624BD6FADE66d105E | https://www.oklink.com/amoy/address/0xB020bA7fcF43DCc59eF0103624BD6FADE66d105E 
  ExchangeMetaV2 | 0x3e52D660b69d1bDacb6C513cE085D924F5Cb9c77 | https://www.oklink.com/amoy/address/0x3e52D660b69d1bDacb6C513cE085D924F5Cb9c77 
- RaribleExchangeWrapper | 0x2FCE8435F0455eDc702199741411dbcD1B7606cA | https://www.oklink.com/amoy/address/0x2FCE8435F0455eDc702199741411dbcD1B7606cA 
+ RaribleExchangeWrapper | 0x7d47126a2600E22eab9eD6CF0e515678727779A6 | https://www.oklink.com/amoy/address/0x7d47126a2600E22eab9eD6CF0e515678727779A6 
  RoyaltiesRegistry | 0xD1f689646861870D44B33dBBb413Fa7D06A2B52f | https://www.oklink.com/amoy/address/0xD1f689646861870D44B33dBBb413Fa7D06A2B52f 
  TransferProxy | 0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af | https://www.oklink.com/amoy/address/0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af 
