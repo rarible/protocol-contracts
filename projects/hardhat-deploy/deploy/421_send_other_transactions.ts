@@ -40,4 +40,4 @@ async function getContract(hre: HardhatRuntimeEnvironment, contractName: string)
 }
 
 export default func;
-func.tags = ['oasys'];
+func.tags = ['oasys', "oasys_config"];
