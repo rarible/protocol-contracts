@@ -208,14 +208,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const erc20TransferProxy = await hre.deployments.get("ERC20TransferProxy");
   settings.transferProxies.push(erc20TransferProxy.address)
 
-  const deployment = await deploy('RaribleExchangeWrapper', {
+  const deployment = await deploy('RaribleExchangeWrapperOwnerManaged', {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [settings.marketplaces, settings.weth, settings.transferProxies],
+    args: [settings.marketplaces, settings.weth, settings.transferProxies, deployer],
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 };
 
 export default func;
-func.tags = ['all', 'all-zk', 'wrapper', 'all-no-tokens', 'all-zk-no-tokens'];
+func.tags = ['all', 'all-zk', 'wrapper', 'all-no-tokens', 'all-zk-no-tokens', '905'];

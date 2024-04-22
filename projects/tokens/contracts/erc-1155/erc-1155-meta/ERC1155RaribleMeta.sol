@@ -22,6 +22,19 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
     }
     
+
+    function __ERC1155RaribleUser_init_proxy(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy, address initialOwner) external {
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+
+        __MetaTransaction_init_unchained("ERC1155RaribleUserMeta", "1");
+        
+        isPrivate = true;
+
+        transferOwnership(initialOwner);
+
+        emit CreateERC1155RaribleUser(initialOwner, _name, _symbol);
+    }
+
     function __ERC1155Rarible_init(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy) external {
         __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
 
@@ -30,6 +43,18 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         isPrivate = false;
 
         emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
+    }
+
+    function __ERC1155Rarible_init_proxy(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy, address initialOwner) external {
+        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+
+        __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
+
+        isPrivate = false;
+
+        transferOwnership(initialOwner);
+
+        emit CreateERC1155Rarible(initialOwner, _name, _symbol);
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {

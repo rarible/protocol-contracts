@@ -32,6 +32,30 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
+    function __ERC721RaribleUser_init_proxy(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address transferProxy, address lazyTransferProxy, address initialOwner) external {
+        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+
+        __MetaTransaction_init_unchained("ERC721RaribleUserMeta", "1");
+
+        isPrivate = true;
+
+        transferOwnership(initialOwner);
+
+        emit CreateERC721RaribleUser(initialOwner, _name, _symbol);
+    }
+
+    function __ERC721Rarible_init_proxy(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address transferProxy, address lazyTransferProxy, address initialOwner) external {
+        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+
+        __MetaTransaction_init_unchained("ERC721RaribleMeta", "1");
+
+        isPrivate = false;
+
+        transferOwnership(initialOwner);
+
+        emit CreateERC721Rarible(initialOwner, _name, _symbol);
+    }
+
     function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
         return super._msgSender();
     }

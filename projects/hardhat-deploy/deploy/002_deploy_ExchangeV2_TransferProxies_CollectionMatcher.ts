@@ -100,4 +100,4 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens', 'TransferProxies'];
+func.tags = ['all', 'all-no-tokens', 'TransferProxies', '002'];

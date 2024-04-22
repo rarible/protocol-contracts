@@ -8,11 +8,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   //deploying ERC721 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMeta");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMetaOwnerManaged");
   }
 
   if (!!deploy_non_meta) {
-    await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeacon");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeaconOwnerManaged");
   }
 
 };
@@ -30,8 +30,8 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
     proxy: {
       execute: {
         init: {
-          methodName: "__ERC721Rarible_init",
-          args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc721LazyMintTransferProxyAddress],
+          methodName: "__ERC721Rarible_init_proxy",
+          args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc721LazyMintTransferProxyAddress, deployer],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
@@ -39,26 +39,29 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
   //deploy beacon
   const erc721BeaconReceipt = await deploy(beaconName, {
     from: deployer,
-    args: [erc721Receipt.implementation],
+    args: [erc721Receipt.implementation, deployer],
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
   //deploy factory
-  const factory721Receipt = await deploy("ERC721RaribleFactoryC2", {
+  const factory721Receipt = await deploy("ERC721RaribleFactoryC2OwnerManaged", {
     from: deployer,
-    args: [erc721BeaconReceipt.address, transferProxyyAddress, erc721LazyMintTransferProxyAddress],
+    args: [erc721BeaconReceipt.address, transferProxyyAddress, erc721LazyMintTransferProxyAddress, deployer],
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 }
 export default func;
 
-func.tags = ['all', 'tokens'];
+func.tags = ['all', 'tokens', '003'];
