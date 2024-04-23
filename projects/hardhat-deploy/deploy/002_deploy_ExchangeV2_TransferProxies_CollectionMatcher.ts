@@ -67,6 +67,8 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     from: deployer,
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
   await (await exchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollectionReceipt.address)).wait()
