@@ -6,7 +6,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Deploying contracts on network ${hre.network.name}`);
 
   const { deploy } = hre.deployments;
-  const { zksyncEthers } = hre;
+  const { ethers } = hre;
   const { deployer } = await hre.getNamedAccounts();
 
   console.log("Deploying contracts with the account:", deployer);
@@ -17,13 +17,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
     autoMine: true,
   });
-
+  
   // Get a contract instance
-  const royaltiesRegistry = await zksyncEthers.getContractAt('RoyaltiesRegistry', deployment.address);
+  const royaltiesRegistry = await ethers.getContractAt('RoyaltiesRegistry', deployment.address);
 
   // Call the __RoyaltiesRegistry_init function
   console.log("Initializing RoyaltiesRegistry");
-  await royaltiesRegistry.__RoyaltiesRegistry_init();
+  await (await royaltiesRegistry.__RoyaltiesRegistry_init()).wait();
 
   console.log("RoyaltiesRegistry deployed and initialized");
 };

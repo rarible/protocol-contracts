@@ -29,4 +29,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 export default func;
-func.tags = ['all', 'all-no-tokens', 'RoyaltiesRegistry', '001'];
+func.tags = ['all', 'all-no-tokens', 'deploy-rr'];

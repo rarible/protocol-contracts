@@ -5,13 +5,13 @@ import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig } from '../utils/utils
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
-  const transferProxy = await deployAndInitProxy(hre, "TransferProxy")
+  const transferProxy = await getTransferProxy(hre, "TransferProxy")
 
-  const erc20TransferProxy = await deployAndInitProxy(hre, "ERC20TransferProxy")
+  const erc20TransferProxy = await getTransferProxy(hre, "ERC20TransferProxy")
 
-  const erc721LazyMintTransferProxy = await deployAndInitProxy(hre, "ERC721LazyMintTransferProxy")
+  const erc721LazyMintTransferProxy = await getTransferProxy(hre, "ERC721LazyMintTransferProxy")
 
-  const erc1155LazyMintTransferProxy = await deployAndInitProxy(hre, "ERC1155LazyMintTransferProxy")
+  const erc1155LazyMintTransferProxy = await getTransferProxy(hre, "ERC1155LazyMintTransferProxy")
 
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
 
@@ -74,32 +74,10 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
   await (await exchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollectionReceipt.address)).wait()
 }
 
-async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
-  const { deploy } = hre.deployments;
-  const { deployer } = await hre.getNamedAccounts();
-
-  const transferProxyReceipt = await deploy(contractName, {
-    from: deployer,
-    proxy: {
-      execute: {
-        init: {
-          methodName: `__${contractName}_init_proxy`,
-          args: [deployer],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
-    log: true,
-    autoMine: true,
-    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
-    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
-  });
-
-  const Proxy = await hre.ethers.getContractFactory(contractName);
-  const proxy = Proxy.attach(transferProxyReceipt.address);
-
-  return proxy;
+async function getTransferProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
+  const address = (await hre.deployments.get(contractName)).address;
+  return await hre.ethers.getContractAt(contractName, address)
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens', 'TransferProxies', '002'];
+func.tags = ['all', 'all-no-tokens', 'deploy-exchange'];

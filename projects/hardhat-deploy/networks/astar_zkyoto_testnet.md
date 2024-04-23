@@ -1,0 +1,17 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0x7d47126a2600E22eab9eD6CF0e515678727779A6 | https://astar-zkyoto.blockscout.com/address/0x7d47126a2600E22eab9eD6CF0e515678727779A6 
+ DefaultProxyAdmin | 0x0fE65B68Eb627c21EAF3cfe8183C4F946F3d48BD | https://astar-zkyoto.blockscout.com/address/0x0fE65B68Eb627c21EAF3cfe8183C4F946F3d48BD 
+ ERC1155LazyMintTransferProxy | 0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa | https://astar-zkyoto.blockscout.com/address/0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa 
+ ERC1155RaribleBeaconMeta | 0x509FD4cdAa29Be7B1fAD251d8Ea0fCA2Ca91eb60 | https://astar-zkyoto.blockscout.com/address/0x509FD4cdAa29Be7B1fAD251d8Ea0fCA2Ca91eb60 
+ ERC1155RaribleFactoryC2 | 0x927b8510Bf3108BF35aD6d60316C2f8dAB1BCD9A | https://astar-zkyoto.blockscout.com/address/0x927b8510Bf3108BF35aD6d60316C2f8dAB1BCD9A 
+ ERC1155RaribleMeta | 0x2eBecaBBbe8a8C629b99aB23ed154d74CD5d4342 | https://astar-zkyoto.blockscout.com/address/0x2eBecaBBbe8a8C629b99aB23ed154d74CD5d4342 
+ ERC20TransferProxy | 0x6F6Cdf267F98eDF9a098864B91A114fD03623462 | https://astar-zkyoto.blockscout.com/address/0x6F6Cdf267F98eDF9a098864B91A114fD03623462 
+ ERC721LazyMintTransferProxy | 0xd786eBeD505D010D4f8127Cd825511E887c65A2A | https://astar-zkyoto.blockscout.com/address/0xd786eBeD505D010D4f8127Cd825511E887c65A2A 
+ ERC721RaribleFactoryC2 | 0x4e045aBF1e239BfA224c8DCb8F889C3d447D3804 | https://astar-zkyoto.blockscout.com/address/0x4e045aBF1e239BfA224c8DCb8F889C3d447D3804 
+ ERC721RaribleMeta | 0x3d3c8f3aCcf388c3618BbE80598692B6d15bd4D5 | https://astar-zkyoto.blockscout.com/address/0x3d3c8f3aCcf388c3618BbE80598692B6d15bd4D5 
+ ERC721RaribleMinimalBeaconMeta | 0x12B372153249F006F756d0668fCDBD8fbD8b0a15 | https://astar-zkyoto.blockscout.com/address/0x12B372153249F006F756d0668fCDBD8fbD8b0a15 
+ ExchangeMetaV2 | 0x41407B447Fb5425187A9BCA3a062644EF2410F8D | https://astar-zkyoto.blockscout.com/address/0x41407B447Fb5425187A9BCA3a062644EF2410F8D 
+ RaribleExchangeWrapper | 0x6667b5ce062115651b0a6f499ac3f24A2DdFCB72 | https://astar-zkyoto.blockscout.com/address/0x6667b5ce062115651b0a6f499ac3f24A2DdFCB72 
+ RoyaltiesRegistry | 0xD504e84B42947Ee6f07dBE28763896EA3A2bc5e9 | https://astar-zkyoto.blockscout.com/address/0xD504e84B42947Ee6f07dBE28763896EA3A2bc5e9 
+ TransferProxy | 0xB7979d08657f37C14659dbd8b45FBA91c0780780 | https://astar-zkyoto.blockscout.com/address/0xB7979d08657f37C14659dbd8b45FBA91c0780780 

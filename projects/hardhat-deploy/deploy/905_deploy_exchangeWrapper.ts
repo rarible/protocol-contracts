@@ -16,6 +16,7 @@ const mainnet = {
     "0x0000000000e655fae4d56241588680f86e3b2377", // looksRareV2
     "0x000000000000Ad05Ccc4F10045630fb830B95127", // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -33,6 +34,7 @@ const polygon_mainnet = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
@@ -50,6 +52,7 @@ const goerli = {
     "0x35C2215F2FFe8917B06454eEEaba189877F200cf", // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
@@ -67,6 +70,7 @@ const def = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: zeroAddress,
@@ -85,6 +89,7 @@ const dev = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: zeroAddress,
@@ -103,6 +108,7 @@ const staging = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: zeroAddress,
@@ -121,6 +127,7 @@ const polygon_staging = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: zeroAddress,
@@ -139,6 +146,7 @@ const polygon_mumbai = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: "0xa6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa",
@@ -157,6 +165,7 @@ const sepolia = {
     "0x35C2215F2FFe8917B06454eEEaba189877F200cf", // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
   ],
 
   weth: "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",

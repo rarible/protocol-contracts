@@ -94,7 +94,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     weth = await WETH9.new();
 
     //deploy wrapper
-    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address], weth.address, [erc20TransferProxy.address, seaport.address]);
+    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, seaport.address], weth.address, [erc20TransferProxy.address, seaport.address]);
   })
 
   it("WETH: single purchase from exchangeV2", async () => {
@@ -300,7 +300,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     
   })
 
-  it("WETH: single purchase from seaport 1.4", async () => {
+  it("WETH: single purchase from seaport 1.5", async () => {
     const buyer = accounts[2];
     const seller = accounts[1];
 
@@ -361,6 +361,80 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
     
     const tradeDataSeaPort = PurchaseData(9, price, await encodeCurrencyAndDataTypeAndFees(1, 0, 1500, 500), dataForSeaportWithSelector);
+
+    const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feeRecipient1, feeRecipient2, { from: buyer })
+    console.log("seaport1.4 V2 721 1 order 1 comission", tx.receipt.gasUsed)
+    assert.equal(await erc721.balanceOf(seller), 0);
+    assert.equal(await erc721.balanceOf(buyer), 1);
+
+    assert.equal(await weth.balanceOf(buyer), 880);
+    assert.equal(await weth.balanceOf(seller), 100);
+    assert.equal(await weth.balanceOf(feeRecipient1), 15);
+    assert.equal(await weth.balanceOf(feeRecipient2), 5);
+    
+  })
+
+  it("WETH: single purchase from seaport 1.6", async () => {
+    const buyer = accounts[2];
+    const seller = accounts[1];
+
+    const price = 100;
+
+    //prepare WETH
+    await prepareWETH(buyer)
+
+    //prepare ERC-721
+    erc721 = await TestERC721.new("Rarible", "RARI");
+    await erc721.mint(seller, erc721TokenId1);
+    await erc721.setApprovalForAll(seaport.address, true, { from: seller });
+
+    const considerationItemLeft = {
+      itemType: 1,
+      token: weth.address,
+      identifierOrCriteria: 0,
+      startAmount: price,
+      endAmount: price,
+      recipient: seller
+    }
+
+    const offerItemLeft = {
+      itemType: 2, // 2: ERC721 items
+      token: erc721.address,
+      identifierOrCriteria: erc721TokenId1,
+      startAmount: 1,
+      endAmount: 1
+    }
+
+    const OrderParametersLeft = {
+      offerer: seller,// 0x00
+      zone: ZERO_ADDRESS, // 0x20
+      offer: [offerItemLeft], // 0x40
+      consideration: [considerationItemLeft], // 0x60
+      orderType: 0, // 0: no partial fills, anyone can execute
+      startTime: 0, //
+      endTime: '0xff00000000000000000000000000', // 0xc0
+      zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000', // 0xe0
+      salt: '0x9d56bd7c39230517f254b5ce4fd292373648067bd5c6d09accbcb3713f328885', // 0x100
+      conduitKey : '0x0000000000000000000000000000000000000000000000000000000000000000', // 0x120
+      totalOriginalConsiderationItems: 1 // 0x140
+      // offer.length                          // 0x160
+    }
+
+    const _advancedOrder = {
+      parameters: OrderParametersLeft,
+      numerator: 1,
+      denominator: 1,
+      signature: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1b',
+      extraData: '0x3c7e9325a7459e2d2258ae8200c465f9a1e913d2cbd7f7f15988ab079f7726494a9a46f9db6e0aaaf8cfab2be8ecf68fed7314817094ca85acc5fbd6a1e192ca1c'
+    }
+
+    const _criteriaResolvers = [];
+    const _fulfillerConduitKey = '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const _recipient = buyer;
+
+    let dataForSeaportWithSelector = await wrapperHelper.getDataSeaPortFulfillAdvancedOrder(_advancedOrder, _criteriaResolvers, _fulfillerConduitKey, _recipient);
+    
+    const tradeDataSeaPort = PurchaseData(10, price, await encodeCurrencyAndDataTypeAndFees(1, 0, 1500, 500), dataForSeaportWithSelector);
 
     const tx = await bulkExchange.singlePurchase(tradeDataSeaPort, feeRecipient1, feeRecipient2, { from: buyer })
     console.log("seaport1.4 V2 721 1 order 1 comission", tx.receipt.gasUsed)

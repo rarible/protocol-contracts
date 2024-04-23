@@ -6,32 +6,32 @@ import { getConfig } from '../utils/utils'
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
 
-  //deploying ERC1155 with meta support if needed
+  //deploying ERC721 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC1155TokenAndFactory(hre, "ERC1155RaribleMeta", "ERC1155RaribleBeaconMetaOwnerManaged");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMetaOwnerManaged");
   }
 
   if (!!deploy_non_meta) {
-    await deployERC1155TokenAndFactory(hre, "ERC1155Rarible", "ERC1155RaribleBeaconOwnerManaged");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeaconOwnerManaged");
   }
 
 };
 
-async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
+async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyyAddress = (await hre.deployments.get("TransferProxy")).address;
-  const erc1155LazyMintTransferProxyAddress = (await hre.deployments.get("ERC1155LazyMintTransferProxy")).address;
+  const erc721LazyMintTransferProxyAddress = (await hre.deployments.get("ERC721LazyMintTransferProxy")).address;
 
   //deploy token proxy
-  const erc1155Receipt = await deploy(contractName, {
+  const erc721Receipt = await deploy(contractName, {
     from: deployer,
     proxy: {
       execute: {
         init: {
-          methodName: "__ERC1155Rarible_init_proxy",
-          args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc1155LazyMintTransferProxyAddress, deployer],
+          methodName: "__ERC721Rarible_init_proxy",
+          args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc721LazyMintTransferProxyAddress, deployer],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
@@ -43,9 +43,9 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   });
 
   //deploy beacon
-  const erc1155BeaconReceipt = await deploy(beaconName, {
+  const erc721BeaconReceipt = await deploy(beaconName, {
     from: deployer,
-    args: [erc1155Receipt.implementation, deployer],
+    args: [erc721Receipt.implementation, deployer],
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
@@ -53,16 +53,15 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   });
 
   //deploy factory
-  const factory1155Receipt = await deploy("ERC1155RaribleFactoryC2OwnerManaged", {
+  const factory721Receipt = await deploy("ERC721RaribleFactoryC2OwnerManaged", {
     from: deployer,
-    args: [erc1155BeaconReceipt.address, transferProxyyAddress, erc1155LazyMintTransferProxyAddress, deployer],
+    args: [erc721BeaconReceipt.address, transferProxyyAddress, erc721LazyMintTransferProxyAddress, deployer],
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
     skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
-
 }
-
 export default func;
-func.tags = ['all', 'tokens', '004'];
+
+func.tags = ['all', 'tokens', 'erc721'];

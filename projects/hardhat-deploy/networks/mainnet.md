@@ -14,7 +14,10 @@
  ERC721RaribleMinimal | 0xc9154424B823b10579895cCBE442d41b9Abd96Ed | https://etherscan.io/address/0xc9154424B823b10579895cCBE442d41b9Abd96Ed 
  ERC721RaribleMinimalBeacon | 0x0890b2d8b6F938CF93b8b243AB8f0589031e158f | https://etherscan.io/address/0x0890b2d8b6F938CF93b8b243AB8f0589031e158f 
  ExchangeV2 | 0x9757F2d2b135150BBeb65308D4a91804107cd8D6 | https://etherscan.io/address/0x9757F2d2b135150BBeb65308D4a91804107cd8D6 
- RaribleExchangeWrapper | 0x0c17Fc3Ea97cDBFc9503333dAEEc3097EE076E23 | https://etherscan.io/address/0x0c17Fc3Ea97cDBFc9503333dAEEc3097EE076E23 
+ ProxyUpgradeAction | 0xd22CD47808ae4b13D46Fa8FEFc08C91eb5790Bf8 | https://etherscan.io/address/0xd22CD47808ae4b13D46Fa8FEFc08C91eb5790Bf8 
+ RaribleExchangeWrapper | 0x9BDB46adb3972f9a5e2eadCcd009f0bf3e386845 | https://etherscan.io/address/0x9BDB46adb3972f9a5e2eadCcd009f0bf3e386845 
  RoyaltiesRegistry | 0xEa90CFad1b8e030B8Fd3E63D22074E0AEb8E0DCD | https://etherscan.io/address/0xEa90CFad1b8e030B8Fd3E63D22074E0AEb8E0DCD 
+ SetProtocolFeeAction | 0xcaC1fE02cB051672D93eE390136B8E10301B6709 | https://etherscan.io/address/0xcaC1fE02cB051672D93eE390136B8E10301B6709 
  TransferProxy | 0x4fee7b061c97c9c496b01dbce9cdb10c02f0a0be | https://etherscan.io/address/0x4fee7b061c97c9c496b01dbce9cdb10c02f0a0be 
+ UpgradeExecutor | 0xb23BCD4F668365B1c9Ec4B4DF79915bF8c76C5b5 | https://etherscan.io/address/0xb23BCD4F668365B1c9Ec4B4DF79915bF8c76C5b5 
  WETH9 | 0x3E33d47eb30078387de943F638854A5efC1F241A | https://etherscan.io/address/0x3E33d47eb30078387de943F638854A5efC1F241A 

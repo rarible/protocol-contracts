@@ -86,7 +86,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
         chainId: parseInt(json.network_id),
         url: json.url || "",
         accounts: [json.key],
-        gas: "auto",
+        gas: 5000000,
         saveDeployments: true,
         verify: json.verify
           ? {
@@ -202,7 +202,7 @@ const config: HardhatUserConfig = {
     mantle_mainnet: createNetwork("mantle_mainnet"),
     arbitrum_goerli: createNetwork("arbitrum_goerli"),
     arbitrum_sepolia: createNetwork("arbitrum_sepolia"),
-    arbitrum_mainnet: createNetwork("arbitrum_mainnet"),
+    arbitrum: createNetwork("arbitrum"),
     zkatana_testnet: createNetwork("zkatana_testnet"),
     zkatana_mainnet: createNetwork("zkatana_mainnet"),
     chiliz_testnet: createNetwork("chiliz_testnet"),
@@ -232,7 +232,21 @@ const config: HardhatUserConfig = {
     kroma: createNetwork("kroma"),
     astar: createNetwork("astar"),
     oasys_testnet: createNetwork("oasys_testnet"),
-    oasys: createNetwork("oasys")
+    oasys: createNetwork("oasys"),
+    zkLink: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("zkLink"),
+    },
+    astar_zkyoto_testnet: createNetwork("astar_zkyoto_testnet"),
+    oasys_testnet_saakuru: createNetwork("oasys_testnet_saakuru"),
+    saakuru: createNetwork("saakuru"),
+    polygon_amoy_testnet: createNetwork("polygon_amoy_testnet"),
+    palm_testnet: createNetwork("palm_testnet"),
+    match_testnet: createNetwork("match_testnet"),
+    "5ire_testnet": createNetwork("5ire_testnet"),
+    palm: createNetwork("palm"),
+    match: createNetwork("match")
   },
   etherscan: {
     apiKey: {
@@ -244,7 +258,7 @@ const config: HardhatUserConfig = {
       mantle_mainnet: getNetworkApiKey("mantle_mainnet"),
       mantle_testnet: getNetworkApiKey("mantle_testnet"),
       arbitrum_sepolia: getNetworkApiKey("arbitrum_sepolia"),
-      arbitrum_mainnet: getNetworkApiKey("arbitrum_mainnet"),
+      arbitrum: getNetworkApiKey("arbitrum"),
       zksync_testnet: getNetworkApiKey("zksync_testnet"),
       rari_testnet: getNetworkApiKey("rari_testnet"),
       mantle_sepolia_testnet: getNetworkApiKey("mantle_sepolia_testnet"),
@@ -261,9 +275,90 @@ const config: HardhatUserConfig = {
       kroma: getNetworkApiKey("kroma"),
       astar: getNetworkApiKey("astar"),
       oasys_testnet: getNetworkApiKey("oasys_testnet"),
-      oasys: getNetworkApiKey("oasys")
+      oasys: getNetworkApiKey("oasys"),
+      astar_zkyoto_testnet: getNetworkApiKey("astar_zkyoto_testnet"),
+      oasys_testnet_saakuru: getNetworkApiKey("oasys_testnet_saakuru"),
+      saakuru: getNetworkApiKey("saakuru"),
+      polygon_amoy_testnet: getNetworkApiKey("polygon_amoy_testnet"),
+      palm_testnet: getNetworkApiKey("palm_testnet"),
+      match_testnet: getNetworkApiKey("match_testnet"),
+      "5ire_testnet": getNetworkApiKey("5ire_testnet"),
+      palm: getNetworkApiKey("palm"),
+      match: getNetworkApiKey("match")
     },
     customChains: [
+      {
+        network: "match",
+        chainId: createNetwork("match").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("match"),
+          browserURL: getNetworkExplorerUrl("match"),
+        },
+      },
+      {
+        network: "palm",
+        chainId: createNetwork("palm").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("palm"),
+          browserURL: getNetworkExplorerUrl("palm"),
+        },
+      },
+      {
+        network: "5ire_testnet",
+        chainId: createNetwork("5ire_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("5ire_testnet"),
+          browserURL: getNetworkExplorerUrl("5ire_testnet"),
+        },
+      },
+      {
+        network: "match_testnet",
+        chainId: createNetwork("match_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("match_testnet"),
+          browserURL: getNetworkExplorerUrl("match_testnet"),
+        },
+      },
+      {
+        network: "palm_testnet",
+        chainId: createNetwork("palm_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("palm_testnet"),
+          browserURL: getNetworkExplorerUrl("palm_testnet"),
+        },
+      },
+      {
+        network: "polygon_amoy_testnet",
+        chainId: createNetwork("polygon_amoy_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("polygon_amoy_testnet"),
+          browserURL: getNetworkExplorerUrl("polygon_amoy_testnet"),
+        },
+      },
+      {
+        network: "saakuru",
+        chainId: createNetwork("saakuru").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("saakuru"),
+          browserURL: getNetworkExplorerUrl("saakuru"),
+        },
+      },
+      {
+        network: "oasys_testnet_saakuru",
+        chainId: createNetwork("oasys_testnet_saakuru").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("oasys_testnet_saakuru"),
+          browserURL: getNetworkExplorerUrl("oasys_testnet_saakuru"),
+        },
+      },
+      {
+        network: "astar_zkyoto_testnet",
+        chainId: createNetwork("astar_zkyoto_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("astar_zkyoto_testnet"),
+          browserURL: getNetworkExplorerUrl("astar_zkyoto_testnet"),
+        },
+      },
       {
         network: "oasys",
         chainId: createNetwork("oasys").chainId!,
@@ -425,11 +520,11 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        network: "arbitrum_mainnet",
-        chainId: createNetwork("arbitrum_mainnet").chainId!,
+        network: "arbitrum",
+        chainId: createNetwork("arbitrum").chainId!,
         urls: {
-          apiURL: getNetworkApiUrl("arbitrum_mainnet"),
-          browserURL: getNetworkExplorerUrl("arbitrum_mainnet"),
+          apiURL: getNetworkApiUrl("arbitrum"),
+          browserURL: getNetworkExplorerUrl("arbitrum"),
         },
       },
       {
@@ -443,7 +538,7 @@ const config: HardhatUserConfig = {
     ],
   },
   zksolc: {
-    compilerSource: 'binary',
+    version: "1.3.18",
     settings: {
       isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
       forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
