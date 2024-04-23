@@ -232,7 +232,8 @@ const config: HardhatUserConfig = {
     match_testnet: createNetwork("match_testnet"),
     "5ire_testnet": createNetwork("5ire_testnet"),
     palm: createNetwork("palm"),
-    match: createNetwork("match")
+    match: createNetwork("match"),
+    lisk_sepolia: createNetwork("lisk_sepolia")
   },
   etherscan: {
     apiKey: {
