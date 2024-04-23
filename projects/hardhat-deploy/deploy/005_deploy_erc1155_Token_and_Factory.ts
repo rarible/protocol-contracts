@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import { getConfig } from '../utils/utils'
+import { getOwner } from './utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
@@ -20,7 +21,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
+  
   const transferProxyyAddress = (await hre.deployments.get("TransferProxy")).address;
   const erc1155LazyMintTransferProxyAddress = (await hre.deployments.get("ERC1155LazyMintTransferProxy")).address;
 
@@ -31,7 +33,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
       execute: {
         init: {
           methodName: "__ERC1155Rarible_init_proxy",
-          args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc1155LazyMintTransferProxyAddress, deployer],
+          args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc1155LazyMintTransferProxyAddress, owner],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
@@ -45,7 +47,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   //deploy beacon
   const erc1155BeaconReceipt = await deploy(beaconName, {
     from: deployer,
-    args: [erc1155Receipt.implementation, deployer],
+    args: [erc1155Receipt.implementation, owner],
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
@@ -55,7 +57,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   //deploy factory
   const factory1155Receipt = await deploy("ERC1155RaribleFactoryC2OwnerManaged", {
     from: deployer,
-    args: [erc1155BeaconReceipt.address, transferProxyyAddress, erc1155LazyMintTransferProxyAddress, deployer],
+    args: [erc1155BeaconReceipt.address, transferProxyyAddress, erc1155LazyMintTransferProxyAddress, owner],
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,

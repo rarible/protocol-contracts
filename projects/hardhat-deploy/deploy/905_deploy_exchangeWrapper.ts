@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import { getConfig } from '../utils/utils'
+import { getOwner } from './utils';
 
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const mainnet = {
@@ -197,7 +198,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
+  
   let exchangeV2;
    if (!!deploy_meta) {
     exchangeV2 = (await hre.deployments.get("ExchangeMetaV2")).address;
@@ -221,7 +223,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [settings.marketplaces, settings.weth, settings.transferProxies, deployer],
+    args: [settings.marketplaces, settings.weth, settings.transferProxies, owner],
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
     skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });

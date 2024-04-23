@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { getOwner } from './utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -7,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
   console.log("deploying contracts with the account:", deployer);
 
   await deploy('RoyaltiesRegistry', {
@@ -16,7 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       execute: {
         init: {
           methodName: "__RoyaltiesRegistry_init_proxy",
-          args: [deployer],
+          args: [owner],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",

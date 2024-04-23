@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { getOwner } from './utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
@@ -16,14 +17,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,
     proxy: {
       execute: {
         init: {
           methodName: `__${contractName}_init_proxy`,
-          args: [deployer],
+          args: [owner],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",

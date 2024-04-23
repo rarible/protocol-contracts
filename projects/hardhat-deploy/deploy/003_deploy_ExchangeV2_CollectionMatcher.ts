@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig } from '../utils/utils'
+import { getOwner } from './utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
@@ -28,7 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
   const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
 
   // deploy ExchangeV2 and initialise contract
@@ -38,7 +39,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
       execute: {
         init: {
           methodName: "__ExchangeV2_init_proxy",
-          args: [transferProxy.address, erc20TransferProxy.address, 0, hre.ethers.constants.AddressZero, royaltiesRegistryAddress, deployer],
+          args: [transferProxy.address, erc20TransferProxy.address, 0, hre.ethers.constants.AddressZero, royaltiesRegistryAddress, owner],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
