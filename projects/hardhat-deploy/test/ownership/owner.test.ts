@@ -7,6 +7,7 @@ import hre from "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import { TransferProxy } from "../../typechain-types";
 import { Ownable } from "../../typechain-types";
+import { getOwner } from "../../deploy/utils";
 
 async function getContract<ContractType>(contractName: string) {
     const address = (await hre.deployments.get(contractName)).address;
@@ -16,10 +17,11 @@ async function getContract<ContractType>(contractName: string) {
 describe("Test Owner Check", function () {
 
   let owner: SignerWithAddress;
-  let targetOwner = "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4"
+  let targetOwner: string
 
   beforeEach(async function () {
     [owner] = await ethers.getSigners();
+    targetOwner = await getOwner(hre)
   });
 
   describe("owners should match target", function () {
