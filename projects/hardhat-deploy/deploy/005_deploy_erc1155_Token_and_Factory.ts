@@ -9,11 +9,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   //deploying ERC1155 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC1155TokenAndFactory(hre, "ERC1155RaribleMeta", "ERC1155RaribleBeaconMetaOwnerManaged");
+    await deployERC1155TokenAndFactory(hre, "ERC1155RaribleMeta", "ERC1155RaribleBeaconMeta");
   }
 
   if (!!deploy_non_meta) {
-    await deployERC1155TokenAndFactory(hre, "ERC1155Rarible", "ERC1155RaribleBeaconOwnerManaged");
+    await deployERC1155TokenAndFactory(hre, "ERC1155Rarible", "ERC1155RaribleBeacon");
   }
 
 };
@@ -55,7 +55,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   });
 
   //deploy factory
-  const factory1155Receipt = await deploy("ERC1155RaribleFactoryC2OwnerManaged", {
+  const factory1155Receipt = await deploy("ERC1155RaribleFactoryC2", {
     from: deployer,
     args: [erc1155BeaconReceipt.address, transferProxyyAddress, erc1155LazyMintTransferProxyAddress, owner],
     log: true,

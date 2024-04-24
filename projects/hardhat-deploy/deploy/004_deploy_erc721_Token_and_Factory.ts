@@ -9,11 +9,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   //deploying ERC721 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMetaOwnerManaged");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMeta", "ERC721RaribleMinimalBeaconMeta");
   }
 
   if (!!deploy_non_meta) {
-    await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeaconOwnerManaged");
+    await deployERC721TokenAndFactory(hre, "ERC721RaribleMinimal", "ERC721RaribleMinimalBeacon");
   }
 
 };
@@ -55,7 +55,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
   });
 
   //deploy factory
-  const factory721Receipt = await deploy("ERC721RaribleFactoryC2OwnerManaged", {
+  const factory721Receipt = await deploy("ERC721RaribleFactoryC2", {
     from: deployer,
     args: [erc721BeaconReceipt.address, transferProxyyAddress, erc721LazyMintTransferProxyAddress, owner],
     log: true,

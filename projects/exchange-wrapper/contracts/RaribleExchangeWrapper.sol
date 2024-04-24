@@ -114,7 +114,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         //address _seaPort_1_5, 9
         //address _seaPort_1_6, 10
         address _weth,
-        address[] memory transferProxies
+        address[] memory transferProxies,
+        address initialOwner
     ) {
         wyvernExchange = marketplaces[0];
         exchangeV2 = marketplaces[1];
@@ -135,6 +136,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
                 IERC20Upgradeable(_weth).approve(transferProxies[i], UINT256_MAX);
             }
         }
+
+        transferOwnership(initialOwner);
     }
 
     /**

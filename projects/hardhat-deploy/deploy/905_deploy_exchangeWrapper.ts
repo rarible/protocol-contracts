@@ -219,7 +219,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const erc20TransferProxy = await hre.deployments.get("ERC20TransferProxy");
   settings.transferProxies.push(erc20TransferProxy.address)
 
-  const deployment = await deploy('RaribleExchangeWrapperOwnerManaged', {
+  const deployment = await deploy('RaribleExchangeWrapper', {
     from: deployer,
     log: true,
     autoMine: true,
