@@ -14,6 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 };
 
+// TODO put back initialize
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
