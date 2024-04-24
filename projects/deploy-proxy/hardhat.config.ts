@@ -1,10 +1,11 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "hardhat-deploy";
+import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 
 import type {
+  HttpNetworkConfig,
   HttpNetworkUserConfig,
 } from "hardhat/types";
 import * as dotenv from "dotenv";
@@ -77,7 +78,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
         url: json.url || "",
         chainId: json.network_id,
         timeout: 60000,
-      }
+      } as HttpNetworkConfig
     } else {
       // if not frame
       return {
@@ -233,7 +234,7 @@ const config: HardhatUserConfig = {
     "5ire_testnet": createNetwork("5ire_testnet"),
     palm: createNetwork("palm"),
     match: createNetwork("match"),
-    lisk_sepolia: createNetwork("lisk_sepolia")
+    lisk_sepolia: createNetwork("lisk_sepolia"),
   },
   etherscan: {
     apiKey: {
@@ -271,7 +272,7 @@ const config: HardhatUserConfig = {
       match_testnet: getNetworkApiKey("match_testnet"),
       "5ire_testnet": getNetworkApiKey("5ire_testnet"),
       palm: getNetworkApiKey("palm"),
-      match: getNetworkApiKey("match")
+      match: getNetworkApiKey("match"),
     },
     customChains: [
       {
@@ -520,6 +521,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("zksync_testnet"),
           browserURL: getNetworkExplorerUrl("zksync_testnet"),
+        },
+      },
+      {
+        network: "lisk_sepolia",
+        chainId: createNetwork("lisk_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("lisk_sepolia"),
+          browserURL: getNetworkExplorerUrl("lisk_sepolia"),
         },
       },
     ],
