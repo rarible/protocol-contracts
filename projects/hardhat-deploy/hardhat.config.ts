@@ -246,7 +246,10 @@ const config: HardhatUserConfig = {
     match_testnet: createNetwork("match_testnet"),
     "5ire_testnet": createNetwork("5ire_testnet"),
     palm: createNetwork("palm"),
-    match: createNetwork("match")
+    match: createNetwork("match"),
+    lisk_sepolia: createNetwork("lisk_sepolia"),
+    camp_sepolia: createNetwork("camp_sepolia"),
+    sei_testnet: createNetwork("sei_testnet"),
   },
   etherscan: {
     apiKey: {
@@ -284,7 +287,10 @@ const config: HardhatUserConfig = {
       match_testnet: getNetworkApiKey("match_testnet"),
       "5ire_testnet": getNetworkApiKey("5ire_testnet"),
       palm: getNetworkApiKey("palm"),
-      match: getNetworkApiKey("match")
+      match: getNetworkApiKey("match"),
+      lisk_sepolia: getNetworkApiKey("lisk_sepolia"),
+      camp_sepolia: getNetworkApiKey("camp_sepolia"),
+      sei_testnet: getNetworkApiKey("sei_testnet")
     },
     customChains: [
       {
@@ -533,6 +539,38 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: getNetworkApiUrl("zksync_testnet"),
           browserURL: getNetworkExplorerUrl("zksync_testnet"),
+        },
+      },
+      {
+        network: "zksync_testnet",
+        chainId: createNetwork("zksync_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("zksync_testnet"),
+          browserURL: getNetworkExplorerUrl("zksync_testnet"),
+        },
+      },
+      {
+        network: "lisk_sepolia",
+        chainId: createNetwork("lisk_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("lisk_sepolia"),
+          browserURL: getNetworkExplorerUrl("lisk_sepolia"),
+        },
+      },
+      {
+        network: "camp_sepolia",
+        chainId: createNetwork("camp_sepolia").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("camp_sepolia"),
+          browserURL: getNetworkExplorerUrl("camp_sepolia"),
+        },
+      },
+      {
+        network: "sei_testnet",
+        chainId: createNetwork("sei_testnet").chainId!,
+        urls: {
+          apiURL: getNetworkApiUrl("sei_testnet"),
+          browserURL: getNetworkExplorerUrl("sei_testnet"),
         },
       },
     ],
