@@ -21,15 +21,6 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
   const owner  = await getOwner(hre);
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,
-    proxy: {
-      execute: {
-        init: {
-          methodName: `__${contractName}_init_proxy`,
-          args: [owner],
-        },
-      },
-      proxyContract: "OpenZeppelinTransparentProxy",
-    },
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
@@ -38,8 +29,11 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
   const Proxy = await hre.ethers.getContractFactory(contractName);
   const proxy = await Proxy.attach(transferProxyReceipt.address);
 
+  const initTx = await proxy.__OperatorRole_init_proxy(owner);
+  await initTx.wait()
+
   return proxy;
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens', 'deploy-transfer-proxies'];
+func.tags = ['all', 'all-no-tokens', 'deploy-transfer-proxies', "002"];
