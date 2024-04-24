@@ -31,6 +31,11 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
         emit ProxyChange(assetType, proxy);
     }
 
+    function _setTransferProxy(bytes4 assetType, address proxy) internal {
+        proxies[assetType] = proxy;
+        emit ProxyChange(assetType, proxy);
+    }
+
     function transfer(
         LibAsset.Asset memory asset,
         address from,

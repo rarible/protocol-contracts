@@ -29,7 +29,11 @@ contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTra
         uint newProtocolFee,
         address newDefaultFeeReceiver,
         IRoyaltiesProvider newRoyaltiesProvider,
-        address _initialOwner
+        address _initialOwner,
+        bytes4[] memory assetTypes, 
+        address[] memory proxies,
+        bytes4 assetMatcherType,
+        address assetMatcher
     ) external initializer {
         __Context_init_unchained();
         __Ownable_init_unchained();
@@ -37,6 +41,10 @@ contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTra
         __MetaTransaction_init_unchained("ExchangeMetaV2", "1");
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
+        for (uint i = 0; i < assetTypes.length; i++) {
+            _setTransferProxy(assetTypes[i], proxies[i]);
+        }
+        _setAssetMatcher(assetMatcherType, assetMatcher);
         transferOwnership(_initialOwner);
     }
 
