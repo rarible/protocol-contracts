@@ -32,7 +32,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
     proxy: {
       execute: {
         init: {
-          methodName: "__ERC721Rarible_init",
+          methodName: "__ERC721Rarible_init_proxy",
           args: ["Rarible", "RARI", "ipfs:/", "", transferProxyyAddress, erc721LazyMintTransferProxyAddress, owner],
         },
       },

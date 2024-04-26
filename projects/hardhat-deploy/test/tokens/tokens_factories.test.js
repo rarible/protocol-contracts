@@ -68,9 +68,9 @@ contract("Test factories and tokens", accounts => {
       const factory = await ERC721RaribleFactoryC2.at(deployed["ERC721RaribleFactoryC2"].address);
 
       let proxy;
-      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, minter)
+      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt)
 
-      const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256,address)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, minter, { from: minter });
+      const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, { from: minter });
       truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
         proxy = ev.proxy;
         return true;
@@ -91,9 +91,9 @@ contract("Test factories and tokens", accounts => {
       const factory = await ERC721RaribleFactoryC2.at(deployed["ERC721RaribleFactoryC2"].address);
 
       let proxy;
-      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, minter)
+      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt)
 
-      const resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, minter, { from: minter });
+      const resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, { from: minter });
       truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleUserProxy', (ev) => {
         proxy = ev.proxy;
         return true;
@@ -116,9 +116,9 @@ contract("Test factories and tokens", accounts => {
       const factory = await ERC1155RaribleFactoryC2.at(deployed["ERC1155RaribleFactoryC2"].address);
 
       let proxy;
-      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, minter)
+      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt)
 
-      const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256,address)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, minter, { from: minter });
+      const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt, { from: minter });
       truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleProxy', (ev) => {
         proxy = ev.proxy;
         return true;
@@ -140,9 +140,9 @@ contract("Test factories and tokens", accounts => {
       const factory = await ERC1155RaribleFactoryC2.at(deployed["ERC1155RaribleFactoryC2"].address);
 
       let proxy;
-      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, minter)
+      const addressBeforeDeploy = await factory.getAddress("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt)
 
-      const resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, minter, { from: minter });
+      const resultCreateToken = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt, { from: minter });
       truffleAssert.eventEmitted(resultCreateToken, 'Create1155RaribleUserProxy', (ev) => {
         proxy = ev.proxy;
         return true;
