@@ -28,17 +28,13 @@ contract ERC721RaribleFactoryC2 is Ownable {
         transferOwnership(initialOwner);
     }
 
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI), salt);
-        ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
-        token.transferOwnership(_msgSender());
+    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt, address initialOwner) external {
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, initialOwner), salt);
         emit Create721RaribleProxy(beaconProxy);
     }
 
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
-        ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
-        token.transferOwnership(_msgSender());
+    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt, address initialOwner) external {
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators, initialOwner), salt);
         emit Create721RaribleUserProxy(beaconProxy);
     }
 
@@ -59,12 +55,12 @@ contract ERC721RaribleFactoryC2 is Ownable {
     }
 
     //returns address that contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint _salt)
+    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint _salt, address initialOwner)
         public
         view
         returns (address)
     {   
-        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI));
+        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, initialOwner));
 
         bytes32 hash = keccak256(
             abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
@@ -73,17 +69,17 @@ contract ERC721RaribleFactoryC2 is Ownable {
         return address(uint160(uint(hash)));
     }
 
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address initialOwner) view internal returns(bytes memory){
+        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy, initialOwner);
     }
 
     //returns address that private contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint _salt)
+    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint _salt, address initialOwner)
         public
         view
         returns (address)
     {   
-        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators));
+        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators, initialOwner));
 
         bytes32 hash = keccak256(
             abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
@@ -92,7 +88,7 @@ contract ERC721RaribleFactoryC2 is Ownable {
         return address(uint160(uint(hash)));
     }
 
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
+    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address initialOwner) view internal returns(bytes memory){
+        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy, initialOwner);
     }
 }

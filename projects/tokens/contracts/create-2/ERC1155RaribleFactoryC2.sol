@@ -28,19 +28,13 @@ contract ERC1155RaribleFactoryC2 is Ownable{
         transferOwnership(initialOwner);
     }
 
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {        
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI), salt);
-
-        ERC1155Rarible token = ERC1155Rarible(beaconProxy);
-        token.transferOwnership(_msgSender());
+    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt, address initialOwner) external {        
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, initialOwner), salt);
         emit Create1155RaribleProxy(beaconProxy);
     }
     
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
-
-        ERC1155Rarible token = ERC1155Rarible(address(beaconProxy));
-        token.transferOwnership(_msgSender());
+    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt, address initialOwner) external {
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators, initialOwner), salt);
         emit Create1155RaribleUserProxy(beaconProxy);
     }
 
@@ -61,12 +55,12 @@ contract ERC1155RaribleFactoryC2 is Ownable{
     }
 
     //returns address that contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint _salt)
+    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint _salt, address initialOwner)
         public
         view
         returns (address)
     {   
-        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI));
+        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, initialOwner));
 
         bytes32 hash = keccak256(
             abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
@@ -75,17 +69,17 @@ contract ERC1155RaribleFactoryC2 is Ownable{
         return address(uint160(uint(hash)));
     }
 
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address initialOwner) view internal returns(bytes memory){
+        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy, initialOwner);
     }
 
     //returns address that contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint _salt)
+    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint _salt, address initialOwner)
         public
         view
         returns (address)
     {   
-        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators));
+        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators, initialOwner));
 
         bytes32 hash = keccak256(
             abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
@@ -94,8 +88,8 @@ contract ERC1155RaribleFactoryC2 is Ownable{
         return address(uint160(uint(hash)));
     }
 
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
+    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, address initialOwner) view internal returns(bytes memory){
+        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy, initialOwner);
     }
 
 }

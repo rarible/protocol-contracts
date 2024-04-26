@@ -29,7 +29,7 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
   const Proxy = await hre.ethers.getContractFactory(contractName);
   const proxy = await Proxy.attach(transferProxyReceipt.address);
 
-  const initTx = await proxy.__OperatorRole_init_proxy(deployer);
+  const initTx = await proxy.__OperatorRole_init_proxy(owner);
   await initTx.wait()
 
   return proxy;
