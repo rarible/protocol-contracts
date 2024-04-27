@@ -598,6 +598,12 @@ const config: HardhatUserConfig = {
     },
     '4202': {
       factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
+    }, 
+    '90354': {
+      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
+    },
+    '713715': {
+      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
     }
   }
 };

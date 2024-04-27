@@ -68,15 +68,25 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
   const exchangeV2 = await ExchangeV2.attach(exchangeV2Receipt.address);
 
   //add exchangeV2 as operator to all 4 transfer proxies
-  await (await transferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc20TransferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
-  // transfer ownership of all 4 transfer proxies to owner
-  await (await transferProxy.transferOwnership(owner)).wait()
-  await (await erc20TransferProxy.transferOwnership(owner)).wait()
-  await (await erc721LazyMintTransferProxy.transferOwnership(owner)).wait()
-  await (await erc1155LazyMintTransferProxy.transferOwnership(owner)).wait()
+  if(await transferProxy.owner() == deployer) {
+    await (await transferProxy.addOperator(exchangeV2.address)).wait()
+    await (await transferProxy.transferOwnership(owner)).wait()
+  }
+  
+  if(await erc20TransferProxy.owner() == deployer) {
+    await (await erc20TransferProxy.addOperator(exchangeV2.address)).wait()
+    await (await erc20TransferProxy.transferOwnership(owner)).wait()
+  }
+
+  if(await erc721LazyMintTransferProxy.owner() == deployer) {
+    await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+    await (await erc721LazyMintTransferProxy.transferOwnership(owner)).wait()
+  }
+
+  if(await erc1155LazyMintTransferProxy.owner() == deployer) {
+    await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+    await (await erc1155LazyMintTransferProxy.transferOwnership(owner)).wait()
+  }
 
 }
 
