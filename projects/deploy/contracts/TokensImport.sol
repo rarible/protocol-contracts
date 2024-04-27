@@ -10,7 +10,6 @@ import {ERC721RaribleFactoryC2} from "@rarible/tokens/contracts/create-2/ERC721R
 //tokens 1155
 import {ERC1155Rarible} from "@rarible/tokens/contracts/erc-1155/ERC1155Rarible.sol";
 import {ERC1155RaribleFactoryC2} from "@rarible/tokens/contracts/create-2/ERC1155RaribleFactoryC2.sol";
-import {ERC1155RaribleFactoryC2OwnedManaged} from "@rarible/tokens/contracts/create-2/ERC1155RaribleFactoryC2OwnedManaged.sol";
 
 //meta tokens
 import {ERC721RaribleMeta} from "@rarible/tokens/contracts/erc-721-minimal/erc-721-minimal-meta/ERC721RaribleMeta.sol";
