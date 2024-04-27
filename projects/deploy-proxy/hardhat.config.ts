@@ -220,11 +220,6 @@ const config: HardhatUserConfig = {
     astar: createNetwork("astar"),
     oasys_testnet: createNetwork("oasys_testnet"),
     oasys: createNetwork("oasys"),
-    zkLink: {
-      zksync: true,
-      ethNetwork: "mainnet",
-      ...createNetwork("zkLink"),
-    },
     astar_zkyoto_testnet: createNetwork("astar_zkyoto_testnet"),
     oasys_testnet_saakuru: createNetwork("oasys_testnet_saakuru"),
     saakuru: createNetwork("saakuru"),
