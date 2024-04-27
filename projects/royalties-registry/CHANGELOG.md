@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.5](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+
+### Features
+
+- add deploy support for factory ([f9a1160](https://github.com/rarible/protocol-contracts/commit/f9a11605766a943f56d004c07d6a4c32b1d26cd1))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
 ## [0.8.4-beta.3](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
 
 **Note:** Version bump only for package @rarible/royalties-registry
