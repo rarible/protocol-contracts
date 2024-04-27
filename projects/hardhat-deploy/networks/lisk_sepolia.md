@@ -1,16 +1,17 @@
  Name | Address | Url 
  --- | --- | ---
- AssetMatcherCollection | 0x00D67438aA5e877b7D8308919776DB643727813B | https://sepolia-blockscout.lisk.comaddress/0x00D67438aA5e877b7D8308919776DB643727813B 
- DefaultProxyAdmin | 0xBf1FEC95b9Ff0cFb31418DF626017eFf61457D14 | https://sepolia-blockscout.lisk.comaddress/0xBf1FEC95b9Ff0cFb31418DF626017eFf61457D14 
- ERC1155LazyMintTransferProxy | 0xF3A09c06b293D9942d3e9e10C48e09d1A623Ee39 | https://sepolia-blockscout.lisk.comaddress/0xF3A09c06b293D9942d3e9e10C48e09d1A623Ee39 
- ERC1155Rarible | 0x56e0aEDB50D9FD65E23EB8DfE8AE98A8e3BD54A3 | https://sepolia-blockscout.lisk.comaddress/0x56e0aEDB50D9FD65E23EB8DfE8AE98A8e3BD54A3 
- ERC1155RaribleBeacon | 0xed84A057Ec33d1053b8D541ABd042cE1e84aF44b | https://sepolia-blockscout.lisk.comaddress/0xed84A057Ec33d1053b8D541ABd042cE1e84aF44b 
- ERC1155RaribleFactoryC2 | 0x1Ed681Bf8054F3Eb2f280CC8AF407aC9D8136F9f | https://sepolia-blockscout.lisk.comaddress/0x1Ed681Bf8054F3Eb2f280CC8AF407aC9D8136F9f 
- ERC20TransferProxy | 0x857E5e31b37eb9CB0E52Fe4961e2f8110c9a24C8 | https://sepolia-blockscout.lisk.comaddress/0x857E5e31b37eb9CB0E52Fe4961e2f8110c9a24C8 
- ERC721LazyMintTransferProxy | 0x2605b551465862AE73D4e4196bf13c4cb8502fB6 | https://sepolia-blockscout.lisk.comaddress/0x2605b551465862AE73D4e4196bf13c4cb8502fB6 
- ERC721RaribleFactoryC2 | 0xB238710011b2E24e5BB86A0C1e98bac8b38A5f31 | https://sepolia-blockscout.lisk.comaddress/0xB238710011b2E24e5BB86A0C1e98bac8b38A5f31 
- ERC721RaribleMinimal | 0x2355C39A4413e341d44a338261fbb4474345d86E | https://sepolia-blockscout.lisk.comaddress/0x2355C39A4413e341d44a338261fbb4474345d86E 
- ERC721RaribleMinimalBeacon | 0x733860AC62E1d28F0Ea053a37B5681c8A34D1959 | https://sepolia-blockscout.lisk.comaddress/0x733860AC62E1d28F0Ea053a37B5681c8A34D1959 
- ExchangeV2 | 0xA757aD5232D8Ee79876b4baA4cD433c713a66610 | https://sepolia-blockscout.lisk.comaddress/0xA757aD5232D8Ee79876b4baA4cD433c713a66610 
- RoyaltiesRegistry | 0x8F1A8226A3f802954397C966d5D221235b093247 | https://sepolia-blockscout.lisk.comaddress/0x8F1A8226A3f802954397C966d5D221235b093247 
- TransferProxy | 0xb9E79fDdA3d88ce47664fd4341Ef4EC4C53246c5 | https://sepolia-blockscout.lisk.comaddress/0xb9E79fDdA3d88ce47664fd4341Ef4EC4C53246c5 
+ AssetMatcherCollection | 0xc4F5FCD96e3b37A31f871F0968206F47294a4471 | https://sepolia-blockscout.lisk.comaddress/0xc4F5FCD96e3b37A31f871F0968206F47294a4471 
+ DefaultProxyAdmin | 0x6DA8C223FCDF463F88cd28E473d81C94DF0fE36a | https://sepolia-blockscout.lisk.comaddress/0x6DA8C223FCDF463F88cd28E473d81C94DF0fE36a 
+ ERC1155LazyMintTransferProxy | 0xd60D801E1E76a44f8A2E728F6d3a760626aa2cf2 | https://sepolia-blockscout.lisk.comaddress/0xd60D801E1E76a44f8A2E728F6d3a760626aa2cf2 
+ ERC1155RaribleBeaconMeta | 0x948669617b558cd3bb7F3dd94720346b3E9cD047 | https://sepolia-blockscout.lisk.comaddress/0x948669617b558cd3bb7F3dd94720346b3E9cD047 
+ ERC1155RaribleFactoryC2 | 0x6E6d179b1DCEaad5483edaCF907bf619FB35C7Eb | https://sepolia-blockscout.lisk.comaddress/0x6E6d179b1DCEaad5483edaCF907bf619FB35C7Eb 
+ ERC1155RaribleMeta | 0x150458a42dF2664dc4A11d2780d23F315Ca5E00A | https://sepolia-blockscout.lisk.comaddress/0x150458a42dF2664dc4A11d2780d23F315Ca5E00A 
+ ERC20TransferProxy | 0xA3d49c7e2c845b792e422696FE0D9ef17a509731 | https://sepolia-blockscout.lisk.comaddress/0xA3d49c7e2c845b792e422696FE0D9ef17a509731 
+ ERC721LazyMintTransferProxy | 0x74eBEEB6FBCf94f748f5999E14aCf3642A38e813 | https://sepolia-blockscout.lisk.comaddress/0x74eBEEB6FBCf94f748f5999E14aCf3642A38e813 
+ ERC721RaribleFactoryC2 | 0xE5D43624116007CD79D17fB7136672A49fd33CE0 | https://sepolia-blockscout.lisk.comaddress/0xE5D43624116007CD79D17fB7136672A49fd33CE0 
+ ERC721RaribleMeta | 0x6448B5A51c6D41480B34248C516957D59f754598 | https://sepolia-blockscout.lisk.comaddress/0x6448B5A51c6D41480B34248C516957D59f754598 
+ ERC721RaribleMinimalBeaconMeta | 0x7Eade39b026f271910557Cf4676c35552BAEf346 | https://sepolia-blockscout.lisk.comaddress/0x7Eade39b026f271910557Cf4676c35552BAEf346 
+ ExchangeMetaV2 | 0x5b96ddd3245aaC0cd97cFf6717985F3b9B01df3B | https://sepolia-blockscout.lisk.comaddress/0x5b96ddd3245aaC0cd97cFf6717985F3b9B01df3B 
+ RaribleExchangeWrapper | 0x689bFf422807f39c9A927bb78c34FE8D63529e28 | https://sepolia-blockscout.lisk.comaddress/0x689bFf422807f39c9A927bb78c34FE8D63529e28 
+ RoyaltiesRegistry | 0xCF64c7115508f23069d5663611e10F5C5CF45776 | https://sepolia-blockscout.lisk.comaddress/0xCF64c7115508f23069d5663611e10F5C5CF45776 
+ TransferProxy | 0xA5707153b8AF346e17AF765235B054136eCf99EC | https://sepolia-blockscout.lisk.comaddress/0xA5707153b8AF346e17AF765235B054136eCf99EC 
