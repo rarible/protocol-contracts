@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.6](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+
+### Bug Fixes
+
+- support orders with zero price ([162238d](https://github.com/rarible/protocol-contracts/commit/162238de3f6df5cfb7760dfce6dd245b85360eb3))
+
+### Features
+
+- add tests for nothing to feel, one order free the other isn't ([7b51920](https://github.com/rarible/protocol-contracts/commit/7b519201dcb9c5b3dc5e4a837698ceed3060cd5e))
+- PT-4662 get rid of nothing to fill tests ([4059dcb](https://github.com/rarible/protocol-contracts/commit/4059dcb20c100e159643e40929392b05f90f7038))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
 ## [0.8.5](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
 
 ### Bug Fixes

@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.6](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+
+### Bug Fixes
+
+- support orders with zero price ([162238d](https://github.com/rariblecom/protocol-contracts/commit/162238de3f6df5cfb7760dfce6dd245b85360eb3))
+
+### Features
+
+- add celo alfajores ([#271](https://github.com/rariblecom/protocol-contracts/issues/271)) ([10a795e](https://github.com/rariblecom/protocol-contracts/commit/10a795e80039677193d5eeccfa14f64e0bcf0448))
+- add configs for palm, match ([cfeee8e](https://github.com/rariblecom/protocol-contracts/commit/cfeee8e12fdd06664fcb021a5f3efa44708c6f92))
+- add migration for SetProtocolFeeAction ([f9c4aca](https://github.com/rariblecom/protocol-contracts/commit/f9c4aca5bd01cff077f8a15a4467fa0e3c88ca05))
+- add oasis testnet, xai testnet. PT-4570 deploy contracts to oasis testnet ([ed0e2ce](https://github.com/rariblecom/protocol-contracts/commit/ed0e2ced1269ce67e29c4795e08193324628aca4))
+- add tests for nothing to feel, one order free the other isn't ([7b51920](https://github.com/rariblecom/protocol-contracts/commit/7b519201dcb9c5b3dc5e4a837698ceed3060cd5e))
+- deploy contracts on palm_testnet ([18fccde](https://github.com/rariblecom/protocol-contracts/commit/18fccded3260b1aebc568ebe4f8b9b9883fd47da))
+- fix getNetworkApiUrl() and getNetworkExplorerUrl() ([50f884b](https://github.com/rariblecom/protocol-contracts/commit/50f884b1d2e25f69d3d4c4dfa96a343e14ade288))
+- PT-4321 deploy contracts on oasys testnet, prepare config for oasys mainnet ([dfd934b](https://github.com/rariblecom/protocol-contracts/commit/dfd934bfb2c28915fd491c04dc5d10a36418310f))
+- PT-4543 deploy contracts on fief_playground_testnet ([f71e0dd](https://github.com/rariblecom/protocol-contracts/commit/f71e0dd84abc948290ca9c5dfac12580917b4f10))
+- PT-4639 fix network config for frame ([514629b](https://github.com/rariblecom/protocol-contracts/commit/514629bd6e6604092cc11077cff02ca885a5142d))
+- PT-4662 get rid of nothing to fill tests ([4059dcb](https://github.com/rariblecom/protocol-contracts/commit/4059dcb20c100e159643e40929392b05f90f7038))
+- PT-4671 deploy contracts on mantle sepolia ([d5033ef](https://github.com/rariblecom/protocol-contracts/commit/d5033efaf19222c60f900914300ee93be1069d45))
+- PT-4705 deploy contract on kroma_sepolia ([36ac439](https://github.com/rariblecom/protocol-contracts/commit/36ac439fef8f85b6e230b481c080bfff7ff5065b))
+- PT-4749 upgrade exchangeV2 with upgradeExecutor ([7e18442](https://github.com/rariblecom/protocol-contracts/commit/7e18442b90bae4ee8a18c797b9126dad2650f896))
+- PT-4844 deploy contract on match_testnet ([73aef7a](https://github.com/rariblecom/protocol-contracts/commit/73aef7a61c47804f8348b12c8f553c7b39a254b8))
+- PT-4914 deploy contract on zkLink testnet, prepare config for mainnet ([8796c0a](https://github.com/rariblecom/protocol-contracts/commit/8796c0a9ac266fdd97ff4bf0a752fbf4b607dd28))
+- PT-4962 deploy contracts on 5ire_testnet ([c752e6d](https://github.com/rariblecom/protocol-contracts/commit/c752e6d7b8a268006a84c1307e0ed70c88a6da3b))
+- PT-5051 deploy contracts on oasys_testnet_saakuru ([b558424](https://github.com/rariblecom/protocol-contracts/commit/b558424aea3de4125336e4c393cc7f76515555b9))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rariblecom/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+- PT-5076 deploy contracts to astar_zkyoto_testnet ([de82643](https://github.com/rariblecom/protocol-contracts/commit/de826431eb30ea6e11d3a74e5c5b0f3a4aa43aa9))
+- PT-5095 deploy contracts on polygon_amoy_testnet ([e89dfd7](https://github.com/rariblecom/protocol-contracts/commit/e89dfd7386d45e0eb31c28024354dc9f66c6008d))
+- tidy up network configs, support frame ([82a88fc](https://github.com/rariblecom/protocol-contracts/commit/82a88fcd81af7638c1234aafd233742d66ecbea1))
+- update wrapper on arbitrum testnet, base testnet, polygon testnet ([572add8](https://github.com/rariblecom/protocol-contracts/commit/572add81b96f0ea00224f1934411b824031d0b87))
+
 ## [0.8.5](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
 
 ### Bug Fixes

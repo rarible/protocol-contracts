@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.6](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+
+### Bug Fixes
+
+- build ([5a04947](https://github.com/rariblecom/protocol-contracts/commit/5a049478b8acde4a8681b09d2f9aa5c54bd9fa58))
+
+### Features
+
+- add build deps ([822c123](https://github.com/rariblecom/protocol-contracts/commit/822c123199ac04598b6f8ab995ee8e8a66828015))
+- PT-4662 get rid of nothing to fill tests ([4059dcb](https://github.com/rariblecom/protocol-contracts/commit/4059dcb20c100e159643e40929392b05f90f7038))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rariblecom/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
 ## [0.8.5](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
 
 ### Bug Fixes
