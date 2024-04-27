@@ -16,3 +16,5 @@ to do integration tests of contracts to deploy:
 ```shell
 npx hardhat test
 ```
+
+salt used DETERMENISTIC_DEPLOYMENT_SALT=0x1115

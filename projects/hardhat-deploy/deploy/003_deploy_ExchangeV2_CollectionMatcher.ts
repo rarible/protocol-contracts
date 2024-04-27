@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig } from '../utils/utils'
+import { getOwner } from './utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
@@ -28,8 +29,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
   const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
+
+  //deploy and setup collection matcher
+  const assetMatcherCollectionReceipt = await deploy("AssetMatcherCollection", {
+    from: deployer,
+    log: true,
+    autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
+  });
 
   // deploy ExchangeV2 and initialise contract
   const exchangeV2Receipt = await deploy(contractName, {
@@ -37,37 +47,47 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     proxy: {
       execute: {
         init: {
-          methodName: "__ExchangeV2_init",
-          args: [transferProxy.address, erc20TransferProxy.address, 0, hre.ethers.constants.AddressZero, royaltiesRegistryAddress],
+          methodName: "__ExchangeV2_init_proxy",
+          args: [transferProxy.address, erc20TransferProxy.address, 0, hre.ethers.constants.AddressZero, royaltiesRegistryAddress, 
+            owner, 
+            [ERC721_LAZY, ERC1155_LAZY], 
+            [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+            COLLECTION,
+            assetMatcherCollectionReceipt.address]
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
     },
     log: true,
     autoMine: true,
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
   const ExchangeV2 = await hre.ethers.getContractFactory(contractName);
   const exchangeV2 = await ExchangeV2.attach(exchangeV2Receipt.address);
 
   //add exchangeV2 as operator to all 4 transfer proxies
-  await (await transferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc20TransferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+  if(await transferProxy.owner() == deployer) {
+    await (await transferProxy.addOperator(exchangeV2.address)).wait()
+    await (await transferProxy.transferOwnership(owner)).wait()
+  }
+  
+  if(await erc20TransferProxy.owner() == deployer) {
+    await (await erc20TransferProxy.addOperator(exchangeV2.address)).wait()
+    await (await erc20TransferProxy.transferOwnership(owner)).wait()
+  }
 
-  //set 2 lazy transfer proxies in exchangeV2 contract (other 2 are set in initialiser)
-  await (await exchangeV2.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address)).wait()
-  await (await exchangeV2.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address)).wait()
+  if(await erc721LazyMintTransferProxy.owner() == deployer) {
+    await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+    await (await erc721LazyMintTransferProxy.transferOwnership(owner)).wait()
+  }
 
-  //deploy and setup collection matcher
-  const assetMatcherCollectionReceipt = await deploy("AssetMatcherCollection", {
-    from: deployer,
-    log: true,
-    autoMine: true,
-  });
+  if(await erc1155LazyMintTransferProxy.owner() == deployer) {
+    await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+    await (await erc1155LazyMintTransferProxy.transferOwnership(owner)).wait()
+  }
 
-  await (await exchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollectionReceipt.address)).wait()
 }
 
 async function getTransferProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
@@ -76,4 +96,4 @@ async function getTransferProxy(hre: HardhatRuntimeEnvironment, contractName: st
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens', 'deploy-exchange'];
+func.tags = ['all', 'all-no-tokens', 'deploy-exchange', "003"];

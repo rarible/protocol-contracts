@@ -12,11 +12,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
  * _Available since v3.1._
  */
 abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeable {
-    function __ERC1155Burnable_init() internal {
-        __Context_init_unchained();
-        __ERC165_init_unchained();
-        __ERC1155Burnable_init_unchained();
-    }
 
     function __ERC1155Burnable_init_unchained() internal {
     }

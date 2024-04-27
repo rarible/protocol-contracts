@@ -11,6 +11,11 @@ contract TransferProxy is INftTransferProxy, Initializable, OperatorRole {
         __Ownable_init();
     }
 
+    function __TransferProxy_init_proxy(address _initialOwner) external initializer {
+        __Ownable_init();
+        transferOwnership(_initialOwner);
+    }
+
     function erc721safeTransferFrom(IERC721Upgradeable token, address from, address to, uint256 tokenId) override external onlyOperator {
         token.safeTransferFrom(from, to, tokenId);
     }

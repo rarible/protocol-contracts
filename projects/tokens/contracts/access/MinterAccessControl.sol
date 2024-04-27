@@ -9,12 +9,12 @@ abstract contract MinterAccessControl is OwnableUpgradeable {
     
     event MinterStatusChanged(address indexed minter, bool indexed status);
 
-    function __MinterAccessControl_init() internal initializer {
+    function __MinterAccessControl_init() internal {
         __Ownable_init_unchained();
         __MinterAccessControl_init_unchained();
     }
 
-    function __MinterAccessControl_init_unchained() internal initializer {
+    function __MinterAccessControl_init_unchained() internal {
     }
 
     /**

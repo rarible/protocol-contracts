@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.5](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+
+### Features
+
+- add deploy operator role for proxy ([5e28f3d](https://github.com/rariblecom/protocol-contracts/commit/5e28f3d9532ed6823302a0cd1a1fb24e0bb12544))
+
 ## [0.8.4-beta.3](https://github.com/rariblecom/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
 
 **Note:** Version bump only for package @rarible/role-operator

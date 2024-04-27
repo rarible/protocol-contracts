@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.5](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+
+### Features
+
+- add proxy deploy support ([40270b0](https://github.com/rarible/protocol-contracts/commit/40270b07cdb2e061a3a349535f7bb9717e686eb7))
+- change token factories back, optomise ERC1155 size ([8e25ae2](https://github.com/rarible/protocol-contracts/commit/8e25ae2ae5c03166ef3524935c827f168f6d0445))
+- fix hardhat-migrations, change createToken() and getAddress() in token factories ([8930c47](https://github.com/rarible/protocol-contracts/commit/8930c47eec9da0b3bcbe5c6a467cae3e803085e2))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+- rename ([a2c6a83](https://github.com/rarible/protocol-contracts/commit/a2c6a83b94a89fc9aaddfa1e754cbf5c1280b8c7))
+
 ## [0.8.4-beta.3](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
 
 **Note:** Version bump only for package @rarible/tokens
