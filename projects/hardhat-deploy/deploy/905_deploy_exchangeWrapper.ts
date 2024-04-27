@@ -173,6 +173,25 @@ const sepolia = {
   transferProxies: [],
 }
 
+const sei_testnet = {
+  marketplaces: [
+    zeroAddress, // wyvernExchange
+    "", //rarible exchangeV2 palceholder
+    zeroAddress, // seaPort_1_1
+    zeroAddress, // x2y2
+    zeroAddress, // looksRare
+    zeroAddress, // sudoSwap
+    zeroAddress, // seaport_1_4
+    zeroAddress, // looksRareV2
+    zeroAddress, // blur
+    zeroAddress, // seaport_1_5
+    zeroAddress, // seaport_1_6
+  ],
+
+  weth: "0x63600a899ad94ae1bc638504fa56d8a6144df2fe",
+  transferProxies: [],
+}
+
 let settings: any = {
   "default": def,
   "mainnet": mainnet,
@@ -183,8 +202,9 @@ let settings: any = {
   "staging": staging,
   "polygon_staging": polygon_staging,
   "polygon_mumbai": polygon_mumbai,
-  "polygon_mainnet": polygon_mainnet
-};
+  "polygon_mainnet": polygon_mainnet,
+  "sei_testnet": sei_testnet
+}
 
 function getWrapperSettings(network: string) {
   if (settings[network] !== undefined) {
