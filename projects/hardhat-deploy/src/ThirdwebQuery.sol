@@ -1,0 +1,1 @@
+import {DropERC721Reader} from "@rarible/thirdweb-query/contracts/drop-reader/DropERC721Reader.sol";

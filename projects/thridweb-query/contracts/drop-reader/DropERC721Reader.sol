@@ -21,22 +21,10 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 import "@thirdweb-dev/contracts/eip/ERC721AVirtualApproveUpgradeable.sol";
 
-//  ==========  Internal imports    ==========
-import "@thirdweb-dev/contracts/lib/CurrencyTransferLib.sol";
-
 //  ==========  Features    ==========
 
-import "@thirdweb-dev/contracts/extension/ContractMetadata.sol";
-import "@thirdweb-dev/contracts/extension/PlatformFee.sol";
-import "@thirdweb-dev/contracts/extension/Royalty.sol";
-import "@thirdweb-dev/contracts/extension/PrimarySale.sol";
-import "@thirdweb-dev/contracts/extension/Ownable.sol";
-import "@thirdweb-dev/contracts/extension/DelayedReveal.sol";
-import "@thirdweb-dev/contracts/extension/LazyMint.sol";
-import "@thirdweb-dev/contracts/extension/PermissionsEnumerable.sol";
 import "@thirdweb-dev/contracts/extension/Drop.sol";
 import "@thirdweb-dev/contracts/extension/interface/IClaimCondition.sol";
-import "@thirdweb-dev/contracts/extension/interface/IClaimConditionMultiPhase.sol";
 
 import "@thirdweb-dev/contracts/prebuilts/drop/DropERC721.sol";
 import "hardhat/console.sol";
