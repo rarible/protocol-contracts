@@ -1,6 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
+import "@nomiclabs/hardhat-truffle5";
 import { config as dotenvConfig } from "dotenv";
 import { resolve } from "path";
 
@@ -11,6 +13,7 @@ import {
   loadApiKeys,
   loadCustomNetworks,
   loadNetworkConfigs,
+  loadFactoryAddresses,
 } from "@rarible/deploy-utils";
 
 
@@ -24,11 +27,15 @@ const config: HardhatUserConfig = {
       }
     }
   },
+  namedAccounts: {
+    deployer: 0,
+  },
   networks: loadNetworkConfigs(),
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
-  }
+  },
+  deterministicDeployment: loadFactoryAddresses()
 };
 
 

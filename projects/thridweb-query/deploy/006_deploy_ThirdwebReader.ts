@@ -1,6 +1,5 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { getOwner } from './utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -8,7 +7,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-  const owner  = await getOwner(hre);
   console.log("deploying contracts with the account:", deployer);
 
   // address public constant NATIVE1 = 0x0000000000000000000000000000000000000000;
