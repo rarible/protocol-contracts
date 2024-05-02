@@ -68,7 +68,7 @@ export function createNetwork(name: string): HttpNetworkUserConfig {
     if (!json.key) {
       return {
         url: json.url || "",
-        chainId: json.network_id,
+        chainId: parseInt(json.network_id),
         timeout: 60000,
       }
     } else {
