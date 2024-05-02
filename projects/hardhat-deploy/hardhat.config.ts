@@ -10,6 +10,7 @@ import {
   loadApiKeys,
   loadCustomNetworks,
   loadNetworkConfigs,
+  loadFactoryAddresses,
 } from "@rarible/deploy-utils";
 
 import "./tasks";
@@ -94,26 +95,7 @@ const config: HardhatUserConfig = {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
   },
-  deterministicDeployment: {
-    '421614': {
-        factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
-    },
-    '5003': {
-      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
-    },
-    '11155111': {
-      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
-    },
-    '4202': {
-      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
-    }, 
-    '90354': {
-      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
-    },
-    '713715': {
-      factory: '0x933AcD72513796c31dc9B63579130335Dcd4a961'
-    }
-  }
+  deterministicDeployment: loadFactoryAddresses()
 };
 
 

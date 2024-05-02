@@ -220,3 +220,32 @@ export function loadApiKeys(): Record<string, string> {
     return apiKeys;
 }
 
+// Function to read and extract factory addresses from JSON files, keeping the specific structure
+export function loadFactoryAddresses(): Record<string, { factory: string }> {
+    const configDirectory = getConfigPath();
+    const factoryAddresses: Record<string, { factory: string }> = {};
+  
+    if (fs.existsSync(configDirectory)) {
+      const files = fs.readdirSync(configDirectory).filter(file => path.extname(file) === '.json');
+      
+      files.forEach(file => {
+        const filePath = path.join(configDirectory, file);
+        const data = fs.readFileSync(filePath, 'utf8');
+        try {
+          const json = JSON.parse(data);
+          const chainId = json.network_id as string; // assuming 'network_id' is the key for network identifier
+          const factory = json.factory as string; // assuming 'factory' is the key where the factory address is stored
+  
+          if (chainId && factory) {
+            factoryAddresses[chainId] = { factory };
+          }
+        } catch (error) {
+          console.error(`Error parsing JSON in ${file}: ${error}`);
+        }
+      });
+    } else {
+      console.error(`Configuration directory not found: ${configDirectory}`);
+    }
+  
+    return factoryAddresses;
+  }
