@@ -37,6 +37,7 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: owner
     },
     log: true,
     autoMine: true,

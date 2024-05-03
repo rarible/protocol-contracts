@@ -57,6 +57,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: owner
     },
     log: true,
     autoMine: true,
