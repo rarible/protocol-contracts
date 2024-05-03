@@ -74,7 +74,7 @@ contract("rarible only gas usage tests", accounts => {
   });
 
   it("NEW + OLD: cancel()", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
 
     let encDataRight = await encDataV3_SELL([await LibPartToUint(seller, 10000), await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
 
@@ -89,7 +89,7 @@ contract("rarible only gas usage tests", accounts => {
 
 
   it("RARIBLE NEW: ETH ROYALTIES = SELLER", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
     const nftAmount = 1;
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
@@ -142,7 +142,7 @@ contract("rarible only gas usage tests", accounts => {
   })
 
   it("RARIBLE NEW: ETH ROYALTIES != SELLER", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
     const nftAmount = 1;
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
@@ -196,7 +196,7 @@ contract("rarible only gas usage tests", accounts => {
   })
 
   it("RARIBLE NEW matchOrders(): ETH ROYALTIES != SELLER", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
 
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
@@ -230,7 +230,7 @@ contract("rarible only gas usage tests", accounts => {
   })
 
   it("RARIBLE OLD: ETH", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
 
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
@@ -259,7 +259,7 @@ contract("rarible only gas usage tests", accounts => {
   })
 
   it("RARIBLE NEW: ERC-20 ROYALTIES = SELLER", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
     const erc20 = await TestERC20.new();
     const nftAmount = 1;
     await erc20.mint(buyer, price)
@@ -314,7 +314,7 @@ contract("rarible only gas usage tests", accounts => {
   })
 
   it("RARIBLE NEW: ERC-20 ROYALTIES != SELLER", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
     const erc20 = await TestERC20.new();
     const nftAmount = 1;
     await erc20.mint(buyer, price)
@@ -370,7 +370,7 @@ contract("rarible only gas usage tests", accounts => {
   })
 
   it("RARIBLE OLD: ERC-20 ROYALTIES = SELLER", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");
     const erc20 = await TestERC20.new();
 
     await erc20.mint(buyer, 1030)

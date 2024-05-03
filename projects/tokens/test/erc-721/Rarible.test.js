@@ -115,7 +115,7 @@ contract("ERC721Rarible", accounts => {
 
   it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
+    factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address, accounts[0]);
     const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {
        proxy = ev.proxy;
@@ -139,7 +139,7 @@ contract("ERC721Rarible", accounts => {
 
   it("checkPrefix should work correctly, checks for duplicating of the base part of the uri ", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address);
+    factory = await ERC721Factory.new(beacon.address, transferProxy.address, proxyLazy.address, accounts[0]);
     const baseURI = "https://ipfs.rarible.com"
     const resultCreateToken = await factory.methods['createToken(string,string,string,string,uint256)']("name", "RARI", baseURI, "https://ipfs.rarible.com", 1, {from: tokenOwner});
     truffleAssert.eventEmitted(resultCreateToken, 'Create721RaribleProxy', (ev) => {

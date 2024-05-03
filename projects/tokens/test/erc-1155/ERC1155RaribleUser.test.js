@@ -36,7 +36,7 @@ contract("ERC1155RaribleUser", accounts => {
 
   it("mint and transfer by minter, token create by Factory", async () => {
     beacon = await UpgradeableBeacon.new(token.address);
-    factory = await ERC1155RaribleUserFactoryC2.new(beacon.address, ZERO, ZERO);
+    factory = await ERC1155RaribleUserFactoryC2.new(beacon.address, ZERO, ZERO, accounts[0]);
     const salt = 3;
 
     const addressBeforeDeploy = await factory.getAddress(name, "TST", "ipfs:/", "ipfs:/", [], salt)
