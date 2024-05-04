@@ -21,6 +21,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: owner
     },
     log: true,
     autoMine: true,

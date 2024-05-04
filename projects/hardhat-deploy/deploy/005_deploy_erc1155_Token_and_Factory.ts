@@ -37,6 +37,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: owner
     },
     log: true,
     autoMine: true,

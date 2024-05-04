@@ -88,7 +88,7 @@ const config: HardhatUserConfig = {
     deployer: 0,
   },
   paths: {
-    sources: "src",
+    sources: "src"
   },
   networks: loadNetworkConfigs(),
   etherscan: {
