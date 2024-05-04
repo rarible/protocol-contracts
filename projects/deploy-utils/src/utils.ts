@@ -75,11 +75,11 @@ export function createNetwork(name: string): HttpNetworkUserConfig {
       // if not frame
       return {
         from: json.address,
-        gasPrice: "auto",
+        gasPrice: json.gasPrice || "auto",
         chainId: parseInt(json.network_id),
         url: json.url || "",
         accounts: [json.key],
-        gas: 5000000,
+        gas: json.gas || 5000000,
         saveDeployments: true,
         verify: json.verify
           ? {
