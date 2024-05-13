@@ -21,71 +21,26 @@ import "./interfaces/ILooksRare.sol";
 import "./interfaces/IBlur.sol";
 
 import "./libraries/IsPausable.sol";
-
 import "./AbstractRaribleExchangeWrapper.sol";
 
+contract MutableRaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
 
-contract RaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
-    //marketplaces
-    address public immutable _wyvernExchange;
-    address public immutable _exchangeV2;
-    address public immutable _seaPort_1_1;
-    address public immutable _x2y2;
-    address public immutable _looksRare;
-    address public immutable _sudoswap;
-    address public immutable _seaPort_1_4;
-    address public immutable _looksRareV2;
-    address public immutable _blur;
-    address public immutable _seaPort_1_5;
-    address public immutable _seaPort_1_6;
+    address private _wyvernExchange;
+    address private _exchangeV2;
+    address private _seaPort_1_1;
+    address private _x2y2;
+    address private _looksRare;
+    address private _sudoswap;
+    address private _seaPort_1_4;
+    address private _looksRareV2;
+    address private _blur;
+    address private _seaPort_1_5;
+    address private _seaPort_1_6;
+    address private _weth;
 
-    //currencties
-    address public immutable _weth;
-
-    //constants
-    uint256 private constant UINT256_MAX = type(uint256).max;
-
-    constructor(
-        address[11] memory marketplaces,
-        //address _wyvernExchange, 0
-        //address _exchangeV2, 1
-        //address _seaPort_1_1, 2
-        //address _x2y2, 3
-        //address _looksRare, 4
-        //address _sudoswap, 5
-        //address _seaPort_1_4, 6
-        //address _looksRareV2, 7
-        //address _blur, 8
-        //address _seaPort_1_5, 9
-        //address _seaPort_1_6, 10
-        address weth,
-        address[] memory transferProxies,
-        address initialOwner
-    ) {
-        _wyvernExchange = marketplaces[0];
-        _exchangeV2 = marketplaces[1];
-        _seaPort_1_1 = marketplaces[2];
-        _x2y2 = marketplaces[3];
-        _looksRare = marketplaces[4];
-        _sudoswap = marketplaces[5];
-        _seaPort_1_4 = marketplaces[6];
-        _looksRareV2 = marketplaces[7];
-        _blur = marketplaces[8];
-        _seaPort_1_5 = marketplaces[9];
-        _seaPort_1_6 = marketplaces[10];
-
-        _weth = weth;
-
-        for (uint i = 0; i < transferProxies.length; ++i) {
-            if (weth != address(0)){
-                IERC20Upgradeable(weth).approve(transferProxies[i], UINT256_MAX);
-            }
-        }
-
+    constructor(address initialOwner) {
         transferOwnership(initialOwner);
     }
-
-
 
     // Getters
     function wyvernExchange() public view override returns(address) {
@@ -135,5 +90,53 @@ contract RaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
     function weth() public view override returns(address) {
         return _weth;
     }
-    
+
+    // Setters
+    function setWyvernExchange(address newAddress) public onlyOwner {
+        _wyvernExchange = newAddress;
+    }
+
+    function setExchangeV2(address newAddress) public onlyOwner {
+        _exchangeV2 = newAddress;
+    }
+
+    function setSeaPort_1_1(address newAddress) public onlyOwner {
+        _seaPort_1_1 = newAddress;
+    }
+
+    function setX2y2(address newAddress) public onlyOwner {
+        _x2y2 = newAddress;
+    }
+
+    function setLooksRare(address newAddress) public onlyOwner {
+        _looksRare = newAddress;
+    }
+
+    function setSudoswap(address newAddress) public onlyOwner {
+        _sudoswap = newAddress;
+    }
+
+    function setSeaPort_1_4(address newAddress) public onlyOwner {
+        _seaPort_1_4 = newAddress;
+    }
+
+    function setLooksRareV2(address newAddress) public onlyOwner {
+        _looksRareV2 = newAddress;
+    }
+
+    function setBlur(address newAddress) public onlyOwner {
+        _blur = newAddress;
+    }
+
+    function setSeaPort_1_5(address newAddress) public onlyOwner {
+        _seaPort_1_5 = newAddress;
+    }
+
+    function setSeaPort_1_6(address newAddress) public onlyOwner {
+        _seaPort_1_6 = newAddress;
+    }
+
+    function setWeth(address newAddress) public onlyOwner {
+        _weth = newAddress;
+    }
 }
