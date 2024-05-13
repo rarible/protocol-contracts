@@ -139,4 +139,33 @@ contract MutableRaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
     function setWeth(address newAddress) public onlyOwner {
         _weth = newAddress;
     }
+
+    // Setter for multiple fields
+    function setMultipleAddresses(
+        address wyvernExchange_,
+        address exchangeV2_,
+        address seaPort_1_1_,
+        address x2y2_,
+        address looksRare_,
+        address sudoswap_,
+        address seaPort_1_4_,
+        address looksRareV2_,
+        address blur_,
+        address seaPort_1_5_,
+        address seaPort_1_6_,
+        address weth_
+    ) public onlyOwner {
+        _wyvernExchange = wyvernExchange_;
+        _exchangeV2 = exchangeV2_;
+        _seaPort_1_1 = seaPort_1_1_;
+        _x2y2 = x2y2_;
+        _looksRare = looksRare_;
+        _sudoswap = sudoswap_;
+        _seaPort_1_4 = seaPort_1_4_;
+        _looksRareV2 = looksRareV2_;
+        _blur = blur_;
+        _seaPort_1_5 = seaPort_1_5_;
+        _seaPort_1_6 = seaPort_1_6_;
+        _weth = weth_;
+    }
 }
