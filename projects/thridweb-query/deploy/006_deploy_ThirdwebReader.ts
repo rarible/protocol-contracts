@@ -26,8 +26,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     log: true,
     autoMine: true,
-    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
-    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
+    // deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    // skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 
 };
