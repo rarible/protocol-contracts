@@ -215,6 +215,7 @@ function getWrapperSettings(network: string) {
 }
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
@@ -236,17 +237,52 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`using zero address WETH for exchangeWrapper`)
   }
 
+
   const erc20TransferProxy = await hre.deployments.get("ERC20TransferProxy");
   settings.transferProxies.push(erc20TransferProxy.address)
 
-  const deployment = await deploy('RaribleExchangeWrapper', {
-    from: deployer,
-    log: true,
-    autoMine: true,
-    args: [settings.marketplaces, settings.weth, settings.transferProxies, owner],
-    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
-    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
-  });
+  if(hre.network.config.chainId == 1 || hre.network.config.chainId == 11155111) {
+    const deployment = await deploy('RaribleExchangeWrapper', {
+      from: deployer,
+      log: true,
+      autoMine: true,
+      args: [settings.marketplaces, settings.weth, settings.transferProxies, owner],
+      deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+      skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
+    });
+  } else {
+    const MutableRaribleExchangeWrapper = await deploy('MutableRaribleExchangeWrapper', {
+      from: deployer,
+      log: true,
+      args: [owner],
+      autoMine: true,
+      deterministicDeployment: process.env.DETERMINISTIC_DEPLOYMENT_SALT || undefined,
+      skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true : false,
+    });
+    
+    // If deployment is successful and we have valid addresses, we proceed to set up the contract
+    if (MutableRaribleExchangeWrapper.newlyDeployed) {
+      const mutableRaribleExchangeWrapper = await hre.ethers.getContractAt('MutableRaribleExchangeWrapper', MutableRaribleExchangeWrapper.address);
+      
+      await mutableRaribleExchangeWrapper.initialize(
+        settings.marketplaces[0] || zeroAddress, // _wyvernExchange
+        settings.marketplaces[1] || zeroAddress,                      // _exchangeV2
+        settings.marketplaces[2] || zeroAddress, // _seaPort_1_1
+        settings.marketplaces[3] || zeroAddress, // _x2y2
+        settings.marketplaces[4] || zeroAddress, // _looksRare
+        settings.marketplaces[5] || zeroAddress, // _sudoswap
+        settings.marketplaces[6] || zeroAddress, // _seaPort_1_4
+        settings.marketplaces[7] || zeroAddress, // _looksRareV2
+        settings.marketplaces[8] || zeroAddress, // _blur
+        settings.marketplaces[9] || zeroAddress, // _seaPort_1_5
+        settings.marketplaces[10] || zeroAddress, // _seaPort_1_6
+        settings.weth || zeroAddress             // _weth
+      );
+  
+      console.log(`MutableRaribleExchangeWrapper setup complete: ${MutableRaribleExchangeWrapper.address}`);
+    }
+  }
+
 };
 
 export default func;

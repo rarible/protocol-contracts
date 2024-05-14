@@ -22,8 +22,9 @@ import "./interfaces/IBlur.sol";
 
 import "./libraries/IsPausable.sol";
 import "./AbstractRaribleExchangeWrapper.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract MutableRaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
+contract MutableRaribleExchangeWrapper is AbstractRaribleExchangeWrapper, Initializable {
 
     address private _wyvernExchange;
     address private _exchangeV2;
@@ -141,7 +142,7 @@ contract MutableRaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
     }
 
     // Setter for multiple fields
-    function setMultipleAddresses(
+    function initialize(
         address wyvernExchange_,
         address exchangeV2_,
         address seaPort_1_1_,
@@ -154,7 +155,7 @@ contract MutableRaribleExchangeWrapper is AbstractRaribleExchangeWrapper {
         address seaPort_1_5_,
         address seaPort_1_6_,
         address weth_
-    ) public onlyOwner {
+    ) public initializer {
         _wyvernExchange = wyvernExchange_;
         _exchangeV2 = exchangeV2_;
         _seaPort_1_1 = seaPort_1_1_;
