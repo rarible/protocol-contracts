@@ -16,3 +16,7 @@ to do integration tests of contracts to deploy:
 ```shell
 npx hardhat test
 ```
+
+salt used DETERMENISTIC_DEPLOYMENT_SALT=0x1118
+
+INITIAL_OWNER=0x256eFfCeA2ab308D31e318728D2615545171d85B

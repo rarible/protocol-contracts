@@ -16,7 +16,7 @@ contract("Test factories minimal", accounts => {
   before(async () => {
 		const impl = await ERC721RaribleMinimal.new();
 		const beacon = await UpgradeableBeacon.new(impl.address);
-		factory = await ERC721RaribleFactoryC2.new(beacon.address, zeroAddress, zeroAddress);
+		factory = await ERC721RaribleFactoryC2.new(beacon.address, zeroAddress, zeroAddress, accounts[0]);
 	})
 
 	it("should create erc721 private from factory, getAddress works correctly", async () => {

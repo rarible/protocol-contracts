@@ -27,7 +27,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [exchangeV2Address]
+    args: [exchangeV2Address],
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
   });
 
 };

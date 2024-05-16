@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import { getConfig } from '../utils/utils'
+import { getOwner } from './utils';
 
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const mainnet = {
@@ -172,6 +173,25 @@ const sepolia = {
   transferProxies: [],
 }
 
+const sei_testnet = {
+  marketplaces: [
+    zeroAddress, // wyvernExchange
+    "", //rarible exchangeV2 palceholder
+    zeroAddress, // seaPort_1_1
+    zeroAddress, // x2y2
+    zeroAddress, // looksRare
+    zeroAddress, // sudoSwap
+    zeroAddress, // seaport_1_4
+    zeroAddress, // looksRareV2
+    zeroAddress, // blur
+    zeroAddress, // seaport_1_5
+    zeroAddress, // seaport_1_6
+  ],
+
+  weth: "0x63600a899ad94ae1bc638504fa56d8a6144df2fe",
+  transferProxies: [],
+}
+
 let settings: any = {
   "default": def,
   "mainnet": mainnet,
@@ -182,8 +202,9 @@ let settings: any = {
   "staging": staging,
   "polygon_staging": polygon_staging,
   "polygon_mumbai": polygon_mumbai,
-  "polygon_mainnet": polygon_mainnet
-};
+  "polygon_mainnet": polygon_mainnet,
+  "sei_testnet": sei_testnet
+}
 
 function getWrapperSettings(network: string) {
   if (settings[network] !== undefined) {
@@ -197,7 +218,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-
+  const owner  = await getOwner(hre);
+  
   let exchangeV2;
    if (!!deploy_meta) {
     exchangeV2 = (await hre.deployments.get("ExchangeMetaV2")).address;
@@ -221,9 +243,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [settings.marketplaces, settings.weth, settings.transferProxies]
+    args: [settings.marketplaces, settings.weth, settings.transferProxies, owner],
+    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
   });
 };
 
 export default func;
-func.tags = ['all', 'all-zk', 'wrapper', 'all-no-tokens', 'all-zk-no-tokens'];
+func.tags = ['all', 'all-zk', 'wrapper', 'all-no-tokens', 'all-zk-no-tokens', '905'];

@@ -21,10 +21,11 @@ contract ERC1155RaribleFactoryC2 is Ownable{
     event Create1155RaribleProxy(address proxy);
     event Create1155RaribleUserProxy(address proxy);
 
-    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy) {
+    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy, address initialOwner) {
         beacon = _beacon;
         transferProxy = _transferProxy;
         lazyTransferProxy = _lazyTransferProxy;
+        transferOwnership(initialOwner);
     }
 
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {        
