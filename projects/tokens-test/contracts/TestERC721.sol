@@ -3,6 +3,7 @@
 pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./dependencies/Ownable.sol";
 
 contract TestERC721 is ERC721Upgradeable, Ownable {
@@ -29,6 +30,13 @@ contract TestERC721 is ERC721Upgradeable, Ownable {
 
     function _canSetOwner() internal virtual view override returns (bool) {
         return msg.sender == owner();
+    }
+
+    function mintWithPrice(address to, uint[] memory tokenIds, address currency, uint256 pricePerToken) external {
+        for(uint i=0; i<tokenIds.length; i++) {
+            _mint(to, tokenIds[i]);
+        }
+        IERC20Upgradeable(currency).transferFrom(msg.sender, owner(), pricePerToken * tokenIds.length);
     }
 
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
