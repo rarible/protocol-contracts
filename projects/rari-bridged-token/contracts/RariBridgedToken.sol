@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: MIT 
 pragma solidity ^0.8.26;
 
-import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC20VotesUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {IArbToken} from "@arbitrum/token-bridge-contracts/contracts/tokenbridge/arbitrum/IArbToken.sol";
@@ -33,17 +34,19 @@ interface IL2GatewayRouter {
 
 contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgradeable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    IERC20 public _previous;
     address public _l1Address;
     address public _customGatewayAddress;
     address public _routerAddress;
 
-    function __RariBridgedToken_init(address __admin, address __minter, address __l1Address, address __customGatewayAddress, address __routerAddress) external initializer {
+    function __RariBridgedToken_init(IERC20 __previous, address __admin, address __minter, address __l1Address, address __customGatewayAddress, address __routerAddress) external initializer {
         __Context_init();
         __EIP712_init("RARI", "1");
         __AccessControl_init();
         __ERC20_init("RARI", "RARI");
         __ERC20Votes_init();
 
+        _previous = __previous;
         _l1Address = __l1Address;
         _customGatewayAddress == __customGatewayAddress;
         __routerAddress == __routerAddress;
@@ -57,6 +60,11 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
         if (__minter != address(0)) {
             _grantRole(MINTER_ROLE, __minter);
         }
+    }
+
+    function wrap(address account, uint256 amount) external {
+        _previous.transferFrom(_msgSender(), address(this), amount);
+        super._mint(account, amount);
     }
 
     function bridgeMint(address account, uint256 amount) external override onlyRole(MINTER_ROLE) {
