@@ -23,6 +23,11 @@ library LibOrderData {
             dataOrder.payouts = data.payouts;
             dataOrder.originFees = data.originFees;
             dataOrder.isMakeFill = data.isMakeFill;
+        } else if (order.dataType == LibOrderDataV3.V3) {
+            LibOrderDataV3.DataV3 memory data = abi.decode(order.data, (LibOrderDataV3.DataV3));
+            dataOrder.payouts = data.payouts;
+            dataOrder.originFees = data.originFees;
+            dataOrder.isMakeFill = data.isMakeFill;
         } else if (order.dataType == 0xffffffff) {
         } else {
             revert("Unknown Order data type");
