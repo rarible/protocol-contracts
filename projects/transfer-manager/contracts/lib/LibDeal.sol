@@ -14,5 +14,6 @@ library LibDeal {
         LibPart.Part[] originFees;
         address proxy;
         address from;
+        bool protocolFeeEnabled;
     }
 }

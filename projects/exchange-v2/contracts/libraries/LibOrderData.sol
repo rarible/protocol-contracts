@@ -11,9 +11,11 @@ library LibOrderData {
         LibPart.Part[] payouts;
         LibPart.Part[] originFees;
         bool isMakeFill;
+        bool protocolFeeEnabled;
     } 
 
     function parse(LibOrder.Order memory order) pure internal returns (GenericOrderData memory dataOrder) {
+        dataOrder.protocolFeeEnabled = false;
         if (order.dataType == LibOrderDataV1.V1) {
             LibOrderDataV1.DataV1 memory data = abi.decode(order.data, (LibOrderDataV1.DataV1));
             dataOrder.payouts = data.payouts;
@@ -28,6 +30,7 @@ library LibOrderData {
             dataOrder.payouts = data.payouts;
             dataOrder.originFees = data.originFees;
             dataOrder.isMakeFill = data.isMakeFill;
+            dataOrder.protocolFeeEnabled = true;
         } else if (order.dataType == 0xffffffff) {
         } else {
             revert("Unknown Order data type");

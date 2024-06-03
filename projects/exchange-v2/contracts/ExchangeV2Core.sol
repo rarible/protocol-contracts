@@ -197,7 +197,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 payouts: leftOrderData.payouts,
                 originFees: leftOrderData.originFees,
                 proxy: proxies[makeMatch.assetClass],
-                from: orderLeft.maker
+                from: orderLeft.maker,
+                protocolFeeEnabled: leftOrderData.protocolFeeEnabled
             }), 
             LibDeal.DealSide({
                 asset: LibAsset.Asset( 
@@ -207,7 +208,8 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
                 payouts: rightOrderData.payouts,
                 originFees: rightOrderData.originFees,
                 proxy: proxies[takeMatch.assetClass],
-                from: orderRight.maker
+                from: orderRight.maker,
+                protocolFeeEnabled: rightOrderData.protocolFeeEnabled
             }),
             LibFeeSide.getFeeSide(makeMatch.assetClass, takeMatch.assetClass)
         );
