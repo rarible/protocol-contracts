@@ -12,9 +12,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   await deploy('RariBridgedToken', {
     from: deployer,
+    proxy: true,
     log: true,
     autoMine: true,
   });
+
 
 };
 export default func;
