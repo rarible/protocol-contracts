@@ -74,7 +74,7 @@ const zeroAddress = "0x0000000000000000000000000000000000000000";
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f13";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f14";
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
 
 contract("Test gas usage for marketplaces", accounts => {
 
@@ -362,7 +362,7 @@ contract("Test gas usage for marketplaces", accounts => {
     let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(protocol, protocolFeeBP), 0, MARKET_MARKER_BUY ]);
 		let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL ]);
 
-		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3, encDataRight);
     
     const signature1 = await getSignature(exchangeV2, right, seller);
 
@@ -376,7 +376,7 @@ contract("Test gas usage for marketplaces", accounts => {
       sellOrderSalt: 1,
       sellOrderStart: 0,
       sellOrderEnd: 0,
-      sellOrderDataType: ORDER_DATA_V3_SELL,
+      sellOrderDataType: ORDER_DATA_V3,
       sellOrderData: encDataRight,
       sellOrderSignature: signature1,
       buyOrderPaymentAmount: price,
@@ -392,7 +392,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await token.mint(seller, tokenid1)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
-		const right1 = Order(seller, Asset(ERC721, enc( token.address, tokenid1), 1), zeroAddress, Asset(ETH, "0x", price), 2, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+		const right1 = Order(seller, Asset(ERC721, enc( token.address, tokenid1), 1), zeroAddress, Asset(ETH, "0x", price), 2, 0, 0, ORDER_DATA_V3, encDataRight);
     
     const signature2 = await getSignature(exchangeV2, right1, seller);
 
@@ -406,7 +406,7 @@ contract("Test gas usage for marketplaces", accounts => {
       sellOrderSalt: 2,
       sellOrderStart: 0,
       sellOrderEnd: 0,
-      sellOrderDataType: ORDER_DATA_V3_SELL,
+      sellOrderDataType: ORDER_DATA_V3,
       sellOrderData: encDataRight,
       sellOrderSignature: signature2,
       buyOrderPaymentAmount: price,
@@ -446,7 +446,7 @@ contract("Test gas usage for marketplaces", accounts => {
     let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(protocol, protocolFeeBP), 0, MARKET_MARKER_BUY]);
 		let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
 
-    const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+    const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3, encDataLeft);
     
     const signature = await getSignature(exchangeV2, left, buyer);
 
@@ -460,7 +460,7 @@ contract("Test gas usage for marketplaces", accounts => {
       bidSalt: 1,
       bidStart: 0,
       bidEnd: 0,
-      bidDataType: ORDER_DATA_V3_BUY,
+      bidDataType: ORDER_DATA_V3,
       bidData: encDataLeft,
       bidSignature: signature,
       sellOrderPaymentAmount: price,
@@ -487,7 +487,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20.approve(erc20TransferProxy.address, price, {from: buyer})
     assert.equal(await erc20.balanceOf(buyer), price, "erc20 deposit")
 
-    const left1 = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenid1), 1), 2, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+    const left1 = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenid1), 1), 2, 0, 0, ORDER_DATA_V3, encDataLeft);
     
     const signature1 = await getSignature(exchangeV2, left1, buyer);
   
@@ -501,7 +501,7 @@ contract("Test gas usage for marketplaces", accounts => {
       bidSalt: 2,
       bidStart: 0,
       bidEnd: 0,
-      bidDataType: ORDER_DATA_V3_BUY,
+      bidDataType: ORDER_DATA_V3,
       bidData: encDataLeft,
       bidSignature: signature1,
       sellOrderPaymentAmount: price,
