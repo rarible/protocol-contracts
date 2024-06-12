@@ -49,7 +49,7 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
         _previous = __previous;
         _l1Address = __l1Address;
         _customGatewayAddress == __customGatewayAddress;
-        __routerAddress == __routerAddress;
+        _routerAddress == __routerAddress;
 
         if (__admin != address(0)) {
             _grantRole(DEFAULT_ADMIN_ROLE, __admin);
@@ -60,6 +60,14 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
         if (__minter != address(0)) {
             _grantRole(MINTER_ROLE, __minter);
         }
+    }
+
+    function setCustomGatewayAddress(address __customGatewayAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _customGatewayAddress = __customGatewayAddress;
+    }
+
+    function setRouterAddress(address __routerAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _routerAddress = __routerAddress;
     }
 
     function wrap(address account, uint256 amount) external {
