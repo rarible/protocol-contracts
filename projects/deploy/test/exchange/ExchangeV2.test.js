@@ -53,7 +53,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
     //royaltiesRegistry
     royaltiesRegistry = await RoyaltiesRegistry.deployed()
 
-    /*Auction*/
+    /*Exchange*/
     exchangeV2 = await ExchangeV2.deployed();
 
     helper = await RaribleTestHelper.new()
