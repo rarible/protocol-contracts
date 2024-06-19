@@ -21,7 +21,7 @@ contract("RoyaltiesRegistry, test methods", accounts => {
 
 	before(async () => {
 		royaltiesRegistry = await RoyaltiesRegistry.new();
-    await royaltiesRegistry.__RoyaltiesRegistry_init();
+    	await royaltiesRegistry.__RoyaltiesRegistry_init();
 		royaltiesRegistryTest = await RoyaltiesRegistryTest.new();
 		testRoyaltiesProvider = await TestRoyaltiesProvider.new();
 	});
