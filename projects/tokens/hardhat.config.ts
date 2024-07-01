@@ -77,6 +77,7 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "contracts",
+    tests: "test-hardhat"
   },
   networks: loadNetworkConfigs(),
   etherscan: {
