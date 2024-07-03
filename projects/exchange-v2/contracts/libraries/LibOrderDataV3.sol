@@ -5,24 +5,12 @@ pragma abicoder v2;
 
 import "@rarible/lib-part/contracts/LibPart.sol";
 
-/// @dev deprecated
 library LibOrderDataV3 {
-    bytes4 constant public V3_SELL = bytes4(keccak256("V3_SELL"));
-    bytes4 constant public V3_BUY = bytes4(keccak256("V3_BUY"));
+    bytes4 constant public V3 = bytes4(keccak256("V3"));
 
-    struct DataV3_SELL {
-        uint payouts;
-        uint originFeeFirst;
-        uint originFeeSecond;
-        uint maxFeesBasePoint;
-        bytes32 marketplaceMarker;
+    struct DataV3 {
+        LibPart.Part[] payouts;
+        LibPart.Part[] originFees;
+        bool isMakeFill;
     }
-
-    struct DataV3_BUY {
-        uint payouts;
-        uint originFeeFirst;
-        uint originFeeSecond;
-        bytes32 marketplaceMarker;
-    }
-
 }

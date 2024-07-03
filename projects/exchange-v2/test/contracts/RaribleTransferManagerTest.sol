@@ -22,6 +22,10 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor 
         return abi.encode(data);
     }
 
+    function encodeV3(LibOrderDataV3.DataV3 memory data) pure external returns (bytes memory) {
+        return abi.encode(data);
+    }
+
     function init____(
         address _transferProxy,
         address _erc20TransferProxy,
@@ -41,7 +45,8 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor 
             orderData.payouts,
             orderData.originFees,
             proxies[order.makeAsset.assetType.assetClass],
-            order.maker
+            order.maker,
+            orderData.protocolFeeEnabled
         );
     }
 

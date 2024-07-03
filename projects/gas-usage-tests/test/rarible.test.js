@@ -23,7 +23,7 @@ const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951
 
 const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3_BUY, ORDER_DATA_V3_SELL, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
 
 contract("rarible only gas usage tests", accounts => {
 
@@ -78,7 +78,7 @@ contract("rarible only gas usage tests", accounts => {
 
     let encDataRight = await encDataV3_SELL([await LibPartToUint(seller, 10000), await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
 
-    const right = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V3_SELL, encDataRight);
+    const right = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V3, encDataRight);
 
     const cancelTx1 = await exchangeV2.cancel(right, { from: seller })
     console.log("RARIBLE NEW: cancel order", cancelTx1.receipt.gasUsed)
@@ -103,7 +103,7 @@ contract("rarible only gas usage tests", accounts => {
     const _nftSellAssetData = enc(token.address, tokenId1);
     const _nftPurchaseAssetData = "0x";
 
-    const left = Order(seller, Asset(ERC721, _nftSellAssetData, nftAmount), zeroAddress, Asset(ETH, _nftPurchaseAssetData, price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+    const left = Order(seller, Asset(ERC721, _nftSellAssetData, nftAmount), zeroAddress, Asset(ETH, _nftPurchaseAssetData, price), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
 
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[seller, 1000]]);
     const signature = await getSignature(exchangeV2, left, seller);
@@ -118,7 +118,7 @@ contract("rarible only gas usage tests", accounts => {
       sellOrderSalt: salt,
       sellOrderStart: 0,
       sellOrderEnd: 0,
-      sellOrderDataType: ORDER_DATA_V3_SELL,
+      sellOrderDataType: ORDER_DATA_V3,
       sellOrderData: encDataLeft,
       sellOrderSignature: signature,
       buyOrderPaymentAmount: price,
@@ -156,7 +156,7 @@ contract("rarible only gas usage tests", accounts => {
     const _nftSellAssetData = enc(token.address, tokenId1);
     const _nftPurchaseAssetData = "0x";
 
-    const left = Order(seller, Asset(ERC721, _nftSellAssetData, nftAmount), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
+    const left = Order(seller, Asset(ERC721, _nftSellAssetData, nftAmount), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
 
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[additionalRoyalties, 1000]]);
 
@@ -172,7 +172,7 @@ contract("rarible only gas usage tests", accounts => {
       sellOrderSalt: salt,
       sellOrderStart: 0,
       sellOrderEnd: 0,
-      sellOrderDataType: ORDER_DATA_V3_SELL,
+      sellOrderDataType: ORDER_DATA_V3,
       sellOrderData: encDataLeft,
       sellOrderSignature: signature,
       buyOrderPaymentAmount: price,
@@ -207,8 +207,8 @@ contract("rarible only gas usage tests", accounts => {
     let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
     let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
 
-    const left = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3_SELL, encDataLeft);
-    const right = Order(buyer,  Asset(ETH, "0x", price), zeroAddress, Asset(ERC721, enc(token.address, tokenId1), 1), 0, 0, 0, ORDER_DATA_V3_BUY, encDataRight);
+    const left = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
+    const right = Order(buyer,  Asset(ETH, "0x", price), zeroAddress, Asset(ERC721, enc(token.address, tokenId1), 1), 0, 0, 0, ORDER_DATA_V3, encDataRight);
 
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[additionalRoyalties, 1000]]);
 
@@ -278,7 +278,7 @@ contract("rarible only gas usage tests", accounts => {
     const _nftAssetData = enc(token.address, tokenId1);
     const _paymentAssetData = enc(erc20.address);
 
-    const left = Order(buyer, Asset(ERC20, _paymentAssetData, price), zeroAddress, Asset(ERC721, _nftAssetData, nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+    const left = Order(buyer, Asset(ERC20, _paymentAssetData, price), zeroAddress, Asset(ERC721, _nftAssetData, nftAmount), 1, 0, 0, ORDER_DATA_V3, encDataLeft);
 
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[seller, 1000]]);
 
@@ -294,7 +294,7 @@ contract("rarible only gas usage tests", accounts => {
       bidSalt: 1,
       bidStart: 0,
       bidEnd: 0,
-      bidDataType: ORDER_DATA_V3_BUY,
+      bidDataType: ORDER_DATA_V3,
       bidData: encDataLeft,
       bidSignature: signature,
       sellOrderPaymentAmount: price,
@@ -333,7 +333,7 @@ contract("rarible only gas usage tests", accounts => {
     const _nftAssetData = enc(token.address, tokenId1);
     const _paymentAssetData = enc(erc20.address);
 
-    const left = Order(buyer, Asset(ERC20, _paymentAssetData, price), zeroAddress, Asset(ERC721, _nftAssetData, nftAmount), 1, 0, 0, ORDER_DATA_V3_BUY, encDataLeft);
+    const left = Order(buyer, Asset(ERC20, _paymentAssetData, price), zeroAddress, Asset(ERC721, _nftAssetData, nftAmount), 1, 0, 0, ORDER_DATA_V3, encDataLeft);
 
     await royaltiesRegistry.setRoyaltiesByToken(token.address, [[additionalRoyalties, 1000]]);
 
@@ -349,7 +349,7 @@ contract("rarible only gas usage tests", accounts => {
       bidSalt: 1,
       bidStart: 0,
       bidEnd: 0,
-      bidDataType: ORDER_DATA_V3_BUY,
+      bidDataType: ORDER_DATA_V3,
       bidData: encDataLeft,
       bidSignature: signature,
       sellOrderPaymentAmount: price,
