@@ -189,6 +189,12 @@ const config: HardhatUserConfig = {
       ...createNetwork("zkLink"),
       verifyURL: 'https://explorer.zklink.io/contracts/verify'
     },
+    zkcandy_sepolia: {
+      zksync: true,
+      ethNetwork: "sepolia",
+      ...createNetwork("zkcandy_sepolia_testnet"),
+      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
+    }
   },
   etherscan: {
     apiKey: "P78HUI9K9SAM5QKD6ABU91G3CPDS98MZW2"
