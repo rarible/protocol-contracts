@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT 
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -10,64 +10,52 @@ import {IArbToken} from "@arbitrum/token-bridge-contracts/contracts/tokenbridge/
  * @title Interface needed to call function registerTokenToL2 of the L1CustomGateway
  */
 interface IL1CustomGateway {
-    function registerTokenToL2(
-        address _l2Address,
-        uint256 _maxGas,
-        uint256 _gasPriceBid,
-        uint256 _maxSubmissionCost,
-        address _creditBackAddress
-    ) external payable returns (uint256);
+    function registerTokenToL2(address _l2Address, uint256 _maxGas, uint256 _gasPriceBid, uint256 _maxSubmissionCost, address _creditBackAddress) external payable returns (uint256);
 }
 
 /**
  * @title Interface needed to call function setGateway of the L2GatewayRouter
  */
 interface IL2GatewayRouter {
-    function setGateway(
-        address _gateway,
-        uint256 _maxGas,
-        uint256 _gasPriceBid,
-        uint256 _maxSubmissionCost,
-        address _creditBackAddress
-    ) external payable returns (uint256);
+    function setGateway(address _gateway, uint256 _maxGas, uint256 _gasPriceBid, uint256 _maxSubmissionCost, address _creditBackAddress) external payable returns (uint256);
 }
 
 contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgradeable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    IERC20 public _previous;
-    address public _l1Address;
-    address public _customGatewayAddress;
-    address public _routerAddress;
+    IERC20 private _previous;
+    address private _l1;
+    address private _customGateway;
+    address private _router;
 
-    function __RariBridgedToken_init(IERC20 __previous, address __admin, address __minter, address __l1Address, address __customGatewayAddress, address __routerAddress) external initializer {
+    function __RariBridgedToken_init(IERC20 previousAddress, address adminAddress, address minterAddress, address l1, address customGatewayAddress, address routerAddress) external initializer {
         __Context_init();
         __EIP712_init("RARI", "1");
         __AccessControl_init();
         __ERC20_init("RARI", "RARI");
         __ERC20Votes_init();
 
-        _previous = __previous;
-        _l1Address = __l1Address;
-        _customGatewayAddress == __customGatewayAddress;
-        _routerAddress == __routerAddress;
-
-        if (__admin != address(0)) {
-            _grantRole(DEFAULT_ADMIN_ROLE, __admin);
+        if (adminAddress != address(0)) {
+            _grantRole(DEFAULT_ADMIN_ROLE, adminAddress);
         } else {
             _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         }
 
-        if (__minter != address(0)) {
-            _grantRole(MINTER_ROLE, __minter);
+        if (minterAddress != address(0)) {
+            _grantRole(MINTER_ROLE, minterAddress);
         }
+
+        _previous = previousAddress;
+        _l1 = l1;
+        _customGateway = customGatewayAddress;
+        _router = routerAddress;
     }
 
-    function setCustomGatewayAddress(address __customGatewayAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _customGatewayAddress = __customGatewayAddress;
+    function setCustomGateway(address customGatewayAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _customGateway = customGatewayAddress;
     }
 
-    function setRouterAddress(address __routerAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _routerAddress = __routerAddress;
+    function setRouter(address routerAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _router = routerAddress;
     }
 
     function wrap(address account, uint256 amount) external {
@@ -84,39 +72,28 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
     }
 
     function l1Address() external view returns (address) {
-        return _l1Address;
+        return _l1;
+    }
+
+    function previous() external view returns (address) {
+        return address(_previous);
+    }
+
+    function customGateway() external view returns (address) {
+        return _customGateway;
+    }
+
+    function router() external view returns (address) {
+        return _router;
     }
 
     function isArbitrumEnabled() external pure returns (uint8) {
         return 0xb1;
     }
 
-    function registerTokenOnL2(
-        address l2CustomTokenAddress,
-        uint256 maxSubmissionCostForCustomGateway,
-        uint256 maxSubmissionCostForRouter,
-        uint256 maxGasForCustomGateway,
-        uint256 maxGasForRouter,
-        uint256 gasPriceBid,
-        uint256 valueForGateway,
-        uint256 valueForRouter,
-        address creditBackAddress
-    ) external payable {
+    function registerTokenOnL2(address l2CustomTokenAddress, uint256 maxSubmissionCostForCustomGateway, uint256 maxSubmissionCostForRouter, uint256 maxGasForCustomGateway, uint256 maxGasForRouter, uint256 gasPriceBid, uint256 valueForGateway, uint256 valueForRouter, address creditBackAddress) external payable {
+        IL1CustomGateway(_customGateway).registerTokenToL2{value: valueForGateway}(l2CustomTokenAddress, maxGasForCustomGateway, gasPriceBid, maxSubmissionCostForCustomGateway, creditBackAddress);
 
-        IL1CustomGateway(_customGatewayAddress).registerTokenToL2{ value: valueForGateway }(
-            l2CustomTokenAddress,
-            maxGasForCustomGateway,
-            gasPriceBid,
-            maxSubmissionCostForCustomGateway,
-            creditBackAddress
-        );
-
-        IL2GatewayRouter(_routerAddress).setGateway{ value: valueForRouter }(
-            _customGatewayAddress,
-            maxGasForRouter,
-            gasPriceBid,
-            maxSubmissionCostForRouter,
-            creditBackAddress
-        );
+        IL2GatewayRouter(_router).setGateway{value: valueForRouter}(_customGateway, maxGasForRouter, gasPriceBid, maxSubmissionCostForRouter, creditBackAddress);
     }
 }
