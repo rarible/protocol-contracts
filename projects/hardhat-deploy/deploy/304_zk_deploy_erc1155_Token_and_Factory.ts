@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-
+import "@matterlabs/hardhat-zksync-ethers";
 import { getConfig } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
-  const { ethers } = hre;
+  const { zksyncEthers } = hre;
   const { deployer } = await hre.getNamedAccounts();
 
   const transferProxyAddress = (await hre.deployments.get("TransferProxy")).address;
@@ -33,7 +33,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   });
 
   // Manually call the initialization function
-  const erc1155Contract = await ethers.getContractAt(contractName, erc1155Receipt.address);
+  const erc1155Contract = await zksyncEthers.getContractAt(contractName, erc1155Receipt.address);
   await (await erc1155Contract.__ERC1155Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc1155LazyMintTransferProxyAddress)).wait();
 
   // Deploy beacon
@@ -54,4 +54,4 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
 }
 
 export default func;
-func.tags = ['all-zk', 'tokens-zk'];
+func.tags = ['all-zk', 'tokens-zk', "304"];
