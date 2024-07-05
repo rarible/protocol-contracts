@@ -7,10 +7,9 @@ import "@matterlabs/hardhat-zksync-verify";
 import "@matterlabs/hardhat-zksync-ethers";
 import "zksync-ethers";
 
-// upgradable plugin
 
 import type {
-    HttpNetworkUserConfig, HardhatUserConfig
+  HttpNetworkUserConfig, HardhatUserConfig
 } from "hardhat/types";
 import * as dotenv from "dotenv";
 import * as os from "os";
@@ -192,7 +191,7 @@ const config: HardhatUserConfig = {
     zkcandy_sepolia: {
       zksync: true,
       ethNetwork: "sepolia",
-      ...createNetwork("zkcandy_sepolia_testnet"),
+      ...createNetwork("zkcandy_sepolia"),
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     }
   },

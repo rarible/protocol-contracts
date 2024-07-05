@@ -29,4 +29,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['all-zk', 'all-zk-no-tokens'];
+func.tags = ['all-zk', 'all-zk-no-tokens', "301"];
