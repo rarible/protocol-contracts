@@ -27,7 +27,7 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
     address private _customGateway;
     address private _router;
 
-    function __RariBridgedToken_init(IERC20 previousAddress, address adminAddress, address minterAddress, address l1, address customGatewayAddress, address routerAddress) external initializer {
+    function __RariBridgedToken_init(IERC20 previousToken, address adminAddress, address minterAddress, address l1, address customGatewayAddress, address routerAddress) external initializer {
         __Context_init();
         __EIP712_init("RARI", "1");
         __AccessControl_init();
@@ -44,7 +44,7 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
             _grantRole(MINTER_ROLE, minterAddress);
         }
 
-        _previous = previousAddress;
+        _previous = previousToken;
         _l1 = l1;
         _customGateway = customGatewayAddress;
         _router = routerAddress;
