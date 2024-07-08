@@ -22,15 +22,7 @@ contract RaribleTestHelper {
         return abi.encode(data);
     }
 
-    function encodeV3_SELL(LibOrderDataV3.DataV3_SELL memory data)
-        external
-        pure
-        returns (bytes memory)
-    {
-        return abi.encode(data);
-    }
-
-    function encodeV3_BUY(LibOrderDataV3.DataV3_BUY memory data)
+    function encodeV3(LibOrderDataV3.DataV3 memory data)
         external
         pure
         returns (bytes memory)
