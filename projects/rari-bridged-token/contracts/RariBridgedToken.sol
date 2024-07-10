@@ -59,7 +59,7 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
     }
 
     function wrap(address account, uint256 amount) external {
-        _previous.transferFrom(_msgSender(), address(this), amount);
+        require(_previous.transferFrom(_msgSender(), address(this), amount));
         super._mint(account, amount);
     }
 
@@ -91,9 +91,24 @@ contract RariBridgedToken is IArbToken, AccessControlUpgradeable, ERC20VotesUpgr
         return 0xb1;
     }
 
-    function registerTokenOnL2(address l2CustomTokenAddress, uint256 maxSubmissionCostForCustomGateway, uint256 maxSubmissionCostForRouter, uint256 maxGasForCustomGateway, uint256 maxGasForRouter, uint256 gasPriceBid, uint256 valueForGateway, uint256 valueForRouter, address creditBackAddress) external payable {
-        IL1CustomGateway(_customGateway).registerTokenToL2{value: valueForGateway}(l2CustomTokenAddress, maxGasForCustomGateway, gasPriceBid, maxSubmissionCostForCustomGateway, creditBackAddress);
+    function registerTokenOnL2(
+        address l2CustomTokenAddress, 
+        uint256 maxSubmissionCostForCustomGateway, 
+        uint256 maxSubmissionCostForRouter, 
+        uint256 maxGasForCustomGateway, 
+        uint256 maxGasForRouter, 
+        uint256 gasPriceBid, 
+        uint256 valueForGateway, 
+        uint256 valueForRouter, 
+        address creditBackAddress
+    ) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
 
-        IL2GatewayRouter(_router).setGateway{value: valueForRouter}(_customGateway, maxGasForRouter, gasPriceBid, maxSubmissionCostForRouter, creditBackAddress);
+        IL1CustomGateway(_customGateway).registerTokenToL2{value: valueForGateway}(
+            l2CustomTokenAddress, maxGasForCustomGateway, gasPriceBid, maxSubmissionCostForCustomGateway, creditBackAddress
+        );
+
+        IL2GatewayRouter(_router).setGateway{value: valueForRouter}(
+            _customGateway, maxGasForRouter, gasPriceBid, maxSubmissionCostForRouter, creditBackAddress
+        );
     }
 }
