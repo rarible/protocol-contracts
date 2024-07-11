@@ -24,45 +24,18 @@
       - if false, order's `fill` (what part of order is completed, stored on-chain) is calculated from take side (in `V1` orders it always works like that)
       - if true, `fill` is calculated from the make side of the order
     - fees logic, works the same as in `V1` orders
-- `"V3"` two types of `V3` orders. 
-  - `"V3_BUY"`
-    - fields
-      - `uint payouts`, works the same as in `V1` orders, but there is only 1 value and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
-      - `uint originFeeFirst`, instead of array there can only be 2 originFee in different vairables (originFeeFirst and originFeeSecond), and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
-      - `uint originFeeSecond`, instead of array there can only be 2 originFee in different vairables (originFeeFirst and originFeeSecond), and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
-      - `bytes32 marketplaceMarker`, bytes32 id marketplace, which generate this order  
-  - `"V3_SELL"`
-    - fields
-      - `uint payouts`, works the same as in `V1` orders, but there is only 1 value and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
-      - `uint originFeeFirst`, instead of array there can only be 2 originFee in different vairables (originFeeFirst and originFeeSecond), and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
-      - `uint originFeeSecond`, instead of array there can only be 2 originFee in different vairables (originFeeFirst and originFeeSecond), and address + amount are encoded into uint (first 12 bytes for amount, last 20 bytes for address), not using `LibPart.Part` struct
-      - `uint maxFeesBasePoint`
-        - maximum amount of fees that can be taken from payment (e.g. 10%)
-        - chosen by seller, that's why it's only present in `V3_SELL` orders
-        - `maxFeesBasePoint` should be more than `0`
-        - `maxFeesBasePoint` should not be bigger than `10%`
-      - `bytes32 marketplaceMarker`, bytes32 id marketplace, which generate this order
-  - `V3` orders can only be matched if buy-order is `V3_BUY` and the sell-order is `V3_SELL`
-  - `V3` orders don't have `isMakeFill` field
-    - `V3_SELL` orders' fills are always calculated from make side (as if `isMakeFill` = true)
-    - `V3_BUY` orders' fills are always calculated from take side (as if `isMakeFill` = false)
+- `"V3"`
+  - fields
+    - `LibPart.Part[] payouts`, works the same as in `V1` and `V2` orders
+    - `LibPart.Part[] originFees`, works the same as in `V1` and `V2` orders
+    - `bool isMakeFill`, works the same as in `V2` orders
   - fees logic
-    - `V3` orders' fees work differently from all previous orders types
-    - `originFees` are taken from seller side only.
-    - sum of buy-order `originFees` + sell-order `originFees` should not be bigger than `maxFeesBasePoint`
-    - example:
-      - sell order is `1 ERC721` => `100 ETH`
-        - `maxFeesBasePoint` is 10 %
-        - Sell order has `originFeeFirst` = `{2% to addr3}`
-      - buy order is `100 ETH` => `1 ERC721`
-        - Buy order has 
-          - `originFeeFirst` = `{3% to addr1}`, 
-          - `originFeeSecond` = `{2% to addr2}`
-      - total amount for buyer is not affected by fees. it remains `100 ETH`
-      - `3% * 100 ETH` + `2% * 100 ETH` is taken as buy order's origin fee, `95 ETH` remaining
-      - `2% * 100 ETH` is taken as sell order's origin, `93 ETH` remaining
-      - after that NFT `royalties` are taken (same as with previous orders' types)
-      - what's left after that is distributed according to sell-order `payouts` (same as with previous orders' types)
+    - The protocol fee is enabled at the contract level for V3 orders.
+    - `originFees` are taken from both sides, but the protocol fee is also considered.
+    - protocol fee details:
+      - if the protocol fee is enabled, it is deducted according to the specified percentages to both the buyer and the seller.
+      - for direct reference on the protocolFee, read [RaribleTransferManager.sol](../../../transfer-manager/contracts/RaribleTransferManager.sol)
+
 
 
 
