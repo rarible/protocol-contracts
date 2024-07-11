@@ -76,7 +76,7 @@ contract("rarible only gas usage tests", accounts => {
   it("NEW + OLD: cancel()", async () => {
     const token = await TestERC721.new("Rarible", "RARI");
 
-    let encDataRight = await encDataV3_SELL([await LibPartToUint(seller, 10000), await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
+    let encDataRight = await encDataV3([[{account: seller, value: 10000}], [], true]);
 
     const right = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", 1000), 1, 0, 0, ORDER_DATA_V3, encDataRight);
 
@@ -94,11 +94,10 @@ contract("rarible only gas usage tests", accounts => {
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
 
-    let addrOriginLeft = await LibPartToUint(origin1, 300);
-    let addrOriginRight = await LibPartToUint(origin1, 300);
+    let encDataLeft = await encDataV3([[], [{account: origin1, value: 300}], true]);
+    let encDataRight = await encDataV3([[], [{account: origin1, value: 300}], false]);
 
-    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
-    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+    const buyerFees = price * 300 / 10000;
 
     const _nftSellAssetData = enc(token.address, tokenId1);
     const _nftPurchaseAssetData = "0x";
@@ -127,12 +126,12 @@ contract("rarible only gas usage tests", accounts => {
     };
 
     console.log("RARIBLE NEW: direct buy ETH <=> ERC721 ROYALTIES = SELLER");
-    await verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+    await verifyBalanceChangeReturnTx(web3, buyer, 1030, async () =>
       verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
         verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
           verifyBalanceChangeReturnTx(web3, additionalRoyalties, 0, async () =>
-            verifyBalanceChangeReturnTx(web3, seller, -940, async () =>
-              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price})
+            verifyBalanceChangeReturnTx(web3, seller, -970, async () =>
+              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price + buyerFees})
             )
           )
         )
@@ -147,11 +146,10 @@ contract("rarible only gas usage tests", accounts => {
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
 
-    let addrOriginLeft = await LibPartToUint(origin1, 300);
-    let addrOriginRight = await LibPartToUint(origin1, 300);
+    let encDataLeft = await encDataV3([[], [{account: origin1, value: 300}], true]);
+    let encDataRight = await encDataV3([[], [{account: origin1, value: 300}], false]);
 
-    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
-    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+    const buyerFees = price * 300 / 10000;
 
     const _nftSellAssetData = enc(token.address, tokenId1);
     const _nftPurchaseAssetData = "0x";
@@ -181,12 +179,12 @@ contract("rarible only gas usage tests", accounts => {
     };
 
     console.log("RARIBLE NEW: direct buy ETH <=> ERC721 ROYALTIES != SELLER:");
-    await verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+    await verifyBalanceChangeReturnTx(web3, buyer, 1030, async () =>
       verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
         verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
           verifyBalanceChangeReturnTx(web3, additionalRoyalties, -100, async () =>
-            verifyBalanceChangeReturnTx(web3, seller, -840, async () =>
-              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price})
+            verifyBalanceChangeReturnTx(web3, seller, -870, async () =>
+              exchangeV2.directPurchase(directPurchaseParams, { from: buyer, value: price + buyerFees})
             )
           )
         )
@@ -201,11 +199,10 @@ contract("rarible only gas usage tests", accounts => {
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
 
-    let addrOriginLeft = await LibPartToUint(origin1, 300);
-    let addrOriginRight = await LibPartToUint(origin1, 300);
+    let encDataLeft = await encDataV3([[], [{account: origin1, value: 300}], true]);
+    let encDataRight = await encDataV3([[], [{account: origin1, value: 300}], false]);
 
-    let encDataLeft = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
-    let encDataRight = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+    const buyerFees = price * 300 / 10000;
 
     const left = Order(seller, Asset(ERC721, enc(token.address, tokenId1), 1), zeroAddress, Asset(ETH, "0x", price), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
     const right = Order(buyer,  Asset(ETH, "0x", price), zeroAddress, Asset(ERC721, enc(token.address, tokenId1), 1), 0, 0, 0, ORDER_DATA_V3, encDataRight);
@@ -215,12 +212,12 @@ contract("rarible only gas usage tests", accounts => {
     const signature = await getSignature(exchangeV2, left, seller);
 
     console.log("RARIBLE NEW: matchOrders ETH <=> ERC721 ROYALTIES != SELLER:");
-    await verifyBalanceChangeReturnTx(web3, buyer, 1000, async () =>
+    await verifyBalanceChangeReturnTx(web3, buyer, 1030, async () =>
       verifyBalanceChangeReturnTx(web3, protocol, 0, async () =>
         verifyBalanceChangeReturnTx(web3, origin1, -60, async () =>
           verifyBalanceChangeReturnTx(web3, additionalRoyalties, -100, async () =>
-            verifyBalanceChangeReturnTx(web3, seller, -840, async () =>
-              exchangeV2.matchOrders(left, signature, right, "0x", { from: buyer, value: price})
+            verifyBalanceChangeReturnTx(web3, seller, -870, async () =>
+              exchangeV2.matchOrders(left, signature, right, "0x", { from: buyer, value: price + buyerFees})
             )
           )
         )
@@ -262,18 +259,17 @@ contract("rarible only gas usage tests", accounts => {
     const token = await TestERC721.new("Rarible", "RARI");
     const erc20 = await TestERC20.new();
     const nftAmount = 1;
-    await erc20.mint(buyer, price)
-    await erc20.approve(erc20TransferProxy.address, price, { from: buyer })
-    assert.equal(await erc20.balanceOf(buyer), price, "erc20 deposit")
+
+    const buyerFees = price * 300 / 10000;
+    await erc20.mint(buyer, price + buyerFees)
+    await erc20.approve(erc20TransferProxy.address, price + buyerFees, { from: buyer })
+    assert.equal(await erc20.balanceOf(buyer), price + buyerFees, "erc20 deposit")
 
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
 
-    let addrOriginLeft = await LibPartToUint(origin1, 300);
-    let addrOriginRight = await LibPartToUint(origin1, 300);
-
-    let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
-    let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
+    let encDataLeft = await encDataV3([[], [{account: origin1, value: 300}], true]);
+    let encDataRight = await encDataV3([[], [{account: origin1, value: 300}], false]);
 
     const _nftAssetData = enc(token.address, tokenId1);
     const _paymentAssetData = enc(erc20.address);
@@ -310,25 +306,24 @@ contract("rarible only gas usage tests", accounts => {
     assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(origin1), 60, "origin")
-    assert.equal(await erc20.balanceOf(seller), 940, "seller")
+    assert.equal(await erc20.balanceOf(seller), 970, "seller")
   })
 
   it("RARIBLE NEW: ERC-20 ROYALTIES != SELLER", async () => {
     const token = await TestERC721.new("Rarible", "RARI");
     const erc20 = await TestERC20.new();
     const nftAmount = 1;
-    await erc20.mint(buyer, price)
-    await erc20.approve(erc20TransferProxy.address, price, { from: buyer })
-    assert.equal(await erc20.balanceOf(buyer), price, "erc20 deposit")
+
+    const buyerFees = price * 300 / 10000;
+    await erc20.mint(buyer, price + buyerFees)
+    await erc20.approve(erc20TransferProxy.address, price + buyerFees, { from: buyer })
+    assert.equal(await erc20.balanceOf(buyer), price + buyerFees, "erc20 deposit")
 
     await token.mint(seller, tokenId1)
     await token.setApprovalForAll(transferProxy.address, true, { from: seller })
 
-    let addrOriginLeft = await LibPartToUint(origin1, 300);
-    let addrOriginRight = await LibPartToUint(origin1, 300);
-
-    let encDataLeft = await encDataV3_BUY([0, addrOriginLeft, 0, MARKET_MARKER_BUY]);
-    let encDataRight = await encDataV3_SELL([0, addrOriginRight, 0, 1000, MARKET_MARKER_SELL]);
+    let encDataLeft = await encDataV3([[], [{account: origin1, value: 300}], true]);
+    let encDataRight = await encDataV3([[], [{account: origin1, value: 300}], false]);
 
     const _nftAssetData = enc(token.address, tokenId1);
     const _paymentAssetData = enc(erc20.address);
@@ -366,7 +361,7 @@ contract("rarible only gas usage tests", accounts => {
     assert.equal(await erc20.balanceOf(protocol), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(origin1), 60, "origin")
     assert.equal(await erc20.balanceOf(additionalRoyalties), 100, "origin")
-    assert.equal(await erc20.balanceOf(seller), 840, "seller")
+    assert.equal(await erc20.balanceOf(seller), 870, "seller")
   })
 
   it("RARIBLE OLD: ERC-20 ROYALTIES = SELLER", async () => {
@@ -403,12 +398,8 @@ contract("rarible only gas usage tests", accounts => {
     return testHelper.encodeV2(tuple);
   }
 
-  function encDataV3_BUY(tuple) {
-    return testHelper.encodeV3_BUY(tuple);
-  }
-
-  function encDataV3_SELL(tuple) {
-    return testHelper.encodeV3_SELL(tuple);
+  function encDataV3(tuple) {
+    return testHelper.encodeV3(tuple);
   }
 
   async function LibPartToUint(account = zeroAddress, value = 0) {
