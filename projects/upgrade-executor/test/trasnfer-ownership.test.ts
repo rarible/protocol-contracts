@@ -17,6 +17,17 @@ describe("Transfer Ownership", function () {
 
   let settings: any;
 
+  enum ProposalState {
+    Pending,
+    Active,
+    Canceled,
+    Defeated,
+    Succeeded,
+    Queued,
+    Expired,
+    Executed
+  }
+
   before(async () => {
     [newOwner, ...signers] = await ethers.getSigners();
 
@@ -149,6 +160,19 @@ describe("Transfer Ownership", function () {
     //prepare data for proposal
     const governor = new ethers.Contract("0x6552C8fb228f7776Fc0e4056AA217c139D4baDa1", RariGovernorABI, userSigner)
 
+    const votingPeriod = await governor.votingPeriod();
+    console.log(`Voting Period: ${votingPeriod}`);
+
+    const votingDelay = await governor.votingDelay();
+    console.log(`Voting Delay: ${votingDelay}`);
+
+    const proposalThreshold = await governor.proposalThreshold();
+    console.log(`Proposal Threshold: ${proposalThreshold}`);
+  
+    const votingPower = await governor.getVotes(user, await ethers.provider.getBlockNumber() - 1);
+    console.log(`Voting Power: ${votingPower}`);
+    expect(votingPower).to.be.gte(proposalThreshold);
+
     const ownableContracts = [
       "0xDc8BaA86f136F8B0851F090a4DfFDc7b5F46688D", //admin1
       "0x80033c932904E077e55a6E43E5E9a796f34d2525", //admin2
@@ -183,6 +207,10 @@ describe("Transfer Ownership", function () {
 
     const proposalId = proposalReceipt.events[0].args.proposalId;
 
+    const initialProposalState = await governor.state(proposalId);
+    console.log(`Proposal ${proposalId} State: ${initialProposalState}`);
+    expect(initialProposalState).to.be.eq(ProposalState.Active); 
+
     const VoteType = {
       Against: 0,
       For: 1,
@@ -192,9 +220,26 @@ describe("Transfer Ownership", function () {
     //vote for proposal
     const voteTx = await governor.castVote(proposalId, VoteType.For)
 
-    const voteReceipt = await voteTx.wait(37000)
+    const voteReceipt = await voteTx.wait()
 
     const hashDiscr = await testHelper.hashDescription(discr)
+
+    const proposalDeadline = await governor.proposalDeadline(proposalId);
+    console.log(`Proposal ${proposalId} Deadline: ${proposalDeadline}`);
+
+    const currentBlock = await ethers.provider.getBlockNumber();
+    console.log(`Current Block: ${currentBlock}`);
+
+    /* Advance Voting Periods time, measured on blocks */
+    await network.provider.send("hardhat_mine", ['0x'+ ((36000).toString(16))]); 
+
+    const currentBlockAfter = await ethers.provider.getBlockNumber();
+    console.log(`Current Block After: ${currentBlockAfter}`);
+    expect(currentBlockAfter).to.be.gt(proposalDeadline);
+
+    const proposalState = await governor.state(proposalId);
+    console.log(`Proposal ${proposalId} State: ${proposalState}`);
+    expect(proposalState).to.be.eq(ProposalState.Succeeded); 
 
     //queue proposal
     const queueTx = await governor['queue(address[],uint256[],bytes[],bytes32)'](
