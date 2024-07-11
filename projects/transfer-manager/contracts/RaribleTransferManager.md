@@ -4,7 +4,7 @@
 It's responsible for transferring all Assets. This manager supports different types of fees, also it supports different beneficiaries (specified in Order.data)  
 
 Types of fees supported:
-- (!DEPRECATED) protocol fee (controlled by `protocolFee` field) 
+- protocol fee (controlled by `protocolFee` field) 
 - origin fee (is coming from `Order.data`)
 - royalties (provided by external `IRoyaltiesProvider`)
 
