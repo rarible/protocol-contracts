@@ -23,9 +23,15 @@ import "./IDropERC721.sol";
 
 contract DropERC721Reader is Initializable, OwnableUpgradeable {
 
+    enum FeeType {
+        Bps,
+        Flat
+    }
+
     struct FeeData {
         address recipient;
-        uint256 bps;
+        uint256 value;
+        FeeType feeType;
     }
 
     struct GlobalData {
@@ -97,21 +103,48 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
         _globalData.totalMinted         = drop.totalMinted();
         _globalData.claimedByUser       = _claimedByUser;
         _globalData.totalSupply         = drop.totalSupply();
-        _globalData.maxTotalSupply      = drop.maxTotalSupply();
+        try drop.maxTotalSupply() returns (uint maxTotalSupply) {
+            _globalData.maxTotalSupply      = maxTotalSupply;
+        } catch {
+            _globalData.maxTotalSupply      = 0;
+        }        
         _globalData.nextTokenIdToMint   = drop.nextTokenIdToMint();
         _globalData.nextTokenIdToClaim  = drop.nextTokenIdToClaim();
         _globalData.name                = drop.name();
         _globalData.symbol              = drop.symbol();
         _globalData.contractURI         = drop.contractURI();
-        _globalData.baseURICount        = drop.getBaseURICount();
+        try drop.getBaseURICount() returns (uint baseURICount) {
+            _globalData.baseURICount        = baseURICount;
+        } catch {
+            _globalData.baseURICount        = 0;
+        }
+        
         _globalData.blockTimeStamp      = block.timestamp;
+
         (address rAddress, uint16 rBps)     = drop.getDefaultRoyaltyInfo();
         _globalData.defaultRoyaltyInfo.recipient    = rAddress;
-        _globalData.defaultRoyaltyInfo.bps          = rBps;
+        _globalData.defaultRoyaltyInfo.value        = rBps;
+        _globalData.defaultRoyaltyInfo.feeType      = FeeType.Bps;
 
-        (address pAddress, uint16 pBps)     = drop.getPlatformFeeInfo();
-        _globalData.platformFeeInfo.recipient       = pAddress;
-        _globalData.platformFeeInfo.bps             = pBps;
+        IDropERC721.PlatformFeeType feeType = IDropERC721.PlatformFeeType.Bps;
+        try drop.getPlatformFeeType() returns (IDropERC721.PlatformFeeType resultFeeType) {
+            feeType = resultFeeType;
+        } catch {
+            feeType = IDropERC721.PlatformFeeType.Bps;
+        }
+        
+        if (feeType == IDropERC721.PlatformFeeType.Flat) {
+            (address pAddress, uint256 pValue)     = drop.getFlatPlatformFeeInfo();
+            _globalData.platformFeeInfo.recipient       = pAddress;
+            _globalData.platformFeeInfo.value           = pValue;
+            _globalData.platformFeeInfo.feeType         = FeeType.Flat;
+        } else {
+            (address pAddress, uint16 pBps)     = drop.getPlatformFeeInfo();
+            _globalData.platformFeeInfo.recipient       = pAddress;
+            _globalData.platformFeeInfo.value           = pBps;
+            _globalData.platformFeeInfo.feeType         = FeeType.Bps;
+        }
+
         return (activeClaimConditionIndex, conditions, _globalData);
     }
 }

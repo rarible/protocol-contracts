@@ -3,8 +3,7 @@ import { ethers } from "hardhat";
 import "@nomicfoundation/hardhat-toolbox";
 import { network } from "hardhat"
 
-import {DropERC721Reader, DropERC721Reader__factory, Initializable} from "../typechain-types";
-import {DropERC721, DropERC721__factory} from "../typechain-types";
+import {DropERC721Reader, DropERC721Reader__factory, IDropERC721__factory} from "../typechain-types";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {ClaimEligibility, ThirdwebSDK} from "@thirdweb-dev/sdk";
 import {ThirdwebStorage} from "@thirdweb-dev/storage";
@@ -22,7 +21,7 @@ describe("Test Erc721 Reader", function () {
   beforeEach(async function () {
     [owner] = await ethers.getSigners();
 
-    erc721Reader = await DropERC721Reader__factory.connect("0x29433D84cCb7241097Df27E30f36fe7433B19232", owner)
+    erc721Reader = await DropERC721Reader__factory.connect("0x507F27bb1d442B45cAC8fbEa8AedeE11eEAdfa2d", owner)
     console.log(erc721Reader.address)
     sdk = ThirdwebSDK.fromSigner(
          owner, // Your wallet's private key (only required for write operations)
@@ -44,21 +43,21 @@ describe("Test Erc721 Reader", function () {
     // NoWallet = "No wallet connected.",
     it("There is no claim condition set.", async function () {
       const collectionAddress = "0x0Fe7B48225f2c7E24952747F5D644Ba9937a199E"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, undefined)
       expect(claimReason).to.eq(ClaimEligibility.NoWallet)
     });
 
     it("There is no claim condition set.", async function () {
       const collectionAddress = "0x0Fe7B48225f2c7E24952747F5D644Ba9937a199E"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.NoClaimConditionSet)
     });
     
     it("This address is not on the allowlist.", async function () {
       const collectionAddress = "0xA00412829A4fFB09b5a85042941f8EC4B2F385cA"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.AddressNotAllowed)
     });
@@ -72,14 +71,14 @@ describe("Test Erc721 Reader", function () {
 
     it("Claim phase has not started yet.", async function () {
       const collectionAddress = "0xe114A562C3F994859fd9077A804A3E5084D62FeF"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.ClaimPhaseNotStarted, "Claim phase has not started yet.")
     });
 
     it("Cannot claim more than maximum allowed quantity.", async function () {
       const collectionAddress = "0x19cFE5f37024B2f4E48Ee090897548A48C88237C"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 4, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.OverMaxClaimablePerWallet, "Cannot claim more than maximum allowed quantity.")
     });
@@ -87,7 +86,7 @@ describe("Test Erc721 Reader", function () {
     // NotEnoughSupply = "There is not enough supply to claim.",
     it("There is not enough supply to claim.", async function () {
       const collectionAddress = "0x0645336C3C2A892926b18e5B85aA009805C377d8"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 4, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.NotEnoughSupply, "There is not enough supply to claim.")
     });
@@ -95,7 +94,7 @@ describe("Test Erc721 Reader", function () {
     // OverMaxClaimablePerWallet = "Cannot claim more than maximum allowed quantity.",
     it("Cannot claim more than maximum allowed quantity.", async function () {
       const collectionAddress = "0x8e0d557d99B4AB7a066327a819c579D0CfdCe3E1"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 10, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.OverMaxClaimablePerWallet, "Cannot claim more than maximum allowed quantity.")
     });
@@ -103,23 +102,33 @@ describe("Test Erc721 Reader", function () {
     // NotEnoughTokens = "There are not enough tokens in the wallet to pay for the claim.",
     it("There are not enough tokens in the wallet to pay for the claim.", async function () {
       const collectionAddress = "0x5fafecB2E623b84d5EE824e82d35a18DFe6B0f20"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.NotEnoughTokens, "There are not enough tokens in the wallet to pay for the claim.")
     });
 
     it("can claim public", async function () {
       const collectionAddress = "0x8e0d557d99B4AB7a066327a819c579D0CfdCe3E1"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(null, "Claim reason should be null for a public mint")
     });
 
     it("can claim private", async function () {
       const collectionAddress = "0x19cFE5f37024B2f4E48Ee090897548A48C88237C"
-      const erc721Drop = DropERC721__factory.connect(collectionAddress, owner)
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(null, "Claim illegebility reason should be null for a private mint")
+    });
+
+    it("can read flat fees info", async function () {
+      const collectionAddress = "0x7672fB1D8C7f2e53bB5BF983Eb687F7A26331A23"
+      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
+      
+      const [,,data] = await erc721Reader.getAllData(collectionAddress, owner.address)
+      expect(data.platformFeeInfo.feeType).to.eq(1)
+      expect(data.platformFeeInfo.recipient).to.eq("0x7E31749358659c627F7f74dD0305A0Bd84c980da")
+      expect(data.platformFeeInfo.value).to.eq(1000000000000)
     });
     
   });
