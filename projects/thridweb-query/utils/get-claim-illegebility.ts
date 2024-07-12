@@ -14,14 +14,13 @@ import {
     ThirdwebSDK
 } from "@thirdweb-dev/sdk";
 import {BigNumber, ethers, utils} from "ethers";
-import {DropERC721, DropERC721Reader} from "../typechain-types";
-import {IClaimCondition} from "../typechain-types/contracts/drop-reader/DropERC721Reader";
+import {IDropERC721, DropERC721Reader, IClaimCondition} from "../typechain-types";
 import {ThirdwebStorage} from "@thirdweb-dev/storage";
 import {getClaimerProofs, prepareClaim} from "./utils";
 
 export async function getClaimIneligibilityReasons(
     erc721Reader: DropERC721Reader,
-    erc721: DropERC721,
+    erc721: IDropERC721,
     quantity: number,
     storage: ThirdwebStorage,
     sdk: ThirdwebSDK,
