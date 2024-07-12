@@ -2,13 +2,12 @@ import {IDropERC721, DropERC721Reader} from "../typechain-types";
 import {ThirdwebStorage} from "@thirdweb-dev/storage";
 import {ClaimVerification, SnapshotEntryWithProof, ThirdwebSDK} from "@thirdweb-dev/sdk";
 import {AddressZero} from "@ethersproject/constants";
-import {IClaimCondition} from "../typechain-types/contracts/drop-reader/DropERC721Reader";
 import {BigNumber, utils} from "ethers";
 import {getClaimerProofs, prepareClaim} from "./utils";
 
 export interface DropData {
     activeClaimConditionIndex: BigNumber;
-    conditions: IClaimCondition.ClaimConditionStructOutput[];
+    conditions: IDropERC721.ClaimConditionStructOutput[];
     globalData: DropERC721Reader.GlobalDataStructOutput;
     snapshot: SnapshotEntryWithProof | null;
     claimVerification: ClaimVerification | null;
