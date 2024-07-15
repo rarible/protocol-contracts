@@ -359,16 +359,8 @@ contract("Test gas usage for marketplaces", accounts => {
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
-    let encDataLeft = await encDataV3([
-      [], 
-      [],
-      true
-    ]);
-		let encDataRight = await encDataV3([
-      [], 
-      [],
-      false
-    ]);
+    let encDataLeft = await encDataV3([[], [], true]);
+		let encDataRight = await encDataV3([[], [], false]);
 
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3, encDataRight);
     
@@ -460,10 +452,7 @@ contract("Test gas usage for marketplaces", accounts => {
       }],
       true
     ]);
-		let encDataRight = await encDataV3([
-      [], 
-      [],
-      false
+		let encDataRight = await encDataV3([[], [], false
     ]);
 
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3, encDataLeft);

@@ -30,10 +30,7 @@ contract("royalties 2981 ", (accounts) => {
 
   it("calculateRoyalties check", async () => {
     const getterRoyalties = accounts[1];
-    const result = await impl.calculateRoyaltiesTest.call(
-      getterRoyalties,
-      150000
-    );
+    const result = await impl.calculateRoyaltiesTest.call(getterRoyalties, 150000);
     assert.equal(result.length, 1);
     assert.equal(result[0][0], getterRoyalties);
     assert.equal(result[0][1], 1500);
