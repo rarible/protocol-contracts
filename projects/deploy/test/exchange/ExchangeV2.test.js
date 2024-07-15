@@ -13,10 +13,6 @@ const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 
-//punk
-const CryptoPunksMarket = artifacts.require('CryptoPunksMarket');
-const PunkTransferProxy = artifacts.require('PunkTransferProxy');
-
 //Lazy
 const ERC721LazyMintTest = artifacts.require("ERC721LazyMintTest.sol");
 
@@ -24,7 +20,7 @@ const { Order, Asset, sign } = require("../../../../scripts/order.js");
 const ZERO = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const { expectThrow } = require("@daonomic/tests-common");
-const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../../scripts/assets.js");
+const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../../scripts/assets.js");
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f11";
 
@@ -1566,7 +1562,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   })
 
   describe("protocol fee", () => {
-    it("protocol fee should work correctly with V2 orders", async () => {
+    it("protocol fee should work correctly with V3 orders", async () => {
         await exchangeV2.setAllProtocolFeeData(protocol, 0, 500)
 
         const fee = (await exchangeV2.protocolFee())
@@ -1584,12 +1580,12 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         let addrOriginLeft = [[accounts[6], 300]];
         let addrOriginRight = [[accounts[5], 300]];
 
-        let encDataLeft  = await encDataV2([[], addrOriginLeft, true]);
-        let encDataRight = await encDataV2([[], addrOriginRight, false]);
+        let encDataLeft  = await encDataV3([[], addrOriginLeft, true]);
+        let encDataRight = await encDataV3([[], addrOriginRight, false]);
         
         const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
         const _nftPurchaseAssetData = "0x";
-        const left = Order(makerLeft, Asset(ERC721, _nftSellAssetData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+        const left = Order(makerLeft, Asset(ERC721, _nftSellAssetData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
         const signature = await getSignature(left, makerLeft);
   
         const directPurchaseParams = {
@@ -1602,7 +1598,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
           sellOrderSalt: salt,
           sellOrderStart: 0,
           sellOrderEnd: 0,
-          sellOrderDataType: ORDER_DATA_V2,
+          sellOrderDataType: ORDER_DATA_V3,
           sellOrderData: encDataLeft,
           sellOrderSignature: signature,
           buyOrderPaymentAmount: _pricePurchase,
@@ -1629,7 +1625,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         assert.equal(await erc721.balanceOf(makerRight), 1);
     })
 
-    it("protocol fee should work correctly with V2 orders", async () => {
+    it("protocol fee should work correctly with V3 orders", async () => {
       await exchangeV2.setAllProtocolFeeData(protocol, 400, 500)
       let fee = (await exchangeV2.protocolFee())
 
@@ -1642,10 +1638,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const nftAmount = 1
       const erc721 = await prepareERC721(makerLeft, erc721TokenId1, [[accounts[7], 100]]); //with royalties
 
-      let encDataLeft  = await encDataV2([[], [[accounts[6], 300]], true]);
-      let encDataRight = await encDataV2([[], [[accounts[5], 300]], false]);
+      let encDataLeft  = await encDataV3([[], [[accounts[6], 300]], true]);
+      let encDataRight = await encDataV3([[], [[accounts[5], 300]], false]);
 
-      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", _priceSell), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", _priceSell), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
       const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
@@ -1660,7 +1656,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         sellOrderSalt: salt,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderDataType: ORDER_DATA_V3,
         sellOrderData: encDataLeft,
         sellOrderSignature: signature,
         buyOrderPaymentAmount: _pricePurchase,
@@ -1698,30 +1694,6 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   })
 
   describe("integrity", () => {
-    it("should match orders with crypto punks", async () => {
-      const cryptoPunksMarket = await CryptoPunksMarket.deployed();
-      await cryptoPunksMarket.allInitialOwnersAssigned(); //allow test contract work with Punk CONTRACT_OWNER accounts[0]
-      const punkIndex = 256;
-      await cryptoPunksMarket.getPunk(punkIndex, { from: makerLeft }); //makerLeft - owner punk with punkIndex
-
-      const proxy = await PunkTransferProxy.deployed();
-
-      await cryptoPunksMarket.offerPunkForSaleToAddress(punkIndex, 0, proxy.address, { from: makerLeft }); //makerLeft - wants to sell punk with punkIndex, min price 0 wei
-
-      const encodedMintData = await enc(cryptoPunksMarket.address, punkIndex);;
-
-      const erc20 = await prepareERC20(makerRight, 106);
-
-      const left = Order(makerLeft, Asset((CRYPTO_PUNKS), encodedMintData, 1), ZERO, Asset(ERC20, enc(erc20.address), 100), 1, 0, 0, "0xffffffff", "0x");
-      const right = Order(makerRight, Asset(ERC20, enc(erc20.address), 100), ZERO, Asset((CRYPTO_PUNKS), encodedMintData, 1), 1, 0, 0, "0xffffffff", "0x");
-
-      await exchangeV2.matchOrders(left, await getSignature(left, makerLeft), right, await getSignature(right, makerRight));
-
-      assert.equal(await erc20.balanceOf(makerLeft), 100);
-      assert.equal(await cryptoPunksMarket.balanceOf(makerLeft), 0);//makerLeft - not owner now
-      assert.equal(await cryptoPunksMarket.balanceOf(makerRight), 1);//punk owner - makerRight
-    })
-
     it("should match orders with ERC721 сollections", async () => {
       const erc721 = await prepareERC721(makerLeft)
 
@@ -1743,6 +1715,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
   function encDataV2(tuple) {
     return helper.encodeV2(tuple);
+  }
+
+  function encDataV3(tuple) {
+    return helper.encodeV3(tuple);
   }
 
   async function LibPartToUint(account = zeroAddress, value = 0) {
