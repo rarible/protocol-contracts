@@ -70,6 +70,7 @@ const def = {
     zeroAddress, // looksRareV2
     zeroAddress, // blur
     "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    zeroAddress, // seaport_1_6 @dev ensure a working seaport_1_6 is not needed for proper truffle tests functionality.
   ],
 
   weth: zeroAddress,
@@ -168,7 +169,9 @@ function getWrapperSettings(network) {
   }
 }
 
-module.exports = async function (deployer, network) {
+module.exports = async function (deployer, network, accounts) {
+  const deployerAddress = accounts[0];
+  
   const { deploy_meta, deploy_non_meta } = getSettings(network);
 
   let exchangeV2;
@@ -195,9 +198,9 @@ module.exports = async function (deployer, network) {
   settings.transferProxies.push(erc20TransferProxy.address)
 
   if (network === "polygon_mainnet") {
-    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network), nonce: 141 });
+    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, deployerAddress, { gas: 4500000 * getGasMultiplier(network), nonce: 141 });
   } else {
-    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, { gas: 4500000 * getGasMultiplier(network) });
+    await deployer.deploy(RaribleExchangeWrapper, settings.marketplaces, settings.weth, settings.transferProxies, deployerAddress, { gas: 4500000 * getGasMultiplier(network) });
   }
   
 

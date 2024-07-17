@@ -17,7 +17,7 @@ async function verifyBalanceChangeReturnTx(web3, account, change, todo) {
     actual = actual.sub(moneyUsedForGas);
   }
 
-  assert.equal(change, actual);
+  assert.equal(actual, change);
 
   return tx;
 }

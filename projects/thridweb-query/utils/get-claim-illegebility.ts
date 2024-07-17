@@ -14,14 +14,13 @@ import {
     ThirdwebSDK
 } from "@thirdweb-dev/sdk";
 import {BigNumber, ethers, utils} from "ethers";
-import {DropERC721, DropERC721Reader} from "../typechain-types";
-import {IClaimCondition} from "../typechain-types/contracts/drop-reader/DropERC721Reader";
+import {IDropERC721, DropERC721Reader} from "../typechain-types";
 import {ThirdwebStorage} from "@thirdweb-dev/storage";
 import {getClaimerProofs, prepareClaim} from "./utils";
 
 export async function getClaimIneligibilityReasons(
     erc721Reader: DropERC721Reader,
-    erc721: DropERC721,
+    erc721: IDropERC721,
     quantity: number,
     storage: ThirdwebStorage,
     sdk: ThirdwebSDK,
@@ -44,7 +43,7 @@ export async function getClaimIneligibilityReasons(
         }
 
         activeConditionIndex = eligibilityData.activeClaimConditionIndex;
-        const claimCondition = eligibilityData.conditions[activeConditionIndex.toNumber()] as IClaimCondition.ClaimConditionStructOutput;
+        const claimCondition = eligibilityData.conditions[activeConditionIndex.toNumber()] as IDropERC721.ClaimConditionStructOutput;
 
         // Check if the claim phase has not started yet
         if (claimCondition.startTimestamp.gt(eligibilityData.globalData.blockTimeStamp)) {
