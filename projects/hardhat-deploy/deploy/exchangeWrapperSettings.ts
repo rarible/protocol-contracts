@@ -1,3 +1,6 @@
+
+/* @dev ExchangeWrapperSettings to be used on deployment scripts and tests */
+
 export const zeroAddress = "0x0000000000000000000000000000000000000000";
 export const nonZeroAddress = "0x0000000000000000000000000000000000000001";
 
