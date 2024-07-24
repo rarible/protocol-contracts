@@ -7,7 +7,7 @@ import {
   zeroAddress,
 } from "../../hardhat-deploy/deploy/exchangeWrapperSettings";
 
-describe("Upgrade Executor", function () {
+describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
   let signers: SignerWithAddress[];
   let deployer: SignerWithAddress;
 
