@@ -1,48 +1,27 @@
-const { deployments } = require("hardhat");
-
-const ExchangeBulkV2 = artifacts.require("RaribleExchangeWrapper.sol");
-const WrapperHelper = artifacts.require("WrapperHelper.sol");
-const ExchangeV2 = artifacts.require("ExchangeV2.sol");
-
-const TestERC20 = artifacts.require("TestERC20.sol");
-const TestERC721 = artifacts.require("TestERC721.sol");
-const TestERC1155 = artifacts.require("TestERC1155.sol");
-
-const TransferProxy = artifacts.require("TransferProxy.sol");
-const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
-
-const { Order, Asset, sign } = require("../../../../scripts/order.js");
-const { expectThrow } = require("@daonomic/tests-common");
+const { deployments, ethers } = require("hardhat");
+const { expect } = require("chai");
 const {
   ETH,
-  ERC20,
   ERC721,
   ERC1155,
   ORDER_DATA_V1,
   ORDER_DATA_V2,
-  TO_MAKER,
-  TO_TAKER,
-  PROTOCOL,
-  ROYALTY,
-  ORIGIN,
-  PAYOUT,
-  CRYPTO_PUNKS,
-  COLLECTION,
   enc,
-  id,
 } = require("../../../../scripts/assets");
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const { verifyBalanceChangeReturnTx } = require("../../../../scripts/balance");
+const { Order, Asset, sign } = require("../../../../scripts/order.js");
+const {
+  verifyBalanceChangeReturnTxEthers,
+} = require("../../../../scripts/balance");
 
-contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", (accounts) => {
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+describe("ExchangeBulkV2Upgradeable, sellerFee + buyerFee = 6%", function () {
+  let accounts;
   let bulkExchange;
   let exchangeV2;
   let wrapperHelper;
   let transferProxy;
   let helper;
-  let erc20;
-  let protocol = accounts[9];
-  const eth = "0x0000000000000000000000000000000000000000";
   const erc721TokenId1 = 55;
   const erc721TokenId2 = 56;
   const erc721TokenId3 = 57;
@@ -51,51 +30,71 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", (accounts) => {
   const erc1155TokenId3 = 57;
   let erc721;
   let erc1155;
-  const feeRecipienterUP = accounts[6];
+  let feeRecipienterUP;
 
   let deployed;
 
   before(async () => {
-    deployed = await deployments.fixture(["all"]);
-    helper = await RaribleTestHelper.new();
-    wrapperHelper = await WrapperHelper.new();
+    accounts = await ethers.getSigners();
+    feeRecipienterUP = accounts[6].address;
 
-    transferProxy = await TransferProxy.at(deployed["TransferProxy"].address);
+    deployed = await deployments.fixture([
+      "all",
+      "update-wrapper-by-upgradeExecutor",
+    ]);
 
-    bulkExchange = await ExchangeBulkV2.at(
-      deployed["RaribleExchangeWrapper"].address
+    const helperFactory = await ethers.getContractFactory("RaribleTestHelper");
+    helper = await helperFactory.deploy();
+
+    const wrapperHelperFactory = await ethers.getContractFactory(
+      "WrapperHelper"
+    );
+    wrapperHelper = await wrapperHelperFactory.deploy();
+
+    transferProxy = await ethers.getContractAt(
+      "TransferProxy",
+      deployed.TransferProxy.address
+    );
+
+    bulkExchange = await ethers.getContractAt(
+      "RaribleExchangeWrapperUpgradeable",
+      deployed.RaribleExchangeWrapperUpgradeable.address
     );
   });
 
   beforeEach(async () => {
-    /*ERC721 */
-    erc721 = await TestERC721.new("Rarible", "RARI");
-    /*ERC1155*/
-    erc1155 = await TestERC1155.new();
+    const erc721Factory = await ethers.getContractFactory("TestERC721");
+    erc721 = await erc721Factory.deploy("Rarible", "RARI");
+    const erc1155Factory = await ethers.getContractFactory("TestERC1155");
+    erc1155 = await erc1155Factory.deploy();
   });
 
   describe("bulkPurchase Rarible orders", () => {
     it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC721<->ETH", async () => {
-      const buyer = accounts[2];
-      const seller1 = accounts[1];
-      const seller2 = accounts[3];
-      const seller3 = accounts[4];
+      const buyer = accounts[2].address;
+      const seller1 = accounts[1].address;
+      const seller2 = accounts[3].address;
+      const seller3 = accounts[4].address;
+
+      const erc721AsSeller1 = erc721.connect(accounts[1]);
+      const erc721AsSeller2 = erc721.connect(accounts[3]);
+      const erc721AsSeller3 = erc721.connect(accounts[4]);
 
       await erc721.mint(seller1, erc721TokenId1);
-      await erc721.setApprovalForAll(transferProxy.address, true, {
-        from: seller1,
-      });
-      await erc721.mint(seller2, erc721TokenId2);
-      await erc721.setApprovalForAll(transferProxy.address, true, {
-        from: seller2,
-      });
-      await erc721.mint(seller3, erc721TokenId3);
-      await erc721.setApprovalForAll(transferProxy.address, true, {
-        from: seller3,
-      });
+      await erc721AsSeller1.setApprovalForAll(transferProxy.address, true);
 
-      exchangeV2 = await ExchangeV2.at(deployed["ExchangeV2"].address);
-      //NB!!! set buyer in payouts
+      await erc721.mint(seller2, erc721TokenId2);
+      await erc721AsSeller2.setApprovalForAll(transferProxy.address, true);
+
+      await erc721.mint(seller3, erc721TokenId3);
+      await erc721AsSeller3.setApprovalForAll(transferProxy.address, true);
+
+      exchangeV2 = await ethers.getContractAt(
+        "ExchangeV2",
+        deployed.ExchangeV2.address
+      );
+
+      // Set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([[], []]);
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
@@ -235,51 +234,61 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", (accounts) => {
         dataForExchCall3
       ); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      await verifyBalanceChangeReturnTx(web3, buyer, 345, async () =>
-        verifyBalanceChangeReturnTx(web3, seller1, -100, async () =>
-          verifyBalanceChangeReturnTx(web3, seller2, -100, async () =>
-            verifyBalanceChangeReturnTx(web3, seller3, -100, async () =>
-              verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -45, () =>
-                bulkExchange.bulkPurchase(
-                  [tradeData1, tradeData2, tradeData3],
-                  feeRecipienterUP,
-                  ZERO_ADDRESS,
-                  false,
-                  { from: buyer, value: 400 }
-                )
+      const bulkExchangeAsBuyer = bulkExchange.connect(accounts[2]);
+
+      await verifyBalanceChangeReturnTxEthers(ethers, buyer, 345, async () =>
+        verifyBalanceChangeReturnTxEthers(ethers, seller1, -100, async () =>
+          verifyBalanceChangeReturnTxEthers(ethers, seller2, -100, async () =>
+            verifyBalanceChangeReturnTxEthers(ethers, seller3, -100, async () =>
+              verifyBalanceChangeReturnTxEthers(
+                ethers,
+                feeRecipienterUP,
+                -45,
+                () =>
+                  bulkExchangeAsBuyer.bulkPurchase(
+                    [tradeData1, tradeData2, tradeData3],
+                    feeRecipienterUP,
+                    ZERO_ADDRESS,
+                    false,
+                    { value: 400 }
+                  )
               )
             )
           )
         )
       );
-      assert.equal(await erc721.balanceOf(seller1), 0);
-      assert.equal(await erc721.balanceOf(seller2), 0);
-      assert.equal(await erc721.balanceOf(seller3), 0);
-      assert.equal(await erc721.balanceOf(accounts[2]), 3);
+
+      expect(await erc721.balanceOf(seller1)).to.equal(0);
+      expect(await erc721.balanceOf(seller2)).to.equal(0);
+      expect(await erc721.balanceOf(seller3)).to.equal(0);
+      expect(await erc721.balanceOf(accounts[2].address)).to.equal(3);
     });
 
     it("Test bulkPurchase ExchangeV2 (num orders = 3, type ==V2, V1) orders are ready, ERC1155<->ETH", async () => {
-      const buyer = accounts[2];
-      const seller1 = accounts[1];
-      const seller2 = accounts[3];
-      const seller3 = accounts[4];
+      const buyer = accounts[2].address;
+      const seller1 = accounts[1].address;
+      const seller2 = accounts[3].address;
+      const seller3 = accounts[4].address;
+
+      const erc1155AsSeller1 = erc1155.connect(accounts[1]);
+      const erc1155AsSeller2 = erc1155.connect(accounts[3]);
+      const erc1155AsSeller3 = erc1155.connect(accounts[4]);
 
       await erc1155.mint(seller1, erc1155TokenId1, 10);
-      await erc1155.setApprovalForAll(transferProxy.address, true, {
-        from: seller1,
-      });
+      await erc1155AsSeller1.setApprovalForAll(transferProxy.address, true);
+
       await erc1155.mint(seller2, erc1155TokenId2, 10);
-      await erc1155.setApprovalForAll(transferProxy.address, true, {
-        from: seller2,
-      });
+      await erc1155AsSeller2.setApprovalForAll(transferProxy.address, true);
+
       await erc1155.mint(seller3, erc1155TokenId3, 10);
-      await erc1155.setApprovalForAll(transferProxy.address, true, {
-        from: seller3,
-      });
+      await erc1155AsSeller3.setApprovalForAll(transferProxy.address, true);
 
-      exchangeV2 = await ExchangeV2.at(deployed["ExchangeV2"].address);
+      exchangeV2 = await ethers.getContractAt(
+        "ExchangeV2",
+        deployed.ExchangeV2.address
+      );
 
-      //NB!!! set buyer in payouts
+      // Set buyer in payouts
       const encDataLeft = await encDataV2([[], [], false]);
       const encDataLeftV1 = await encDataV1([[], []]);
       const encDataRight = await encDataV2([[[buyer, 10000]], [], false]);
@@ -334,7 +343,6 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", (accounts) => {
         seller3,
         exchangeV2.address
       );
-      //NB!!! DONT Need to signature buy orders, because ExchangeBulkV2 is  msg.sender == buyOrder.maker
 
       const directPurchaseParams1 = {
         sellOrderMaker: seller1,
@@ -420,29 +428,42 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", (accounts) => {
         dataForExchCall3
       ); //0 is Exch orders, 100 is amount + 0 protocolFee
 
-      await verifyBalanceChangeReturnTx(web3, buyer, 276, async () =>
-        verifyBalanceChangeReturnTx(web3, seller1, -60, async () =>
-          verifyBalanceChangeReturnTx(web3, seller2, -80, async () =>
-            verifyBalanceChangeReturnTx(web3, seller3, -100, async () =>
-              verifyBalanceChangeReturnTx(web3, feeRecipienterUP, -36, () =>
-                bulkExchange.bulkPurchase(
-                  [tradeData1, tradeData2, tradeData3],
-                  feeRecipienterUP,
-                  ZERO_ADDRESS,
-                  false,
-                  { from: buyer, value: 400 }
-                )
+      const bulkExchangeAsBuyer = bulkExchange.connect(accounts[2]);
+
+      await verifyBalanceChangeReturnTxEthers(ethers, buyer, 276, async () =>
+        verifyBalanceChangeReturnTxEthers(ethers, seller1, -60, async () =>
+          verifyBalanceChangeReturnTxEthers(ethers, seller2, -80, async () =>
+            verifyBalanceChangeReturnTxEthers(ethers, seller3, -100, async () =>
+              verifyBalanceChangeReturnTxEthers(
+                ethers,
+                feeRecipienterUP,
+                -36,
+                () =>
+                  bulkExchangeAsBuyer.bulkPurchase(
+                    [tradeData1, tradeData2, tradeData3],
+                    feeRecipienterUP,
+                    ZERO_ADDRESS,
+                    false,
+                    { value: 400 }
+                  )
               )
             )
           )
         )
       );
-      assert.equal(await erc1155.balanceOf(seller1, erc1155TokenId1), 4);
-      assert.equal(await erc1155.balanceOf(seller2, erc1155TokenId2), 2);
-      assert.equal(await erc1155.balanceOf(seller3, erc1155TokenId3), 0);
-      assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId1), 6);
-      assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId2), 8);
-      assert.equal(await erc1155.balanceOf(accounts[2], erc1155TokenId3), 10);
+
+      expect(await erc1155.balanceOf(seller1, erc1155TokenId1)).to.equal(4);
+      expect(await erc1155.balanceOf(seller2, erc1155TokenId2)).to.equal(2);
+      expect(await erc1155.balanceOf(seller3, erc1155TokenId3)).to.equal(0);
+      expect(
+        await erc1155.balanceOf(accounts[2].address, erc1155TokenId1)
+      ).to.equal(6);
+      expect(
+        await erc1155.balanceOf(accounts[2].address, erc1155TokenId2)
+      ).to.equal(8);
+      expect(
+        await erc1155.balanceOf(accounts[2].address, erc1155TokenId3)
+      ).to.equal(10);
     });
   });
 
@@ -457,6 +478,7 @@ contract("ExchangeBulkV2, sellerFee + buyerFee =  6%,", (accounts) => {
   function PurchaseData(marketId, amount, fees, data) {
     return { marketId, amount, fees, data };
   }
+
   async function getSignature(order, signer, exchangeContract) {
     return sign(order, signer, exchangeContract);
   }
