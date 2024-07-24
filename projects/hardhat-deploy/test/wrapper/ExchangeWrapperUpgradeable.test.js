@@ -15,6 +15,8 @@ const {
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+/* @dev this test-suite is a fork of the ExchangeWrapper set-suite but for the Upgradeable version of the contract */
+
 describe("ExchangeBulkV2Upgradeable, sellerFee + buyerFee = 6%", function () {
   let accounts;
   let bulkExchange;
@@ -38,10 +40,7 @@ describe("ExchangeBulkV2Upgradeable, sellerFee + buyerFee = 6%", function () {
     accounts = await ethers.getSigners();
     feeRecipienterUP = accounts[6].address;
 
-    deployed = await deployments.fixture([
-      "all",
-      "update-wrapper-by-upgradeExecutor",
-    ]);
+    deployed = await deployments.fixture(["all"]);
 
     const helperFactory = await ethers.getContractFactory("RaribleTestHelper");
     helper = await helperFactory.deploy();

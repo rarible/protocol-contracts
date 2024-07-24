@@ -17,7 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (!!deploy_non_meta) {
     contractName = "ExchangeV2";
   }
-  4;
+
   // deploy ExchangeV2 and initialise contract
   await deploy(contractName, {
     from: deployer,

@@ -34,7 +34,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     newImplementationAddress
   );
 
-  // Save the new implementation's artifacts
+  /* Save the new implementation's artifacts */
   await save(`RaribleExchangeWrapperUpgradeable_Implementation`, {
     address: newImplementationAddress,
     ...(await getExtendedArtifact("RaribleExchangeWrapperUpgradeable")),
@@ -43,7 +43,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     "Saved artifacts for new RaribleExchangeWrapperUpgradeable implementation"
   );
 
-  // Deploy ProxyUpgradeAction contract
+  /* Deploy ProxyUpgradeAction contract */
   const proxyUpgradeActionReceipt = await deploy("ProxyUpgradeAction", {
     from: deployer,
     log: true,
@@ -58,15 +58,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
   console.log(`Using ProxyUpgradeAction at ${proxyUpgradeAction.address}`);
 
-  // Get existing UpgradeExecutor
+  /* Get existing UpgradeExecutor */
   const upgradeExecutor = await hre.deployments.get("UpgradeExecutor");
   console.log(`Using UpgradeExecutor at ${upgradeExecutor.address}`);
 
-  // Prepare calldata
+  /* Prepare calldata */
   const adminAddress = (await hre.deployments.get("DefaultProxyAdmin")).address;
   console.log(`Using ProxyAdmin address: ${adminAddress}`);
 
-  /* @dev @tbd ensure that this is picking the correct TransparentProxyAddress and not the implementation */
+  /* @dev @TBD ensure that this is picking the correct TransparentProxyAddress 
+  and not the implementation address from the hardhat deployed contracts */
   const exchangeWrapperProxyAddress = (
     await hre.deployments.get("RaribleExchangeWrapperUpgradeable")
   ).address;
