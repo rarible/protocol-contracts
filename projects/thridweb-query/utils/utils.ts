@@ -1,11 +1,11 @@
-import {IClaimCondition} from "../typechain-types/contracts/drop-reader/DropERC721Reader";
 import {ThirdwebStorage} from "@thirdweb-dev/storage";
 import {ClaimVerification, fetchSnapshotEntryForAddress, SnapshotEntryWithProof, ThirdwebSDK} from "@thirdweb-dev/sdk";
 import {BigNumber, ethers, utils} from "ethers";
+import { IDropERC721 } from "../typechain-types";
 
 export async function getClaimerProofs(
     claimerAddress: string,
-    claimCondition: IClaimCondition.ClaimConditionStructOutput,
+    claimCondition: IDropERC721.ClaimConditionStructOutput,
     merkleRootArray: Uint8Array,
     collectionUri: string,
     storage: ThirdwebStorage,

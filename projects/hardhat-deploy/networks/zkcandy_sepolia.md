@@ -1,0 +1,16 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0x0559bDd18B77534F336EAeF6629CcA4f330a3d46 | https://sepolia.explorer.zkcandy.ioaddress/0x0559bDd18B77534F336EAeF6629CcA4f330a3d46 
+ ERC1155LazyMintTransferProxy | 0x5de707d8f2fd54ba6bAF6801D416887A52B5A027 | https://sepolia.explorer.zkcandy.ioaddress/0x5de707d8f2fd54ba6bAF6801D416887A52B5A027 
+ ERC1155Rarible | 0x8225cddFb6b94B4aa85f398009782E22aA97F442 | https://sepolia.explorer.zkcandy.ioaddress/0x8225cddFb6b94B4aa85f398009782E22aA97F442 
+ ERC1155RaribleBeacon | 0x6F7BB16a93fba2d4fE1420c700707da6a24d7587 | https://sepolia.explorer.zkcandy.ioaddress/0x6F7BB16a93fba2d4fE1420c700707da6a24d7587 
+ ERC1155RaribleFactoryC2 | 0xcE2E38af3BfaAB815A4Bc069003d5E16B39380c4 | https://sepolia.explorer.zkcandy.ioaddress/0xcE2E38af3BfaAB815A4Bc069003d5E16B39380c4 
+ ERC20TransferProxy | 0xAdE40ac73a618DD5E4359064e8c72cc126f1BA2E | https://sepolia.explorer.zkcandy.ioaddress/0xAdE40ac73a618DD5E4359064e8c72cc126f1BA2E 
+ ERC721LazyMintTransferProxy | 0x9140F1a2a0564135b3C0e8aaC6E007A7e0C9eB55 | https://sepolia.explorer.zkcandy.ioaddress/0x9140F1a2a0564135b3C0e8aaC6E007A7e0C9eB55 
+ ERC721RaribleFactoryC2 | 0x7f605708BF7b3814B736Fd75D073bbb1e9DC7d83 | https://sepolia.explorer.zkcandy.ioaddress/0x7f605708BF7b3814B736Fd75D073bbb1e9DC7d83 
+ ERC721RaribleMinimal | 0x264fEb99438015D3acB0686895722F4E8050632e | https://sepolia.explorer.zkcandy.ioaddress/0x264fEb99438015D3acB0686895722F4E8050632e 
+ ERC721RaribleMinimalBeacon | 0xdf484823B1819E4D821b970E6f7BbFeF3763a4d1 | https://sepolia.explorer.zkcandy.ioaddress/0xdf484823B1819E4D821b970E6f7BbFeF3763a4d1 
+ ExchangeV2 | 0x18f60a693a9fbc66153E828e968dF0ED3F32c0aF | https://sepolia.explorer.zkcandy.ioaddress/0x18f60a693a9fbc66153E828e968dF0ED3F32c0aF 
+ RaribleExchangeWrapper | 0x3922f247be2CABc97B4E1bAb68dA58A262296bf1 | https://sepolia.explorer.zkcandy.ioaddress/0x3922f247be2CABc97B4E1bAb68dA58A262296bf1 
+ RoyaltiesRegistry | 0xCB17D50A50583cB87D7b7Cbc32809319FD131F6c | https://sepolia.explorer.zkcandy.ioaddress/0xCB17D50A50583cB87D7b7Cbc32809319FD131F6c 
+ TransferProxy | 0xD0a43d2E0B5f1BA2C97f66F532E4218051316857 | https://sepolia.explorer.zkcandy.ioaddress/0xD0a43d2E0B5f1BA2C97f66F532E4218051316857 

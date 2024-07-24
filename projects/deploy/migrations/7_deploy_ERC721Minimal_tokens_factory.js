@@ -18,21 +18,22 @@ const ERC721LazyMintTransferProxy = artifacts.require('ERC721LazyMintTransferPro
 
 const ERC721RaribleMeta = artifacts.require('ERC721RaribleMeta');
 
-module.exports = async function (deployer, network) {
+module.exports = async function (deployer, network, accounts) {
+  const deployerAddress = accounts[0];
 
   const { deploy_meta, deploy_non_meta } = getSettings(network);
 
   if (!!deploy_meta) {
-    await deployERC721Minimal(ERC721RaribleMeta, ERC721RaribleMinimalBeaconMeta, deployer, network);
+    await deployERC721Minimal(ERC721RaribleMeta, ERC721RaribleMinimalBeaconMeta, deployer, deployerAddress, network);
   } 
 
   if (!!deploy_non_meta){
-    await deployERC721Minimal(ERC721RaribleMinimal, ERC721RaribleMinimalBeacon, deployer, network);
+    await deployERC721Minimal(ERC721RaribleMinimal, ERC721RaribleMinimalBeacon, deployer, deployerAddress, network);
   }
 
 };
 
-async function deployERC721Minimal(erc721toDeploy, beacon, deployer, network) {
+async function deployERC721Minimal(erc721toDeploy, beacon, deployer, deployerAddress, network) {
   const transferProxy = (await TransferProxy.deployed()).address;
   const erc721LazyMintTransferProxy = (await ERC721LazyMintTransferProxy.deployed()).address;
 
@@ -43,10 +44,10 @@ async function deployERC721Minimal(erc721toDeploy, beacon, deployer, network) {
   const erc721minimal = await getProxyImplementation(erc721toDeploy, network, ProxyAdmin)
 
   //upgrading 721 beacon
-  await deployer.deploy(beacon, erc721minimal, { gas: 1000000 * getGasMultiplier(network) });
+  await deployer.deploy(beacon, erc721minimal, deployerAddress, { gas: 1000000 * getGasMultiplier(network) });
   const beacon721Minimal = await beacon.deployed()
 
   //deploying factory
-  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721Minimal.address, transferProxy, erc721LazyMintTransferProxy, { gas: 2500000 * getGasMultiplier(network) });
+  const factory721 = await deployer.deploy(ERC721RaribleFactoryC2, beacon721Minimal.address, transferProxy, erc721LazyMintTransferProxy, deployerAddress, { gas: 2500000 * getGasMultiplier(network) });
   console.log(`deployed factory721 minimal at ${factory721.address}`)
 }
