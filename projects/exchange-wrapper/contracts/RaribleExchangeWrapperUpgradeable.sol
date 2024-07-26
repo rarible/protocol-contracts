@@ -37,20 +37,20 @@ contract RaribleExchangeWrapperUpgradeable is Initializable, OwnableUpgradeable,
     using SafeMathUpgradeable for uint256;
 
     //marketplaces
-    address public immutable wyvernExchange;
-    address public immutable exchangeV2;
-    address public immutable seaPort_1_1;
-    address public immutable x2y2;
-    address public immutable looksRare;
-    address public immutable sudoswap;
-    address public immutable seaPort_1_4;
-    address public immutable looksRareV2;
-    address public immutable blur;
-    address public immutable seaPort_1_5;
-    address public immutable seaPort_1_6;
+    address public wyvernExchange;
+    address public exchangeV2;
+    address public seaPort_1_1;
+    address public x2y2;
+    address public looksRare;
+    address public sudoswap;
+    address public seaPort_1_4;
+    address public looksRareV2;
+    address public blur;
+    address public seaPort_1_5;
+    address public seaPort_1_6;
 
     //currencties
-    address public immutable weth;
+    address public weth;
 
     //constants
     uint256 private constant UINT256_MAX = type(uint256).max;
@@ -109,21 +109,24 @@ contract RaribleExchangeWrapperUpgradeable is Initializable, OwnableUpgradeable,
         uint256[] additionalRoyalties;
     }
 
-    constructor(
+    /**
+        @notice initializes the proxy contract
+        @param _marketplaces - array of addresses of the marketplaces
+        @param _weth - address of the WETH erc-20 token
+        @param _transferProxies - array of addresses of the transfer proxies
+        @param _initialOwner - address of the owner
+     */
+    function __ExchangeWrapper_init_proxy(
         address[11] memory _marketplaces,
-        //address _wyvernExchange, 0
-        //address _exchangeV2, 1
-        //address _seaPort_1_1, 2
-        //address _x2y2, 3
-        //address _looksRare, 4
-        //address _sudoswap, 5
-        //address _seaPort_1_4, 6
-        //address _looksRareV2, 7
-        //address _blur, 8
-        //address _seaPort_1_5, 9
-        //address _seaPort_1_6, 10
-        address _weth
-    ) {
+        address _weth,
+        address[] memory _transferProxies,
+        address _initialOwner
+    ) public initializer {
+        __Ownable_init();
+        __ERC721Holder_init();
+        __ERC1155Holder_init();
+        __Pausable_init();
+
         wyvernExchange = _marketplaces[0];
         exchangeV2 = _marketplaces[1];
         seaPort_1_1 = _marketplaces[2];
@@ -137,13 +140,6 @@ contract RaribleExchangeWrapperUpgradeable is Initializable, OwnableUpgradeable,
         seaPort_1_6 = _marketplaces[10];
 
         weth = _weth;
-    }
-
-    function __ExchangeWrapper_init_proxy(address[] memory _transferProxies, address _initialOwner) public initializer {
-        __Ownable_init();
-        __ERC721Holder_init();
-        __ERC1155Holder_init();
-        __Pausable_init();
 
         for (uint256 i = 0; i < _transferProxies.length; ++i) {
             if (weth != address(0)) {

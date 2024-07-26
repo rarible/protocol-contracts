@@ -1,18 +1,25 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { getWrapperSettings } from "./exchangeWrapperSettings";
+import { getWrapperSettings } from "../utils/exchangeWrapperSettings";
+import { getConfig } from "../utils/utils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deploy, save, getExtendedArtifact } = hre.deployments;
+  const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
+  const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
 
-  /* Get previously deployed ExchangeV2 */
-  const exchangeV2 = await hre.deployments.get("ExchangeV2");
+  let exchangeV2;
+  if (!!deploy_meta) {
+    exchangeV2 = (await hre.deployments.get("ExchangeMetaV2")).address;
+  }
+
+  if (!!deploy_non_meta) {
+    exchangeV2 = (await hre.deployments.get("ExchangeV2")).address;
+  }
 
   let settings = getWrapperSettings(hre.network.name);
-  settings.marketplaces[1] = exchangeV2.address;
+  settings.marketplaces[1] = exchangeV2;
 
-  /* Get previously deployed ERC20TransferProxys */
   const erc20TransferProxy = await hre.deployments.get("ERC20TransferProxy");
   settings.transferProxies.push(erc20TransferProxy.address);
 
@@ -23,10 +30,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const RaribleExchangeWrapperFactory = await hre.ethers.getContractFactory(
     "RaribleExchangeWrapperUpgradeable"
   );
-  const newRaribleExchangeWrapper = await RaribleExchangeWrapperFactory.deploy(
-    settings.marketplaces,
-    settings.weth
-  );
+  const newRaribleExchangeWrapper =
+    await RaribleExchangeWrapperFactory.deploy();
   await newRaribleExchangeWrapper.deployed();
   const newImplementationAddress = newRaribleExchangeWrapper.address;
   console.log(
@@ -35,6 +40,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   /* Save the new implementation's artifacts */
+  const { save, getExtendedArtifact } = hre.deployments;
   await save(`RaribleExchangeWrapperUpgradeable_Implementation`, {
     address: newImplementationAddress,
     ...(await getExtendedArtifact("RaribleExchangeWrapperUpgradeable")),
@@ -49,6 +55,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
     autoMine: true,
     deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true : false,
   });
   const ProxyUpgradeAction = await hre.ethers.getContractFactory(
     "ProxyUpgradeAction"
@@ -59,8 +66,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Using ProxyUpgradeAction at ${proxyUpgradeAction.address}`);
 
   /* Get existing UpgradeExecutor */
-  const upgradeExecutor = await hre.deployments.get("UpgradeExecutor");
-  console.log(`Using UpgradeExecutor at ${upgradeExecutor.address}`);
+  const UpgradeExecutor = await hre.ethers.getContractFactory(
+    "UpgradeExecutor"
+  );
+  const upgradeExecutorAddress = (await hre.deployments.get("UpgradeExecutor"))
+    .address;
+  const upgradeExecutor = await UpgradeExecutor.attach(upgradeExecutorAddress);
+  console.log(`using UpgradeExecutor at ${upgradeExecutor.address}`);
 
   /* Prepare calldata */
   const adminAddress = (await hre.deployments.get("DefaultProxyAdmin")).address;

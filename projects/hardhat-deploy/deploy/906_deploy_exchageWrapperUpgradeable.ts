@@ -2,7 +2,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { getConfig } from "../utils/utils";
 import { getOwner } from "./utils";
-import { getWrapperSettings, zeroAddress } from "./exchangeWrapperSettings";
+import {
+  getWrapperSettings,
+  zeroAddress,
+} from "../utils/exchangeWrapperSettings";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
@@ -33,12 +36,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [settings.marketplaces, settings.weth],
     proxy: {
       execute: {
         init: {
           methodName: "__ExchangeWrapper_init_proxy",
-          args: [settings.transferProxies, owner],
+          args: [
+            settings.marketplaces,
+            settings.weth,
+            settings.transferProxies,
+            owner,
+          ],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",
