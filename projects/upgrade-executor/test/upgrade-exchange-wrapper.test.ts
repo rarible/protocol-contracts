@@ -1,11 +1,11 @@
-import { ethers, network, deployments } from "hardhat";
+import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   getWrapperSettings,
   nonZeroAddress,
   zeroAddress,
-} from "../../hardhat-deploy/deploy/exchangeWrapperSettings";
+} from "../../hardhat-deploy/utils/exchangeWrapperSettings";
 
 describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
   let signers: SignerWithAddress[];
@@ -16,7 +16,7 @@ describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
     deployer = signers[0];
   });
 
-  it("Should be able to upgrade the ExchangeWrapper", async function () {
+  it("Should be able to upgrade the ExchangeWrapper and use new functionality", async function () {
     /* 1. Get dependencies/settings for the ExchangeWrapperUpgradeable implementation deployment & construction */
     const exchangeV2Address = zeroAddress;
     const wrapperSettings = getWrapperSettings(network.name);
@@ -27,10 +27,7 @@ describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
       "RaribleExchangeWrapperUpgradeable"
     );
     const raribleExchangeWrapperUpgradeable =
-      await RaribleExchangeWrapperUpgradeable.deploy(
-        wrapperSettings.marketplaces,
-        wrapperSettings.weth
-      );
+      await RaribleExchangeWrapperUpgradeable.deploy();
 
     /* 3. Deploy the TestHelper contract */
     const TestHelper = await ethers.getContractFactory("TestHelper");
@@ -57,7 +54,12 @@ describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
     const initializeData =
       raribleExchangeWrapperUpgradeable.interface.encodeFunctionData(
         "__ExchangeWrapper_init_proxy",
-        [wrapperSettings.transferProxies, deployer.address]
+        [
+          wrapperSettings.marketplaces,
+          wrapperSettings.weth,
+          wrapperSettings.transferProxies,
+          deployer.address,
+        ]
       );
 
     /* 9. Deploy the TransparentUpgradeableProxy contract */
@@ -94,16 +96,10 @@ describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
     const RaribleExchangeWrapperUpgradeableV2 = await ethers.getContractFactory(
       "RaribleExchangeWrapperUpgradeableV2"
     );
-
-    /* 13. Add a new marketplace to the settings */
-    wrapperSettings.marketplaces.push(nonZeroAddress);
     const raribleUpgradableExchangeWrapperV2 =
-      await RaribleExchangeWrapperUpgradeableV2.deploy(
-        wrapperSettings.marketplaces,
-        wrapperSettings.weth
-      );
+      await RaribleExchangeWrapperUpgradeableV2.deploy();
 
-    /* 14. Prepare the data to upgrade the Proxy */
+    /* 13. Prepare the data to upgrade the Proxy */
     const newImpl = raribleUpgradableExchangeWrapperV2.address;
     const actionUpgradeProxydata = await testHelper.encodeProxyUpgradeCall(
       proxyAdmin.address,
@@ -111,19 +107,19 @@ describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
       newImpl
     );
 
-    /* 15. Execute the upgrade */
+    /* 14. Execute the upgrade */
     await upgradeExecutor.execute(
       proxyUpgradeAction.address,
       actionUpgradeProxydata
     );
 
-    /* 16. Check that the second implementation is correctly set */
+    /* 15. Check that the second implementation is correctly set */
     const implSecond = await proxyAdmin.getProxyImplementation(
       transparentUpgradeableProxy.address
     );
     expect(implSecond).to.equal(newImpl);
 
-    /* 17. Check that the new immutable variables are correctly set */
+    /* 16. Check that the new immutable variables are correctly set */
     const proxyInstanceV2 = await ethers.getContractAt(
       "RaribleExchangeWrapperUpgradeableV2",
       transparentUpgradeableProxy.address
@@ -135,7 +131,10 @@ describe("Upgrade Executor, ExchangeWrapperUpgradeable", function () {
     expect(seaPort_1_6V2).to.equal(wrapperSettings.marketplaces[10]);
     const exchangeV2V2 = await proxyInstanceV2.exchangeV2();
     expect(exchangeV2V2).to.equal(wrapperSettings.marketplaces[1]);
+
+    /* 17. Initialize the new marketplace variable */
+    await proxyInstanceV2.__initializeNewMarket(nonZeroAddress);
     const newMarketplace = await proxyInstanceV2.newMarket();
-    expect(newMarketplace).to.equal(wrapperSettings.marketplaces[11]);
+    expect(newMarketplace).to.equal(nonZeroAddress);
   });
 });
