@@ -64,6 +64,26 @@ contract OpenEditionCustomFee is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    struct FeeRecipient {
+        address recipient;
+        uint96 value;
+    }
+
+    /// @dev Protocol fee, amount
+    uint256 private protocolFee;
+    /// @dev Protocol fee recipient
+    address private protocolFeeRecipient;
+
+    /// @dev Creator finder fee, amount
+    uint256 private creatorFinderFee;
+    /// @dev Creator finder fee recipient 1. If value == 10000 then recipient 2 is not read
+    FeeRecipient private creatorFinderFeeRecipient1;
+    /// @dev Creator finder fee recipient 2
+    FeeRecipient private creatorFinderFeeRecipient2;
+
+    /// @dev Buyer finder fee, amount. Can be spread across several addresses (which are specified per tx)
+    uint256 private buyerFinderFee;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -137,6 +157,36 @@ contract OpenEditionCustomFee is
         return _startTokenId();
     }
 
+    /// @dev Lets an account claim tokens.
+    function claim(
+        address _receiver,
+        uint256 _quantity,
+        address _currency,
+        uint256 _pricePerToken,
+        AllowlistProof calldata _allowlistProof,
+        bytes memory _data
+    ) public payable virtual override {
+        _beforeClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
+
+        uint256 activeConditionId = getActiveClaimConditionId();
+
+        verifyClaim(activeConditionId, _dropMsgSender(), _quantity, _currency, _pricePerToken, _allowlistProof);
+
+        // Update contract state.
+        claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
+        claimCondition.supplyClaimedByWallet[activeConditionId][_dropMsgSender()] += _quantity;
+
+        // If there's a price, collect price.
+        _collectPriceOnClaim(address(0), _quantity, _currency, _pricePerToken, _data);
+
+        // Mint the relevant tokens to claimer.
+        uint256 startTokenId = _transferTokensOnClaim(_receiver, _quantity);
+
+        emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, startTokenId, _quantity);
+
+        _afterClaim(_receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -146,25 +196,70 @@ contract OpenEditionCustomFee is
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
-    ) internal override {
+        uint256 _pricePerToken,
+        bytes memory _data
+    ) internal {
+        // _data format = <buyerFinder: address><buyerFinderFeeBps: uint96> X 2 (buyerFinderFeeBps - share, specified in bps)
+        // _data is optional. if present should be in the defined format. Can be 1 or 2 finder fees specified
+        // sum should be 10000 or tx is reverted otherwise
+
+        // price structure:
+        //   protocol fee, read from storage. on contract creation is read from static address
+        //   creator finder fee, read from storage, set on contract creation
+        //     2 creator finder fees are supported
+        //   buyer finder fee, amount is specified in storage (set on creation), shares are specified at the tx level
+        //     any number of finder fees are supported
+        //   if buyer finders are not specified, then buyer finder fee is paid to the protocol fee recipient
+        //   rest goes to creator (seller)
+        //
+        // constraint: price >= (protocol fee + sum(creator finder fees) + sum(buyer finder fees))
+
         if (_pricePerToken == 0) {
             require(msg.value == 0, "!Value");
             return;
         }
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees;
-        address platformFeeRecipient;
 
-        if (getPlatformFeeType() == IPlatformFee.PlatformFeeType.Flat) {
-            (platformFeeRecipient, platformFees) = getFlatPlatformFeeInfo();
-        } else {
-            (address recipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-            platformFeeRecipient = recipient;
-            platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
+        // Fees. fees - total number of fees already paid
+        uint256 fees = protocolFee * _quantityToClaim;
+
+        // Protocol fees
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, fees);
+
+        // Creator finder fees
+        FeeRecipient memory creatorFeeRecipient1 = creatorFinderFeeRecipient1;
+        uint _creatorFinderFee = creatorFinderFee;
+        if (_creatorFinderFee != 0) {
+            uint creatorFeeRecipient1Amount = _creatorFinderFee * creatorFeeRecipient1.value * _quantityToClaim / MAX_BPS;
+            CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient1.recipient, creatorFeeRecipient1Amount);
+
+            if (creatorFeeRecipient1.value < MAX_BPS) {
+                FeeRecipient memory creatorFeeRecipient2 = creatorFinderFeeRecipient2;
+                uint creatorFeeRecipient2Amount = _creatorFinderFee * creatorFeeRecipient2.value * _quantityToClaim / MAX_BPS;
+                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient2.recipient, creatorFeeRecipient2Amount);
+            }
+            fees += _creatorFinderFee * _quantityToClaim;
         }
-        require(totalPrice >= platformFees, "price less than platform fee");
+
+        // Buyer finder fees
+        uint _buyerFinderFee = buyerFinderFee;
+        if (_buyerFinderFee != 0) {
+            if (_data.length == 0) {
+                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, _buyerFinderFee * _quantityToClaim);
+            } else {
+                if (_data.length == 32) {
+
+                } else if (_data.length == 64) {
+
+                } else {
+                    revert("!DataLength");
+                }
+            }
+            fees += _buyerFinderFee * _quantityToClaim;
+        }
+
+        require(totalPrice >= fees, "price less than fees");
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -176,8 +271,11 @@ contract OpenEditionCustomFee is
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
+    }
+
+    function _collectPriceOnClaim(address, uint256, address, uint256) internal override {
+        revert();
     }
 
     /// @dev Transfers the NFTs being claimed.
