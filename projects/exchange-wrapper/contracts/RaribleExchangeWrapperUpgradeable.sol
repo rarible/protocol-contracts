@@ -56,6 +56,7 @@ contract RaribleExchangeWrapperUpgradeable is Initializable, OwnableUpgradeable,
     uint256 private constant UINT256_MAX = type(uint256).max;
 
     event Execution(bool result);
+    event MarketplaceAddressUpdated(Markets indexed _market, address indexed _newAddress);
 
     enum Markets {
         ExchangeV2, //0
@@ -714,6 +715,43 @@ contract RaribleExchangeWrapperUpgradeable is Initializable, OwnableUpgradeable,
         for (uint256 i = 0; i < transferProxies.length; ++i) {
             IERC20Upgradeable(weth).approve(transferProxies[i], UINT256_MAX);
         }
+    }
+
+    /**
+     * @notice updates the address of the marketplace
+     * @param _market - type of the marketplace
+     * @param _newAddress - new address of the marketplace
+     */
+    function updateMarketplaceAddress(Markets _market, address _newAddress) external onlyOwner {
+        require(_newAddress != address(0), "New address cannot be zero");
+
+        if (_market == Markets.WyvernExchange) {
+            wyvernExchange = _newAddress;
+        } else if (_market == Markets.ExchangeV2) {
+            exchangeV2 = _newAddress;
+        } else if (_market == Markets.SeaPort_1_1) {
+            seaPort_1_1 = _newAddress;
+        } else if (_market == Markets.X2Y2) {
+            x2y2 = _newAddress;
+        } else if (_market == Markets.LooksRareOrders) {
+            looksRare = _newAddress;
+        } else if (_market == Markets.SudoSwap) {
+            sudoswap = _newAddress;
+        } else if (_market == Markets.SeaPort_1_4) {
+            seaPort_1_4 = _newAddress;
+        } else if (_market == Markets.LooksRareV2) {
+            looksRareV2 = _newAddress;
+        } else if (_market == Markets.Blur) {
+            blur = _newAddress;
+        } else if (_market == Markets.SeaPort_1_5) {
+            seaPort_1_5 = _newAddress;
+        } else if (_market == Markets.SeaPort_1_6) {
+            seaPort_1_6 = _newAddress;
+        } else {
+            revert("Invalid marketplace type");
+        }
+
+        emit MarketplaceAddressUpdated(_market, _newAddress);
     }
 
     receive() external payable {}
