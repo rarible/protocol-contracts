@@ -39,7 +39,6 @@ import "./CustomFlatPlatformFee.sol";
 contract OpenEditionCustomFee is
     Initializable,
     ContractMetadata,
-    CustomFlatPlatformFee,
     Royalty,
     PrimarySale,
     Ownable,
@@ -67,6 +66,15 @@ contract OpenEditionCustomFee is
     struct FeeRecipient {
         address recipient;
         uint96 value;
+    }
+
+    struct Fees {
+        uint56 protocolFee; //todo read this from static contract
+        address protocolFeeRecipient; //todo read this from static contract
+        uint256 creatorFinderFee;
+        FeeRecipient creatorFinderFeeRecipient1;
+        FeeRecipient creatorFinderFeeRecipient2;
+        uint256 buyerFinderFee;
     }
 
     /// @dev Protocol fee, amount
@@ -100,8 +108,7 @@ contract OpenEditionCustomFee is
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
-        uint128 _platformFlatFee,
-        address _platformFeeRecipient
+        Fees memory _fees
     ) external initializerERC721A initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
@@ -118,12 +125,21 @@ contract OpenEditionCustomFee is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        _setupFlatPlatformFeeInfo(_platformFeeRecipient, _platformFlatFee);
+        initFees(_fees);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
         transferRole = _transferRole;
         minterRole = _minterRole;
+    }
+
+    function initFees(Fees memory _fees) internal {
+        protocolFee = _fees.protocolFee;
+        protocolFeeRecipient = _fees.protocolFeeRecipient;
+        creatorFinderFee = _fees.creatorFinderFee;
+        creatorFinderFeeRecipient1 = _fees.creatorFinderFeeRecipient1;
+        creatorFinderFeeRecipient2 = _fees.creatorFinderFeeRecipient2;
+        buyerFinderFee = _fees.buyerFinderFee;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -228,34 +244,16 @@ contract OpenEditionCustomFee is
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, fees);
 
         // Creator finder fees
-        FeeRecipient memory creatorFeeRecipient1 = creatorFinderFeeRecipient1;
         uint _creatorFinderFee = creatorFinderFee;
         if (_creatorFinderFee != 0) {
-            uint creatorFeeRecipient1Amount = _creatorFinderFee * creatorFeeRecipient1.value * _quantityToClaim / MAX_BPS;
-            CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient1.recipient, creatorFeeRecipient1Amount);
-
-            if (creatorFeeRecipient1.value < MAX_BPS) {
-                FeeRecipient memory creatorFeeRecipient2 = creatorFinderFeeRecipient2;
-                uint creatorFeeRecipient2Amount = _creatorFinderFee * creatorFeeRecipient2.value * _quantityToClaim / MAX_BPS;
-                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient2.recipient, creatorFeeRecipient2Amount);
-            }
+            _transferCreatorFinderFee(_currency, _creatorFinderFee * _quantityToClaim);
             fees += _creatorFinderFee * _quantityToClaim;
         }
 
         // Buyer finder fees
         uint _buyerFinderFee = buyerFinderFee;
         if (_buyerFinderFee != 0) {
-            if (_data.length == 0) {
-                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, _buyerFinderFee * _quantityToClaim);
-            } else {
-                if (_data.length == 32) {
-
-                } else if (_data.length == 64) {
-
-                } else {
-                    revert("!DataLength");
-                }
-            }
+            _transferBuyerFinderFee(_currency, _buyerFinderFee * _quantityToClaim, _data);
             fees += _buyerFinderFee * _quantityToClaim;
         }
 
@@ -272,6 +270,51 @@ contract OpenEditionCustomFee is
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
+    }
+
+    function _transferCreatorFinderFee(address _currency, uint256 _creatorFinderFee) internal {
+        FeeRecipient memory creatorFeeRecipient1 = creatorFinderFeeRecipient1;
+        uint creatorFeeRecipient1Amount = _creatorFinderFee * creatorFeeRecipient1.value / MAX_BPS;
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient1.recipient, creatorFeeRecipient1Amount);
+
+        if (creatorFeeRecipient1.value < MAX_BPS) {
+            FeeRecipient memory creatorFeeRecipient2 = creatorFinderFeeRecipient2;
+            uint creatorFeeRecipient2Amount = _creatorFinderFee * creatorFeeRecipient2.value / MAX_BPS;
+            CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient2.recipient, creatorFeeRecipient2Amount);
+        }
+    }
+
+    function _transferBuyerFinderFee(address _currency, uint256 _buyerFinderFee, bytes memory _data) internal {
+        if (_data.length == 0) {
+            CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, _buyerFinderFee);
+        } else {
+            if (_data.length == 32) {
+                address recipient;
+                uint bps;
+                assembly {
+                    recipient := shr(96, mload(add(_data, 32)))
+                    bps := shr(160, mload(add(_data, 52)))
+                }
+                require(bps == MAX_BPS, "!BuyerFeeBpsNot10000");
+                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient, _buyerFinderFee);
+            } else if (_data.length == 64) {
+                address recipient1;
+                uint bps1;
+                address recipient2;
+                uint bps2;
+                assembly {
+                    recipient1 := shr(96, mload(add(_data, 32)))
+                    bps1 := shr(160, mload(add(_data, 52)))
+                    recipient2 := shr(96, mload(add(_data, 64)))
+                    bps2 := shr(160, mload(add(_data, 84)))
+                }
+                require(bps1 + bps2 == MAX_BPS, "!BuyerFeeBpsNot10000");
+                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient1, (_buyerFinderFee) * bps1 / MAX_BPS);
+                CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient2, (_buyerFinderFee) * bps2 / MAX_BPS);
+            } else {
+                revert("!DataLength");
+            }
+        }
     }
 
     function _collectPriceOnClaim(address, uint256, address, uint256) internal override {
@@ -315,11 +358,6 @@ contract OpenEditionCustomFee is
     /// @dev Returns whether the shared metadata of tokens can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
-    }
-
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
