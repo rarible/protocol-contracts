@@ -3,9 +3,9 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
-  // await deployAndInitProxy(hre, "TransferProxy")
+  await deployAndInitProxy(hre, "TransferProxy")
 
-  // await deployAndInitProxy(hre, "ERC20TransferProxy")
+  await deployAndInitProxy(hre, "ERC20TransferProxy")
 
   await deployAndInitProxy(hre, "ERC721LazyMintTransferProxy")
 
@@ -33,4 +33,4 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens', 'deploy-transfer-proxies'];
+func.tags = ['all', 'all-no-tokens', 'deploy-transfer-proxies', '002'];
