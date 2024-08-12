@@ -158,6 +158,7 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "src",
+    artifacts: "artifacts-zk"
   },
   networks: {
     sepolia: {
@@ -193,6 +194,9 @@ const config: HardhatUserConfig = {
       ethNetwork: "sepolia",
       ...createNetwork("zkcandy_sepolia"),
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
+    },
+    abstract_testnet: {
+      ...createNetwork("abstract_testnet"),
     }
   },
   etherscan: {
