@@ -11,6 +11,13 @@ type NetworkConfig = {
 
 const zero = "0x0000000000000000000000000000000000000000"
 const configs: Record<string, NetworkConfig> = {
+  "arbitrum": {
+    l1Address: "0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF",
+    previousAddress: "0xCF8600347Dc375C5f2FdD6Dab9BB66e0b6773cd7",
+    customGatewayAddress: "0x8bE956aB42274056ef4471BEb211b33e258b7324",
+    routerAddress: "0x2623C144B4d167f70893f6A8968B98c89a6C5F97",
+    minterAddress: "0x096760F208390250649E3e8763348E783AEF5562"
+  },
   "arbitrum_sepolia": {
     l1Address: "0xfac63865d9ca6f1e70e9c441d4b01255519f7a54",
     previousAddress: "0xcca8413d36c6061934e13ab1ad685a638dc2210a",
