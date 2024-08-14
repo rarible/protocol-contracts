@@ -18,6 +18,13 @@ const configs: Record<string, NetworkConfig> = {
     routerAddress: "0x2623C144B4d167f70893f6A8968B98c89a6C5F97",
     minterAddress: "0x096760F208390250649E3e8763348E783AEF5562"
   },
+  "rari": {
+    l1Address: "0xcf78572a8fe97b2b9a4b9709f6a7d9a863c1b8e0",
+    previousAddress: "0xC6e8a38FA44720d9d89Fef0A9E71F5a15E0b2C38",
+    customGatewayAddress: zero,
+    routerAddress: zero,
+    minterAddress: "0x90E43f5d772e50B01B3F9596f65AD5653467d010"
+  },
   "arbitrum_sepolia": {
     l1Address: "0xfac63865d9ca6f1e70e9c441d4b01255519f7a54",
     previousAddress: "0xcca8413d36c6061934e13ab1ad685a638dc2210a",
