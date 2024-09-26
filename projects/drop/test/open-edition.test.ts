@@ -5,17 +5,19 @@ import {
 	EIP173Proxy__factory,
 	IDrop,
 	OpenEditionRariFees,
-	OpenEditionRariFees__factory
+	OpenEditionRariFees__factory, RariFeesConfig
 } from "../typechain-types"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { expect } from "chai"
 import { randomAddress } from "hardhat/internal/hardhat-network/provider/utils/random"
 import { RariFeesDrop } from "../typechain-types/contracts/OpenEditionRariFees"
 import FeesStruct = RariFeesDrop.FeesStruct
+import { zeroAddress } from "ethereumjs-util"
 
 type AllowlistProofStruct = IDrop.AllowlistProofStruct
 
 describe("OpenEdition", () => {
+	let feesConfig: RariFeesConfig
 	let factory: OpenEditionRariFees__factory
 	let impl: OpenEditionRariFees
 	let proxyFactory: EIP173Proxy__factory
@@ -30,6 +32,9 @@ describe("OpenEdition", () => {
 	let buyerFinderFeeRecipient2: string
 
 	before(async () => {
+		const configFactory = await hre.ethers.getContractFactory("RariFeesConfig")
+		feesConfig = await configFactory.deploy(zeroAddress())
+
 		signers = await hre.ethers.getSigners()
 		first = signers[0]
 
@@ -112,10 +117,10 @@ describe("OpenEdition", () => {
 
 	it("should revert if total bps != 10000 for creator finder fee", async () => {
 		const config = {}
+		await feesConfig.setRecipient(protocolRecipient)
+		await feesConfig.setFee(ETH_CURRENCY, 100)
 		const p = initialize(
 			{
-				protocolFee: 100,
-				protocolFeeRecipient: protocolRecipient,
 				creatorFinderFee: 150,
 				creatorFinderFeeRecipient1: {
 					recipient: creatorFinderFeeRecipient1,
@@ -140,10 +145,10 @@ describe("OpenEdition", () => {
 
 	async function prepareDropContract(config?: DropContractsConfig) {
 		config = config || {}
+		await feesConfig.setRecipient(protocolRecipient)
+		await feesConfig.setFee(ETH_CURRENCY, config.protocolFee || 100)
 		await initialize(
 			{
-				protocolFee: config.protocolFee || 100,
-				protocolFeeRecipient: protocolRecipient,
 				creatorFinderFee: 150,
 				creatorFinderFeeRecipient1: {
 					recipient: creatorFinderFeeRecipient1,
@@ -168,6 +173,7 @@ describe("OpenEdition", () => {
 			signers[1].address,
 			signers[2].address,
 			1000,
+			feesConfig.address,
 			fees,
 		)
 

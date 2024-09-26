@@ -5,6 +5,8 @@ import "@thirdweb-dev/contracts/lib/CurrencyTransferLib.sol";
 import "@thirdweb-dev/contracts/extension/Drop.sol";
 import "@thirdweb-dev/contracts/extension/PrimarySale.sol";
 import "@thirdweb-dev/contracts/external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "@thirdweb-dev/contracts/lib/Address.sol";
+import "./IRariFeesConfig.sol";
 
 /// @author rari.foundation
 
@@ -17,6 +19,8 @@ import "@thirdweb-dev/contracts/external-deps/openzeppelin/metatx/ERC2771Context
 //
 
 abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
+    using Address for address;
+
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
@@ -26,18 +30,14 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
     }
 
     struct Fees {
-        uint56 protocolFee; //todo read this from static contract
-        address protocolFeeRecipient; //todo read this from static contract
         uint256 creatorFinderFee;
         FeeRecipient creatorFinderFeeRecipient1;
         FeeRecipient creatorFinderFeeRecipient2;
         uint256 buyerFinderFee;
     }
 
-    /// @dev Protocol fee, amount
-    uint256 private protocolFee;
-    /// @dev Protocol fee recipient
-    address private protocolFeeRecipient;
+    /// @dev Protocol fee config
+    address private feesConfig;
 
     /// @dev Creator finder fee, amount
     uint256 private creatorFinderFee;
@@ -49,14 +49,32 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
     /// @dev Buyer finder fee, amount. Can be spread across several addresses (which are specified per tx)
     uint256 private buyerFinderFee;
 
-    function _setupRariFees(Fees memory _fees) internal {
-        protocolFee = _fees.protocolFee;
-        protocolFeeRecipient = _fees.protocolFeeRecipient;
+    address constant private DEFAULT_CONFIG_ADDRESS = address(0); //todo set static address
+
+    // @notice Reads protocol
+    function _setupRariFees(address config, Fees memory _fees) internal {
+        if (config != address(0)) {
+            feesConfig = config;
+        } else {
+            feesConfig = DEFAULT_CONFIG_ADDRESS;
+        }
         creatorFinderFee = _fees.creatorFinderFee;
         creatorFinderFeeRecipient1 = _fees.creatorFinderFeeRecipient1;
         creatorFinderFeeRecipient2 = _fees.creatorFinderFeeRecipient2;
         require(creatorFinderFeeRecipient1.value + creatorFinderFeeRecipient2.value == MAX_BPS, "!CreatorFeeBpsNot10000");
         buyerFinderFee = _fees.buyerFinderFee;
+    }
+
+    // @notice Reads RariFeesConfig and returns recipient and fee
+    function _readFeesConfig(address currency) internal view returns (address recipient, uint fee) {
+        address _config = feesConfig;
+        if (_config.isContract()) {
+            recipient = IRariFeesConfig(_config).getRecipient();
+            fee = IRariFeesConfig(_config).getFee(currency);
+        } else {
+            recipient = address(0);
+            fee = 0;
+        }
     }
 
     /// @dev Lets an account claim tokens.
@@ -120,6 +138,7 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
 
         // Fees. fees - total number of fees already paid
+        (address protocolFeeRecipient, uint protocolFee) = _readFeesConfig(_currency);
         uint256 fees = protocolFee * _quantityToClaim;
 
         // Protocol fees
@@ -135,7 +154,7 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         // Buyer finder fees
         uint _buyerFinderFee = buyerFinderFee;
         if (_buyerFinderFee != 0) {
-            _transferBuyerFinderFee(_currency, _buyerFinderFee * _quantityToClaim, _data);
+            _transferBuyerFinderFee(protocolFeeRecipient, _currency, _buyerFinderFee * _quantityToClaim, _data);
             fees += _buyerFinderFee * _quantityToClaim;
         }
 
@@ -166,7 +185,7 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         }
     }
 
-    function _transferBuyerFinderFee(address _currency, uint256 _buyerFinderFee, bytes memory _data) internal {
+    function _transferBuyerFinderFee(address protocolFeeRecipient, address _currency, uint256 _buyerFinderFee, bytes memory _data) internal {
         if (_data.length == 0) {
             CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, _buyerFinderFee);
         } else {

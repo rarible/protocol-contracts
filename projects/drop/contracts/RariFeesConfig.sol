@@ -8,9 +8,9 @@ contract RariFeesConfig is Ownable {
     mapping (address => uint) private _fee;
 
     event RecipientSet(address recipient);
-    event FeeSet(address token, uint fee);
+    event FeeSet(address currency, uint fee);
 
-    constructor(address owner) public {
+    constructor(address owner) {
         if (owner != address(0)) {
             _transferOwnership(owner);
         }
@@ -21,13 +21,13 @@ contract RariFeesConfig is Ownable {
         emit RecipientSet(recipient);
     }
 
-    function setFee(address token, uint fee) external onlyOwner {
-        _fee[token] = fee;
-        emit FeeSet(token, fee);
+    function setFee(address currency, uint fee) external onlyOwner {
+        _fee[currency] = fee;
+        emit FeeSet(currency, fee);
     }
 
-    function getFee(address token) external view returns (uint) {
-        return _fee[token];
+    function getFee(address currency) external view returns (uint) {
+        return _fee[currency];
     }
 
     function getRecipient() external view returns (address) {
