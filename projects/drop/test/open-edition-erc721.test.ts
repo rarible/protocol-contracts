@@ -17,7 +17,7 @@ import { zeroAddress } from "ethereumjs-util"
 
 type AllowlistProofStruct = IDrop.AllowlistProofStruct
 
-describe("OpenEdition", () => {
+describe("OpenEditionERC721RariFee", () => {
 	let feesConfig: RariFeesConfig
 	let factory: OpenEditionERC721RariFee__factory
 	let impl: OpenEditionERC721RariFee

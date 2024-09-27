@@ -36,21 +36,20 @@ import "@thirdweb-dev/contracts/extension/DelayedReveal.sol";
 import "@thirdweb-dev/contracts/extension/LazyMint.sol";
 import "@thirdweb-dev/contracts/extension/PermissionsEnumerable.sol";
 import "@thirdweb-dev/contracts/extension/Drop.sol";
+import "../lib/RariFeesDrop.sol";
 
-contract DropERC721 is
+contract DropERC721RariFee is
     Initializable,
     ContractMetadata,
-    PlatformFee,
     Royalty,
-    PrimarySale,
     Ownable,
     DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
-    Drop,
     ERC2771ContextUpgradeable,
     Multicall,
-    ERC721AUpgradeable
+    ERC721AUpgradeable,
+    RariFeesDrop
 {
     using StringsUpgradeable for uint256;
 
@@ -90,8 +89,8 @@ contract DropERC721 is
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
+        address _rariFeesConfig,
+        Fees memory _fees
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
@@ -111,7 +110,7 @@ contract DropERC721 is
         _setupRole(_metadataRole, _defaultAdmin);
         _setRoleAdmin(_metadataRole, _metadataRole);
 
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        _setupRariFees(_rariFeesConfig, _fees);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
@@ -244,37 +243,6 @@ contract DropERC721 is
         require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "!Supply");
     }
 
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function _collectPriceOnClaim(
-        address _primarySaleRecipient,
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal override {
-        if (_pricePerToken == 0) {
-            require(msg.value == 0, "!V");
-            return;
-        }
-
-        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-
-        bool validMsgValue;
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            validMsgValue = msg.value == totalPrice;
-        } else {
-            validMsgValue = msg.value == 0;
-        }
-        require(validMsgValue, "!V");
-
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
-    }
-
     /// @dev Transfers the NFTs being claimed.
     function _transferTokensOnClaim(
         address _to,
@@ -282,11 +250,6 @@ contract DropERC721 is
     ) internal override returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
-    }
-
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.

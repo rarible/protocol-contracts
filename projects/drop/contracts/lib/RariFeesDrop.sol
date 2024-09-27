@@ -77,7 +77,8 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         }
     }
 
-    /// @dev Lets an account claim tokens.
+    /// @notice Lets an account claim tokens.
+    /// @dev the only difference from overriden function is that _collectPriceOnClaim also has _data argument
     function claim(
         address _receiver,
         uint256 _quantity,
@@ -218,6 +219,8 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         }
     }
 
+    /// @dev this function is not used at all, so no needed.
+    /// @dev in this contract another function is used (with extra _data argument)
     function _collectPriceOnClaim(address, uint256, address, uint256) internal override {
         revert();
     }
