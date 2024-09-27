@@ -33,7 +33,7 @@ import "@thirdweb-dev/contracts/extension/Ownable.sol";
 import "@thirdweb-dev/contracts/extension/SharedMetadata.sol";
 import "@thirdweb-dev/contracts/extension/PermissionsEnumerable.sol";
 import "@thirdweb-dev/contracts/extension/Drop.sol";
-import "./RariFeesDrop.sol";
+import "./lib/RariFeesDrop.sol";
 
 contract OpenEditionRariFees is
     Initializable,
