@@ -4,13 +4,14 @@ import {
 	EIP173Proxy,
 	EIP173Proxy__factory,
 	IDrop,
-	OpenEditionRariFees,
-	OpenEditionRariFees__factory, RariFeesConfig
+	OpenEditionERC721RariFee,
+	OpenEditionERC721RariFee__factory,
+	RariFeesConfig,
 } from "../typechain-types"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { expect } from "chai"
 import { randomAddress } from "hardhat/internal/hardhat-network/provider/utils/random"
-import { RariFeesDrop } from "../typechain-types/contracts/OpenEditionRariFees"
+import { RariFeesDrop } from "../typechain-types/contracts/final/OpenEditionERC721RariFee"
 import FeesStruct = RariFeesDrop.FeesStruct
 import { zeroAddress } from "ethereumjs-util"
 
@@ -18,11 +19,11 @@ type AllowlistProofStruct = IDrop.AllowlistProofStruct
 
 describe("OpenEdition", () => {
 	let feesConfig: RariFeesConfig
-	let factory: OpenEditionRariFees__factory
-	let impl: OpenEditionRariFees
+	let factory: OpenEditionERC721RariFee__factory
+	let impl: OpenEditionERC721RariFee
 	let proxyFactory: EIP173Proxy__factory
 	let proxy: EIP173Proxy
-	let drop: OpenEditionRariFees
+	let drop: OpenEditionERC721RariFee
 	let first: SignerWithAddress
 	let signers: SignerWithAddress[]
 	let protocolRecipient: string
@@ -38,7 +39,7 @@ describe("OpenEdition", () => {
 		signers = await hre.ethers.getSigners()
 		first = signers[0]
 
-		factory = await hre.ethers.getContractFactory("OpenEditionRariFees")
+		factory = await hre.ethers.getContractFactory("OpenEditionERC721RariFee")
 		impl = await factory.deploy()
 		proxyFactory = await hre.ethers.getContractFactory("EIP173Proxy")
 	})

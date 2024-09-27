@@ -29,26 +29,23 @@ import "@thirdweb-dev/contracts/lib/CurrencyTransferLib.sol";
 import "@thirdweb-dev/contracts/extension/Multicall.sol";
 import "@thirdweb-dev/contracts/extension/ContractMetadata.sol";
 import "@thirdweb-dev/contracts/extension/Royalty.sol";
-import "@thirdweb-dev/contracts/extension/PrimarySale.sol";
 import "@thirdweb-dev/contracts/extension/Ownable.sol";
 import "@thirdweb-dev/contracts/extension/SharedMetadata.sol";
 import "@thirdweb-dev/contracts/extension/PermissionsEnumerable.sol";
 import "@thirdweb-dev/contracts/extension/Drop.sol";
-import "@thirdweb-dev/contracts/extension/PlatformFee.sol";
+import "../lib/RariFeesDrop.sol";
 
 contract OpenEditionERC721RariFee is
     Initializable,
     ContractMetadata,
-    PlatformFee,
     Royalty,
-    PrimarySale,
     Ownable,
     SharedMetadata,
     PermissionsEnumerable,
-    Drop,
     ERC2771ContextUpgradeable,
     Multicall,
-    ERC721AQueryableUpgradeable
+    ERC721AQueryableUpgradeable,
+    RariFeesDrop
 {
     using StringsUpgradeable for uint256;
 
@@ -80,8 +77,8 @@ contract OpenEditionERC721RariFee is
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
+        address _rariFeesConfig,
+        Fees memory _fees
     ) external initializerERC721A initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
@@ -98,7 +95,7 @@ contract OpenEditionERC721RariFee is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+        _setupRariFees(_rariFeesConfig, _fees);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
@@ -141,45 +138,6 @@ contract OpenEditionERC721RariFee is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function _collectPriceOnClaim(
-        address _primarySaleRecipient,
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal override {
-        if (_pricePerToken == 0) {
-            require(msg.value == 0, "!Value");
-            return;
-        }
-
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees;
-        address platformFeeRecipient;
-
-        if (getPlatformFeeType() == IPlatformFee.PlatformFeeType.Flat) {
-            (platformFeeRecipient, platformFees) = getFlatPlatformFeeInfo();
-        } else {
-            (address recipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-            platformFeeRecipient = recipient;
-            platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
-        }
-        require(totalPrice >= platformFees, "price less than platform fee");
-
-        bool validMsgValue;
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            validMsgValue = msg.value == totalPrice;
-        } else {
-            validMsgValue = msg.value == 0;
-        }
-        require(validMsgValue, "!V");
-
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
-    }
-
     /// @dev Transfers the NFTs being claimed.
     function _transferTokensOnClaim(
         address _to,
@@ -217,11 +175,6 @@ contract OpenEditionERC721RariFee is
     /// @dev Returns whether the shared metadata of tokens can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
-    }
-
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -279,11 +232,11 @@ contract OpenEditionERC721RariFee is
     }
 
     function _msgSender()
-    internal
-    view
-    virtual
-    override(ERC2771ContextUpgradeable, Multicall)
-    returns (address sender)
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Multicall)
+        returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();
     }
