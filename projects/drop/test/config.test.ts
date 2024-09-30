@@ -1,12 +1,12 @@
-import { RariFeesConfig } from "../typechain-types"
+import { RariFeesConfigProvider } from "../typechain-types"
 import hre from "hardhat"
 import { expect } from "chai"
 
-describe("RariFeesConfig", () => {
-	let config: RariFeesConfig
+describe("RariFeesConfigProvider", () => {
+	let config: RariFeesConfigProvider
 
 	beforeEach(async () => {
-		const f = await hre.ethers.getContractFactory("RariFeesConfig")
+		const f = await hre.ethers.getContractFactory("RariFeesConfigProvider")
 		config = await f.deploy(zero)
 	})
 

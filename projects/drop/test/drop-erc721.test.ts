@@ -6,19 +6,19 @@ import {
 	IDrop,
 	DropERC721RariFee,
 	DropERC721RariFee__factory,
-	RariFeesConfig,
+	RariFeesConfigProvider,
 } from "../typechain-types"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { expect } from "chai"
 import { randomAddress } from "hardhat/internal/hardhat-network/provider/utils/random"
 import { RariFeesDrop } from "../typechain-types/contracts/final/DropERC721RariFee"
-import FeesStruct = RariFeesDrop.FeesStruct
+import FeesStruct = RariFeesDrop.FeesConfigStruct
 import { zeroAddress } from "ethereumjs-util"
 
 type AllowlistProofStruct = IDrop.AllowlistProofStruct
 
 describe("DropERC721", () => {
-	let feesConfig: RariFeesConfig
+	let feesConfigProvider: RariFeesConfigProvider
 	let factory: DropERC721RariFee__factory
 	let impl: DropERC721RariFee
 	let proxyFactory: EIP173Proxy__factory
@@ -33,8 +33,8 @@ describe("DropERC721", () => {
 	let buyerFinderFeeRecipient2: string
 
 	before(async () => {
-		const configFactory = await hre.ethers.getContractFactory("RariFeesConfig")
-		feesConfig = await configFactory.deploy(zeroAddress())
+		const configFactory = await hre.ethers.getContractFactory("RariFeesConfigProvider")
+		feesConfigProvider = await configFactory.deploy(zeroAddress())
 
 		signers = await hre.ethers.getSigners()
 		first = signers[0]
@@ -118,8 +118,8 @@ describe("DropERC721", () => {
 
 	it("should revert if total bps != 10000 for creator finder fee", async () => {
 		const config = {}
-		await feesConfig.setRecipient(protocolRecipient)
-		await feesConfig.setFee(ETH_CURRENCY, 100)
+		await feesConfigProvider.setRecipient(protocolRecipient)
+		await feesConfigProvider.setFee(ETH_CURRENCY, 100)
 		const p = initialize(
 			{
 				creatorFinderFee: 150,
@@ -146,8 +146,8 @@ describe("DropERC721", () => {
 
 	async function prepareDropContract(config?: DropContractsConfig) {
 		config = config || {}
-		await feesConfig.setRecipient(protocolRecipient)
-		await feesConfig.setFee(ETH_CURRENCY, config.protocolFee || 100)
+		await feesConfigProvider.setRecipient(protocolRecipient)
+		await feesConfigProvider.setFee(ETH_CURRENCY, config.protocolFee || 100)
 		await initialize(
 			{
 				creatorFinderFee: 150,
@@ -174,7 +174,7 @@ describe("DropERC721", () => {
 			signers[1].address,
 			signers[2].address,
 			1000,
-			feesConfig.address,
+			feesConfigProvider.address,
 			fees,
 		)
 

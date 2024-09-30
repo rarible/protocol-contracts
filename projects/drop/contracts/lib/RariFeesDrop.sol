@@ -6,7 +6,7 @@ import "@thirdweb-dev/contracts/extension/Drop.sol";
 import "@thirdweb-dev/contracts/extension/PrimarySale.sol";
 import "@thirdweb-dev/contracts/external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "@thirdweb-dev/contracts/lib/Address.sol";
-import "./IRariFeesConfig.sol";
+import "./IRariFeesConfigProvider.sol";
 
 /// @author rari.foundation
 
@@ -29,7 +29,7 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         uint96 value;
     }
 
-    struct Fees {
+    struct FeesConfig {
         uint256 creatorFinderFee;
         FeeRecipient creatorFinderFeeRecipient1;
         FeeRecipient creatorFinderFeeRecipient2;
@@ -37,40 +37,50 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
     }
 
     /// @dev Protocol fee config
-    address private feesConfig;
+    address private _feesConfigProvider;
 
     /// @dev Creator finder fee, amount
-    uint256 private creatorFinderFee;
+    uint256 private _creatorFinderFee;
     /// @dev Creator finder fee recipient 1. If value == 10000 then recipient 2 is not read
-    FeeRecipient private creatorFinderFeeRecipient1;
+    FeeRecipient private _creatorFinderFeeRecipient1;
     /// @dev Creator finder fee recipient 2
-    FeeRecipient private creatorFinderFeeRecipient2;
+    FeeRecipient private _creatorFinderFeeRecipient2;
 
     /// @dev Buyer finder fee, amount. Can be spread across several addresses (which are specified per tx)
-    uint256 private buyerFinderFee;
+    uint256 private _buyerFinderFee;
 
     address constant private DEFAULT_CONFIG_ADDRESS = address(0); //todo set static address
 
     // @notice Reads protocol
-    function _setupRariFees(address config, Fees memory _fees) internal {
-        if (config != address(0)) {
-            feesConfig = config;
+    function _setupRariFees(address configProvider, FeesConfig memory _fees) internal {
+        if (configProvider != address(0)) {
+            _feesConfigProvider = configProvider;
         } else {
-            feesConfig = DEFAULT_CONFIG_ADDRESS;
+            _feesConfigProvider = DEFAULT_CONFIG_ADDRESS;
         }
-        creatorFinderFee = _fees.creatorFinderFee;
-        creatorFinderFeeRecipient1 = _fees.creatorFinderFeeRecipient1;
-        creatorFinderFeeRecipient2 = _fees.creatorFinderFeeRecipient2;
-        require(creatorFinderFeeRecipient1.value + creatorFinderFeeRecipient2.value == MAX_BPS, "!CreatorFeeBpsNot10000");
-        buyerFinderFee = _fees.buyerFinderFee;
+        _creatorFinderFee = _fees.creatorFinderFee;
+        _creatorFinderFeeRecipient1 = _fees.creatorFinderFeeRecipient1;
+        _creatorFinderFeeRecipient2 = _fees.creatorFinderFeeRecipient2;
+        require(_creatorFinderFeeRecipient1.value + _creatorFinderFeeRecipient2.value == MAX_BPS, "!CreatorFeeBpsNot10000");
+        _buyerFinderFee = _fees.buyerFinderFee;
+    }
+
+    function getFees(address currency) external view returns (address protocolFeeRecipient, uint protocolFee, uint creatorFinderFee, FeeRecipient memory creatorFinderFeeRecipient1, FeeRecipient memory creatorFinderFeeRecipient2, uint buyerFinderFee) {
+        (address feeRecipient, uint fee) = _readFeesConfig(currency);
+        protocolFeeRecipient = feeRecipient;
+        protocolFee = fee;
+        creatorFinderFee = _creatorFinderFee;
+        creatorFinderFeeRecipient1 = _creatorFinderFeeRecipient1;
+        creatorFinderFeeRecipient2 = _creatorFinderFeeRecipient2;
+        buyerFinderFee = _buyerFinderFee;
     }
 
     // @notice Reads RariFeesConfig and returns recipient and fee
     function _readFeesConfig(address currency) internal view returns (address recipient, uint fee) {
-        address _config = feesConfig;
-        if (_config.isContract()) {
-            recipient = IRariFeesConfig(_config).getRecipient();
-            fee = IRariFeesConfig(_config).getFee(currency);
+        address _configProvider = _feesConfigProvider;
+        if (_configProvider.isContract()) {
+            recipient = IRariFeesConfigProvider(_configProvider).getRecipient();
+            fee = IRariFeesConfigProvider(_configProvider).getFee(currency);
         } else {
             recipient = address(0);
             fee = 0;
@@ -146,14 +156,14 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), protocolFeeRecipient, fees);
 
         // Creator finder fees
-        uint _creatorFinderFee = creatorFinderFee;
+        uint _creatorFinderFee = _creatorFinderFee;
         if (_creatorFinderFee != 0) {
             _transferCreatorFinderFee(_currency, _creatorFinderFee * _quantityToClaim);
             fees += _creatorFinderFee * _quantityToClaim;
         }
 
         // Buyer finder fees
-        uint _buyerFinderFee = buyerFinderFee;
+        uint _buyerFinderFee = _buyerFinderFee;
         if (_buyerFinderFee != 0) {
             _transferBuyerFinderFee(protocolFeeRecipient, _currency, _buyerFinderFee * _quantityToClaim, _data);
             fees += _buyerFinderFee * _quantityToClaim;
@@ -175,12 +185,12 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
     }
 
     function _transferCreatorFinderFee(address _currency, uint256 _creatorFinderFee) internal {
-        FeeRecipient memory creatorFeeRecipient1 = creatorFinderFeeRecipient1;
+        FeeRecipient memory creatorFeeRecipient1 = _creatorFinderFeeRecipient1;
         uint creatorFeeRecipient1Amount = _creatorFinderFee * creatorFeeRecipient1.value / MAX_BPS;
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient1.recipient, creatorFeeRecipient1Amount);
 
         if (creatorFeeRecipient1.value < MAX_BPS) {
-            FeeRecipient memory creatorFeeRecipient2 = creatorFinderFeeRecipient2;
+            FeeRecipient memory creatorFeeRecipient2 = _creatorFinderFeeRecipient2;
             uint creatorFeeRecipient2Amount = _creatorFinderFee * creatorFeeRecipient2.value / MAX_BPS;
             CurrencyTransferLib.transferCurrency(_currency, _msgSender(), creatorFeeRecipient2.recipient, creatorFeeRecipient2Amount);
         }

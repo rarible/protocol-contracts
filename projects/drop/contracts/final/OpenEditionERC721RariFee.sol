@@ -77,8 +77,8 @@ contract OpenEditionERC721RariFee is
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
-        address _rariFeesConfig,
-        Fees memory _fees
+        address _rariFeesConfigProvider,
+        FeesConfig memory _fees
     ) external initializerERC721A initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
@@ -95,7 +95,7 @@ contract OpenEditionERC721RariFee is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        _setupRariFees(_rariFeesConfig, _fees);
+        _setupRariFees(_rariFeesConfigProvider, _fees);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 

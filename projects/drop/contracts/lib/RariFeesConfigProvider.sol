@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RariFeesConfig is Ownable {
+contract RariFeesConfigProvider is Ownable {
     address private _recipient;
     mapping (address => uint) private _fee;
 

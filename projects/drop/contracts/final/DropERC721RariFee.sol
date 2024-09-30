@@ -90,7 +90,7 @@ contract DropERC721RariFee is
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _rariFeesConfig,
-        Fees memory _fees
+        FeesConfig memory _fees
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
