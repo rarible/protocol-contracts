@@ -229,6 +229,11 @@ abstract contract RariFeesDrop is PrimarySale, ERC2771ContextUpgradeable, Drop {
         }
     }
 
+    /// @dev this function usually returns enum (flat/bp), but here it tells that we have special case - rari fees
+    function getPlatformFeeType() pure external returns (uint) {
+        return 1000;
+    }
+
     /// @dev this function is not used at all, so no needed.
     /// @dev in this contract another function is used (with extra _data argument)
     function _collectPriceOnClaim(address, uint256, address, uint256) internal override {

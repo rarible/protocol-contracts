@@ -143,18 +143,6 @@ contract DropERC721RariFee is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Contract identifiers
-    //////////////////////////////////////////////////////////////*/
-
-    function contractType() external pure returns (bytes32) {
-        return bytes32("DropERC721");
-    }
-
-    function contractVersion() external pure returns (uint8) {
-        return uint8(4);
-    }
-
-    /*///////////////////////////////////////////////////////////////
                     Lazy minting + delayed-reveal logic
     //////////////////////////////////////////////////////////////*/
 
