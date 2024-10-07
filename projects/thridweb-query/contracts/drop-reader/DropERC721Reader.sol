@@ -25,13 +25,22 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
 
     enum FeeType {
         Bps,
-        Flat
+        Flat,
+        Rari
     }
 
     struct FeeData {
         address recipient;
         uint256 value;
         FeeType feeType;
+
+        // for rari fees only
+        address protocolFeeRecipient;
+        uint protocolFee;
+        uint creatorFinderFee;
+        IDropERC721.FeeRecipient creatorFinderFeeRecipient1;
+        IDropERC721.FeeRecipient creatorFinderFeeRecipient2;
+        uint buyerFinderFee;
     }
 
     struct GlobalData {
@@ -69,19 +78,19 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
         uint256 activeClaimConditionIndex,
         IDropERC721.ClaimCondition[] memory conditions,
         GlobalData memory globalData
-        ) {
+    ) {
         IDropERC721 drop = IDropERC721(_dropERC721);
 
         (uint256 startConditionIndex, uint256 stopConditionIndex)  = drop.claimCondition();
         uint256 _claimedByUser = 0;
-        if(stopConditionIndex != 0) {
+        if (stopConditionIndex != 0) {
             try drop.getActiveClaimConditionId() returns (uint256 _activeClaimConditionIndex) {
                 activeClaimConditionIndex = _activeClaimConditionIndex;
             } catch {
                 activeClaimConditionIndex = 0;
             }
             conditions = new IDropERC721.ClaimCondition[](stopConditionIndex);
-            
+
             for (uint i = 0; i < stopConditionIndex; i++) {
                 IDropERC721.ClaimCondition memory condition = drop.getClaimConditionById(i);
                 conditions[i] = condition;
@@ -89,10 +98,11 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
         }
 
         DropERC721Reader.GlobalData memory _globalData;
-        if(stopConditionIndex > 0) {
+        IDropERC721.ClaimCondition memory condition;
+        if (stopConditionIndex > 0) {
             _claimedByUser = drop.getSupplyClaimedByWallet(activeClaimConditionIndex, _claimer);
-            IDropERC721.ClaimCondition memory condition = drop.getClaimConditionById(activeClaimConditionIndex);
-            if(condition.currency == native1 || condition.currency == native2) {
+            condition = drop.getClaimConditionById(activeClaimConditionIndex);
+            if (condition.currency == native1 || condition.currency == native2) {
                 _globalData.userBalance = _claimer.balance;
             } else {
                 _globalData.userBalance = IERC20(condition.currency).balanceOf(_claimer);
@@ -107,7 +117,7 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
             _globalData.maxTotalSupply      = maxTotalSupply;
         } catch {
             _globalData.maxTotalSupply      = 0;
-        }        
+        }
         _globalData.nextTokenIdToMint   = drop.nextTokenIdToMint();
         _globalData.nextTokenIdToClaim  = drop.nextTokenIdToClaim();
         _globalData.name                = drop.name();
@@ -118,7 +128,7 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
         } catch {
             _globalData.baseURICount        = 0;
         }
-        
+
         _globalData.blockTimeStamp      = block.timestamp;
 
         (address rAddress, uint16 rBps)     = drop.getDefaultRoyaltyInfo();
@@ -126,23 +136,32 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
         _globalData.defaultRoyaltyInfo.value        = rBps;
         _globalData.defaultRoyaltyInfo.feeType      = FeeType.Bps;
 
-        IDropERC721.PlatformFeeType feeType = IDropERC721.PlatformFeeType.Bps;
-        try drop.getPlatformFeeType() returns (IDropERC721.PlatformFeeType resultFeeType) {
+        uint feeType = 0;
+        try drop.getPlatformFeeType() returns (uint resultFeeType) {
             feeType = resultFeeType;
         } catch {
-            feeType = IDropERC721.PlatformFeeType.Bps;
+            feeType = 0;
         }
-        
-        if (feeType == IDropERC721.PlatformFeeType.Flat) {
+
+        if (feeType == 1) {
             (address pAddress, uint256 pValue)     = drop.getFlatPlatformFeeInfo();
             _globalData.platformFeeInfo.recipient       = pAddress;
             _globalData.platformFeeInfo.value           = pValue;
             _globalData.platformFeeInfo.feeType         = FeeType.Flat;
-        } else {
+        } else if (feeType == 0) {
             (address pAddress, uint16 pBps)     = drop.getPlatformFeeInfo();
             _globalData.platformFeeInfo.recipient       = pAddress;
             _globalData.platformFeeInfo.value           = pBps;
             _globalData.platformFeeInfo.feeType         = FeeType.Bps;
+        } else {
+            (address protocolFeeRecipient, uint protocolFee, uint creatorFinderFee, IDropERC721.FeeRecipient memory creatorFinderFeeRecipient1, IDropERC721.FeeRecipient memory creatorFinderFeeRecipient2, uint buyerFinderFee) = drop.getFees(condition.currency);
+            _globalData.platformFeeInfo.feeType = FeeType.Rari;
+            _globalData.platformFeeInfo.protocolFeeRecipient = protocolFeeRecipient;
+            _globalData.platformFeeInfo.protocolFee = protocolFee;
+            _globalData.platformFeeInfo.creatorFinderFee = creatorFinderFee;
+            _globalData.platformFeeInfo.buyerFinderFee = buyerFinderFee;
+            _globalData.platformFeeInfo.creatorFinderFeeRecipient1 = creatorFinderFeeRecipient1;
+            _globalData.platformFeeInfo.creatorFinderFeeRecipient2 = creatorFinderFeeRecipient2;
         }
 
         return (activeClaimConditionIndex, conditions, _globalData);

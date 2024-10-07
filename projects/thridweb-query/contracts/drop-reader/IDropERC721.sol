@@ -27,6 +27,11 @@ interface IDropERC721 {
         string metadata;
     }
 
+    struct FeeRecipient {
+        address recipient;
+        uint96 value;
+    }
+
     // Events
     event ClaimConditionsUpdated(
         ClaimCondition[] claimConditions,
@@ -41,12 +46,6 @@ interface IDropERC721 {
         uint256 quantityClaimed
     );
 
-    // Enums
-    enum PlatformFeeType {
-        Bps,
-        Flat
-    }
-
     // View functions for global data
     function totalMinted() external view returns (uint256);
     function totalSupply() external view returns (uint256);
@@ -58,9 +57,10 @@ interface IDropERC721 {
     function contractURI() external view returns (string memory);
     function getBaseURICount() external view returns (uint256);
     function getDefaultRoyaltyInfo() external view returns (address, uint16);
-    function getPlatformFeeType() external view returns (PlatformFeeType);
+    function getPlatformFeeType() external view returns (uint);
     function getPlatformFeeInfo() external view returns (address, uint16);
     function getFlatPlatformFeeInfo() external view returns (address, uint256);
+    function getFees(address currency) external view returns (address protocolFeeRecipient, uint protocolFee, uint creatorFinderFee, FeeRecipient memory creatorFinderFeeRecipient1, FeeRecipient memory creatorFinderFeeRecipient2, uint buyerFinderFee);
 
     // Specific claim condition methods
     function claimCondition() external view returns (uint256 currentStartId, uint256 count);
