@@ -21,7 +21,7 @@ describe("Test Erc721 Reader", function () {
   beforeEach(async function () {
     [owner] = await ethers.getSigners();
 
-    erc721Reader = await DropERC721Reader__factory.connect("0x507F27bb1d442B45cAC8fbEa8AedeE11eEAdfa2d", owner)
+    erc721Reader = await DropERC721Reader__factory.connect("0xe109ddbA35ADAA9f3fe822239Ab484a32f5084ea", owner)
     console.log(erc721Reader.address)
     sdk = ThirdwebSDK.fromSigner(
          owner, // Your wallet's private key (only required for write operations)
@@ -54,7 +54,7 @@ describe("Test Erc721 Reader", function () {
       const claimReason = await getClaimIneligibilityReasons(erc721Reader, erc721Drop, 1, storage, sdk, owner.address)
       expect(claimReason).to.eq(ClaimEligibility.NoClaimConditionSet)
     });
-    
+
     it("This address is not on the allowlist.", async function () {
       const collectionAddress = "0xA00412829A4fFB09b5a85042941f8EC4B2F385cA"
       const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
@@ -123,18 +123,28 @@ describe("Test Erc721 Reader", function () {
 
     it("can read flat fees info", async function () {
       const collectionAddress = "0x7672fB1D8C7f2e53bB5BF983Eb687F7A26331A23"
-      const erc721Drop = IDropERC721__factory.connect(collectionAddress, owner)
-      
+
       const [,,data] = await erc721Reader.getAllData(collectionAddress, owner.address)
       expect(data.platformFeeInfo.feeType).to.eq(1)
       expect(data.platformFeeInfo.recipient).to.eq("0x7E31749358659c627F7f74dD0305A0Bd84c980da")
       expect(data.platformFeeInfo.value).to.eq(1000000000000)
     });
-    
+
+    it("can read rari fees info", async function () {
+      const collectionAddress = "0x4Fd9C4cb5DE36bA86fFcd85c1B5673A54bb7e679"
+
+      const [,,data] = await erc721Reader.getAllData(collectionAddress, owner.address)
+      expect(data.platformFeeInfo.feeType).to.eq(2)
+      expect(data.platformFeeInfo.buyerFinderFee).to.eq(10000000000000)
+      expect(data.platformFeeInfo.creatorFinderFee).to.eq(10000000000000)
+      expect(data.platformFeeInfo.creatorFinderFeeRecipient1.recipient).to.eq("0x19d2a55F2Bd362a9e09F674B722782329F63F3fB")
+      expect(data.platformFeeInfo.creatorFinderFeeRecipient1.value).to.eq(10000)
+    });
+
   });
 
   // https://polygonscan.com/block/51404403
-  // 
+  //
   describe("reader test", function () {
     it("can query datas.", async function () {
       const value = ethers.utils.parseEther("0.003")
