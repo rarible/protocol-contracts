@@ -20,6 +20,11 @@ const config: HardhatUserConfig = {
 			url: "http://127.0.0.1:1248",
 			chainId: 11155111,
 			timeout: 60000,
+		},
+		polygon: {
+			url: "http://127.0.0.1:1248",
+			chainId: 137,
+			timeout: 60000,
 		}
 	},
 	namedAccounts: {
