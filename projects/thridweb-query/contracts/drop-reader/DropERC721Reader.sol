@@ -75,7 +75,7 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
                 activeClaimConditionIndex = 0;
             }
             conditions = new IDropERC721.ClaimCondition[](stopConditionIndex);
-            
+
             for (uint i = 0; i < stopConditionIndex; i++) {
                 IDropERC721.ClaimCondition memory condition = drop.getClaimConditionById(i);
                 conditions[i] = condition;
@@ -97,6 +97,12 @@ contract DropERC721Reader is Initializable, OwnableUpgradeable {
         _globalData.totalMinted         = drop.totalMinted();
         _globalData.claimedByUser       = _claimedByUser;
         _globalData.totalSupply         = drop.totalSupply();
+        try drop.maxTotalSupply() returns (uint256 _maxTotalSupply) {
+            _globalData.maxTotalSupply = _maxTotalSupply;
+        } catch {
+            _globalData.maxTotalSupply = 0;
+        }
+
         _globalData.maxTotalSupply      = drop.maxTotalSupply();
         _globalData.nextTokenIdToMint   = drop.nextTokenIdToMint();
         _globalData.nextTokenIdToClaim  = drop.nextTokenIdToClaim();
