@@ -17,10 +17,6 @@ import "./tasks";
 
 dotenv.config();
 
-console.log("loadCustomNetworks", loadCustomNetworks());
-console.log("loadNetworkConfigs", loadNetworkConfigs());
-console.log("loadFactoryAddresses", loadFactoryAddresses());
-
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
