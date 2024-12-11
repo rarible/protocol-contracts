@@ -17,6 +17,10 @@ import "./tasks";
 
 dotenv.config();
 
+console.log("loadCustomNetworks", loadCustomNetworks());
+console.log("loadNetworkConfigs", loadNetworkConfigs());
+console.log("loadFactoryAddresses", loadFactoryAddresses());
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
@@ -68,7 +72,7 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      }
+      },
     },
     settings: {
       metadata: {
@@ -88,16 +92,14 @@ const config: HardhatUserConfig = {
     deployer: 0,
   },
   paths: {
-    sources: "src"
+    sources: "src",
   },
   networks: loadNetworkConfigs(),
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
   },
-  deterministicDeployment: loadFactoryAddresses()
+  deterministicDeployment: loadFactoryAddresses(),
 };
-
-
 
 export default config;
