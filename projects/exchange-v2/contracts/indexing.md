@@ -17,6 +17,10 @@ If it's needed to get fees involved, then Order's data struct should be parsed a
 
 ### List of ExchangeV2 contracts on different chains
 
+All deployed contract addresses can be found [here](../../hardhat-deploy/networks)
+
+Here's a quick list to access Exchange contracts on some of the chains:
+
 Mainnet: https://etherscan.io/address/0x9757F2d2b135150BBeb65308D4a91804107cd8D6
 Base: https://basescan.org/address/0x139608ABeE12Ff39FEDae39C493B571A25995E10
 RARI chain: https://rari.calderaexplorer.xyz/address/0x10CCBf49617ECB7A8262065853D6C93Ad42C3C2C
