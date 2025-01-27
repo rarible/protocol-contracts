@@ -197,6 +197,11 @@ const config: HardhatUserConfig = {
     },
     abstract_testnet: {
       ...createNetwork("abstract_testnet"),
+    },
+    abstract: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("abstract"),
     }
   },
   etherscan: {
