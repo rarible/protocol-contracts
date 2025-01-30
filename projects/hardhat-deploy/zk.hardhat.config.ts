@@ -151,8 +151,6 @@ const config: HardhatUserConfig = {
   defaultNetwork: "zksync",
   namedAccounts: {
     deployer: 0,
-    abstract: 'trezor://0xe24d0a62B0918be98ba1328f891bCfFBE1Df3C45',
-    abstract_testnet: 'trezor://0xe24d0a62B0918be98ba1328f891bCfFBE1Df3C45',
   },
   paths: {
     sources: "src",
@@ -201,7 +199,7 @@ const config: HardhatUserConfig = {
       ethNetwork: "mainnet",
       url: "http://127.0.0.1:1248",
       chainId: 2741,
-      ...createNetwork("abstract"),      
+      ...createNetwork("abstract"),
     }
   },
   etherscan: {
