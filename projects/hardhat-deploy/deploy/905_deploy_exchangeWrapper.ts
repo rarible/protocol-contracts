@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { getConfig } from '../utils/utils'
+import { DEPLOY_FROM, getConfig } from '../utils/utils'
 
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const mainnet = {
@@ -196,7 +196,12 @@ function getWrapperSettings(network: string) {
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
   const { deploy } = hre.deployments;
-  const { deployer } = await hre.getNamedAccounts();
+  let { deployer } = await hre.getNamedAccounts();
+
+  // hardware wallet support
+  if(deployer === undefined) {
+    deployer = DEPLOY_FROM!;
+  }
 
   let exchangeV2;
    if (!!deploy_meta) {

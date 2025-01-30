@@ -1,8 +1,12 @@
-import '@matterlabs/hardhat-zksync-deploy';
-import '@matterlabs/hardhat-zksync-solc';
-import "@nomicfoundation/hardhat-toolbox";
-import "@openzeppelin/hardhat-upgrades";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-deploy";
+// import "@matterlabs/hardhat-zksync-upgradable";
 import "@nomiclabs/hardhat-truffle5";
+import "@matterlabs/hardhat-zksync-toolbox";
+import "@matterlabs/hardhat-zksync-verify";
+import "@matterlabs/hardhat-zksync-ethers";
+import "zksync-ethers";
+
 
 import type {
   HttpNetworkUserConfig, HardhatUserConfig
@@ -165,6 +169,7 @@ const config: HardhatUserConfig = {
       zksync: true,
       ethNetwork: "sepolia",
       ...createNetwork("zksync_sepolia"),
+      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     },
     zksync: {
       ...createNetwork("zksync"),
@@ -175,30 +180,27 @@ const config: HardhatUserConfig = {
       zksync: true,
       ethNetwork: "goerli",
       ...createNetwork("zkLinkGoerliTestnet"),
+      verifyURL: 'https://goerli.explorer.zklink.io/contracts/verify',
       timeout: 120000
     },
     zkLink: {
       zksync: true,
       ethNetwork: "mainnet",
       ...createNetwork("zkLink"),
+      verifyURL: 'https://explorer.zklink.io/contracts/verify'
     },
     zkcandy_sepolia: {
       zksync: true,
       ethNetwork: "sepolia",
       ...createNetwork("zkcandy_sepolia"),
+      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     },
     abstract_testnet: {
-      zksync: true,
-      ethNetwork: "sepolia",
       ...createNetwork("abstract_testnet"),
-      url: "http://127.0.0.1:1248",
-      chainId: 11124,
     },
     abstract: {
       zksync: true,
       ethNetwork: "mainnet",
-      url: "http://127.0.0.1:1248",
-      chainId: 2741,
       ...createNetwork("abstract"),
     }
   },

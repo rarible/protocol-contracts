@@ -25,3 +25,5 @@ export function getConfig(network: string): any {
     throw new Error('No config for the network: ' + network);
   }
 }
+
+export const DEPLOY_FROM = process.env.DEPLOY_FROM;
