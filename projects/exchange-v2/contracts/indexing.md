@@ -26,7 +26,7 @@ Deployment block: 12617828
 Example purchase tx: https://etherscan.io/tx/0x32804b980d662138e3e79d3fc75aee9f8fbe55cd788898e255127e24853c8168
 
 Base: https://basescan.org/address/0x6C65a3C3AA67b126e43F86DA85775E0F5e9743F7  
-Deployment block: 8104020
+Deployment block: 8104020  
 Example purchase tx: https://basescan.org/tx/0x1d152615e913a370fec0b5bab9496008693cdd66e8e9e2f3983a76821aedcf93
 
 RARI chain: https://rari.calderaexplorer.xyz/address/0x10CCBf49617ECB7A8262065853D6C93Ad42C3C2C  
