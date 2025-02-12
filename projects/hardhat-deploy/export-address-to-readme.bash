@@ -5,8 +5,12 @@ NC='\033[0m' # No Color
 # get network id
 path="${HOME}/.ethereum/${NETWORK}.json"
 path_readme="networks/${NETWORK}.md"
-echo $path
-explorer_url=$(jq '.verify.explorerUrl' $path)
+
+echo "--------------------------------"
+echo generating network readme for: $NETWORK
+echo picking chain configuration at path: $path
+
+explorer_url=$(jq '.explorer_url' $path)
 
 # Function to add a row to the table
 add_row() {
