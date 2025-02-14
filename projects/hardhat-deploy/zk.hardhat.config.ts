@@ -187,6 +187,11 @@ const config: HardhatUserConfig = {
       ethNetwork: "sepolia",
       ...createNetwork("zkcandy_sepolia"),
     },
+    zkcandy: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("zkcandy"),
+    },
     abstract_testnet: {
       zksync: true,
       ethNetwork: "sepolia",
