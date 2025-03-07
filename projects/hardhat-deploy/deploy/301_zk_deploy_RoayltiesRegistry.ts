@@ -8,7 +8,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Deploying contracts on network ${hre.network.name}`);
 
   const { deploy } = hre.deployments;
-  const { ethers } = hre;
   let { deployer } = await hre.getNamedAccounts();
 
   // hardware wallet support
