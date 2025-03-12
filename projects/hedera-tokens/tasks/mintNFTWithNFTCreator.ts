@@ -14,12 +14,11 @@ task("mintNFTWithNFTCreator", "Creates a non-fungible token with fix fee using t
     const tokenAddress = "0x0000000000000000000000000000000000572c88";
     // https://console.filebase.com/object/rarible-drops/Eclipse/cat/metadata/1.json
     // QmYVnaTG4Fo5kPxkuZCCUp7B5XT5P88aARQe44WcxYs11r
+
     
-    const mintTx = await rariNFTCreator.mintNft(tokenAddress, [
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-    ]);
+    const mintTx = await rariNFTCreator.mintNft(tokenAddress,     [
+        Buffer.from("ipfs://QmYVnaTG4Fo5kPxkuZCCUp7B5XT5P88aARQe44WcxYs11r"),
+      ]);
     const txReceipt = await mintTx.wait();
     console.log("Mint tx hash", mintTx.hash);
     
