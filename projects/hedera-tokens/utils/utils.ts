@@ -1,0 +1,1 @@
+export const DEPLOY_FROM = process.env.DEPLOY_FROM;
