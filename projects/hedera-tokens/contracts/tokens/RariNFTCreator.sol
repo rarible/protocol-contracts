@@ -7,7 +7,7 @@ import "../system-contracts/hedera-token-service/HederaTokenService.sol";
 import "../system-contracts/hedera-token-service/ExpiryHelper.sol";
 import "../system-contracts/hedera-token-service/KeyHelper.sol";
 
-contract NFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
+contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
 
     function createNft(
             string memory name, 

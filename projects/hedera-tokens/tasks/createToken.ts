@@ -15,7 +15,7 @@ task("createToken", "Creates a non-fungible token with fix fee using the precomp
 
     //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
     const createTokenTx = await tokenCreateContract.createNonFungibleTokenWithCustomFeesPublic(
-      factoryAddress, // treasury
+      deployer.address, // treasury
       feeCollector.address, // feeCollector
       true, // isRoyalties
       false, // isFixed
