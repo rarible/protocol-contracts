@@ -24,7 +24,7 @@ task("createToken", "Creates a non-fungible token with fix fee using the precomp
       false, // if true the fee will be in Hbar
       false, // if true use the current token for fixed fee
       {
-        value: "3000000000000000000", // = 3 hbars
+        value: "30000000000000000000", // = 30 hbars
         gasLimit: 1_000_000,
       }
     ); 

@@ -9,6 +9,9 @@ import "../system-contracts/hedera-token-service/KeyHelper.sol";
 
 contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
 
+
+    event CreatedToken(address tokenAddress);
+
     function createNft(
             string memory name, 
             string memory symbol, 
@@ -37,9 +40,15 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
         if(responseCode != HederaResponseCodes.SUCCESS){
             revert("Failed to create non-fungible token");
         }
+        
+        emit CreatedToken(createdToken);
+
         return createdToken;
     }
 
+    // IPFS content identifier (CID) that points to your metadata
+    // String CID = ("QmTzWcVfk88JRqjTpVwHzBeULRTNzHY7mnBSG42CpwHmPa") ;
+    // .addMetadata(CID.getBytes())
     function mintNft(
         address token,
         bytes[] memory metadata
