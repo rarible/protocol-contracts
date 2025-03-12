@@ -3,6 +3,7 @@
 // //the treasury and the supply key is the contract 
 import  "./createToken";
 import  "./createCollectionWithNFTCreator";
+import  "./mintNFTWithNFTCreator";
 // const {ethers} = require("hardhat");
 
 
