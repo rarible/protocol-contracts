@@ -1,0 +1,39 @@
+import { task } from "hardhat/config";
+import { RariHedera721DropFactory, RariHedera721DropFactory__factory } from "../typechain-types";
+
+task("createToken", "Creates a non-fungible token with fix fee using the precompiled contract")
+  .setAction(async (_, hre) => {
+    const signers = await hre.ethers.getSigners();
+    const [deployer, feeCollector] = signers;
+
+    console.log("Using deployer address:", deployer.address);
+    const contractName = "RariHedera721DropFactory";
+    const tokenCreateFactory = await hre.ethers.getContractFactory(contractName);
+    const factoryAddress = (await hre.deployments.get(contractName)).address
+    const tokenCreateContract = tokenCreateFactory.attach(factoryAddress) as RariHedera721DropFactory;
+    console.log(`using factory: ${factoryAddress}`);
+
+    //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
+    const createTokenTx = await tokenCreateContract.createNonFungibleTokenWithCustomFeesPublic(
+      factoryAddress, // treasury
+      feeCollector.address, // feeCollector
+      true, // isRoyalties
+      false, // isFixed
+      0,  // amount for fixedFee
+      '0x0000000000000000000000000000000000000000', //address for token of fixedFee, if set to 0x0, the fee will be in hbars
+      false, // if true the fee will be in Hbar
+      false, // if true use the current token for fixed fee
+      {
+        value: "3000000000000000000", // = 3 hbars
+        gasLimit: 1_000_000,
+      }
+    ); 
+    const txReceipt = await createTokenTx.wait();
+    const parsedLogs = txReceipt.logs.map(log => tokenCreateContract.interface.parseLog(log)).filter(Boolean);
+    const tokenAddress = parsedLogs.filter(
+      (e) => e.eventFragment.name === "CreatedToken"
+    )[0].args[0];
+    console.log("Token created at address", tokenAddress);
+
+    console.log("createNft task is not fully implemented. See TS code in comment above!");
+});
