@@ -15,11 +15,15 @@ task("createCollectionWithNFTCreator", "Creates a non-fungible token with fix fe
 
     //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
     const createTokenTx = await rariNFTCreator.createNft(
-      "RariHederaCollection",
-      "RaraiHederaCollectionSymbol",
-      "MEMO",
+      "RariHederaCollection1",
+      "RaraiHederaCollectionSymbol1",
+      "MEMO00000123477",
       1000,
-      7_000_000
+      8000000,
+      {
+        value: "12000000000000000000", // = 12 hbars
+        gasLimit: 1_000_000,
+      }
     );
 
     

@@ -24,23 +24,27 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
         // Set this contract as supply for the token
         keys[0] = getSingleKey(KeyType.SUPPLY, KeyValueType.CONTRACT_ID, address(this));
 
-        IHederaTokenService.HederaToken memory token;
-        token.name = name;
-        token.symbol = symbol;
-        token.memo = memo;
-        token.treasury = address(this);
-        token.tokenSupplyType = true; // set supply to FINITE
-        token.maxSupply = maxSupply;
-        token.tokenKeys = keys;
-        token.freezeDefault = false;
-        token.expiry = createAutoRenewExpiry(address(this), autoRenewPeriod); // Contract auto-renews the token
+        IHederaTokenService.HederaToken memory token = IHederaTokenService.HederaToken(
+            name, symbol, address(this), memo, true, maxSupply, false, keys, createAutoRenewExpiry(address(this), autoRenewPeriod)
+        );
+
+        // IHederaTokenService.HederaToken memory token;
+        // token.name = name;
+        // token.symbol = symbol;
+        // token.memo = memo;
+        // token.treasury = address(this);
+        // token.tokenSupplyType = true; // set supply to FINITE
+        // token.maxSupply = maxSupply;
+        // token.tokenKeys = keys;
+        // token.freezeDefault = false;
+        // token.expiry = createAutoRenewExpiry(address(this), autoRenewPeriod); // Contract auto-renews the token
 
         (int responseCode, address createdToken) = HederaTokenService.createNonFungibleToken(token);
 
         if(responseCode != HederaResponseCodes.SUCCESS){
             revert("Failed to create non-fungible token");
         }
-        
+
         emit CreatedToken(createdToken);
 
         return createdToken;
