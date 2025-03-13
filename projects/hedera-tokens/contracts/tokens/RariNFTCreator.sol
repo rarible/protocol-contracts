@@ -148,7 +148,10 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             revert("Failed to mint non-fungible token");
         }
 
-        HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
+        int responseCodeTransfer = HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
+        if (responseCodeTransfer != HederaResponseCodes.SUCCESS) {
+            revert("Failed to transfer non-fungible token");
+        }
 
         return serial[0];
     }
@@ -172,7 +175,10 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             revert("Failed to mint non-fungible token");
         }
         
-        HederaTokenService.transferNFT(token, address(this), to, serial[0]);
+        int responseCodeTransfer = HederaTokenService.transferNFT(token, address(this), to, serial[0]);
+        if (responseCodeTransfer != HederaResponseCodes.SUCCESS) {
+            revert("Failed to transfer non-fungible token");
+        }
 
         return serial[0];
     }
@@ -205,7 +211,10 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             revert("Failed to mint non-fungible token");
         }
 
-        HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
+        int responseCodeTransfer = HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
+        if (responseCodeTransfer != HederaResponseCodes.SUCCESS) {
+            revert("Failed to transfer non-fungible token");
+        }
 
         return serial[0];
     }
