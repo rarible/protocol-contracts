@@ -13,52 +13,29 @@ task("createNftCollectionWithRoalties", "Creates a non-fungible token with fix f
     const rariNFTCreator = tokenCreateFactory.attach(factoryAddress) as RariNFTCreator;
     console.log(`using factory: ${factoryAddress}`);
 
-    const royaltyParams = {
-      isRoyaltyFee: false,
-      isMultipleRoyaltyFee: false,
-      feeAmount: 10,
-      fixedFeeTokenAddress: "0x0000000000000000000000000000000000000000",
-      useHbarsForPayment: false,
-      feeCollector: deployer.address,
-      secondfeeAmount: 0,
-      secondFixedFeeTokenAddress: "0x0000000000000000000000000000000000000000",
-      useHbarsForPaymentSecondFixFee: false,
-      useCurrentTokenForPaymentSecondFixFee: false,
-      feeCollector2: feeCollector.address,
-    }
-
-    const fixFeeParams = {
-      isFractionalFee: false,
-      isFixedFee: false,
-      useCurrentTokenForPayment: false,
-      isMultipleFixedFee: false,
-      feeAmount: 0,
-      fixedFeeTokenAddress: "0x0000000000000000000000000000000000000000",
-      useHbarsForPayment: false,
-      feeCollector: deployer.address,
-      secondfeeAmount: 0,
-      secondFixedFeeTokenAddress: "0x0000000000000000000000000000000000000000",
-      useHbarsForPaymentSecondFixFee: false,
-      useCurrentTokenForPaymentSecondFixFee: false,
-      feeCollector2: feeCollector.address,
-    }
 
     //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
-    const createTokenTx = await rariNFTCreator.createNftCollectionWithFeesAndRoyalty(
-      "RaribleCollectionWithRoyalties",
-      "CAT",
-      "MEMOCAT01",
-      1000,
-      8000000,
-      fixFeeParams,
-      royaltyParams,
-      {
-        value: "100000000000000000000", // = 100 hbars
-        gasLimit: 1_000_000,
-      }
-    );
+    const createTokenTx = await rariNFTCreator.createNonFungibleTokenWithCustomFeesPublic(
+        "RaribleCollectionWithRoyalties",
+        "CAT",
+        "MEMOCAT06",
+        1000,
+        "ipfs://QmaTZvdDwnNagPwniwbmZNUE6Frd4y3cRYMju6PZ9ZKtKQ",
+        {
+            feeCollector: deployer.address,
+            isRoyaltyFee: true,
+            isFixedFee: false,
+            feeAmount: 10,
+            fixedFeeTokenAddress: '0x0000000000000000000000000000000000000000', //address for token of fixedFee, if set to 0x0, the fee will be in hbars
+            useHbarsForPayment: true,
+            useCurrentTokenForPayment: false,
+        },
+        {
+            value: "50000000000000000000", // = 30 hbars
+            gasLimit: 4_000_000,
+        }
+    ); 
 
-    
     const txReceipt = await createTokenTx.wait();
     const parsedLogs = txReceipt.logs.map(log => rariNFTCreator.interface.parseLog(log)).filter(Boolean);
     const tokenAddress = parsedLogs.filter(
