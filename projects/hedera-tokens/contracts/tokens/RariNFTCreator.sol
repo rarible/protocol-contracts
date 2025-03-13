@@ -129,7 +129,7 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
         return bytes(input);
     }
 
-    // token id starts at 0
+    // token id starts at 1
     function mintNft(address token) external returns (int64) {
         string memory uri = baseUri[token];
         (int responseCode, IHederaTokenService.TokenInfo memory tokenInfo) =
@@ -138,8 +138,8 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Failed to mint non-fungible token");
         }
-        int64 nextTokenId = tokenInfo.totalSupply;
-        string memory tokenUri = string.concat(uri, "/", int64ToString(totalSupply), ".json");
+        int64 nextTokenId = tokenInfo.totalSupply + 1;
+        string memory tokenUri = string.concat(uri, "/", int64ToString(nextTokenId), ".json");
         bytes[] memory metadata = new bytes[](1);
         metadata[0] = bytes(tokenUri);
 
