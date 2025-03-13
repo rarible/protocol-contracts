@@ -6,8 +6,6 @@ import "./SafeHTS.sol";
 
 contract SafeOperations is SafeHTS {
 
-    bool finiteTotalSupplyType = true;
-
     event TokenCreated(address);
     event MintedNft(int64[], int64);
     event BurnToken(int64);
@@ -104,7 +102,7 @@ contract SafeOperations is SafeHTS {
             0, msg.sender, 8000000
         );
         IHederaTokenService.HederaToken memory token = IHederaTokenService.HederaToken(
-            "tokenName", "tokenSymbol", msg.sender, "memo", finiteTotalSupplyType, 1000, false, getKeys(), expiry
+            "tokenName", "tokenSymbol", msg.sender, "memo", true, 1000, false, getKeys(), expiry
         );
         (tokenAddress) = safeCreateNonFungibleToken(token);
         emit ResponseCode(HederaResponseCodes.SUCCESS);

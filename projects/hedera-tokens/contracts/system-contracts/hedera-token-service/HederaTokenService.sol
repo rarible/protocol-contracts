@@ -704,46 +704,4 @@ abstract contract HederaTokenService {
             abi.encodeWithSelector(IHederaTokenService.updateNonFungibleTokenCustomFees.selector, token, fixedFees, royaltyFees));
         responseCode = success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
     }
-
-    /// @notice Airdrop one or more tokens to one or more accounts
-    /// @param tokenTransfers Array of token transfer lists containing token addresses and recipient details
-    /// @return responseCode The response code for the status of the request. SUCCESS is 22.
-    function airdropTokens(IHederaTokenService.TokenTransferList[] memory tokenTransfers) internal returns (int64 responseCode) {
-        (bool success, bytes memory result) = precompileAddress.call(
-            abi.encodeWithSelector(IHederaTokenService.airdropTokens.selector, tokenTransfers));
-
-        (responseCode) = success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
-    }
-
-    /// @notice Cancels pending airdrops that have not yet been claimed
-    /// @param pendingAirdrops Array of pending airdrops to cancel
-    /// @return responseCode The response code for the status of the request. SUCCESS is 22.
-    function cancelAirdrops(IHederaTokenService.PendingAirdrop[] memory pendingAirdrops) internal returns (int64 responseCode) {
-        (bool success, bytes memory result) = precompileAddress.call(
-            abi.encodeWithSelector(IHederaTokenService.cancelAirdrops.selector, pendingAirdrops)
-        );
-        (responseCode) = success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
-    }
-
-    /// @notice Claims pending airdrops that were sent to the calling account
-    /// @param pendingAirdrops Array of pending airdrops to claim
-    /// @return responseCode The response code for the status of the request. SUCCESS is 22.
-    function claimAirdrops(IHederaTokenService.PendingAirdrop[] memory pendingAirdrops) internal returns (int64 responseCode) {
-        (bool success, bytes memory result) = precompileAddress.call(
-            abi.encodeWithSelector(IHederaTokenService.claimAirdrops.selector, pendingAirdrops)
-        );
-        (responseCode) = success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
-    }
-
-    /// @notice Rejects one or more tokens by transferring their full balance from the requesting account to the treasury
-    /// @param rejectingAddress The address rejecting the tokens
-    /// @param ftAddresses Array of fungible token addresses to reject
-    /// @param nftIds Array of NFT IDs to reject
-    /// @return responseCode The response code for the status of the request. SUCCESS is 22.
-    function rejectTokens(address rejectingAddress, address[] memory ftAddresses, IHederaTokenService.NftID[] memory nftIds) internal returns (int64 responseCode) {
-        (bool success, bytes memory result) = precompileAddress.call(
-            abi.encodeWithSelector(IHederaTokenService.rejectTokens.selector, rejectingAddress, ftAddresses, nftIds)
-        );
-        (responseCode) = success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
-    }
 }
