@@ -6,7 +6,7 @@ import "../system-contracts/hedera-token-service/IHederaTokenService.sol";
 import "../system-contracts/hedera-token-service/HederaTokenService.sol";
 import "../system-contracts/hedera-token-service/ExpiryHelper.sol";
 import "../system-contracts/hedera-token-service/KeyHelper.sol";
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
 
@@ -130,7 +130,7 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
     }
 
     // token id starts at 1
-    function mintNft(address token) external returns (int64) {
+    function mintNft(address token) external payable returns (int64) {
         string memory uri = baseUri[token];
         (int responseCode, IHederaTokenService.TokenInfo memory tokenInfo) =
             HederaTokenService.getTokenInfo(token);
@@ -148,20 +148,41 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             revert("Failed to mint non-fungible token");
         }
 
+        HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
+
         return serial[0];
     }
+
+        // token id starts at 1
+    function mintNftTo(address token, address to) external payable returns (int64) {
+        string memory uri = baseUri[token];
+        (int responseCode, IHederaTokenService.TokenInfo memory tokenInfo) =
+            HederaTokenService.getTokenInfo(token);
+
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Failed to mint non-fungible token");
+        }
+        int64 nextTokenId = tokenInfo.totalSupply + 1;
+        string memory tokenUri = string.concat(uri, "/", int64ToString(nextTokenId), ".json");
+        bytes[] memory metadata = new bytes[](1);
+        metadata[0] = bytes(tokenUri);
+
+        (int response, , int64[] memory serial) = HederaTokenService.mintToken(token, 0, metadata);
+        if (response != HederaResponseCodes.SUCCESS) {
+            revert("Failed to mint non-fungible token");
+        }
+        
+        HederaTokenService.transferNFT(token, address(this), to, serial[0]);
+
+        return serial[0];
+    }
+
 
     /**
      * @dev Example function that logs both the input metadata and a
      *      newly-generated metadata to compare the two.
      */
     function mintNftWithMetadata(address token, bytes[] memory metadata) external returns (int64) {
-        // Log each item of the input metadata
-        console.log("Logging input metadata array:");
-        for (uint i = 0; i < metadata.length; i++) {
-            console.log("- metadata[%s]:", i);
-            console.logBytes(metadata[i]);
-        }
 
         (int response, , int64[] memory serial) = HederaTokenService.mintToken(token, 0, metadata);
 
@@ -180,17 +201,11 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
         bytes[] memory metadatagen = new bytes[](1);
         metadatagen[0] = bytes(tokenUri);
 
-        console.log("Generated metadata array:");
-        for (uint i = 0; i < metadatagen.length; i++) {
-            console.log("- metadatagen[%s]:", i);
-            console.logBytes(metadatagen[i]);
-        }
-
-        console.log("tokenUri:", tokenUri);
-
         if (response != HederaResponseCodes.SUCCESS) {
             revert("Failed to mint non-fungible token");
         }
+
+        HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
 
         return serial[0];
     }

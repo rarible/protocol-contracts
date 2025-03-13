@@ -19,6 +19,4 @@ task("transferNFT", "Mint a non-fungible token with fix fee using the precompile
     const txReceipt = await mintTx.wait();
     console.log("Mint tx hash", mintTx.hash);
     
-
-    console.log("createNft task is not fully implemented. See TS code in comment above!");
 });
