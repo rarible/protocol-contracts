@@ -4,6 +4,8 @@
 import  "./createToken";
 import  "./createCollectionWithNFTCreator";
 import  "./mintNFTWithNFTCreator";
+import  "./createNftCollectionWithRoalties";
+import  "./mintNFT";
 // const {ethers} = require("hardhat");
 
 

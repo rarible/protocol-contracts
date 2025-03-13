@@ -14,10 +14,10 @@ task("createCollectionWithNFTCreator", "Creates a non-fungible token with fix fe
     console.log(`using factory: ${factoryAddress}`);
 
     //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
-    const createTokenTx = await rariNFTCreator.createNft(
+    const createTokenTx = await rariNFTCreator.createNftCollection(
       "RaribleCollection",
       "SYMOL",
-      "MEMO00000123478",
+      "MEMO00000123479",
       1000,
       8000000,
       {
