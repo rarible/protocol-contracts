@@ -3,7 +3,6 @@ import { RariNFTCreator, RariNFTCreator__factory } from "../typechain-types";
 
 task("mintNFT", "Mint a non-fungible token with fix fee using the precompiled contract")
   .addParam("tokenAddress", "The address of the token to mint")
-  .addParam("tokenURI", "The URI of the token to mint")
   .setAction(async (params, hre) => {
     const signers = await hre.ethers.getSigners();
     const [deployer, feeCollector] = signers;
@@ -14,12 +13,8 @@ task("mintNFT", "Mint a non-fungible token with fix fee using the precompiled co
     const factoryAddress = (await hre.deployments.get(contractName)).address
     const rariNFTCreator = tokenCreateFactory.attach(factoryAddress) as RariNFTCreator;
     const tokenAddress = params.tokenAddress;
-    // https://console.filebase.com/object/rarible-drops/Eclipse/cat/metadata/1.json
-    // QmYVnaTG4Fo5kPxkuZCCUp7B5XT5P88aARQe44WcxYs11r
-
     
     const mintTx = await rariNFTCreator.mintNft(tokenAddress);
-    const txReceipt = await mintTx.wait();
     console.log("Mint tx hash", mintTx.hash);
     
 

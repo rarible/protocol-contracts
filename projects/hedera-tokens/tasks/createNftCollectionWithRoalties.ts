@@ -18,9 +18,9 @@ task("createNftCollectionWithRoalties", "Creates a non-fungible token with fix f
     const createTokenTx = await rariNFTCreator.createNonFungibleTokenWithCustomFeesPublic(
         "RaribleCollectionWithRoyalties",
         "CAT",
-        "MEMOCAT06",
-        1000,
-        "ipfs://QmaTZvdDwnNagPwniwbmZNUE6Frd4y3cRYMju6PZ9ZKtKQ",
+        "MEMOCAT07",
+        1001,
+        "ipfs://QmeSQDV3oVmrwpbBAecu5BLmCFZwd1KRkWMssFXHZBY424",
         {
             feeCollector: deployer.address,
             isRoyaltyFee: true,
