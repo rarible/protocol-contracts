@@ -14,7 +14,8 @@ task("mintNFT", "Mint a non-fungible token with fix fee using the precompiled co
     const rariNFTCreator = tokenCreateFactory.attach(factoryAddress) as RariNFTCreator;
     const collectionAddress = params.collectionAddress;
     
-    const mintTx = await rariNFTCreator.mintNft(collectionAddress,);
+    const mintTx = await rariNFTCreator.mintNft(collectionAddress, {gasLimit: 4_000_000});
+
+    const txReceipt = await mintTx.wait();
     console.log("Mint tx hash", mintTx.hash);
-    
 });

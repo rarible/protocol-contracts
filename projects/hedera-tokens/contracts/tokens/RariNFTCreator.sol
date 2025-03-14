@@ -21,6 +21,7 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
     }
 
     event CreatedToken(address tokenAddress);
+    event MintTokenStatus(int256 status);
 
     mapping(address => string) public baseUri;
 
@@ -136,7 +137,7 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             HederaTokenService.getTokenInfo(token);
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Failed to mint non-fungible token");
+            revert(string.concat("Failed to get infor for collection non-fungible token; status: ", intToString(int256(responseCode))));
         }
         int64 nextTokenId = tokenInfo.totalSupply + 1;
         string memory tokenUri = string.concat(uri, "/", int64ToString(nextTokenId), ".json");
@@ -145,12 +146,12 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
 
         (int response, , int64[] memory serial) = HederaTokenService.mintToken(token, 0, metadata);
         if (response != HederaResponseCodes.SUCCESS) {
-            revert("Failed to mint non-fungible token");
+            revert(string.concat("Failed to mint non-fungible token; status: ", intToString(int256(response))));
         }
-
+        
         int responseCodeTransfer = HederaTokenService.transferNFT(token, address(this), msg.sender, serial[0]);
         if (responseCodeTransfer != HederaResponseCodes.SUCCESS) {
-            revert("Failed to transfer non-fungible token");
+            revert(string.concat("Failed to transfer non-fungible token; status: ", intToString(int256(responseCodeTransfer)), " tokenId: ", intToString(int256(serial[0]))));
         }
 
         return serial[0];
@@ -163,7 +164,7 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             HederaTokenService.getTokenInfo(token);
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Failed to mint non-fungible token");
+            revert(string.concat("Failed to get infor for collection non-fungible token; status: ", intToString(int256(responseCode))));
         }
         int64 nextTokenId = tokenInfo.totalSupply + 1;
         string memory tokenUri = string.concat(uri, "/", int64ToString(nextTokenId), ".json");
@@ -172,12 +173,12 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
 
         (int response, , int64[] memory serial) = HederaTokenService.mintToken(token, 0, metadata);
         if (response != HederaResponseCodes.SUCCESS) {
-            revert("Failed to mint non-fungible token");
+            revert(string.concat("Failed to mint non-fungible token; status: ", intToString(int256(response))));
         }
         
         int responseCodeTransfer = HederaTokenService.transferNFT(token, address(this), to, serial[0]);
         if (responseCodeTransfer != HederaResponseCodes.SUCCESS) {
-            revert("Failed to transfer non-fungible token");
+            revert(string.concat("Failed to transfer non-fungible token; status: ", intToString(int256(responseCodeTransfer))));
         }
 
         return serial[0];
@@ -266,6 +267,50 @@ contract RariNFTCreator is ExpiryHelper, KeyHelper, HederaTokenService {
             buffer[0] = '-';
         }
 
+        return string(buffer);
+    }
+
+    function intToString(int256 value) internal pure returns (string memory) {
+        // Special case: zero
+        if (value == 0) {
+            return "0";
+        }
+        
+        bool negative = value < 0;
+        // Take absolute value (unchecked to allow minimum int256)
+        uint256 tempValue = negative ? uint256(-value) : uint256(value);
+        
+        // Determine length of the string
+        uint256 digits;
+        uint256 temp = tempValue;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        
+        // If negative, we need extra space for '-'
+        if (negative) {
+            digits++;
+        }
+        
+        // Create a buffer for the characters
+        bytes memory buffer = new bytes(digits);
+        uint256 index = digits - 1;
+        
+        // Write digits into buffer (in reverse order)
+        while (tempValue != 0) {
+            buffer[index] = bytes1(uint8(48 + tempValue % 10)); // '0' = 48
+            tempValue /= 10;
+            if (index > 0) {
+                index--;
+            }
+        }
+        
+        // If negative, set the '-' sign
+        if (negative) {
+            buffer[0] = "-";
+        }
+        
         return string(buffer);
     }
 }

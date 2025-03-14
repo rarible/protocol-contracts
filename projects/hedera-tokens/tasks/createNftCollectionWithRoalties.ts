@@ -16,9 +16,9 @@ task("createNftCollectionWithRoalties", "Creates a non-fungible token with fix f
 
     //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
     const createTokenTx = await rariNFTCreator.createNonFungibleTokenWithCustomFeesPublic(
-        "Rarible Collection With Royalties 08",
-        "CAT08",
-        "MEMOCAT08",
+        "Rarible Collection With Royalties 10",
+        "CAT10",
+        "MEMOCAT10",
         1001,
         "ipfs://QmeSQDV3oVmrwpbBAecu5BLmCFZwd1KRkWMssFXHZBY424",
         {
