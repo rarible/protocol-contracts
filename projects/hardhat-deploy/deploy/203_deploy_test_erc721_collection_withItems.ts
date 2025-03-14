@@ -56,9 +56,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
         let to: string;
         if (i <= 20) {
-            to = "0x1d5527FdE1e811F6530F0AfCf5A82e7fB371204c";
-        } else if (i <= 40) {
             to = signer.address;
+        } else if (i <= 40) {
+            to = "0x1d5527FdE1e811F6530F0AfCf5A82e7fB371204c";
         } else {
             to = "0xcFD34E597be9770639B809996000e06663948095";
         }
@@ -89,4 +89,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['test-erc721-collection-withItems'];
+func.tags = ['test-erc721-collection-withItems', '203'];
