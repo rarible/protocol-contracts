@@ -2,14 +2,13 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { ERC721RaribleFactoryC2, ERC721RaribleFactoryC2__factory } from "../typechain-types";
 import { ERC721RaribleMinimal, ERC721RaribleMinimal__factory } from "../typechain-types";
-import { getConfig } from '../utils/utils';
-import { ethers, BigNumber } from 'ethers';
+
+import { BigNumber } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
 
-    const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
     const signer = await hre.ethers.getSigner(deployer);
 
     let contractName: string = "ERC721RaribleFactoryC2";
@@ -63,26 +62,26 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             to = "0xcFD34E597be9770639B809996000e06663948095";
         }
 
-        // try {
-        //     const tx = await erc721.mintAndTransfer({
-        //         tokenId: tokenId.toString(),
-        //         tokenURI: `https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/${i}.json`,
-        //         creators: [{
-        //         account: signer.address,
-        //         value: 10000
-        //     }],
-        //     royalties: [{
-        //         account: signer.address,
-        //         value: 100
-        //     }],
-        //     // Must be length 1 to match creators' length of 1
-        //     signatures: ["0x"]
-        //     }, to);
+        try {
+            const tx = await erc721.mintAndTransfer({
+                tokenId: tokenId.toString(),
+                tokenURI: `https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/${i}.json`,
+                creators: [{
+                account: signer.address,
+                value: 10000
+            }],
+            royalties: [{
+                account: signer.address,
+                value: 100
+            }],
+            // Must be length 1 to match creators' length of 1
+            signatures: ["0x"]
+            }, to);
 
-        //     console.log(`Minted tokenId #${i}, tx: ${tx.hash}; tokenId: ${tokenId}`);
-        // } catch (error) {
-        //     console.log(`error: ${error}`);
-        // }
+            console.log(`Minted tokenId #${i}, tx: ${tx.hash}; tokenId: ${tokenId}`);
+        } catch (error) {
+            console.log(`error: ${error}`);
+        }
         const owner = await erc721.ownerOf(tokenId.toString());
         console.log(`Token #${i}, collection: ${address}, tokenId: ${tokenId}, owner: ${owner} ${await erc721.balanceOf(owner)}`);
     }
