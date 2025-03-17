@@ -29,7 +29,7 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      },
+      }
     ],
     settings: {
       metadata: {
