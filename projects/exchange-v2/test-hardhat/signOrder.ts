@@ -1,6 +1,6 @@
 // signOrder.ts
 
-import { BigNumber } from "ethers";
+import { BigNumber, Signer } from "ethers";
 import { createTypeData, signTypedData, signTypedData_v4 } from "./EIP712";
 import { LibOrder } from "@rarible/exchange-v2/typechain-types/contracts/ExchangeV2";
 /**
@@ -129,4 +129,91 @@ export async function signOrder(
     const { sig } = await signTypedData_v4(web3, account, dataToSign);
     return sig;
   }
+}
+
+
+import { utils } from "ethers";
+import { _TypedDataEncoder } from "@ethersproject/hash";
+
+export async function signOrderEthers(
+  order: LibOrder.OrderStruct,
+  signer: Signer,
+  verifyingContract: string
+): Promise<string> {
+  const chainId = await signer.getChainId();
+
+  // EIP-712 domain
+  const domain = {
+    name: "Exchange",
+    version: "2",
+    chainId,
+    verifyingContract,
+  };
+
+  // Must match the shape you specify in your "types"
+  const types = {
+    AssetType: [
+      { name: "assetClass", type: "bytes4" },
+      { name: "data", type: "bytes" },
+    ],
+    Asset: [
+      { name: "assetType", type: "AssetType" },
+      { name: "value", type: "uint256" },
+    ],
+    Order: [
+      { name: "maker", type: "address" },
+      { name: "makeAsset", type: "Asset" },
+      { name: "taker", type: "address" },
+      { name: "takeAsset", type: "Asset" },
+      { name: "salt", type: "uint256" },
+      { name: "start", type: "uint256" },
+      { name: "end", type: "uint256" },
+      { name: "dataType", type: "bytes4" },
+      { name: "data", type: "bytes" },
+    ],
+  };
+
+  // Values must be strictly typed as strings, numbers, or arrays in the same format that EIP-712 expects
+  // Convert BigNumbers to string, etc.
+  const value = {
+    maker: order.maker,
+    makeAsset: {
+      assetType: {
+        assetClass: order.makeAsset.assetType.assetClass,
+        data: order.makeAsset.assetType.data,
+      },
+      value: order.makeAsset.value.toString(),
+    },
+    taker: order.taker,
+    takeAsset: {
+      assetType: {
+        assetClass: order.takeAsset.assetType.assetClass,
+        data: order.takeAsset.assetType.data,
+      },
+      value: order.takeAsset.value.toString(),
+    },
+    salt: order.salt.toString(),
+    start: order.start.toString(),
+    end: order.end.toString(),
+    dataType: order.dataType,
+    data: order.data,
+  };
+
+  // Compute domain separator + struct hash, then sign the resulting bytes
+  const domainSeparator = _TypedDataEncoder.hashDomain(domain);
+  const structHash = _TypedDataEncoder.hashStruct("Order", types, value);
+
+  // EIP-712 prefix
+  // The final signed hash is keccak256("\x19\x01" + domainSeparator + structHash)
+  const eip712Hash = utils.keccak256(
+    utils.concat([
+      utils.toUtf8Bytes("\x19\x01"),
+      utils.arrayify(domainSeparator),
+      utils.arrayify(structHash),
+    ])
+  );
+
+  // Now sign the EIP-712 hash by standard personal signing of those 32 bytes
+  const signature = await signer.signMessage(utils.arrayify(eip712Hash));
+  return signature;
 }

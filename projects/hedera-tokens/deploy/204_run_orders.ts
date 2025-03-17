@@ -7,7 +7,7 @@
 import { LibAsset, enc, ERC721, ETH, encBigNumber, ZERO, ORDER_DATA_V3 } from "@rarible/exchange-v2";
 import { ExchangeMetaV2, ExchangeMetaV2__factory } from "@rarible/exchange-v2";
 import { LibOrder } from "@rarible/exchange-v2/typechain-types/contracts/ExchangeV2";
-import { signOrder } from "@rarible/exchange-v2/test-hardhat/signOrder";
+import { signOrder, signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { ERC721RaribleFactoryC2, ERC721RaribleFactoryC2__factory } from "@rarible/tokens";
@@ -17,6 +17,7 @@ import { ethers, BigNumber } from 'ethers';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
+    const provider = hre.ethers.getDefaultProvider();
     const [signer, makerRight] = await hre.ethers.getSigners();
 
     const erc721Address = "0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce";
@@ -68,9 +69,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     let exchangeContractName: string = "ExchangeMetaV2";
     const exchangeAddress = (await hre.deployments.get(exchangeContractName)).address
     const exchange: ExchangeMetaV2 = ExchangeMetaV2__factory.connect(exchangeAddress, signer);
-    const leftSig = await signOrder(left, signer.address, exchangeAddress, hre.ethers);
-    const rightSig = await signOrder(right, makerRight.address, exchangeAddress, hre.ethers);
-    exchange.matchOrders(left, leftSig, right, rightSig);
+    const leftSig = await signOrderEthers(left, signer, exchangeAddress);
+    const rightSig = await signOrderEthers(right, makerRight, exchangeAddress);
+    const tx = await exchange.matchOrders(left, leftSig, right, rightSig);
+    console.log(`Match orders tx: ${tx.hash}`);
 
     // const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
     // const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
