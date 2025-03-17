@@ -4,80 +4,87 @@
 // import { ZERO, ORDER_DATA_V2, ORDER_DATA_V3, verifyBalanceChangeReturnTx, ERC721, enc, ETH } from "./utils";
 // import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // import { Signer } from "zksync-web3";
-import { LibAsset, enc, ERC721, ETH, encBigNumber, ZERO, ORDER_DATA_V3 } from "@rarible/exchange-v2";
+import { encBigNumber, ERC721, ETH, ZERO, ORDER_DATA_V3 } from "@rarible/exchange-v2/test-hardhat/utils";
 import { ExchangeMetaV2, ExchangeMetaV2__factory } from "@rarible/exchange-v2";
 import { LibOrder } from "@rarible/exchange-v2/typechain-types/contracts/ExchangeV2";
-import { signOrder, signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
+import { signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { ERC721RaribleFactoryC2, ERC721RaribleFactoryC2__factory } from "@rarible/tokens";
 import { ERC721RaribleMinimal, ERC721RaribleMinimal__factory } from "@rarible/tokens";
-import { ethers, BigNumber } from 'ethers';
+import { BigNumber } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const { deploy } = hre.deployments;
-    const { deployer } = await hre.getNamedAccounts();
-    const provider = hre.ethers.getDefaultProvider();
-    const [signer, makerRight] = await hre.ethers.getSigners();
+    // Get signers
+    const signers = await hre.ethers.getSigners();
+    const signer = signers[0];
+    const makerRight = signers[1];
 
+    // Example NFT
     const erc721Address = "0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce";
     const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(erc721Address, signer);
-    const erc721TokenId1 = BigNumber.from("48827653089252063377009650346866330927455685249615897861731929327047129694209");
-    const owner = await erc721.ownerOf(erc721TokenId1);
-    console.log(`Token #1, collection: ${erc721Address}, tokenId: ${erc721TokenId1}, owner: ${owner} ${await erc721.balanceOf(owner)}`);
+    const tokenId = BigNumber.from("48827653089252063377009650346866330927455685249615897861731929327047129694209");
+    console.log(`tokenId = ${tokenId.toString()}`);
 
-    const nftAssetType = {
-        assetClass: ERC721,
-        data: encBigNumber(erc721.address, erc721TokenId1),
-    }
-    const nftAsset = {
-        assetType: nftAssetType,
+    // Build orders
+    const leftOrder: LibOrder.OrderStruct = {
+      maker: signer.address,
+      makeAsset: {
+        assetType: {
+          assetClass: ERC721,
+          data: encBigNumber(erc721.address, tokenId),
+        },
         value: 1
-    }
-    const ethAssetType = {
-        assetClass: ETH,
-        data: "0x",
-    }
-    const ethAsset = {
-        assetType: ethAssetType,
+      },
+      taker: ZERO,
+      takeAsset: {
+        assetType: {
+          assetClass: ETH,
+          data: "0x",
+        },
         value: 1000
-    }
-    const left: LibOrder.OrderStruct = {
-        maker: signer.address,
-        makeAsset: nftAsset,
-        taker: ZERO,
-        takeAsset: ethAsset,
-        salt: 1,
-        start: 0,
-        end: 0,
-        dataType: ORDER_DATA_V3,
-        data: "0x"
-    }
+      },
+      salt: 1,
+      start: 0,
+      end: 0,
+      dataType: ORDER_DATA_V3,
+      data: "0x"
+    };
 
-    const right: LibOrder.OrderStruct = {
-        maker: makerRight.address,
-        makeAsset: ethAsset,
-        taker: ZERO,
-        takeAsset: nftAsset,
-        salt: 1,
-        start: 0,
-        end: 0,
-        dataType: ORDER_DATA_V3,
-        data: "0x"
-    }
+    const rightOrder: LibOrder.OrderStruct = {
+      maker: makerRight.address,
+      makeAsset: {
+        assetType: {
+          assetClass: ETH,
+          data: "0x"
+        },
+        value: 1000
+      },
+      taker: ZERO,
+      takeAsset: {
+        assetType: {
+          assetClass: ERC721,
+          data: encBigNumber(erc721.address, tokenId),
+        },
+        value: 1
+      },
+      salt: 1,
+      start: 0,
+      end: 0,
+      dataType: ORDER_DATA_V3,
+      data: "0x"
+    };
 
-    let exchangeContractName: string = "ExchangeMetaV2";
-    const exchangeAddress = (await hre.deployments.get(exchangeContractName)).address
-    const exchange: ExchangeMetaV2 = ExchangeMetaV2__factory.connect(exchangeAddress, signer);
-    const leftSig = await signOrderEthers(left, signer, exchangeAddress);
-    const rightSig = await signOrderEthers(right, makerRight, exchangeAddress);
-    const tx = await exchange.matchOrders(left, leftSig, right, rightSig);
-    console.log(`Match orders tx: ${tx.hash}`);
+    // Prepare the exchange contract
+    const exchangeDeployment = await hre.deployments.get("ExchangeMetaV2");
+    const exchange: ExchangeMetaV2 = ExchangeMetaV2__factory.connect(exchangeDeployment.address, signer);
 
-    // const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
-    // const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+    // EIP-712 sign with Ethers
+    const leftSig = await signOrderEthers(leftOrder, signer, exchangeDeployment.address);
+    const rightSig = await signOrderEthers(rightOrder, makerRight, exchangeDeployment.address);
 
-    
+    // Now match
+    const tx = await exchange.matchOrders(leftOrder, leftSig, rightOrder, rightSig);
+    console.log("matchOrders =>", tx.hash);
 };
 
 export default func;
