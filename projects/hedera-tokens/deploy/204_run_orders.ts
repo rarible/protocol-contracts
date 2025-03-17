@@ -4,8 +4,10 @@
 // import { ZERO, ORDER_DATA_V2, ORDER_DATA_V3, verifyBalanceChangeReturnTx, ERC721, enc, ETH } from "./utils";
 // import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // import { Signer } from "zksync-web3";
-import { LibOrder } from "@rarible/exchange-v2";
-
+import { LibAsset, enc, ERC721, ETH, encBigNumber, ZERO, ORDER_DATA_V3 } from "@rarible/exchange-v2";
+import { ExchangeMetaV2, ExchangeMetaV2__factory } from "@rarible/exchange-v2";
+import { LibOrder } from "@rarible/exchange-v2/typechain-types/contracts/ExchangeV2";
+import { signOrder } from "@rarible/exchange-v2/test-hardhat/signOrder";
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { ERC721RaribleFactoryC2, ERC721RaribleFactoryC2__factory } from "@rarible/tokens";
@@ -15,199 +17,79 @@ import { ethers, BigNumber } from 'ethers';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
+    const [signer, makerRight] = await hre.ethers.getSigners();
 
-    const signer = await hre.ethers.getSigner(deployer);
+    const erc721Address = "0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce";
+    const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(erc721Address, signer);
+    const erc721TokenId1 = BigNumber.from("48827653089252063377009650346866330927455685249615897861731929327047129694209");
+    const owner = await erc721.ownerOf(erc721TokenId1);
+    console.log(`Token #1, collection: ${erc721Address}, tokenId: ${erc721TokenId1}, owner: ${owner} ${await erc721.balanceOf(owner)}`);
 
-    let contractName: string = "ERC721RaribleFactoryC2";
-    const factoryAddress = (await hre.deployments.get(contractName)).address
-    console.log(`using factory: ${factoryAddress}`);
-
-    const factory: ERC721RaribleFactoryC2 = ERC721RaribleFactoryC2__factory.connect(factoryAddress, signer);
-
-    // Deploy new ERC721 using the factory
-    const address = await factory['getAddress(string,string,string,string,address[],uint256)'](
-        "Mystical Cats",
-        "MYSTICAL",
-        "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
-        "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
-        [signer.address],
-        140
-    );
-
-    try {
-        const tx = await factory['createToken(string,string,string,string,address[],uint256)'](
-            "Mystical Cats",
-            "MYSTICAL",
-            "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
-            "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
-            [signer.address],
-            140
-        );
-        console.log(`factory.createToken => tx: ${tx.hash}, address: ${address}`);
-    } catch (error) {
-        console.log(`error: ${error}`);
+    const nftAssetType = {
+        assetClass: ERC721,
+        data: encBigNumber(erc721.address, erc721TokenId1),
     }
-    console.log(`address: ${address}`);
-
-    const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(address, signer);
-    await erc721.addMinter(signer.address);
-
-    // Single function that loops from 1..60. Adjust to your liking:
-    for (let i = 1; i <= 60; i++) {
-        // Construct the tokenId with the top 160 bits = signer address
-        const tokenId = BigNumber
-            .from(signer.address) // 20-byte address
-            .shl(96)              // shift left by 96 bits
-            .add(i);              // i fits into the low 96 bits
-
-        let to: string;
-        if (i <= 20) {
-            to = signer.address;
-        } else if (i <= 40) {
-            to = "0x1d5527FdE1e811F6530F0AfCf5A82e7fB371204c";
-        } else {
-            to = "0xcFD34E597be9770639B809996000e06663948095";
-        }
-
-        // try {
-        //     const tx = await erc721.mintAndTransfer({
-        //         tokenId: tokenId.toString(),
-        //         tokenURI: `https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/${i}.json`,
-        //         creators: [{
-        //         account: signer.address,
-        //         value: 10000
-        //     }],
-        //     royalties: [{
-        //         account: signer.address,
-        //         value: 100
-        //     }],
-        //     // Must be length 1 to match creators' length of 1
-        //     signatures: ["0x"]
-        //     }, to);
-
-        //     console.log(`Minted tokenId #${i}, tx: ${tx.hash}; tokenId: ${tokenId}`);
-        // } catch (error) {
-        //     console.log(`error: ${error}`);
-        // }
-        const owner = await erc721.ownerOf(tokenId.toString());
-        console.log(`Token #${i}, collection: ${address}, tokenId: ${tokenId}, owner: ${owner} ${await erc721.balanceOf(owner)}`);
+    const nftAsset = {
+        assetType: nftAssetType,
+        value: 1
     }
+    const ethAssetType = {
+        assetClass: ETH,
+        data: "0x",
+    }
+    const ethAsset = {
+        assetType: ethAssetType,
+        value: 1000
+    }
+    const left: LibOrder.OrderStruct = {
+        maker: signer.address,
+        makeAsset: nftAsset,
+        taker: ZERO,
+        takeAsset: ethAsset,
+        salt: 1,
+        start: 0,
+        end: 0,
+        dataType: ORDER_DATA_V3,
+        data: "0x"
+    }
+
+    const right: LibOrder.OrderStruct = {
+        maker: makerRight.address,
+        makeAsset: ethAsset,
+        taker: ZERO,
+        takeAsset: nftAsset,
+        salt: 1,
+        start: 0,
+        end: 0,
+        dataType: ORDER_DATA_V3,
+        data: "0x"
+    }
+
+    let exchangeContractName: string = "ExchangeMetaV2";
+    const exchangeAddress = (await hre.deployments.get(exchangeContractName)).address
+    const exchange: ExchangeMetaV2 = ExchangeMetaV2__factory.connect(exchangeAddress, signer);
+    const leftSig = await signOrder(left, signer.address, exchangeAddress, hre.ethers);
+    const rightSig = await signOrder(right, makerRight.address, exchangeAddress, hre.ethers);
+    exchange.matchOrders(left, leftSig, right, rightSig);
+
+    // const right = Order(accounts[1], Asset(ERC20, enc(t1.address), 100), ZERO, Asset(ETH, "0x", 200), 1, 0, 0, "0xffffffff", "0x");
+    // const left = Order(accounts[2], Asset(ETH, "0x", 200), ZERO, Asset(ERC20, enc(t1.address), 100), 1, 0, 0, "0xffffffff", "0x");
+
+    
 };
 
 export default func;
-func.tags = ['test-erc721-collection-withItems', '203'];
+func.tags = ['run-orders', '204'];
 
-// describe("RaribleTransferManager", () => {
-//     let transferProxy: TransferProxyTest
-//     let erc20TransferProxy: ERC20TransferProxyTest
-//     let rtm: RaribleTransferManagerTest
-//     let royaltiesRegistry: TestRoyaltiesRegistry
-//     let protocol: SignerWithAddress
-//     let accounts: SignerWithAddress[]
 
-//     const erc721TokenId0 = 52;
-//     const erc721TokenId1 = 53;
-//     const erc1155TokenId1 = 54;
-//     const erc1155TokenId2 = 55;
-
-//     before(async () => {
-//         [protocol, ...accounts] = await ethers.getSigners()
-
-//         transferProxy = await ethers.getContractFactory("TransferProxyTest").then(f => f.deploy())
-//         erc20TransferProxy = await ethers.getContractFactory("ERC20TransferProxyTest").then(f => f.deploy());
-//         rtm = await ethers.getContractFactory("RaribleTransferManagerTest").then(f => f.deploy());
-//         royaltiesRegistry = await ethers.getContractFactory("TestRoyaltiesRegistry").then(f => f.deploy());
-
-//         await rtm.init____(transferProxy.address, erc20TransferProxy.address, 0, ZERO, royaltiesRegistry.address);
-//     });
-
-//     it("protocol fee is not paid in V2 order", async () => {
-//         await checkProtocolFee(ORDER_DATA_V2, ORDER_DATA_V2, 1000, -1000, 0, 1000);
-//     })
-
-//     it("protocol fee is paid for both V3 orders", async () => {
-//         await checkProtocolFee(ORDER_DATA_V3, ORDER_DATA_V3, 1030, -980, -50, 1030);
-//     })
-
-//     it("protocol fee is paid for V3 sell side", async () => {
-//         await checkProtocolFee(ORDER_DATA_V3, ORDER_DATA_V2, 1000, -980, -20, 1000);
-//     })
-
-//     it("protocol fee is paid for V3 buy side", async () => {
-//         await checkProtocolFee(ORDER_DATA_V2, ORDER_DATA_V3, 1030, -1000, -30, 1030);
-//     })
-
-//     async function checkProtocolFee(leftOrderV: string, rightOrderV: string, rightBalanceChange: number, leftBalanceChange: number, protocolChange: number, txValue: number) {
-//         const makerLeft = accounts[1]
-//         const makerRight = accounts[2]
-//         // minting NFT
-//         const erc721 = await prepareERC721(makerLeft);
-
-//         const tx = await rtm.setAllProtocolFeeData(protocol.address, 300, 200)
-
-//         const fee = (await rtm.protocolFee())
-
-//         expect(fee.receiver).to.eq(protocol.address)
-//         expect(fee.buyerAmount).to.eq(300)
-//         expect(fee.sellerAmount).to.eq(200)
-
-//         const nftAssetType = {
-//             assetClass: ERC721,
-//             data: enc(erc721.address, erc721TokenId1),
-//         }
-//         const nftAsset = {
-//             assetType: nftAssetType,
-//             value: 1
-//         }
-//         const ethAssetType = {
-//             assetClass: ETH,
-//             data: "0x",
-//         }
-//         const ethAsset = {
-//             assetType: ethAssetType,
-//             value: 1000
-//         }
-//         const left: LibOrder.OrderStruct = {
-//             maker: makerLeft.address,
-//             makeAsset: nftAsset,
-//             taker: ZERO,
-//             takeAsset: ethAsset,
-//             salt: 1,
-//             start: 0,
-//             end: 0,
-//             dataType: leftOrderV,
-//             data: (await rtm.encodeV2({ originFees: [], payouts: [], isMakeFill: true }))
-//         }
-
-//         const right: LibOrder.OrderStruct = {
-//             maker: makerRight.address,
-//             makeAsset: ethAsset,
-//             taker: ZERO,
-//             takeAsset: nftAsset,
-//             salt: 1,
-//             start: 0,
-//             end: 0,
-//             dataType: rightOrderV,
-//             data: (await rtm.encodeV2({ originFees: [], payouts: [], isMakeFill: false }))
-//         }
-
-//         await verifyBalanceChangeReturnTx(ethers, makerRight, rightBalanceChange, () =>
-//             verifyBalanceChangeReturnTx(ethers, makerLeft, leftBalanceChange, () =>
-//                 verifyBalanceChangeReturnTx(ethers, protocol, protocolChange, () =>
-//                     rtm.connect(makerRight).doTransfersExternal(left, right, { value: txValue })
-//                 )
-//             )
-//         );
-
-//         await expect(erc721.ownerOf(erc721TokenId1)).to.eventually.eq(makerRight.address)
-//     }
-
-//     async function prepareERC721(user: SignerWithAddress, tokenId: number = erc721TokenId1, royalties = []) {
-//         const erc721 = await ethers.getContractFactory("TestERC721RoyaltiesV2").then(f => f.deploy());
-//         await erc721.initialize();
-
-//         await erc721.mint(user.address, tokenId, royalties);
-//         await erc721.connect(user).setApprovalForAll(transferProxy.address, true);
-//         return erc721;
-//     }
-// })
+// collection 721 address: 0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce
+// Minted tokenId #1, tx: 0x0e12b99dcaebb2f8e947c246167449353feae6841dcfb80ba8052266ae10438c; tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694209
+// Token #1, collection: 0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce, tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694209, owner: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B 1
+// Minted tokenId #2, tx: 0x651a098aa04a4372bc6e35aee205b919e32c95a196dfb960f8688527e23d289c; tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694210
+// Token #2, collection: 0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce, tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694210, owner: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B 2
+// Minted tokenId #3, tx: 0xf00b2b125b59b9e3ad05cca3380e0d810e638c0054616971bd1e6e14da715a28; tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694211
+// Token #3, collection: 0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce, tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694211, owner: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B 3
+// Minted tokenId #4, tx: 0xb52a15ef5817177f1462dd879095de8f9bdd5d019d6d84343db6963bd6b3f7c8; tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694212
+// Token #4, collection: 0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce, tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694212, owner: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B 4
+// Minted tokenId #5, tx: 0x0dae9393486334d76c8069f2c53213dbd62015094f8e90d5873568b16faad7a2; tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694213
+// Token #5, collection: 0x6a3FB32D86A6510A7C719E55998F08fbe22C4fce, tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694213, owner: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B 5
