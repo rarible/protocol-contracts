@@ -83,7 +83,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const rightSig = await signOrderEthers(rightOrder, makerRight, exchangeDeployment.address);
 
     // Now match
-    const tx = await exchange.matchOrders(leftOrder, leftSig, rightOrder, rightSig);
+    const tx = await exchange.matchOrders(leftOrder, leftSig, rightOrder, rightSig, { gasLimit: 4_000_000 });
     console.log("matchOrders =>", tx.hash);
 };
 

@@ -1,5 +1,5 @@
-import { BigNumber, Signer, utils } from "ethers";
-import { _TypedDataEncoder } from "@ethersproject/hash";
+import { Signer } from "ethers";
+import { TypedDataSigner } from "@ethersproject/abstract-signer";
 import { LibOrder } from "@rarible/exchange-v2/typechain-types/contracts/ExchangeV2";
 
 /**
@@ -29,11 +29,14 @@ const Types = {
 
 /**
  * Creates an EIP-712 signature for a LibOrder.OrderStruct.
- * The domain must match the contract's domain. 
+ * The domain must match the contract's domain:
+ *   - domain.name = "Exchange"
+ *   - domain.version = "2"
+ *   - domain.verifyingContract = address of the Exchange contract
  */
 export async function signOrderEthers(
   order: LibOrder.OrderStruct,
-  signer: Signer,
+  signer: Signer & TypedDataSigner,
   verifyingContract: string
 ): Promise<string> {
   // The on-chain code sets domain name "Exchange" and version "2"
@@ -46,7 +49,7 @@ export async function signOrderEthers(
   };
 
   // Convert numeric fields to string for EIP-712
-  const value = {
+  const typedData = {
     maker: order.maker,
     makeAsset: {
       assetType: {
@@ -70,19 +73,15 @@ export async function signOrderEthers(
     data: order.data,
   };
 
-  // Encode domain & struct
-  const domainSeparator = _TypedDataEncoder.hashDomain(domain);
-  const structHash = _TypedDataEncoder.hashStruct("Order", Types, value);
-
-  // The standard EIP-712 message
-  const eip712Hash = utils.keccak256(
-    utils.concat([
-      utils.toUtf8Bytes("\x19\x01"),
-      utils.arrayify(domainSeparator),
-      utils.arrayify(structHash),
-    ])
-  );
-
-  // Finally sign the 32-byte EIP-712 hash
-  return signer.signMessage(utils.arrayify(eip712Hash));
+  /**
+   * The contract calls:
+   *   _hashTypedDataV4( keccak256(
+   *     abi.encode(
+   *       ORDER_TYPEHASH, ...
+   *     )
+   *   ))
+   * plus ECDSA.recover
+   * => Provide a typed-data signature for the domain + typedData object
+   */
+  return signer._signTypedData(domain, Types, typedData);
 }
