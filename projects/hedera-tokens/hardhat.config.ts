@@ -69,6 +69,38 @@ const config: HardhatUserConfig = {
       //   // Your ECDSA account private key pulled from the .env file
       //   accounts: [process.env.OPERATOR_KEY, process.env.OTHER_OPERATOR_KEY, process.env.TREASURY_KEY],
       // },
+      // -----------------------------------------
+    // Add Polygon networks here
+    // -----------------------------------------
+    polygon: {
+      url: process.env.POLYGON_MAINNET_URL || "",
+      chainId: 137,
+      timeout: 2_000_000,
+      allowUnlimitedContractSize: true,
+      accounts: [
+        process.env.OPERATOR_KEY!,
+        process.env.OTHER_OPERATOR_KEY!,
+        // Add more if you need
+      ],
+    },
+    berachain: {
+      url: process.env.BERACHAIN_MAINNET_URL || "",
+      chainId: 80094,
+      timeout: 2_000_000,
+      allowUnlimitedContractSize: true,
+      accounts: [
+        process.env.OPERATOR_KEY!,
+        process.env.OTHER_OPERATOR_KEY!,
+        // Add more if you need
+      ],
+    },
+    mantle: {
+      url: process.env.MANTLE_MAINNET_URL || "",
+      chainId: 5000,
+      timeout: 2_000_000,
+      allowUnlimitedContractSize: true,
+      accounts: [process.env.OPERATOR_KEY!, process.env.OTHER_OPERATOR_KEY!],
+    },
     },
   
   etherscan: {
