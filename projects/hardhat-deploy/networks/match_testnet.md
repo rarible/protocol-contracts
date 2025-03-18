@@ -1,17 +1,17 @@
  Name | Address | Url 
  --- | --- | ---
- AssetMatcherCollection | 0x799ac034128f89b2c785809087bc5C66c2EFEea4 | https://lisbon.matchscan.io/address/0x799ac034128f89b2c785809087bc5C66c2EFEea4 
- DefaultProxyAdmin | 0x3db982bBdBC7EDdD258B10Ed7AAE65C82Fdcc73c | https://lisbon.matchscan.io/address/0x3db982bBdBC7EDdD258B10Ed7AAE65C82Fdcc73c 
- ERC1155LazyMintTransferProxy | 0xa2eEBb837aEF89369Ad117568d75348e6174520e | https://lisbon.matchscan.io/address/0xa2eEBb837aEF89369Ad117568d75348e6174520e 
- ERC1155RaribleBeaconMeta | 0x18a2553ef1aaE12d9cd158821319e26A62feE90E | https://lisbon.matchscan.io/address/0x18a2553ef1aaE12d9cd158821319e26A62feE90E 
- ERC1155RaribleFactoryC2 | 0x57B3f3b79F64c475a37E6c493BAA8E6E7C5F748e | https://lisbon.matchscan.io/address/0x57B3f3b79F64c475a37E6c493BAA8E6E7C5F748e 
- ERC1155RaribleMeta | 0xB020bA7fcF43DCc59eF0103624BD6FADE66d105E | https://lisbon.matchscan.io/address/0xB020bA7fcF43DCc59eF0103624BD6FADE66d105E 
- ERC20TransferProxy | 0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af | https://lisbon.matchscan.io/address/0xA094E566b61b3c2D88ACf7Cc15e3Dd0FA83F32af 
- ERC721LazyMintTransferProxy | 0xB8863180CAC2d0Ab665e5968C0De25298A1D8CEe | https://lisbon.matchscan.io/address/0xB8863180CAC2d0Ab665e5968C0De25298A1D8CEe 
- ERC721RaribleFactoryC2 | 0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 | https://lisbon.matchscan.io/address/0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 
- ERC721RaribleMeta | 0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa | https://lisbon.matchscan.io/address/0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa 
- ERC721RaribleMinimalBeaconMeta | 0x2FCE8435F0455eDc702199741411dbcD1B7606cA | https://lisbon.matchscan.io/address/0x2FCE8435F0455eDc702199741411dbcD1B7606cA 
- ExchangeMetaV2 | 0x61512179F6a16bEC0D259d8010CC0485CE363868 | https://lisbon.matchscan.io/address/0x61512179F6a16bEC0D259d8010CC0485CE363868 
- RaribleExchangeWrapper | 0xc798B273FaF23932Cf11177402C10C9b44D30Da2 | https://lisbon.matchscan.io/address/0xc798B273FaF23932Cf11177402C10C9b44D30Da2 
- RoyaltiesRegistry | 0xD1f689646861870D44B33dBBb413Fa7D06A2B52f | https://lisbon.matchscan.io/address/0xD1f689646861870D44B33dBBb413Fa7D06A2B52f 
- TransferProxy | 0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b | https://lisbon.matchscan.io/address/0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b 
+ AssetMatcherCollection | 0x37Ba24f6F2fc8C7d242cb9fcf7CA4a42f2721ccD | https://testnet.matchscan.io/address/0x37Ba24f6F2fc8C7d242cb9fcf7CA4a42f2721ccD 
+ DefaultProxyAdmin | 0x67aC7Ca8b4513b34277412F630B655eED85b63C1 | https://testnet.matchscan.io/address/0x67aC7Ca8b4513b34277412F630B655eED85b63C1 
+ ERC1155LazyMintTransferProxy | 0x9A93478C8C9c8ecBF7db2f098AEDE82dBB0e6306 | https://testnet.matchscan.io/address/0x9A93478C8C9c8ecBF7db2f098AEDE82dBB0e6306 
+ ERC1155RaribleBeaconMeta | 0x1f6fF3fC71e583865846C97B079f593f39409104 | https://testnet.matchscan.io/address/0x1f6fF3fC71e583865846C97B079f593f39409104 
+ ERC1155RaribleFactoryC2 | 0x8936ADC061Bb292fc9b8e285BACD27054E7DE002 | https://testnet.matchscan.io/address/0x8936ADC061Bb292fc9b8e285BACD27054E7DE002 
+ ERC1155RaribleMeta | 0x2F8FA2B9503Fe91BE6B5C290D4e38e861d4398b0 | https://testnet.matchscan.io/address/0x2F8FA2B9503Fe91BE6B5C290D4e38e861d4398b0 
+ ERC20TransferProxy | 0x5Fcf855bB0ec0587a806507fe0d9D71079c04EBc | https://testnet.matchscan.io/address/0x5Fcf855bB0ec0587a806507fe0d9D71079c04EBc 
+ ERC721LazyMintTransferProxy | 0x83B58a979fF87728da4c5AB8a1A2C6F4a28Af0Fd | https://testnet.matchscan.io/address/0x83B58a979fF87728da4c5AB8a1A2C6F4a28Af0Fd 
+ ERC721RaribleFactoryC2 | 0x0bb5F77F0567133BF4d22293296F9F81752CC35a | https://testnet.matchscan.io/address/0x0bb5F77F0567133BF4d22293296F9F81752CC35a 
+ ERC721RaribleMeta | 0x4fB1d6b49c09B6576c5f580b7062f745694Fc838 | https://testnet.matchscan.io/address/0x4fB1d6b49c09B6576c5f580b7062f745694Fc838 
+ ERC721RaribleMinimalBeaconMeta | 0x108728e0835Be13c372aF39bE1a400bF47C68397 | https://testnet.matchscan.io/address/0x108728e0835Be13c372aF39bE1a400bF47C68397 
+ ExchangeMetaV2 | 0xC4d4d5f9AcDBaA8D5a296369dA439BEE235F0dbe | https://testnet.matchscan.io/address/0xC4d4d5f9AcDBaA8D5a296369dA439BEE235F0dbe 
+ RaribleExchangeWrapper | 0xaC66b61Dd026E02732Ae4e2a8F0776194AC20a1a | https://testnet.matchscan.io/address/0xaC66b61Dd026E02732Ae4e2a8F0776194AC20a1a 
+ RoyaltiesRegistry | 0xCd5134Cc7Fafaf1A391460de4781e70EC36C169a | https://testnet.matchscan.io/address/0xCd5134Cc7Fafaf1A391460de4781e70EC36C169a 
+ TransferProxy | 0x9FC45dCE54Cf761C689367a7450a82688279b818 | https://testnet.matchscan.io/address/0x9FC45dCE54Cf761C689367a7450a82688279b818 
