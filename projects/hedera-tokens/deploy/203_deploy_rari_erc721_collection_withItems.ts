@@ -18,8 +18,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     // Deploy new ERC721 using the factory
     const address = await factory['getAddress(string,string,string,string,address[],uint256)'](
-        "Mystical Cats",
-        "MYSTICAL2",
+        "Mystical Cats 3",
+        "MYSTICAL3",
         "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
         "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
         [signer.address],
@@ -28,8 +28,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     try {
         const tx = await factory['createToken(string,string,string,string,address[],uint256)'](
-            "Mystical Cats",
-            "MYSTICAL2",
+            "Mystical Cats 3",
+            "MYSTICAL3",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
             [signer.address],
@@ -68,8 +68,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             }],
             // Must be length 1 to match creators' length of 1
             signatures: ["0x"]
-            }, to);
-
+            }, to, {gasLimit: 4_000_000});
+            await tx.wait();
             console.log(`Minted tokenId #${i}, tx: ${tx.hash}; tokenId: ${tokenId}`);
         } catch (error) {
             console.log(`error: ${error}`);
