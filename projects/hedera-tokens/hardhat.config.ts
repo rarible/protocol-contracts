@@ -15,7 +15,6 @@ import {
 
 import "./tasks";
 
-
 dotenv.config();
 
 const config: HardhatUserConfig = {
@@ -29,8 +28,28 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
+      },
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       }
     ],
+    overrides: {
+      "contracts/exchange/UnsafeTransferProxy.sol": {
+        version: "0.7.6",
+      },
+      "contracts/exchange/ExchangeV2Import.sol": {
+        version: "0.7.6",
+      },
+      "contracts/exchange/TransferProxiesImport.sol": {
+        version: "0.7.6",
+      },
+    },
     settings: {
       metadata: {
         // Not including the metadata hash

@@ -13,6 +13,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { ERC721RaribleMinimal, ERC721RaribleMinimal__factory } from "@rarible/tokens";
 import { BigNumber, ethers } from "ethers";
 import { LibOrderDataV3, LibOrderDataV3__factory } from "@rarible/exchange-v2/typechain-types";
+import { IERC721, IERC721__factory, IERC721Payble, IERC721Payble__factory, IHRC719, IHRC719__factory } from "../typechain-types";
 
 const v3SELL = "0x2fa3cfd3"
 const v3BUY = "0x1b18cdf6"
@@ -48,7 +49,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const txapp = await erc721.setApprovalForAll(exchangeDeployment.address, true, {gasLimit: 8_000_000});
     const status = await txapp.wait();
+
+    const UnsafeTransferProxyDeployment = await hre.deployments.get("UnsafeTransferProxy");
+    const txappUnsafe = await erc721.setApprovalForAll(UnsafeTransferProxyDeployment.address, true, {gasLimit: 8_000_000});
+    const statusUnsafe = await txappUnsafe.wait();
     console.log("setApprovalForAll =>", txapp.hash, status.status);
+    console.log("setApprovalForAll =>", txappUnsafe.hash, statusUnsafe.status);
     // Encode V3 struct with no payouts, no origin fees, and isMakeFill = false
     const encodedV3 = ethers.utils.defaultAbiCoder.encode(
         [
@@ -62,6 +68,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         ]
         ]
     );
+
+    const associateTokenInterface = IHRC719__factory.connect(erc721Address, makerRight)
+    const associateTokenTx = await associateTokenInterface.associate(
+      {
+        gasLimit: 1_000_000,
+      }
+    );
+    console.log("associateTokenTx =>", associateTokenTx.hash);
     // hedera cost caluculation -- rpc receives 10^10 more than the cost
     // min 10_000_000_000
     // cost 1 HBAR
@@ -130,7 +144,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log("balanceETH right", balanceETH.toString());
 
     // Now match
-    const tx = await exchange.connect(makerRight).matchOrders(leftOrder, leftSig, rightOrder, rightSig, { gasLimit: 8_000_000, value: costRpc });
+    const tx = await exchange.connect(makerRight).matchOrders(leftOrder, leftSig, rightOrder, rightSig, { gasLimit: 15_000_000, value: costRpc });
     console.log("matchOrders =>", tx.hash);
 };
 

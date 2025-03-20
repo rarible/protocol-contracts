@@ -1,21 +1,21 @@
+// <ai_context>
+// tasks/mintNftTask.ts
+// Hardhat task that uses the mintNft function from our sdk
+// </ai_context>
+
 import { task } from "hardhat/config";
-import { RariNFTCreator, RariNFTCreator__factory } from "../typechain-types";
 
-task("mintNFT", "Mint a non-fungible token with fix fee using the precompiled contract")
-  .addParam("collectionAddress", "The address of the token to mint")
-  .setAction(async (params, hre) => {
-    const signers = await hre.ethers.getSigners();
-    const [deployer, feeCollector] = signers;
+task("mintNftSdk", "Mint an NFT from a given collection (using the sdk)")
+  .addParam("collectionAddress", "The address of the NFT collection")
+  .addOptionalParam("gasLimit", "Gas limit (default 4000000)", "4000000")
+  .setAction(async (args, hre) => {
+    const { collectionAddress, gasLimit } = args;
 
-    console.log("Using deployer address:", deployer.address);
-    const contractName = "RariNFTCreator";
-    const tokenCreateFactory = await hre.ethers.getContractFactory(contractName) as RariNFTCreator__factory;
-    const factoryAddress = (await hre.deployments.get(contractName)).address
-    const rariNFTCreator = tokenCreateFactory.attach(factoryAddress) as RariNFTCreator;
-    const collectionAddress = params.collectionAddress;
-    
-    const mintTx = await rariNFTCreator.mintNftTo(collectionAddress, deployer.address, {gasLimit: 4_000_000});
+    const { mintNft } = await import("../sdk");
+    const txHash = await mintNft({
+      collectionAddress,
+      gasLimit: parseInt(gasLimit),
+    });
 
-    const txReceipt = await mintTx.wait();
-    console.log("Mint tx hash", mintTx.hash);
-});
+    console.log("SDK => minted NFT, tx hash:", txHash);
+  });
