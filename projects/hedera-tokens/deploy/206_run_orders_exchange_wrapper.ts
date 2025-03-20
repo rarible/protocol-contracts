@@ -37,16 +37,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log("makerRight", makerRight.address);
 
     // Example NFT
-    const erc721Address = "0x7cA29c59D76E45FdBE5F5E900eFCC8dF37485E31";
+    const erc721Address = "0x000000000000000000000000000000000057C327";
     const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(erc721Address, signer);
-    const tokenId = BigNumber.from("48827653089252063377009650346866330927455685249615897861731929327047129694213");
+    const tokenId = BigNumber.from("1");
     console.log(`tokenId = ${tokenId.toString()}`);
 
     // Prepare the exchange contract
     const exchangeDeployment = await hre.deployments.get("ExchangeMetaV2");
     const exchange: ExchangeMetaV2 = ExchangeMetaV2__factory.connect(exchangeDeployment.address, makerRight);
 
-    const txapp =await erc721.setApprovalForAll(exchangeDeployment.address, true, {gasLimit: 8_000_000});
+    const txapp = await erc721.setApprovalForAll(exchangeDeployment.address, true, {gasLimit: 8_000_000});
     const status = await txapp.wait();
     console.log("setApprovalForAll =>", txapp.hash, status.status);
     // Encode V3 struct with no payouts, no origin fees, and isMakeFill = false
@@ -62,8 +62,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         ]
         ]
     );
-    const cost = BigNumber.from(10_000_000_000).mul(100000000);
-
+    // hedera cost caluculation -- rpc receives 10^10 more than the cost
+    // min 10_000_000_000
+    // cost 1 HBAR
+    const cost = BigNumber.from(10e8);
+    const chainId = await hre.ethers.provider.getNetwork().then(network => network.chainId);
+    let costRpc = cost;
+    if (chainId === 296 || chainId === 295) {
+        costRpc = BigNumber.from("1000000000000000000"); // 10^18
+    }
     // Build orders
     const leftOrder: LibOrder.OrderStruct = {
       maker: signer.address,
@@ -96,7 +103,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
           assetClass: ETH,
           data: "0x"
         },
-        value: cost // min 10_000_000_000
+        value: cost 
       },
       taker: ZERO,
       takeAsset: {
@@ -122,13 +129,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const balanceETH = await makerRight.getBalance();
     console.log("balanceETH right", balanceETH.toString());
 
-    const txCheck = await signer.sendTransaction({ to: exchangeDeployment.address, value: cost, gasLimit: 8_000_000 });
-    console.log("sendTransaction =>", txCheck.hash);
-
     // Now match
-    const tx = await exchange.connect(makerRight).matchOrders(leftOrder, leftSig, rightOrder, rightSig, { gasLimit: 8_000_000, value: cost });
+    const tx = await exchange.connect(makerRight).matchOrders(leftOrder, leftSig, rightOrder, rightSig, { gasLimit: 8_000_000, value: costRpc });
     console.log("matchOrders =>", tx.hash);
 };
 
 export default func;
 func.tags = ['run-orders-exchange-wrapper', '206'];
+
+
+// Token created at address 0x000000000000000000000000000000000057C327
+// vfadeev@Mac hedera-tokens % npx hardhat mintNFT --collection-address 0x000000000000000000000000000000000057C327 --network testnet
+// Using deployer address: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B
+// Mint tx hash 0xaf8ec2a829198da75443611e08eb8561650c89be05672e333627123bd07de1a8
+// vfadeev@Mac hedera-tokens % npx hardhat mintNFT --collection-address 0x000000000000000000000000000000000057C327 --network testnet
+// Using deployer address: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B
+// Mint tx hash 0xe87b4bae1f94c2266f2ddc88cde29a354b13b22732b5146fa0e2f42b3aad2444
+// vfadeev@Mac hedera-tokens % npx hardhat mintNFT --collection-address 0x000000000000000000000000000000000057C327 --network testnet
+// Using deployer address: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B
+// Mint tx hash 0xf3ec83f1abfffd8184a3b1cc8e5e6c1293aa2e4daa5dd00179d3715da4d7af65
+// vfadeev@Mac hedera-tokens % npx hardhat mintNFT --collection-address 0x000000000000000000000000000000000057C327 --network testnet
+// Using deployer address: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B
+// Mint tx hash 0x579e94b77ff471a19ac30a29a478900a3154c9171febe95b81edf647f84e7d94

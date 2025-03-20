@@ -16,16 +16,16 @@ task("createNftCollectionWithRoalties", "Creates a non-fungible token with fix f
 
     //Create a non fungible token with precompiled contract, all keys are set to the contract and the contract is the treasury
     const createTokenTx = await rariNFTCreator.createNonFungibleTokenWithCustomFeesPublic(
-        "Rarible Collection With Royalties 10",
-        "CAT10",
-        "MEMOCAT10",
+        "Rarible Collection Without Fee and Royalties 12",
+        "CAT12",
+        "MEMOCAT12",
         1001,
         "ipfs://QmeSQDV3oVmrwpbBAecu5BLmCFZwd1KRkWMssFXHZBY424",
         {
             feeCollector: deployer.address,
-            isRoyaltyFee: true,
+            isRoyaltyFee: false,
             isFixedFee: false,
-            feeAmount: 10,
+            feeAmount: 0,
             fixedFeeTokenAddress: '0x0000000000000000000000000000000000000000', //address for token of fixedFee, if set to 0x0, the fee will be in hbars
             useHbarsForPayment: true,
             useCurrentTokenForPayment: false,

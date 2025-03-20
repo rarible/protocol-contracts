@@ -4,7 +4,7 @@
 // import { ZERO, ORDER_DATA_V2, ORDER_DATA_V3, verifyBalanceChangeReturnTx, ERC721, enc, ETH } from "./utils";
 // import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 // import { Signer } from "zksync-web3";
-import { encBigNumber, ERC721, ETH, ZERO, ERC20, ORDER_DATA_V3 } from "@rarible/exchange-v2/test-hardhat/utils";
+import { encBigNumber, ERC721, ETH, ZERO, ERC20, ORDER_DATA_V3, enc } from "@rarible/exchange-v2/test-hardhat/utils";
 import { ExchangeMetaV2, ExchangeMetaV2__factory } from "@rarible/exchange-v2";
 import { LibOrder } from "@rarible/exchange-v2/typechain-types/contracts/ExchangeV2";
 import { signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
@@ -26,6 +26,14 @@ function getV3Selector(): string {
   
   const V3 = getV3Selector();
 
+  // 1) ERC-20 => only encodes (address)
+function encodeErc20AssetData(erc20Address: string) {
+  return ethers.utils.defaultAbiCoder.encode(
+    ["address"], 
+    [erc20Address]
+  );
+}
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // Get signers
     const signers = await hre.ethers.getSigners();
@@ -37,12 +45,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     // Example NFT
     const erc721Address = "0x7cA29c59D76E45FdBE5F5E900eFCC8dF37485E31";
     const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(erc721Address, signer);
-    const tokenId = BigNumber.from("48827653089252063377009650346866330927455685249615897861731929327047129694212");
+    const tokenId = BigNumber.from("48827653089252063377009650346866330927455685249615897861731929327047129694211");
     console.log(`tokenId = ${tokenId.toString()}`);
 
     // Prepare the exchange contract
     const exchangeDeployment = await hre.deployments.get("ExchangeMetaV2");
     const exchange: ExchangeMetaV2 = ExchangeMetaV2__factory.connect(exchangeDeployment.address, makerRight);
+
+    const erc20TransferProxy = await hre.deployments.get("ERC20TransferProxy");
 
     const erc20Deployment = await hre.deployments.get("RariTestERC20");
     const erc20: RariTestERC20 = RariTestERC20__factory.connect(erc20Deployment.address, makerRight);
@@ -50,7 +60,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const txapp =await erc721.setApprovalForAll(exchangeDeployment.address, true, {gasLimit: 8_000_000});
     const status = await txapp.wait();
-    const txapproveErc20 = await erc20.connect(makerRight).approve(exchangeDeployment.address, cost, {gasLimit: 8_000_000});
+    const txapproveErc20 = await erc20.connect(makerRight).approve(erc20TransferProxy.address, cost, {gasLimit: 8_000_000});
     const status2 = await txapproveErc20.wait();
 
     console.log("setApprovalForAll 721 =>", txapp.hash, status.status);
@@ -68,6 +78,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         ]
         ]
     );
+    const encodedErc20Address = enc(erc20Deployment.address);
     
     // Build orders
     const leftOrder: LibOrder.OrderStruct = {
@@ -83,7 +94,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       takeAsset: {
         assetType: {
           assetClass: ERC20,
-          data: erc20Deployment.address,
+          data: encodedErc20Address,
         },
         value: cost
       },
@@ -99,7 +110,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       makeAsset: {
         assetType: {
           assetClass: ERC20,
-          data: erc20Deployment.address,
+          data: encodedErc20Address,
         },
         value: cost
       },
@@ -147,6 +158,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 export default func;
 func.tags = ['run-erc20-orders', '207'];
+
+
+
+// polygon
+// collection 721 address: 0xBb2C2E1Fe82b0DC922DD33532797273b5f5B8912
+// Minted tokenId #1, tx: 0xff502b413a55695ce59d7ca9118593577b51f482fc2b9c910541e02720ee839e; tokenId: 113684458893483085791140453563089956290380401423266949679181692179405588135937
+// Token #1, collection: 0xBb2C2E1Fe82b0DC922DD33532797273b5f5B8912, tokenId: 113684458893483085791140453563089956290380401423266949679181692179405588135937, owner: 0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4 1
+
 
 // hedera testnet
 // Token #1, collection: 0x7cA29c59D76E45FdBE5F5E900eFCC8dF37485E31, tokenId: 48827653089252063377009650346866330927455685249615897861731929327047129694209, owner: 0x6Bf378e79F736057f64cD647e7Da99fD76800C9B 1

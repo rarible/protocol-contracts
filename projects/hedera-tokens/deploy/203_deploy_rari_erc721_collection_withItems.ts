@@ -42,7 +42,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`collection 721 address: ${address}`);
 
     const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(address, signer);
-    await erc721.addMinter(signer.address);
+    // await erc721.addMinter(signer.address);
 
     // Single function that loops from 1..60. Adjust to your liking:
     for (let i = 1; i <= 5; i++) {
