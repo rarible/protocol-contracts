@@ -7,7 +7,7 @@ import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 
 contract UnsafeTransferProxy is INftTransferProxy, Initializable, OperatorRole {
 
-    function __TransferProxy_init() external initializer {
+    function __UnsafeTransferProxy_init() external initializer {
         __Ownable_init();
     }
 
