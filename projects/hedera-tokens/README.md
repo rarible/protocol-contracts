@@ -1,47 +1,41 @@
 # Hardhat Hedera Project
 
-# created NFT collection
+## NFT Collection Details
 
-# collection address(testnet) 0x0000000000000000000000000000000000574E0c
+- **Created NFT Collection**
+- **Collection Address (Testnet):** `0x0000000000000000000000000000000000574E0c`  
+  [View on Hashscan](https://hashscan.io/testnet/token/0.0.5721612)
 
-https://hashscan.io/testnet/token/0.0.5721612
+## Testnet Collection Without Fee & Royalties
 
+- **Collection Address:** `0x000000000000000000000000000000000057C327`
 
-# testnet colection without fee & roaylties
+## Transfer NFT
 
-0x000000000000000000000000000000000057C327
+1. **Receiver Association Requirement:**  
+   The receiver must associate the collection before receiving an NFT.
+   - **Transaction 1:** [View Transaction](https://hashscan.io/testnet/transaction/1742485311.338018000)
+   - **Transaction 2:** [View Transaction](https://hashscan.io/testnet/transaction/1742485683.237962000)
+2. **Transfer Method:**  
+   Use `transferFrom` for transferring the NFT (Note: `safeTransferFrom` doesn't work).
 
-# transfer NFT
+- **Native Transfer Transaction:**  
+  [View Transaction](https://hashscan.io/testnet/transaction/1742485689.369017195)
 
-1 receiver should associate collection to recieve NFT
-tx 1
-https://hashscan.io/testnet/transaction/1742485311.338018000
-tx 2
-https://hashscan.io/testnet/transaction/1742485683.237962000
+---
 
-2 send must use 
-transferFrom
+## Custom Exchange Support for Hedera 721
 
-safeTransferFrom doesn't work
+## Cancel Order Transaction
 
+- [View Cancel Order Transaction](https://hashscan.io/testnet/transaction/1742516580.599761727)
 
-# only custom exchange can support hedera 721
-transfer tx - native
-https://hashscan.io/testnet/transaction/1742485689.369017195
+## Buy ERC721 (Non-Hedera) with HBAR
 
+- **Native Hedera Token Purchase:**  
+  [View Transaction](https://hashscan.io/testnet/transaction/1742306786.163001390)
 
-#####################
+## Buy ERC721 (Non-Hedera) with ERC20
 
-# cancel order tx
-
-https://hashscan.io/testnet/transaction/1742516580.599761727
-
-# buy erc 721(non hedera) with hbar tx
-
-
-
-native hedera token purchase - https://hashscan.io/testnet/transaction/1742306786.163001390
-
-# buy erc 721(non hedera) with erc20 tx
-
- erc 20 purchase - https://hashscan.io/testnet/transaction/1742473001.968214104
+- **ERC20 Purchase Transaction:**  
+  [View Transaction](https://hashscan.io/testnet/transaction/1742473001.968214104)
