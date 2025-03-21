@@ -19,7 +19,9 @@ task("listBuyNft", "List an NFT for sale and then buy it")
     const { exchange, nft, tokenId, price, sellerIndex, buyerIndex } = args;
     const signers = await hre.ethers.getSigners();
     const sellerSigner = signers[Number(sellerIndex)];
+    console.log("Seller signer:", sellerSigner.address);
     const buyerSigner = signers[Number(buyerIndex)];
+    console.log("Buyer signer:", buyerSigner.address);
     console.log("Listing NFT for sale...");
     const listResult = await listNftToken(exchange, sellerSigner, nft, BigNumber.from(tokenId), BigNumber.from(price));
     console.log("Order listed:");
