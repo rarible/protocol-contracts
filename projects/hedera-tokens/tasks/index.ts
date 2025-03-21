@@ -4,3 +4,4 @@ import "./mintNft";
 import "./transferNft";
 import "./verify721";
 import "./associateToken";
+import "./supportInterface";
