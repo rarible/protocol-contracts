@@ -11,10 +11,19 @@ function getV3Selector(): string {
 }
 
 function encodeV3Data(): string {
-  return ethers.utils.defaultAbiCoder.encode(
-    ["tuple((address,uint96)[] payouts, (address,uint96)[] originFees, bool isMakeFill)"],
-    [[[[], [], false]]]
+  const encodedV3 = ethers.utils.defaultAbiCoder.encode(
+    [
+      "tuple((address account, uint96 value)[] payouts, (address account, uint96 value)[] originFees, bool isMakeFill)"
+    ],
+    [
+      [
+        [], // payouts
+        [], // originFees
+        false // isMakeFill
+      ]
+    ]
   );
+  return encodedV3;
 }
 
 function encodeERC20AssetData(erc20Address: string): string {
@@ -87,9 +96,9 @@ export async function buyNftToken(
     dataType: V3,
     data: sellerOrder.data
   };
-  const buyerSignature = await signOrderEthers(buyerOrder, buyerSigner, exchangeAddress);
+  const buyerSignature = await signOrderEthers(buyerOrder, buyerSigner as any, exchangeAddress);
   const exchange = ExchangeMetaV2__factory.connect(exchangeAddress, buyerSigner);
-  const tx = await exchange.matchOrders(sellerOrder, sellerSignature, buyerOrder, buyerSignature, { value: price, gasLimit: 8000000 });
+  const tx = await exchange.matchOrders(sellerOrder, sellerSignature, buyerOrder, buyerSignature, { value: price.mul(BigNumber.from("10000000000")), gasLimit: 8000000 });
   return tx;
 }
 
@@ -140,7 +149,7 @@ export async function listNftTokenWithERC20(
     dataType: V3,
     data: encodedV3
   };
-  const signature = await signOrderEthers(order, sellerSigner, exchangeAddress);
+  const signature = await signOrderEthers(order, sellerSigner as any, exchangeAddress);
   return { order, signature };
 }
 

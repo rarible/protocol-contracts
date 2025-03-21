@@ -5,7 +5,7 @@
 
 import { task } from "hardhat/config";
 
-task("mintNftSdk", "Mint an NFT from a given collection (using the sdk)")
+task("mintNft", "Mint an NFT from a given collection (using the sdk)")
   .addParam("collectionAddress", "The address of the NFT collection")
   .addOptionalParam("gasLimit", "Gas limit (default 4000000)", "4000000")
   .setAction(async (args, hre) => {

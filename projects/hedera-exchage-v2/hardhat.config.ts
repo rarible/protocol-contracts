@@ -50,7 +50,17 @@ const config: HardhatUserConfig = {
   paths: {
     sources: "contracts",
   },
-  networks: loadNetworkConfigs(),
+  networks: {
+    ...loadNetworkConfigs(),
+    testnet: {
+      // HashIO testnet endpoint from the TESTNET_ENDPOINT variable in the .env file
+      url: process.env.TESTNET_ENDPOINT,
+      timeout: 2000000,
+      allowUnlimitedContractSize: true,
+      // Your ECDSA account private key pulled from the .env file
+      accounts: [process.env.OPERATOR_KEY!, process.env.OTHER_OPERATOR_KEY!, process.env.FEE_COLLECTOR_KEY!, process.env.SECOND_FEE_COLLECTOR_KEY!],
+    }
+  },
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),

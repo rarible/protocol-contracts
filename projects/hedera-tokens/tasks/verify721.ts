@@ -5,7 +5,7 @@
 
 import { task } from "hardhat/config";
 
-task("verify721Sdk", "Verify an ERC721 contract using the sdk")
+task("verify721", "Verify an ERC721 contract using the sdk")
   .addParam("collectionAddress", "The NFT collection address to verify")
   .addParam("tokenId", "Token ID to test, e.g. 1")
   .addOptionalParam("to", "An address to test transfer", undefined)

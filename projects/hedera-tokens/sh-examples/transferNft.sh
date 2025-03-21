@@ -8,10 +8,10 @@
 
 echo "Transferring NFT..."
 
-npx ts-node scripts/transferNft.ts \
-  --tokenAddress "0x0000000000000000000000000000000000NFT123" \
-  --to "0x0000000000000000000000000000000000RECEIVE" \
-  --tokenId "1" \
-  --associate true \
-  --gasLimit 6000000 \
+npx hardhat transferNft \
+  --token-address "0x000000000000000000000000000000000057C327" \
+  --to "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4" \
+  --token-id "1" \
+  --do-associate true \
+  --gas-limit 6000000 \
   --network testnet

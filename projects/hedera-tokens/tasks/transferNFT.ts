@@ -6,7 +6,7 @@
 import { task } from "hardhat/config";
 
 
-task("transferNftSdk", "Transfer a Hedera NFT (with optional association) using the sdk")
+task("transferNft", "Transfer a Hedera NFT (with optional association) using the sdk")
   .addParam("tokenAddress", "NFT contract address to transfer")
   .addParam("to", "Recipient address")
   .addParam("tokenId", "Token ID to transfer")

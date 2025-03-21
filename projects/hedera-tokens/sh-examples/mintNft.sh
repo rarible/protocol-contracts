@@ -8,7 +8,7 @@
 
 echo "Minting NFT..."
 
-npx ts-node scripts/mintNft.ts \
-  --collectionAddress "0x0000000000000000000000000000000000COLLE" \
-  --gasLimit 4000000 \
+npx hardhat mintNft \
+  --collection-address "0x000000000000000000000000000000000057C327" \
+  --gas-limit 4000000 \
   --network testnet
