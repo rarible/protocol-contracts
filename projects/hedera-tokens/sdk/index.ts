@@ -9,3 +9,4 @@ export * from "./transferNft";
 export * from "./verify721";
 export * from "./associateToken";
 export * from "./supportInterface";
+export * from "./owner";

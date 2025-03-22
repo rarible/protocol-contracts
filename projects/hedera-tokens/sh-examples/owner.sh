@@ -1,0 +1,1 @@
+npx hardhat owner --collection-address 0x000000000000000000000000000000000057C327 --network testnet

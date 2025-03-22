@@ -10,12 +10,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log("deploying contracts with the account:", deployer);
 
-  await deploy('RoyaltiesRegistry', {
+  await deploy('HederaRoyaltiesRegistry', {
     from: deployer,
     proxy: {
       execute: {
         init: {
-          methodName: "__RoyaltiesRegistry_init",
+          methodName: "__HederaRoyaltiesRegistry_init",
           args: [],
         },
       },
