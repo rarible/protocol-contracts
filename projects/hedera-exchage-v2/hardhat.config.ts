@@ -96,6 +96,7 @@ const config: HardhatUserConfig = {
       url: process.env.TESTNET_ENDPOINT,
       timeout: 2000000,
       allowUnlimitedContractSize: true,
+      gasPrice: 1200000000000,
       // Your ECDSA account private key pulled from the .env file
       accounts: [process.env.OPERATOR_KEY!, process.env.OTHER_OPERATOR_KEY!, process.env.FEE_COLLECTOR_KEY!, process.env.SECOND_FEE_COLLECTOR_KEY!],
     }

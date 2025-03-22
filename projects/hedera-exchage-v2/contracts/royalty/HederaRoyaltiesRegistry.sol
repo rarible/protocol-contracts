@@ -42,7 +42,8 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     // 1 - royaltiesByToken, 2 - v2, 3 - v1,
     // 4 - external provider, 5 - EIP-2981
     // 6 - unsupported/nonexistent royalties type
-    uint constant royaltiesTypesAmount = 6;
+    // 7 - royalties hedera
+    uint constant royaltiesTypesAmount = 7;
 
     function __HederaRoyaltiesRegistry_init() external initializer {
         __Ownable_init_unchained();

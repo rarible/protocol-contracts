@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { Signer, BigNumber } from "ethers";
 
-// Factories from Rarible’s Exchange
+// Factories from Rarible's Exchange
 import { ExchangeMetaV2, ExchangeMetaV2__factory } from "@rarible/exchange-v2";
 import { signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
 import { IERC721Enumerable, IERC721Enumerable__factory } from "@rarible/hedera-tokens/typechain-types";
@@ -58,52 +58,66 @@ describe("Exchange Test", function () {
   let mintedSerial: string;
 
   beforeEach(async () => {
+    console.log("--------- TEST SETUP STARTED ---------");
+    
+    console.log("STEP 0: Setting up test accounts");
     const signers = await ethers.getSigners();
-    deployer = signers[0];
+    deployer = signers[2];
     user1 = signers[1];
-    user2 = signers[2];
-    console.log("user1", await user1.getAddress());
-    console.log("user2", await user2.getAddress());
-    console.log("deployer", await deployer.getAddress());
+    user2 = signers[0];
+    console.log("user1:", await user1.getAddress());
+    console.log("user2:", await user2.getAddress());
+    console.log("deployer:", await deployer.getAddress());
 
-    console.log("balance deployer", await deployer.getBalance());
-    console.log("balance user1", await user1.getBalance());
-    console.log("balance user2", await user2.getBalance());
+    console.log("Account balances:");
+    console.log("- deployer:", ethers.utils.formatEther(await deployer.getBalance()), "ETH");
+    console.log("- user1:", ethers.utils.formatEther(await user1.getBalance()), "ETH");
+    console.log("- user2:", ethers.utils.formatEther(await user2.getBalance()), "ETH");
 
-    // 1. Deploy UnsafeTransferProxy
+    console.log("\nSTEP 1: Deploying UnsafeTransferProxy");
     const unsafeTransferProxyFactory = new UnsafeTransferProxy__factory(deployer);
     unsafeTransferProxy = await unsafeTransferProxyFactory.deploy();
     await unsafeTransferProxy.deployed();
+    console.log("UnsafeTransferProxy deployed at:", unsafeTransferProxy.address);
     await unsafeTransferProxy.__OperatorRole_init();
+    console.log("UnsafeTransferProxy initialized");
 
-    // 2. Deploy ERC20TransferProxy
+    console.log("\nSTEP 2: Deploying ERC20TransferProxy");
     const erc20TransferProxyFactory = new ERC20TransferProxy__factory(deployer);
     erc20TransferProxy = await erc20TransferProxyFactory.deploy();
     await erc20TransferProxy.deployed();
+    console.log("ERC20TransferProxy deployed at:", erc20TransferProxy.address);
     await erc20TransferProxy.__OperatorRole_init();
+    console.log("ERC20TransferProxy initialized");
 
-    // 3. Deploy ERC721LazyMintTransferProxy
+    console.log("\nSTEP 3: Deploying ERC721LazyMintTransferProxy");
     const erc721LazyFactory = new ERC721LazyMintTransferProxy__factory(deployer);
     erc721LazyMintTransferProxy = await erc721LazyFactory.deploy();
     await erc721LazyMintTransferProxy.deployed();
+    console.log("ERC721LazyMintTransferProxy deployed at:", erc721LazyMintTransferProxy.address);
     await erc721LazyMintTransferProxy.__OperatorRole_init();
+    console.log("ERC721LazyMintTransferProxy initialized");
 
-    // 4. Deploy ERC1155LazyMintTransferProxy
+    console.log("\nSTEP 4: Deploying ERC1155LazyMintTransferProxy");
     const erc1155LazyFactory = new ERC1155LazyMintTransferProxy__factory(deployer);
     erc1155LazyMintTransferProxy = await erc1155LazyFactory.deploy();
     await erc1155LazyMintTransferProxy.deployed();
+    console.log("ERC1155LazyMintTransferProxy deployed at:", erc1155LazyMintTransferProxy.address);
     await erc1155LazyMintTransferProxy.__OperatorRole_init();
+    console.log("ERC1155LazyMintTransferProxy initialized");
 
-    // 5. Deploy RoyaltiesRegistry
+    console.log("\nSTEP 5: Deploying RoyaltiesRegistry");
     const RoyaltiesRegistryFactory = new HederaRoyaltiesRegistry__factory(deployer);
     royaltiesRegistry = await RoyaltiesRegistryFactory.deploy();
     await royaltiesRegistry.deployed();
+    console.log("RoyaltiesRegistry deployed at:", royaltiesRegistry.address);
     await royaltiesRegistry.__HederaRoyaltiesRegistry_init();
+    console.log("RoyaltiesRegistry initialized");
 
-    // 6. Deploy and init ExchangeMetaV2
+    console.log("\nSTEP 6: Deploying and initializing ExchangeMetaV2");
     const exchangeFactory = new ExchangeMetaV2__factory(deployer);
     exchange = await exchangeFactory.deploy();
-    await exchange.deployed();
+    console.log("ExchangeMetaV2 deployed at:", exchange.address);
     await exchange.__ExchangeV2_init(
       unsafeTransferProxy.address,
       erc20TransferProxy.address,
@@ -111,19 +125,26 @@ describe("Exchange Test", function () {
       ethers.constants.AddressZero, // default fee receiver
       royaltiesRegistry.address
     );
+    console.log("ExchangeMetaV2 initialized with proxies and royalties registry");
 
-    // 7. Grant operator roles so Exchange can transfer items
+    console.log("\nSTEP 7: Granting operator roles to Exchange");
     await (await unsafeTransferProxy.addOperator(exchange.address)).wait();
+    console.log("UnsafeTransferProxy operator role granted");
     await (await erc20TransferProxy.addOperator(exchange.address)).wait();
+    console.log("ERC20TransferProxy operator role granted");
     await (await erc721LazyMintTransferProxy.addOperator(exchange.address)).wait();
+    console.log("ERC721LazyMintTransferProxy operator role granted");
     await (await erc1155LazyMintTransferProxy.addOperator(exchange.address)).wait();
+    console.log("ERC1155LazyMintTransferProxy operator role granted");
 
-    // 8. Deploy RariNFTCreator
+    console.log("\nSTEP 8: Deploying RariNFTCreator");
     const RariNFTCreatorFactory = new RariNFTCreator__factory(deployer);
     rariNFTCreator = await RariNFTCreatorFactory.deploy();
     await rariNFTCreator.deployed();
+    console.log("RariNFTCreator deployed at:", rariNFTCreator.address);
 
-    // user1 creates an NFT collection
+    console.log("\nSTEP 9: Creating NFT collection");
+    console.log("Creating collection with user1:", await user1.getAddress());
     nftAddress = await createNftCollection(
       user1,
       rariNFTCreator.address,
@@ -133,7 +154,7 @@ describe("Exchange Test", function () {
         memo: "Test Collection for Exchange",
         maxSupply: 100,
         metadataUri: "ipfs://CID",
-        feeCollector: await (await deployer.getAddress()),
+        feeCollector: await deployer.getAddress(),
         isRoyaltyFee: false,
         isFixedFee: false,
         feeAmount: 0,
@@ -144,12 +165,17 @@ describe("Exchange Test", function () {
         gasLimit: 4_000_000
       }
     );
+    console.log("NFT collection created at:", nftAddress);
 
-    // associate the NFT to user1, user2
+    console.log("\nSTEP 10: Associating tokens");
+    console.log("Associating token to user1");
     await associateToken(user1, { tokenAddress: nftAddress });
+    console.log("Associating token to user2");
     await associateToken(user2, { tokenAddress: nftAddress });
+    console.log("Token associations completed");
 
-    // user1 mints an NFT
+    console.log("\nSTEP 11: Minting NFT");
+    console.log("Minting NFT with user1");
     mintedSerial = await mintNft(
       user1,
       rariNFTCreator.address,
@@ -158,17 +184,33 @@ describe("Exchange Test", function () {
         gasLimit: 4_000_000
       }
     );
+    console.log("Minted NFT with serial:", mintedSerial);
 
+    console.log("\nSTEP 12: Verifying ownership and approving transfer");
     const erc721: IERC721Enumerable = IERC721Enumerable__factory.connect(nftAddress, user1);
     const owner = await erc721.ownerOf(mintedSerial);
+    console.log("Current owner:", owner);
+    console.log("Expected owner (user1):", await user1.getAddress());
     expect(owner).to.equal(await user1.getAddress());
-    const tx = await erc721.setApprovalForAll(unsafeTransferProxy.address, true);
+    
+    console.log("Approving UnsafeTransferProxy to transfer NFTs");
+    const tx = await erc721.connect(user1).setApprovalForAll(unsafeTransferProxy.address, true);
     await tx.wait();
+    console.log("Approval granted to proxy:", unsafeTransferProxy.address);
+    
+    console.log("--------- TEST SETUP COMPLETED ---------\n");
   });
 
   it("Should list and buy NFT using ExchangeMetaV2", async function () {
+    console.log("--------- TEST STARTED ---------");
+    
     // 1. user1 lists the NFT
+    console.log("STEP 1: Listing NFT for sale");
+    console.log(`NFT Collection: ${nftAddress}`);
+    console.log(`Token ID: ${mintedSerial}`);
     const price = BigNumber.from("100000000"); // Price in "HBAR" terms. The code adjusts the value in buyNftToken
+    console.log(`Listing price: ${ethers.utils.formatUnits(price, 8)} HBAR`);
+    
     const { order, signature } = await listNftToken(
       exchange.address,
       user1,
@@ -176,8 +218,15 @@ describe("Exchange Test", function () {
       BigNumber.from(mintedSerial),
       price
     );
+    console.log("NFT successfully listed");
+    console.log(`Order maker: ${order.maker}`);
+    console.log(`Signature: ${signature.substring(0, 20)}...`);
 
     // 2. user2 buys the NFT
+    console.log("\nSTEP 2: Buying the NFT");
+    console.log(`Buyer address: ${await user2.getAddress()}`);
+    console.log(`Payment amount: ${ethers.utils.formatUnits(price, 8)} HBAR`);
+    
     const tx = await buyNftToken(
       exchange.address,
       user2,
@@ -185,13 +234,20 @@ describe("Exchange Test", function () {
       signature,
       price
     );
-    await tx.wait();
+    console.log("Purchase transaction submitted");
+    const receipt = await tx.wait();
+    console.log(`Purchase completed in block ${receipt.blockNumber}`);
+    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
 
     // 3. Verify user2 is the new owner
-    //    Since we minted an ERC721 on Hedera,
-    //    we can just check by calling "ownerOf"
+    console.log("\nSTEP 3: Verifying ownership transfer");
     const erc721: IERC721Enumerable = IERC721Enumerable__factory.connect(nftAddress, user1);
     const newOwner2 = await erc721.ownerOf(mintedSerial);
+    console.log(`Current owner of token ${mintedSerial}: ${newOwner2}`);
+    console.log(`Expected owner (user2): ${await user2.getAddress()}`);
     expect(newOwner2).to.equal(await user2.getAddress());
+    console.log("Ownership verification successful");
+    
+    console.log("--------- TEST COMPLETED ---------");
   });
 });
