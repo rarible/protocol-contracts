@@ -62,6 +62,13 @@ describe("Exchange Test", function () {
     deployer = signers[0];
     user1 = signers[1];
     user2 = signers[2];
+    console.log("user1", await user1.getAddress());
+    console.log("user2", await user2.getAddress());
+    console.log("deployer", await deployer.getAddress());
+
+    console.log("balance deployer", await deployer.getBalance());
+    console.log("balance user1", await user1.getBalance());
+    console.log("balance user2", await user2.getBalance());
 
     // 1. Deploy UnsafeTransferProxy
     const unsafeTransferProxyFactory = new UnsafeTransferProxy__factory(deployer);
@@ -167,7 +174,7 @@ describe("Exchange Test", function () {
       user1,
       nftAddress,
       BigNumber.from(mintedSerial),
-      price
+      price.div(BigNumber.from("10000000000"))
     );
 
     // 2. user2 buys the NFT
@@ -176,7 +183,7 @@ describe("Exchange Test", function () {
       user2,
       order,
       signature,
-      price
+      price.div(BigNumber.from("10000000000"))
     );
     await tx.wait();
 
