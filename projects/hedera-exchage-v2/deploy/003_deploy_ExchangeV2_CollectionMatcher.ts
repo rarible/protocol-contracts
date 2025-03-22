@@ -29,7 +29,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
   const { deploy } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
 
-  const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
+  const royaltiesRegistryAddress = (await hre.deployments.get("HederaRoyaltiesRegistry")).address;
 
   // deploy ExchangeV2 and initialise contract
   const exchangeV2Receipt = await deploy(contractName, {
