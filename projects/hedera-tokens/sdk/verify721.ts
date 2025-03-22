@@ -1,10 +1,10 @@
 // <ai_context>
 // sdk/verify721.ts
 // Exports a function to verify an ERC721 contract (interfaces, standard methods, etc.)
+// Updated to remove direct Hardhat references. Now accepts a signer from outside
 // </ai_context>
 
-import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
+import { Signer, BigNumber } from "ethers";
 import { IERC721__factory } from "../typechain-types";
 
 export interface Verify721Params {
@@ -15,7 +15,17 @@ export interface Verify721Params {
   gasLimit?: number;
 }
 
-export async function verify721(params: Verify721Params): Promise<void> {
+/**
+ * Verifies ERC721 functionality. This function tries:
+ *  - supportsInterface checks
+ *  - balanceOf, ownerOf
+ *  - Approve tests
+ *  - Transfer tests (if "to" is supplied)
+ */
+export async function verify721(
+  signer: Signer,
+  params: Verify721Params
+): Promise<void> {
   const {
     collectionAddress,
     tokenId,
@@ -24,11 +34,9 @@ export async function verify721(params: Verify721Params): Promise<void> {
     gasLimit = 4_000_000,
   } = params;
 
-  const [deployer] = await ethers.getSigners();
-  console.log("Verifying with deployer:", deployer.address);
-
+  const deployerAddress = await signer.getAddress();
   const tokenIdBN = BigNumber.from(tokenId);
-  const erc721 = IERC721__factory.connect(collectionAddress, deployer);
+  const erc721 = IERC721__factory.connect(collectionAddress, signer);
 
   console.log("Checking ERC165 / ERC721 / ERC721Metadata...");
 
@@ -58,8 +66,8 @@ export async function verify721(params: Verify721Params): Promise<void> {
 
   console.log("Testing balanceOf / ownerOf...");
   try {
-    const balance = await erc721.balanceOf(deployer.address);
-    console.log(`balanceOf(${deployer.address}): ${balance.toString()}`);
+    const balance = await erc721.balanceOf(deployerAddress);
+    console.log(`balanceOf(${deployerAddress}): ${balance.toString()}`);
   } catch (err) {
     console.log("❌ balanceOf call failed:", err);
   }
@@ -88,7 +96,7 @@ export async function verify721(params: Verify721Params): Promise<void> {
     try {
       const tx = await erc721.setApprovalForAll(operator, true, { gasLimit });
       await tx.wait();
-      const isApprovedForAll = await erc721.isApprovedForAll(deployer.address, operator);
+      const isApprovedForAll = await erc721.isApprovedForAll(deployerAddress, operator);
       console.log(`isApprovedForAll => ${isApprovedForAll}`);
     } catch (error) {
       console.log("❌ setApprovalForAll or isApprovedForAll call failed:", error);
@@ -98,9 +106,9 @@ export async function verify721(params: Verify721Params): Promise<void> {
   // Transfer tests if "to" is provided
   if (to) {
     try {
-      const tx = await erc721.transferFrom(deployer.address, to, tokenIdBN, { gasLimit });
+      const tx = await erc721.transferFrom(deployerAddress, to, tokenIdBN, { gasLimit });
       await tx.wait();
-      console.log(`✅ transferFrom() success`);
+      console.log("✅ transferFrom() success");
     } catch (error) {
       console.log("❌ transferFrom failed:", error);
     }

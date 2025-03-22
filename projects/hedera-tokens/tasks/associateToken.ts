@@ -1,6 +1,7 @@
 // <ai_context>
 // tasks/associateToken.ts
 // Hardhat task that uses the SDK function to associate a Hedera token with a designated signer
+// Updated to pass the signer to the new associateToken function
 // </ai_context>
 
 import { task } from "hardhat/config";
@@ -12,10 +13,17 @@ task("associateToken", "Associates a Hedera token with a designated signer so it
   .setAction(async (args, hre) => {
     const { tokenAddress, gasLimit, signerIndex } = args;
     const { associateToken } = await import("../sdk");
-    await associateToken({
+
+    const signers = await hre.ethers.getSigners();
+    const index = parseInt(signerIndex);
+    if (!signers[index]) {
+      throw new Error(`No signer found at index ${index}`);
+    }
+    const designatedSigner = signers[index];
+
+    const txHash = await associateToken(designatedSigner, {
       tokenAddress,
-      gasLimit: parseInt(gasLimit),
-      signerIndex: parseInt(signerIndex),
+      gasLimit: parseInt(gasLimit)
     });
-    console.log("SDK => Token association completed");
+    console.log("SDK => Token association completed, tx hash:", txHash);
   });

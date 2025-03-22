@@ -1,10 +1,11 @@
 // <ai_context>
 // sdk/createNftCollection.ts
 // Exports a function that creates a new NFT collection on Hedera via RariNFTCreator
+// Updated to remove direct Hardhat references and accept external signer/contract address
 // </ai_context>
 
-import { ethers, deployments } from "hardhat";
-import { RariNFTCreator, RariNFTCreator__factory } from "../typechain-types";
+import { Signer } from "ethers";
+import { RariNFTCreator__factory } from "../typechain-types";
 
 export interface CreateNftCollectionParams {
   collectionName: string;
@@ -23,7 +24,11 @@ export interface CreateNftCollectionParams {
   gasLimit?: number;  // default 4_000_000
 }
 
-export async function createNftCollection(params: CreateNftCollectionParams): Promise<string> {
+export async function createNftCollection(
+  signer: Signer,
+  rariNFTCreatorAddress: string,
+  params: CreateNftCollectionParams
+): Promise<string> {
   const {
     collectionName,
     collectionSymbol,
@@ -41,22 +46,8 @@ export async function createNftCollection(params: CreateNftCollectionParams): Pr
     gasLimit = 4_000_000
   } = params;
 
-  // Grab signer (first account is deployer by default)
-  const signers = await ethers.getSigners();
-  const [deployer] = signers;
-  console.log("Using deployer:", deployer.address);
+  const rariNFTCreator = RariNFTCreator__factory.connect(rariNFTCreatorAddress, signer);
 
-  // Attach to RariNFTCreator
-  const contractName = "RariNFTCreator";
-  const tokenCreateFactory = (await ethers.getContractFactory(
-    contractName
-  )) as RariNFTCreator__factory;
-  const factoryAddress = (await deployments.get(contractName)).address;
-  const rariNFTCreator = tokenCreateFactory.attach(factoryAddress) as RariNFTCreator;
-
-  console.log(`Using RariNFTCreator at address: ${factoryAddress}`);
-
-  // Create collection
   const createTokenTx = await rariNFTCreator.createNonFungibleTokenWithCustomFeesPublic(
     collectionName,
     collectionSymbol,
@@ -64,7 +55,7 @@ export async function createNftCollection(params: CreateNftCollectionParams): Pr
     tokenType,
     metadataUri,
     {
-      feeCollector: feeCollector || deployer.address,
+      feeCollector,
       isRoyaltyFee,
       isFixedFee,
       feeAmount,
@@ -79,16 +70,17 @@ export async function createNftCollection(params: CreateNftCollectionParams): Pr
   );
 
   const txReceipt = await createTokenTx.wait();
-  console.log("createNonFungibleToken tx hash:", createTokenTx.hash);
 
   // Attempt to parse the "CreatedToken" event
-  const parsedLogs = txReceipt.logs.map(log => {
-    try {
-      return rariNFTCreator.interface.parseLog(log);
-    } catch {
-      return null;
-    }
-  }).filter(Boolean);
+  const parsedLogs = txReceipt.logs
+    .map((log) => {
+      try {
+        return rariNFTCreator.interface.parseLog(log);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
 
   const createdTokenEvent = parsedLogs.find(
     (e) => e && e.eventFragment.name === "CreatedToken"
@@ -98,7 +90,5 @@ export async function createNftCollection(params: CreateNftCollectionParams): Pr
   }
 
   const tokenAddress = createdTokenEvent.args[0];
-  console.log("Token created at address:", tokenAddress);
-
   return tokenAddress;
 }
