@@ -28,8 +28,46 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      }
+      },
+      {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
+    overrides: {
+      "contracts/system-contracts/hedera-token-service/safe-hts/SafeHTS.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      "contracts/system-contracts/hedera-token-service/AtomicHTS.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      "contracts/system-contracts/native/EthNativePrecompileCaller.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    },
     settings: {
       metadata: {
         // Not including the metadata hash

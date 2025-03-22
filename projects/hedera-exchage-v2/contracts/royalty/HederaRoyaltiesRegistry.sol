@@ -12,7 +12,7 @@ import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../interface/IHederaTokenService.sol";
+import "../system-contracts/hedera-token-service/IHederaTokenService.sol";
 
 contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     /// @dev deprecated
@@ -40,7 +40,7 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     // 6 - unsupported/nonexistent royalties type
     uint constant royaltiesTypesAmount = 6;
 
-    function __HederaRoyaltiesRegistry_init() external initializer {
+    function __RoyaltiesRegistry_init() external initializer {
         __Ownable_init_unchained();
     }
 
@@ -116,14 +116,85 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     }
 
     /// @dev calculates royalties type for token contract
-    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) {   
+    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) { 
+
+
+        try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns(bool result) {
+            if (result) {
+                return 2;
+            }
+        } catch { }
+
+        try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns(bool result) {
+            if (result) {
+                return 3;
+            }
+        } catch { }
+        
+        try IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES) returns(bool result) {
+            if (result) {
+                return 5;
+            }
+        } catch { }
+        
+        if (royaltiesProvider != address(0)) {
+            return 4;
+        }
+
+        if (royaltiesByToken[token].initialized) {
+            return 1;
+        }
 
         return 6;
     }
 
     /// @dev returns royalties for token contract and token id
     function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
-        return new LibPart.Part[](0);
+        uint royaltiesProviderData = royaltiesProviders[token];
+
+        address royaltiesProvider = address(royaltiesProviderData);
+        uint royaltiesType = _getRoyaltiesType(royaltiesProviderData);
+
+        // case when royaltiesType is not set
+        if (royaltiesType == 0) {
+            // calculating royalties type for token
+            royaltiesType = calculateRoyaltiesType(token, royaltiesProvider);
+            
+            //saving royalties type
+            setRoyaltiesType(token, royaltiesType, royaltiesProvider);
+        }
+
+        //case royaltiesType = 1, royalties are set in royaltiesByToken
+        if (royaltiesType == 1) {
+            return royaltiesByToken[token].royalties;
+        }
+
+        //case royaltiesType = 2, royalties rarible v2
+        if (royaltiesType == 2) {
+            return getRoyaltiesRaribleV2(token,tokenId);
+        }
+
+        //case royaltiesType = 3, royalties rarible v1
+        if (royaltiesType == 3) {
+            return getRoyaltiesRaribleV1(token, tokenId);
+        }
+
+        //case royaltiesType = 4, royalties from external provider
+        if (royaltiesType == 4) {
+            return providerExtractor(token, tokenId, royaltiesProvider);
+        }
+
+        //case royaltiesType = 5, royalties EIP-2981
+        if (royaltiesType == 5) {
+            return getRoyaltiesEIP2981(token, tokenId);
+        }
+
+        // case royaltiesType = 6, unknown/empty royalties
+        if (royaltiesType == 6) {
+            return new LibPart.Part[](0);
+        } 
+
+        revert("something wrong in getRoyalties");
     }
 
     /// @dev tries to get royalties rarible-v2 for token and tokenId
