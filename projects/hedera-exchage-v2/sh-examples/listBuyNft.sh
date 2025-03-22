@@ -7,7 +7,7 @@
 
 echo "Listing and buying NFT token..."
 npx hardhat listBuyNft \
-  --exchange "0xdD34aBb3c4ADb5Bd5bde5743AA32A5aA63424cEb" \
+  --exchange "0xAA8ee5bCcA0f23deCf53Ac685f273E76Fede7fFA" \
   --nft "0x000000000000000000000000000000000057C327" \
   --token-id "8" \
   --price "100000000" \
