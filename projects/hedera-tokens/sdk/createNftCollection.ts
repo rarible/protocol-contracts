@@ -11,7 +11,7 @@ export interface CreateNftCollectionParams {
   collectionName: string;
   collectionSymbol: string;
   memo: string;
-  tokenType: number;
+  maxSupply: number;
   metadataUri: string;
   feeCollector: string;
   isRoyaltyFee: boolean;
@@ -33,7 +33,7 @@ export async function createNftCollection(
     collectionName,
     collectionSymbol,
     memo,
-    tokenType,
+    maxSupply,
     metadataUri,
     feeCollector,
     isRoyaltyFee,
@@ -52,7 +52,7 @@ export async function createNftCollection(
     collectionName,
     collectionSymbol,
     memo,
-    tokenType,
+    maxSupply,
     metadataUri,
     {
       feeCollector,

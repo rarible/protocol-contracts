@@ -11,7 +11,7 @@ task("createCollection", "Creates a new Hedera NFT collection via RariNFTCreator
   .addParam("collectionName", "Name of the NFT collection")
   .addParam("collectionSymbol", "Symbol for the NFT collection")
   .addParam("memo", "Memo field for the NFT collection")
-  .addParam("tokenType", "Numeric token type (e.g. 1001)")
+  .addParam("maxSupply", "Numeric (e.g. 1001)")
   .addParam("metadataUri", "Metadata URI (ipfs://...)")
   .addOptionalParam("feeCollector", "Fee collector address")
   .addOptionalParam("isRoyaltyFee", "true/false if we want royalties", "false")
@@ -28,7 +28,7 @@ task("createCollection", "Creates a new Hedera NFT collection via RariNFTCreator
       collectionName,
       collectionSymbol,
       memo,
-      tokenType,
+      maxSupply,
       metadataUri,
       feeCollector,
       isRoyaltyFee,
@@ -62,7 +62,7 @@ task("createCollection", "Creates a new Hedera NFT collection via RariNFTCreator
       collectionName,
       collectionSymbol,
       memo,
-      tokenType: parseInt(tokenType),
+      maxSupply: parseInt(maxSupply),
       metadataUri,
       feeCollector: feeCollector || deployer.address,
       isRoyaltyFee: isRoyaltyFee === "true",
