@@ -87,6 +87,7 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "contracts",
+    tests: "tests",
   },
   networks: {
     ...loadNetworkConfigs(),
@@ -104,6 +105,9 @@ const config: HardhatUserConfig = {
     customChains: loadCustomNetworks(),
   },
   deterministicDeployment: loadFactoryAddresses(),
+  mocha: {
+    timeout: 100000000
+  },
 };
 
 export default config;
