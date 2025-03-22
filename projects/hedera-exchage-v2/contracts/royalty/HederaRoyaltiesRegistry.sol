@@ -13,8 +13,12 @@ import "@rarible/royalties/contracts/IERC2981.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../system-contracts/hedera-token-service/IHederaTokenService.sol";
+import "../system-contracts/HederaResponseCodes.sol";
 
 contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
+
+    address constant precompileAddress = address(0x167);
+
     /// @dev deprecated
     event RoyaltiesSetForToken(address indexed token, uint indexed tokenId, LibPart.Part[] royalties);
     /// @dev emitted when royalties set for token in 
@@ -116,8 +120,14 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     }
 
     /// @dev calculates royalties type for token contract
-    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) { 
+    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal returns(uint) { 
 
+        (int64 responseCode, int32 tokenType) = getTokenType(token);
+        if (responseCode == HederaResponseCodes.SUCCESS) {
+            if (tokenType == 1) {
+                return 7;
+            }
+        }
 
         try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns(bool result) {
             if (result) {
@@ -194,6 +204,11 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
             return new LibPart.Part[](0);
         } 
 
+        // case royaltiesType = 7, royalties hedera
+        if (royaltiesType == 7) {
+            return getRoyaltiesHedera(token);
+        }
+
         revert("something wrong in getRoyalties");
     }
 
@@ -248,6 +263,49 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
         } catch {
             return new LibPart.Part[](0);
         }
+    }
+
+    /// @dev tries to get royalties EIP-2981 for token and tokenId
+    function getRoyaltiesHedera(address token) internal returns (LibPart.Part[] memory) {
+        (int256 responseCode, IHederaTokenService.TokenInfo memory tokenInfo) = getTokenInfo(token);
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            return new LibPart.Part[](0);
+        }
+        uint len = tokenInfo.royaltyFees.length;
+        LibPart.Part[] memory parts = new LibPart.Part[](len);
+        for (uint i = 0; i < len; i++) {
+            IHederaTokenService.RoyaltyFee memory fee = tokenInfo.royaltyFees[i];
+            uint96 value;
+            if (fee.denominator > 0) {
+                value = uint96((uint256(fee.numerator) * 10000) / uint256(fee.denominator));
+            } else {
+                value = 0;
+            }
+            parts[i].value = value;
+            parts[i].account = payable(fee.feeCollector);
+        }
+        return parts;
+    }
+
+    /// Query to return the token type for a given address
+    /// @param token The token address
+    /// @return responseCode The response code for the status of the request. SUCCESS is 22.
+    /// @return tokenType the token type. 0 is FUNGIBLE_COMMON, 1 is NON_FUNGIBLE_UNIQUE, -1 is UNRECOGNIZED
+    /// @dev This function reverts if the call is not successful
+    function getTokenType(address token) internal returns (int64 responseCode, int32 tokenType) {
+        (bool success, bytes memory result) = precompileAddress.call(
+            abi.encodeWithSelector(IHederaTokenService.getTokenType.selector, token));
+        (responseCode, tokenType) = success ? abi.decode(result, (int32, int32)) : (HederaResponseCodes.UNKNOWN, - 1);
+    }
+
+    /// Retrieves general token info for a given token
+    /// @param token The ID of the token as a solidity address
+    /// @dev This function reverts if the call is not successful
+    function getTokenInfo(address token) internal returns (int responseCode, IHederaTokenService.TokenInfo memory tokenInfo) {
+        (bool success, bytes memory result) = precompileAddress.call(
+            abi.encodeWithSelector(IHederaTokenService.getTokenInfo.selector, token));
+        IHederaTokenService.TokenInfo memory defaultTokenInfo;
+        (responseCode, tokenInfo) = success ? abi.decode(result, (int32, IHederaTokenService.TokenInfo)) : (HederaResponseCodes.UNKNOWN, defaultTokenInfo);
     }
 
     uint256[46] private __gap;

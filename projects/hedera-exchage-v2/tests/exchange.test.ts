@@ -168,13 +168,13 @@ describe("Exchange Test", function () {
 
   it("Should list and buy NFT using ExchangeMetaV2", async function () {
     // 1. user1 lists the NFT
-    const price = BigNumber.from("1"); // Price in "HBAR" terms. The code adjusts the value in buyNftToken
+    const price = BigNumber.from("100000000"); // Price in "HBAR" terms. The code adjusts the value in buyNftToken
     const { order, signature } = await listNftToken(
       exchange.address,
       user1,
       nftAddress,
       BigNumber.from(mintedSerial),
-      price.div(BigNumber.from("10000000000"))
+      price
     );
 
     // 2. user2 buys the NFT
@@ -183,7 +183,7 @@ describe("Exchange Test", function () {
       user2,
       order,
       signature,
-      price.div(BigNumber.from("10000000000"))
+      price
     );
     await tx.wait();
 
