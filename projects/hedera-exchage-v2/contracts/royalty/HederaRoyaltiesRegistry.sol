@@ -40,7 +40,7 @@ contract HederaRoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     // 6 - unsupported/nonexistent royalties type
     uint constant royaltiesTypesAmount = 6;
 
-    function __RoyaltiesRegistry_init() external initializer {
+    function __HederaRoyaltiesRegistry_init() external initializer {
         __Ownable_init_unchained();
     }
 

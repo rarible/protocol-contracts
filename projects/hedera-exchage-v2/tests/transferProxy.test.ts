@@ -125,7 +125,7 @@ describe("UnsafeTransferProxy", function () {
     expect(receipt.status).to.equal(1);
 
     // Verify that new owner is user2
-    const erc721 = IERC721Enumerable__factory.connect(nftAddress, user1);
+    const erc721: IERC721Enumerable = IERC721Enumerable__factory.connect(nftAddress, user1);
     const newOwner = await erc721.ownerOf(mintedSerial);
     expect(newOwner).to.equal(toAddress);
   });
