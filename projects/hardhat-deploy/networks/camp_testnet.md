@@ -1,0 +1,16 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0x37Ba24f6F2fc8C7d242cb9fcf7CA4a42f2721ccD | https://camp-network-testnet.blockscout.com/address/0x37Ba24f6F2fc8C7d242cb9fcf7CA4a42f2721ccD 
+ DefaultProxyAdmin | 0x67aC7Ca8b4513b34277412F630B655eED85b63C1 | https://camp-network-testnet.blockscout.com/address/0x67aC7Ca8b4513b34277412F630B655eED85b63C1 
+ ERC1155LazyMintTransferProxy | 0x9A93478C8C9c8ecBF7db2f098AEDE82dBB0e6306 | https://camp-network-testnet.blockscout.com/address/0x9A93478C8C9c8ecBF7db2f098AEDE82dBB0e6306 
+ ERC1155RaribleBeaconMeta | 0xaC66b61Dd026E02732Ae4e2a8F0776194AC20a1a | https://camp-network-testnet.blockscout.com/address/0xaC66b61Dd026E02732Ae4e2a8F0776194AC20a1a 
+ ERC1155RaribleFactoryC2 | 0xC8c23a81044787BA91bb45e141E7F5D3eEDfA492 | https://camp-network-testnet.blockscout.com/address/0xC8c23a81044787BA91bb45e141E7F5D3eEDfA492 
+ ERC1155RaribleMeta | 0x8936ADC061Bb292fc9b8e285BACD27054E7DE002 | https://camp-network-testnet.blockscout.com/address/0x8936ADC061Bb292fc9b8e285BACD27054E7DE002 
+ ERC20TransferProxy | 0x5Fcf855bB0ec0587a806507fe0d9D71079c04EBc | https://camp-network-testnet.blockscout.com/address/0x5Fcf855bB0ec0587a806507fe0d9D71079c04EBc 
+ ERC721LazyMintTransferProxy | 0x83B58a979fF87728da4c5AB8a1A2C6F4a28Af0Fd | https://camp-network-testnet.blockscout.com/address/0x83B58a979fF87728da4c5AB8a1A2C6F4a28Af0Fd 
+ ERC721RaribleFactoryC2 | 0x2F8FA2B9503Fe91BE6B5C290D4e38e861d4398b0 | https://camp-network-testnet.blockscout.com/address/0x2F8FA2B9503Fe91BE6B5C290D4e38e861d4398b0 
+ ERC721RaribleMeta | 0x4fB1d6b49c09B6576c5f580b7062f745694Fc838 | https://camp-network-testnet.blockscout.com/address/0x4fB1d6b49c09B6576c5f580b7062f745694Fc838 
+ ERC721RaribleMinimalBeaconMeta | 0x108728e0835Be13c372aF39bE1a400bF47C68397 | https://camp-network-testnet.blockscout.com/address/0x108728e0835Be13c372aF39bE1a400bF47C68397 
+ ExchangeMetaV2 | 0xC4d4d5f9AcDBaA8D5a296369dA439BEE235F0dbe | https://camp-network-testnet.blockscout.com/address/0xC4d4d5f9AcDBaA8D5a296369dA439BEE235F0dbe 
+ RoyaltiesRegistry | 0xCd5134Cc7Fafaf1A391460de4781e70EC36C169a | https://camp-network-testnet.blockscout.com/address/0xCd5134Cc7Fafaf1A391460de4781e70EC36C169a 
+ TransferProxy | 0x9FC45dCE54Cf761C689367a7450a82688279b818 | https://camp-network-testnet.blockscout.com/address/0x9FC45dCE54Cf761C689367a7450a82688279b818 
