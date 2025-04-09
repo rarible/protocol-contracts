@@ -45,6 +45,7 @@ describe("Exchange Test", function () {
   let deployer: Signer;
   let user1: Signer;
   let user2: Signer;
+  let royaltiesReceiver: Signer;
 
   let unsafeTransferProxy: UnsafeTransferProxy;
   let erc20TransferProxy: ERC20TransferProxy;
@@ -62,18 +63,20 @@ describe("Exchange Test", function () {
     
     console.log("STEP 0: Setting up test accounts");
     const signers = await ethers.getSigners();
-    deployer = signers[2];
-    user1 = signers[1];
+    deployer = signers[1];
+    user1 = signers[2];
     user2 = signers[0];
+    royaltiesReceiver = signers[3]; 
     console.log("user1:", await user1.getAddress());
     console.log("user2:", await user2.getAddress());
     console.log("deployer:", await deployer.getAddress());
+    console.log("royaltiesReceiver:", await royaltiesReceiver.getAddress());
 
     console.log("Account balances:");
     console.log("- deployer:", ethers.utils.formatEther(await deployer.getBalance()), "ETH");
     console.log("- user1:", ethers.utils.formatEther(await user1.getBalance()), "ETH");
     console.log("- user2:", ethers.utils.formatEther(await user2.getBalance()), "ETH");
-
+    console.log("- royaltiesReceiver:", ethers.utils.formatEther(await royaltiesReceiver.getBalance()), "ETH");
     console.log("\nSTEP 1: Deploying UnsafeTransferProxy");
     const unsafeTransferProxyFactory = new UnsafeTransferProxy__factory(deployer);
     unsafeTransferProxy = await unsafeTransferProxyFactory.deploy();
@@ -121,8 +124,8 @@ describe("Exchange Test", function () {
     await exchange.__ExchangeV2_init(
       unsafeTransferProxy.address,
       erc20TransferProxy.address,
-      0, // protocol fee
-      ethers.constants.AddressZero, // default fee receiver
+      1, // protocol fee
+      await royaltiesReceiver.getAddress(), // default fee receiver
       royaltiesRegistry.address
     );
     console.log("ExchangeMetaV2 initialized with proxies and royalties registry");
@@ -154,10 +157,10 @@ describe("Exchange Test", function () {
         memo: "Test Collection for Exchange",
         maxSupply: 100,
         metadataUri: "ipfs://CID",
-        feeCollector: await deployer.getAddress(),
-        isRoyaltyFee: false,
+        feeCollector: await royaltiesReceiver.getAddress(),
+        isRoyaltyFee: true,
         isFixedFee: false,
-        feeAmount: 0,
+        feeAmount: 10,
         fixedFeeTokenAddress: ethers.constants.AddressZero,
         useHbarsForPayment: true,
         useCurrentTokenForPayment: false,
@@ -208,7 +211,7 @@ describe("Exchange Test", function () {
     console.log("STEP 1: Listing NFT for sale");
     console.log(`NFT Collection: ${nftAddress}`);
     console.log(`Token ID: ${mintedSerial}`);
-    const price = BigNumber.from("100000000"); // Price in "HBAR" terms. The code adjusts the value in buyNftToken
+    const price = BigNumber.from("1000000000"); // Price in "HBAR" terms. The code adjusts the value in buyNftToken
     console.log(`Listing price: ${ethers.utils.formatUnits(price, 8)} HBAR`);
     
     const { order, signature } = await listNftToken(

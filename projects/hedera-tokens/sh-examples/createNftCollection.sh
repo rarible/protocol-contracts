@@ -1,13 +1,13 @@
 npx hardhat createCollection --network testnet \
   --collection-name "Rarible Hedera collection without royalties" \
-  --collection-symbol "CATSYMBOL2" \
-  --memo "MEMOCATSYMBOL2" \
+  --collection-symbol "CATSYMBOL3" \
+  --memo "MEMOCATSYMBOL3" \
   --max-supply 1001 \
   --metadata-uri "ipfs://QmeSQDV3oVmrwpbBAecu5BLmCFZwd1KRkWMssFXHZBY424" \
   --fee-collector "0x6Bf378e79F736057f64cD647e7Da99fD76800C9B" \
-  --is-royalty-fee false \
+  --is-royalty-fee true \
   --is-fixed-fee false \
-  --fee-amount 0 \
+  --fee-amount 10 \
   --fixed-fee-token-address "0x0000000000000000000000000000000000000000" \
   --use-hbars-for-payment true \
   --use-current-token-for-payment false \

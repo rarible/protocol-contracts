@@ -123,6 +123,8 @@ export async function buyNftToken(
   const buyerSignature = await signOrderEthers(buyerOrder, buyerSigner, exchangeAddress);
   const exchange = ExchangeMetaV2__factory.connect(exchangeAddress, buyerSigner);
 
+  console.log("buyerOrder:", JSON.stringify(buyerOrder));
+  console.log("sellerOrder:", JSON.stringify(sellerOrder));
   // For Hedera, adapt 'value' as needed if paying in native currency
   const tx = await exchange.matchOrders(
     sellerOrder,
@@ -130,8 +132,8 @@ export async function buyNftToken(
     buyerOrder,
     buyerSignature,
     {
-      gasLimit: 8_000_000,
-      value: price.mul(BigNumber.from("10000000000")) // example, adapt if needed
+      gasLimit: 15_000_000,
+      value: (price.add(price.mul(15000).div(10000))).mul(BigNumber.from("10000000000")) // example, adapt if needed
     }
   );
   return tx;
