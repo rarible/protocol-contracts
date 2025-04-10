@@ -5,7 +5,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
   .addParam("name", "Contract name")
   .addParam("symbol", "Contract symbol")
   .addParam("contractUri", "Base contract URI")
-  .addParam("trustedForwarders", "Comma-separated list of trusted forwarder addresses")
+  .addOptionalParam("trustedForwarders", "Comma-separated list of trusted forwarder addresses")
   .addParam("saleRecipient", "Sale recipient address")
   .addParam("royaltyRecipient", "Royalty recipient address")
   .addParam("royaltyBps", "Royalty basis points (numeric)")
@@ -38,7 +38,10 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
     const deployer = signers[0];
 
     // parse the forwarders input
-    const forwarders = trustedForwarders.split(",").map((addr: string) => addr.trim());
+    let forwarders = []
+    if (trustedForwarders) {
+      forwarders = trustedForwarders.split(",").map((addr: string) => addr.trim());
+    }
 
     // get the clone factory address
     let cloneFactoryAddress = cloneFactory;

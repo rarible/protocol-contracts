@@ -23,7 +23,7 @@ export async function deployContract(
   name: string,
   symbol: string,
   contractURI: string,
-  trustedForwarders: string[],
+  trustedForwarders: string[] = [],
   saleRecipient: string,
   royaltyRecipient: string,
   royaltyBps: number,
