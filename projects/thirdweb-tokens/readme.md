@@ -33,3 +33,10 @@ This project demonstrates how to deploy NFT collections without fees using Third
 - Clone factory support
 
 
+## drop 721 implementation
+
+https://polygonscan.com/address/0xe6bb91e8facf3717d5f28093efc8e0fe00994cb1
+
+## drop 1155 implementation
+
+https://polygonscan.com/address/0x7de673c34dce4be7d9dad99a465bb1f3f380be6b

@@ -1,0 +1,14 @@
+npx hardhat deploy-drop721 --network polygon_mainnet \
+    --defaultAdmin 0xb3D6b3e65C39C5C3c7434a27542912C4600e9910 \
+    --name "MyDrop721Collection" \
+    --symbol "DRP" \
+    --contractUri "ipfs://QmSomeHash" \
+    --saleRecipient 0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4 \
+    --royaltyRecipient 0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4 \
+    --royaltyBps 500 \
+    --platformFeeBps 200 \
+    --platformFeeRecipient 0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4 \
+    --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
+    --extraData 0x \
+    --cloneFactory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
+    --implementation 0x123456789abcdef123456789abcdef123456789a

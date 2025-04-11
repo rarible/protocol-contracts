@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFactory")
+task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
   .addParam("symbol", "Contract symbol")
@@ -14,7 +14,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
   .addOptionalParam("salt", "Salt value (default 0x)", "0x0000000000000000000000000000000000000000000000000000000000000000")
   .addOptionalParam("extraData", "Extra data in hex, default 0x", "0x")
   .addParam("cloneFactory", "TWCloneFactory address if not using deployments", "")
-  .addParam("implementation", "Address of the OpenEditionERC721FlatFee logic contract", "")
+  .addParam("implementation", "Address of the DropERC721 logic contract", "")
   .setAction(async (args, hre) => {
     const {
       defaultAdmin,
@@ -38,7 +38,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
     const deployer = signers[0];
 
     // parse the forwarders input
-    let forwarders = []
+    let forwarders = [];
     if (trustedForwarders) {
       forwarders = trustedForwarders.split(",").map((addr: string) => addr.trim());
     }
@@ -50,9 +50,9 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
     let contractImplementation = implementation;
 
     // Now call the sdk method
-    const { deployOE: deployContract } = await import("../sdk");
+    const { deployDrop721 } = await import("../sdk");
 
-    const deployedAddress = await deployContract(
+    const deployedAddress = await deployDrop721(
       deployer,
       cloneFactoryAddress,
       contractImplementation,
@@ -70,5 +70,5 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
       extraData
     );
 
-    console.log("OpenEditionERC721FlatFee proxy deployed at:", deployedAddress);
+    console.log("DropERC721 proxy deployed at:", deployedAddress);
   });

@@ -1,24 +1,13 @@
-import { Signer, BytesLike, BigNumber, providers, ContractReceipt } from "ethers";
-import { getCloneFactory } from "./clone-factory";
+import { Signer, BytesLike } from "ethers";
 import { TWCloneFactory } from "../typechain-types";
+import { DropERC721__factory } from "../typechain-types/factories/DropERC721__factory";
+import { getCloneFactory } from "./clone-factory";
 
-// If you have a factory for OpenEditionERC721FlatFee, import it here:
-import { OpenEditionERC721FlatFee__factory } from "../typechain-types/factories/OpenEditionERC721FlatFee__factory";
-
-/*
-<ai_context>
-This file is the deploy-contracts utility. We add a method to:
-- create the init data
-- call the clone factory
-- return the deployed address
-</ai_context>
-*/
-
-export async function deployContract(
+export async function deployDrop721(
   signer: Signer,
   cloneFactoryAddress: string,
   contractImplementation: string,
-  // Arguments to initialize the OpenEditionERC721FlatFee contract:
+  // Arguments to initialize the DropERC721 contract:
   defaultAdmin: string,
   name: string,
   symbol: string,
@@ -34,7 +23,7 @@ export async function deployContract(
   extraData: BytesLike = "0x"
 ): Promise<string> {
   // 1. Encode the initializer data for the logic contract
-  const initData = OpenEditionERC721FlatFee__factory.createInterface().encodeFunctionData(
+  const initData = DropERC721__factory.createInterface().encodeFunctionData(
     "initialize",
     [
       defaultAdmin,
@@ -54,7 +43,6 @@ export async function deployContract(
   const cloneFactory: TWCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
 
   // 3. Deploy the proxy by calling the factory's deployProxyByImplementationV2 function.
-  //    This returns a transaction object typed by TypeChain.
   const tx = await cloneFactory.deployProxyByImplementationV2(
     contractImplementation,
     initData,
