@@ -37,6 +37,15 @@ This project demonstrates how to deploy NFT collections without fees using Third
 
 https://polygonscan.com/address/0xe6bb91e8facf3717d5f28093efc8e0fe00994cb1
 
+
+## drop 721 claim tx
+
+https://polygonscan.com/tx/0x666eec972a12ca1bac267a38bbdeb99d7f67ccc6d04c07f2bd3d22732417a991
+
+## collection 
+https://thirdweb.com/polygon/0x715a49C8808C8EddE4Bd084A26c53E796291657b/nfts
+
+
 ## drop 1155 implementation
 
 https://polygonscan.com/address/0x7de673c34dce4be7d9dad99a465bb1f3f380be6b
