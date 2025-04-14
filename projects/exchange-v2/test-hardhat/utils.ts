@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { keccak256 } from "ethereumjs-util";
-import { ContractTransaction } from "ethers";
+import { BigNumber, ContractTransaction } from "ethers";
 import { ethers } from "hardhat";
 import { HardhatEthersHelpers } from "hardhat/types";
 import Web3 from "web3";
@@ -17,6 +17,14 @@ export function id(str: string): string {
 export function enc(token: string, tokenId?: number): string {
   if (tokenId) {
     return web3.eth.abi.encodeParameters(["address", "uint256"], [token, "" + tokenId]);
+  } else {
+    return web3.eth.abi.encodeParameter("address", token);
+  }
+}
+
+export function encBigNumber(token: string, tokenId?: BigNumber): string {
+  if (tokenId) {
+    return web3.eth.abi.encodeParameters(["address", "uint256"], [token, tokenId.toString()]);
   } else {
     return web3.eth.abi.encodeParameter("address", token);
   }

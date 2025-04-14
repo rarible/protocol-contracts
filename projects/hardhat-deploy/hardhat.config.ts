@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
+import "./tasks/sanity-check";
 
 import * as dotenv from "dotenv";
 
