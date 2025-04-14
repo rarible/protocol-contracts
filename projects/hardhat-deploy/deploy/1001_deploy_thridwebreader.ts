@@ -12,13 +12,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const owner = deployer;
   console.log("deploying contracts with the account:", deployer);
 
+  const NATIVE1 = "0x0000000000000000000000000000000000000000";
+  const NATIVE2 = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
   await deploy('DropERC721Reader', {
     from: deployer,
     proxy: {
         execute: {
             init: {
             methodName: "initialize",
-            args: ["0x0000000000000000000000000000000000000000", "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", owner],
+            args: [NATIVE1, NATIVE2, owner],
             },
         },
         proxyContract: "OpenZeppelinTransparentProxy",
