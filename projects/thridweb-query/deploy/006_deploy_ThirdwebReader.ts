@@ -9,10 +9,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   console.log("deploying contracts with the account:", deployer);
 
-  // address public constant NATIVE1 = 0x0000000000000000000000000000000000000000;
-  // address public constant NATIVE2 = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-  // kkep deployer as an owner because read only contract
+  // keep deployer as an owner because read only contract
   await deploy('DropERC721Reader', {
     from: deployer,
     proxy: {
