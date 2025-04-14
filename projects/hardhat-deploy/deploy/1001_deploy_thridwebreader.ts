@@ -1,9 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import {DropERC721Reader, DropERC721Reader__factory } from "@rarible/thirdweb-query";
-//import { ProxyAdmin, ProxyAdmin__factory } from "../typechain-types";
+import { DropERC721Reader__factory } from "@rarible/thirdweb-query";
 import { DefaultProxyAdmin__factory } from "../typechain-types";
-// import {TransparentUpgradeableProxy__factory} from "../typechain-types/@openzeppelin/contracts-sol08/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
