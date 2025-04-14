@@ -69,6 +69,15 @@ const config: HardhatUserConfig = {
           },
         },
       },
+      "src/TransparentUpgradeableProxy.sol": {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     },
     settings: {
       metadata: {
