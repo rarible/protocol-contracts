@@ -12,11 +12,11 @@ Two main requirements for function are:
 
 ##### Algorithm `matchOrders(Order orderLeft, bytes signatureLeft,  Order orderRight, bytes signatureRight)` 
 
-Orders are being validated by `validateOrders()` internal function, if error is find, function being reverted.
+Orders are being validated by `validateOrders()` internal function, if error is found, function being reverted.
 
 Next step is `matchAssets` function, should calculate if Asset types match with each other.
 
-Next step is parsing `Order.data`. After that fumction `setFillEmitMatch()` calculates fills for the matched orders and set them in "fills" mapping. Finally `doTransfers()` function is called.
+Next step is parsing `Order.data`. After that function `setFillEmitMatch()` calculates fills for the matched orders and set them in "fills" mapping. Finally `doTransfers()` function is called.
 
 ##### Algorithm `directPurchase(Purchase  direct)` or `directAcceptBid(AcceptBid  direct)`
 
