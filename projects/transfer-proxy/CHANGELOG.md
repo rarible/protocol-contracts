@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
+
+### Bug Fixes
+
+- removed unneded migrations and tests ([7971522](https://github.com/rarible/protocol-contracts/commit/7971522e7d2721537687aadcebd9f45d427a3997))
+
+### Features
+
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
 ## [0.8.4-beta.3](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
 
 **Note:** Version bump only for package @rarible/transfer-proxy

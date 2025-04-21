@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
+
+### Features
+
+- add erc721ex for e2e tests ([#313](https://github.com/rarible/protocol-contracts/issues/313)) ([72c0bef](https://github.com/rarible/protocol-contracts/commit/72c0bef3f1920a3547df0e257051545e10639f7a))
+- **PT-5279:** mint price erc20 ([#292](https://github.com/rarible/protocol-contracts/issues/292)) ([cd9a75a](https://github.com/rarible/protocol-contracts/commit/cd9a75a3c52464b9304b44f98e8ce3dd7e3a46b4))
+- **PT-5303:** owner updated event ([#282](https://github.com/rarible/protocol-contracts/issues/282)) ([634a0ca](https://github.com/rarible/protocol-contracts/commit/634a0ca386c84e86e61b717a143aed324007fc9b))
+- **PT-5492:** extend test contract with erc-4906 ([2655ba0](https://github.com/rarible/protocol-contracts/commit/2655ba03c928d393e30b767fa6a134057ba7613b))
+- **PT-5535:** moonbirds rendering ([bbb8df3](https://github.com/rarible/protocol-contracts/commit/bbb8df35170e862ae2387b3607821a079a150e86))
+- **PT-7153:** index items without mints ([c24a729](https://github.com/rarible/protocol-contracts/commit/c24a7299f13622f3e7932fb8cf635deec52f80fd))
+
 ## [0.8.4-beta.3](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
 
 **Note:** Version bump only for package @rarible/test
