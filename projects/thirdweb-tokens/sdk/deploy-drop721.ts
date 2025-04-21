@@ -1,6 +1,6 @@
 import { Signer, BytesLike } from "ethers";
 import { TWCloneFactory } from "../typechain-types";
-import { DropERC721__factory } from "../typechain-types/factories/DropERC721__factory";
+import { DropERC721__factory } from "../typechain/factories/DropERC721__factory";
 import { getCloneFactory } from "./clone-factory";
 
 export async function deployDrop721(

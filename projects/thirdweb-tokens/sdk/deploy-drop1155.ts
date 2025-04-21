@@ -8,7 +8,7 @@ returning the deployed proxy address.
 
 import { Signer, BytesLike } from "ethers";
 import { TWCloneFactory } from "../typechain-types";
-import { DropERC1155__factory } from "../typechain-types/factories/DropERC1155__factory";
+import { DropERC1155__factory } from "../typechain/factories/DropERC1155__factory";
 import { getCloneFactory } from "./clone-factory";
 
 export async function deployDrop1155(

@@ -3,7 +3,7 @@ import { getCloneFactory } from "./clone-factory";
 import { TWCloneFactory } from "../typechain-types";
 
 // If you have a factory for OpenEditionERC721FlatFee, import it here:
-import { OpenEditionERC721FlatFee__factory } from "../typechain-types/factories/OpenEditionERC721FlatFee__factory";
+import { OpenEditionERC721FlatFee__factory } from "../typechain/factories/OpenEditionERC721FlatFee__factory";
 
 /*
 <ai_context>
