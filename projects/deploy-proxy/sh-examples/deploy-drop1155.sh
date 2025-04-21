@@ -11,4 +11,4 @@ npx hardhat deploy-drop1155 --network polygon_mainnet \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
     --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0x49FB44646021b6903700B83eD458F72F21Cf7D87
+    --implementation 0x060087232E5aAC1c3793a1BAd866b5B930cfCA31

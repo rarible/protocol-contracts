@@ -11,10 +11,8 @@ npx hardhat deploy-drop721 --network polygon_mainnet \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
     --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0xe6bb91e8facf3717d5f28093efc8e0fe00994cb1
+    --implementation 0x70682de037C28b46dB85408A5Cb9dF95e15a6301
 
-
-    0x98C2d878064dCD20489214cf0866f972f91784D0
 
     
 npx hardhat deploy-drop721 --network megaeth_testnet \
@@ -30,4 +28,4 @@ npx hardhat deploy-drop721 --network megaeth_testnet \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
     --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0x98C2d878064dCD20489214cf0866f972f91784D0
+    --implementation 0x70682de037C28b46dB85408A5Cb9dF95e15a6301

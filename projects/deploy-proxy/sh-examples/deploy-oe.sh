@@ -11,12 +11,10 @@ npx hardhat deploy-oe --network polygon_mainnet \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
     --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0x01429892dCa00bA625908378D277481852e147d7
+    --implementation 0x5aDEB38dE7E5485e54E9e2ae6a750d70F7245860
 
 
 # megaeth
-
-0x7d47126a2600E22eab9eD6CF0e515678727779A6
 
 npx hardhat deploy-oe --network megaeth_testnet \
     --default-admin 0x98556b192f8304001986e0bb94e61e51049a600c \
@@ -31,4 +29,4 @@ npx hardhat deploy-oe --network megaeth_testnet \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
     --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0x01429892dCa00bA625908378D277481852e147d7
+    --implementation 0x5aDEB38dE7E5485e54E9e2ae6a750d70F7245860
