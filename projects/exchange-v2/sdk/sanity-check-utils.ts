@@ -1,7 +1,8 @@
 import { signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
 import { encBigNumber, ERC1155, ERC20, ERC721, ETH, ZERO } from '@rarible/exchange-v2/test-hardhat/utils';
 import { BigNumber, ethers } from 'ethers';
-import { ExchangeMetaV2, ExchangeV2, TestERC20 } from '../../typechain-types';
+import { ExchangeMetaV2, ExchangeV2 } from '../typechain-types';
+import { IERC20Upgradeable } from '@rarible/tokens/js';
 
 /**
  * Return 4-byte selector for "V3"
@@ -200,7 +201,7 @@ export async function listBuyWithERC20(
     tokenId: string,
     price: string,
     exchange: ExchangeMetaV2 | ExchangeV2,
-    erc20Contract: TestERC20
+    erc20Contract: IERC20Upgradeable
   ) {
     const sellerAddress = sellerWallet.address;
     const mint721Data = {

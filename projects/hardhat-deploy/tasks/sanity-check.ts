@@ -2,7 +2,6 @@ import { task } from 'hardhat/config';
 import dotenv from 'dotenv';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { BigNumber, ethers } from 'ethers';
-import { ERC1155RaribleFactoryC2__factory, ERC721RaribleFactoryC2__factory, ExchangeMetaV2, ExchangeV2, TestERC20 } from '../typechain-types';
 import { getConfig } from '../utils/utils';
 import { getTokenAddress, listBuyWithERC20, listBuyWithEth } from './sanityCheckUtils/utils';
 
@@ -16,6 +15,8 @@ task('sanity-check', 'Mints tokens from two contracts and transfers them to a ne
     .addOptionalParam("price", "Price in wei", "1000")
     .addOptionalParam('salt', 'Salt for the token creation', "0")
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { ERC1155RaribleFactoryC2__factory, ERC721RaribleFactoryC2__factory, ExchangeMetaV2, ExchangeV2, TestERC20 } = await import('../typechain-types');
+
         // Get deployment configuration based on network
         const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
         const { deploy } = hre.deployments;
@@ -47,9 +48,9 @@ task('sanity-check', 'Mints tokens from two contracts and transfers them to a ne
 
         let exchangeContract;
         if (deploy_meta && !deploy_non_meta) {
-            exchangeContract = await hre.ethers.getContractAt("ExchangeMetaV2", taskArgs.exchange) as ExchangeMetaV2;
+            exchangeContract = await hre.ethers.getContractAt("ExchangeMetaV2", taskArgs.exchange) as typeof ExchangeMetaV2;
         } else {
-            exchangeContract = await hre.ethers.getContractAt("ExchangeV2", taskArgs.exchange) as ExchangeV2;
+            exchangeContract = await hre.ethers.getContractAt("ExchangeV2", taskArgs.exchange) as typeof ExchangeV2;
         }
 
         console.log('Created 721 token at:', tokenAddress721);
