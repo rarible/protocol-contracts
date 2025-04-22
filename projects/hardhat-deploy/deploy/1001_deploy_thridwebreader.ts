@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { DropERC721Reader__factory } from "@rarible/thirdweb-query";
 import { DefaultProxyAdmin__factory } from "../typechain-types";
+import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils/utils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -38,8 +39,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
     autoMine: true,
     args: [],
-    deterministicDeployment: process.env.DETERMENISTIC_DEPLOYMENT_SALT,
-    skipIfAlreadyDeployed: process.env.SKIP_IF_ALREADY_DEPLOYED ? true: false,
+    deterministicDeployment: DETERMENISTIC_DEPLOYMENT_SALT,
+    skipIfAlreadyDeployed: true,
     contract: {
       abi: DropERC721Reader__factory.abi as any,
       bytecode: DropERC721Reader__factory.bytecode,
