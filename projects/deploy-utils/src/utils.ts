@@ -161,8 +161,11 @@ function readNetworkConfig(file: string): { chainId: number, apiUrl: string, exp
 // Main function to load and return custom network configurations
 export function loadCustomNetworks(): Array<{ network: string; chainId: number; urls: { apiURL: string; browserURL: string; } }> {
     const configDirectory = getConfigPath();
-    const files = fs.readdirSync(configDirectory).filter(file => path.extname(file) === '.json');
-    const networks = files.map(file => path.basename(file, '.json'));
+    let networks = new Array<string>();
+    if (fs.existsSync(configDirectory)) {
+      const files = fs.readdirSync(configDirectory).filter(file => path.extname(file) === '.json');
+      networks = files.map(file => path.basename(file, '.json'));
+    }
 
     return networks.map(network => {
         const configData = readNetworkConfig(network + '.json');
@@ -206,16 +209,17 @@ function readApiKeyFromConfig(file: string): string {
 export function loadApiKeys(): Record<string, string> {
     const configDirectory = getConfigPath();
     const apiKeys: Record<string, string> = {};
-    
-    // Read all JSON files from the config directory
-    const files = fs.readdirSync(configDirectory).filter(file => path.extname(file) === '.json');
+    if (fs.existsSync(configDirectory)) {
+      // Read all JSON files from the config directory
+      const files = fs.readdirSync(configDirectory).filter(file => path.extname(file) === '.json');
 
-    // Process each JSON file and extract API keys
-    files.forEach(file => {
-        const networkName = path.basename(file, '.json'); // Removes the .json extension to get the network name
-        const camelCaseKey = toCamelCase(networkName);   // Convert network name to camelCase for the key
-        apiKeys[camelCaseKey] = readApiKeyFromConfig(file); // Read the API key from the file
-    });
+      // Process each JSON file and extract API keys
+      files.forEach(file => {
+          const networkName = path.basename(file, '.json'); // Removes the .json extension to get the network name
+          const camelCaseKey = toCamelCase(networkName);   // Convert network name to camelCase for the key
+          apiKeys[camelCaseKey] = readApiKeyFromConfig(file); // Read the API key from the file
+      });
+    }
 
     return apiKeys;
 }
