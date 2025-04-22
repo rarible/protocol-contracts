@@ -9,7 +9,9 @@ import {
   TestERC20,
 } from '../typechain-types';
 import { getConfig } from '../utils/utils';
-import { getTokenAddress, listBuyWithERC20, listBuyWithEth } from '../tasks/sanityCheckUtils/utils';
+import { getTokenAddress } from '@rarible/exchange-v2/sdk/getTokenAddress';
+import { listBuyWithERC20 } from '@rarible/exchange-v2/sdk/listBuyERC20';
+import { listBuyWithEth } from '@rarible/exchange-v2/sdk/listBuyETH';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, ethers: hardhatEthers, network } = hre;
