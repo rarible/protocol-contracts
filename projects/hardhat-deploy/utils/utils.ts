@@ -27,3 +27,5 @@ export function getConfig(network: string): any {
 }
 
 export const DEPLOY_FROM = process.env.DEPLOY_FROM;
+
+export const DETERMENISTIC_DEPLOYMENT_SALT: string = process.env.DETERMENISTIC_DEPLOYMENT_SALT || "0x1118";
