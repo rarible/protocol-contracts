@@ -101,7 +101,15 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
-  }
+  },
+  typechain: {
+    outDir: "typechain-types", // Output directory for generated typings
+    target: "ethers-v5", // Use ethers-v6 for zksync-ethers compatibility
+    alwaysGenerateOverloads: false,
+    // externalArtifacts: [
+    //   "artifacts/contracts/**/*[!dbg].json"
+    // ],
+  },
 };
 
 export default config;
