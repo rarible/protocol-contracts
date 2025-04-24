@@ -59,37 +59,3 @@ To run integration tests of contracts to deploy:
 ```shell
 npx hardhat test
 ```
-
-
-<!--
-kroma done -- need more fund
-4:03
-alephzero done
-4:04
-shape done
-4:05
-telos done
-4:06
-eth done
-
-
-Vadim Fadeev
-  4:07 PM
-0.08227252444
-4:07
-eth
-4:07
-oe
-
-
-Kirill Timofeev
-:spiral_calendar_pad:  4:08 PM
-bera done
-4:09
-abstract done
-4:09
-arbitrum done
-4:11
-matchain done
-4:12
-goat done
