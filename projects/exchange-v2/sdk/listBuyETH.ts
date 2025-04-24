@@ -1,5 +1,5 @@
-import { signOrderEthers } from "@rarible/exchange-v2/test-hardhat/signOrder";
-import { encBigNumber, ERC1155, ERC20, ERC721, ETH, ZERO } from '@rarible/exchange-v2/test-hardhat/utils';
+import { signOrderEthers } from "./signOrder";
+import { encBigNumber, ERC1155, ERC20, ERC721, ETH, ZERO } from './utils';
 import { BigNumber } from 'ethers';
 import { ExchangeMetaV2, ExchangeV2 } from '../typechain-types';
 import { encodeV3Data } from './encodeUtils';
