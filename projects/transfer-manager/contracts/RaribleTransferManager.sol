@@ -121,8 +121,10 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibDeal.DealSide memory nftSide,
         ProtocolFeeData memory _protocolFee
     ) internal returns (uint totalAmount) {
-        totalAmount = calculateTotalAmount(paymentSide.asset.value, _protocolFee, paymentSide.originFees);
-        uint rest = transferProtocolFee(totalAmount, paymentSide.asset.value, paymentSide.from, _protocolFee, paymentSide.asset.assetType, paymentSide.proxy);
+        uint buyerProtocolFee = paymentSide.protocolFeeEnabled ? _protocolFee.buyerAmount : 0;
+        uint sellerProtocolFee = nftSide.protocolFeeEnabled ? _protocolFee.sellerAmount : 0;
+        totalAmount = calculateTotalAmount(paymentSide.asset.value, buyerProtocolFee, paymentSide.originFees);
+        uint rest = transferProtocolFee(totalAmount, paymentSide.asset.value, paymentSide.from, buyerProtocolFee + sellerProtocolFee, _protocolFee.receiver, paymentSide.asset.assetType, paymentSide.proxy);
 
         rest = transferRoyalties(paymentSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, paymentSide.asset.value, paymentSide.from, paymentSide.proxy);
         if (
@@ -141,17 +143,21 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         transferPayouts(paymentSide.asset.assetType, rest, paymentSide.from, nftSide.payouts, paymentSide.proxy);
     }
 
+    /**
+        @notice transfers protocol fee to protocol fee receiver
+    */
     function transferProtocolFee(
         uint totalAmount,
         uint amount,
         address from,
-        ProtocolFeeData memory _protocolFee,
+        uint protocolFeeTotal,
+        address protocolFeeReceiver,
         LibAsset.AssetType memory matchCalculate,
         address proxy
     ) internal returns (uint) {
-        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, _protocolFee.buyerAmount + _protocolFee.sellerAmount);
+        (uint rest, uint fee) = subFeeInBp(totalAmount, amount, protocolFeeTotal);
         if (fee > 0) {
-            transfer(LibAsset.Asset(matchCalculate, fee), from, _protocolFee.receiver, proxy);
+            transfer(LibAsset.Asset(matchCalculate, fee), from, protocolFeeReceiver, proxy);
         }
         return rest;
     }
@@ -278,17 +284,17 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
     /**
         @notice calculates total amount of fee-side asset that is going to be used in match
         @param amount fee-side order value
-        @param _protocolFee protocol fee
+        @param buyerProtocolFee buyer protocol fee
         @param orderOriginFees fee-side order's origin fee (it adds on top of the amount)
         @return total amount of fee-side asset
     */
     function calculateTotalAmount(
         uint amount,
-        ProtocolFeeData memory _protocolFee,
+        uint buyerProtocolFee,
         LibPart.Part[] memory orderOriginFees
     ) internal pure returns (uint) {
         
-        uint fees = _protocolFee.buyerAmount;
+        uint fees = buyerProtocolFee;
         for (uint256 i = 0; i < orderOriginFees.length; ++i) {
             require(orderOriginFees[i].value <= 10000, "origin fee is too big");
             fees = fees + orderOriginFees[i].value;

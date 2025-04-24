@@ -1,0 +1,17 @@
+ Name | Address | Url 
+ --- | --- | ---
+ AssetMatcherCollection | 0x1Bb191afBf69A62092756d8e68AAf352A0b687C5 | https://testnet.vicgscan.xyz/address/0x1Bb191afBf69A62092756d8e68AAf352A0b687C5 
+ DefaultProxyAdmin | 0x72D2E591D6E4eC07adcEc61d9A669AE4A454Bc6e | https://testnet.vicscan.xyz/address/0x72D2E591D6E4eC07adcEc61d9A669AE4A454Bc6e 
+ ERC1155LazyMintTransferProxy | 0x18DdB853D32f2dBd11054d5C0ffB68d41D18AE50 | https://testnet.vicscan.xyz/address/0x18DdB853D32f2dBd11054d5C0ffB68d41D18AE50 
+ ERC1155RaribleBeaconMeta | 0xAD3fa94561aa83177a1f3494CC75E26B78EAbDEf | https://testnet.vicscan.xyz/address/0xAD3fa94561aa83177a1f3494CC75E26B78EAbDEf 
+ ERC1155RaribleFactoryC2 | 0xE7E6210560830181CccF72cB73cdeC8dDcC40969 | https://testnet.vicscan.xyz/address/0xE7E6210560830181CccF72cB73cdeC8dDcC40969 
+ ERC1155RaribleMeta | 0xADbf64751C98C4a16257D94380C961627e281c81 | https://testnet.vicscan.xyz/address/0xADbf64751C98C4a16257D94380C961627e281c81 
+ ERC20TransferProxy | 0x79B7dC2794860c7066e020a9d90f21FA0c8BEe83 | https://testnet.vicscan.xyz/address/0x79B7dC2794860c7066e020a9d90f21FA0c8BEe83 
+ ERC721LazyMintTransferProxy | 0x0C6373B1715d4Cc02B4994b488c79772dd2aE2e0 | https://testnet.vicscan.xyz/address/0x0C6373B1715d4Cc02B4994b488c79772dd2aE2e0 
+ ERC721RaribleFactoryC2 | 0x397a9BAD5c7FFa1e297c3f2F3243D92E3c3B6D8a | https://testnet.vicscan.xyz/address/0x397a9BAD5c7FFa1e297c3f2F3243D92E3c3B6D8a 
+ ERC721RaribleMeta | 0x434B1CB6d2a70c392300e046FDb0c9DDC776B300 | https://testnet.vicscan.xyz/address/0x434B1CB6d2a70c392300e046FDb0c9DDC776B300 
+ ERC721RaribleMinimalBeaconMeta | 0xAEff015DB96C630dcB8b72c90e7c6d14B1501553 | https://testnet.vicscan.xyz/address/0xAEff015DB96C630dcB8b72c90e7c6d14B1501553 
+ ExchangeMetaV2 | 0xb708CB47976D253614F6b3b4E878959f208799B9 | https://testnet.vicscan.xyz/address/0xb708CB47976D253614F6b3b4E878959f208799B9 
+ RaribleExchangeWrapper | 0x3cB4beaac289aC699A6b6d1d6FC2363fb9e3C648 | https://testnet.vicscan.xyz/address/0x3cB4beaac289aC699A6b6d1d6FC2363fb9e3C648 
+ RoyaltiesRegistry | 0xb791A671810f727430e3F60d34a0edC4A371f09B | https://testnet.vicscan.xyz/address/0xb791A671810f727430e3F60d34a0edC4A371f09B 
+ TransferProxy | 0x6eE1644ae1f6023B277c686bF832d0adcD4DFd91 | https://testnet.vicscan.xyz/address/0x6eE1644ae1f6023B277c686bF832d0adcD4DFd91 

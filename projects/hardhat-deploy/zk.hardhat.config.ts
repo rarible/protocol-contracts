@@ -1,16 +1,11 @@
-import "@matterlabs/hardhat-zksync-solc";
-import "@matterlabs/hardhat-zksync-deploy";
-// import "@matterlabs/hardhat-zksync-upgradable";
+import '@matterlabs/hardhat-zksync-deploy';
+import '@matterlabs/hardhat-zksync-solc';
+import "@nomicfoundation/hardhat-toolbox";
+import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
-import "@matterlabs/hardhat-zksync-toolbox";
-import "@matterlabs/hardhat-zksync-verify";
-import "@matterlabs/hardhat-zksync-ethers";
-import "zksync-ethers";
-
-// upgradable plugin
 
 import type {
-    HttpNetworkUserConfig, HardhatUserConfig
+  HttpNetworkUserConfig, HardhatUserConfig
 } from "hardhat/types";
 import * as dotenv from "dotenv";
 import * as os from "os";
@@ -159,6 +154,7 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "src",
+    artifacts: "artifacts-zk"
   },
   networks: {
     sepolia: {
@@ -169,7 +165,6 @@ const config: HardhatUserConfig = {
       zksync: true,
       ethNetwork: "sepolia",
       ...createNetwork("zksync_sepolia"),
-      verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     },
     zksync: {
       ...createNetwork("zksync"),
@@ -180,15 +175,37 @@ const config: HardhatUserConfig = {
       zksync: true,
       ethNetwork: "goerli",
       ...createNetwork("zkLinkGoerliTestnet"),
-      verifyURL: 'https://goerli.explorer.zklink.io/contracts/verify',
       timeout: 120000
     },
     zkLink: {
       zksync: true,
       ethNetwork: "mainnet",
       ...createNetwork("zkLink"),
-      verifyURL: 'https://explorer.zklink.io/contracts/verify'
     },
+    zkcandy_sepolia: {
+      zksync: true,
+      ethNetwork: "sepolia",
+      ...createNetwork("zkcandy_sepolia"),
+    },
+    zkcandy: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      ...createNetwork("zkcandy"),
+    },
+    abstract_testnet: {
+      zksync: true,
+      ethNetwork: "sepolia",
+      ...createNetwork("abstract_testnet"),
+      url: "http://127.0.0.1:1248",
+      chainId: 11124,
+    },
+    abstract: {
+      zksync: true,
+      ethNetwork: "mainnet",
+      url: "http://127.0.0.1:1248",
+      chainId: 2741,
+      ...createNetwork("abstract"),
+    }
   },
   etherscan: {
     apiKey: "P78HUI9K9SAM5QKD6ABU91G3CPDS98MZW2"

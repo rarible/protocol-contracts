@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig, DEPLOY_FROM } from '../utils/utils';
 
-import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // Deploy and initialize 4 transfer proxies
@@ -25,7 +25,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
   const { deploy } = hre.deployments;
   const { ethers } = hre;
-  const { deployer } = await hre.getNamedAccounts();
+  let { deployer } = await hre.getNamedAccounts();
+
+  // hardware wallet support
+  if(deployer === undefined) {
+    deployer = DEPLOY_FROM!;
+  }
   const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
 
   // Deploy ExchangeV2
@@ -63,7 +68,12 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
   const { deploy } = hre.deployments;
   const { ethers } = hre;
-  const { deployer } = await hre.getNamedAccounts();
+  let { deployer } = await hre.getNamedAccounts();
+
+  // hardware wallet support
+  if(deployer === undefined) {
+    deployer = DEPLOY_FROM!;
+  }
 
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,
@@ -81,4 +91,4 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
 }
 
 export default func;
-func.tags = ['all-zk', 'all-zk-no-tokens'];
+func.tags = ['all-zk', 'all-zk-no-tokens', "302"];

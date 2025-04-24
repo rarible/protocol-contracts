@@ -1,7 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-
-import { getConfig } from '../utils/utils';
+import { DEPLOY_FROM, getConfig } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
@@ -19,7 +18,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
   const { ethers } = hre;
-  const { deployer } = await hre.getNamedAccounts();
+  let { deployer } = await hre.getNamedAccounts();
+
+  // hardware wallet support
+  if(deployer === undefined) {
+    deployer = DEPLOY_FROM!;
+  }
 
   const transferProxyAddress = (await hre.deployments.get("TransferProxy")).address;
   const erc721LazyMintTransferProxyAddress = (await hre.deployments.get("ERC721LazyMintTransferProxy")).address;
@@ -54,4 +58,4 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
 }
 
 export default func;
-func.tags = ['all-zk', 'tokens-zk'];
+func.tags = ['all-zk', 'tokens-zk', "303"];
