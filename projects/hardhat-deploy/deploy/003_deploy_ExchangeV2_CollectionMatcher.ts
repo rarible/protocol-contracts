@@ -97,4 +97,4 @@ async function getTransferProxy(hre: HardhatRuntimeEnvironment, contractName: st
 }
 
 export default func;
-func.tags = ['all', 'all-no-tokens', 'deploy-exchange', "003"];
+func.tags = ['all', 'all-no-tokens', 'all-with-sanity-check', 'deploy-exchange', '003'];

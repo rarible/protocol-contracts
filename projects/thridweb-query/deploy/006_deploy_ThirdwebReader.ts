@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { address } from 'hardhat/src/internal/core/config/config-validation';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -9,17 +10,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   console.log("deploying contracts with the account:", deployer);
 
-  // address public constant NATIVE1 = 0x0000000000000000000000000000000000000000;
-  // address public constant NATIVE2 = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+  const NATIVE1 = "0x0000000000000000000000000000000000000000";
+  const NATIVE2 = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-  // kkep deployer as an owner because read only contract
+  // keep deployer as an owner because read only contract
   await deploy('DropERC721Reader', {
     from: deployer,
     proxy: {
       execute: {
         init: {
           methodName: "initialize",
-          args: ["0x0000000000000000000000000000000000000000", "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", deployer],
+          args: [NATIVE1, NATIVE2, deployer],
         },
       },
       proxyContract: "OpenZeppelinTransparentProxy",

@@ -39,7 +39,7 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.8.16",
+        version: "0.8.20",
         settings: {
           optimizer: {
             enabled: true,
@@ -55,8 +55,25 @@ const config: HardhatUserConfig = {
           optimizer: {
             enabled: true,
             runs: 99999,
-          },
-          evmVersion: "petersburg",
+          }
+        },
+      },
+      "contracts/TWCloneFactory.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          }
+        },
+      },
+      "contracts/lib/soladity/src/utils/LibClone.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          }
         },
       }
     },
@@ -84,7 +101,15 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
-  }
+  },
+  typechain: {
+    outDir: "typechain-types", // Output directory for generated typings
+    target: "ethers-v5", // Use ethers-v6 for zksync-ethers compatibility
+    alwaysGenerateOverloads: false,
+    // externalArtifacts: [
+    //   "artifacts/contracts/**/*[!dbg].json"
+    // ],
+  },
 };
 
 export default config;

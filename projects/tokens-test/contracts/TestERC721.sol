@@ -2,8 +2,8 @@
 
 pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "./dependencies/ERC721Upgradeable.sol";
 import "./dependencies/Ownable.sol";
 import "./dependencies/RenderingContract.sol";
 import "./dependencies/IERC4906.sol";
@@ -17,6 +17,10 @@ contract TestERC721 is ERC721Upgradeable, Ownable, RenderingContract, IERC4906 {
 
     function mint(address to, uint tokenId) external {
         _mint(to, tokenId);
+    }
+
+    function mintFromContract(address to, uint tokenId) external {
+        _mintFromContract(to, tokenId);
     }
 
     function setBaseURI(string calldata uri) external {
