@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.8](https://github.com/rariblecom/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+
+### Features
+
+- 3dweb reader for base ([6c8332e](https://github.com/rariblecom/protocol-contracts/commit/6c8332e435b3d0a04d44160b364a570920904d77))
+- add deploy ([711bc22](https://github.com/rariblecom/protocol-contracts/commit/711bc223214211d23e5a48096230a0c46a329794))
+- add goat reader ([6ef3b20](https://github.com/rariblecom/protocol-contracts/commit/6ef3b2004c4e317726908716297210ed9217320c))
+- add lightlink for thirdweb query ([b76a5da](https://github.com/rariblecom/protocol-contracts/commit/b76a5da408ef8ee69816052be32bb693402bc0a3))
+- add new proxy reader deploys ([1469505](https://github.com/rariblecom/protocol-contracts/commit/146950568ceaebddc7d45502ae40fa51ee4d18a6))
+- add reader amoy deploy ([3644945](https://github.com/rariblecom/protocol-contracts/commit/36449453c1695c7cb49a96d3fb5d787b82a284cb))
+- add reader berachain mainnet and test net ([6a06871](https://github.com/rariblecom/protocol-contracts/commit/6a06871bf57db4bdda96b1a845cc397b4fdfe96d))
+
 **Note:** Version bump only for package @rarible/thirdweb-query
 
 ## [0.8.4](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+
+### Bug Fixes
+
+- typos in documentation files ([#327](https://github.com/rarible/protocol-contracts/issues/327)) ([c02f8a1](https://github.com/rarible/protocol-contracts/commit/c02f8a1afd65a72b54023341fe637bc18cdfc67b))
+
+### Features
+
+- add test contracts ([bb464b0](https://github.com/rarible/protocol-contracts/commit/bb464b0fcd335400df2f2ccba30bf1bd3d86035a))
+- fix types ([f175b7f](https://github.com/rarible/protocol-contracts/commit/f175b7f81f048694241946f0a119968ad6a7df2d))
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
 **Note:** Version bump only for package @rarible/exchange-v2
 
 ## [0.8.6](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)

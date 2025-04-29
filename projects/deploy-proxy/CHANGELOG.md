@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+
+### Features
+
+- refactoring ([#283](https://github.com/rarible/protocol-contracts/issues/283)) ([014b6a3](https://github.com/rarible/protocol-contracts/commit/014b6a3ea4331c7334a0b5299614eb56fc5d58f3))
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
 **Note:** Version bump only for package @rarible/deploy-proxy
 
 ## [0.8.7](https://github.com/rarible/protocol-contracts/compare/v0.8.6...v0.8.7) (2024-04-27)
