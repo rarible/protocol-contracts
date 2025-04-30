@@ -7,4 +7,4 @@ truffle test \
         ./test/contracts/TestERC20.sol \
         ./test/contracts/TestERC721.sol \
         ./test/contracts/TestERC1155.sol \
-        ./test/contracts/TestERC20ZRX.sol
+        ./test/contracts/TestERC20ZRX.sol --compile-all
