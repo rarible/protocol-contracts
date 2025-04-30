@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.9](https://github.com/rariblecom/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
+
+### Features
+
+- fix build ([3857dfc](https://github.com/rariblecom/protocol-contracts/commit/3857dfcf6ab80beb519ae3d763a27196db1e3fea))
+- skip legacy test ([da25088](https://github.com/rariblecom/protocol-contracts/commit/da250883b01a1abdfb61cfa74b7a31dc0f7ad475))
+
 ## [0.8.8](https://github.com/rariblecom/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
 
 **Note:** Version bump only for package @rarible/upgrade-executor

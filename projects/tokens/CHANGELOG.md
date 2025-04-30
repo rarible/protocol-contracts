@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.9](https://github.com/rarible/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
+
+### Features
+
+- fix build ([3857dfc](https://github.com/rarible/protocol-contracts/commit/3857dfcf6ab80beb519ae3d763a27196db1e3fea))
+- fix tests ([97c8920](https://github.com/rarible/protocol-contracts/commit/97c892068aae4551a93bbdf94f51ca3de4ef630c))
+- fix tests ([4d32582](https://github.com/rarible/protocol-contracts/commit/4d325820f57eded19069627bf92761dbd2f2437f))
+
 ## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
 
 ### Features
