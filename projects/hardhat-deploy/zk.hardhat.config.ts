@@ -72,7 +72,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 
 const config: HardhatUserConfig = {
   zksolc: {
-    version: "1.3.18",
+    version: "1.5.12",
     settings: {
         isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
         forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul

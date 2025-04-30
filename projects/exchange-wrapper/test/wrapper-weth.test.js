@@ -94,7 +94,7 @@ contract("RaribleExchangeWrapper WETH purchases", accounts => {
     weth = await WETH9.new();
 
     //deploy wrapper
-    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, seaport.address], weth.address, [erc20TransferProxy.address, seaport.address]);
+    bulkExchange = await ExchangeBulkV2.new([ZERO_ADDRESS, exchangeV2.address, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, ZERO_ADDRESS, ZERO_ADDRESS, seaport.address, seaport.address], weth.address, [erc20TransferProxy.address, seaport.address], accounts[0]);
   })
 
   it("WETH: single purchase from exchangeV2", async () => {

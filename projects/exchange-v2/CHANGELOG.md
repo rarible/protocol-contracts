@@ -3,18 +3,67 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
+## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/exchange-v2
+
+## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/exchange-v2
+
+## [0.8.11](https://github.com/rarible/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+
+### Features
+
+- fix test and build ([78ae40b](https://github.com/rarible/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+
+**Note:** Version bump only for package @rarible/exchange-v2
+
+## [0.8.10](https://github.com/rarible/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/exchange-v2
+
+## [0.8.9](https://github.com/rarible/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/exchange-v2
+
+## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
 
 ### Bug Fixes
 
-- build ([8e1270b](https://github.com/rarible/protocol-contracts/commit/8e1270b701c6ec77e0504f488f076f203083e1c4))
-- support orders with zero price ([162238d](https://github.com/rarible/protocol-contracts/commit/162238de3f6df5cfb7760dfce6dd245b85360eb3))
 - typos in documentation files ([#327](https://github.com/rarible/protocol-contracts/issues/327)) ([c02f8a1](https://github.com/rarible/protocol-contracts/commit/c02f8a1afd65a72b54023341fe637bc18cdfc67b))
 
 ### Features
 
-- add tests for nothing to feel, one order free the other isn't ([7b51920](https://github.com/rarible/protocol-contracts/commit/7b519201dcb9c5b3dc5e4a837698ceed3060cd5e))
+- add test contracts ([bb464b0](https://github.com/rarible/protocol-contracts/commit/bb464b0fcd335400df2f2ccba30bf1bd3d86035a))
 - fix types ([f175b7f](https://github.com/rarible/protocol-contracts/commit/f175b7f81f048694241946f0a119968ad6a7df2d))
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
+**Note:** Version bump only for package @rarible/exchange-v2
+
+## [0.8.6](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+
+### Bug Fixes
+
+- support orders with zero price ([162238d](https://github.com/rarible/protocol-contracts/commit/162238de3f6df5cfb7760dfce6dd245b85360eb3))
+
+### Features
+
+- add tests for nothing to feel, one order free the other isn't ([7b51920](https://github.com/rarible/protocol-contracts/commit/7b519201dcb9c5b3dc5e4a837698ceed3060cd5e))
+- PT-4662 get rid of nothing to fill tests ([4059dcb](https://github.com/rarible/protocol-contracts/commit/4059dcb20c100e159643e40929392b05f90f7038))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
+## [0.8.5](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+
+### Bug Fixes
+
+- support orders with zero price ([162238d](https://github.com/rarible/protocol-contracts/commit/162238de3f6df5cfb7760dfce6dd245b85360eb3))
+
+### Features
+
+- add deploy support for factory ([f9a1160](https://github.com/rarible/protocol-contracts/commit/f9a11605766a943f56d004c07d6a4c32b1d26cd1))
+- add lisk deploy ([6c5f6ba](https://github.com/rarible/protocol-contracts/commit/6c5f6ba32a56664ee5b50dd26de3bbbb98924f36))
+- add tests for nothing to feel, one order free the other isn't ([7b51920](https://github.com/rarible/protocol-contracts/commit/7b519201dcb9c5b3dc5e4a837698ceed3060cd5e))
 - PT-4662 get rid of nothing to fill tests ([4059dcb](https://github.com/rarible/protocol-contracts/commit/4059dcb20c100e159643e40929392b05f90f7038))
 - PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
 

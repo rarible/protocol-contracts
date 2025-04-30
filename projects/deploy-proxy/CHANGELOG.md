@@ -3,6 +3,43 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/deploy-proxy
+
+## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/deploy-proxy
+
+## [0.8.11](https://github.com/rarible/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+
+### Features
+
+- fix test and build ([78ae40b](https://github.com/rarible/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+
+**Note:** Version bump only for package @rarible/deploy-proxy
+
+## [0.8.10](https://github.com/rarible/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/deploy-proxy
+
+## [0.8.9](https://github.com/rarible/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
+
+### Features
+
+- fix build ([3857dfc](https://github.com/rarible/protocol-contracts/commit/3857dfcf6ab80beb519ae3d763a27196db1e3fea))
+- fix tests ([8da7eac](https://github.com/rarible/protocol-contracts/commit/8da7eacecd799cc81d6f42daaf576cdc9f25a528))
+- removed generated files ([1ef19d3](https://github.com/rarible/protocol-contracts/commit/1ef19d3ca6a74d6d7de97a52f7ed3fd9d5716a1c))
+
+## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+
+### Features
+
+- refactoring ([#283](https://github.com/rarible/protocol-contracts/issues/283)) ([014b6a3](https://github.com/rarible/protocol-contracts/commit/014b6a3ea4331c7334a0b5299614eb56fc5d58f3))
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
+**Note:** Version bump only for package @rarible/deploy-proxy
+
 ## [0.8.7](https://github.com/rarible/protocol-contracts/compare/v0.8.6...v0.8.7) (2024-04-27)
 
 ### Bug Fixes

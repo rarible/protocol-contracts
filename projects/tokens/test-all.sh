@@ -1,0 +1,10 @@
+./test-default-approval-721.sh
+./test-default-approval-1155.sh
+./test-factories-721.sh
+./test-meta-tx.sh
+./test-mint-721.sh
+./test-mint-1155.sh
+./test-rarible-721.sh
+./test-rarible-1155.sh
+./test-rarible-user-721.sh
+./test-rarible-user-1155.sh

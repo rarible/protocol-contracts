@@ -12,6 +12,12 @@ contract OperatorRole is OwnableUpgradeable {
         __Ownable_init_unchained();
     }
 
+    function __OperatorRole_init_proxy(address initialOwner) external initializer {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+        transferOwnership(initialOwner);
+    }
+
     function addOperator(address operator) external onlyOwner {
         operators[operator] = true;
     }

@@ -12,6 +12,6 @@
  ERC721RaribleMeta | 0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 | https://base-sepolia.blockscout.com/address/0xe10605b2026884aCc669C2A9Cd4A5ec5f5FFf494 
  ERC721RaribleMinimalBeaconMeta | 0x41407B447Fb5425187A9BCA3a062644EF2410F8D | https://base-sepolia.blockscout.com/address/0x41407B447Fb5425187A9BCA3a062644EF2410F8D 
  ExchangeMetaV2 | 0x0fE65B68Eb627c21EAF3cfe8183C4F946F3d48BD | https://base-sepolia.blockscout.com/address/0x0fE65B68Eb627c21EAF3cfe8183C4F946F3d48BD 
- RaribleExchangeWrapper | 0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa | https://base-sepolia.blockscout.com/address/0x4fEB488209d2A0A71fEef28E5fA306F15b2D5FEa 
+ RaribleExchangeWrapper | 0x3d3c8f3aCcf388c3618BbE80598692B6d15bd4D5 | https://base-sepolia.blockscout.com/address/0x3d3c8f3aCcf388c3618BbE80598692B6d15bd4D5 
  RoyaltiesRegistry | 0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b | https://base-sepolia.blockscout.com/address/0x00C74eD067Cea48F1D6F7D00aBABa3C1D5B2598b 
  TransferProxy | 0x4f4cC63D7f2bC894078d41f284453062842Afa46 | https://base-sepolia.blockscout.com/address/0x4f4cC63D7f2bC894078d41f284453062842Afa46 

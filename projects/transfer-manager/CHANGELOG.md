@@ -3,10 +3,45 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
+## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
 
 ### Features
 
+- fix test ([727acf0](https://github.com/rarible/protocol-contracts/commit/727acf064b991b3edc756c4fb94f9065677b6029))
+
+## [0.8.11](https://github.com/rarible/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+
+### Features
+
+- fix test and build ([78ae40b](https://github.com/rarible/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.10](https://github.com/rarible/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.6](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+
+### Features
+
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
+## [0.8.5](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+
+### Features
+
+- add lisk deploy ([6c5f6ba](https://github.com/rarible/protocol-contracts/commit/6c5f6ba32a56664ee5b50dd26de3bbbb98924f36))
 - PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
 
 ## [0.8.4-beta.3](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)

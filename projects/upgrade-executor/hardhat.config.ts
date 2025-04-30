@@ -141,7 +141,7 @@ const config: HardhatUserConfig = {
       interval: 1
     }},
     mainnet: {
-      url: 'http://127.0.0.1:1248',
+      url: 'https://ethereum-rpc.publicnode.com',
       chainId: 1,
       timeout: 60000,
     }

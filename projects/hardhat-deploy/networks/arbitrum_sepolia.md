@@ -14,5 +14,6 @@
  ERC721RaribleMinimal | 0xB02f8F8F3527e5b2C7dB72B7eE1Af244fA8B3BAE | https://sepolia.arbiscan.io/address/0xB02f8F8F3527e5b2C7dB72B7eE1Af244fA8B3BAE 
  ERC721RaribleMinimalBeacon | 0xED2DfF3672795C89dAd8a8162026838fFd818B82 | https://sepolia.arbiscan.io/address/0xED2DfF3672795C89dAd8a8162026838fFd818B82 
  ExchangeV2 | 0x47F6d59216aAdb2e5aA6bFAf0b06d790EdC35118 | https://sepolia.arbiscan.io/address/0x47F6d59216aAdb2e5aA6bFAf0b06d790EdC35118 
+ RaribleExchangeWrapper | 0x6374B7AC4b09a4C211ebf83e8DBB934D03487f82 | https://sepolia.arbiscan.io/address/0x6374B7AC4b09a4C211ebf83e8DBB934D03487f82 
  RoyaltiesRegistry | 0x4f4cC63D7f2bC894078d41f284453062842Afa46 | https://sepolia.arbiscan.io/address/0x4f4cC63D7f2bC894078d41f284453062842Afa46 
  TransferProxy | 0x3049455cdA17beE43d61090Ec344624aeda72Ed6 | https://sepolia.arbiscan.io/address/0x3049455cdA17beE43d61090Ec344624aeda72Ed6 
