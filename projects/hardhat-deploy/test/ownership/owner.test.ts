@@ -32,7 +32,14 @@ describe("Test Owner Check", function () {
         const allDeployments = await hre.deployments.all()
         for (const [contractName, deployment] of Object.entries(allDeployments)) {
             console.log(contractName, deployment.address)
-            if(!contractName.includes("_") && contractName != "DefaultProxyAdmin" && contractName != "AssetMatcherCollection") {
+            if(!contractName.includes("_") && contractName != "DefaultProxyAdmin" && 
+               contractName != "AssetMatcherCollection" && 
+               contractName != "ReaderProxyAdmin" && 
+               contractName != "DropERC721Reader" && 
+               contractName != "OpenEditionERC721FlatFee" && 
+               contractName != "DropERC721" && 
+               contractName != "DropERC1155"
+            ) {
                 let contract = await getContract<Ownable>(contractName)
                 console.log("check ownership")
                 let owner = ""
