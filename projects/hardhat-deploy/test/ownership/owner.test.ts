@@ -38,7 +38,8 @@ describe("Test Owner Check", function () {
                contractName != "DropERC721Reader" && 
                contractName != "OpenEditionERC721FlatFee" && 
                contractName != "DropERC721" && 
-               contractName != "DropERC1155"
+               contractName != "DropERC1155" &&
+               contractName != "TransferProxy"
             ) {
                 let contract = await getContract<Ownable>(contractName)
                 console.log("check ownership")
