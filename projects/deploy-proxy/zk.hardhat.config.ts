@@ -6,6 +6,7 @@ import "@matterlabs/hardhat-zksync-toolbox";
 import "@matterlabs/hardhat-zksync-verify";
 import "@matterlabs/hardhat-zksync-ethers";
 import "zksync-ethers";
+import "@typechain/hardhat"; // Add TypeChain plugin
 
 // upgradable plugin
 
@@ -67,7 +68,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 
 const config: HardhatUserConfig = {
   zksolc: {
-    version: "1.3.22",
+    version: "1.5.12",
     settings: {
         isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
         forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
@@ -76,6 +77,67 @@ const config: HardhatUserConfig = {
           mode: 'z' // optional. 3 by default, z to optimize bytecode size
         },
       }
+  },
+  solidity: {
+    compilers: [
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.5.10",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          },
+          evmVersion: "petersburg",
+        },
+      },
+      {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
+    overrides: {
+      "contracts/ImmutableCreate2Factory.sol": {
+        version: "0.5.10",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          }
+        },
+      },
+      "contracts/TWCloneFactory.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          }
+        },
+      },
+      "contracts/lib/soladity/src/utils/LibClone.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 99999,
+          }
+        },
+      }
+    },
   },
   defaultNetwork: "zksync_sepolia",
   networks: {
@@ -90,12 +152,21 @@ const config: HardhatUserConfig = {
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     },
   },
-  solidity: {
-    version: "0.7.6",
-  },
   etherscan: {
     apiKey: "P78HUI9K9SAM5QKD6ABU91G3CPDS98MZW2"
-  }
+  },
+  paths: {
+    
+  },
+  typechain: {
+    outDir: "typechain-types-zk", // Output directory for generated typings
+    target: "ethers-v5", // Use ethers-v6 for zksync-ethers compatibility
+    alwaysGenerateOverloads: false,
+    dontOverrideCompile: true, // Prevent TypeChain from overriding compile task
+    externalArtifacts: [
+      "artifacts-zk/contracts/**/*[!dbg].json"
+    ],
+  },
 };
 
 export default config;

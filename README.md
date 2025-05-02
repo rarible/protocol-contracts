@@ -65,6 +65,71 @@ The codebase is maintained using the "contributor workflow" where everyone witho
 
 See more information on [CONTRIBUTING.md](https://github.com/rarible/protocol/blob/main/CONTRIBUTING.md).
 
+---
+
+## Branches
+
+- **`main`**  
+  This is the default branch where the latest development happens once releases are completed and merged back in.
+
+- **`release/*`**  
+  Used for stabilizing and releasing code. A new `release/x` branch is created from `main` when the team is ready to prepare a new release.
+
+- **`feature/PT-xxx`**  
+  Short-lived feature branches for implementing new features or bug fixes. Merged into a `release/*` branch when preparing a release.
+
+---
+
+## Workflow
+
+1. **Create a Release Branch**  
+   - When ready to release, create a new `release/*` branch from `master`.
+
+2. **Merge Feature Branches**  
+   - Merge all relevant `feature/PT-xxx` branches into the new `release/*` branch.
+
+3. **Tag & Deploy (Beta)**  
+   - In the `release/*` branch, create a beta tag using the format `v{major}.{minor}.{patch}-beta.{number}`.  
+   - Deploy npm packages by running:
+     ```bash
+     npx lerna version v{major}.{minor}.{patch}-beta.{number} --yes
+     ```
+
+4. **Test on Testnet**  
+   - Deploy from the `release/*` branch to the testnet for validation and QA.
+
+5. **Deploy to Mainnet**  
+   - Once testing is complete and everything looks good, deploy the same `release/*` branch to mainnet.
+
+6. **Merge Back to `master`**  
+   - After a successful release, merge the `release/*` branch back into `master`.
+
+---
+
+## Versioning
+
+- The versions of **Cargo packages** and **npm** packages are synced.
+- If you need to fix only the npm package, you can simply bump the **patch** version (e.g., from `v1.2.3-beta.1` to `v1.2.4-beta.1`).
+
+---
+
+## Diagram
+
+```mermaid
+flowchart LR
+    A["feature/PT-xxx"] --> B["release/*"]
+    B --> C["Create Release Branch from master"]
+    C --> D["Tag: v&#123;major&#125;.&#123;minor&#125;.&#123;patch&#125;-beta.&#123;number&#125;"]
+    D --> E["Deploy to Testnet"]
+    E --> F["Test & Validate"]
+    F --> G["Deploy to Mainnet"]
+    G --> H["Merge release/* back to master"]
+```
+
+## How to check the release status
+
+Go to the [Rarible Jenkins Protocol Contracts](http://jenkins.rarible.int/job/protocol-contracts) and check the release status.
+
 ## License
 
 Smart contracts for Rarible protocol are available under the [MIT License](LICENSE.md).

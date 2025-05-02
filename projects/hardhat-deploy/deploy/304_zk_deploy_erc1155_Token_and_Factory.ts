@@ -1,7 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import "@matterlabs/hardhat-zksync-ethers";
-import { getConfig } from '../utils/utils';
+import { DEPLOY_FROM, getConfig } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
@@ -18,8 +17,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
   const { deploy } = hre.deployments;
-  const { zksyncEthers } = hre;
-  const { deployer } = await hre.getNamedAccounts();
+  const { ethers } = hre;
+  let { deployer } = await hre.getNamedAccounts();
+
+  // hardware wallet support
+  if(deployer === undefined) {
+    deployer = DEPLOY_FROM!;
+  }
 
   const transferProxyAddress = (await hre.deployments.get("TransferProxy")).address;
   const erc1155LazyMintTransferProxyAddress = (await hre.deployments.get("ERC1155LazyMintTransferProxy")).address;
@@ -33,7 +37,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
   });
 
   // Manually call the initialization function
-  const erc1155Contract = await zksyncEthers.getContractAt(contractName, erc1155Receipt.address);
+  const erc1155Contract = await ethers.getContractAt(contractName, erc1155Receipt.address);
   await (await erc1155Contract.__ERC1155Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc1155LazyMintTransferProxyAddress)).wait();
 
   // Deploy beacon

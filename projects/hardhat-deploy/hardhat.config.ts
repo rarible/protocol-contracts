@@ -3,6 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
+import "./tasks/sanity-check";
 
 import * as dotenv from "dotenv";
 
@@ -20,6 +21,15 @@ dotenv.config();
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
+      {
+        version: "0.5.17",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
       {
         version: "0.7.6",
         settings: {
@@ -68,7 +78,16 @@ const config: HardhatUserConfig = {
             runs: 200,
           },
         },
-      }
+      },
+      "src/TransparentUpgradeableProxy.sol": {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     },
     settings: {
       metadata: {
@@ -88,16 +107,14 @@ const config: HardhatUserConfig = {
     deployer: 0,
   },
   paths: {
-    sources: "src"
+    sources: "src",
   },
   networks: loadNetworkConfigs(),
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
   },
-  deterministicDeployment: loadFactoryAddresses()
+  deterministicDeployment: loadFactoryAddresses(),
 };
-
-
 
 export default config;

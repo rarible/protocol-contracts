@@ -3,6 +3,75 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.13](https://github.com/rariblecom/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/hardhat-deploy
+
+## [0.8.12](https://github.com/rariblecom/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
+
+**Note:** Version bump only for package @rarible/hardhat-deploy
+
+## [0.8.11](https://github.com/rariblecom/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+
+### Features
+
+- fix test and build ([78ae40b](https://github.com/rariblecom/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+
+**Note:** Version bump only for package @rarible/hardhat-deploy
+
+## [0.8.10](https://github.com/rariblecom/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+
+### Features
+
+- add tests folder ([1c76fd3](https://github.com/rariblecom/protocol-contracts/commit/1c76fd3aed96110565f4ee430579e02ae00e39d4))
+
+## [0.8.9](https://github.com/rariblecom/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
+
+### Features
+
+- fix build ([3857dfc](https://github.com/rariblecom/protocol-contracts/commit/3857dfcf6ab80beb519ae3d763a27196db1e3fea))
+- fix tests ([8da7eac](https://github.com/rariblecom/protocol-contracts/commit/8da7eacecd799cc81d6f42daaf576cdc9f25a528))
+
+## [0.8.8](https://github.com/rariblecom/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+
+### Bug Fixes
+
+- exported 5ire addresses ([770a1a0](https://github.com/rariblecom/protocol-contracts/commit/770a1a04165a4f9f8cb169b0282e2ca4cc68ab29))
+- remove auction: not needed at the moment ([ecbc515](https://github.com/rariblecom/protocol-contracts/commit/ecbc515b058acadeace296ede9793afe5831bfcf))
+- removed uneeded code ([b5110cc](https://github.com/rariblecom/protocol-contracts/commit/b5110cc7a0b712ce16339756e6e3f190e4a8d443))
+
+### Features
+
+- add alpeh zero ([#308](https://github.com/rariblecom/protocol-contracts/issues/308)) ([bb4ea3a](https://github.com/rariblecom/protocol-contracts/commit/bb4ea3a4d5ffafe6fd6b0a2b3712abbfc25828e3))
+- add contracts for amoy ([94873c9](https://github.com/rariblecom/protocol-contracts/commit/94873c92c35decbd9f5637c0ab4f94a08df80bcb))
+- add etherlink and moonbeam ([46705d3](https://github.com/rariblecom/protocol-contracts/commit/46705d3c1fb6fe002556b6b83e3ad592708269ac))
+- add frame support ([a00a8d5](https://github.com/rariblecom/protocol-contracts/commit/a00a8d50c9a53bb67d9bcffd7b3c432dbcaf4ae3))
+- add lsik config ([5e4832e](https://github.com/rariblecom/protocol-contracts/commit/5e4832e7caa9addc3255687b9c425f799fa27528))
+- add match chain 699 deploy ([#311](https://github.com/rariblecom/protocol-contracts/issues/311)) ([e57b0ec](https://github.com/rariblecom/protocol-contracts/commit/e57b0ec12947f3d200f209584b31a9420fca0022))
+- add missing deps ([243f743](https://github.com/rariblecom/protocol-contracts/commit/243f7436750c401c7b1dbe44ce9a6de1ca04f7f4))
+- add new config ([#289](https://github.com/rariblecom/protocol-contracts/issues/289)) ([266cf8c](https://github.com/rariblecom/protocol-contracts/commit/266cf8cc237d009dbd98850120f54ac10ef66a8e))
+- add new version ([6002467](https://github.com/rariblecom/protocol-contracts/commit/600246771191540cbe45a6ea5a68c72e0454d501))
+- add reader ([#335](https://github.com/rariblecom/protocol-contracts/issues/335)) ([725f269](https://github.com/rariblecom/protocol-contracts/commit/725f269c15a143e64477894f1f9673d704a5c085))
+- add sei config ([7a2ef86](https://github.com/rariblecom/protocol-contracts/commit/7a2ef86d0a7a36dba375c9458861febafdb79f08))
+- add shape test net ([#314](https://github.com/rariblecom/protocol-contracts/issues/314)) ([9979fc7](https://github.com/rariblecom/protocol-contracts/commit/9979fc7ea0008aa3f2e05634666d7c6b19eb5ba6))
+- add telos testnet ([c4fd04a](https://github.com/rariblecom/protocol-contracts/commit/c4fd04af0786400fecdedb5e20bf975d63e0744a))
+- added abstract configuration ([d86cd1d](https://github.com/rariblecom/protocol-contracts/commit/d86cd1d7ff8ae42b3b8c60d20ff9630a2829819d))
+- berachain deploy ([607e6e6](https://github.com/rariblecom/protocol-contracts/commit/607e6e6d0a184a6aa42c9b3347d4e58cb6b2886f))
+- deploy specs ([c9153ef](https://github.com/rariblecom/protocol-contracts/commit/c9153ef317d6fd8bbd7f963c275de6ba021f10ff))
+- deploy to camp testnet ([#323](https://github.com/rariblecom/protocol-contracts/issues/323)) ([2a23f39](https://github.com/rariblecom/protocol-contracts/commit/2a23f39c4fa8bab8f6607225c3b8d25750d4fb56))
+- deploy to etherlink testnet ([#290](https://github.com/rariblecom/protocol-contracts/issues/290)) ([42256d7](https://github.com/rariblecom/protocol-contracts/commit/42256d7cd70fd586eed2a97f03139e4d8aea1622))
+- deploy to match testnet ([#325](https://github.com/rariblecom/protocol-contracts/issues/325)) ([fbf3181](https://github.com/rariblecom/protocol-contracts/commit/fbf31819a077dcac5f0400fd3218fdb8a0801aca))
+- deployed to hyper evm testnet ([809a17c](https://github.com/rariblecom/protocol-contracts/commit/809a17cdaabc0280c9e6d6a75a50950b92813bcd))
+- deployed to viction testnet ([#320](https://github.com/rariblecom/protocol-contracts/issues/320)) ([7536b08](https://github.com/rariblecom/protocol-contracts/commit/7536b083b46235e2fdf1bf93292863baf2823d93))
+- fix compile ([3553f3a](https://github.com/rariblecom/protocol-contracts/commit/3553f3acf0547094c643b1776bb3b83b496e87af))
+- fix deploy ([02f3e29](https://github.com/rariblecom/protocol-contracts/commit/02f3e291ebcf4bbd5504e0e4d242fe94c8ceb8b8))
+- fix deploy ([#322](https://github.com/rariblecom/protocol-contracts/issues/322)) ([76a0a1a](https://github.com/rariblecom/protocol-contracts/commit/76a0a1afa8a17a37cc9077e3b144132e5534f510))
+- goat deploy ([#321](https://github.com/rariblecom/protocol-contracts/issues/321)) ([dac5f13](https://github.com/rariblecom/protocol-contracts/commit/dac5f1320d6b83b6bebd69ca03bdbdfb7ea29a9b))
+- refactoring ([#283](https://github.com/rariblecom/protocol-contracts/issues/283)) ([014b6a3](https://github.com/rariblecom/protocol-contracts/commit/014b6a3ea4331c7334a0b5299614eb56fc5d58f3))
+- sanity check script for after new chain deployment ([#329](https://github.com/rariblecom/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rariblecom/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
+**Note:** Version bump only for package @rarible/hardhat-deploy
+
 ## [0.8.6](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
 
 ### Bug Fixes
