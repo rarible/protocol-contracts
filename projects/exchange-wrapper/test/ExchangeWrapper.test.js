@@ -2491,6 +2491,31 @@ contract("RaribleExchangeWrapper signle purchase cases", accounts => {
 
   }
 
+  async function deployRaribleWithProxy() {
+    //deploy exchange
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
+
+    exchangeV2 = await ExchangeV2.new()
+    await exchangeV2.__ExchangeV2_init_proxy(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      0,
+      protocol,
+      royaltiesRegistry.address,
+      accounts[0],
+      [ERC721_LAZY, ERC1155_LAZY],
+      [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+      COLLECTION,
+      assetMatcherCollectionReceipt.address
+    )
+
+    await transferProxy.addOperator(exchangeV2.address)
+    await erc20TransferProxy.addOperator(exchangeV2.address)
+
+  }
+
   async function generateItemX2Y2(tokenid, price) {
     const tokenDataToEncode = [
       {
