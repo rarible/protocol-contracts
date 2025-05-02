@@ -421,6 +421,85 @@ contract("Test gas usage for marketplaces", accounts => {
     console.log("RARIBLE: cancel ETH order", cancelTx1.receipt.gasUsed)
   })
 
+  it("rarible ETH with Proxy", async () => {
+		const exchangeV2 = await ExchangeV2.new();
+		const transferProxy = await TransferProxy.new();
+    await transferProxy.__TransferProxy_init_proxy(accounts[0]);
+    await transferProxy.addOperator(exchangeV2.address);
+		const erc20TransferProxy = await ERC20TransferProxy.new();
+    await erc20TransferProxy.__ERC20TransferProxy_init_proxy(accounts[0]);
+    await erc20TransferProxy.addOperator(exchangeV2.address)
+		const royaltiesRegistry = await RoyaltiesRegistry.new();
+    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, protocol, royaltiesRegistry.address);
+
+    const token = await TestERC721.new("Rarible", "RARI");;
+
+    //TEST-CASE 1: ETH <=> ERC721
+    await token.mint(seller, tokenId)
+    await token.setApprovalForAll(transferProxy.address, true, {from: seller})
+
+    let encDataLeft = await encDataV3([[], [], true]);
+		let encDataRight = await encDataV3([[], [], false]);
+
+		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3, encDataRight);
+    
+    const signature1 = await getSignature(exchangeV2, right, seller);
+
+    const directBuyParams1 = {
+      sellOrderMaker: seller,
+      sellOrderNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenId),
+      sellOrderPaymentAmount: price,
+      paymentToken: zeroAddress,
+      sellOrderSalt: 1,
+      sellOrderStart: 0,
+      sellOrderEnd: 0,
+      sellOrderDataType: ORDER_DATA_V3,
+      sellOrderData: encDataRight,
+      sellOrderSignature: signature1,
+      buyOrderPaymentAmount: price,
+      buyOrderNftAmount: 1,
+      buyOrderData: encDataLeft
+    };
+    const matchTx1 = await exchangeV2.directPurchase(directBuyParams1, { from: buyer, value: price });
+    console.log("RARIBLE: match ETH <=> ERC721", matchTx1.receipt.gasUsed)
+
+    const tokenid1 = "1235112312"
+
+    //TEST-CASE 2: ETH <=> ERC721
+    await token.mint(seller, tokenid1)
+    await token.setApprovalForAll(transferProxy.address, true, {from: seller})
+
+		const right1 = Order(seller, Asset(ERC721, enc( token.address, tokenid1), 1), zeroAddress, Asset(ETH, "0x", price), 2, 0, 0, ORDER_DATA_V3, encDataRight);
+    
+    const signature2 = await getSignature(exchangeV2, right1, seller);
+
+    const directBuyParams2 = {
+      sellOrderMaker: seller,
+      sellOrderNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenid1),
+      sellOrderPaymentAmount: price,
+      paymentToken: zeroAddress,
+      sellOrderSalt: 2,
+      sellOrderStart: 0,
+      sellOrderEnd: 0,
+      sellOrderDataType: ORDER_DATA_V3,
+      sellOrderData: encDataRight,
+      sellOrderSignature: signature2,
+      buyOrderPaymentAmount: price,
+      buyOrderNftAmount: 1,
+      buyOrderData: encDataLeft
+    };
+
+    const matchTx2 = await exchangeV2.directPurchase(directBuyParams2, { from: buyer, value: price });
+    console.log("RARIBLE: match ETH <=> ERC721 (second token of collection)", matchTx2.receipt.gasUsed)
+
+    const cancelTx1 = await exchangeV2.cancel(right, {from: seller})
+    console.log("RARIBLE: cancel ETH order", cancelTx1.receipt.gasUsed)
+  })
+
   it("rarible ERC-20", async () => {
 		const exchangeV2 = await ExchangeV2.new();
 		const transferProxy = await TransferProxy.new();
@@ -428,6 +507,116 @@ contract("Test gas usage for marketplaces", accounts => {
     await transferProxy.addOperator(exchangeV2.address)
 		const erc20TransferProxy = await ERC20TransferProxy.new();
     await erc20TransferProxy.__ERC20TransferProxy_init();
+    await erc20TransferProxy.addOperator(exchangeV2.address)
+		const royaltiesRegistry = await RoyaltiesRegistry.new();
+    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+
+    const token = await TestERC721.new("Rarible", "RARI");;
+    const erc20 = await TestERC20.new();
+
+    //TEST-CASE 1: ERC20 <=> ERC721
+    await token.mint(seller, tokenId)
+    await token.setApprovalForAll(transferProxy.address, true, {from: seller})
+
+    const erc20Fees = price * protocolFeeBP / 10000;
+    await erc20.mint(buyer, price + erc20Fees)
+    await erc20.approve(erc20TransferProxy.address, price + erc20Fees, {from: buyer})
+    assert.equal(await erc20.balanceOf(buyer), price + erc20Fees, "erc20 deposit")
+
+    let encDataLeft = await encDataV3([
+      [], 
+      [{ 
+        account: protocol,
+        value: protocolFeeBP
+      }],
+      true
+    ]);
+		let encDataRight = await encDataV3([[], [], false
+    ]);
+
+    const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3, encDataLeft);
+    
+    const signature = await getSignature(exchangeV2, left, buyer);
+
+    const directAcceptParams = {
+      bidMaker: buyer,
+      bidNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenId),
+      bidPaymentAmount: price,
+      paymentToken: erc20.address,
+      bidSalt: 1,
+      bidStart: 0,
+      bidEnd: 0,
+      bidDataType: ORDER_DATA_V3,
+      bidData: encDataLeft,
+      bidSignature: signature,
+      sellOrderPaymentAmount: price,
+      sellOrderNftAmount: 1,
+      sellOrderData: encDataRight
+    };
+
+    const matchTx1 = await exchangeV2.directAcceptBid(directAcceptParams, { from: seller });
+
+    console.log("RARIBLE: match ERC20 <=> ERC721", matchTx1.receipt.gasUsed)
+
+    assert.equal(await token.ownerOf(tokenId), buyer, "buyer has token1");
+    assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
+    assert.equal(await erc20.balanceOf(protocol), 30, "protocol")
+    assert.equal(await erc20.balanceOf(seller), 1000, "seller")
+
+    const tokenid1 = "1235112312"
+
+    //TEST-CASE 2: ERC20 <=> ERC721
+    await token.mint(seller, tokenid1)
+    await token.setApprovalForAll(transferProxy.address, true, {from: seller})
+
+    const erc20Fees1 = price * protocolFeeBP / 10000;
+    await erc20.mint(buyer, price + erc20Fees1)
+    await erc20.approve(erc20TransferProxy.address, price + erc20Fees1, {from: buyer})
+    assert.equal(await erc20.balanceOf(buyer), price + erc20Fees1, "erc20 deposit")
+
+    const left1 = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenid1), 1), 2, 0, 0, ORDER_DATA_V3, encDataLeft);
+    
+    const signature1 = await getSignature(exchangeV2, left1, buyer);
+  
+    const directAcceptParams1 = {
+      bidMaker: buyer,
+      bidNftAmount: 1,
+      nftAssetClass: ERC721,
+      nftData: enc( token.address, tokenid1),
+      bidPaymentAmount: price,
+      paymentToken: erc20.address,
+      bidSalt: 2,
+      bidStart: 0,
+      bidEnd: 0,
+      bidDataType: ORDER_DATA_V3,
+      bidData: encDataLeft,
+      bidSignature: signature1,
+      sellOrderPaymentAmount: price,
+      sellOrderNftAmount: 1,
+      sellOrderData: encDataRight
+    };
+    
+    const matchTx2 = await exchangeV2.directAcceptBid(directAcceptParams1, { from: seller });
+    console.log("RARIBLE: match ERC20 <=> ERC721 (second token of collection)", matchTx2.receipt.gasUsed)
+
+    const cancelTx1 = await exchangeV2.cancel(left, {from: buyer})
+    console.log("RARIBLE: cancel ERC-20 order", cancelTx1.receipt.gasUsed)
+
+    assert.equal(await token.ownerOf(tokenid1), buyer, "buyer has token1");
+    assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
+    assert.equal(await erc20.balanceOf(protocol), 60, "protocol")
+    assert.equal(await erc20.balanceOf(seller), 2000, "seller")
+  })
+
+  it("rarible ERC-20 with Proxy", async () => {
+		const exchangeV2 = await ExchangeV2.new();
+		const transferProxy = await TransferProxy.new();
+    await transferProxy.__TransferProxy_init_proxy(accounts[0]);
+    await transferProxy.addOperator(exchangeV2.address);
+		const erc20TransferProxy = await ERC20TransferProxy.new();
+    await erc20TransferProxy.__ERC20TransferProxy_init_proxy(accounts[0]);
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
     await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
