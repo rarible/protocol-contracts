@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.18](https://github.com/rarible/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
+
+### Features
+
+- fix publish ([07d1e15](https://github.com/rarible/protocol-contracts/commit/07d1e15222311dd0fe589cd025941cd6014e380e))
+
 ## [0.8.17](https://github.com/rarible/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
 
 ### Features
