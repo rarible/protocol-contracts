@@ -35,9 +35,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   console.log('Starting deployment process...');
 
-  const { deploy_meta, deploy_non_meta } = getConfig(network.name);
+  let { deploy_meta, deploy_non_meta } = getConfig(network.name);
   console.log('Configuration loaded:', { deploy_meta, deploy_non_meta });
-
+  deploy_meta = false;
   // Fetch previously deployed contract addresses
   let exchangeDeployment;
   if (!!deploy_meta) {

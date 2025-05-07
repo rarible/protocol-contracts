@@ -1,7 +1,8 @@
 // Import required dependencies from viem
-import { PrivateKeyAccount, createWalletClient, http } from "viem";
+import { PrivateKeyAccount, createWalletClient, encodeFunctionData, http, parseEther } from "viem";
 import { privateKeyToAccount } from 'viem/accounts'
 import { Chain, hoodi } from 'viem/chains'
+import {RaribleAccountERC7702__factory} from "../typechain-types";
 
 // Load environment variables from .env file
 import { config as dotenvConfig } from "dotenv";
@@ -44,18 +45,32 @@ const authorization = await eoaClient.signAuthorization({
   // executor: "self",
 });
 
-// Send the `authorization` along with `data`
-const receipt = await walletClient
-  .sendTransaction({
-    authorizationList: [authorization],
-    data: '0x<CALLDATA_TO_EXECUTE_IN_THE_ACCOUNT>',
-    to: eoa.address,
-  })
-  .then((txHash) =>
-    publicClient.waitForTransactionReceipt({
-      hash: txHash,
-    })
-  );
 
+// Define the operations
+const operations: (string | bigint)[][] = [
+  ['0xcb98643b8786950F0461f3B0edf99D88F274574D', parseEther('0.001'), '0x'],
+  ['0xd2135CfB216b74109775236E36d4b433F1DF507B', parseEther('0.002'), '0x'],
+];
+
+// Encode the operations into a hex string
+const encodedData = encodeFunctionData({
+  abi: RaribleAccountERC7702__factory.abi,
+  functionName: 'execute',
+  args: [operations],
+}) as `0x${string}`;
+
+const hash = await walletClient.sendTransaction({
+  authorizationList: [authorization],
+  data: encodeFunctionData({
+    abi: RaribleAccountERC7702__factory.abi,
+    functionName: 'execute',
+    args: [
+        ['0xcb98643b8786950F0461f3B0edf99D88F274574D', parseEther('0.001') as any, '0x' as any],
+        ['0xd2135CfB216b74109775236E36d4b433F1DF507B', parseEther('0.002') as any, '0x' as any],
+      
+    ],
+  }),
+  to: walletClient.account.address,
+});
 // Print receipt
 console.log(userOpReceipt);
