@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.14](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+### Features
+
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rariblecom/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
 ## [0.8.4](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 ### Features

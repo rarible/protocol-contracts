@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.14](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+### Features
+
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
 ## [0.8.7](https://github.com/rarible/protocol-contracts/compare/v0.8.6...v0.8.7) (2024-04-27)
 
 ### Bug Fixes

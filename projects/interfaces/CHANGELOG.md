@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.14](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+**Note:** Version bump only for package @rarible/exchange-interfaces
+
 ## [0.8.4](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 **Note:** Version bump only for package @rarible/exchange-interfaces

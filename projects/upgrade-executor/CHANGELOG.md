@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.14](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+### Features
+
+- tidy up network configs, support frame ([82a88fc](https://github.com/rariblecom/protocol-contracts/commit/82a88fcd81af7638c1234aafd233742d66ecbea1))
+
 ## [0.8.4](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 ### Features
