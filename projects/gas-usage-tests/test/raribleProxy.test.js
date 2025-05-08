@@ -4,6 +4,9 @@ const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 const TransferProxy = artifacts.require("TransferProxy.sol");
 const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
+const AssetMatcherCollection = artifacts.require("AssetMatcherCollection.sol");
+const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxy.sol");
+const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxy.sol");
 
 //RARIBLE Exchange (november 2021)
 const ExchangeV2Old = artifacts.require("ExchangeV2Old.sol");
@@ -24,6 +27,10 @@ const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951
 const { verifyBalanceChangeReturnTx } = require("../../../scripts/balance")
 
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+
+const ERC721_LAZY = "0xd8f960c1"
+const ERC1155_LAZY = "0x1cdfaa40"
+const COLLECTION_ID = "0xf63c2825"
 
 contract("rarible only gas usage tests with Proxy", accounts => {
 
@@ -53,6 +60,10 @@ contract("rarible only gas usage tests with Proxy", accounts => {
   beforeEach(async () => {
     testHelper = await RaribleTestHelper.new()
 
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
+
     exchangeV2 = await ExchangeV2.new();
     exchangeV2OLD = await ExchangeV2Old.new();
 
@@ -67,9 +78,20 @@ contract("rarible only gas usage tests with Proxy", accounts => {
     await erc20TransferProxy.addOperator(exchangeV2OLD.address)
 
     royaltiesRegistry = await RoyaltiesRegistry.new();
-    await royaltiesRegistry.__RoyaltiesRegistry_init();
+    await royaltiesRegistry.__RoyaltiesRegistry_init_proxy(accounts[0]);
 
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init_proxy(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      protocolFeeBP,
+      protocol,
+      royaltiesRegistry.address,
+      accounts[0],
+      [ERC721_LAZY, ERC1155_LAZY],
+      [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+      COLLECTION_ID,
+      assetMatcherCollectionReceipt.address
+    );
     await exchangeV2OLD.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
   });
 

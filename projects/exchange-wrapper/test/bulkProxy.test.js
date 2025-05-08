@@ -8,6 +8,8 @@ const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
 const AssetMatcherCollection = artifacts.require("AssetMatcherCollection.sol");
+const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxy.sol");
+const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxy.sol");
 
 //tokens
 const TestERC721 = artifacts.require("TestERC721.sol");
@@ -54,9 +56,9 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f10";
 
-// const ERC721_LAZY = "0xd8f960c1"
-// const ERC1155_LAZY = "0x1cdfaa40"
-// const COLLECTION = "0xf63c2825"
+const ERC721_LAZY = "0xd8f960c1"
+const ERC1155_LAZY = "0x1cdfaa40"
+const COLLECTION_ID = "0xf63c2825"
 
 contract("RaribleExchangeWrapper default cases", accounts => {
   let bulkExchange;
@@ -107,7 +109,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
     await erc20TransferProxy.__OperatorRole_init();
 
     royaltiesRegistry = await RoyaltiesRegistry.new()
-    await royaltiesRegistry.__RoyaltiesRegistry_init()
+    await royaltiesRegistry.__RoyaltiesRegistry_init_proxy(accounts[0])
   })
 
   beforeEach(async () => {    
@@ -1691,7 +1693,7 @@ contract("RaribleExchangeWrapper default cases", accounts => {
       accounts[0],
       [ERC721_LAZY, ERC1155_LAZY],
       [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
-      COLLECTION,
+      COLLECTION_ID,
       assetMatcherCollectionReceipt.address
     )
 
