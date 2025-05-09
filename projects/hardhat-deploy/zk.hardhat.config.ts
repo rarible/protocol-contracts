@@ -160,6 +160,8 @@ const config: HardhatUserConfig = {
   defaultNetwork: "zksync",
   namedAccounts: {
     deployer: 0,
+    // deployer: "ledger://0xe223825497c435BAeaf318F03d33Ec704954028A",
+    // zkcandy: "ledger://0xe223825497c435BAeaf318F03d33Ec704954028A",
   },
   paths: {
     sources: "src",
@@ -201,9 +203,9 @@ const config: HardhatUserConfig = {
       verifyURL: 'https://explorer.sepolia.era.zksync.dev/contract_verification'
     },
     zkcandy: {
+      ...createNetwork("zkcandy"),
       zksync: true,
       ethNetwork: "mainnet",
-      ...createNetwork("zkcandy"),
     },
     abstract_testnet: {
       ...createNetwork("abstract_testnet"),
