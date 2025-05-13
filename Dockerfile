@@ -1,6 +1,6 @@
 FROM node:20.18.3 as base
 WORKDIR /protocol
-RUN npm install -g truffle@5.4.17
+RUN npm install -g truffle
 COPY . .
 RUN yarn install
 RUN yarn build
