@@ -1,11 +1,4 @@
-import "@matterlabs/hardhat-zksync-solc";
-import "@matterlabs/hardhat-zksync-deploy";
-// import "@matterlabs/hardhat-zksync-upgradable";
-import "@nomiclabs/hardhat-truffle5";
-import "@matterlabs/hardhat-zksync-toolbox";
-import "@matterlabs/hardhat-zksync-verify";
-import "@matterlabs/hardhat-zksync-ethers";
-import "zksync-ethers";
+import "@matterlabs/hardhat-zksync";
 import "@typechain/hardhat"; // Add TypeChain plugin
 
 // upgradable plugin

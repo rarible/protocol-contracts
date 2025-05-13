@@ -1,4 +1,4 @@
-FROM node:18.19.0 as base
+FROM node:20.18.3 as base
 WORKDIR /protocol
 RUN npm install -g truffle@5.4.17
 COPY . .
