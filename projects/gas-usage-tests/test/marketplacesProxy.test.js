@@ -14,6 +14,9 @@ const RoyaltiesRegistry = artifacts.require("RoyaltiesRegistry.sol");
 const TransferProxy = artifacts.require("TransferProxy.sol");
 const ERC20TransferProxy = artifacts.require("ERC20TransferProxy.sol");
 const RaribleTestHelper = artifacts.require("RaribleTestHelper.sol");
+const AssetMatcherCollection = artifacts.require("AssetMatcherCollection.sol");
+const ERC721LazyMintTransferProxy = artifacts.require("ERC721LazyMintTransferProxy.sol");
+const ERC1155LazyMintTransferProxy = artifacts.require("ERC1155LazyMintTransferProxy.sol");
 
 //RARIBLE Exchange (november 2021)
 const ExchangeV2Old = artifacts.require("ExchangeV2Old.sol");
@@ -75,6 +78,10 @@ const MARKET_MARKER_SELL = "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951
 const MARKET_MARKER_BUY =  "0x68619b8adb206de04f676007b2437f99ff6129b672495a6951499c6c56bc2f14";
 
 const { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, ORDER_DATA_V3, TO_MAKER, TO_TAKER, PROTOCOL, ROYALTY, ORIGIN, PAYOUT, CRYPTO_PUNKS, COLLECTION, TO_LOCK, LOCK, enc, id } = require("../../../scripts/assets.js");
+
+const ERC721_LAZY = "0xd8f960c1"
+const ERC1155_LAZY = "0x1cdfaa40"
+const COLLECTION_ID = "0xf63c2825"
 
 contract("Test gas usage for marketplaces", accounts => {
 
@@ -343,6 +350,9 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("rarible ETH", async () => {
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
 		const exchangeV2 = await ExchangeV2.new();
 		const transferProxy = await TransferProxy.new();
     await transferProxy.__TransferProxy_init()
@@ -351,7 +361,17 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init();
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init_proxy(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      0,
+      protocol,
+      royaltiesRegistry.address,
+      accounts[0],
+      [ERC721_LAZY, ERC1155_LAZY],
+      [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+      COLLECTION_ID,
+      assetMatcherCollectionReceipt.address);
 
     const token = await TestERC721.new("Rarible", "RARI");;
 
@@ -422,6 +442,9 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("rarible ETH with Proxy", async () => {
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
 		const exchangeV2 = await ExchangeV2.new();
 		const transferProxy = await TransferProxy.new();
     await transferProxy.__TransferProxy_init_proxy(accounts[0]);
@@ -430,7 +453,18 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init_proxy(accounts[0]);
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init_proxy(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      0,
+      protocol,
+      royaltiesRegistry.address,
+      accounts[0],
+      [ERC721_LAZY, ERC1155_LAZY],
+      [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+      COLLECTION_ID,
+      assetMatcherCollectionReceipt.address
+    );
 
     const token = await TestERC721.new("Rarible", "RARI");;
 
@@ -501,6 +535,9 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("rarible ERC-20", async () => {
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
 		const exchangeV2 = await ExchangeV2.new();
 		const transferProxy = await TransferProxy.new();
     await transferProxy.__TransferProxy_init()
@@ -509,7 +546,18 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init();
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init_proxy(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      protocolFeeBP,
+      protocol,
+      royaltiesRegistry.address,
+      accounts[0],
+      [ERC721_LAZY, ERC1155_LAZY],
+      [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+      COLLECTION_ID,
+      assetMatcherCollectionReceipt.address
+    );
 
     const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
@@ -611,6 +659,9 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("rarible ERC-20 with Proxy", async () => {
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
 		const exchangeV2 = await ExchangeV2.new();
 		const transferProxy = await TransferProxy.new();
     await transferProxy.__TransferProxy_init_proxy(accounts[0]);
@@ -619,7 +670,18 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init_proxy(accounts[0]);
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init_proxy(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      protocolFeeBP,
+      protocol,
+      royaltiesRegistry.address,
+      accounts[0],
+      [ERC721_LAZY, ERC1155_LAZY],
+      [erc721LazyMintTransferProxy.address, erc1155LazyMintTransferProxy.address],
+      COLLECTION_ID,
+      assetMatcherCollectionReceipt.address
+    );
 
     const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
@@ -721,6 +783,9 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("OLD rarible ETH", async () => {
+    const assetMatcherCollectionReceipt = await AssetMatcherCollection.new();
+    const erc721LazyMintTransferProxy = await ERC721LazyMintTransferProxy.new();
+    const erc1155LazyMintTransferProxy = await ERC1155LazyMintTransferProxy.new();
 		const exchangeV2 = await ExchangeV2Old.new();
 		const transferProxy = await TransferProxy.new();
     await transferProxy.__TransferProxy_init()
@@ -729,7 +794,13 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init();
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      protocolFeeBP,
+      protocol,
+      royaltiesRegistry.address
+    );
 
     const token = await TestERC721.new("Rarible", "RARI");;
 
@@ -785,7 +856,13 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc20TransferProxy.__ERC20TransferProxy_init();
     await erc20TransferProxy.addOperator(exchangeV2.address)
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
-    await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
+    await exchangeV2.__ExchangeV2_init(
+      transferProxy.address,
+      erc20TransferProxy.address,
+      protocolFeeBP,
+      protocol,
+      royaltiesRegistry.address
+    );
 
     const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
