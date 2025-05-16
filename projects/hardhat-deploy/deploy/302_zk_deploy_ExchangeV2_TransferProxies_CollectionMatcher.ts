@@ -22,9 +22,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   }
 };
 
-async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
-  const { deploy } = hre.deployments;
-  const { ethers } = hre;
+async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxyAddress: string, erc20TransferProxyAddress: string, erc721LazyMintTransferProxyAddress: string, erc1155LazyMintTransferProxyAddress: string) {
+  const { deploy, execute } = hre.deployments;
   let { deployer } = await hre.getNamedAccounts();
 
   // hardware wallet support
@@ -40,21 +39,58 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     autoMine: true,
   });
   
-  const ExchangeV2 = await ethers.getContractFactory(contractName);
-  const exchangeV2 = ExchangeV2.attach(exchangeV2Receipt.address);
-
-  // Initialize ExchangeV2 contract
-  await (await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, "0x0000000000000000000000000000000000000000", royaltiesRegistryAddress)).wait();
+  const exchangeV2Address = exchangeV2Receipt.address;
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "__ExchangeV2_init",
+    transferProxyAddress, 
+    erc20TransferProxyAddress, 
+    0, 
+    "0x0000000000000000000000000000000000000000", 
+    royaltiesRegistryAddress
+  );
 
   //add exchangeV2 as operator to all 4 transfer proxies
-  await (await transferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc20TransferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc721LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
-  await (await erc1155LazyMintTransferProxy.addOperator(exchangeV2.address)).wait()
+  await execute(
+    "TransferProxy",
+    { from: deployer, log: true },
+    "addOperator",
+    exchangeV2Address
+  );
+  await execute(
+    "ERC20TransferProxy",
+    { from: deployer, log: true },
+    "addOperator",
+    exchangeV2Address
+  );
+  await execute(
+    "ERC721LazyMintTransferProxy",
+    { from: deployer, log: true },
+    "addOperator",
+    exchangeV2Address
+  );
+  await execute(
+    "ERC1155LazyMintTransferProxy",
+    { from: deployer, log: true },
+    "addOperator",
+    exchangeV2Address
+  );
 
   //set 2 lazy transfer proxies in exchangeV2 contract (other 2 are set in initialiser)
-  await (await exchangeV2.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address)).wait()
-  await (await exchangeV2.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address)).wait()
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "setTransferProxy",
+    ERC721_LAZY, erc721LazyMintTransferProxyAddress
+  );
+
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "setTransferProxy",
+    ERC1155_LAZY, erc1155LazyMintTransferProxyAddress
+  );
 
   //deploy and setup collection matcher
   const assetMatcherCollectionReceipt = await deploy("AssetMatcherCollection", {
@@ -62,12 +98,16 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     log: true,
     autoMine: true,
   });
-  await (await exchangeV2.setAssetMatcher(COLLECTION, assetMatcherCollectionReceipt.address)).wait()
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "setAssetMatcher",
+    COLLECTION, assetMatcherCollectionReceipt.address
+  );
 }
 
-async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
-  const { deploy } = hre.deployments;
-  const { ethers } = hre;
+async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string): Promise<string> {
+  const { deploy, execute } = hre.deployments;
   let { deployer } = await hre.getNamedAccounts();
 
   // hardware wallet support
@@ -81,13 +121,15 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
     autoMine: true,
   });
 
-  const Proxy = await ethers.getContractFactory(contractName);
-  const proxy = await Proxy.attach(transferProxyReceipt.address);
 
   // Initialize the proxy
-  await (await proxy.__OperatorRole_init()).wait()
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "__OperatorRole_init"
+  );
 
-  return proxy;
+  return transferProxyReceipt.address;
 }
 
 export default func;
