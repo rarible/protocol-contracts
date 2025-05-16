@@ -1,36 +1,34 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { ERC721RaribleFactoryC2, ERC721RaribleFactoryC2__factory } from "@rarible/tokens/jszk";
 import { ERC721RaribleMinimal, ERC721RaribleMinimal__factory } from "@rarible/tokens/jszk";
-import { ethers, BigNumber } from 'ethers';
-
+import { BigNumber } from 'ethers';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const { deploy } = hre.deployments;
+
+    // need to get signer from hre deployment !
+    const { deploy, execute, getSigner } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
 
-    const signer = await hre.ethers.getSigner(deployer);
+    const signer = await getSigner(deployer);
+
     const signerAddress = await signer.getAddress()
 
     let contractName: string = "ERC721RaribleFactoryC2";
     const factoryAddress = (await hre.deployments.get(contractName)).address
     console.log(`using factory: ${factoryAddress}`);
 
-    const factory: ERC721RaribleFactoryC2 = ERC721RaribleFactoryC2__factory.connect(factoryAddress, signer);
     console.log(`using factory 2: ${factoryAddress}, signer: ${signerAddress}`);
     // Deploy new ERC721 using the factory
     let address = "0x0ECA5f8b4CA915f143a98cB96E41f946136cced2"
 
     try {
-        const tx = await factory['createToken(string,string,string,string,address[],uint256)'](
-            "Mystical Cats 4",
-            "MYSTICAL4",
+        const receipt = await execute(contractName, { from: deployer, log: true }, "createToken(string,string,string,string,address[],uint256)", "Mystical Cats 7",
+            "MYSTICAL7",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
             [signerAddress],
             140
-        );
-        console.log(`factory.createToken => tx: ${tx.hash}, address: ${address}`);
-        const receipt = await tx.wait();
+        )
+        
         console.log('\nTransaction Events:');
         receipt.events?.forEach((event, index) => {
             console.log(`\nEvent ${index + 1}: ${event.event}`);
@@ -77,6 +75,27 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         } catch (error) {
             console.log(`error: ${error}`);
         }
+        // try {
+        //     console.log("mint token and transfer", tokenId)
+        //     const receipt = await execute("ERC721RaribleMinimal", { from: deployer, log: true, to: address }, "mintAndTransfer", {
+        //         tokenId: tokenId,
+        //         tokenURI: `https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/${i}.json`,
+        //         creators: [{
+        //             account: signerAddress,
+        //             value: BigNumber.from("10000")
+        //         }],
+        //         royalties: [{
+        //             account: signerAddress,
+        //             value: BigNumber.from("100")
+        //         }],
+        //         signatures: ["0x"]
+        //     }, to
+        //     )
+
+        //     console.log(`Minted tokenId #${i}, tx: ${receipt.transactionHash}; tokenId: ${tokenId}`);
+        // } catch (error) {
+        //     console.log(`error: ${error}`);
+        // }
         // const owner = await erc721.ownerOf(tokenId.toString());
         // console.log(`Token #${i}, collection: ${address}, tokenId: ${tokenId}, owner: ${owner} ${await erc721.balanceOf(owner)}`);
     }
