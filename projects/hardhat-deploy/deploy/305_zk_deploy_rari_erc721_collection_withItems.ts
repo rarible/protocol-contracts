@@ -75,29 +75,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         } catch (error) {
             console.log(`error: ${error}`);
         }
-        // try {
-        //     console.log("mint token and transfer", tokenId)
-        //     const receipt = await execute("ERC721RaribleMinimal", { from: deployer, log: true, to: address }, "mintAndTransfer", {
-        //         tokenId: tokenId,
-        //         tokenURI: `https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/${i}.json`,
-        //         creators: [{
-        //             account: signerAddress,
-        //             value: BigNumber.from("10000")
-        //         }],
-        //         royalties: [{
-        //             account: signerAddress,
-        //             value: BigNumber.from("100")
-        //         }],
-        //         signatures: ["0x"]
-        //     }, to
-        //     )
-
-        //     console.log(`Minted tokenId #${i}, tx: ${receipt.transactionHash}; tokenId: ${tokenId}`);
-        // } catch (error) {
-        //     console.log(`error: ${error}`);
-        // }
-        // const owner = await erc721.ownerOf(tokenId.toString());
-        // console.log(`Token #${i}, collection: ${address}, tokenId: ${tokenId}, owner: ${owner} ${await erc721.balanceOf(owner)}`);
     }
 };
 
