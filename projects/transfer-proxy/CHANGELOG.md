@@ -3,32 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
-
-### Features
-
-- fix tests ([66c2224](https://github.com/rarible/protocol-contracts/commit/66c22248e844f39868deccabf9b1d7d47837a144))
-
-## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
+## [0.8.18](https://github.com/rarible/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/transfer-proxy
 
-## [0.8.11](https://github.com/rarible/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+## [0.8.17](https://github.com/rarible/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
 
 ### Features
 
-- fix test and build ([78ae40b](https://github.com/rarible/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+- add new deps ([ff283d4](https://github.com/rarible/protocol-contracts/commit/ff283d449c57aeb87450b89f92ac7140b3114a63))
 
 **Note:** Version bump only for package @rarible/transfer-proxy
 
-## [0.8.10](https://github.com/rarible/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+## [0.8.16](https://github.com/rarible/protocol-contracts/compare/v0.8.15...v0.8.16) (2025-05-07)
+
+**Note:** Version bump only for package @rarible/transfer-proxy
+
+## [0.8.15](https://github.com/rarible/protocol-contracts/compare/v0.8.14...v0.8.15) (2025-05-07)
+
+**Note:** Version bump only for package @rarible/transfer-proxy
+
+## [0.8.14](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+### Bug Fixes
+
+- removed unneded migrations and tests ([7971522](https://github.com/rarible/protocol-contracts/commit/7971522e7d2721537687aadcebd9f45d427a3997))
 
 ### Features
 
-- add tests folder ([1c76fd3](https://github.com/rarible/protocol-contracts/commit/1c76fd3aed96110565f4ee430579e02ae00e39d4))
-- fix test ([9f9a5af](https://github.com/rarible/protocol-contracts/commit/9f9a5af7943debbfc2a33b4573f6fe9323b6d9b2))
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
 
-## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 ### Bug Fixes
 

@@ -16,8 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contractName: string, beaconName: string) {
-  const { deploy } = hre.deployments;
-  const { ethers } = hre;
+  const { deploy, execute } = hre.deployments;
   let { deployer } = await hre.getNamedAccounts();
 
   // hardware wallet support
@@ -37,9 +36,14 @@ async function deployERC721TokenAndFactory(hre: HardhatRuntimeEnvironment, contr
   });
 
   // Manually call the initialization function
-  const erc721Contract = await ethers.getContractAt(contractName, erc721Receipt.address);
-  await( await erc721Contract.__ERC721Rarible_init("Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc721LazyMintTransferProxyAddress)).wait();
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "__ERC721Rarible_init",
+    "Rarible", "RARI", "ipfs:/", "", transferProxyAddress, erc721LazyMintTransferProxyAddress
+  );
 
+  
   // Deploy beacon
   const erc721BeaconReceipt = await deploy(beaconName, {
     from: deployer,
