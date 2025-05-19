@@ -1671,7 +1671,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
   })
 
   describe("other", () => {
-    it("protocol fee should work correctly with V2 orders", async () => {
+    it("protocol fee should work correctly with V3 orders", async () => {
       await exchangeV2.setAllProtocolFeeData(protocol, 0, 500)
 
       const fee = (await exchangeV2.protocolFee())
@@ -1689,12 +1689,12 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       let addrOriginLeft = [[accounts[6], 300]];
       let addrOriginRight = [[accounts[5], 300]];
 
-      let encDataLeft = await encDataV2([[], addrOriginLeft, true]);
-      let encDataRight = await encDataV2([[], addrOriginRight, false]);
+      let encDataLeft = await encDataV3([[], addrOriginLeft, true]);
+      let encDataRight = await encDataV3([[], addrOriginRight, false]);
 
       const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
       const _nftPurchaseAssetData = "0x";
-      const left = Order(makerLeft, Asset(ERC721, _nftSellAssetData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const left = Order(makerLeft, Asset(ERC721, _nftSellAssetData, nftAmount), ZERO, Asset(ETH, _nftPurchaseAssetData, _priceSell), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
       const directPurchaseParams = {
@@ -1707,7 +1707,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         sellOrderSalt: salt,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderDataType: ORDER_DATA_V3,
         sellOrderData: encDataLeft,
         sellOrderSignature: signature,
         buyOrderPaymentAmount: _pricePurchase,
@@ -1734,7 +1734,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       assert.equal(await erc721.balanceOf(makerRight), 1);
     })
 
-    it("protocol fee should work correctly with V2 orders", async () => {
+    it("protocol fee should work correctly with V3 orders", async () => {
       await exchangeV2.setAllProtocolFeeData(protocol, 400, 500)
       let fee = (await exchangeV2.protocolFee())
 
@@ -1747,10 +1747,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
       const nftAmount = 1
       const erc721 = await prepareERC721(makerLeft, erc721TokenId1, [[accounts[7], 100]]); //with royalties
 
-      let encDataLeft = await encDataV2([[], [[accounts[6], 300]], true]);
-      let encDataRight = await encDataV2([[], [[accounts[5], 300]], false]);
+      let encDataLeft = await encDataV3([[], [[accounts[6], 300]], true]);
+      let encDataRight = await encDataV3([[], [[accounts[5], 300]], false]);
 
-      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", _priceSell), salt, 0, 0, ORDER_DATA_V2, encDataLeft);
+      const left = Order(makerLeft, Asset(ERC721, enc(erc721.address, erc721TokenId1), nftAmount), ZERO, Asset(ETH, "0x", _priceSell), salt, 0, 0, ORDER_DATA_V3, encDataLeft);
       const signature = await getSignature(left, makerLeft);
 
       const _nftSellAssetData = enc(erc721.address, erc721TokenId1);
@@ -1765,7 +1765,7 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
         sellOrderSalt: salt,
         sellOrderStart: 0,
         sellOrderEnd: 0,
-        sellOrderDataType: ORDER_DATA_V2,
+        sellOrderDataType: ORDER_DATA_V3,
         sellOrderData: encDataLeft,
         sellOrderSignature: signature,
         buyOrderPaymentAmount: _pricePurchase,
@@ -1869,6 +1869,10 @@ contract("ExchangeV2, sellerFee + buyerFee =  6%,", accounts => {
 
   function encDataV2(tuple) {
     return helper.encodeV2(tuple);
+  }
+
+  function encDataV3(tuple) {
+    return helper.encodeV3(tuple);
   }
 
   async function LibPartToUint(account = zeroAddress, value = 0) {

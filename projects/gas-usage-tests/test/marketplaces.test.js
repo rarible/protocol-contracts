@@ -114,7 +114,7 @@ contract("Test gas usage for marketplaces", accounts => {
     const royaltyEngine = await RoyaltyEngineV1.new();
     await royaltyEngine.initialize(royaltyRegistry.address)
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     // Deploy Asks v1.1
@@ -169,7 +169,7 @@ contract("Test gas usage for marketplaces", accounts => {
     const royaltyEngine = await RoyaltyEngineV1.new();
     await royaltyEngine.initialize(royaltyRegistry.address)
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
     
     const offers = await OffersV1.new(erc20TransferHelper.address, erc721TransferHelper.address, royaltyEngine.address, ZPFS.address, erc20.address);
@@ -221,7 +221,7 @@ contract("Test gas usage for marketplaces", accounts => {
     const royaltyEngine = await RoyaltyEngineV1.new();
     await royaltyEngine.initialize(royaltyRegistry.address)
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     // Deploy Asks v1.1
@@ -293,7 +293,7 @@ contract("Test gas usage for marketplaces", accounts => {
     const royaltyEngine = await RoyaltyEngineV1.new();
     await royaltyEngine.initialize(royaltyRegistry.address)
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     const offers = await OffersV1.new(erc20TransferHelper.address, erc721TransferHelper.address, royaltyEngine.address, ZPFS.address, erc20.address);
@@ -353,14 +353,14 @@ contract("Test gas usage for marketplaces", accounts => {
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
     await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, protocol, royaltiesRegistry.address);
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
 
     //TEST-CASE 1: ETH <=> ERC721
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
-    let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(protocol, protocolFeeBP), 0, MARKET_MARKER_BUY ]);
-		let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL ]);
+    let encDataLeft = await encDataV3([[], [], true]);
+		let encDataRight = await encDataV3([[], [], false]);
 
 		const right = Order(seller, Asset(ERC721, enc( token.address, tokenId), 1), zeroAddress, Asset(ETH, "0x", price), 1, 0, 0, ORDER_DATA_V3, encDataRight);
     
@@ -432,19 +432,28 @@ contract("Test gas usage for marketplaces", accounts => {
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
     await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     //TEST-CASE 1: ERC20 <=> ERC721
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
-    await erc20.mint(buyer, price)
-    await erc20.approve(erc20TransferProxy.address, price, {from: buyer})
-    assert.equal(await erc20.balanceOf(buyer), price, "erc20 deposit")
+    const erc20Fees = price * protocolFeeBP / 10000;
+    await erc20.mint(buyer, price + erc20Fees)
+    await erc20.approve(erc20TransferProxy.address, price + erc20Fees, {from: buyer})
+    assert.equal(await erc20.balanceOf(buyer), price + erc20Fees, "erc20 deposit")
 
-    let encDataLeft = await encDataV3_BUY([ 0, await LibPartToUint(protocol, protocolFeeBP), 0, MARKET_MARKER_BUY]);
-		let encDataRight = await encDataV3_SELL([ 0, await LibPartToUint(), 0, 1000, MARKET_MARKER_SELL]);
+    let encDataLeft = await encDataV3([
+      [], 
+      [{ 
+        account: protocol,
+        value: protocolFeeBP
+      }],
+      true
+    ]);
+		let encDataRight = await encDataV3([[], [], false
+    ]);
 
     const left = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenId), 1), 1, 0, 0, ORDER_DATA_V3, encDataLeft);
     
@@ -475,7 +484,7 @@ contract("Test gas usage for marketplaces", accounts => {
     assert.equal(await token.ownerOf(tokenId), buyer, "buyer has token1");
     assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 30, "protocol")
-    assert.equal(await erc20.balanceOf(seller), 970, "seller")
+    assert.equal(await erc20.balanceOf(seller), 1000, "seller")
 
     const tokenid1 = "1235112312"
 
@@ -483,9 +492,10 @@ contract("Test gas usage for marketplaces", accounts => {
     await token.mint(seller, tokenid1)
     await token.setApprovalForAll(transferProxy.address, true, {from: seller})
 
-    await erc20.mint(buyer, price)
-    await erc20.approve(erc20TransferProxy.address, price, {from: buyer})
-    assert.equal(await erc20.balanceOf(buyer), price, "erc20 deposit")
+    const erc20Fees1 = price * protocolFeeBP / 10000;
+    await erc20.mint(buyer, price + erc20Fees1)
+    await erc20.approve(erc20TransferProxy.address, price + erc20Fees1, {from: buyer})
+    assert.equal(await erc20.balanceOf(buyer), price + erc20Fees1, "erc20 deposit")
 
     const left1 = Order(buyer, Asset(ERC20, enc(erc20.address), price), zeroAddress, Asset(ERC721, enc( token.address, tokenid1), 1), 2, 0, 0, ORDER_DATA_V3, encDataLeft);
     
@@ -518,7 +528,7 @@ contract("Test gas usage for marketplaces", accounts => {
     assert.equal(await token.ownerOf(tokenid1), buyer, "buyer has token1");
     assert.equal(await erc20.balanceOf(buyer), 0, "erc20 buyer");
     assert.equal(await erc20.balanceOf(protocol), 60, "protocol")
-    assert.equal(await erc20.balanceOf(seller), 1940, "seller")
+    assert.equal(await erc20.balanceOf(seller), 2000, "seller")
   })
 
   it("OLD rarible ETH", async () => {
@@ -532,7 +542,7 @@ contract("Test gas usage for marketplaces", accounts => {
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
     await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
 
     //TEST-CASE 1: ETH <=> ERC721
     await token.mint(seller, tokenId)
@@ -588,7 +598,7 @@ contract("Test gas usage for marketplaces", accounts => {
 		const royaltiesRegistry = await RoyaltiesRegistry.new();
     await exchangeV2.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, protocolFeeBP, protocol, royaltiesRegistry.address);
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     //TEST-CASE 1: ERC20 <=> ERC721
@@ -634,7 +644,7 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("openSea ETH", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     const wyvernProxyRegistry = await WyvernProxyRegistry.new();
@@ -669,7 +679,7 @@ contract("Test gas usage for marketplaces", accounts => {
   })
 
   it("openSea ERC20", async () => {
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     const erc20 = await TestERC20.new();
 
     const wyvernProxyRegistry = await WyvernProxyRegistry.new();
@@ -734,7 +744,7 @@ contract("Test gas usage for marketplaces", accounts => {
     const conduitController = await ConduitController.new();
     const seaport = await Seaport.new(conduitController.address)
   
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(seaport.address, true, {from: seller})
 
@@ -779,7 +789,7 @@ contract("Test gas usage for marketplaces", accounts => {
     const conduitController = await ConduitController.new();
     const seaport = await Seaport.new(conduitController.address)
   
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(seaport.address, true, {from: seller})
 
@@ -840,7 +850,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await erc721delegate.grantRole("0x7630198b183b603be5df16e380207195f2a065102b113930ccb600feaf615331", x2y2.address);
     await x2y2.updateDelegates([erc721delegate.address], [])
 
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(erc721delegate.address, true, {from: seller})
     const tokenDataToEncode = [
@@ -1045,7 +1055,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await factory.setBondingCurveAllowed(exp.address, true)
     await factory.setBondingCurveAllowed(lin.address, true)
     
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
 
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(factory.address, true, {from: seller})
@@ -1116,7 +1126,7 @@ contract("Test gas usage for marketplaces", accounts => {
     await looksRareProtocol.addStrategy(50, 50, 200, "0x7e897147", true, strategyCollectionOffer.address)
 
     //mint NFT
-    const token = await TestERC721.new();
+    const token = await TestERC721.new("Rarible", "RARI");;
     await token.mint(seller, tokenId)
     await token.setApprovalForAll(transferManager.address, true, {from: seller})
     await transferManager.grantApprovals([looksRareProtocol.address], {from: seller})
@@ -1237,7 +1247,7 @@ it("blur V2 ETH", async () => {
   await executionDelegate.approveContract(blurExchange.address)
 
   //mint NFT
-  const token = await TestERC721.new();
+  const token = await TestERC721.new("Rarible", "RARI");;
   await token.mint(seller, tokenId)
   await token.setApprovalForAll(executionDelegate.address, true, {from: seller})
 
@@ -1511,12 +1521,8 @@ it("blur V2 ETH", async () => {
     return testHelper.encodeV2(tuple);
   }
 
-  function encDataV3_BUY(tuple) {
-    return testHelper.encodeV3_BUY(tuple);
-  }
-
-  function encDataV3_SELL(tuple) {
-    return testHelper.encodeV3_SELL(tuple);
+  function encDataV3(tuple) {
+    return testHelper.encodeV3(tuple);
   }
 
   async function LibPartToUint(account = zeroAddress, value = 0) {

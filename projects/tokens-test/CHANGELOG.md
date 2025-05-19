@@ -45,6 +45,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - **PT-5492:** extend test contract with erc-4906 ([2655ba0](https://github.com/rarible/protocol-contracts/commit/2655ba03c928d393e30b767fa6a134057ba7613b))
 - **PT-5535:** moonbirds rendering ([bbb8df3](https://github.com/rarible/protocol-contracts/commit/bbb8df35170e862ae2387b3607821a079a150e86))
 - **PT-7153:** index items without mints ([c24a729](https://github.com/rarible/protocol-contracts/commit/c24a7299f13622f3e7932fb8cf635deec52f80fd))
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
+**Note:** Version bump only for package @rarible/test
+
+## [0.8.6](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+
+**Note:** Version bump only for package @rarible/test
+
+## [0.8.5](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+
+**Note:** Version bump only for package @rarible/test
 
 ## [0.8.4-beta.3](https://github.com/rarible/protocol-contracts/compare/v0.8.4-beta.2...v0.8.4-beta.3) (2024-01-19)
 

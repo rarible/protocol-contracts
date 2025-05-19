@@ -16,23 +16,25 @@ const ERC1155LazyMintTransferProxy = artifacts.require('ERC1155LazyMintTransferP
 
 const ERC1155RaribleMeta = artifacts.require('ERC1155RaribleMeta');
 
-module.exports = async function (deployer, network) {
+module.exports = async function (deployer, network, accounts) {
+  const deployerAddress = accounts[0];
+  
   const transferProxy = (await TransferProxy.deployed()).address;
   const erc1155LazyMintTransferProxy = (await ERC1155LazyMintTransferProxy.deployed()).address;
 
   const { deploy_meta, deploy_non_meta } = getSettings(network);
 
   if (!!deploy_meta) {
-    await updateERC1155(ERC1155RaribleMeta, ERC1155RaribleBeaconMeta, transferProxy, erc1155LazyMintTransferProxy, deployer, network);
+    await updateERC1155(ERC1155RaribleMeta, ERC1155RaribleBeaconMeta, transferProxy, erc1155LazyMintTransferProxy, deployer, deployerAddress, network);
   } 
   
   if (!!deploy_non_meta){
-    await updateERC1155(ERC1155Rarible, ERC1155RaribleBeacon, transferProxy, erc1155LazyMintTransferProxy, deployer, network);
+    await updateERC1155(ERC1155Rarible, ERC1155RaribleBeacon, transferProxy, erc1155LazyMintTransferProxy, deployer, deployerAddress, network);
   }
 
 };
 
-async function updateERC1155(erc1155toDeploy, beacon, transferProxy, erc1155LazyMintTransferProxy, deployer, network) {
+async function updateERC1155(erc1155toDeploy, beacon, transferProxy, erc1155LazyMintTransferProxy, deployer, deployerAddress, network) {
   //upgrade 1155 proxy
   const erc1155Proxy = await erc1155toDeploy.deployed();
   await upgradeProxy(erc1155Proxy.address, erc1155toDeploy, { deployer });
@@ -44,6 +46,6 @@ async function updateERC1155(erc1155toDeploy, beacon, transferProxy, erc1155Lazy
   await updateImplementation(beacon1155, erc1155)
   
   //deploying new factory
-  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, { gas: 2500000 * getGasMultiplier(network) });
+  const factory1155 = await deployer.deploy(ERC1155RaribleFactoryC2, beacon1155.address, transferProxy, erc1155LazyMintTransferProxy, deployerAddress, { gas: 2500000 * getGasMultiplier(network) });
   console.log(`deployed factory1155 at ${factory1155.address}`)
 }
