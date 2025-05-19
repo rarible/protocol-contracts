@@ -1,11 +1,5 @@
-import "@matterlabs/hardhat-zksync-solc";
-import "@matterlabs/hardhat-zksync-deploy";
-// import "@matterlabs/hardhat-zksync-upgradable";
-import "@nomiclabs/hardhat-truffle5";
-import "@matterlabs/hardhat-zksync-toolbox";
-import "@matterlabs/hardhat-zksync-verify";
-import "@matterlabs/hardhat-zksync-ethers";
-import "zksync-ethers";
+import "@matterlabs/hardhat-zksync";
+import "@typechain/hardhat"; // Add TypeChain plugin
 
 // upgradable plugin
 
@@ -67,7 +61,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 
 const config: HardhatUserConfig = {
   zksolc: {
-    version: "1.5.12",
+    version: "1.4.1",
     settings: {
         isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
         forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
@@ -95,7 +89,16 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: "P78HUI9K9SAM5QKD6ABU91G3CPDS98MZW2"
-  }
+  },
+  typechain: {
+    outDir: "typechain-types-zk", // Output directory for generated typings
+    target: "ethers-v5", // Use ethers-v6 for zksync-ethers compatibility
+    alwaysGenerateOverloads: false,
+    dontOverrideCompile: true, // Prevent TypeChain from overriding compile task
+    externalArtifacts: [
+      "artifacts-zk/contracts/**/*[!dbg].json"
+    ],
+  },
 };
 
 export default config;

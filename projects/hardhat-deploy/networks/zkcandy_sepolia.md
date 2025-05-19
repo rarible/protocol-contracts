@@ -1,16 +1,21 @@
  Name | Address | Url 
  --- | --- | ---
- AssetMatcherCollection | 0x0559bDd18B77534F336EAeF6629CcA4f330a3d46 | https://sepolia.explorer.zkcandy.ioaddress/0x0559bDd18B77534F336EAeF6629CcA4f330a3d46 
- ERC1155LazyMintTransferProxy | 0x5de707d8f2fd54ba6bAF6801D416887A52B5A027 | https://sepolia.explorer.zkcandy.ioaddress/0x5de707d8f2fd54ba6bAF6801D416887A52B5A027 
- ERC1155Rarible | 0x8225cddFb6b94B4aa85f398009782E22aA97F442 | https://sepolia.explorer.zkcandy.ioaddress/0x8225cddFb6b94B4aa85f398009782E22aA97F442 
- ERC1155RaribleBeacon | 0x6F7BB16a93fba2d4fE1420c700707da6a24d7587 | https://sepolia.explorer.zkcandy.ioaddress/0x6F7BB16a93fba2d4fE1420c700707da6a24d7587 
- ERC1155RaribleFactoryC2 | 0xcE2E38af3BfaAB815A4Bc069003d5E16B39380c4 | https://sepolia.explorer.zkcandy.ioaddress/0xcE2E38af3BfaAB815A4Bc069003d5E16B39380c4 
- ERC20TransferProxy | 0xAdE40ac73a618DD5E4359064e8c72cc126f1BA2E | https://sepolia.explorer.zkcandy.ioaddress/0xAdE40ac73a618DD5E4359064e8c72cc126f1BA2E 
- ERC721LazyMintTransferProxy | 0x9140F1a2a0564135b3C0e8aaC6E007A7e0C9eB55 | https://sepolia.explorer.zkcandy.ioaddress/0x9140F1a2a0564135b3C0e8aaC6E007A7e0C9eB55 
- ERC721RaribleFactoryC2 | 0x7f605708BF7b3814B736Fd75D073bbb1e9DC7d83 | https://sepolia.explorer.zkcandy.ioaddress/0x7f605708BF7b3814B736Fd75D073bbb1e9DC7d83 
- ERC721RaribleMinimal | 0x264fEb99438015D3acB0686895722F4E8050632e | https://sepolia.explorer.zkcandy.ioaddress/0x264fEb99438015D3acB0686895722F4E8050632e 
- ERC721RaribleMinimalBeacon | 0xdf484823B1819E4D821b970E6f7BbFeF3763a4d1 | https://sepolia.explorer.zkcandy.ioaddress/0xdf484823B1819E4D821b970E6f7BbFeF3763a4d1 
- ExchangeV2 | 0x18f60a693a9fbc66153E828e968dF0ED3F32c0aF | https://sepolia.explorer.zkcandy.ioaddress/0x18f60a693a9fbc66153E828e968dF0ED3F32c0aF 
- RaribleExchangeWrapper | 0x3922f247be2CABc97B4E1bAb68dA58A262296bf1 | https://sepolia.explorer.zkcandy.ioaddress/0x3922f247be2CABc97B4E1bAb68dA58A262296bf1 
- RoyaltiesRegistry | 0xCB17D50A50583cB87D7b7Cbc32809319FD131F6c | https://sepolia.explorer.zkcandy.ioaddress/0xCB17D50A50583cB87D7b7Cbc32809319FD131F6c 
- TransferProxy | 0xD0a43d2E0B5f1BA2C97f66F532E4218051316857 | https://sepolia.explorer.zkcandy.ioaddress/0xD0a43d2E0B5f1BA2C97f66F532E4218051316857 
+ AssetMatcherCollection | 0x5aA36A3983eeb85Dd115C6BEEA2a4C1D29dC4364 | https://sepolia.explorer.zkcandy.io/0x5aA36A3983eeb85Dd115C6BEEA2a4C1D29dC4364 
+ ERC1155LazyMintTransferProxy | 0x6C2CFaA91A1d4b92FbCB10123365084412cEe4b1 | https://sepolia.explorer.zkcandy.io/0x6C2CFaA91A1d4b92FbCB10123365084412cEe4b1 
+ ERC1155Rarible | 0xc098a5d00d0C116E0E3FE3345a0BE1Bc38E507AB | https://sepolia.explorer.zkcandy.io/0xc098a5d00d0C116E0E3FE3345a0BE1Bc38E507AB 
+ ERC1155RaribleBeacon | 0x4cA92075aB425A1AB753C731730A893AA32A0E08 | https://sepolia.explorer.zkcandy.io/0x4cA92075aB425A1AB753C731730A893AA32A0E08 
+ ERC1155RaribleBeaconMeta | 0x117cEA07F99a30ceFE821007506EBf6db64f18b4 | https://sepolia.explorer.zkcandy.io/0x117cEA07F99a30ceFE821007506EBf6db64f18b4 
+ ERC1155RaribleFactoryC2 | 0x688DE9Fb235aed1457f6D6D4668c808FaceB5962 | https://sepolia.explorer.zkcandy.io/0x688DE9Fb235aed1457f6D6D4668c808FaceB5962 
+ ERC1155RaribleMeta | 0x378af581BDA23a2919FEBAc4040bDeDbc9B8C038 | https://sepolia.explorer.zkcandy.io/0x378af581BDA23a2919FEBAc4040bDeDbc9B8C038 
+ ERC20TransferProxy | 0x2abC8bD09c681702e2297F11fd759d9014664B33 | https://sepolia.explorer.zkcandy.io/0x2abC8bD09c681702e2297F11fd759d9014664B33 
+ ERC721LazyMintTransferProxy | 0xA01B190820112DF741D00BcEA10e57a933B669CF | https://sepolia.explorer.zkcandy.io/0xA01B190820112DF741D00BcEA10e57a933B669CF 
+ ERC721RaribleFactoryC2 | 0xb1E70E352F4FF4E46673054A02C4658f9f09c9CF | https://sepolia.explorer.zkcandy.io/0xb1E70E352F4FF4E46673054A02C4658f9f09c9CF 
+ ERC721RaribleMeta | 0x7098C5bEC1eA17684FA9CE53B92CA5995F979257 | https://sepolia.explorer.zkcandy.io/0x7098C5bEC1eA17684FA9CE53B92CA5995F979257 
+ ERC721RaribleMinimal | 0x45AC277b5F1aB00D7f2cE87E38Ba7104D6E48245 | https://sepolia.explorer.zkcandy.io/0x45AC277b5F1aB00D7f2cE87E38Ba7104D6E48245 
+ ERC721RaribleMinimalBeacon | 0xCcbDcE88bca096d0c3dc980B25040049B675A209 | https://sepolia.explorer.zkcandy.io/0xCcbDcE88bca096d0c3dc980B25040049B675A209 
+ ERC721RaribleMinimalBeaconMeta | 0x13592E13dC988D5ebb5B8dd6c007dEB6C85682cE | https://sepolia.explorer.zkcandy.io/0x13592E13dC988D5ebb5B8dd6c007dEB6C85682cE 
+ ExchangeMetaV2 | 0xB8d66c04c0f154eE6f6f8192aAe7cbdbd40400c4 | https://sepolia.explorer.zkcandy.io/0xB8d66c04c0f154eE6f6f8192aAe7cbdbd40400c4 
+ ExchangeV2 | 0xEda115D72EF1Dc96d0297278D1D241821F999927 | https://sepolia.explorer.zkcandy.io/0xEda115D72EF1Dc96d0297278D1D241821F999927 
+ RaribleExchangeWrapper | 0xE89c67db39f5B13b9f1F7a815E9890b94B85Ce0f | https://sepolia.explorer.zkcandy.io/0xE89c67db39f5B13b9f1F7a815E9890b94B85Ce0f 
+ RoyaltiesRegistry | 0xb36603d6956bC855f5F246DFDb77979a2EB63b53 | https://sepolia.explorer.zkcandy.io/0xb36603d6956bC855f5F246DFDb77979a2EB63b53 
+ TransferProxy | 0x9301194711E0015316AA0d9e0F184dFB87f70582 | https://sepolia.explorer.zkcandy.io/0x9301194711E0015316AA0d9e0F184dFB87f70582 

@@ -3,11 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+## [0.8.18](https://github.com/rarible/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/transfer-manager
 
-## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
+## [0.8.17](https://github.com/rarible/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
+
+### Features
+
+- add new deps ([ff283d4](https://github.com/rarible/protocol-contracts/commit/ff283d449c57aeb87450b89f92ac7140b3114a63))
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.16](https://github.com/rarible/protocol-contracts/compare/v0.8.15...v0.8.16) (2025-05-07)
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.15](https://github.com/rarible/protocol-contracts/compare/v0.8.14...v0.8.15) (2025-05-07)
+
+**Note:** Version bump only for package @rarible/transfer-manager
+
+## [0.8.14](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+### Features
+
+- PT-5072 add seaport 1.6 to exchange wrapper, deploy wrapper to sepolia ([c6f10f1](https://github.com/rarible/protocol-contracts/commit/c6f10f151740dd76da0e997b8bf499f03cba00a9))
+
+## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 ### Features
 
