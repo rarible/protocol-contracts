@@ -41,22 +41,15 @@ describe("TWCreateX", function () {
     ).to.be.revertedWithCustomError(twCreateX, "FailedContractCreation");
   });
 
-  it.only("should return the correct address using findCreate2AddressViaHash", async () => {
+  it("should return the correct address using findCreate2AddressViaHash", async () => {
     const salt = getSaltWithCaller(deployer.address, 0x03);
     const initCodeHash = ethers.utils.keccak256(simpleBytecode);
 
-    const predictedAddress = await twCreateX.computeCreate2Address(salt, initCodeHash, twCreateX.address);
+    const predictedAddress = await twCreateX.findCreate2AddressViaHash(salt, initCodeHash);
     const tx = await twCreateX["deployCreate2(bytes32,bytes)"](salt, simpleBytecode);
     const receipt = await tx.wait();
 
     const deploymentAddress = receipt.events[0].args[0];
-    // Get contract instance at deployment address
-    // const deployedContract = await ethers.getContractAt("Simple", deploymentAddress);
-    
-    // // Verify the contract was deployed correctly by checking its value
-    // expect(await deployedContract.value()).to.equal(42);
-
-    // expect(await twCreateX.hasBeenDeployed(predictedAddress)).to.equal(true);
     expect(predictedAddress).to.equal(deploymentAddress);
   });
 

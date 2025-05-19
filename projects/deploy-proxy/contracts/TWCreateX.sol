@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.20;
-import "hardhat/console.sol";
 
 /**
  * @title CreateX Factory Smart Contract
@@ -660,7 +659,7 @@ contract TWCreateX {
      * @return computedAddress The 20-byte address where a contract will be stored.
      */
     function findCreate2AddressViaHash(bytes32 salt, bytes32 initCodeHash) public view returns (address computedAddress) {
-        computedAddress = computeCreate2Address({salt: salt, initCodeHash: initCodeHash, deployer: _SELF});
+        computedAddress = computeCreate2Address({salt: _guard({salt: salt}), initCodeHash: initCodeHash, deployer: _SELF});
         // return null address to signify failure if contract has been deployed.
         if (_create2Deployed[computedAddress]) return address(0);
     }
@@ -674,7 +673,7 @@ contract TWCreateX {
      * @return computedAddress The 20-byte address where a contract will be stored.
      */
     function findCreate2Address(bytes32 salt, bytes memory initCode) public view returns (address computedAddress) {
-        computedAddress = computeCreate2Address({salt: salt, initCodeHash: keccak256(abi.encodePacked(initCode)), deployer: _SELF});
+        computedAddress = computeCreate2Address({salt: _guard({salt: salt}), initCodeHash: keccak256(abi.encodePacked(initCode)), deployer: _SELF});
         // return null address to signify failure if contract has been deployed.
         if (_create2Deployed[computedAddress]) return address(0);
     }
