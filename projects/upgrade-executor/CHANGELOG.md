@@ -3,48 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.13](https://github.com/rariblecom/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+## [0.8.18](https://github.com/rariblecom/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/upgrade-executor
 
-## [0.8.12](https://github.com/rariblecom/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
-
-**Note:** Version bump only for package @rarible/upgrade-executor
-
-## [0.8.11](https://github.com/rariblecom/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+## [0.8.17](https://github.com/rariblecom/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
 
 ### Features
 
-- fix test and build ([78ae40b](https://github.com/rariblecom/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+- add new deps ([ff283d4](https://github.com/rariblecom/protocol-contracts/commit/ff283d449c57aeb87450b89f92ac7140b3114a63))
 
 **Note:** Version bump only for package @rarible/upgrade-executor
 
-## [0.8.10](https://github.com/rariblecom/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
-
-### Features
-
-- add tests folder ([1c76fd3](https://github.com/rariblecom/protocol-contracts/commit/1c76fd3aed96110565f4ee430579e02ae00e39d4))
-
-## [0.8.9](https://github.com/rariblecom/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
-
-### Features
-
-- fix build ([3857dfc](https://github.com/rariblecom/protocol-contracts/commit/3857dfcf6ab80beb519ae3d763a27196db1e3fea))
-- skip legacy test ([da25088](https://github.com/rariblecom/protocol-contracts/commit/da250883b01a1abdfb61cfa74b7a31dc0f7ad475))
-
-## [0.8.8](https://github.com/rariblecom/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+## [0.8.16](https://github.com/rariblecom/protocol-contracts/compare/v0.8.15...v0.8.16) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/upgrade-executor
 
+## [0.8.15](https://github.com/rariblecom/protocol-contracts/compare/v0.8.14...v0.8.15) (2025-05-07)
+
 **Note:** Version bump only for package @rarible/upgrade-executor
 
-## [0.8.6](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+## [0.8.14](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
 
 ### Features
 
 - tidy up network configs, support frame ([82a88fc](https://github.com/rariblecom/protocol-contracts/commit/82a88fcd81af7638c1234aafd233742d66ecbea1))
 
-## [0.8.5](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+## [0.8.4](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 ### Features
 

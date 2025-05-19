@@ -1,14 +1,12 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-
 import { DEPLOY_FROM } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Deploying contracts on network ${hre.network.name}`);
 
-  const { deploy } = hre.deployments;
-  const { ethers } = hre;
+  const { deploy, execute } = hre.deployments;
   let { deployer } = await hre.getNamedAccounts();
 
   // hardware wallet support
@@ -25,14 +23,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     autoMine: true,
   });
   
-  // Get a contract instance
-  
-  const royaltiesRegistry = await hre.ethers.getContractAt('RoyaltiesRegistry', deployment.address);
-  // Call the __RoyaltiesRegistry_init function
   console.log("Initializing RoyaltiesRegistry");
-  await (await royaltiesRegistry.__RoyaltiesRegistry_init()).wait();
+  // Get a contract instance
+  const receit = await execute(
+    "RoyaltiesRegistry",
+    { from: deployer, log: true },
+    "__RoyaltiesRegistry_init"               // pass init args here if any
+  );
 
-  console.log("RoyaltiesRegistry deployed and initialized");
+  console.log("RoyaltiesRegistry deployed and initialized", receit.status);
 };
 
 export default func;

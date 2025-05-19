@@ -3,27 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+## [0.8.18](https://github.com/rarible/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/test
 
-## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
-
-**Note:** Version bump only for package @rarible/test
-
-## [0.8.11](https://github.com/rarible/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+## [0.8.17](https://github.com/rarible/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
 
 ### Features
 
-- fix test and build ([78ae40b](https://github.com/rarible/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+- add new deps ([ff283d4](https://github.com/rarible/protocol-contracts/commit/ff283d449c57aeb87450b89f92ac7140b3114a63))
 
 **Note:** Version bump only for package @rarible/test
 
-## [0.8.10](https://github.com/rarible/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+## [0.8.16](https://github.com/rarible/protocol-contracts/compare/v0.8.15...v0.8.16) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/test
 
-## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+## [0.8.15](https://github.com/rarible/protocol-contracts/compare/v0.8.14...v0.8.15) (2025-05-07)
+
+**Note:** Version bump only for package @rarible/test
+
+## [0.8.14](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
+
+### Features
+
+- add erc721ex for e2e tests ([#313](https://github.com/rarible/protocol-contracts/issues/313)) ([72c0bef](https://github.com/rarible/protocol-contracts/commit/72c0bef3f1920a3547df0e257051545e10639f7a))
+- **PT-5279:** mint price erc20 ([#292](https://github.com/rarible/protocol-contracts/issues/292)) ([cd9a75a](https://github.com/rarible/protocol-contracts/commit/cd9a75a3c52464b9304b44f98e8ce3dd7e3a46b4))
+- **PT-5303:** owner updated event ([#282](https://github.com/rarible/protocol-contracts/issues/282)) ([634a0ca](https://github.com/rarible/protocol-contracts/commit/634a0ca386c84e86e61b717a143aed324007fc9b))
+- **PT-5492:** extend test contract with erc-4906 ([2655ba0](https://github.com/rarible/protocol-contracts/commit/2655ba03c928d393e30b767fa6a134057ba7613b))
+- **PT-5535:** moonbirds rendering ([bbb8df3](https://github.com/rarible/protocol-contracts/commit/bbb8df35170e862ae2387b3607821a079a150e86))
+- **PT-7153:** index items without mints ([c24a729](https://github.com/rarible/protocol-contracts/commit/c24a7299f13622f3e7932fb8cf635deec52f80fd))
+- sanity check script for after new chain deployment ([#329](https://github.com/rarible/protocol-contracts/issues/329)) ([f046cc5](https://github.com/rarible/protocol-contracts/commit/f046cc564fa613894284c50b71eba44ed06e4483))
+
+## [0.8.4](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 ### Features
 
