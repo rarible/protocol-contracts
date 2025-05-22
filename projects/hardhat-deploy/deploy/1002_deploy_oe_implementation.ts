@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Network: ${hre.network.name}`);
   console.log(`Chain ID: ${hre.network.config.chainId}`);
 
-  const { deploy } = hre.deployments;
+  const { deploy, getSigner } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
   console.log(`\nDeployer Address: ${deployer}`);
 
@@ -27,12 +27,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     contract: {
       abi: OpenEditionERC721FlatFee__factory.abi as any,
       bytecode: OpenEditionERC721FlatFee__factory.bytecode,
-    },
+    }
   });
 
   console.log('\n=== Deployment Results ===');
   console.log(`Contract Address: ${deployResult.address}`);
   console.log(`Transaction Hash: ${deployResult.transactionHash}`);
+  console.log(`Initializing OpenEditionERC721FlatFee contract...`);
+  const edition = OpenEditionERC721FlatFee__factory.connect(deployResult.address, await getSigner(deployer));
+  await edition.initialize(deployer, "Rarible", "RARI", "ipfs:/", [], deployer, deployer, 1000, 1000, deployer);
   console.log(`Newly Deployed: ${deployResult.newlyDeployed ? 'Yes' : 'No'}`);
   console.log('=== Deployment Complete ===\n');
 };
