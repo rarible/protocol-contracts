@@ -5,7 +5,7 @@ import { BigNumber } from 'ethers';
 import { getConfig } from '../utils/utils';
 import { listBuyWithERC20 } from '@rarible/exchange-v2/sdk/listBuyERC20';
 import { listBuyWithEth } from '@rarible/exchange-v2/sdk/listBuyETH';
-import { getTokenAddress } from '@rarible/exchange-v2/sdk/getTokenAddress';
+import { createTokenFromFactory } from '@rarible/tokens/sdk/createTokenFromFactory';
 import { ExchangeMetaV2, ExchangeV2 } from '@rarible/exchange-v2/typechain-types';
 import { IERC20Upgradeable } from '@rarible/tokens/js';
 
@@ -32,8 +32,8 @@ task('sanity-check', 'Mints tokens from two contracts and transfers them to a ne
         const factory1155 = await ERC1155RaribleFactoryC2__factory.connect(taskArgs.factory1155, sellerWallet);
 
         // Get deterministic addresses for the tokens that will be created
-        const tokenAddress721 = await getTokenAddress(factory721, `721${taskArgs.salt}`);
-        const tokenAddress1155 = await getTokenAddress(factory1155, `1155${taskArgs.salt}`);
+        const tokenAddress721 = await createTokenFromFactory(factory721, `SanityMintable_721${taskArgs.salt}`, `SMNTBL_721${taskArgs.salt}`, `ipfs:/`, `ipfs:/`, `721${taskArgs.salt}`);
+        const tokenAddress1155 = await createTokenFromFactory(factory1155, `SanityMintable_1155${taskArgs.salt}`, `SMNTBL_1155${taskArgs.salt}`, `ipfs:/`, `ipfs:/`, `1155${taskArgs.salt}`);
         
         // Initialize the appropriate token contract based on deployment configuration
         let token721;

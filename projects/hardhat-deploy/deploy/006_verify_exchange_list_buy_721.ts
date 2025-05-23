@@ -9,7 +9,7 @@ import {
   TestERC20,
 } from '../typechain-types';
 import { getConfig } from '../utils/utils';
-import { getTokenAddress } from '@rarible/exchange-v2/sdk/getTokenAddress';
+import { createTokenFromFactory } from '@rarible/tokens/sdk/createTokenFromFactory';
 import { listBuyWithERC20 } from '@rarible/exchange-v2/sdk/listBuyERC20';
 import { listBuyWithEth } from '@rarible/exchange-v2/sdk/listBuyETH';
 
@@ -39,8 +39,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const factory721 = ERC721RaribleFactoryC2__factory.connect(factory721Deployment.address, sellerWallet);
   const factory1155 = ERC1155RaribleFactoryC2__factory.connect(factory1155Deployment.address, sellerWallet);
 
-  const tokenAddress721 = await getTokenAddress(factory721, `721${SALT}`);
-  const tokenAddress1155 = await getTokenAddress(factory1155, `1155${SALT}`);
+  const tokenAddress721 = await createTokenFromFactory(factory721, `SanityMintable_721${SALT}`, `SMNTBL_721${SALT}`, `ipfs:/`, `ipfs:/`, `721${SALT}`);
+  const tokenAddress1155 = await createTokenFromFactory(factory1155, `SanityMintable_1155${SALT}`, `SMNTBL_1155${SALT}`, `ipfs:/`, `ipfs:/`, `1155${SALT}`);
 
   const token721 = await hardhatEthers.getContractAt(
     deploy_meta && !deploy_non_meta ? 'ERC721RaribleMeta' : 'ERC721RaribleMinimal',
