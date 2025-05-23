@@ -1,7 +1,13 @@
-const ethUtil = require('ethereumjs-util');
+const { keccak256, keccakFromString, bufferToHex } = require('ethereumjs-util');
 
+// // 1.  Use the new helper that accepts strings
+// function id(str) {
+//   return bufferToHex(keccakFromString(str)).slice(0, 10);   // 0x + 8 hex chars
+// }
+
+/* 2. Or stay with keccak256 but give it a Buffer/Uint8Array */
 function id(str) {
-	return `0x${ethUtil.keccak256(str).toString("hex").substring(0, 8)}`;
+  return bufferToHex(keccak256(Buffer.from(str, 'utf8'))).slice(0, 10);
 }
 
 function enc(token, tokenId) {
