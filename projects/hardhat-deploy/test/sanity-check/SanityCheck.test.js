@@ -50,18 +50,22 @@ contract("Sanity Check - Token Creation & Buy", () => {
       `1155${SALT}`
     );
 
-    token721 = await artifacts.require(
-      deploy_meta && !deploy_non_meta ? 'ERC721RaribleMeta' : 'ERC721RaribleMinimal'
-    ).at(tokenAddress721);
+    token721 = await ethers.getContractAt(
+      deploy_meta && !deploy_non_meta ? 'ERC721RaribleMeta' : 'ERC721RaribleMinimal',
+      tokenAddress721,
+      sellerWallet
+    );
 
-    token1155 = await artifacts.require(
-      deploy_meta && !deploy_non_meta ? 'ERC1155RaribleMeta' : 'ERC1155Rarible'
-    ).at(tokenAddress1155);
+    token1155 = await ethers.getContractAt(
+      deploy_meta && !deploy_non_meta ? 'ERC1155RaribleMeta' : 'ERC1155Rarible',
+      tokenAddress1155,
+      sellerWallet
+    );
 
     exchangeContract = await ethers.getContractAt(deploy_meta ? "ExchangeMetaV2" : "ExchangeV2", exchangeDeployment.address, sellerWallet);
 
-    await token721.setApprovalForAll(exchangeContract.address, true, { from: sellerWallet.address });
-    await token1155.setApprovalForAll(exchangeContract.address, true, { from: sellerWallet.address });
+    await token721.connect(sellerWallet).setApprovalForAll(exchangeContract.address, true);
+    await token1155.connect(sellerWallet).setApprovalForAll(exchangeContract.address, true);
 
     console.log("Token721:", token721.address);
     console.log("Token1155:", token1155.address);
