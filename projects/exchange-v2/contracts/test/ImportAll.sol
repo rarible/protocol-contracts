@@ -9,3 +9,5 @@ import "../../test/contracts/TestRoyaltiesRegistry.sol";
 import "../../test/contracts/ERC721LazyMintTest.sol";
 import "../../test/contracts/ERC1155LazyMintTest.sol";
 import "../../test/contracts/TestERC20.sol";
+import "../../test/contracts/ERC721LazyMintTransferProxyTest.sol";
+import "../../test/contracts/ERC1155LazyMintTransferProxyTest.sol";

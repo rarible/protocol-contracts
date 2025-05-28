@@ -9,9 +9,10 @@ import {
   signOrderWithWallet,
   matchOrderOnExchange,
 } from "../sdk/listingUtils";
-import { ERC721, ERC20, ETH, ZERO } from "../sdk/utils";
+import { ERC721, ERC20, ETH, ZERO, ERC1155_LAZY, ERC721_LAZY } from "../sdk/utils";
 import { ERC721LazyMintTest, ERC1155LazyMintTest, TestERC20, TransferProxyTest, ERC20TransferProxyTest, TestRoyaltiesRegistry, RaribleTransferManagerTest } from "../typechain-types";
 import { ExchangeV2 } from "../typechain-types/ExchangeV2";
+import { ERC721LazyMintTransferProxyTest, ERC1155LazyMintTransferProxyTest } from "../typechain-types";
 
 describe("listingUtils", function () {
   let seller: SignerWithAddress;
@@ -22,6 +23,8 @@ describe("listingUtils", function () {
   let erc20: TestERC20;
   let transferProxy: TransferProxyTest;
   let erc20TransferProxy: ERC20TransferProxyTest;
+  let erc721LazyMintTransferProxy: ERC721LazyMintTransferProxyTest;
+  let erc1155LazyMintTransferProxy: ERC1155LazyMintTransferProxyTest;
   let rtm: RaribleTransferManagerTest;
   let royaltiesRegistry: TestRoyaltiesRegistry;
 
@@ -40,9 +43,24 @@ describe("listingUtils", function () {
     erc20TransferProxy = await ethers.getContractFactory("ERC20TransferProxyTest").then(f => f.deploy());
     rtm = await ethers.getContractFactory("RaribleTransferManagerTest").then(f => f.deploy());
     royaltiesRegistry = await ethers.getContractFactory("TestRoyaltiesRegistry").then(f => f.deploy());
+    
     const Exchange = await ethers.getContractFactory("ExchangeV2");
     exchange = await Exchange.deploy();
     await exchange.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, ZERO, royaltiesRegistry.address);
+
+    erc721LazyMintTransferProxy = await ethers.getContractFactory("ERC721LazyMintTransferProxyTest").then(f => f.deploy());
+    await erc721LazyMintTransferProxy.__OperatorRole_init();
+    erc1155LazyMintTransferProxy = await ethers.getContractFactory("ERC1155LazyMintTransferProxyTest").then(f => f.deploy());
+    await erc1155LazyMintTransferProxy.__OperatorRole_init();
+
+    await (await erc721LazyMintTransferProxy.addOperator(exchange.address)).wait()
+    await (await erc1155LazyMintTransferProxy.addOperator(exchange.address)).wait()
+
+    await (await exchange.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address)).wait()
+    await (await exchange.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address)).wait()
+
+    await token721.connect(seller).setApprovalForAll(exchange.address, true);
+    await token1155.connect(seller).setApprovalForAll(exchange.address, true);
 
     const TestERC20 = await ethers.getContractFactory("TestERC20");
     erc20 = await TestERC20.deploy();
