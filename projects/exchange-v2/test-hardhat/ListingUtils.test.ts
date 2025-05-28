@@ -9,8 +9,8 @@ import {
   signOrderWithWallet,
   matchOrderOnExchange,
 } from "../sdk/listingUtils";
-import { ERC721, ERC20, ETH } from "../sdk/utils";
-import { ERC721LazyMintTest, ERC1155LazyMintTest, TestERC20 } from "../typechain-types";
+import { ERC721, ERC20, ETH, ZERO } from "../sdk/utils";
+import { ERC721LazyMintTest, ERC1155LazyMintTest, TestERC20, TransferProxyTest, ERC20TransferProxyTest, TestRoyaltiesRegistry, RaribleTransferManagerTest } from "../typechain-types";
 import { ExchangeV2 } from "../typechain-types/ExchangeV2";
 
 describe("listingUtils", function () {
@@ -20,6 +20,10 @@ describe("listingUtils", function () {
   let token1155: ERC1155LazyMintTest;
   let exchange: ExchangeV2;
   let erc20: TestERC20;
+  let transferProxy: TransferProxyTest;
+  let erc20TransferProxy: ERC20TransferProxyTest;
+  let rtm: RaribleTransferManagerTest;
+  let royaltiesRegistry: TestRoyaltiesRegistry;
 
   beforeEach(async function () {
     [seller, buyer] = await ethers.getSigners();
@@ -32,9 +36,13 @@ describe("listingUtils", function () {
     token1155 = await TestERC1155.deploy();
     // await token1155.initialize();
 
+    transferProxy = await ethers.getContractFactory("TransferProxyTest").then(f => f.deploy())
+    erc20TransferProxy = await ethers.getContractFactory("ERC20TransferProxyTest").then(f => f.deploy());
+    rtm = await ethers.getContractFactory("RaribleTransferManagerTest").then(f => f.deploy());
+    royaltiesRegistry = await ethers.getContractFactory("TestRoyaltiesRegistry").then(f => f.deploy());
     const Exchange = await ethers.getContractFactory("ExchangeV2");
     exchange = await Exchange.deploy();
-    // await exchange.initialize();
+    await exchange.__ExchangeV2_init(transferProxy.address, erc20TransferProxy.address, 0, ZERO, royaltiesRegistry.address);
 
     const TestERC20 = await ethers.getContractFactory("TestERC20");
     erc20 = await TestERC20.deploy();
@@ -97,6 +105,7 @@ describe("listingUtils", function () {
     );
     const sig = await signOrderWithWallet(sellOrder, seller, exchange.address);
     expect(sig).to.match(/^0x[0-9a-f]{130}$/); // Basic signature format check
+    // cannot check if the signature is valid because it's internally implemented in the contract
   });
 
   it("should match orders without value (ERC20)", async () => {
