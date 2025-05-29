@@ -25,7 +25,7 @@ async function main() {
   const _index = 0;                               // your index
   const _uri   = "ipfs://QmbEDxG6huiJB1tGd89TYEcnwuGNdYrvEf1RcECnAtqQuY/";                  // your new base URI
 
-  const tx = await contract.updateBatchBaseURI(_index, _uri);
+  const tx = await contract.updateBatchBaseURI(_index, _uri, { gasLimit: 1000000, gasPrice: ethers.utils.parseUnits("1", "gwei") });
   console.log(`Tx sent ⛽  ${tx.hash}`);
 
   const receipt = await tx.wait();                // wait for mining
