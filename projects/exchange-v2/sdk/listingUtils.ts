@@ -6,36 +6,34 @@ import { encodeERC20AssetData, encodeV3Data } from "./encodeUtils";
 import { getV3Selector } from "./selectorUtils";
 import { ZERO_WORD } from "./constants";
 
-export async function mintERC721(
-  token721: any,
+export async function mintToken(
+  tokenContract: any,
   tokenId: string,
-  sellerAddress: string
+  sellerAddress: string,
+  options?: {
+    is1155?: boolean;
+    supply?: number;
+  }
 ) {
-  const mintData = {
+  const is1155 = options?.is1155 ?? false;
+  const supply = options?.supply ?? 1;
+
+  const mintData: any = {
     tokenId,
     tokenURI: "ipfs:/",
     creators: [{ account: sellerAddress, value: 10000 }],
     royalties: [],
     signatures: [ZERO_WORD],
   };
-  await token721.mintAndTransfer(mintData, sellerAddress);
+
+  if (is1155) {
+    mintData.supply = supply;
+    await tokenContract.mintAndTransfer(mintData, sellerAddress, supply);
+  } else {
+    await tokenContract.mintAndTransfer(mintData, sellerAddress);
+  }
 }
 
-export async function mintERC1155(
-  token1155: any,
-  tokenId: string,
-  sellerAddress: string
-) {
-  const mintData = {
-    tokenId,
-    tokenURI: "ipfs:/",
-    creators: [{ account: sellerAddress, value: 10000 }],
-    royalties: [],
-    signatures: [ZERO_WORD],
-    supply: 1,
-  };
-  await token1155.mintAndTransfer(mintData, sellerAddress, 1);
-}
 
 export function createSellOrder(
     tokenAddress: string,

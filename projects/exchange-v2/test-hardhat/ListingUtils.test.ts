@@ -2,12 +2,11 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
-  mintERC721,
-  mintERC1155,
   createSellOrder,
   createBuyOrder,
   signOrderWithWallet,
   matchOrderOnExchange,
+  mintToken,
 } from "../sdk/listingUtils";
 import { ERC721, ERC20, ETH, ZERO, ERC1155_LAZY, ERC721_LAZY } from "../sdk/utils";
 import { ERC721LazyMintTest, ERC1155LazyMintTest, TestERC20, TransferProxyTest, ERC20TransferProxyTest, TestRoyaltiesRegistry, RaribleTransferManagerTest } from "../typechain-types";
@@ -33,11 +32,9 @@ describe("listingUtils", function () {
 
     const TestERC721 = await ethers.getContractFactory("ERC721LazyMintTest");
     token721 = await TestERC721.deploy();
-    // await token721.initialize();
 
     const TestERC1155 = await ethers.getContractFactory("ERC1155LazyMintTest");
     token1155 = await TestERC1155.deploy();
-    // await token1155.initialize();
 
     transferProxy = await ethers.getContractFactory("TransferProxyTest").then(f => f.deploy())
     erc20TransferProxy = await ethers.getContractFactory("ERC20TransferProxyTest").then(f => f.deploy());
@@ -70,13 +67,13 @@ describe("listingUtils", function () {
 
   it("should mint ERC721 correctly", async () => {
     const tokenId = "1";
-    await mintERC721(token721, tokenId, seller.address);
+    await mintToken(token721, tokenId, seller.address);
     expect(await token721.ownerOf(tokenId)).to.equal(seller.address);
   });
 
   it("should mint ERC1155 correctly", async () => {
     const tokenId = "2";
-    await mintERC1155(token1155, tokenId, seller.address);
+    await mintToken(token1155, tokenId, seller.address, { is1155: true });
     expect(await token1155.balanceOf(seller.address, tokenId)).to.equal(1);
   });
 
@@ -128,7 +125,7 @@ describe("listingUtils", function () {
 
   it("should match orders without value (ERC20)", async () => {
     const tokenId = "6";
-    await mintERC721(token721, tokenId, seller.address);
+    await mintToken(token721, tokenId, seller.address);
     await token721.connect(seller).setApprovalForAll(exchange.address, true);
 
     const sellOrder = createSellOrder(
@@ -152,7 +149,7 @@ describe("listingUtils", function () {
 
   it("should match orders with value (ETH)", async () => {
     const tokenId = seller.address + "b00000000000000000000001";
-    await mintERC721(token721, tokenId, seller.address);
+    await mintToken(token721, tokenId, seller.address);
     await token721.setApprovalForAll(exchange.address, true);
 
     const sellOrder = createSellOrder(
