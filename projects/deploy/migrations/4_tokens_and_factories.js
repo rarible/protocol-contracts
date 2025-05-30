@@ -18,7 +18,9 @@ const ERC1155LazyMintTransferProxy = artifacts.require('ERC1155LazyMintTransferP
 
 const ERC1155RaribleMeta = artifacts.require('ERC1155RaribleMeta');
 
-module.exports = async function (deployer, network) {
+module.exports = async function (deployer, network, accounts) {
+  const deployerAddress = accounts[0];
+
   const transferProxy = (await TransferProxy.deployed()).address;
   const erc721LazyMintTransferProxy = (await ERC721LazyMintTransferProxy.deployed()).address;
   const erc1155LazyMintTransferProxy = (await ERC1155LazyMintTransferProxy.deployed()).address;
@@ -26,11 +28,11 @@ module.exports = async function (deployer, network) {
   const { deploy_meta, deploy_non_meta } = getSettings(network);
   //deploying ERC1155 with meta support if needed
   if (!!deploy_meta) {
-    await deployERC1155(ERC1155RaribleMeta, ERC1155RaribleBeaconMeta, transferProxy, erc1155LazyMintTransferProxy, deployer, network);
+    await deployERC1155(ERC1155RaribleMeta, ERC1155RaribleBeaconMeta, transferProxy, erc1155LazyMintTransferProxy, deployer, deployerAddress, network);
   } 
   
   if (!!deploy_non_meta){
-    await deployERC1155(ERC1155Rarible, ERC1155RaribleBeacon, transferProxy, erc1155LazyMintTransferProxy, deployer, network);
+    await deployERC1155(ERC1155Rarible, ERC1155RaribleBeacon, transferProxy, erc1155LazyMintTransferProxy, deployer, deployerAddress, network);
   }
 
   //deploying erc721 proxy
@@ -46,7 +48,7 @@ module.exports = async function (deployer, network) {
 
 };
 
-async function deployERC1155(erc1155toDeploy, beaconToDeploy, transferProxy, erc1155LazyMintTransferProxy, deployer, network) {
+async function deployERC1155(erc1155toDeploy, beaconToDeploy, transferProxy, erc1155LazyMintTransferProxy, deployer, deployerAddress, network) {
   //deploying erc1155 proxy
   const erc1155Proxy = await deployProxy(erc1155toDeploy, ["Rarible", "RARI", "ipfs:/", "", transferProxy, erc1155LazyMintTransferProxy], { deployer, initializer: '__ERC1155Rarible_init' });
   console.log("deployed erc1155 at", erc1155Proxy.address)
@@ -56,5 +58,5 @@ async function deployERC1155(erc1155toDeploy, beaconToDeploy, transferProxy, erc
   const erc1155 = await getProxyImplementation(erc1155toDeploy, network, ProxyAdmin)
 
   //deploying beacon
-  const beacon1155 = await deployer.deploy(beaconToDeploy, erc1155, { gas: 1000000 * getGasMultiplier(network) });
+  const beacon1155 = await deployer.deploy(beaconToDeploy, erc1155, deployerAddress, { gas: 1000000 * getGasMultiplier(network) });
 }

@@ -43,6 +43,11 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
         __Ownable_init_unchained();
     }
 
+    function __RoyaltiesRegistry_init_proxy(address _initialOwner) external initializer {
+        __Ownable_init_unchained();
+        transferOwnership(_initialOwner);
+    }
+
     /// @dev sets external provider for token contract, and royalties type = 4
     function setProviderByToken(address token, address provider) external {
         checkOwner(token);

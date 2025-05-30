@@ -19,6 +19,11 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         emit MatcherChange(assetType, matcher);
     }
 
+    function _setAssetMatcher(bytes4 assetType, address matcher) internal {
+        matchers[assetType] = matcher;
+        emit MatcherChange(assetType, matcher);
+    }
+
     function matchAssets(LibAsset.AssetType memory leftAssetType, LibAsset.AssetType memory rightAssetType) internal view returns (LibAsset.AssetType memory) {
         LibAsset.AssetType memory result = matchAssetOneSide(leftAssetType, rightAssetType);
         if (result.assetClass == 0) {
