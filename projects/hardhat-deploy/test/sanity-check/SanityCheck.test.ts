@@ -3,7 +3,7 @@ import { BigNumber, Contract, Signer } from 'ethers';
 import { getConfig } from '../../utils/utils';
 import { createTokenFromFactory } from '@rarible/tokens/sdk/createTokenFromFactory';
 import { ERC721RaribleFactoryC2, ERC1155RaribleFactoryC2, ExchangeMetaV2, ExchangeV2 } from '../../typechain-types';
-import { mintToken } from '@rarible/exchange-v2/sdk/listingUtils';
+import { mintToken } from "@rarible/tokens/sdk/mintToken";
 import { createSellOrder } from '@rarible/exchange-v2/sdk/listingUtils';
 import { createBuyOrder, matchOrderOnExchange, signOrderWithWallet } from '@rarible/exchange-v2/sdk/listingUtils';
 import { ERC1155, ERC20, ERC721, ETH } from '@rarible/exchange-v2/sdk/utils';
