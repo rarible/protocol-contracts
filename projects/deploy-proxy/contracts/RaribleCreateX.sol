@@ -16,7 +16,7 @@ pragma solidity 0.8.20;
  * and Matt Solomon (https://web.archive.org/web/20230921103335/https://mattsolomon.dev/), modified by RARIBLE team
  * for specific use cases.
  */
-contract TWCreateX {
+contract RaribleCreateX {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                         IMMUTABLES                         */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
