@@ -16,7 +16,7 @@ pragma solidity 0.8.20;
  * and Matt Solomon (https://web.archive.org/web/20230921103335/https://mattsolomon.dev/), modified by RARIBLE team
  * for specific use cases.
  */
-contract RaribleCreateX {
+contract CreateX {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                         IMMUTABLES                         */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -613,18 +613,6 @@ contract RaribleCreateX {
         // Note that the safeguarding function `_guard` is called as part of the overloaded function
         // `deployCreate2Clone`.
         proxy = deployCreate2Clone({salt: _generateSalt(), implementation: implementation, data: data});
-    }
-
-    /**
-     * @dev Returns the address where a contract will be stored if deployed via this contract using
-     * the `CREATE2` opcode. Any change in the `initCodeHash` or `salt` values will result in a new
-     * destination address.
-     * @param salt The 32-byte random value used to create the contract address.
-     * @param initCodeHash The 32-byte bytecode digest of the contract creation bytecode.
-     * @return computedAddress The 20-byte address where a contract will be stored.
-     */
-    function computeCreate2Address(bytes32 salt, bytes32 initCodeHash) public view returns (address computedAddress) {
-        computedAddress = computeCreate2Address({salt: salt, initCodeHash: initCodeHash, deployer: _SELF});
     }
 
     /**
