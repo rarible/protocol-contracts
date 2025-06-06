@@ -20,4 +20,4 @@ const deployLock: DeployFunction = async (
 };
 
 export default deployLock;
-deployLock.tags = ["all", "TestDeployContract"];
+deployLock.tags = ["01", "TestDeployContract"];
