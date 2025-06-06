@@ -6,19 +6,18 @@ const deployLock: DeployFunction = async (
 ) => {
     const { deploy } = hre.deployments;
     const { getNamedAccounts } = hre;
-    const na = await getNamedAccounts()
     const {deployer,} = await getNamedAccounts();
-    console.log('deployer', deployer, JSON.stringify(na))
-    const deployResult: DeployResult = await deploy("ImmutableCreate2Factory", {
+    console.log('deployer', deployer)
+    
+    const deployResult: DeployResult = await deploy("RaribleCreateX", {
         from: deployer,
         log: true,
-        args: [], // Unlock timestamp in seconds
+        args: [100, 200], // Unlock timestamp in seconds
         waitConfirmations: 1,
-        nonce: 0
+        nonce: 0, // nonce must be 0
     });
     console.log("transactionHash", deployResult.transactionHash)
-
 };
 
 export default deployLock;
-deployLock.tags = ["00", "ImmutableCreate2Factory"];
+deployLock.tags = ["02", "RaribleCreateX"];
