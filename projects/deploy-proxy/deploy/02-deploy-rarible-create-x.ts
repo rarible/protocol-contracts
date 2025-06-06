@@ -12,7 +12,6 @@ const deployLock: DeployFunction = async (
     const deployResult: DeployResult = await deploy("RaribleCreateX", {
         from: deployer,
         log: true,
-        args: [100, 200], // Unlock timestamp in seconds
         waitConfirmations: 1,
         nonce: 0, // nonce must be 0
     });
