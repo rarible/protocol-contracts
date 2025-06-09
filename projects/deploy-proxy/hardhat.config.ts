@@ -92,7 +92,10 @@ const config: HardhatUserConfig = {
     },
   },
   namedAccounts: {
-    deployer: 0,
+    // ledger path 4
+    // deployer: "ledger://m/44'/60'/3'/0/0:0xCfDBcc22887744ab38bC447Eb7fc4A419F24923e",
+    // deployer: 0 -- default
+    deployer: "ledger://m/44'/60'/3'/0/0:0xCfDBcc22887744ab38bC447Eb7fc4A419F24923e",
   },
   paths: {
     sources: "contracts",
