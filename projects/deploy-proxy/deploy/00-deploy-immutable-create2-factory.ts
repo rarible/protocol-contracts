@@ -21,4 +21,4 @@ const deployLock: DeployFunction = async (
 };
 
 export default deployLock;
-deployLock.tags = ["all", "ImmutableCreate2Factory"];
+deployLock.tags = ["00", "ImmutableCreate2Factory"];

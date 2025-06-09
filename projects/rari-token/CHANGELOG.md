@@ -3,34 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.13](https://github.com/rarible/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+## [0.8.18](https://github.com/rarible/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/rari-token
 
-## [0.8.12](https://github.com/rarible/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
-
-**Note:** Version bump only for package @rarible/rari-token
-
-## [0.8.11](https://github.com/rarible/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+## [0.8.17](https://github.com/rarible/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
 
 ### Features
 
-- fix test and build ([78ae40b](https://github.com/rarible/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+- add new deps ([ff283d4](https://github.com/rarible/protocol-contracts/commit/ff283d449c57aeb87450b89f92ac7140b3114a63))
+- fix pipeline ([cb44fbc](https://github.com/rarible/protocol-contracts/commit/cb44fbc7ec5805b14cb0ffea5950f859c2293ffc))
 
 **Note:** Version bump only for package @rarible/rari-token
 
-## [0.8.10](https://github.com/rarible/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
-
-**Note:** Version bump only for package @rarible/rari-token
-
-## [0.8.9](https://github.com/rarible/protocol-contracts/compare/v0.8.8...v0.8.9) (2025-04-30)
+## [0.8.16](https://github.com/rarible/protocol-contracts/compare/v0.8.15...v0.8.16) (2025-05-07)
 
 ### Features
 
-- fix tests ([8da7eac](https://github.com/rarible/protocol-contracts/commit/8da7eacecd799cc81d6f42daaf576cdc9f25a528))
+- fix build ([b09a1ee](https://github.com/rarible/protocol-contracts/commit/b09a1eee27c8856fa16a0722b56cdedea5d73bd2))
 
-## [0.8.8](https://github.com/rarible/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+## [0.8.15](https://github.com/rarible/protocol-contracts/compare/v0.8.14...v0.8.15) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/rari-token
+
+## [0.8.14](https://github.com/rarible/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/rari-token

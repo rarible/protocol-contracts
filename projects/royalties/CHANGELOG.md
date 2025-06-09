@@ -3,37 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.8.13](https://github.com/rariblecom/protocol-contracts/compare/v0.8.12...v0.8.13) (2025-04-30)
+## [0.8.18](https://github.com/rariblecom/protocol-contracts/compare/v0.8.17...v0.8.18) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/royalties
 
-## [0.8.12](https://github.com/rariblecom/protocol-contracts/compare/v0.8.11...v0.8.12) (2025-04-30)
-
-**Note:** Version bump only for package @rarible/royalties
-
-## [0.8.11](https://github.com/rariblecom/protocol-contracts/compare/v0.8.10...v0.8.11) (2025-04-30)
+## [0.8.17](https://github.com/rariblecom/protocol-contracts/compare/v0.8.16...v0.8.17) (2025-05-07)
 
 ### Features
 
-- fix test and build ([78ae40b](https://github.com/rariblecom/protocol-contracts/commit/78ae40b4fdda18da610b022621a92f6944bdd8ba))
+- add new deps ([ff283d4](https://github.com/rariblecom/protocol-contracts/commit/ff283d449c57aeb87450b89f92ac7140b3114a63))
 
 **Note:** Version bump only for package @rarible/royalties
 
-## [0.8.10](https://github.com/rariblecom/protocol-contracts/compare/v0.8.9...v0.8.10) (2025-04-30)
+## [0.8.16](https://github.com/rariblecom/protocol-contracts/compare/v0.8.15...v0.8.16) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/royalties
 
-## [0.8.8](https://github.com/rariblecom/protocol-contracts/compare/v0.8.7...v0.8.8) (2025-04-29)
+## [0.8.15](https://github.com/rariblecom/protocol-contracts/compare/v0.8.14...v0.8.15) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/royalties
 
-**Note:** Version bump only for package @rarible/royalties
-
-## [0.8.6](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.6) (2024-04-27)
+## [0.8.14](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.14) (2025-05-07)
 
 **Note:** Version bump only for package @rarible/royalties
 
-## [0.8.5](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.5) (2024-04-27)
+## [0.8.4](https://github.com/rariblecom/protocol-contracts/compare/v0.8.1...v0.8.4) (2025-04-21)
 
 **Note:** Version bump only for package @rarible/royalties
 
