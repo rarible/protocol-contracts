@@ -103,7 +103,8 @@ const config: HardhatUserConfig = {
     },
   },
   namedAccounts: {
-    deployer: 0,
+    // deployer: 0,
+    deployer: "ledger://m/44'/60'/0'/0/0:0xe223825497c435BAeaf318F03d33Ec704954028A",
   },
   paths: {
     sources: "src",
