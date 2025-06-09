@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: GNU AGPLv3
-// NOTE: Actual licence is AGPL-3.0-only; we use Etherscan’s alias for verification.
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.20;
 
 /**
