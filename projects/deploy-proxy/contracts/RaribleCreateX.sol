@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GNU AGPLv3
+// NOTE: Actual licence is AGPL-3.0-only; we use Etherscan’s alias for verification.
 pragma solidity 0.8.20;
 
 /**
