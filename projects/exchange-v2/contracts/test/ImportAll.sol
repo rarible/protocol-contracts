@@ -7,3 +7,4 @@ import "../../test/contracts/ERC20TransferProxyTest.sol";
 import "../../test/contracts/RaribleTransferManagerTest.sol";
 import "../../test/contracts/TestRoyaltiesRegistry.sol";
 import "../../test/contracts/TestERC721RoyaltiesV2.sol";
+import "../../test/contracts/ExchangeSimpleV2.sol";
