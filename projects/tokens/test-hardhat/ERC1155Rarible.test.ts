@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { ERC1155LazyMintTransferProxyTest, ERC1155Rarible } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe.only("ERC1155Rarible Initialization", function () {
+describe("ERC1155Rarible Initialization", function () {
   let token: ERC1155Rarible;
   let secondToken: ERC1155Rarible;
   let erc1155LazyMintTransferProxy: ERC1155LazyMintTransferProxyTest;
