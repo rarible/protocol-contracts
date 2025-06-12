@@ -1,3 +1,4 @@
+import { poll } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import { DeployFunction, DeployResult } from "hardhat-deploy/dist/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -9,6 +10,8 @@ const deployLock: DeployFunction = async (
     const { getNamedAccounts } = hre;
     const {deployer,} = await getNamedAccounts();
     console.log('deployer', deployer)
+    // 1. avoid gasLimit
+    // 2. gas price auto
     
     const deployResult: DeployResult = await deploy("RaribleCreateX", {
         from: deployer,
@@ -31,3 +34,15 @@ const deployLock: DeployFunction = async (
 
 export default deployLock;
 deployLock.tags = ["02", "RaribleCreateX"];
+
+
+
+// done 2
+// pol
+// alpeh zero evm
+// kroma
+// polygon
+// megaeth_testnet
+// shape
+// etherlink -- pending
+// berachain
