@@ -1,14 +1,13 @@
+import 'dotenv/config';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 
-import * as dotenv from "dotenv";
-
 import "./tasks";
 
-dotenv.config();
+const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
 
 import {
   loadApiKeys,
@@ -92,10 +91,10 @@ const config: HardhatUserConfig = {
     },
   },
   namedAccounts: {
-    // ledger path 4
-    // deployer: "ledger://m/44'/60'/3'/0/0:0xCfDBcc22887744ab38bC447Eb7fc4A419F24923e",
-    // deployer: 0 -- default
-    deployer: "ledger://m/44'/60'/3'/0/0:0xCfDBcc22887744ab38bC447Eb7fc4A419F24923e",
+      // Fallback to the first local account if the env-vars are missing
+      deployer: HARDWARE_DERIVATION && DEPLOYER_ADDRESS
+      ? `${HARDWARE_DERIVATION}:${DEPLOYER_ADDRESS}`
+      : 0,
   },
   paths: {
     sources: "contracts",

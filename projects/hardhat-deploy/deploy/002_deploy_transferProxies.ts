@@ -14,8 +14,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: string) {
-  const { deploy } = hre.deployments;
+  
   const { deployer } = await hre.getNamedAccounts();
+  
+  const { deploy, execute } = hre.deployments;
 
   const transferProxyReceipt = await deploy(contractName, {
     from: deployer,
@@ -24,10 +26,13 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
   });
 
   const Proxy = await hre.ethers.getContractFactory(contractName);
-  const proxy = await Proxy.attach(transferProxyReceipt.address);
+  const proxy = Proxy.attach(transferProxyReceipt.address);
 
-  const initTx = await proxy.__OperatorRole_init();
-  await initTx.wait()
+  await execute(
+    contractName,
+    { from: deployer, log: true },
+    "__OperatorRole_init"
+  );
 
   return proxy;
 }

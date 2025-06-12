@@ -15,8 +15,6 @@ const deployLock: DeployFunction = async (
         log: true,
         waitConfirmations: 1,
         nonce: 0, // nonce must be 0
-        gasLimit: 10000000,
-        gasPrice: "179000000000",
     });
     // Retrieve the full transaction to verify its nonce
     const tx = await ethers.provider.getTransaction(
