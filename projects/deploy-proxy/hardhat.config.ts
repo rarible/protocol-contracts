@@ -28,16 +28,6 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.5.10",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          },
-          evmVersion: "petersburg",
-        },
-      },
-      {
         version: "0.8.20",
         settings: {
           optimizer: {
@@ -48,15 +38,6 @@ const config: HardhatUserConfig = {
       },
     ],
     overrides: {
-      "contracts/ImmutableCreate2Factory.sol": {
-        version: "0.5.10",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          }
-        },
-      },
       "contracts/TWCloneFactory.sol": {
         version: "0.8.20",
         settings: {

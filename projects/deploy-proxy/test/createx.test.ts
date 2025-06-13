@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { RaribleCreateX } from "../typechain-types"; // adjust the path if needed
+import { CreateX } from "../typechain-types"; // adjust the path if needed
 import { ContractFactory, Signer } from "ethers";
 
-describe("RaribleCreateX", function () {
-  let createX: RaribleCreateX;
+describe("CreateX", function () {
+  let createX: CreateX;
   let SimpleFactory: ContractFactory;
   let simpleBytecode: string;
   let deployer: Signer;
@@ -14,8 +14,8 @@ describe("RaribleCreateX", function () {
     [deployer] = await ethers.getSigners();
     deployerAddress = await deployer.getAddress();
 
-    const CreateXFactory = await ethers.getContractFactory("RaribleCreateX");
-    createX = (await CreateXFactory.deploy()) as RaribleCreateX;
+    const CreateXFactory = await ethers.getContractFactory("CreateX");
+    createX = (await CreateXFactory.deploy()) as CreateX;
     await createX.deployed();
 
     SimpleFactory = await ethers.getContractFactory("Simple");
