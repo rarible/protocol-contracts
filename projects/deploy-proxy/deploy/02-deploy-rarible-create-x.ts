@@ -34,15 +34,3 @@ const deployLock: DeployFunction = async (
 
 export default deployLock;
 deployLock.tags = ["02", "RaribleCreateX"];
-
-
-
-// done 2
-// pol
-// alpeh zero evm
-// kroma
-// polygon
-// megaeth_testnet
-// shape
-// etherlink -- pending
-// berachain
