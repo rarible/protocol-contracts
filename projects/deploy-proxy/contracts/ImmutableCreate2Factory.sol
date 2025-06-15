@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.5.10; // optimization enabled, 99999 runs, evm: petersburg
+pragma solidity 0.8.20; // optimization enabled, 99999 runs, evm: petersburg
 
 
 /**
@@ -30,8 +30,8 @@ contract ImmutableCreate2Factory {
    * @param salt bytes32 The nonce that will be passed into the CREATE2 call.
    * @param initializationCode bytes The initialization code that will be passed
    * into the CREATE2 call.
-   * @return Address of the contract that will be created, or the null address
-   * if a contract already exists at that address.
+   * @return deploymentAddress Address of the contract that will be created, or
+   * the null address if a contract already exists at that address.
    */
   function safeCreate2(
     bytes32 salt,
@@ -71,7 +71,7 @@ contract ImmutableCreate2Factory {
       let encoded_data := add(0x20, initCode) // load initialization code.
       let encoded_size := mload(initCode)     // load the init code's length.
       deploymentAddress := create2(           // call CREATE2 with 4 arguments.
-        callvalue,                            // forward any attached value.
+        callvalue(),                          // forward any attached value.
         encoded_data,                         // pass in initialization code.
         encoded_size,                         // pass in init code's length.
         salt                                  // pass in the salt value.
@@ -99,7 +99,7 @@ contract ImmutableCreate2Factory {
    * @param salt bytes32 The nonce passed into the CREATE2 address calculation.
    * @param initCode bytes The contract initialization code to be used.
    * that will be passed into the CREATE2 address calculation.
-   * @return Address of the contract that will be created, or the null address
+   * @return deploymentAddress Address of the contract that will be created, or the null address
    * if a contract has already been deployed to that address.
    */
   function findCreate2Address(
@@ -143,8 +143,8 @@ contract ImmutableCreate2Factory {
    * @param salt bytes32 The nonce passed into the CREATE2 address calculation.
    * @param initCodeHash bytes32 The keccak256 hash of the initialization code
    * that will be passed into the CREATE2 address calculation.
-   * @return Address of the contract that will be created, or the null address
-   * if a contract has already been deployed to that address.
+   * @return deploymentAddress Address of the contract that will be created, or
+   * the null address if a contract has already been deployed to that address.
    */
   function findCreate2AddressViaHash(
     bytes32 salt,
