@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { DeployFunction, DeployResult } from "hardhat-deploy/dist/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils";
+import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils/utils";
 
 const deployLock: DeployFunction = async (
     hre: HardhatRuntimeEnvironment
@@ -34,4 +34,4 @@ const deployLock: DeployFunction = async (
 };
 
 export default deployLock;
-deployLock.tags = ["03", "RaribleCloneFactory"];
+deployLock.tags = ["all","1001", "RaribleCloneFactory"];
