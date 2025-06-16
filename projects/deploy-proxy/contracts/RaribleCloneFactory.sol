@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {LibClone} from "./lib/solady/src/utils/LibClone.sol";
 
-contract TWCloneFactory {
+contract RaribleCloneFactory {
 
     error ProxyDeploymentFailed();
 
