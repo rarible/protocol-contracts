@@ -38,4 +38,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['all', "1003", "721-collection"];
+func.tags = ["1003", "721-collection"];

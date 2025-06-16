@@ -1,14 +1,13 @@
+import 'dotenv/config';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 
-import * as dotenv from "dotenv";
-
 import "./tasks";
 
-dotenv.config();
+const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
 
 import {
   loadApiKeys,
@@ -29,16 +28,6 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.5.10",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          },
-          evmVersion: "petersburg",
-        },
-      },
-      {
         version: "0.8.20",
         settings: {
           optimizer: {
@@ -49,15 +38,6 @@ const config: HardhatUserConfig = {
       },
     ],
     overrides: {
-      "contracts/ImmutableCreate2Factory.sol": {
-        version: "0.5.10",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          }
-        },
-      },
       "contracts/TWCloneFactory.sol": {
         version: "0.8.20",
         settings: {
@@ -92,7 +72,10 @@ const config: HardhatUserConfig = {
     },
   },
   namedAccounts: {
-    deployer: 0,
+      // Fallback to the first local account if the env-vars are missing
+      deployer: HARDWARE_DERIVATION && DEPLOYER_ADDRESS
+      ? `${HARDWARE_DERIVATION}:${DEPLOYER_ADDRESS}`
+      : 0,
   },
   paths: {
     sources: "contracts",

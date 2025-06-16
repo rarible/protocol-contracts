@@ -14,11 +14,11 @@ const deployLock: DeployFunction = async (
         log: true,
         args: [], // Unlock timestamp in seconds
         waitConfirmations: 1,
-        nonce: 0
+        nonce: 0,
     });
     console.log("transactionHash", deployResult.transactionHash)
 
 };
 
 export default deployLock;
-deployLock.tags = ["all", "ImmutableCreate2Factory"];
+deployLock.tags = ["00", "ImmutableCreate2Factory"];

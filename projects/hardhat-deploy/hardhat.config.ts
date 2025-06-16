@@ -1,11 +1,10 @@
+import 'dotenv/config';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 import "./tasks/transfer-ownership";
-
-import * as dotenv from "dotenv";
 
 import {
   loadApiKeys,
@@ -16,7 +15,7 @@ import {
 
 import "./tasks";
 
-dotenv.config();
+const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -104,7 +103,10 @@ const config: HardhatUserConfig = {
     },
   },
   namedAccounts: {
-    deployer: 0,
+    // Fallback to the first local account if the env-vars are missing
+    deployer: HARDWARE_DERIVATION && DEPLOYER_ADDRESS
+      ? `${HARDWARE_DERIVATION}:${DEPLOYER_ADDRESS}`
+      : 0,
   },
   paths: {
     sources: "src",
