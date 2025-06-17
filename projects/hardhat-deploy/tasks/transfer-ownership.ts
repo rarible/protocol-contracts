@@ -2,7 +2,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeploymentsExtension } from "hardhat-deploy/types";
 import "@nomiclabs/hardhat-ethers";
-
+import { getContractsWithProxy, transferOwnership } from "./transfer-ownership-utils";
 /**
  * This task iterates through ALL deployed contracts for the network specified via --network parameter.
  * 
@@ -17,6 +17,10 @@ import "@nomiclabs/hardhat-ethers";
  * 
  * This design ensures the task can process an entire deployment, transferring ownership
  * where possible while gracefully handling contracts that don't support ownership.
+ * 
+ * Sample usage:
+ * 
+ * npx hardhat transfer-ownership-all --new-owner "0x4e59b44847b379578588920ca78fbf26c0b4956c" --network localhost
  */
 
 task(
@@ -38,32 +42,9 @@ task(
       console.log(`Using signer: ${signer.address}`);
       console.log(`Transferring ownership to: ${newOwner}`);
 
-      const allDeployments = await deployments.all();
+      let contractsWithProxy: string[] = await getContractsWithProxy(deployments);
 
-      for (const [contractName, deployment] of Object.entries(allDeployments)) {
-        console.log(`\n→ Processing: ${contractName} at ${deployment.address}`);
-        try {
-          const contract = await hre.ethers.getContractAt(
-            contractName,
-            deployment.address,
-            signer
-          );
-
-          const currentOwner = await contract.owner();
-
-          if (currentOwner.toLowerCase() === newOwner.toLowerCase()) {
-            console.log("  Skipped: Already owned by target.");
-            continue;
-          }
-
-          const tx = await contract.transferOwnership(newOwner);
-          console.log(`  Tx hash: ${tx.hash}`);
-          await tx.wait();
-          console.log("  Ownership transferred.");
-        } catch (err: any) {
-          console.error(`  Failed to transfer ownership for ${contractName}: ${err.message}`);
-        }
-      }
+      await transferOwnership(hre, deployments, contractsWithProxy, signer, newOwner);
 
       console.log("\n✅ Ownership transfer process complete.");
     }
