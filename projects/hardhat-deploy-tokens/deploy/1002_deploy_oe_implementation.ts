@@ -33,4 +33,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ["all","1002", "oe-collection"];
+func.tags = ["all", "1002", "oe-collection"];

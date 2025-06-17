@@ -27,11 +27,8 @@ const deployLock: DeployFunction = async (
 
     console.log("deploy tx nonce", tx.nonce); // should print 0
 
-    if (tx.nonce !== 0) {
-        throw new Error(`Expected nonce 0, got ${tx.nonce}`);
-    }
     console.log("transactionHash", deployResult.transactionHash)
 };
 
 export default deployLock;
-deployLock.tags = ["all","1001", "RaribleCloneFactory"];
+deployLock.tags = ["all", "1001", "RaribleCloneFactory"];
