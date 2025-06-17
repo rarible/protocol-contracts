@@ -15,7 +15,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
     autoMine: true,
     gasLimit: 100000000,
-    gasPrice: "600000000",
+    gasPrice: "0x2FAF0800",
+    maxFeePerGas: undefined,
+    maxPriorityFeePerGas: undefined,
     args: [deployer],
     
   });
@@ -34,7 +36,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     log: true,
     autoMine: true,
     gasLimit: 100000000,
-    gasPrice: "600000000",
+    gasPrice: "0x2FAF0800",
+    maxFeePerGas: undefined,
+    maxPriorityFeePerGas: undefined,
   });
 
 };
