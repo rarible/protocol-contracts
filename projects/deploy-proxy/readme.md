@@ -28,7 +28,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### 2. Clone Factory
 - **Contract Address**:  
-  [0x25548ba29a0071f30e4bdcd98ea72f79341b07a1](https://polygonscan.com/address/0x25548ba29a0071f30e4bdcd98ea72f79341b07a1)  
+  [0x9A611f52a1b8007B1A20935ba619352C694fAE8F](https://polygonscan.com/address/0x9A611f52a1b8007B1A20935ba619352C694fAE8F)  
 - **Usage**: Integrate with ThirdWeb to deploy NFT collections efficiently.
 
 ---
@@ -53,7 +53,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### Drop OE
 - **Contract Address (Implementation)**:  
-  [0x5aDEB38dE7E5485e54E9e2ae6a750d70F7245860](https://polygonscan.com/address/0x5aDEB38dE7E5485e54E9e2ae6a750d70F7245860#code)  
+  [0x7C4d9b685eBf60679c9852FAb4caa97781f79DEF](https://polygonscan.com/address/0x7C4d9b685eBf60679c9852FAb4caa97781f79DEF#code)  
 - **Claim Transaction Without Secondary Fee Recipient**:  
   [View on Polygonscan](https://polygonscan.com/tx/0x2db4734ed77c95b21dabe448c8f66548e315e054f62ebd0dff52e98e26342805)  
 - **Contract Instance**:  
@@ -61,7 +61,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### Drop 721 
 - **Contract Address**:  
-  [0x70682de037C28b46dB85408A5Cb9dF95e15a6301](https://polygonscan.com/address/0x70682de037C28b46dB85408A5Cb9dF95e15a6301)  
+  [0xAe7c9D8BE532DAE56cdaacD9f91D17243CB8a91E](https://polygonscan.com/address/0xAe7c9D8BE532DAE56cdaacD9f91D17243CB8a91E)  
 - **Claim Transaction Without Secondary Fee Recipient**:  
   [View on Polygonscan](https://polygonscan.com/tx/0x666eec972a12ca1bac267a38bbdeb99d7f67ccc6d04c07f2bd3d22732417a991)  
 - **Contract Instance**:  
@@ -69,7 +69,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### Drop 1155 
 - **Contract Address**:  
-  [0x060087232E5aAC1c3793a1BAd866b5B930cfCA31](https://polygonscan.com/address/0x060087232E5aAC1c3793a1BAd866b5B930cfCA31)  
+  [0xE4c5B2E3E508A7d83486d31541Abf6F4a875F27f](https://polygonscan.com/address/0xE4c5B2E3E508A7d83486d31541Abf6F4a875F27f)  
 - **Claim Transaction Without Secondary Fee Recipient**:  
   [View on Polygonscan](https://polygonscan.com/tx/0x6ed244be3475a6e49ae16d1e71c722f8694c94e1498d4ce3dc36ff98a0c44d91)  
 - **Contract Instance**:  
