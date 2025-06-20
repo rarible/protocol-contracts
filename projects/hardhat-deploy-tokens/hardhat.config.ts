@@ -32,24 +32,6 @@ const config: HardhatUserConfig = {
       },
     ],
     overrides: {
-      "src/RaribleCloneFactory.sol": {
-        version: "0.8.26",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          }
-        },
-      },
-      "src/lib/soladity/src/utils/LibClone.sol": {
-        version: "0.8.26",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          }
-        },
-      }
     },
     settings: {
       metadata: {
