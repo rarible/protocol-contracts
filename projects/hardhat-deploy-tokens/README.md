@@ -58,4 +58,13 @@ To run integration tests of contracts to deploy:
 
 ```shell
 npx hardhat test
+
+Result:
+
+Abstract -- zk
+LightLink Phoenix
+Palm
+Settlus
+Telos EVM
+ZKcandy -- zk
 ```
