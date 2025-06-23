@@ -62,8 +62,6 @@ npx hardhat test
 Result:
 
 Abstract -- zk
-LightLink Phoenix
 Palm
-Settlus
 ZKcandy -- zk
 ```
