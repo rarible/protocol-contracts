@@ -65,6 +65,5 @@ Abstract -- zk
 LightLink Phoenix
 Palm
 Settlus
-Telos EVM
 ZKcandy -- zk
 ```
