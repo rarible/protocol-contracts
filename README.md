@@ -1,6 +1,7 @@
 # Deployed Addresses
 
 Deployed contracts' addresses for all supported networks can be found [here](./projects/hardhat-deploy/networks/)
+
 # Smart contracts for Rarible Protocol
 
 Consists of:
@@ -14,20 +15,137 @@ See more information about Rarible Protocol at [docs.rarible.org](https://docs.r
 
 Also, you can find Rarible Smart Contracts deployed instances across Mainnet, Testnet and Development at [Contract Addresses](https://docs.rarible.org/reference/contract-addresses/) page.
 
-## Compile, Test, Deploy
+## Quick Start
 
 ```shell
 yarn
 yarn bootstrap
 ```
-if error, check node version for `yarn` expected node version ">=14.18.2", for check and set necessary version use, for example
+
+If error, check node version for `yarn` expected node version ">=14.18.2", for check and set necessary version use, for example:
 ```shell
 node -v
 nvm use 18.13.0
 ```
-then use truffle to compile, test: cd into directory and then
+
+## Deployment
+
+The Rarible Protocol consists of multiple projects that need to be deployed in sequence. Use the following commands for different deployment scenarios.
+
+### Full Deployment (All Projects)
+
+Deploy all projects in the correct order:
 ```shell
-truffle test --compile-all
+yarn deploy
+```
+
+This command deploys:
+1. `@rarible/deploy-proxy` - Proxy contracts and factories
+2. `@rarible/hardhat-deploy-tokens` - Token contracts (ERC721, ERC1155)
+3. `@rarible/hardhat-deploy` - Core protocol contracts (Exchange, Royalties, etc.)
+
+### Individual Project Deployment
+
+#### Deploy Proxy Contracts
+```shell
+yarn workspace @rarible/deploy-proxy run deploy
+# Or with specific network and tags:
+cd projects/deploy-proxy && npx hardhat deploy --tags ImmutableCreate2Factory --network <network_name>
+```
+
+#### Deploy Token Contracts
+```shell
+yarn workspace @rarible/hardhat-deploy-tokens run deploy
+# Or with specific network:
+cd projects/hardhat-deploy-tokens && npx hardhat deploy --network <network_name> --tags all
+```
+
+#### Deploy Core Protocol Contracts
+```shell
+yarn workspace @rarible/hardhat-deploy run deploy
+# Or with specific network:
+cd projects/hardhat-deploy && npx hardhat deploy --network <network_name> --tags all
+```
+
+### Network-Specific Deployment Examples
+
+#### Deploy to Ethereum Mainnet
+```shell
+# Deploy all projects to mainnet
+NETWORK=mainnet yarn deploy
+
+# Deploy individual projects to mainnet
+yarn workspace @rarible/deploy-proxy run deploy --network mainnet
+yarn workspace @rarible/hardhat-deploy-tokens run deploy --network mainnet
+yarn workspace @rarible/hardhat-deploy run deploy --network mainnet
+```
+
+#### Deploy to Polygon
+```shell
+# Deploy all projects to Polygon
+NETWORK=polygon_mainnet yarn deploy
+
+# Deploy individual projects to Polygon
+yarn workspace @rarible/deploy-proxy run deploy --network polygon_mainnet
+yarn workspace @rarible/hardhat-deploy-tokens run deploy --network polygon_mainnet
+yarn workspace @rarible/hardhat-deploy run deploy --network polygon_mainnet
+```
+
+
+### ZK-Sync Deployment
+
+For ZK-Sync compatible chains, use the special ZK deployment commands:
+
+```shell
+# Deploy to Abstract (ZK-Sync)
+cd projects/hardhat-deploy-tokens && npx hardhat deploy --tags all-zk --network abstract --config zk.hardhat.config.ts
+
+# Deploy to ZK-Sync Era
+cd projects/hardhat-deploy && npx hardhat deploy --tags all-zk --network zksync --config zk.hardhat.config.ts
+```
+
+### Contract Verification
+
+After deployment, verify contracts on block explorers:
+
+#### Etherscan-compatible chains
+```shell
+cd projects/hardhat-deploy && npx hardhat --network <network_name> etherscan-verify
+cd projects/hardhat-deploy-tokens && npx hardhat --network <network_name> etherscan-verify
+```
+
+#### Sourcify-compatible chains
+```shell
+cd projects/hardhat-deploy && npx hardhat --network <network_name> sourcify
+cd projects/hardhat-deploy-tokens && npx hardhat --network <network_name> sourcify
+```
+
+### Environment Setup
+
+Before deployment, ensure you have the required environment variables:
+
+```bash
+# Copy example environment file
+cp example.env .env
+
+# Required variables:
+PRIVATE_KEY=your_deployer_private_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+POLYGONSCAN_API_KEY=your_polygonscan_api_key
+# ... other API keys for different networks
+```
+
+## Testing
+
+To run tests before deployment:
+
+```shell
+# Test all projects
+yarn test
+
+# Test individual projects
+cd projects/hardhat-deploy && npx hardhat test
+cd projects/hardhat-deploy-tokens && npx hardhat test
 ```
 
 ## Protocol overview
