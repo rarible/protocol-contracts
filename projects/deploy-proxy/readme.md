@@ -1,4 +1,111 @@
-# Contract Addresses Documentation
+# Deploy Proxy - Factory Contracts
+
+This project contains factory contract deployments for the Rarible Protocol, including proxy factories and third-party integrations.
+
+## Quick Start
+
+```shell
+# Install dependencies and compile
+yarn install
+npx hardhat compile
+
+# Deploy factory contracts
+npx hardhat deploy --tags ImmutableCreate2Factory --network <network_name>
+```
+
+## Deployment
+
+### Deploy All Factory Contracts
+
+Deploy the main factory contracts:
+
+```shell
+# Deploy ImmutableCreate2Factory
+npx hardhat deploy --tags ImmutableCreate2Factory --network <network_name>
+
+# Deploy test contracts (for testing)
+npx hardhat deploy --tags TestDeployContract --network <network_name>
+```
+
+### Network-Specific Examples
+
+```shell
+# Deploy to Ethereum Sepolia testnet (default)
+npx hardhat deploy --tags ImmutableCreate2Factory --network sepolia
+
+# Deploy to Polygon mainnet
+npx hardhat deploy --tags ImmutableCreate2Factory --network polygon_mainnet
+
+# Deploy to Base
+npx hardhat deploy --tags ImmutableCreate2Factory --network base
+```
+
+### ZK-Sync Deployment
+
+For ZK-Sync compatible chains, use the specialized scripts:
+
+```shell
+# Deploy 721 factory on ZK-Sync
+npx hardhat run --config zk.hardhat.config.ts scripts/zk-deploy-721-factory.ts
+
+# Compile for ZK-Sync
+npx hardhat --config zk.hardhat.config.ts compile
+```
+
+## Contract Verification
+
+### Ethereum-compatible chains
+
+```shell
+# Verify on Sepolia
+npx hardhat verify 0x1bf0973f710Ea3EBaA7b34D5F3733c82585f5252 --network sepolia
+
+# Verify with API key
+npx hardhat verify <contract_address> --network <network_name> --api-key <api_key>
+```
+
+### ZK-Sync chains
+
+```shell
+# Verify on ZK-Sync
+npx hardhat verify --config zk.hardhat.config.ts <contract_address>
+```
+
+## Available Scripts
+
+This project includes several deployment and verification scripts:
+
+```shell
+# Build TypeScript types
+yarn build
+
+# Deploy factory contract
+yarn deploy
+
+# Deploy test contract
+yarn deploy-test-contract
+
+# ZK-Sync specific deployments
+yarn deploy-zk
+yarn verify-zk
+```
+
+## Environment Setup
+
+Create a `.env` file with the required configuration:
+
+```bash
+# Deployer configuration
+PRIVATE_KEY=your_deployer_private_key
+HARDWARE_DERIVATION=ledger  # Optional: for hardware wallet
+DEPLOYER_ADDRESS=0x...      # Required if using hardware wallet
+
+# API Keys for verification
+ETHERSCAN_API_KEY=your_etherscan_api_key
+POLYGONSCAN_API_KEY=your_polygonscan_api_key
+```
+
+## Contract Addresses Documentation
 
 ## Factory Contracts
 
@@ -16,7 +123,7 @@ Welcome to the ThirdWeb Tokens Project documentation! This guide provides a read
 ---
 
 ## Overview
-This project showcases a fee-less approach to minting and managing NFTs. By leveraging ThirdWeb’s infrastructure and custom implementations, you can deploy NFT collections without incurring secondary fees. Key components include clone factories and specialized contract implementations.
+This project showcases a fee-less approach to minting and managing NFTs. By leveraging ThirdWeb's infrastructure and custom implementations, you can deploy NFT collections without incurring secondary fees. Key components include clone factories and specialized contract implementations.
 
 ---
 
@@ -28,7 +135,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### 2. Clone Factory
 - **Contract Address**:  
-  [0x25548ba29a0071f30e4bdcd98ea72f79341b07a1](https://polygonscan.com/address/0x25548ba29a0071f30e4bdcd98ea72f79341b07a1)  
+  [0x9A611f52a1b8007B1A20935ba619352C694fAE8F](https://polygonscan.com/address/0x9A611f52a1b8007B1A20935ba619352C694fAE8F)  
 - **Usage**: Integrate with ThirdWeb to deploy NFT collections efficiently.
 
 ---
@@ -49,11 +156,9 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ## Contracts 
 
-
-
 ### Drop OE
 - **Contract Address (Implementation)**:  
-  [0x5aDEB38dE7E5485e54E9e2ae6a750d70F7245860](https://polygonscan.com/address/0x5aDEB38dE7E5485e54E9e2ae6a750d70F7245860#code)  
+  [0x7C4d9b685eBf60679c9852FAb4caa97781f79DEF](https://polygonscan.com/address/0x7C4d9b685eBf60679c9852FAb4caa97781f79DEF#code)  
 - **Claim Transaction Without Secondary Fee Recipient**:  
   [View on Polygonscan](https://polygonscan.com/tx/0x2db4734ed77c95b21dabe448c8f66548e315e054f62ebd0dff52e98e26342805)  
 - **Contract Instance**:  
@@ -61,7 +166,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### Drop 721 
 - **Contract Address**:  
-  [0x70682de037C28b46dB85408A5Cb9dF95e15a6301](https://polygonscan.com/address/0x70682de037C28b46dB85408A5Cb9dF95e15a6301)  
+  [0xAe7c9D8BE532DAE56cdaacD9f91D17243CB8a91E](https://polygonscan.com/address/0xAe7c9D8BE532DAE56cdaacD9f91D17243CB8a91E)  
 - **Claim Transaction Without Secondary Fee Recipient**:  
   [View on Polygonscan](https://polygonscan.com/tx/0x666eec972a12ca1bac267a38bbdeb99d7f67ccc6d04c07f2bd3d22732417a991)  
 - **Contract Instance**:  
@@ -69,7 +174,7 @@ This project showcases a fee-less approach to minting and managing NFTs. By leve
 
 ### Drop 1155 
 - **Contract Address**:  
-  [0x060087232E5aAC1c3793a1BAd866b5B930cfCA31](https://polygonscan.com/address/0x060087232E5aAC1c3793a1BAd866b5B930cfCA31)  
+  [0xE4c5B2E3E508A7d83486d31541Abf6F4a875F27f](https://polygonscan.com/address/0xE4c5B2E3E508A7d83486d31541Abf6F4a875F27f)  
 - **Claim Transaction Without Secondary Fee Recipient**:  
   [View on Polygonscan](https://polygonscan.com/tx/0x6ed244be3475a6e49ae16d1e71c722f8694c94e1498d4ce3dc36ff98a0c44d91)  
 - **Contract Instance**:  

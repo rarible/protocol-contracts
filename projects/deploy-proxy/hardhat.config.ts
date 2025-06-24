@@ -36,26 +36,17 @@ const config: HardhatUserConfig = {
           },
         },
       },
-    ],
-    overrides: {
-      "contracts/TWCloneFactory.sol": {
-        version: "0.8.20",
+      {
+        version: "0.8.26",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 99999,
-          }
+            runs: 200,
+          },
         },
       },
-      "contracts/lib/soladity/src/utils/LibClone.sol": {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 99999,
-          }
-        },
-      }
+    ],
+    overrides: {
     },
     settings: {
       metadata: {
