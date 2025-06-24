@@ -1,4 +1,5 @@
-@Library('shared-library@feature/protocol-pipeline') _
+@Library('shared-library@feature/foundry') _
+
 
 def pipelineConfig = [
   "JSpublicLibrary": "true",
