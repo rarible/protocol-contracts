@@ -38,14 +38,5 @@ describe("ERC1155Rarible Initialization", function () {
     expect(await secondToken.symbol()).to.equal("TST");
     expect(await secondToken.baseURI()).to.equal("ipfs:/");
     expect(await secondToken.contractURI()).to.equal("ipfs:/");
-    console.log(`whitelist proxy: ${whiteListProxy.address}`);
-    console.log(`erc1155LazyMintTransferProxy: ${erc1155LazyMintTransferProxy.address}`);
-    console.log(`deployer: ${deployer.address}`);
-    for (let i = 0; i < 10000; i++) {
-      const storage = await ethers.provider.getStorageAt(secondToken.address, i);
-      if (storage !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
-        console.log(`${i}: ${storage}`)
-      }
-    }
   });
 });
