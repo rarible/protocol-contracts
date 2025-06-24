@@ -4,6 +4,14 @@ import "@matterlabs/hardhat-zksync-verify";
 import "@matterlabs/hardhat-zksync-ethers";
 import "zksync-ethers";
 import "@typechain/hardhat";
+import "hardhat-deploy-immutable-proxy";
+
+import {
+  loadApiKeys,
+  loadCustomNetworks,
+  loadNetworkConfigs,
+  loadFactoryAddresses,
+} from "@rarible/deploy-utils";
 
 import type {
   HttpNetworkUserConfig, HardhatUserConfig
@@ -182,6 +190,7 @@ const config: HardhatUserConfig = {
       "artifacts-zk/contracts/**/*[!dbg].json"
     ],
   },
+  deterministicDeployment: loadFactoryAddresses(),
 };
 
 export default config;
