@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
+import "./tasks/transfer-ownership";
 
 import {
   loadApiKeys,
@@ -109,6 +110,7 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "src",
+    tests: "test-hardhat"
   },
   networks: loadNetworkConfigs(),
   etherscan: {
