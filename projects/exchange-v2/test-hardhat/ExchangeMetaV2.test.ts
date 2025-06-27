@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { ERC20TransferProxyTest, TestRoyaltiesRegistry, TransferProxyTest, ERC721LazyMintTransferProxyTest, ERC1155LazyMintTransferProxyTest, ExchangeMetaV2 } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { getValueFromMapping } from "./utils/getValueFromMapping";
 
 const ERC721_LAZY = "0xd8f960c1"
 const ERC1155_LAZY = "0x1cdfaa40"
@@ -81,5 +82,35 @@ describe("ExchangeMetaV2 Initialization", function () {
 
     expect(await exchangeV2.owner()).to.equal(await secondExchangeMetaV2.owner());
     expect(await exchangeV2.royaltiesRegistry()).to.equal(await secondExchangeMetaV2.royaltiesRegistry());
+
+    // 0: 0x0000000000000000000000000000000000000000000000000000000000000001 => initialized
+    expect(await ethers.provider.getStorageAt(secondExchangeMetaV2.address, 0)).to.equal("0x0000000000000000000000000000000000000000000000000000000000000001");
+    // 201: 0xddd112a261429abc594f5771eb08d7fa47bff456b2e5f1a47907b78573e33d96 => _HASHED_NAME
+    expect(await ethers.provider.getStorageAt(secondExchangeMetaV2.address, 201)).to.equal("0xddd112a261429abc594f5771eb08d7fa47bff456b2e5f1a47907b78573e33d96");
+    // 202: 0xad7c5bef027816a800da1736444fb58a807ef4c9603b7848673f7e3a68eb14a5 => _HASHED_VERSION
+    expect(await ethers.provider.getStorageAt(secondExchangeMetaV2.address, 202)).to.equal("0xad7c5bef027816a800da1736444fb58a807ef4c9603b7848673f7e3a68eb14a5");
+    // 151: proxies mapping(bytes4 => address)
+    const ERC20_ASSET_CLASS = ethers.utils.hexDataSlice(
+      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ERC20")),
+      0,
+      4
+    );
+    expect(await getValueFromMapping(secondExchangeMetaV2, ERC20_ASSET_CLASS, "bytes4", 151)).to.equal(ethers.utils.hexZeroPad(erc20TransferProxy.address, 32).toLowerCase());
+    const ERC721_ASSET_CLASS = ethers.utils.hexDataSlice(
+      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ERC721")),
+      0,
+      4
+    );
+    expect(await getValueFromMapping(secondExchangeMetaV2, ERC721_ASSET_CLASS, "bytes4", 151)).to.equal(ethers.utils.hexZeroPad(transferProxy.address, 32).toLowerCase());
+    const ERC1155_ASSET_CLASS = ethers.utils.hexDataSlice(
+      ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ERC1155")),
+      0,
+      4
+    );
+    expect(await getValueFromMapping(secondExchangeMetaV2, ERC1155_ASSET_CLASS, "bytes4", 151)).to.equal(ethers.utils.hexZeroPad(transferProxy.address, 32).toLowerCase());
+    expect(await getValueFromMapping(secondExchangeMetaV2, ERC721_LAZY, "bytes4", 151)).to.equal(ethers.utils.hexZeroPad(erc721LazyMintTransferProxy.address, 32).toLowerCase());
+    expect(await getValueFromMapping(secondExchangeMetaV2, ERC1155_LAZY, "bytes4", 151)).to.equal(ethers.utils.hexZeroPad(erc1155LazyMintTransferProxy.address, 32).toLowerCase());
+    // 101: matchers mapping(bytes4 => address)
+    expect(await getValueFromMapping(secondExchangeMetaV2, COLLECTION_ID, "bytes4", 101)).to.equal(ethers.utils.hexZeroPad(symbolicAssetMatcher.address, 32).toLowerCase());
   });
 });

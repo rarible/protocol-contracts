@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { ERC1155LazyMintTransferProxyTest, ERC1155Rarible } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { getValueFromMapping } from "./utils/getValueFromMapping";
 
 describe("ERC1155Rarible Initialization", function () {
   let token: ERC1155Rarible;
@@ -38,5 +39,14 @@ describe("ERC1155Rarible Initialization", function () {
     expect(await secondToken.symbol()).to.equal("TST");
     expect(await secondToken.baseURI()).to.equal("ipfs:/");
     expect(await secondToken.contractURI()).to.equal("ipfs:/");
+    // 0: 0x0000000000000000000000000000000000000000000000000000000000000001 => initialized
+    expect(await ethers.provider.getStorageAt(secondToken.address, 0)).to.equal("0x0000000000000000000000000000000000000000000000000000000000000001");
+    // 354: 0x08167dbffed14bc23a2b328ced59a6370a82faa4bd594543394fcfed96746173 => _HASHED_NAME
+    expect(await ethers.provider.getStorageAt(secondToken.address, 354)).to.equal("0x08167dbffed14bc23a2b328ced59a6370a82faa4bd594543394fcfed96746173");
+    // 355: 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6 => _HASHED_VERSION
+    expect(await ethers.provider.getStorageAt(secondToken.address, 355)).to.equal("0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6");
+    // 201: defaultApprovals mapping(address,bool)
+    expect(await getValueFromMapping(secondToken, whiteListProxy.address, "address", 201)).to.equal("0x0000000000000000000000000000000000000000000000000000000000000001");
+    expect(await getValueFromMapping(secondToken, erc1155LazyMintTransferProxy.address, "address", 201)).to.equal("0x0000000000000000000000000000000000000000000000000000000000000001");
   });
 });
