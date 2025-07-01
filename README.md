@@ -41,7 +41,7 @@ yarn deploy
 
 This command deploys:
 1. `@rarible/deploy-proxy` - Proxy contracts and factories
-2. `@rarible/hardhat-deploy-tokens` - Token contracts (ERC721, ERC1155)
+2. `@rarible/drops` - Token contracts (ERC721, ERC1155)
 3. `@rarible/hardhat-deploy` - Core protocol contracts (Exchange, Royalties, etc.)
 
 ### Individual Project Deployment
@@ -55,9 +55,9 @@ cd projects/deploy-proxy && npx hardhat deploy --tags ImmutableCreate2Factory --
 
 #### Deploy Token Contracts
 ```shell
-yarn workspace @rarible/hardhat-deploy-tokens run deploy
+yarn workspace @rarible/drops run deploy
 # Or with specific network:
-cd projects/hardhat-deploy-tokens && npx hardhat deploy --network <network_name> --tags all
+cd projects/drops && npx hardhat deploy --network <network_name> --tags all
 ```
 
 #### Deploy Core Protocol Contracts
@@ -76,7 +76,7 @@ NETWORK=mainnet yarn deploy
 
 # Deploy individual projects to mainnet
 yarn workspace @rarible/deploy-proxy run deploy --network mainnet
-yarn workspace @rarible/hardhat-deploy-tokens run deploy --network mainnet
+yarn workspace @rarible/drops run deploy --network mainnet
 yarn workspace @rarible/hardhat-deploy run deploy --network mainnet
 ```
 
@@ -87,7 +87,7 @@ NETWORK=polygon_mainnet yarn deploy
 
 # Deploy individual projects to Polygon
 yarn workspace @rarible/deploy-proxy run deploy --network polygon_mainnet
-yarn workspace @rarible/hardhat-deploy-tokens run deploy --network polygon_mainnet
+yarn workspace @rarible/drops run deploy --network polygon_mainnet
 yarn workspace @rarible/hardhat-deploy run deploy --network polygon_mainnet
 ```
 
@@ -98,7 +98,7 @@ For ZK-Sync compatible chains, use the special ZK deployment commands:
 
 ```shell
 # Deploy to Abstract (ZK-Sync)
-cd projects/hardhat-deploy-tokens && npx hardhat deploy --tags all-zk --network abstract --config zk.hardhat.config.ts
+cd projects/drops && npx hardhat deploy --tags all-zk --network abstract --config zk.hardhat.config.ts
 
 # Deploy to ZK-Sync Era
 cd projects/hardhat-deploy && npx hardhat deploy --tags all-zk --network zksync --config zk.hardhat.config.ts
@@ -111,13 +111,13 @@ After deployment, verify contracts on block explorers:
 #### Etherscan-compatible chains
 ```shell
 cd projects/hardhat-deploy && npx hardhat --network <network_name> etherscan-verify
-cd projects/hardhat-deploy-tokens && npx hardhat --network <network_name> etherscan-verify
+cd projects/drops && npx hardhat --network <network_name> etherscan-verify
 ```
 
 #### Sourcify-compatible chains
 ```shell
 cd projects/hardhat-deploy && npx hardhat --network <network_name> sourcify
-cd projects/hardhat-deploy-tokens && npx hardhat --network <network_name> sourcify
+cd projects/drops && npx hardhat --network <network_name> sourcify
 ```
 
 ### Environment Setup
@@ -145,7 +145,7 @@ yarn test
 
 # Test individual projects
 cd projects/hardhat-deploy && npx hardhat test
-cd projects/hardhat-deploy-tokens && npx hardhat test
+cd projects/drops && npx hardhat test
 ```
 
 ## Protocol overview
