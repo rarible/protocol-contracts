@@ -1,5 +1,5 @@
 import { task } from "hardhat/config";
-
+import { logDeployment } from "../utils/logDeployment";
 task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
@@ -69,6 +69,8 @@ task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
       salt,
       extraData
     );
+
+    logDeployment(hre.network.name, "DropERC721", deployedAddress, name, contractUri, deployer.address);
 
     console.log("DropERC721 proxy deployed at:", deployedAddress);
   });

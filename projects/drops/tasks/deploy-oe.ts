@@ -1,5 +1,5 @@
 import { task } from "hardhat/config";
-
+import { logDeployment } from "../utils/logDeployment";
 task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
@@ -69,6 +69,8 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
       salt,
       extraData
     );
+
+    logDeployment(hre.network.name, "OpenEditionERC721FlatFee", deployedAddress, name, contractUri, deployer.address);
 
     console.log("OpenEditionERC721FlatFee proxy deployed at:", deployedAddress);
   });
