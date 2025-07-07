@@ -4,3 +4,4 @@ import "./deploy-oe";
 import "./update-batch-base-uri";
 import "./grant-role";
 import "./revoke-role";
+import "./transfer-ownership";
