@@ -1,5 +1,5 @@
 import { Signer, BytesLike } from "ethers";
-import { TWCloneFactory } from "../typechain-types";
+import { RaribleCloneFactory } from "../typechain-types";
 import { DropERC721__factory } from "@rarible/external-contracts/js/factories/DropERC721__factory";
 import { getCloneFactory } from "./clone-factory";
 
@@ -40,7 +40,7 @@ export async function deployDrop721(
   );
 
   // 2. Get the clone factory contract
-  const cloneFactory: TWCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
+  const cloneFactory: RaribleCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
 
   // 3. Deploy the proxy by calling the factory's deployProxyByImplementationV2 function.
   const tx = await cloneFactory.deployProxyByImplementationV2(

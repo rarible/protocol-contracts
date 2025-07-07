@@ -7,7 +7,7 @@ returning the deployed proxy address.
 */
 
 import { Signer, BytesLike } from "ethers";
-import { TWCloneFactory } from "../typechain-types";
+import { RaribleCloneFactory } from "../typechain-types";
 import { DropERC1155__factory } from "@rarible/external-contracts/js/factories/DropERC1155__factory";
 import { getCloneFactory } from "./clone-factory";
 
@@ -48,7 +48,7 @@ export async function deployDrop1155(
   );
 
   // 2. Get the clone factory contract
-  const cloneFactory: TWCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
+  const cloneFactory: RaribleCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
 
   // 3. Deploy the proxy via the factory's deployProxyByImplementationV2 function
   const tx = await cloneFactory.deployProxyByImplementationV2(
