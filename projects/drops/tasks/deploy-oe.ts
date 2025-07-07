@@ -1,5 +1,6 @@
 import { task } from "hardhat/config";
 import { logDeployment } from "../utils/logDeployment";
+
 task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")

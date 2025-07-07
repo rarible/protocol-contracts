@@ -1,5 +1,6 @@
 import { task } from "hardhat/config";
 import { logDeployment } from "../utils/logDeployment";
+
 task("deploy-drop1155", "Deploys a DropERC1155 contract via TWCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
