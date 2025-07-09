@@ -10,8 +10,8 @@ npx hardhat deploy-drop721 --network polygon_mainnet \
     --platform-fee-recipient 0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4 \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
-    --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0x70682de037C28b46dB85408A5Cb9dF95e15a6301
+    --clone-factory 0x9A611f52a1b8007B1A20935ba619352C694fAE8F \
+    --implementation 0xAe7c9D8BE532DAE56cdaacD9f91D17243CB8a91E
 
 
     
@@ -27,5 +27,5 @@ npx hardhat deploy-drop721 --network megaeth_testnet \
     --platform-fee-recipient 0x98556b192f8304001986e0bb94e61e51049a600c \
     --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
     --extra-data 0x \
-    --clone-factory 0x25548ba29a0071f30e4bdcd98ea72f79341b07a1 \
-    --implementation 0x70682de037C28b46dB85408A5Cb9dF95e15a6301
+    --clone-factory 0x9A611f52a1b8007B1A20935ba619352C694fAE8F \
+    --implementation 0xAe7c9D8BE532DAE56cdaacD9f91D17243CB8a91E

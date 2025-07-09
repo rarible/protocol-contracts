@@ -1,5 +1,5 @@
-import { DeployFunction, DeployResult } from "hardhat-deploy/dist/types";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { DeployFunction, DeployResult } from 'hardhat-deploy/types';
 
 const deployLock: DeployFunction = async (
     hre: HardhatRuntimeEnvironment

@@ -1,5 +1,6 @@
 import { DeployFunction, DeployResult } from "hardhat-deploy/dist/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils";
 
 const deployLock: DeployFunction = async (
     hre: HardhatRuntimeEnvironment
@@ -14,7 +15,7 @@ const deployLock: DeployFunction = async (
         log: true,
         args: [100, 200], // Unlock timestamp in seconds
         waitConfirmations: 1,
-        deterministicDeployment: "0x11111",
+        deterministicDeployment: DETERMENISTIC_DEPLOYMENT_SALT,
     });
     console.log("transactionHash", deployResult.transactionHash)
 };

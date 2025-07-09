@@ -1,0 +1,1 @@
+npx hardhat update-batch-base-uri --contract 0x83400f434888a973fa3bb2c1ea0f6b3faac9564a --batch 0 --uri ipfs://QmRjgAjVq4wdTVHcFLdy6YawrCVxDQupSCxtpyTjaubHzL/ --network mainnet
