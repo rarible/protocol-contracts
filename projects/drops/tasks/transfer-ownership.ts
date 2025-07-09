@@ -1,5 +1,4 @@
 import { task } from "hardhat/config";
-import { transferOwnershipOfContract } from "../sdk/transfer-ownership";
 
 task("transfer-ownership", "Transfers ownership of an Ownable contract")
   .addParam("contract", "The deployed contract address")
@@ -7,6 +6,7 @@ task("transfer-ownership", "Transfers ownership of an Ownable contract")
   .addOptionalParam("from", "The current owner's address (defaults to first available signer)")
   .setAction(async (args, hre) => {
     const { ethers } = hre;
+    const { transferOwnership } = await import("../sdk");
 
     // Resolve signer
     let signer;
@@ -21,5 +21,6 @@ task("transfer-ownership", "Transfers ownership of an Ownable contract")
 
     console.log(`Transferring ownership of ${contract} to ${newOwner} using ${signerAddress}`);
 
-    await transferOwnershipOfContract(contract, newOwner, signer);
+    await transferOwnership(contract, newOwner, signer);
+    console.log(`✅ Ownership transferred to ${newOwner}`);
   });
