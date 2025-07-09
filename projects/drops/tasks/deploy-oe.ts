@@ -1,5 +1,5 @@
 import { task } from "hardhat/config";
-import { logDeployment } from "../utils/logDeployment";
+
 task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via RaribleCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
@@ -51,6 +51,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via RaribleClone
 
     // Now call the sdk method
     const { deployOE: deployContract } = await import("../sdk");
+    const { logDeployment } = await import("../utils/logDeployment");
 
     const deployedAddress = await deployContract(
       deployer,
