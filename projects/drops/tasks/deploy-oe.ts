@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 import { logDeployment } from "../utils/logDeployment";
-task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFactory")
+task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via RaribleCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
   .addParam("symbol", "Contract symbol")
@@ -13,7 +13,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
   .addParam("platformFeeRecipient", "Platform fee recipient address")
   .addOptionalParam("salt", "Salt value (default 0x)", "0x0000000000000000000000000000000000000000000000000000000000000000")
   .addOptionalParam("extraData", "Extra data in hex, default 0x", "0x")
-  .addParam("cloneFactory", "TWCloneFactory address if not using deployments", "")
+  .addParam("cloneFactory", "RaribleCloneFactory address if not using deployments", "")
   .addParam("implementation", "Address of the OpenEditionERC721FlatFee logic contract", "")
   .setAction(async (args, hre) => {
     const {

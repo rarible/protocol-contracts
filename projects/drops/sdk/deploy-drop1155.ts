@@ -1,7 +1,7 @@
 /*
 <ai_context>
 This file provides the deployment utility for DropERC1155 contracts.
-It creates the initialization data and deploys the contract via TWCloneFactory,
+It creates the initialization data and deploys the contract via RaribleCloneFactory,
 returning the deployed proxy address.
 </ai_context>
 */
