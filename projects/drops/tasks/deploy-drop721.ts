@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
+task("deploy-drop721", "Deploys a DropERC721 contract via RaribleCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
   .addParam("symbol", "Contract symbol")
@@ -13,7 +13,7 @@ task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
   .addParam("platformFeeRecipient", "Platform fee recipient address")
   .addOptionalParam("salt", "Salt value (default 0x)", "0x0000000000000000000000000000000000000000000000000000000000000000")
   .addOptionalParam("extraData", "Extra data in hex, default 0x", "0x")
-  .addParam("cloneFactory", "TWCloneFactory address if not using deployments", "")
+  .addParam("cloneFactory", "RaribleCloneFactory address if not using deployments", "")
   .addParam("implementation", "Address of the DropERC721 logic contract", "")
   .setAction(async (args, hre) => {
     const {
@@ -51,6 +51,7 @@ task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
 
     // Now call the sdk method
     const { deployDrop721 } = await import("../sdk");
+    const { logDeployment } = await import("../utils/logDeployment");
 
     const deployedAddress = await deployDrop721(
       deployer,
@@ -69,6 +70,8 @@ task("deploy-drop721", "Deploys a DropERC721 contract via TWCloneFactory")
       salt,
       extraData
     );
+
+    logDeployment(hre.network.name, "DropERC721", deployedAddress, name, contractUri, deployer.address);
 
     console.log("DropERC721 proxy deployed at:", deployedAddress);
   });

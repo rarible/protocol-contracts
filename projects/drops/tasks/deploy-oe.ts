@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFactory")
+task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via RaribleCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
   .addParam("symbol", "Contract symbol")
@@ -13,7 +13,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
   .addParam("platformFeeRecipient", "Platform fee recipient address")
   .addOptionalParam("salt", "Salt value (default 0x)", "0x0000000000000000000000000000000000000000000000000000000000000000")
   .addOptionalParam("extraData", "Extra data in hex, default 0x", "0x")
-  .addParam("cloneFactory", "TWCloneFactory address if not using deployments", "")
+  .addParam("cloneFactory", "RaribleCloneFactory address if not using deployments", "")
   .addParam("implementation", "Address of the OpenEditionERC721FlatFee logic contract", "")
   .setAction(async (args, hre) => {
     const {
@@ -51,6 +51,7 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
 
     // Now call the sdk method
     const { deployOE: deployContract } = await import("../sdk");
+    const { logDeployment } = await import("../utils/logDeployment");
 
     const deployedAddress = await deployContract(
       deployer,
@@ -69,6 +70,8 @@ task("deploy-oe", "Deploys an OpenEditionERC721FlatFee contract via TWCloneFacto
       salt,
       extraData
     );
+
+    logDeployment(hre.network.name, "OpenEditionERC721FlatFee", deployedAddress, name, contractUri, deployer.address);
 
     console.log("OpenEditionERC721FlatFee proxy deployed at:", deployedAddress);
   });
