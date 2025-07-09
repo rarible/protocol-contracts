@@ -1,5 +1,5 @@
 import { task } from "hardhat/config";
-import { logDeployment } from "../utils/logDeployment";
+
 task("deploy-drop1155", "Deploys a DropERC1155 contract via RaribleCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
@@ -51,6 +51,7 @@ task("deploy-drop1155", "Deploys a DropERC1155 contract via RaribleCloneFactory"
 
     // Call the SDK method
     const { deployDrop1155 } = await import("../sdk");
+    const { logDeployment } = await import("../utils/logDeployment");
 
     const deployedAddress = await deployDrop1155(
       deployer,
