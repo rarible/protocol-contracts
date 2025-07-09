@@ -1,6 +1,5 @@
 import { task } from "hardhat/config";
 import { BytesLike } from "ethers";
-import { grantRole } from "../sdk/grant-role";
 
 task("grant-role", "Grants a role to an account on a compatible contract")
   .addParam("contract", "The deployed contract address")
@@ -12,6 +11,7 @@ task("grant-role", "Grants a role to an account on a compatible contract")
   .addOptionalParam("from", "The address of the signer (defaults to first signer)")
   .setAction(async (args, hre) => {
     const { ethers } = hre;
+    const { grantRole } = await import("../sdk");
 
     const contractAddress: string = args.contract;
     const account: string = args.to;
@@ -42,4 +42,5 @@ task("grant-role", "Grants a role to an account on a compatible contract")
     console.log(`Granting role ${role} to ${account} on ${contractAddress} using ${await signer.getAddress()}`);
 
     await grantRole(contractAddress, role, account, signer);
+    console.log(`✅ Role ${role} granted to ${account} on ${contractAddress}`);
   });

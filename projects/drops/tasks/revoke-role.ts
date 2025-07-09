@@ -1,6 +1,5 @@
 import { task } from "hardhat/config";
 import { BytesLike } from "ethers";
-import { revokeRole } from "../sdk/revoke-role";
 
 task("revoke-role", "Revokes a role from an account on a compatible contract")
   .addParam("contract", "The deployed contract address")
@@ -12,6 +11,7 @@ task("revoke-role", "Revokes a role from an account on a compatible contract")
   .addOptionalParam("from", "The address of the signer (defaults to the first available signer)")
   .setAction(async (args, hre) => {
     const { ethers } = hre;
+    const { revokeRole } = await import("../sdk");
 
     const contractAddress: string = args.contract;
     const account: string = args.target;
@@ -43,4 +43,5 @@ task("revoke-role", "Revokes a role from an account on a compatible contract")
     console.log(`Revoking role ${role} from ${account} on ${contractAddress} using ${signerAddress}`);
 
     await revokeRole(contractAddress, role, account, signer);
+    console.log(`✅ Role ${role} revoked from ${account} on ${contractAddress}`);
   });

@@ -12,7 +12,7 @@ const ownableAbi = [
  * @param newOwner The address to transfer ownership to
  * @param signer A signer that is the current owner
  */
-export async function transferOwnershipOfContract(
+export async function transferOwnership(
   contractAddress: string,
   newOwner: string,
   signer: Signer

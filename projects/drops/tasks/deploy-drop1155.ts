@@ -1,7 +1,6 @@
 import { task } from "hardhat/config";
-import { logDeployment } from "../utils/logDeployment";
 
-task("deploy-drop1155", "Deploys a DropERC1155 contract via TWCloneFactory")
+task("deploy-drop1155", "Deploys a DropERC1155 contract via RaribleCloneFactory")
   .addParam("defaultAdmin", "Default admin address")
   .addParam("name", "Contract name")
   .addParam("symbol", "Contract symbol")
@@ -14,7 +13,7 @@ task("deploy-drop1155", "Deploys a DropERC1155 contract via TWCloneFactory")
   .addParam("platformFeeRecipient", "Platform fee recipient address")
   .addOptionalParam("salt", "Salt value (default 0x)", "0x0000000000000000000000000000000000000000000000000000000000000000")
   .addOptionalParam("extraData", "Extra data in hex, default 0x", "0x")
-  .addParam("cloneFactory", "TWCloneFactory address if not using deployments", "")
+  .addParam("cloneFactory", "RaribleCloneFactory address if not using deployments", "")
   .addParam("implementation", "Address of the DropERC1155 logic contract", "")
   .setAction(async (args, hre) => {
     const {
@@ -52,6 +51,7 @@ task("deploy-drop1155", "Deploys a DropERC1155 contract via TWCloneFactory")
 
     // Call the SDK method
     const { deployDrop1155 } = await import("../sdk");
+    const { logDeployment } = await import("../utils/logDeployment");
 
     const deployedAddress = await deployDrop1155(
       deployer,
