@@ -9,18 +9,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
 
   console.log("deploying contracts with the account:", deployer);
-  
-  await deploy('DefaultProxyAdmin', {
-    from: deployer,
-    log: true,
-    autoMine: true,
-    gasLimit: 100000000,
-    gasPrice: "0x2FAF0800",
-    maxFeePerGas: undefined,
-    maxPriorityFeePerGas: undefined,
-    args: [deployer],
-    
-  });
 
   await deploy('RoyaltiesRegistry', {
     from: deployer,
@@ -35,10 +23,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     log: true,
     autoMine: true,
-    gasLimit: 100000000,
-    gasPrice: "0x2FAF0800",
-    maxFeePerGas: undefined,
-    maxPriorityFeePerGas: undefined,
   });
 
 };
