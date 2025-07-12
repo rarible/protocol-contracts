@@ -8,9 +8,10 @@ import {
   ERC721LazyMintTransferProxy, ERC721LazyMintTransferProxy__factory,
   TransferProxy, TransferProxy__factory,
   RoyaltiesRegistry, RoyaltiesRegistry__factory,
+  AssetMatcherCollection, AssetMatcherCollection__factory,
 } from "../typechain-types";
 
-import { ZERO, ETH, ERC721, ERC721_LAZY, ERC1155_LAZY,} from "@rarible/exchange-v2/sdk/utils";
+import { ZERO, ETH, ERC721, ERC721_LAZY, ERC1155_LAZY, ERC20, COLLECTION,} from "@rarible/exchange-v2/sdk/utils";
 import {
   createSellOrder,
   createBuyOrder,
@@ -27,7 +28,7 @@ describe("ExchangeV2 - Sell ERC721 for native ETH (non-lazy)", function () {
   let erc721LazyMintTransferProxy: ERC721LazyMintTransferProxy;
   let erc1155LazyMintTransferProxy: ERC1155LazyMintTransferProxy;
   let royaltiesRegistry: RoyaltiesRegistry;
-  
+  let assetMatcherCollection: AssetMatcherCollection;
   let erc721: TestERC721RoyaltiesV2;
   
   let seller: SignerWithAddress;
@@ -55,6 +56,8 @@ describe("ExchangeV2 - Sell ERC721 for native ETH (non-lazy)", function () {
     erc1155LazyMintTransferProxy = await (new ERC1155LazyMintTransferProxy__factory(owner)).deploy();
     await erc1155LazyMintTransferProxy.__OperatorRole_init();
 
+    assetMatcherCollection = await (new AssetMatcherCollection__factory(owner)).deploy();
+
     // Deploy royalties registry
     royaltiesRegistry = await (new RoyaltiesRegistry__factory(owner)).deploy();
 
@@ -72,8 +75,13 @@ describe("ExchangeV2 - Sell ERC721 for native ETH (non-lazy)", function () {
     // Set up lazy mint proxies
     await erc721LazyMintTransferProxy.addOperator(exchange.address);
     await erc1155LazyMintTransferProxy.addOperator(exchange.address);
+    await erc20TransferProxy.addOperator(exchange.address);
+    await transferProxy.addOperator(exchange.address);
+
     await exchange.setTransferProxy(ERC721_LAZY, erc721LazyMintTransferProxy.address);
     await exchange.setTransferProxy(ERC1155_LAZY, erc1155LazyMintTransferProxy.address);
+    await exchange.setTransferProxy(ERC20, erc20TransferProxy.address);
+    await exchange.setAssetMatcher(COLLECTION, assetMatcherCollection.address);
 
     // Deploy NFT contracts
     erc721 = await (new TestERC721RoyaltiesV2__factory(owner)).deploy();
