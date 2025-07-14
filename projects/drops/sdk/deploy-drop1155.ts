@@ -1,13 +1,13 @@
 /*
 <ai_context>
 This file provides the deployment utility for DropERC1155 contracts.
-It creates the initialization data and deploys the contract via TWCloneFactory,
+It creates the initialization data and deploys the contract via RaribleCloneFactory,
 returning the deployed proxy address.
 </ai_context>
 */
 
 import { Signer, BytesLike } from "ethers";
-import { TWCloneFactory } from "../typechain-types";
+import { RaribleCloneFactory } from "../typechain-types";
 import { DropERC1155__factory } from "@rarible/external-contracts/js/factories/DropERC1155__factory";
 import { getCloneFactory } from "./clone-factory";
 
@@ -48,7 +48,7 @@ export async function deployDrop1155(
   );
 
   // 2. Get the clone factory contract
-  const cloneFactory: TWCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
+  const cloneFactory: RaribleCloneFactory = getCloneFactory(signer, cloneFactoryAddress);
 
   // 3. Deploy the proxy via the factory's deployProxyByImplementationV2 function
   const tx = await cloneFactory.deployProxyByImplementationV2(
