@@ -4,6 +4,7 @@ task("transfer-ownership", "Transfers ownership of an Ownable contract")
   .addParam("contract", "The deployed contract address")
   .addParam("newOwner", "The address to transfer ownership to")
   .addOptionalParam("from", "The current owner's address (defaults to first available signer)")
+  .addOptionalParam("contractType", 'Contract type: "721" | "1155" | "oe"')
   .setAction(async (args, hre) => {
     const { ethers } = hre;
     const { transferOwnership } = await import("../sdk");
@@ -21,6 +22,6 @@ task("transfer-ownership", "Transfers ownership of an Ownable contract")
 
     console.log(`Transferring ownership of ${contract} to ${newOwner} using ${signerAddress}`);
 
-    await transferOwnership(contract, newOwner, signer);
+    await transferOwnership(contract, newOwner, signer, args.contractType);
     console.log(`✅ Ownership transferred to ${newOwner}`);
   });

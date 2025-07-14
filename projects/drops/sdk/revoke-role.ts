@@ -1,9 +1,6 @@
 import { Contract, Signer, BytesLike } from "ethers";
-
-// Minimal ABI for revokeRole
-const accessControlAbi = [
-  "function revokeRole(bytes32 role, address account) external",
-];
+import { connectWithDropContract } from "../utils/contractLoader";
+import { DropContractType } from "../types/drop-types";
 
 /**
  * Revokes a role from an address on any contract that implements `revokeRole`.
@@ -17,9 +14,10 @@ export async function revokeRole(
   contractAddress: string,
   role: BytesLike,
   account: string,
-  signer: Signer
+  signer: Signer,
+  contractType?: DropContractType
 ): Promise<void> {
-  const contract = new Contract(contractAddress, accessControlAbi, signer);
+  const contract = connectWithDropContract(contractAddress, signer, contractType);
   const tx = await contract.revokeRole(role, account);
   console.log(`Transaction sent: ${tx.hash}`);
   await tx.wait();
