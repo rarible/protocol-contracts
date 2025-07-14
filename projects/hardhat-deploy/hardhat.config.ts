@@ -117,7 +117,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: "test test test test test test test test test test test junk",
         count: 10,
-        accountsBalance: "1000000000000000000000000000000000000000",
+        accountsBalance: "1000000000000000000",
       }
     },
     ...loadNetworkConfigs()
