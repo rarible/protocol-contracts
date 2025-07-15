@@ -17,7 +17,6 @@ import {
   createBuyOrder,
   signOrderWithWallet,
 } from "@rarible/exchange-v2/sdk/listingUtils";
-import { matchOrderOnExchange } from "@rarible/exchange-v2/sdk/listingUtils";
 import { TestERC721RoyaltiesV2, TestERC721RoyaltiesV2__factory } from "@rarible/exchange-v2/typechain-types";
 
 describe("ExchangeV2 - Sell ERC721 for native ETH (non-lazy)", function () {
