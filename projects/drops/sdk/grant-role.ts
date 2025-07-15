@@ -1,9 +1,5 @@
-import { Contract, Signer, BytesLike } from "ethers";
-
-// Minimal ABI for grantRole function
-const accessControlAbi = [
-  "function grantRole(bytes32 role, address account) external",
-];
+import { Signer, BytesLike } from "ethers";
+import { Permissions__factory } from "../typechain-types";
 
 /**
  * Grants a role to an address on any contract that implements `grantRole`.
@@ -19,7 +15,7 @@ export async function grantRole(
   account: string,
   signer: Signer
 ): Promise<void> {
-  const contract = new Contract(contractAddress, accessControlAbi, signer);
+  const contract = Permissions__factory.connect(contractAddress, signer);
 
   const tx = await contract.grantRole(role, account);
   console.log(`Granting role… tx hash: ${tx.hash}`);

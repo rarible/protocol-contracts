@@ -1,9 +1,7 @@
-import { Contract, Signer, BytesLike } from "ethers";
+import { Signer, BytesLike } from "ethers";
+import { Permissions__factory } from "../typechain-types";
 
-// Minimal ABI for revokeRole
-const accessControlAbi = [
-  "function revokeRole(bytes32 role, address account) external",
-];
+/**
 
 /**
  * Revokes a role from an address on any contract that implements `revokeRole`.
@@ -19,7 +17,7 @@ export async function revokeRole(
   account: string,
   signer: Signer
 ): Promise<void> {
-  const contract = new Contract(contractAddress, accessControlAbi, signer);
+  const contract = Permissions__factory.connect(contractAddress, signer);
   const tx = await contract.revokeRole(role, account);
   console.log(`Transaction sent: ${tx.hash}`);
   await tx.wait();
