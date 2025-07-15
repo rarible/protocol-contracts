@@ -1,9 +1,11 @@
 import { signOrderEthers } from "./signOrder";
 import { encBigNumber, ERC20, ETH, ZERO } from "./utils";
-import { BigNumber } from "ethers";
-import { ExchangeMetaV2, ExchangeV2 } from "../typechain-types";
+import { BigNumber, Signer } from "ethers";
+import { ExchangeMetaV2, ExchangeV2, } from "../typechain-types";
+import type { LibOrder } from "../typechain-types/ExchangeV2";
 import { encodeERC20AssetData, encodeV3Data } from "./encodeUtils";
 import { getV3Selector } from "./selectorUtils";
+import { TypedDataSigner } from "@ethersproject/abstract-signer";
 
 export function createSellOrder(
     tokenAddress: string,
@@ -43,7 +45,7 @@ export function createSellOrder(
   }
 
 export function createBuyOrder(
-    sellOrder: any,
+    sellOrder: LibOrder.OrderStruct,
     buyerAddress: string,
     price: string
   ) {
@@ -68,8 +70,8 @@ export function createBuyOrder(
   
 
 export async function signOrderWithWallet(
-  order: any,
-  wallet: any,
+  order: LibOrder.OrderStruct,
+  wallet: Signer & TypedDataSigner,
   exchangeAddress: string
 ) {
   return await signOrderEthers(order, wallet, exchangeAddress);
@@ -77,11 +79,11 @@ export async function signOrderWithWallet(
 
 export async function matchOrderOnExchange(
     exchange: ExchangeMetaV2 | ExchangeV2,
-    buyerWallet: any,
-    sellOrder: any,
-    sellSignature: any,
-    buyOrder: any,
-    buySignature: any,
+    buyerWallet: Signer & TypedDataSigner,
+    sellOrder: LibOrder.OrderStruct,
+    sellSignature: string,
+    buyOrder: LibOrder.OrderStruct,
+    buySignature: string,
     price?: string
   ) {
     const tx = await exchange.connect(buyerWallet).matchOrders(

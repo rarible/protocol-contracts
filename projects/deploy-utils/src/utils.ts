@@ -81,6 +81,7 @@ export function createNetwork(name: string): HttpNetworkUserConfig {
         accounts: [json.key],
         gas: json.gas || 5000000,
         saveDeployments: true,
+        timeout: json.timeout || 60000,
         verify: json.verify
           ? {
               etherscan: {
