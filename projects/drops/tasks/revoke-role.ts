@@ -9,6 +9,7 @@ task("revoke-role", "Revokes a role from an account on a compatible contract")
     - or raw bytes32 hex string`)
   .addParam("target", "The address from which the role will be revoked")
   .addOptionalParam("from", "The address of the signer (defaults to the first available signer)")
+  .addOptionalParam("contractType", 'Contract type: "721" | "1155" | "oe"')
   .setAction(async (args, hre) => {
     const { ethers } = hre;
     const { revokeRole } = await import("../sdk");
@@ -42,6 +43,6 @@ task("revoke-role", "Revokes a role from an account on a compatible contract")
     const signerAddress = await signer.getAddress();
     console.log(`Revoking role ${role} from ${account} on ${contractAddress} using ${signerAddress}`);
 
-    await revokeRole(contractAddress, role, account, signer);
+    await revokeRole(contractAddress, role, account, signer, args.contractType);
     console.log(`✅ Role ${role} revoked from ${account} on ${contractAddress}`);
   });

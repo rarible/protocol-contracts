@@ -1,9 +1,6 @@
-import { Contract, Signer } from "ethers";
-
-// Minimal ABI to interact with Ownable contracts
-const ownableAbi = [
-  "function transferOwnership(address newOwner) external",
-];
+import { Signer } from "ethers";
+import { connectWithDropContract } from "../utils/contractLoader";
+import { DropContractType } from "../types/drop-types";
 
 /**
  * Transfers ownership of a contract that uses OpenZeppelin Ownable.
@@ -15,10 +12,11 @@ const ownableAbi = [
 export async function transferOwnership(
   contractAddress: string,
   newOwner: string,
-  signer: Signer
+  signer: Signer,
+  contractType?: DropContractType
 ): Promise<void> {
-  const contract = new Contract(contractAddress, ownableAbi, signer);
-  const tx = await contract.transferOwnership(newOwner);
+  const contract = connectWithDropContract(contractAddress, signer, contractType);
+  const tx = await contract.setOwner(newOwner);
   console.log(`Transaction sent: ${tx.hash}`);
   await tx.wait();
   console.log(`✅ Ownership transferred to ${newOwner}`);

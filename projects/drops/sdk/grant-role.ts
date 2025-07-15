@@ -1,29 +1,28 @@
-import { Contract, Signer, BytesLike } from "ethers";
-
-// Minimal ABI for grantRole function
-const accessControlAbi = [
-  "function grantRole(bytes32 role, address account) external",
-];
+import { Signer, BytesLike } from "ethers";
+import { connectWithDropContract } from "../utils/contractLoader";
+import { DropContractType } from "../types/drop-types";
 
 /**
- * Grants a role to an address on any contract that implements `grantRole`.
+ * Grants a role to an address using a known contract type.
  *
  * @param contractAddress Address of the deployed contract
- * @param role Bytes32 role to grant (e.g., ethers.utils.id("MINTER_ROLE"))
- * @param account Address to grant the role to
- * @param signer Signer to use for sending the transaction
+ * @param role Role bytes32
+ * @param account Target address
+ * @param signer Signer
+ * @param contractType Optional known contract type ("drop721" | "drop1155" | "openedition")
  */
 export async function grantRole(
   contractAddress: string,
   role: BytesLike,
   account: string,
-  signer: Signer
+  signer: Signer,
+  contractType?: DropContractType
 ): Promise<void> {
-  const contract = new Contract(contractAddress, accessControlAbi, signer);
+  const contract = connectWithDropContract(contractAddress, signer, contractType);
 
   const tx = await contract.grantRole(role, account);
   console.log(`Granting role… tx hash: ${tx.hash}`);
 
   await tx.wait();
-  console.log(`Role granted to ${account} on contract ${contractAddress}`);
+  console.log(`✅ Role granted to ${account} on contract ${contractAddress}`);
 }
