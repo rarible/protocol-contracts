@@ -111,12 +111,25 @@ const config: HardhatUserConfig = {
     sources: "src",
     tests: "test-hardhat"
   },
-  networks: loadNetworkConfigs(),
+  networks: {
+    hardhat: {
+      gas: 10000000,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        count: 10,
+        accountsBalance: "1000000000000000000",
+      }
+    },
+    ...loadNetworkConfigs()
+  },
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
   },
   deterministicDeployment: loadFactoryAddresses(),
+  mocha: {
+    timeout: 400000
+  }
 };
 
 export default config;

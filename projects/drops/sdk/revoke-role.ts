@@ -1,6 +1,7 @@
-import { Contract, Signer, BytesLike } from "ethers";
-import { connectWithDropContract } from "../utils/contractLoader";
-import { DropContractType } from "../types/drop-types";
+import { Signer, BytesLike } from "ethers";
+import { Permissions__factory } from "../typechain-types";
+
+/**
 
 /**
  * Revokes a role from an address on any contract that implements `revokeRole`.
@@ -14,10 +15,9 @@ export async function revokeRole(
   contractAddress: string,
   role: BytesLike,
   account: string,
-  signer: Signer,
-  contractType?: DropContractType
+  signer: Signer
 ): Promise<void> {
-  const contract = connectWithDropContract(contractAddress, signer, contractType);
+  const contract = Permissions__factory.connect(contractAddress, signer);
   const tx = await contract.revokeRole(role, account);
   console.log(`Transaction sent: ${tx.hash}`);
   await tx.wait();

@@ -9,7 +9,6 @@ task("grant-role", "Grants a role to an account on a compatible contract")
     - or raw bytes32 hex string`)
   .addParam("to", "The address to grant the role to")
   .addOptionalParam("from", "The address of the signer (defaults to first signer)")
-  .addOptionalParam("contractType", 'Contract type: "721" | "1155" | "oe"')
   .setAction(async (args, hre) => {
     const { ethers } = hre;
     const { grantRole } = await import("../sdk");
@@ -42,6 +41,6 @@ task("grant-role", "Grants a role to an account on a compatible contract")
 
     console.log(`Granting role ${role} to ${account} on ${contractAddress} using ${await signer.getAddress()}`);
 
-    await grantRole(contractAddress, role, account, signer, args.contractType);
+    await grantRole(contractAddress, role, account, signer);
     console.log(`✅ Role ${role} granted to ${account} on ${contractAddress}`);
   });

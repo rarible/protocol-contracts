@@ -1,6 +1,5 @@
-import { Signer } from "ethers";
-import { connectWithDropContract } from "../utils/contractLoader";
-import { DropContractType } from "../types/drop-types";
+import { Contract, Signer } from "ethers";
+import { Ownable__factory } from "../typechain-types";
 
 /**
  * Transfers ownership of a contract that uses OpenZeppelin Ownable.
@@ -12,10 +11,9 @@ import { DropContractType } from "../types/drop-types";
 export async function transferOwnership(
   contractAddress: string,
   newOwner: string,
-  signer: Signer,
-  contractType?: DropContractType
+  signer: Signer
 ): Promise<void> {
-  const contract = connectWithDropContract(contractAddress, signer, contractType);
+  const contract = Ownable__factory.connect(contractAddress, signer);
   const tx = await contract.setOwner(newOwner);
   console.log(`Transaction sent: ${tx.hash}`);
   await tx.wait();

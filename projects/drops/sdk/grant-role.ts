@@ -1,24 +1,21 @@
 import { Signer, BytesLike } from "ethers";
-import { connectWithDropContract } from "../utils/contractLoader";
-import { DropContractType } from "../types/drop-types";
+import { Permissions__factory } from "../typechain-types";
 
 /**
- * Grants a role to an address using a known contract type.
+ * Grants a role to an address on any contract that implements `grantRole`.
  *
  * @param contractAddress Address of the deployed contract
- * @param role Role bytes32
- * @param account Target address
- * @param signer Signer
- * @param contractType Optional known contract type ("drop721" | "drop1155" | "openedition")
+ * @param role Bytes32 role to grant (e.g., ethers.utils.id("MINTER_ROLE"))
+ * @param account Address to grant the role to
+ * @param signer Signer to use for sending the transaction
  */
 export async function grantRole(
   contractAddress: string,
   role: BytesLike,
   account: string,
-  signer: Signer,
-  contractType?: DropContractType
+  signer: Signer
 ): Promise<void> {
-  const contract = connectWithDropContract(contractAddress, signer, contractType);
+  const contract = Permissions__factory.connect(contractAddress, signer);
 
   const tx = await contract.grantRole(role, account);
   console.log(`Granting role… tx hash: ${tx.hash}`);

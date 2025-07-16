@@ -7,15 +7,14 @@ task("revoke-role", "Revokes a role from an account on a compatible contract")
     - "DEFAULT_ADMIN_ROLE" (0x00)
     - human-readable name like "MINTER_ROLE" (will be hashed)
     - or raw bytes32 hex string`)
-  .addParam("target", "The address from which the role will be revoked")
+  .addParam("to", "The address from which the role will be revoked")
   .addOptionalParam("from", "The address of the signer (defaults to the first available signer)")
-  .addOptionalParam("contractType", 'Contract type: "721" | "1155" | "oe"')
   .setAction(async (args, hre) => {
     const { ethers } = hre;
     const { revokeRole } = await import("../sdk");
 
     const contractAddress: string = args.contract;
-    const account: string = args.target;
+    const account: string = args.to;
 
     // Resolve role into bytes32
     let role: BytesLike;
@@ -43,6 +42,6 @@ task("revoke-role", "Revokes a role from an account on a compatible contract")
     const signerAddress = await signer.getAddress();
     console.log(`Revoking role ${role} from ${account} on ${contractAddress} using ${signerAddress}`);
 
-    await revokeRole(contractAddress, role, account, signer, args.contractType);
+    await revokeRole(contractAddress, role, account, signer);
     console.log(`✅ Role ${role} revoked from ${account} on ${contractAddress}`);
   });
