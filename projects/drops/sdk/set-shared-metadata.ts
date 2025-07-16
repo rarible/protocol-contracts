@@ -1,11 +1,5 @@
 import { Contract, Signer } from "ethers";
-
-/**
- * Minimal ABI for calling setSharedMetadata with a SharedMetadataInfo struct
- */
-const sharedMetadataAbi = [
-  "function setSharedMetadata((string name,string description,string imageURI,string animationURI) metadata) external",
-];
+import { SharedMetadata__factory } from "../typechain-types";
 
 /**
  * Sends a transaction to update the shared metadata in any compatible contract.
@@ -25,7 +19,7 @@ export async function setSharedMetadata(
   },
   signer: Signer
 ) {
-  const contract = new Contract(contractAddress, sharedMetadataAbi, signer);
+  const contract = SharedMetadata__factory.connect(contractAddress, signer);
   const tx = await contract.setSharedMetadata(metadata);
   const receipt = await tx.wait();
   return receipt;

@@ -1,11 +1,5 @@
 import { Contract, Signer } from "ethers";
-
-/**
- * Minimal ABI with updateBatchBaseURI(uint256, string)
- */
-const updateBatchBaseURIAbi = [
-  "function updateBatchBaseURI(uint256 _index, string calldata _uri) external",
-];
+import { DropERC721__factory, DropERC1155__factory } from "../typechain-types";
 
 /**
  * Updates the base URI of a batch in any compatible drop contract.
@@ -20,9 +14,17 @@ export async function updateBatchBaseURI(
   contractAddress: string,
   batchIndex: number,
   batchUri: string,
-  signer: Signer
+  signer: Signer,
+  contractType: "721" | "1155"
 ) {
-  const contract = new Contract(contractAddress, updateBatchBaseURIAbi, signer);
+  let contract;
+  if (contractType === "721") {
+    contract = DropERC721__factory.connect(contractAddress, signer);
+  } else if (contractType === "1155") {
+    contract = DropERC1155__factory.connect(contractAddress, signer);
+  } else {
+    throw new Error("Invalid contract type");
+  }
   const tx = await contract.updateBatchBaseURI(batchIndex, batchUri);
   const receipt = await tx.wait();
   return receipt;
