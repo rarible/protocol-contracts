@@ -24,7 +24,7 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
     bytes32 public constant WL_ADMIN_ROLE = keccak256("WL_ADMIN_ROLE");
 
     IERC20 public wlToken;
-    uint256 public wlPrice = 1000000000000000000; // 1 token with 18 decimals by default
+    uint256 public wlPrice = 1 ether; // Default: 1 token with 18 decimals
 
     struct Collection {
         address creator;
@@ -33,11 +33,14 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
         uint256 lockedAmount;
     }
 
+    // Mapping from collection address to collection struct
     mapping(address => Collection) public collections;
+
+    // Whitelist status per collection address
     mapping(address => bool) public isWhitelisted;
 
-    event CollectionAdded(address indexed collection, address indexed creator, uint256 lockedAmount);
-    event CollectionRemoved(address indexed collection, address indexed creator, uint256 unlockedAmount);
+    event CollectionAdded(address indexed collection, address indexed creator, uint256 lockedAmount, uint256 chainId);
+    event CollectionRemoved(address indexed collection, address indexed creator, uint256 unlockedAmount, uint256 chainId);
     event WLTokenSet(address indexed oldToken, address indexed newToken);
     event WLPriceSet(uint256 oldPrice, uint256 newPrice);
     event EmergencyWithdraw(address indexed token, uint256 amount);
@@ -67,32 +70,42 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
         emit WLPriceSet(oldPrice, _price);
     }
 
-    function addToWL(address collection) external nonReentrant {
+    /**
+     * @notice Adds a collection to the whitelist.
+     * @param collection The collection address.
+     * @param chainId The chainId associated with the collection (supplied by caller).
+     */
+    function addToWL(address collection, uint256 chainId) external nonReentrant {
         require(collection != address(0), "Invalid collection address");
         require(!isWhitelisted[collection], "Collection already whitelisted");
         require(address(wlToken) != address(0), "WL token not set");
+        require(chainId != 0, "Invalid chainId");
         
         uint256 amountToLock = 0;
-        
+
         // WL_ADMIN_ROLE can add collections for free
         if (!hasRole(WL_ADMIN_ROLE, msg.sender)) {
             amountToLock = wlPrice;
-            // Transfer and lock tokens from non-admin users
             wlToken.safeTransferFrom(msg.sender, address(this), amountToLock);
         }
         
         collections[collection] = Collection({
             creator: msg.sender,
             collection: collection,
-            chainId: block.chainid,
+            chainId: chainId,
             lockedAmount: amountToLock
         });
         
         isWhitelisted[collection] = true;
         
-        emit CollectionAdded(collection, msg.sender, amountToLock);
+        emit CollectionAdded(collection, msg.sender, amountToLock, chainId);
     }
 
+    /**
+     * @notice Removes a collection from the whitelist.
+     * Only WL_ADMIN_ROLE can call this.
+     * Returns locked tokens to the creator if any.
+     */
     function removeFromWL(address collection) external onlyRole(WL_ADMIN_ROLE) nonReentrant {
         require(isWhitelisted[collection], "Collection not whitelisted");
         
@@ -106,9 +119,12 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
         isWhitelisted[collection] = false;
         delete collections[collection];
         
-        emit CollectionRemoved(collection, col.creator, col.lockedAmount);
+        emit CollectionRemoved(collection, col.creator, col.lockedAmount, col.chainId);
     }
 
+    /**
+     * @notice Returns info about a collection.
+     */
     function getCollection(address collection) external view returns (
         address creator,
         uint256 chainId,
@@ -124,8 +140,19 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
         );
     }
 
+    /**
+     * @notice Returns available ERC20 token balance (locked + unclaimed).
+     */
     function getAvailableBalance() external view returns (uint256) {
-        uint256 balance = wlToken.balanceOf(address(this));
-        return balance;
+        return wlToken.balanceOf(address(this));
+    }
+
+    /**
+     * @notice Owner can withdraw ERC20 tokens in emergency.
+     */
+    function emergencyWithdraw(address token, address to, uint256 amount) external onlyOwner nonReentrant {
+        require(to != address(0), "Invalid recipient");
+        IERC20(token).safeTransfer(to, amount);
+        emit EmergencyWithdraw(token, amount);
     }
 }
