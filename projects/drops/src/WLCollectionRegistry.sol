@@ -106,8 +106,9 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
      * Only WL_ADMIN_ROLE can call this.
      * Returns locked tokens to the creator if any.
      */
-    function removeFromWL(address collection) external onlyRole(WL_ADMIN_ROLE) nonReentrant {
+    function removeFromWL(address collection) external nonReentrant {
         require(isWhitelisted[collection], "Collection not whitelisted");
+        require(msg.sender == collections[collection].creator, "Not collection creator");
         
         Collection memory col = collections[collection];
         
