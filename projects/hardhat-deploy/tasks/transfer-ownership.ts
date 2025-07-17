@@ -2,7 +2,7 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeploymentsExtension } from "hardhat-deploy/types";
 import "@nomiclabs/hardhat-ethers";
-import { getContractsWithProxy, transferOwnership } from "./transfer-ownership-utils";
+import { getContractsWithProxy, transferOwnership } from "../sdk/transfer-ownership";
 /**
  * This task iterates through ALL deployed contracts for the network specified via --network parameter.
  * 

@@ -21,7 +21,6 @@ import { TestERC721RoyaltiesV2, TestERC721RoyaltiesV2__factory } from "@rarible/
 import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/exchange-v2/sdk/listingUtils";
 import { ETH, ERC721 } from "@rarible/exchange-v2/sdk/utils";
 
-
 dotenv.config();
 
 task("create-and-trade-order", "Deploys collection, mints NFT, creates order, and executes trade")
