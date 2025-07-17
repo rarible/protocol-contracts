@@ -17,11 +17,7 @@ task("set-protocol-fee", "Sets the protocol fee on ExchangeV2")
   .setAction(async (args, hre) => {
     const { sellerFeeBps, buyerFeeBps, recipient } = args;
     let { exchange } = args;
-    const signers = await hre.ethers.getSigners();
-    const signer = signers[0];
-    if (!exchange) {
-      exchange = (await hre.deployments.get("ExchangeV2")).address;
-    }
+
     console.log(`Setting protocol fee for ExchangeV2 at ${exchange}`);
     console.log(`New fee: ${sellerFeeBps} bps (${(parseInt(sellerFeeBps) / 10000).toFixed(2)}%)`);
     console.log(`New fee: ${buyerFeeBps} bps (${(parseInt(buyerFeeBps) / 10000).toFixed(2)}%)`);
@@ -29,12 +25,16 @@ task("set-protocol-fee", "Sets the protocol fee on ExchangeV2")
     else console.log(`Fee recipient: (no change)`);
 
     try {
-      const receipt = await setProtocolFee(
-        exchange,
-        parseInt(sellerFeeBps, 10),
+
+      const { execute } = hre.deployments;
+      const { deployer } = await hre.getNamedAccounts();
+      const receipt = await execute(
+        exchange || "ExchangeMetaV2",
+        { from: deployer, log: true },
+        "setAllProtocolFeeData",
+        recipient!,
         parseInt(buyerFeeBps, 10),
-        recipient,
-        signer
+        parseInt(sellerFeeBps, 10)
       );
       console.log(`✅ Protocol fee set. Tx hash: ${receipt.transactionHash}`);
     } catch (err: any) {

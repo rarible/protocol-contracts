@@ -23,7 +23,12 @@ export async function setProtocolFee(
 ) {
   // Attach to ExchangeV2
   const contract = ExchangeV2__factory.connect(exchangeAddress, signerOrProvider);
-
+  const owner = await contract.owner();
+  if (owner !== signerOrProvider.address) {
+    console.log(`Owner: ${owner}`);
+    console.log(`Signer: ${signerOrProvider.address}`);
+    throw new Error("Only the owner can set the protocol fee");
+  }
   let tx = await contract.setAllProtocolFeeData(recipient, buyerFeeBps, sellerFeeBps);
   const receipt = await tx.wait();
   return receipt;
