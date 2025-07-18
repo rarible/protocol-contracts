@@ -36,24 +36,19 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
     // Mapping from collection address to collection struct
     mapping(address => Collection) public collections;
 
-    // Whitelist status per collection address
-    mapping(address => bool) public isWhitelisted;
-
     event CollectionAdded(address indexed collection, address indexed creator, uint256 lockedAmount, uint256 chainId);
     event CollectionRemoved(address indexed collection, address indexed creator, uint256 unlockedAmount, uint256 chainId);
     event WLTokenSet(address indexed oldToken, address indexed newToken);
     event WLPriceSet(uint256 oldPrice, uint256 newPrice);
     event EmergencyWithdraw(address indexed token, uint256 amount);
 
-    constructor(address _initialOwner, address _wlToken) {
+    constructor(address _initialOwner) {
         require(_initialOwner != address(0), "Invalid owner");
-        require(_wlToken != address(0), "Invalid token");
         
         _transferOwnership(_initialOwner);
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WL_ADMIN_ROLE, _initialOwner);
-        
-        wlToken = IERC20(_wlToken);
+
     }
 
     function setWLToken(address _wlToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -77,7 +72,7 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
      */
     function addToWL(address collection, uint256 chainId) external nonReentrant {
         require(collection != address(0), "Invalid collection address");
-        require(!isWhitelisted[collection], "Collection already whitelisted");
+        require(collections[collection].creator == address(0), "Collection already whitelisted");
         require(address(wlToken) != address(0), "WL token not set");
         require(chainId != 0, "Invalid chainId");
         
@@ -96,8 +91,6 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
             lockedAmount: amountToLock
         });
         
-        isWhitelisted[collection] = true;
-        
         emit CollectionAdded(collection, msg.sender, amountToLock, chainId);
     }
 
@@ -107,8 +100,9 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
      * Returns locked tokens to the creator if any.
      */
     function removeFromWL(address collection) external nonReentrant {
-        require(isWhitelisted[collection], "Collection not whitelisted");
+        require(collections[collection].creator != address(0), "Collection not whitelisted");
         require(msg.sender == collections[collection].creator, "Not collection creator");
+        require(address(wlToken) != address(0), "WL token not set");
         
         Collection memory col = collections[collection];
         
@@ -117,7 +111,6 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
             wlToken.safeTransfer(col.creator, col.lockedAmount);
         }
         
-        isWhitelisted[collection] = false;
         delete collections[collection];
         
         emit CollectionRemoved(collection, col.creator, col.lockedAmount, col.chainId);
@@ -129,15 +122,13 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard {
     function getCollection(address collection) external view returns (
         address creator,
         uint256 chainId,
-        uint256 lockedAmount,
-        bool whitelisted
+        uint256 lockedAmount
     ) {
         Collection memory col = collections[collection];
         return (
             col.creator,
             col.chainId,
-            col.lockedAmount,
-            isWhitelisted[collection]
+            col.lockedAmount
         );
     }
 
