@@ -117,13 +117,13 @@ describe("WLCollectionListing", function () {
     it("should allow user to add collection by paying native tokens", async () => {
       await listing.setPayWithNative(true);
       const nativeWlPrice = await listing.nativeWlPrice();
-
+      const treasuryBalanceBefore = await ethers.provider.getBalance(treasury.address);
       await expect(listing.connect(user1).addToWL(collection1.address, CHAIN_ID_1, { value: nativeWlPrice }))
         .to.emit(registry, "CollectionAdded")
         .withArgs(collection1.address, user1.address, CHAIN_ID_1);
 
-      const treasuryBalance = await ethers.provider.getBalance(treasury.address);
-      expect(treasuryBalance).to.equal(nativeWlPrice);
+      const treasuryBalanceAfter = await ethers.provider.getBalance(treasury.address);
+      expect(treasuryBalanceAfter.sub(treasuryBalanceBefore)).to.equal(nativeWlPrice);
     });
 
     it("should revert if incorrect native token amount", async () => {
@@ -232,7 +232,7 @@ describe("WLCollectionListing", function () {
     it("should revert when non-owner tries to set wlPrice", async () => {
       await expect(
         listing.connect(user1).setWLPrice(ethers.utils.parseEther("2"))
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("AccessControl: account " + user1.address.toLocaleLowerCase() + " is missing role " + DEFAULT_ADMIN_ROLE);
     });
 
     it("should revert when setting zero wlPrice", async () => {
