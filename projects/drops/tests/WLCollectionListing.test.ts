@@ -148,7 +148,7 @@ describe("WLCollectionListing", function () {
 
       await expect(
         listing.connect(user1).addToWL(collection1.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection already whitelisted");
+      ).to.be.revertedWith("Collection already whitelisted on this chain");
     });
 
     it("should revert when collection address is zero", async () => {

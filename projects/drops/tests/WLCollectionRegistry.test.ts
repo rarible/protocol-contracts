@@ -73,8 +73,8 @@ describe("WLCollectionRegistry", function () {
     it("should revert when collection already whitelisted", async () => {
       await registry.connect(admin).addToWL(collection1.address, user1.address, CHAIN_ID_1);
       await expect(
-        registry.connect(admin).addToWL(collection1.address, user2.address, CHAIN_ID_137)
-      ).to.be.revertedWith("Collection already whitelisted");
+        registry.connect(admin).addToWL(collection1.address, user2.address, CHAIN_ID_1)
+      ).to.be.revertedWith("Collection already whitelisted on this chain");
     });
 
     it("should revert when chainId is zero", async () => {
@@ -107,7 +107,7 @@ describe("WLCollectionRegistry", function () {
     it("should revert when collection not whitelisted", async () => {
       await expect(
         registry.connect(admin).removeFromWL(collection2.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection not whitelisted");
+      ).to.be.revertedWith("Collection not whitelisted on this chain");
     });
   });
 
