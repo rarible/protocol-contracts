@@ -54,9 +54,8 @@ describe("WLCollectionRegistry", function () {
         .to.emit(registry, "CollectionAdded")
         .withArgs(collection1.address, user1.address, CHAIN_ID_1);
 
-      const [creator, chainId] = await registry.getCollection(collection1.address);
+      const creator = await registry.getCollection(collection1.address, CHAIN_ID_1);
       expect(creator).to.equal(user1.address);
-      expect(chainId).to.equal(CHAIN_ID_1);
     });
 
     it("should revert when non-admin tries to add collection", async () => {
@@ -91,24 +90,23 @@ describe("WLCollectionRegistry", function () {
     });
 
     it("should allow WL_ADMIN to remove collection", async () => {
-      await expect(registry.connect(admin).removeFromWL(collection1.address))
+      await expect(registry.connect(admin).removeFromWL(collection1.address, CHAIN_ID_1))
         .to.emit(registry, "CollectionRemoved")
         .withArgs(collection1.address, user1.address, CHAIN_ID_1);
 
-      const [creator, chainId] = await registry.getCollection(collection1.address);
+      const creator = await registry.getCollection(collection1.address, CHAIN_ID_1);
       expect(creator).to.equal(ethers.constants.AddressZero);
-      expect(chainId).to.equal(0);
     });
 
     it("should revert when non-admin tries to remove collection", async () => {
       await expect(
-        registry.connect(user1).removeFromWL(collection1.address)
+        registry.connect(user1).removeFromWL(collection1.address, CHAIN_ID_1)
       ).to.be.reverted;
     });
 
     it("should revert when collection not whitelisted", async () => {
       await expect(
-        registry.connect(admin).removeFromWL(collection2.address)
+        registry.connect(admin).removeFromWL(collection2.address, CHAIN_ID_1)
       ).to.be.revertedWith("Collection not whitelisted");
     });
   });
@@ -116,15 +114,13 @@ describe("WLCollectionRegistry", function () {
   describe("View Functions", () => {
     it("should return correct collection info", async () => {
       await registry.connect(admin).addToWL(collection1.address, user1.address, CHAIN_ID_1);
-      const [creator, chainId] = await registry.getCollection(collection1.address);
+      const creator = await registry.getCollection(collection1.address, CHAIN_ID_1);
       expect(creator).to.equal(user1.address);
-      expect(chainId).to.equal(CHAIN_ID_1);
     });
 
     it("should return zero values for non-existent collection", async () => {
-      const [creator, chainId] = await registry.getCollection(collection2.address);
-      expect(creator).to.equal(ethers.constants.AddressZero);
-      expect(chainId).to.equal(0);
+      const creator = await registry.getCollection(collection2.address, CHAIN_ID_1);
+      expect(creator).to.equal(ethers.constants.AddressZero);   
     });
   });
 

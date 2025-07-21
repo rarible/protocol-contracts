@@ -8,17 +8,6 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { IWLCollectionRegistry } from "./IWLCollectionRegistry.sol";
 
-/*
-<ai_context>
-WLCollectionRegistry is a contract that manages a whitelist of collections.
-- Users pay ERC20 tokens to add their collection to the whitelist
-- Tokens are locked when collection is added and unlocked when removed
-- Admin can set the ERC20 token and price
-- Owner can perform emergency withdrawal
-- WL_ADMIN_ROLE can add collections for free (zero price)
-</ai_context>
-*/
-
 contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard, IWLCollectionRegistry {
     using SafeERC20 for IERC20;
     
@@ -27,11 +16,10 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard, IWLCol
     struct Collection {
         address creator;
         address collection;
-        uint256 chainId;
     }
 
-    // Mapping from collection address to collection struct
-    mapping(address => Collection) public collections;
+    // Mapping from chainId to collection address to Collection struct
+    mapping(uint256 => mapping(address => Collection)) public collections;
 
     event CollectionAdded(address indexed collection, address indexed creator, uint256 chainId);
     event CollectionRemoved(address indexed collection, address indexed creator, uint256 chainId);
@@ -42,54 +30,52 @@ contract WLCollectionRegistry is Ownable, AccessControl, ReentrancyGuard, IWLCol
         _transferOwnership(_initialOwner);
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WL_ADMIN_ROLE, _initialOwner);
-
     }
 
     /**
-     * @notice Adds a collection to the whitelist.
+     * @notice Adds a collection to the whitelist for a specific chainId.
      * @param collection The collection address.
-     * @param chainId The chainId associated with the collection (supplied by caller).
+     * @param creator The creator of the collection.
+     * @param chainId The chainId associated with the collection.
      */
     function addToWL(address collection, address creator, uint256 chainId) external nonReentrant onlyRole(WL_ADMIN_ROLE) {
         require(collection != address(0), "Invalid collection address");
-        require(collections[collection].creator == address(0), "Collection already whitelisted");
+        require(collections[chainId][collection].creator == address(0), "Collection already whitelisted on this chain");
         require(chainId != 0, "Invalid chainId");
         
-        collections[collection] = Collection({
+        collections[chainId][collection] = Collection({
             creator: creator,
-            collection: collection,
-            chainId: chainId
+            collection: collection
         });
         
         emit CollectionAdded(collection, creator, chainId);
     }
 
     /**
-     * @notice Removes a collection from the whitelist.
+     * @notice Removes a collection from the whitelist for a specific chainId.
      * Only WL_ADMIN_ROLE can call this.
-     * Returns locked tokens to the creator if any.
+     * @param collection The collection address.
+     * @param chainId The chainId associated with the collection.
      */
-    function removeFromWL(address collection) external nonReentrant onlyRole(WL_ADMIN_ROLE) {
-        require(collections[collection].creator != address(0), "Collection not whitelisted");
-        Collection memory col = collections[collection];
+    function removeFromWL(address collection, uint256 chainId) external nonReentrant onlyRole(WL_ADMIN_ROLE) {
+        require(collections[chainId][collection].creator != address(0), "Collection not whitelisted on this chain");
+        Collection memory col = collections[chainId][collection];
         
-        delete collections[collection];
+        delete collections[chainId][collection];
         
-        emit CollectionRemoved(collection, col.creator, col.chainId);
+        emit CollectionRemoved(collection, col.creator, chainId);
     }
 
     /**
-     * @notice Returns info about a collection.
+     * @notice Returns info about a collection for a specific chainId.
+     * @param collection The collection address.
+     * @param chainId The chainId associated with the collection.
+     * @return creator The creator of the collection.
      */
-    function getCollection(address collection) external view returns (
-        address creator,
-        uint256 chainId
+    function getCollection(address collection, uint256 chainId) external view returns (
+        address creator
     ) {
-        Collection memory col = collections[collection];
-        return (
-            col.creator,
-            col.chainId
-        );
+        Collection memory col = collections[chainId][collection];
+        return (col.creator);
     }
-
 }

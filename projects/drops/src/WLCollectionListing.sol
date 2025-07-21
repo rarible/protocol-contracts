@@ -106,14 +106,14 @@ contract WLCollectionListing is Ownable, AccessControl, ReentrancyGuard {
      * @notice Removes a collection from the whitelist.
      * Only the collection creator can call this.
      */
-    function removeFromWL(address collection) external nonReentrant  {
-        (address creator, ) = wlCollectionRegistry.getCollection(collection);
+    function removeFromWL(address collection, uint256 chainId) external nonReentrant  {
+        address creator = wlCollectionRegistry.getCollection(collection, chainId);
         require(
             hasRole(WL_ADMIN_ROLE, msg.sender) || 
             creator == msg.sender, "Collection not whitelisted"
         );
 
-        wlCollectionRegistry.removeFromWL(collection);
+        wlCollectionRegistry.removeFromWL(collection, chainId);
     }
 
 }

@@ -109,9 +109,8 @@ describe("WLCollectionListing", function () {
       const balanceAfter = await listingToken.balanceOf(user1.address);
       expect(balanceBefore.sub(balanceAfter)).to.equal(wlPrice);
 
-      const [creator, chainId] = await registry.getCollection(collection1.address);
+      const creator = await registry.getCollection(collection1.address, CHAIN_ID_1);
       expect(creator).to.equal(user1.address);
-      expect(chainId).to.equal(CHAIN_ID_1);
     });
 
     it("should allow user to add collection by paying native tokens", async () => {
@@ -177,30 +176,29 @@ describe("WLCollectionListing", function () {
     });
 
     it("should allow creator to remove collection", async () => {
-      await expect(listing.connect(user1).removeFromWL(collection1.address))
+      await expect(listing.connect(user1).removeFromWL(collection1.address, CHAIN_ID_1))
         .to.emit(registry, "CollectionRemoved")
         .withArgs(collection1.address, user1.address, CHAIN_ID_1);
 
-      const [creator, chainId] = await registry.getCollection(collection1.address);
+      const creator = await registry.getCollection(collection1.address, CHAIN_ID_1);
       expect(creator).to.equal(ethers.constants.AddressZero);
-      expect(chainId).to.equal(0);
     });
 
     it("should allow WL_ADMIN to remove collection", async () => {
-      await expect(listing.connect(admin).removeFromWL(collection1.address))
+      await expect(listing.connect(admin).removeFromWL(collection1.address, CHAIN_ID_1))
         .to.emit(registry, "CollectionRemoved")
         .withArgs(collection1.address, user1.address, CHAIN_ID_1);
     });
 
     it("should revert if collection not whitelisted", async () => {
       await expect(
-        listing.connect(user1).removeFromWL(collection2.address)
+        listing.connect(user1).removeFromWL(collection2.address, CHAIN_ID_1)
       ).to.be.revertedWith("Collection not whitelisted");
     });
 
     it("should revert if non-creator/non-admin tries to remove", async () => {
       await expect(
-        listing.connect(user2).removeFromWL(collection1.address)
+        listing.connect(user2).removeFromWL(collection1.address, CHAIN_ID_1)
       ).to.be.revertedWith("Collection not whitelisted");
     });
   });
