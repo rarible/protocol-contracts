@@ -7,10 +7,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IWLCollectionRegistry } from "./IWLCollectionRegistry.sol";
 
-contract WLCollectionListing is Initializable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+contract WLCollectionListing is Initializable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
     
     bytes32 public constant WL_ADMIN_ROLE = keccak256("WL_ADMIN_ROLE");
@@ -38,17 +37,15 @@ contract WLCollectionListing is Initializable, OwnableUpgradeable, AccessControl
         require(_initialOwner != address(0), "Invalid owner");
         require(_initialTreasury != address(0), "Invalid treasury");
         
-        __Ownable_init(_initialOwner);
+        __Ownable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
-        __UUPSUpgradeable_init();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WL_ADMIN_ROLE, _initialOwner);
         treasury = _initialTreasury;
+        transferOwnership(_initialOwner);
     }
-
-    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
 
     function setWLToken(address _wlToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_wlToken != address(0), "Invalid token address");
