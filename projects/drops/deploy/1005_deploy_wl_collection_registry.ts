@@ -32,4 +32,4 @@ const deployLock: DeployFunction = async (
 };
 
 export default deployLock;
-deployLock.tags = ["all", "1005", "WLCollectionRegistry"];
+deployLock.tags = ["all", "1005", "WLCollectionRegistry", "WLCollection"];
