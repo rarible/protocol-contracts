@@ -15,9 +15,17 @@ const deployLock: DeployFunction = async (
     
     const deployResult: DeployResult = await deploy("WLCollectionRegistry", {
         from: deployer,
-        args: [deployer],
         log: true,
         waitConfirmations: 1,
+        proxy: {
+            execute: {
+                init: {
+                    methodName: "initialize",
+                    args: [deployer],
+                },
+            },
+            proxyContract: 'UUPS',
+        },
         deterministicDeployment: DETERMENISTIC_DEPLOYMENT_SALT,
         skipIfAlreadyDeployed: true,
     });

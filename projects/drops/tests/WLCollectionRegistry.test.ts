@@ -33,7 +33,7 @@ describe("WLCollectionRegistry", function () {
       [owner.address], // Arguments for the initializer function
       {
         initializer: "initialize", // Name of the initializer function
-        kind: "transparent", // Specify transparent proxy
+        kind: "uups", // Specify transparent proxy
       }
     ) as WLCollectionRegistry;
 

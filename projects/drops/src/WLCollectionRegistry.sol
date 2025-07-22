@@ -8,8 +8,10 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IWLCollectionRegistry } from "./IWLCollectionRegistry.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract WLCollectionRegistry is Initializable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, IWLCollectionRegistry {
+
+contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, IWLCollectionRegistry {
     using SafeERC20 for IERC20;
     
     bytes32 public constant WL_ADMIN_ROLE = keccak256("WL_ADMIN_ROLE");
@@ -36,10 +38,14 @@ contract WLCollectionRegistry is Initializable, OwnableUpgradeable, AccessContro
         __Ownable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
         
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WL_ADMIN_ROLE, _initialOwner);
         transferOwnership(_initialOwner);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
     }
 
     /**

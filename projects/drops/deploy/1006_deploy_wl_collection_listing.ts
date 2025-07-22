@@ -7,21 +7,29 @@ import { WLCollectionRegistry__factory, WLCollectionListing__factory } from "../
 const deployLock: DeployFunction = async (
     hre: HardhatRuntimeEnvironment
 ) => {
-    const { deploy, get } = hre.deployments;
+    const { deploy, get, execute } = hre.deployments;
     const { getNamedAccounts } = hre;
     const {deployer,} = await getNamedAccounts();
     console.log('deployer', deployer)
     // 1. avoid gasLimit
     // 2. gas price auto
-
     
     const deployResult: DeployResult = await deploy("WLCollectionListing", {
         from: deployer,
-        args: [deployer, deployer],
+        proxy: {
+            execute: {
+                init: {
+                    methodName: "initialize",
+                    args: [deployer, deployer],
+                },
+            },
+            proxyContract: 'UUPS',
+        },
         log: true,
         waitConfirmations: 1,
         deterministicDeployment: DETERMENISTIC_DEPLOYMENT_SALT,
         skipIfAlreadyDeployed: true,
+
     });
 
     // Retrieve the full transaction to verify its nonce
@@ -29,14 +37,20 @@ const deployLock: DeployFunction = async (
         deployResult.transactionHash!
     );
 
+    const registryAddress = await get("WLCollectionRegistry");
+
     console.log("deploy tx nonce", tx.nonce); // should print 0
     console.log("transactionHash", deployResult.transactionHash)
     console.log("deployResult.address", deployResult.address)
     console.log("setting wlCollectionRegistry")
-    const wlCollectionRegistry = await get("WLCollectionRegistry");
-    const wlCollectionListing = WLCollectionListing__factory.connect(deployResult.address, hre.ethers.provider);
-    await wlCollectionListing.setWLCollectionRegistry(wlCollectionRegistry.address);
-    console.log("setting wlCollectionRegistry done")
+
+    const receit = await execute(
+        "WLCollectionListing",
+        { from: deployer, log: true },
+        "setWLCollectionRegistry",
+        registryAddress.address
+      );
+    console.log("setting wlCollectionRegistry done", receit.status)
 };
 
 export default deployLock;
