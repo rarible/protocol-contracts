@@ -6,3 +6,5 @@ export * from "./set-shared-metadata";
 export * from "./grant-role";
 export * from "./revoke-role";
 export * from "./transfer-ownership";
+export * from "./owner";
+export * from "./set-claim-conditions";
