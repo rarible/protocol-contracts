@@ -1,9 +1,7 @@
 import { task } from "hardhat/config";
 import fs from "fs";
-import { setClaimConditions, ClaimCondition } from "../sdk/set-claim-conditions";
-import { uploadMetadataToIPFS, uploadAllowlistToIPFS } from "../utils/fileBaseUploader"; // ← wrap Filebase SDK call here
-import { generateMerkleTreeFromCSV, hashLeaf } from "../utils/merkleTreeGenerator";
 import { BigNumber } from "ethers";
+import { ClaimCondition } from "../sdk/set-claim-conditions";
 
 task("add-phase", "Adds a phase to a drop contract")
   .addParam("contract", "Deployed contract address")
@@ -22,11 +20,17 @@ task("add-phase", "Adds a phase to a drop contract")
   .addOptionalParam("currency", "Currency address (ERC20 or native), if not set, it will assume native currency")
 
   .setAction(async (args, hre) => {
+    const { setClaimConditions } = await import("../sdk/set-claim-conditions");
+    const { getClaimConditions } = await import("../sdk/get-claim-conditions");
+    const { uploadMetadataToIPFS, uploadAllowlistToIPFS } = await import("../utils/fileBaseUploader");
+    const { generateMerkleTreeFromCSV, hashLeaf } = await import("../utils/merkleTreeGenerator");
+
     const { ethers } = hre;
     const signer = args.from
       ? await ethers.getSigner(args.from)
       : (await ethers.getSigners())[0];
-
+    
+    const claimConditions = await getClaimConditions(args.contract, signer);
     const nativeCurrency = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
     const metadataUri = await uploadMetadataToIPFS(args.contract, {
@@ -109,7 +113,8 @@ task("add-phase", "Adds a phase to a drop contract")
       throw new Error(`Phase '${args.phase}' not yet supported.`);
     }
 
-    await setClaimConditions(args.contract, [condition], args.reset, signer);
+    const newClaimConditions = [...claimConditions, condition];
+    await setClaimConditions(args.contract, newClaimConditions, args.reset || false, signer);
     if (fs.existsSync("./allowlist.json")) {
       fs.unlinkSync("./allowlist.json");
     }
