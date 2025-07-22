@@ -20,8 +20,7 @@ task("add-phase", "Adds a phase to a drop contract")
   .addOptionalParam("currency", "Currency address (ERC20 or native), if not set, it will assume native currency")
 
   .setAction(async (args, hre) => {
-    const { setClaimConditions } = await import("../sdk/set-claim-conditions");
-    const { getClaimConditions } = await import("../sdk/get-claim-conditions");
+    const { setClaimConditions, getClaimConditions } = await import("../sdk");
     const { uploadMetadataToIPFS, uploadAllowlistToIPFS } = await import("../utils/fileBaseUploader");
     const { generateMerkleTreeFromCSV, hashLeaf } = await import("../utils/merkleTreeGenerator");
 

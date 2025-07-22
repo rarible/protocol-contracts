@@ -5,8 +5,7 @@ task("remove-phase", "Removes a phase from a drop contract")
   .addParam("phaseIndex", "Index of the phase to remove")
   .addOptionalParam("from", "Signer address (defaults to first signer)")
   .setAction(async (args, hre) => {
-    const { getClaimConditions } = await import("../sdk/get-claim-conditions");
-    const { setClaimConditions } = await import("../sdk/set-claim-conditions");
+    const { getClaimConditions, setClaimConditions } = await import("../sdk");
     const { ethers } = hre;
     const signer = args.from
       ? await ethers.getSigner(args.from)

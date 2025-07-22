@@ -19,8 +19,7 @@ task("update-phase", "Updates a specific phase by index")
   .addOptionalParam("currency", "Currency address")
 
   .setAction(async (args, hre) => {
-    const { setClaimConditions } = await import("../sdk/set-claim-conditions");
-    const { getClaimConditions } = await import("../sdk/get-claim-conditions");
+    const { setClaimConditions, getClaimConditions } = await import("../sdk");
     const { uploadMetadataToIPFS, uploadAllowlistToIPFS } = await import("../utils/fileBaseUploader");
     const { generateMerkleTreeFromCSV } = await import("../utils/merkleTreeGenerator");
     const { ethers } = hre;
