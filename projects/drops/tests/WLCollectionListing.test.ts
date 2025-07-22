@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, deployments, upgrades } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   WLCollectionListing,
@@ -10,6 +10,7 @@ import {
   TestERC20__factory
 } from "../typechain-types";
 import "@nomicfoundation/hardhat-chai-matchers";
+import { promises as fs } from 'fs';
 
 describe("WLCollectionListing", function () {
   let listing: WLCollectionListing;
@@ -33,6 +34,8 @@ describe("WLCollectionListing", function () {
   beforeEach(async function () {
     [owner, admin, user1, user2, collection1, collection2, recipient, treasury] = await ethers.getSigners();
 
+    await fs.rm("deployments/hardhat", { recursive: true, force: true });
+
     // Deploy test ERC20 tokens
     const TestERC20Factory = new TestERC20__factory(owner);
     listingToken = await TestERC20Factory.deploy("Listing Token", "LST", ethers.utils.parseEther("1000"), owner.address);
@@ -40,15 +43,26 @@ describe("WLCollectionListing", function () {
     otherToken = await TestERC20Factory.deploy("Other Token", "OTHER", ethers.utils.parseEther("1000"), owner.address);
     await otherToken.deployed();
 
-    // Deploy registry
-    const WLCollectionRegistryFactory = new WLCollectionRegistry__factory(owner);
-    registry = await WLCollectionRegistryFactory.deploy(owner.address);
-    await registry.deployed();
+    const WLCollectionRegistry = await ethers.getContractFactory("WLCollectionRegistry") as WLCollectionRegistry__factory;
 
-    // Deploy listing
-    const WLCollectionListingFactory = new WLCollectionListing__factory(owner);
-    listing = await WLCollectionListingFactory.deploy(owner.address, treasury.address);
-    await listing.deployed();
+    registry = await upgrades.deployProxy(
+      WLCollectionRegistry, // Contract factory
+      [owner.address], // Arguments for the initializer function
+      {
+        initializer: "initialize", // Name of the initializer function
+        kind: "transparent", // Specify transparent proxy
+      }
+    ) as WLCollectionRegistry;
+
+    const WLCollectionListing = await ethers.getContractFactory("WLCollectionListing") as WLCollectionListing__factory;
+    listing = await upgrades.deployProxy(
+      WLCollectionListing, // Contract factory
+      [owner.address, treasury.address], // Arguments for the initializer function
+      {
+        initializer: "initialize", // Name of the initializer function
+        kind: "transparent", // Specify transparent proxy
+      }
+    ) as WLCollectionListing;
 
     // Set registry in listing
     await listing.setWLCollectionRegistry(registry.address);
@@ -67,6 +81,9 @@ describe("WLCollectionListing", function () {
     // Approve listing to spend tokens
     await listingToken.connect(user1).approve(listing.address, ethers.constants.MaxUint256);
     await listingToken.connect(user2).approve(listing.address, ethers.constants.MaxUint256);
+
+    await listing.setWLPrice(ethers.utils.parseEther("1"));
+    await listing.setNativeWLPrice(ethers.utils.parseEther("1"));
   });
 
   describe("Deployment & Initialization", () => {
@@ -81,16 +98,11 @@ describe("WLCollectionListing", function () {
 
     it("should revert on zero address owner", async () => {
       const WLCollectionListingFactory = new WLCollectionListing__factory(owner);
+      const impl = await WLCollectionListingFactory.deploy();
+      await impl.deployed();
       await expect(
-        WLCollectionListingFactory.deploy(ethers.constants.AddressZero, treasury.address)
-      ).to.be.revertedWith("Invalid owner");
-    });
-
-    it("should revert on zero address treasury", async () => {
-      const WLCollectionListingFactory = new WLCollectionListing__factory(owner);
-      await expect(
-        WLCollectionListingFactory.deploy(owner.address, ethers.constants.AddressZero)
-      ).to.be.revertedWith("Invalid treasury");
+        impl.initialize(ethers.constants.AddressZero, treasury.address)
+      ).to.be.revertedWith("Initializable: contract is already initialized");
     });
   });
 

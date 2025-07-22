@@ -16,10 +16,10 @@ contract WLCollectionListing is Initializable, OwnableUpgradeable, AccessControl
 
     IWLCollectionRegistry public wlCollectionRegistry;
     IERC20 public wlToken;
-    uint256 public wlPrice = 1 ether; // Default: 1 token with 18 decimals
-    uint256 public nativeWlPrice = 1 ether; // Default: 1 native token (e.g., ETH)
+    uint256 public wlPrice; // Default: 1 token with 18 decimals
+    uint256 public nativeWlPrice; // Default: 1 native token (e.g., ETH)
     address public treasury;
-    bool public payWithNative = true;
+    bool public payWithNative;
 
     event WLTokenSet(address indexed oldToken, address indexed newToken);
     event WLPriceSet(uint256 oldPrice, uint256 newPrice);
@@ -43,8 +43,11 @@ contract WLCollectionListing is Initializable, OwnableUpgradeable, AccessControl
 
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WL_ADMIN_ROLE, _initialOwner);
-        treasury = _initialTreasury;
         transferOwnership(_initialOwner);
+        treasury = _initialTreasury;
+        wlPrice = 1 ether;
+        nativeWlPrice = 1 ether;
+        payWithNative = true;
     }
 
     function setWLToken(address _wlToken) external onlyRole(DEFAULT_ADMIN_ROLE) {

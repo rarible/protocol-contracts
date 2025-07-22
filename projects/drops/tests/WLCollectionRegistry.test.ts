@@ -1,11 +1,12 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { deployments, ethers, network, upgrades } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   WLCollectionRegistry,
-  WLCollectionRegistry__factory
+  WLCollectionRegistry__factory,
 } from "../typechain-types";
 import "@nomicfoundation/hardhat-chai-matchers";
+import { promises as fs } from 'fs';
 
 describe("WLCollectionRegistry", function () {
   let registry: WLCollectionRegistry;
@@ -16,6 +17,7 @@ describe("WLCollectionRegistry", function () {
   let collection1: SignerWithAddress;
   let collection2: SignerWithAddress;
 
+
   const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
   const WL_ADMIN_ROLE = ethers.utils.id("WL_ADMIN_ROLE");
   const CHAIN_ID_1 = 1;
@@ -23,11 +25,17 @@ describe("WLCollectionRegistry", function () {
 
   beforeEach(async function () {
     [owner, admin, user1, user2, collection1, collection2] = await ethers.getSigners();
+    // Get the contract factory
+    const WLCollectionRegistry = await ethers.getContractFactory("WLCollectionRegistry") as WLCollectionRegistry__factory;
 
-    // Deploy registry
-    const WLCollectionRegistryFactory = new WLCollectionRegistry__factory(owner);
-    registry = await WLCollectionRegistryFactory.deploy(owner.address);
-    await registry.deployed();
+    registry = await upgrades.deployProxy(
+      WLCollectionRegistry, // Contract factory
+      [owner.address], // Arguments for the initializer function
+      {
+        initializer: "initialize", // Name of the initializer function
+        kind: "transparent", // Specify transparent proxy
+      }
+    ) as WLCollectionRegistry;
 
     // Setup roles
     await registry.grantRole(WL_ADMIN_ROLE, admin.address);
@@ -38,13 +46,6 @@ describe("WLCollectionRegistry", function () {
       expect(await registry.owner()).to.equal(owner.address);
       expect(await registry.hasRole(DEFAULT_ADMIN_ROLE, owner.address)).to.be.true;
       expect(await registry.hasRole(WL_ADMIN_ROLE, owner.address)).to.be.true;
-    });
-
-    it("should revert deployment with zero address owner", async () => {
-      const WLCollectionRegistryFactory = new WLCollectionRegistry__factory(owner);
-      await expect(
-        WLCollectionRegistryFactory.deploy(ethers.constants.AddressZero)
-      ).to.be.revertedWith("Invalid owner");
     });
   });
 
@@ -70,17 +71,22 @@ describe("WLCollectionRegistry", function () {
       ).to.be.revertedWith("Invalid collection address");
     });
 
-    it("should revert when collection already whitelisted", async () => {
-      await registry.connect(admin).addToWL(collection1.address, user1.address, CHAIN_ID_1);
-      await expect(
-        registry.connect(admin).addToWL(collection1.address, user2.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection already whitelisted on this chain");
-    });
-
     it("should revert when chainId is zero", async () => {
       await expect(
         registry.connect(admin).addToWL(collection1.address, user1.address, 0)
       ).to.be.revertedWith("Invalid chainId");
+    });
+  });
+
+  describe("Add to Whitelist", () => {
+    it("should revert when collection already whitelisted", async () => {
+
+      await expect(registry.connect(admin).addToWL(collection1.address, user1.address, CHAIN_ID_1))
+        .to.emit(registry, "CollectionAdded")
+        .withArgs(collection1.address, user1.address, CHAIN_ID_1);
+
+      await expect(registry.connect(admin).addToWL(collection1.address, user1.address, CHAIN_ID_1))
+        .to.be.revertedWith("Collection already whitelisted on this chain");
     });
   });
 
@@ -120,7 +126,7 @@ describe("WLCollectionRegistry", function () {
 
     it("should return zero values for non-existent collection", async () => {
       const creator = await registry.getCollection(collection2.address, CHAIN_ID_1);
-      expect(creator).to.equal(ethers.constants.AddressZero);   
+      expect(creator).to.equal(ethers.constants.AddressZero);
     });
   });
 

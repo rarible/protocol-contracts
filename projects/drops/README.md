@@ -262,3 +262,5 @@ Test deployment without executing:
 ```shell
 npx hardhat deploy --network <network_name> --dry-run
 ```
+
+# import { OptimizedTransparentUpgradeableProxy } from "hardhat-deploy-immutable-proxy/solc_0.8/proxy/OptimizedTransparentUpgradeableProxy.sol";
