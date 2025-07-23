@@ -263,4 +263,10 @@ Test deployment without executing:
 npx hardhat deploy --network <network_name> --dry-run
 ```
 
-# import { OptimizedTransparentUpgradeableProxy } from "hardhat-deploy-immutable-proxy/solc_0.8/proxy/OptimizedTransparentUpgradeableProxy.sol";
+# White List Registry
+
+https://sepolia.etherscan.io/address/0x671Df320005bc06B93E8424A386b15027Ac3958C
+
+# White List Listing
+
+https://sepolia.etherscan.io/address/0x9119963b359af217dE69D4292555d4B3FE17575e

@@ -4,12 +4,14 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils/utils";
 import { WLCollectionRegistry__factory, WLCollectionListing__factory } from "../typechain-types";
 
+
 const deployLock: DeployFunction = async (
     hre: HardhatRuntimeEnvironment
 ) => {
     const { deploy, get, execute } = hre.deployments;
     const { getNamedAccounts } = hre;
     const {deployer,} = await getNamedAccounts();
+    const WL_ADMIN_ROLE = ethers.utils.id("WL_ADMIN_ROLE");
     console.log('deployer', deployer)
     // 1. avoid gasLimit
     // 2. gas price auto
@@ -51,6 +53,16 @@ const deployLock: DeployFunction = async (
         registryAddress.address
       );
     console.log("setting wlCollectionRegistry done", receit.status)
+    
+
+    const receitWlAdmin = await execute(
+        "WLCollectionRegistry",
+        { from: deployer, log: true },
+        "grantRole",
+        WL_ADMIN_ROLE,
+        deployResult.address
+      );
+    console.log("setting grantRole done", receitWlAdmin.status)
 };
 
 export default deployLock;
