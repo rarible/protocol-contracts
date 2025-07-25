@@ -21,5 +21,5 @@ export async function grantRole(
   console.log(`Granting role… tx hash: ${tx.hash}`);
 
   await tx.wait();
-  console.log(`Role granted to ${account} on contract ${contractAddress}`);
+  console.log(`✅ Role granted to ${account} on contract ${contractAddress}`);
 }
