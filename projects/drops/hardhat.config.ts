@@ -56,8 +56,23 @@ const config: HardhatUserConfig = {
   },
   paths: {
     sources: "src",
+    tests: "tests"
   },
-  networks: loadNetworkConfigs(),
+  networks: {
+    hardhat: {
+      gas: 10000000,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        count: 10,
+        accountsBalance: "1000000000000000000",
+      },
+      mining: {
+        auto: true,
+        interval: 500
+      }
+    },
+    ...loadNetworkConfigs()
+  },
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
