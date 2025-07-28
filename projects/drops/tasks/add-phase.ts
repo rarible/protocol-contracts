@@ -80,7 +80,7 @@ task("add-phase", "Adds a phase to a drop contract")
           address: ownerAddress,
           maxClaimable: quantityLimitPerWallet.toString(),
           price: pricePerToken.toString(),
-          currency: currency,
+          currency,
         }),
         pricePerToken,
         currency,

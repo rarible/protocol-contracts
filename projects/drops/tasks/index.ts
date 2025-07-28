@@ -6,3 +6,4 @@ import "./grant-role";
 import "./revoke-role";
 import "./transfer-ownership";
 import "./add-phase";
+import "./claim";

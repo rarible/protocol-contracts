@@ -9,3 +9,5 @@ export * from "./transfer-ownership";
 export * from "./owner";
 export * from "./set-claim-conditions";
 export * from "./get-claim-conditions";
+export * from "./claim";
+export * from "./get-active-claim-condition";
