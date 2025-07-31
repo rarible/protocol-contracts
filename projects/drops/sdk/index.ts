@@ -6,3 +6,8 @@ export * from "./set-shared-metadata";
 export * from "./grant-role";
 export * from "./revoke-role";
 export * from "./transfer-ownership";
+export * from "./set-contract-uri";
+export * from "./set-platform-fee-info";
+export * from "./set-platform-fee-type";
+export * from "./set-primary-sale-recipient";
+export * from "./set-royalty-info";
