@@ -79,7 +79,7 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
 
     // TokenId and price
     const _tokenId = tokenid ? BigNumber.from(tokenid) : BigNumber.from(hre.ethers.utils.randomBytes(4));
-    const _price = price ? hre.ethers.utils.parseEther(price) : hre.ethers.utils.parseEther("0.1");
+    const _price = price ? hre.ethers.utils.parseEther(price) : hre.ethers.utils.parseEther("0.00001");
 
     // Mint NFT to seller
     await (await erc721Contract.mint(seller.address, _tokenId, [
