@@ -11,3 +11,8 @@ export * from "./set-claim-conditions";
 export * from "./get-claim-conditions";
 export * from "./claim";
 export * from "./get-active-claim-condition";
+export * from "./set-contract-uri";
+export * from "./set-platform-fee-info";
+export * from "./set-platform-fee-type";
+export * from "./set-primary-sale-recipient";
+export * from "./set-royalty-info";
