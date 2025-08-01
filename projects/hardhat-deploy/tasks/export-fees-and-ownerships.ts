@@ -17,6 +17,7 @@ import fs from "fs";
 import path from "path";
 import { ethers } from "hardhat";
 import { ExchangeV2, ExchangeV2__factory } from "@rarible/exchange-v2/typechain-types";
+
 import { getProtocolFee } from "@rarible/exchange-v2/sdk/protocolFee";
 import { HttpNetworkConfig } from "hardhat/types";
 
@@ -61,7 +62,7 @@ async function getProxyAdminAddress(deploymentsDir: string): Promise<string | un
       if (!file.endsWith(".json")) continue;
       const deployInfo = JSON.parse(await fs.promises.readFile(path.join(deploymentsDir, file), "utf-8"));
       if (
-        (deployInfo.contractName === "ProxyAdmin" || file.replace(/\.json$/, "") === "ProxyAdmin") &&
+        (deployInfo.contractName === "DefaultProxyAdmin" || file.replace(/\.json$/, "") === "DefaultProxyAdmin") &&
         deployInfo.address
       ) {
         return deployInfo.address;
@@ -75,7 +76,7 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
   .setAction(async (_, hre) => {
     const deploymentsRoot = hre.config.paths.deployments;
     const networks = hre.config.networks
-    const depDirs = (await getSubdirectories(deploymentsRoot)).filter(network => !network.includes("hardhat"));
+    const depDirs = (await getSubdirectories(deploymentsRoot)).filter(network => !network.includes("hardhat") && !network.includes("testnet") && !network.includes("sepolia"));
 
     // Table headers
     let markdown = "# Protocol Fees and Ownerships for All Networks\n\n";
@@ -83,21 +84,11 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
     markdown += "|---------|---------|--------------------|--------------|------------------|-----------------|------------------|\n";
 
     for (const depDir of depDirs) {
+      if(depDir.includes("testnet") || depDir.includes("sepolia"))
+        continue;
       const deploymentsDir = path.join(deploymentsRoot, depDir);
       let files: string[] = [];
       let chainId = await getChainIdFromDeployments(deploymentsDir);
-      let proxyAdminOwner = "";
-      let proxyAdminAddress = await getProxyAdminAddress(deploymentsDir);
-
-      // Fetch ProxyAdmin owner if address is present
-      if (proxyAdminAddress) {
-        try {
-          const proxyAdmin = await hre.ethers.getContractAt("ProxyAdmin", proxyAdminAddress);
-          proxyAdminOwner = await proxyAdmin.owner();
-        } catch {
-          proxyAdminOwner = "_Error_";
-        }
-      }
 
       try {
         files = await fs.promises.readdir(deploymentsDir);
@@ -119,26 +110,25 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
           let feeReceiver = "";
           let feeSeller = "";
           let feeBuyer = "";
+          let owner = "";
 
           // ABI (TypeChain): protocolFee() returns (receiver, buyerAmount, sellerAmount)
           try {
             const network = networks[depDir] as HttpNetworkConfig;
-            const res = await getProtocolFee(address, new hre.ethers.providers.JsonRpcProvider(network.url));
+            const exchange = ExchangeV2__factory.connect(address, new hre.ethers.providers.JsonRpcProvider(network.url));
+            owner = await exchange.owner();
+            const res = await exchange.protocolFee();
             feeReceiver = res.receiver;
             feeBuyer = res.buyerAmount.toString();
             feeSeller = res.sellerAmount.toString();
           } catch (e) {
-            if(depDir.includes("rari"))
-              {
-                console.log(e);
-              }
             row += " | _Old_ | _Old_ | _Old_ | ";
-            markdown += row + (proxyAdminOwner ? "`" + proxyAdminOwner + "`" : "") + "|\n";
+            markdown += row + (owner ? "`" + owner + "`" : owner.toString()) + "|\n";
             continue;
           }
-          row += ` | \`${feeReceiver}\` | ${feeSeller} | ${feeBuyer} | ${proxyAdminOwner ? "`" + proxyAdminOwner + "`" : ""}`;
+          row += ` | \`${feeReceiver}\` | ${feeSeller} | ${feeBuyer} | ${owner ? "`" + owner + "`" : owner}`;
         } catch (err) {
-          row += " | _Old_ | _Old_ | _Old_ | " + (proxyAdminOwner ? "`" + proxyAdminOwner + "`" : "");
+          row += " | _Old_ | _Old_ | _Old_ | _Old_";
         }
 
         row += "|\n";
