@@ -84,7 +84,11 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
     markdown += "|---------|---------|--------------------|--------------|------------------|-----------------|------------------|\n";
 
     for (const depDir of depDirs) {
-      if(depDir.includes("testnet") || depDir.includes("sepolia"))
+      if(depDir.includes("testnet") || 
+      depDir.includes("sepolia") || 
+      depDir.includes("optimism_goerli") || 
+      depDir.includes("zkcandy_old") ||
+      depDir.includes("Goerli")) 
         continue;
       const deploymentsDir = path.join(deploymentsRoot, depDir);
       let files: string[] = [];
@@ -115,6 +119,10 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
           // ABI (TypeChain): protocolFee() returns (receiver, buyerAmount, sellerAmount)
           try {
             const network = networks[depDir] as HttpNetworkConfig;
+            if(!network) {
+              console.log("network not found", depDir);
+              continue;
+            }
             const exchange = ExchangeV2__factory.connect(address, new hre.ethers.providers.JsonRpcProvider(network.url));
             owner = await exchange.owner();
             const res = await exchange.protocolFee();
@@ -122,6 +130,7 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
             feeBuyer = res.buyerAmount.toString();
             feeSeller = res.sellerAmount.toString();
           } catch (e) {
+            console.log(e);
             row += " | _Old_ | _Old_ | _Old_ | ";
             markdown += row + (owner ? "`" + owner + "`" : owner.toString()) + "|\n";
             continue;
