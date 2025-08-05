@@ -13,6 +13,7 @@
  ERC721RaribleMeta | 0xe6c2893b2F4F7ab2f6f22cF05509D1bD821380Ae | https://explorer.block-chain.lol/address/0xe6c2893b2F4F7ab2f6f22cF05509D1bD821380Ae
  ERC721RaribleMinimalBeaconMeta | 0x623346f63FdB90a06009be8c7795B26553757Ba1 | https://explorer.block-chain.lol/address/0x623346f63FdB90a06009be8c7795B26553757Ba1
  ExchangeMetaV2 | 0x2c46e116a742C159fa79e2717b50759EC979e3Be | https://explorer.block-chain.lol/address/0x2c46e116a742C159fa79e2717b50759EC979e3Be
+ RaribleExchangeWrapper | 0xC49dB032fB73eacf337C27831A1435BBDCF2B044 | https://explorer.block-chain.lol/address/0xC49dB032fB73eacf337C27831A1435BBDCF2B044
  ReaderProxyAdmin | 0x526D0d1f0D2DDc166B930e6aC7683b171cD88EF4 | https://explorer.block-chain.lol/address/0x526D0d1f0D2DDc166B930e6aC7683b171cD88EF4
  RoyaltiesRegistry | 0x4196c4056a32e800F854aB3Ea058255f324391F6 | https://explorer.block-chain.lol/address/0x4196c4056a32e800F854aB3Ea058255f324391F6
  TransferProxy | 0x892f0e3DEaC041b12b748bf9d7D1BA480d266696 | https://explorer.block-chain.lol/address/0x892f0e3DEaC041b12b748bf9d7D1BA480d266696
