@@ -88,6 +88,8 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
       depDir.includes("sepolia") || 
       depDir.includes("optimism_goerli") || 
       depDir.includes("zkcandy_old") ||
+      depDir.includes("dev") ||
+      depDir.includes("polygon_mumbai") ||
       depDir.includes("Goerli")) 
         continue;
       const deploymentsDir = path.join(deploymentsRoot, depDir);
