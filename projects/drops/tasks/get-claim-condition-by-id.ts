@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("getClaimConditionById", "Get a specific claim condition by ID from a Drop contract")
+task("get-claim-condition-by-id", "Get a specific claim condition by ID from a Drop contract")
   .addParam("contract", "The deployed Drop contract address")
   .addParam("conditionid", "The ID of the claim condition to fetch")
   .addOptionalParam("from", "Address to sign the transaction")

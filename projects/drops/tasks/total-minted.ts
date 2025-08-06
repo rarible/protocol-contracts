@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("totalMinted", "Get the total minted amount from a Drop contract")
+task("total-minted", "Get the total minted amount from a Drop contract")
   .addParam("contract", "The deployed contract address")
   .addParam("type", 'Contract type: "721" or "oe"')
   .addOptionalParam("from", "Address to sign the transaction")

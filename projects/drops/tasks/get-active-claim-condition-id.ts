@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("getActiveClaimConditionId", "Get the active claim condition ID from a Drop contract")
+task("get-active-claim-condition-id", "Get the active claim condition ID from a Drop contract")
   .addParam("contract", "The deployed Drop contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {

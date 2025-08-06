@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("getFlatPlatformFeeInfo", "Get the flat platform fee info from a PlatformFee contract")
+task("get-flat-platform-fee-info", "Get the flat platform fee info from a PlatformFee contract")
   .addParam("contract", "The deployed PlatformFee-compatible contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {
@@ -19,7 +19,7 @@ task("getFlatPlatformFeeInfo", "Get the flat platform fee info from a PlatformFe
     }
   });
 
-task("getPlatformFeeInfo", "Get the platform fee info (percentage-based) from a PlatformFee contract")
+task("get-platform-fee-info", "Get the platform fee info (percentage-based) from a PlatformFee contract")
   .addParam("contract", "The deployed PlatformFee-compatible contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {
@@ -38,7 +38,7 @@ task("getPlatformFeeInfo", "Get the platform fee info (percentage-based) from a 
     }
   });
 
-task("getPlatformFeeType", "Get the platform fee type (flat vs percentage) from a PlatformFee contract")
+task("get-platform-fee-type", "Get the platform fee type (flat vs percentage) from a PlatformFee contract")
   .addParam("contract", "The deployed PlatformFee-compatible contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {

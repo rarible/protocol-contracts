@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("totalSupply", "Get the total supply of a known drop contract")
+task("total-supply", "Get the total supply of a known drop contract")
   .addParam("contract", "The deployed contract address")
   .addParam("type", 'Contract type: "721", "1155", or "oe"')
   .addOptionalParam("tokenid", "Token ID (required for 1155 contract type)")

@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("getApproved", "Get the approved address for a given token ID from an ERC721AQueryableUpgradeable contract")
+task("get-approved", "Get the approved address for a given token ID from an ERC721AQueryableUpgradeable contract")
   .addParam("contract", "The deployed contract address (must be ERC721AQueryableUpgradeable)")
   .addParam("tokenid", "Token ID to check approval for")
   .addOptionalParam("from", "Address to sign the transaction")

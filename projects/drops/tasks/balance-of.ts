@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("balanceOf", "Get the token balance for a given address from a drop contract")
+task("balance-of", "Get the token balance for a given address from a drop contract")
   .addParam("contract", "The deployed drop contract address")
   .addParam("type", "Contract type: 721, 1155, or oe")
   .addParam("address", "The address to check the token balance for")

@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("getDefaultRoyaltyInfo", "Get the default royalty info from a Royalty contract")
+task("get-default-royalty-info", "Get the default royalty info from a Royalty contract")
   .addParam("contract", "The deployed contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {
@@ -19,7 +19,7 @@ task("getDefaultRoyaltyInfo", "Get the default royalty info from a Royalty contr
     }
   });
 
-task("getRoyaltyInfoForToken", "Get royalty info for a specific token from a Royalty contract")
+task("get-royalty-info-for-token", "Get royalty info for a specific token from a Royalty contract")
   .addParam("contract", "The deployed contract address")
   .addParam("tokenid", "Token ID to query")
   .addOptionalParam("from", "Address to sign the transaction")
@@ -39,7 +39,7 @@ task("getRoyaltyInfoForToken", "Get royalty info for a specific token from a Roy
     }
   });
 
-task("getRoyaltyInfo", "Get royalty info for a token and sale price from a Royalty contract")
+task("get-royalty-info", "Get royalty info for a token and sale price from a Royalty contract")
   .addParam("contract", "The deployed contract address")
   .addParam("tokenid", "Token ID to query")
   .addParam("saleprice", "Sale price (in wei)")

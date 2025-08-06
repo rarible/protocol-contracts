@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("isApprovedForAll", "Check if an operator is approved for all tokens from an ERC721AUpgradeable contract")
+task("is-approved-for-all", "Check if an operator is approved for all tokens from an ERC721AUpgradeable contract")
   .addParam("contract", "The deployed ERC721AUpgradeable contract address")
   .addParam("owner", "The owner of the tokens")
   .addParam("operator", "The operator to check approval for")

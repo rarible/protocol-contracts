@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("ownerOf", "Get the owner of a token from a known drop contract")
+task("owner-of", "Get the owner of a token from a known drop contract")
   .addParam("contract", "The deployed contract address")
   .addParam("type", 'Contract type: "721" or "oe" (OpenEdition)')
   .addParam("tokenid", "Token ID to query")

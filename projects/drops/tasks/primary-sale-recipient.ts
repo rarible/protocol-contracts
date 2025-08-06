@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("primarySaleRecipient", "Get the primary sale recipient from a known drop contract")
+task("primary-sale-recipient", "Get the primary sale recipient from a known drop contract")
   .addParam("contract", "The deployed contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {

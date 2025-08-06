@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("getSupplyClaimedByWallet", "Get the supply claimed by a wallet for a claim condition in a Drop contract")
+task("get-supply-claimed-by-wallet", "Get the supply claimed by a wallet for a claim condition in a Drop contract")
   .addParam("contract", "The deployed Drop contract address")
   .addParam("conditionid", "The claim condition ID")
   .addParam("claimer", "The address of the claimer")

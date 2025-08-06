@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("sharedMetadata", "Get the shared metadata from a known drop contract")
+task("shared-metadata", "Get the shared metadata from a known drop contract")
   .addParam("contract", "The deployed contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {

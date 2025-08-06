@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("tokenURI", "Get the token URI for a given token ID from a known drop contract")
+task("token-uri", "Get the token URI for a given token ID from a known drop contract")
   .addParam("contract", "The deployed contract address")
   .addParam("type", 'Contract type: "721" or "oe"')
   .addParam("tokenid", "Token ID to query")

@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("contractURI", "Get the contract URI from a drop contract")
+task("contract-uri", "Get the contract URI from a drop contract")
   .addParam("contract", "The deployed drop contract address")
   .addParam("type", "Contract type: 721, 1155, or oe")
   .setAction(async (args, hre) => {

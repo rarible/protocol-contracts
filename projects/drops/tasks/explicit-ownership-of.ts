@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("explicitOwnershipOf", "Get ownership details of a token from an ERC721AQueryableUpgradeable contract")
+task("explicit-ownership-of", "Get ownership details of a token from an ERC721AQueryableUpgradeable contract")
   .addParam("contract", "The deployed contract address (must be ERC721AQueryableUpgradeable)")
   .addParam("tokenid", "Token ID to query ownership for")
   .setAction(async (args, hre) => {

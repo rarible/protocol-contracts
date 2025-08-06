@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("tokensOfOwner", "Get all tokens owned by an address in an ERC721AQueryableUpgradeable contract")
+task("tokens-of-owner", "Get all tokens owned by an address in an ERC721AQueryableUpgradeable contract")
   .addParam("contract", "The deployed contract address")
   .addParam("owner", "The owner address")
   .addOptionalParam("from", "Address to sign the transaction")
@@ -20,7 +20,7 @@ task("tokensOfOwner", "Get all tokens owned by an address in an ERC721AQueryable
     }
   });
 
-task("tokensOfOwnerIn", "Get tokens owned by an address within a range in an ERC721AQueryableUpgradeable contract")
+task("tokens-of-owner-in", "Get tokens owned by an address within a range in an ERC721AQueryableUpgradeable contract")
   .addParam("contract", "The deployed contract address")
   .addParam("owner", "The owner address")
   .addParam("start", "Start token ID (inclusive)")

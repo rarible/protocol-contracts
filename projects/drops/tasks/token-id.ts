@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 
-task("nextTokenIdToClaim", "Get the next token ID to claim from a Drop contract")
+task("next-token-id-to-claim", "Get the next token ID to claim from a Drop contract")
   .addParam("contract", "The deployed contract address")
   .addParam("type", 'Contract type: "721" or "oe"')
   .addOptionalParam("from", "Address to sign the transaction")
@@ -21,7 +21,7 @@ task("nextTokenIdToClaim", "Get the next token ID to claim from a Drop contract"
     }
   });
 
-task("nextTokenIdToMint", "Get the next token ID to mint from a Drop contract")
+task("next-token-id-to-mint", "Get the next token ID to mint from a Drop contract")
   .addParam("contract", "The deployed contract address")
   .addParam("type", 'Contract type: "721", "1155", or "oe"')
   .addOptionalParam("from", "Address to sign the transaction")
@@ -42,7 +42,7 @@ task("nextTokenIdToMint", "Get the next token ID to mint from a Drop contract")
     }
   });
 
-task("startTokenId", "Get the start token ID from an OpenEdition Drop contract")
+task("start-token-id", "Get the start token ID from an OpenEdition Drop contract")
   .addParam("contract", "The deployed contract address")
   .addOptionalParam("from", "Address to sign the transaction")
   .setAction(async (args, hre) => {

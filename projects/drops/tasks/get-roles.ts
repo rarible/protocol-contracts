@@ -1,7 +1,7 @@
 import { task } from "hardhat/config";
 
 // getRoleAdmin
-task("getRoleAdmin", "Get the admin role of a given role from a Permissions contract")
+task("get-role-admin", "Get the admin role of a given role from a Permissions contract")
   .addParam("contract", "The deployed contract address")
   .addParam("role", "The role to query (in bytes32 string format)")
   .addOptionalParam("from", "Address to sign the transaction")
@@ -22,7 +22,7 @@ task("getRoleAdmin", "Get the admin role of a given role from a Permissions cont
   });
 
 // getRoleMember
-task("getRoleMember", "Get the address of a role member by index from a PermissionsEnumerable contract")
+task("get-role-member", "Get the address of a role member by index from a PermissionsEnumerable contract")
   .addParam("contract", "The deployed contract address")
   .addParam("role", "The role to query (in bytes32 string format)")
   .addParam("index", "Index of the role member to fetch")
@@ -44,7 +44,7 @@ task("getRoleMember", "Get the address of a role member by index from a Permissi
   });
 
 // getRoleMemberCount
-task("getRoleMemberCount", "Get the number of members for a given role from a PermissionsEnumerable contract")
+task("get-role-member-count", "Get the number of members for a given role from a PermissionsEnumerable contract")
   .addParam("contract", "The deployed contract address")
   .addParam("role", "The role to query (in bytes32 string format)")
   .addOptionalParam("from", "Address to sign the transaction")
@@ -65,7 +65,7 @@ task("getRoleMemberCount", "Get the number of members for a given role from a Pe
   });
 
 // hasRole
-task("hasRole", "Check if an account has a specific role in a Permissions contract")
+task("has-role", "Check if an account has a specific role in a Permissions contract")
   .addParam("contract", "The deployed contract address")
   .addParam("role", "The role to check (in bytes32 string format)")
   .addParam("account", "The account to check")
@@ -87,7 +87,7 @@ task("hasRole", "Check if an account has a specific role in a Permissions contra
   });
 
 // hasRoleWithSwitch
-task("hasRoleWithSwitch", "Check if an account has a specific role (with role switch logic) in a Permissions contract")
+task("has-role-with-switch", "Check if an account has a specific role (with role switch logic) in a Permissions contract")
   .addParam("contract", "The deployed contract address")
   .addParam("role", "The role to check (in bytes32 string format)")
   .addParam("account", "The account to check")
