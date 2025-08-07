@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { getContractsWithProxy, transferOwnership } from "../tasks/transfer-ownership-utils";
+import { getContractsWithProxy, transferOwnership } from "../sdk/transfer-ownership";
 
 describe("Ownership checks", function () {
   let expectedOwner: string;
