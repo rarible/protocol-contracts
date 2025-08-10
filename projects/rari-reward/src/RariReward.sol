@@ -53,6 +53,7 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
     event EpochUpdated(uint256 indexed epochIndex, uint256 totalAllocatedPoints, uint256 price);
     event RewardClaimed(address indexed user, uint256 indexed epochIndex, uint256 pointsClaimed, uint256 rewardAmount);
     event FeeWithdrawn(address indexed by, address indexed token, uint256 amount, address indexed to);
+    event RewardTokenSet(address indexed rewardToken);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -62,17 +63,13 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
     /**
      * @dev Initializer function (to replace constructor in upgradeable contract).
      * @param _initialOwner Address of the initial owner/admin.
-     * @param _rewardToken Address of the RARI reward token.
      */
-    function initialize(address _initialOwner, address _rewardToken) public initializer {
+    function initialize(address _initialOwner) public initializer {
         require(_initialOwner != address(0), "Invalid owner");
-        require(_rewardToken != address(0), "Invalid token");
 
         __Ownable_init(_initialOwner);
         __AccessControl_init();
         __ReentrancyGuard_init();
-
-        rewardToken = IERC20(_rewardToken);
 
         epochIndex = 0;
         totalAllocatedPoints = 0;
@@ -83,6 +80,11 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
         _grantRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _grantRole(SWAP_ROLE, _initialOwner);
         _grantRole(EPOCH_ROLE, _initialOwner);
+    }
+
+    function setRewardToken(address _rewardToken) external onlyOwner {
+        rewardToken = IERC20(_rewardToken);
+        emit RewardTokenSet(_rewardToken);
     }
 
     /**
