@@ -93,7 +93,6 @@ describe("RariReward", function () {
   }
 
   it("initializes and assigns roles properly", async () => {
-    const { owner, backend, swapper, reward, EPOCH_ROLE, SWAP_ROLE } = await ethers.provider.send("hardhat_reset", []) || await deployFixture();
     const fixture = await deployFixture();
 
     // Admin is owner
