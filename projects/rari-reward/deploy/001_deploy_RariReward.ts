@@ -23,7 +23,7 @@ const deployLock: DeployFunction = async (
                     args: [deployer],
                 },
             },
-            proxyContract: 'transparent',
+            proxyContract: "OpenZeppelinTransparentProxy",
         },
         waitConfirmations: 1,
         deterministicDeployment: DETERMENISTIC_DEPLOYMENT_SALT,
@@ -57,4 +57,4 @@ const deployLock: DeployFunction = async (
 };
 
 export default deployLock;
-deployLock.tags = ["all", "1001", "RaribleCloneFactory"];
+deployLock.tags = ["all", "001", "RariReward"];
