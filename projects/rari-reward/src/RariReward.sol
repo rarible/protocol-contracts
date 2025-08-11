@@ -110,8 +110,7 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
 
     /**
      * @notice Allows the Swap service to withdraw collected fees (ETH or non-RARI ERC20) for conversion to RARI.
-     * @dev Restricted to SWAP_ROLE. Cannot withdraw the rewardToken (RARI).
-     * @param token Address of the token to withdraw (use address(0) for ETH).
+     * @dev Restricted to SWAP_ROLE.
      * @param amount Amount to withdraw.
      * @param to Recipient of the funds (swap executor).
      */
