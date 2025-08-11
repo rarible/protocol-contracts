@@ -109,6 +109,21 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
     }
 
     /**
+     * @notice Allows the Swap service to withdraw collected fees (ETH or non-RARI ERC20) for conversion to RARI.
+     * @dev Restricted to SWAP_ROLE. Cannot withdraw the rewardToken (RARI).
+     * @param token Address of the token to withdraw (use address(0) for ETH).
+     * @param amount Amount to withdraw.
+     * @param to Recipient of the funds (swap executor).
+     */
+    function withdrawFeesETH(uint256 amount, address to) external onlyRole(SWAP_ROLE) nonReentrant {
+        require(to != address(0), "Invalid recipient");
+        require(address(this).balance >= amount, "Insufficient ETH");
+        (bool success, ) = to.call{ value: amount }("");
+        require(success, "ETH transfer failed");
+        emit FeeWithdrawn(msg.sender, address(0), amount, to);
+    }
+
+    /**
      * @notice Allows the owner to withdraw the reward token.
      * @dev Only the owner can withdraw the reward token.
      * @param amount Amount to withdraw.
