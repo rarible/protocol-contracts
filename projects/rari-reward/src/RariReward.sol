@@ -27,7 +27,7 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
  * - totalConvertedPoints tracks cumulative points that have actually been paid out.
  * - On updateEpoch(newTotalPoints), price is set from the current RARI balance and the remaining unconverted points.
  */
-contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable {
+contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, IERC20 {
     using SafeERC20 for IERC20;
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
@@ -46,14 +46,15 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
     uint256 public totalConvertedPoints;  // cumulative total points that have been claimed/converted
     uint256 public price;                 // RARI per point for current epoch (scaled by 1e18)
 
-    // user cumulative points already claimed for a given epoch
-    mapping(uint256 => mapping(address => uint256)) public claimedPoints;
+    // user cumulative points already claimed
+    mapping(address => uint256) public claimedPoints;
 
     // ========= Events =========
     event EpochUpdated(uint256 indexed epochIndex, uint256 totalAllocatedPoints, uint256 price);
     event RewardClaimed(address indexed user, uint256 indexed epochIndex, uint256 pointsClaimed, uint256 rewardAmount);
     event FeeWithdrawn(address indexed by, address indexed token, uint256 amount, address indexed to);
     event RewardTokenSet(address indexed rewardToken);
+    event RewardTokenWithdrawn(uint256 amount, address indexed to);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -108,6 +109,17 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
     }
 
     /**
+     * @notice Allows the owner to withdraw the reward token.
+     * @dev Only the owner can withdraw the reward token.
+     * @param amount Amount to withdraw.
+     * @param to Recipient of the reward token.
+     */
+    function withdrawRewardToken(uint256 amount, address to) external onlyOwner {
+        rewardToken.safeTransfer(to, amount);
+        emit RewardTokenWithdrawn(amount, to);
+    }
+
+    /**
      * @notice Update the reward epoch with new total allocated points.
      * @dev Only EPOCH_ROLE. Computes a new price per point from current RARI balance and remaining points.
      *      - newTotalPoints must strictly increase.
@@ -141,19 +153,21 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
     /**
      * @notice Claim RARI rewards for the caller, using a backend signature for (epoch, user, cumulative points).
      * @dev Signature must be from an address with EPOCH_ROLE.
-     *      The contract pays only the delta = signedPoints - alreadyClaimed[user][epoch].
-     * @param points CUMULATIVE points allocated to the user for this epoch (not the delta).
+     *      The contract pays only the delta = signedPoints - alreadyClaimed[user].
+     * @param pointsToClaim points user wants to claim.
+     * @param totalPoints CUMULATIVE points allocated to the user for this epoch.
      * @param epoch  The epoch index being claimed (must equal current epochIndex).
      * @param signature Backend signature over the claim (see claimMessageHash()).
      */
-    function claimReward(uint256 points, uint256 epoch, bytes calldata signature) external nonReentrant {
+    function claimReward(uint256 pointsToClaim, uint256 totalPoints, uint256 epoch, bytes calldata signature) external nonReentrant {
         address user = msg.sender;
         require(epoch == epochIndex, "Epoch mismatch");
-        require(points > 0, "No points");
+        require(pointsToClaim > 0, "No points to claim");
+        require(totalPoints > 0, "Total points must be greater than 0");
 
         // Recreate the message hash that was signed by the backend
         // dataHash = keccak256(chainid, contract, epoch, user, points) -> toEthSignedMessageHash()
-        bytes32 dataHash = keccak256(abi.encodePacked(block.chainid, address(this), epoch, user, points));
+        bytes32 dataHash = keccak256(abi.encodePacked(address(this), epoch, user, totalPoints));
         bytes32 ethHash = MessageHashUtils.toEthSignedMessageHash(dataHash);
 
         // Recover signer and verify it has EPOCH_ROLE
@@ -161,22 +175,24 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
         require(hasRole(EPOCH_ROLE, signer), "Invalid signature");
 
         // Compute delta claimable points for this user/epoch
-        uint256 already = claimedPoints[epoch][user];
-        require(points > already, "Nothing claimable");
-        uint256 delta = points - already;
+        uint256 already = claimedPoints[user];
+        require(totalPoints > already, "Nothing claimable");
+        uint256 delta = totalPoints - already;
+        require(pointsToClaim <= delta, "Points to claim must be less than or equal to delta");
 
         // Compute reward amount from price (scaled by PRICE_SCALE)
-        uint256 rewardAmount = (delta * price) / PRICE_SCALE;
+        uint256 rewardAmount = (pointsToClaim * price) / PRICE_SCALE;
         require(rewardAmount > 0, "No reward available");
 
         // State updates
-        claimedPoints[epoch][user] = points;       // store cumulative claimed
-        totalConvertedPoints += delta;             // track cumulatively converted points
+        claimedPoints[user] += pointsToClaim;       // store cumulative claimed
+        totalConvertedPoints += pointsToClaim;             // track cumulatively converted points
 
         // Effects
         rewardToken.safeTransfer(user, rewardAmount);
 
-        emit RewardClaimed(user, epoch, delta, rewardAmount);
+        emit RewardClaimed(user, epoch, pointsToClaim, rewardAmount);
+        emit Transfer(address(0), user, rewardAmount);
     }
 
     /**
@@ -188,7 +204,7 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
         returns (uint256 claimablePoints, uint256 claimableAmount)
     {
         if (epoch != epochIndex) return (0, 0);
-        uint256 already = claimedPoints[epoch][user];
+        uint256 already = claimedPoints[user];
         if (signedCumulativePoints <= already) return (0, 0);
         uint256 delta = signedCumulativePoints - already;
         return (delta, (delta * price) / PRICE_SCALE);
@@ -207,4 +223,60 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
      * @dev Allow the contract to receive ETH (fees from the Exchange contract).
      */
     receive() external payable {}
+
+    // ========= ERC20 Functions (view-only; non-transferable) =========
+
+    /// @notice Returns the name of the token.
+    function name() public pure returns (string memory) {
+        return "Rari Reward Points";
+    }
+
+    /// @notice Returns the symbol of the token.
+    function symbol() public pure returns (string memory) {
+        return "RariRP";
+    }
+
+    /// @notice Returns the number of decimals of the token.
+    function decimals() public pure returns (uint8) {
+        return 18;
+    }
+
+    /// @notice Total supply equals total converted (claimed) points.
+    function totalSupply() public view override returns (uint256) {
+        return totalConvertedPoints;
+    }
+
+    /// @notice Balance equals user's cumulative claimed points.
+    function balanceOf(address account) public view override returns (uint256) {
+        return claimedPoints[account];
+    }
+
+    /**
+     * @notice Non-transferable: always reverts.
+     */
+    function transfer(address /* to */, uint256 /* amount */) external pure override returns (bool) {
+        revert("NON_TRANSFERABLE");
+    }
+
+    /**
+     * @notice Allowance is always zero for a non-transferable token.
+     */
+    function allowance(address /* owner */, address /* spender */) public pure override returns (uint256) {
+        return 0;
+    }
+
+    /**
+     * @notice Approvals are not supported: always reverts.
+     */
+    function approve(address /* spender */, uint256 /* amount */) public pure override returns (bool) {
+        revert("NON_TRANSFERABLE");
+    }
+
+    /**
+     * @notice Transfers via allowance are not supported: always reverts.
+     */
+    function transferFrom(address /* from */, address /* to */, uint256 /* amount */) public pure override returns (bool) {
+        revert("NON_TRANSFERABLE");
+    }
+    
 }
