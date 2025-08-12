@@ -172,6 +172,25 @@ const sepolia = {
   transferProxies: [],
 }
 
+const electroneum = {
+  marketplaces: [
+    zeroAddress, // wyvernExchange
+    "", //rarible exchangeV2 palceholder
+    "0x00000000006c3852cbEf3e08E8dF289169EdE581", // seaPort_1_1
+    zeroAddress, // x2y2
+    zeroAddress, // looksRare
+    zeroAddress, // sudoSwap
+    "0x00000000000001ad428e4906aE43D8F9852d0dD6", // seaport_1_4
+    zeroAddress, // looksRareV2
+    zeroAddress, // blur
+    "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC", // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
+  ],
+
+  weth: "0x138DAFbDA0CCB3d8E39C19edb0510Fc31b7C1c77",
+  transferProxies: [],
+};
+
 let settings: any = {
   "default": def,
   "mainnet": mainnet,
@@ -182,7 +201,8 @@ let settings: any = {
   "staging": staging,
   "polygon_staging": polygon_staging,
   "polygon_mumbai": polygon_mumbai,
-  "polygon_mainnet": polygon_mainnet
+  "polygon_mainnet": polygon_mainnet,
+  "electroneum": electroneum
 };
 
 function getWrapperSettings(network: string) {
