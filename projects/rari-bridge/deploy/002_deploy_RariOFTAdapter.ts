@@ -1,6 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils";
+import { EndpointId } from '@layerzerolabs/lz-definitions'
 
 const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, network } = hre;
@@ -12,7 +13,7 @@ const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntime
     return;
   }
 
-  const lzEndpoint = "0x6EDCE65403992e310a62460808c4b910D972f10f"; // V2 testnet endpoint
+  const lzEndpoint = EndpointId.SEPOLIA_V2_TESTNET; // V2 testnet endpoint
   const rariToken = "0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54"; // RARI on Sepolia test
 
   await deploy("RariOFTAdapter", {
@@ -24,6 +25,6 @@ const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntime
   });
 };
 
-deployRariOFTAdapter.tags = ["RariOFTAdapter"];
+deployRariOFTAdapter.tags = ["RariOFTAdapterSepolia"];
 
 export default deployRariOFTAdapter;

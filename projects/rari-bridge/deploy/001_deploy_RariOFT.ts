@@ -1,6 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils";
+import { EndpointId } from "@layerzerolabs/lz-definitions";
 
 const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts, network } = hre;
@@ -12,7 +13,7 @@ const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnviron
     return;
   }
 
-  const lzEndpoint = "0x6EDCE65403992e310a62460808c4b910D972f10f"; // V2 testnet endpoint
+  const lzEndpoint = EndpointId.BASESEP_V2_TESTNET; // V2 testnet endpoint
 
   await deploy("RariOFT", {
     from: deployer,
@@ -23,6 +24,6 @@ const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnviron
   });
 };
 
-deployRariOFT.tags = ["RariOFT"];
+deployRariOFT.tags = ["RariOFTSepolia"];
 
 export default deployRariOFT;
