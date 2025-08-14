@@ -13,7 +13,7 @@ const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntime
   }
 
   const lzEndpoint = "0x6EDCE65403992e310a62460808c4b910D972f10f"; // V2 testnet endpoint
-  const rariToken = "0xDe438f962c321680538A95826B14D41B8334AE43"; // RARI on Sepolia test
+  const rariToken = "0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54"; // RARI on Sepolia test
 
   await deploy("RariOFTAdapter", {
     from: deployer,

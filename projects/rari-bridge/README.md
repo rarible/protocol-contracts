@@ -22,3 +22,6 @@ Similar, but on mainnet (eid 30101) for adapter, Base (eid 30184) for OFT. Updat
 ## Usage
 - Sepolia: Approve RARI to adapter, call send().
 - Base-Sepolia: Call send() on RariOFT.
+
+# Scan
+- Use the link for scan tokens https://layerzeroscan.com/
