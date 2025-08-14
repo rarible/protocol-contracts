@@ -5,13 +5,13 @@ import { RariOFT__factory } from "../typechain-types";
 const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getNamedAccounts, network, ethers } = hre;
   const { deployer } = await getNamedAccounts();
-  if (network.name !== "base-sepolia") {
-    console.log("Skipping: Not base-sepolia");
+  if (network.name !== "base_sepolia") {
+    console.log("Skipping: Not base_sepolia");
     return;
   }
   const lzEndpoint = EndpointId.BASESEP_V2_TESTNET; // V2 testnet endpoint
   // Use CREATE3 for deterministic deployment
-  const create3FactoryAddr = "0x9fBB3DF7C40Da2e5A0de984fFE2CCB7C47cd0ABf";
+  const create3FactoryAddr = "0x4A6B3E61fE44352f8ae9728e94C560F5493e1BAF";
   const create3ABI = [
     "function deploy(bytes32 salt, bytes memory creationBytecode) external returns (address)",
     "function getDeployed(bytes32 salt) external view returns (address)"
@@ -30,5 +30,5 @@ const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnviron
     console.log("RariOFT already deployed at:", expectedAddr);
   }
 };
-deployRariOFT.tags = ["RariOFTBaseSepolia"];
+deployRariOFT.tags = ["001", "RariOFTBaseSepolia"];
 export default deployRariOFT;
