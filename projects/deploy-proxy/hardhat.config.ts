@@ -5,15 +5,14 @@ import "hardhat-deploy-immutable-proxy";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-truffle5";
 
-import "./tasks";
-
-const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
-
 import {
   loadApiKeys,
   loadCustomNetworks,
   loadNetworkConfigs,
+  loadFactoryAddresses,
 } from "@rarible/deploy-utils";
+
+const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: {
