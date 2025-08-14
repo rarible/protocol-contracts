@@ -16,7 +16,6 @@ task(
     const { ethers } = hre;
     const { execute, getSigner } = hre.deployments;
     const provider = hre.ethers.provider;
-    console.log("provider", provider);
     const signer = new LedgerSigner(provider, "m/44'/60'/0'/0/0");
     const signerAddress = await signer.getAddress();
     
