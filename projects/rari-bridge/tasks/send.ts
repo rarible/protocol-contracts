@@ -56,7 +56,6 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
   .addOptionalParam("decimals", "Token decimals override (auto-detected if omitted)", "")
   .addOptionalParam("gas", "lzReceive gas on destination (default 200000)", "200000")
   .addOptionalParam("payInLz", "Pay fee in LZ token instead of native (default false)", "false")
-  .addOptionalParam("approve", "Approve underlying ERC20 to the adapter before send (default false)", "false")
   .setAction(async (args, hre: HardhatRuntimeEnvironment) => {
     const { ethers: hreEthers, network } = hre;
     const signer = getLedgerSigner(hreEthers.provider, "m/44'/60'/0'/0/0");
@@ -73,7 +72,13 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
       const a = RariOFTAdapter__factory.connect(args.source, signer);
       await a.owner(); // probe
       oft = a;
+    }
+
+    if(network.name === "sepolia" || network.name === "mainnet") {
       isAdapter = true;
+      const a = RariOFTAdapter__factory.connect(args.source, signer);
+      await a.owner(); // probe
+      oft = a;
     }
 
     // Determine decimals
@@ -96,13 +101,12 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
     const toBytes32 = hreEthers.utils.hexZeroPad(args.to, 32);
     const gas = hreEthers.BigNumber.from(args.gas);
     const payInLzToken = String(args.payInLz).toLowerCase() === "true";
-    const doApprove = String(args.approve).toLowerCase() === "true";
 
     // Build options = OptionsBuilder.newOptions().addExecutorLzReceiveOption(gas, 0)
     const extraOptions = buildLzReceiveOptions(gas);
 
     // Optional approval for adapters
-    if (isAdapter && doApprove) {
+    if (isAdapter) {
       const tokenAddr = await (oft as RariOFTAdapter).token();
       const erc20 = new hreEthers.Contract(tokenAddr, ERC20_ABI, signer);
       console.log(`[${network.name}] Approving ${args.source} to spend ${amountLD.toString()} of ${tokenAddr} ...`);

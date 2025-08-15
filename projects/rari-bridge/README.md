@@ -71,3 +71,14 @@ npx hardhat wire --network berachain_testnet --contract 0xCB7edB78db1c31a2f893Fe
 npx hardhat wire --network base_sepolia --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 80069
 
 npx hardhat oft:send --network sepolia --source 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c --target-chain-id 84532 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 5
+
+vfadeev@Mac rari-bridge % npx hardhat oft:send --network sepolia --source 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c --target-chain-id 84532 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 5
+[sepolia] Approving 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c to spend 5000000000000000000 of 0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54 ...
+approve.tx: 0xca4f0c3a916113454b4d0f9a4a5d4ff1427d33c37904d2a1c8103c0e05327d8f
+✅ Approved.
+Quoted fee: { nativeFee: '7335986817076', lzTokenFee: '0' }
+[sepolia] Sending 5 (decimals=18) to 0xe223825497c435BAeaf318F03d33Ec704954028A (eid=40245) ...
+send.tx: 0x30b7415f9f3abb7cf36c6ce294b0b4188a2d8a7e199ee6faeefb5b204a059909
+✅ Sent.
+
+https://testnet.layerzeroscan.com/tx/0x30b7415f9f3abb7cf36c6ce294b0b4188a2d8a7e199ee6faeefb5b204a059909
