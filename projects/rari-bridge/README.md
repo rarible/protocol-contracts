@@ -60,3 +60,12 @@ npx hardhat etherscan-verify-cli \
   0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54 \
   0x6C7Ab2202C98C4227C5c46f1417D81144DA716Ff \
   0xe223825497c435BAeaf318F03d33Ec704954028A
+
+npx hardhat wire --network sepolia --contract 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 84532
+npx hardhat wire --network sepolia --contract 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 80069
+
+npx hardhat wire --network berachain_testnet --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c --target-chain-id 11155111
+npx hardhat wire --network base_sepolia --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c --target-chain-id 11155111
+
+npx hardhat wire --network berachain_testnet --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 84532
+npx hardhat wire --network base_sepolia --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 80069
