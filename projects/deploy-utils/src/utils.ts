@@ -6,6 +6,9 @@ import * as os from "os";
 import * as path from "path";
 import fs from "fs";
 
+import { LedgerSigner } from "@anders-t/ethers-ledger";
+import { ethers } from "ethers";
+    
 dotenv.config();
 
 export function getConfigPath() {
@@ -254,4 +257,12 @@ export function loadFactoryAddresses(): Record<string, { factory: string }> {
   
     return factoryAddresses;
   }
-  
+
+export const DETERMENISTIC_DEPLOYMENT_SALT: string = process.env.DETERMENISTIC_DEPLOYMENT_SALT || "0x1118"
+
+export function getLedgerSigner(provider: ethers.providers.Provider, path: string = "m/44'/60'/0'/0/0"): LedgerSigner {
+  const signer = new LedgerSigner(provider, path);
+  return signer;
+}
+
+// create a function to get signer from env var in case hardware wallet is used (env vars are: HARDWARE_DERIVATION, DEPLOYER_ADDRESS) or load from private key if not set

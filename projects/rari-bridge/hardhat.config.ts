@@ -12,36 +12,22 @@ import {
   loadFactoryAddresses,
 } from "@rarible/deploy-utils";
 
+import "./tasks";
+
 const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.7.6",
+        version: "0.8.23",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 20,
+            
           },
-        },
-      },
-      {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      {
-        version: "0.8.26",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
+          evmVersion: "london",
         },
       },
     ],
@@ -57,32 +43,47 @@ const config: HardhatUserConfig = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 20,
+        evmVersion: "london",
       },
     },
   },
   namedAccounts: {
-      // Fallback to the first local account if the env-vars are missing
-      deployer: HARDWARE_DERIVATION && DEPLOYER_ADDRESS
+    // Fallback to the first local account if the env-vars are missing
+    deployer: HARDWARE_DERIVATION && DEPLOYER_ADDRESS
       ? `${HARDWARE_DERIVATION}:${DEPLOYER_ADDRESS}`
       : 0,
   },
   paths: {
-    sources: "contracts",
+    sources: "src",
+    tests: "tests"
   },
-  networks: loadNetworkConfigs(),
+  networks: {
+    hardhat: {
+      gas: 10000000,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        count: 10,
+        accountsBalance: "1000000000000000000",
+      },
+      mining: {
+        auto: true,
+        interval: 500
+      }
+    },
+    ...loadNetworkConfigs()
+  },
   etherscan: {
     apiKey: loadApiKeys(),
     customChains: loadCustomNetworks(),
   },
-  typechain: {
-    outDir: "typechain-types", // Output directory for generated typings
-    target: "ethers-v5", // Use ethers-v6 for zksync-ethers compatibility
-    alwaysGenerateOverloads: false,
-    // externalArtifacts: [
-    //   "artifacts/contracts/**/*[!dbg].json"
-    // ],
-  },
+  deterministicDeployment: loadFactoryAddresses(),
+  verify: {
+    etherscan: {
+      apiKey: process.env.ETHERSCAN_API_KEY || "", // Single key (string); works for Basescan since it uses Etherscan API keys
+      // OR for multiple networks: apiKey: { base_sepolia: process.env.ETHERSCAN_API_KEY || "" } (object format)
+    },
+  }
 };
 
 export default config;
