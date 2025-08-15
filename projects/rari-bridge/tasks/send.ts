@@ -13,6 +13,7 @@ import { getLedgerSigner } from "@rarible/deploy-utils";
 import { ethers } from "ethers";
 import type { RariOFT, RariOFTAdapter } from "../typechain-types";
 import { RariOFT__factory, RariOFTAdapter__factory } from "../typechain-types";
+import { getEndpointV2IdByChainId } from "../utils";
 
 // Minimal ERC20 interface for decimals/approve (TypeChain may not include external OZ interfaces)
 const ERC20_ABI = [
@@ -49,7 +50,7 @@ function buildLzReceiveOptions(gas: ethers.BigNumberish): string {
 
 task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
   .addParam("source", "OFT/OFTAdapter contract address (on source chain)")
-  .addParam("targeteid", "Destination Endpoint ID (uint32)")
+  .addParam("targetChainId", "Destination Endpoint ID (uint32)")
   .addParam("to", "Recipient EVM address on destination chain")
   .addParam("amount", "Amount in whole tokens (e.g., 10.5)")
   .addOptionalParam("decimals", "Token decimals override (auto-detected if omitted)", "")
@@ -91,7 +92,7 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
 
     const amountLD = hreEthers.utils.parseUnits(args.amount, decimals);
     const minAmountLD = amountLD; // simple case: no slippage; adjust if you need
-    const dstEid = Number(args.targeteid);
+    const dstEid = getEndpointV2IdByChainId(Number(args.targetChainId));
     const toBytes32 = hreEthers.utils.hexZeroPad(args.to, 32);
     const gas = hreEthers.BigNumber.from(args.gas);
     const payInLzToken = String(args.payInLz).toLowerCase() === "true";
@@ -122,7 +123,7 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
     };
 
     // Quote fee
-    const fee = await (oft as any).quoteSend(sendParam, payInLzToken);
+    const fee = await oft.quoteSend(sendParam, payInLzToken);
     console.log("Quoted fee:", {
       nativeFee: fee.nativeFee?.toString?.() ?? String(fee.nativeFee),
       lzTokenFee: fee.lzTokenFee?.toString?.() ?? String(fee.lzTokenFee),
@@ -130,7 +131,7 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
 
     // Send
     console.log(`[${network.name}] Sending ${args.amount} (decimals=${decimals}) to ${args.to} (eid=${dstEid}) ...`);
-    const tx = await (oft as any).send(sendParam, fee, sender, {
+    const tx = await oft.send(sendParam, fee, sender, {
       value: payInLzToken ? 0 : fee.nativeFee,
     });
     console.log("send.tx:", tx.hash);

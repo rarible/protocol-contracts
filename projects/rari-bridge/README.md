@@ -69,3 +69,5 @@ npx hardhat wire --network base_sepolia --contract 0xCB7edB78db1c31a2f893Fe202DE
 
 npx hardhat wire --network berachain_testnet --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 84532
 npx hardhat wire --network base_sepolia --contract 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081  --target 0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 --target-chain-id 80069
+
+npx hardhat oft:send --network sepolia --source 0xcD7f9F32393454Ac805bDC71BcfA98670E13605c --target-chain-id 84532 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 5
