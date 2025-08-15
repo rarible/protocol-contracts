@@ -2,6 +2,7 @@ export const DETERMENISTIC_DEPLOYMENT_SALT: string = process.env.DETERMENISTIC_D
 
 // ethers v5
 import { utils } from "ethers";
+export * from "./endpoint";
 
 /**
  * Left-pads an Ethereum address to 32 bytes, matching:
