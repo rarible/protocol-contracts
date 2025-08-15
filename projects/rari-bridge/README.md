@@ -49,3 +49,14 @@ npx hardhat etherscan-verify-cli \
   0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 \
   0x6C7Ab2202C98C4227C5c46f1417D81144DA716Ff \
   0xe223825497c435BAeaf318F03d33Ec704954028A
+
+
+npx hardhat etherscan-verify-cli \
+  --network sepolia \
+  --contract src/RariOFTAdapter.sol:RariOFTAdapter \
+  --api-url https://api-sepolia.etherscan.io/api \
+  --api-key E7MHB2Z34NBPNBNDW5ZXU18MV6VS4MKRF5 \
+  0xcD7f9F32393454Ac805bDC71BcfA98670E13605c \
+  0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54 \
+  0x6C7Ab2202C98C4227C5c46f1417D81144DA716Ff \
+  0xe223825497c435BAeaf318F03d33Ec704954028A

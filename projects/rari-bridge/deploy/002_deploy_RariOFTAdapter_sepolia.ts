@@ -1,6 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { EndpointId } from '@layerzerolabs/lz-definitions'
+import { EndpointId } from '@layerzerolabs/lz-definitions';
+import { getLedgerSigner } from "@rarible/deploy-utils";
 import { RariOFTAdapter__factory, CREATE3Factory__factory } from "../typechain-types";
 
 const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -12,7 +13,7 @@ const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntime
   }
   // Use CREATE3 for deterministic deployment
   const create3FactoryAddr = "0x4A6B3E61fE44352f8ae9728e94C560F5493e1BAF";
-  const create3 = CREATE3Factory__factory.connect(create3FactoryAddr, ethers.provider);
+  const create3 = CREATE3Factory__factory.connect(create3FactoryAddr, getLedgerSigner(ethers.provider, "m/44'/60'/0'/0/0"));
   const factory = await ethers.getContractFactory("RariOFTAdapter") as RariOFTAdapter__factory;
   const rariToken = "0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54"; // RARI on Sepolia test
   const endpointAddress = "0x6EDCE65403992e310A62460808c4b910D972f10f";
@@ -28,5 +29,5 @@ const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntime
     console.log("RariOFTAdapter already deployed at:", expectedAddr);
   }
 };
-deployRariOFTAdapter.tags = ["RariOFTAdapterSepolia"];
+deployRariOFTAdapter.tags = ["002", "RariOFTAdapterSepolia"];
 export default deployRariOFTAdapter;
