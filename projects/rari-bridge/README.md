@@ -26,3 +26,26 @@ Similar, but on mainnet (eid 30101) for adapter, Base (eid 30184) for OFT. Updat
 # Scan
 - Use the link for scan tokens https://layerzeroscan.com/
 - Uxe to get endpoint address https://docs.layerzero.network/v2/deployments/deployed-contracts?stages=testnet&chains=sepolia
+
+# verify 
+
+https://sepolia.basescan.org/address/0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081#code
+npx hardhat etherscan-verify-cli \
+  --network base_sepolia \
+  --contract src/RariOFT.sol:RariOFT \
+  --api-url https://api-sepolia.basescan.org/api \
+  --api-key API_KEY \
+  0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 \
+  0x6EDCE65403992e310A62460808c4b910D972f10f \
+  0xe223825497c435BAeaf318F03d33Ec704954028A
+
+https://testnet.berascan.com/address/0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081#code
+
+npx hardhat etherscan-verify-cli \
+  --network berachain_testnet \
+  --contract src/RariOFT.sol:RariOFT \
+  --api-url https://api-testnet.berascan.com/api \
+  --api-key API_KEY \
+  0xCB7edB78db1c31a2f893Fe202DE57E727DB0c081 \
+  0x6C7Ab2202C98C4227C5c46f1417D81144DA716Ff \
+  0xe223825497c435BAeaf318F03d33Ec704954028A

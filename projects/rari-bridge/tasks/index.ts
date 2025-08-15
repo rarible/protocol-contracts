@@ -1,1 +1,2 @@
 import "./wire";
+import "./verify";

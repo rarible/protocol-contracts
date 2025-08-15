@@ -78,6 +78,12 @@ const config: HardhatUserConfig = {
     customChains: loadCustomNetworks(),
   },
   deterministicDeployment: loadFactoryAddresses(),
+  verify: {
+    etherscan: {
+      apiKey: process.env.ETHERSCAN_API_KEY || "", // Single key (string); works for Basescan since it uses Etherscan API keys
+      // OR for multiple networks: apiKey: { base_sepolia: process.env.ETHERSCAN_API_KEY || "" } (object format)
+    },
+  }
 };
 
 export default config;

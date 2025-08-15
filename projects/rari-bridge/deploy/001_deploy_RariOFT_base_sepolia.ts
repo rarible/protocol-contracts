@@ -28,22 +28,6 @@ const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnviron
   } else {
     console.log("RariOFT already deployed at:", expectedAddr);
   }
-
-  // Verify the contract on Basescan (assuming @nomicfoundation/hardhat-verify is installed and configured)
-  try {
-    await hre.run("verify:verify", {
-      address: expectedAddr,
-      constructorArguments: [endpointAddress, deployer],
-      contract: "src/RariOFT.sol:RariOFT" // Adjust the path if your contract file is in a different location
-    });
-    console.log("RariOFT verified on Basescan");
-  } catch (error: any) {
-    if (error.message.includes("already verified")) {
-      console.log("RariOFT already verified");
-    } else {
-      console.error("Verification failed:", error);
-    }
-  }
 };
 deployRariOFT.tags = ["001", "RariOFTBaseSepolia"];
 export default deployRariOFT;
