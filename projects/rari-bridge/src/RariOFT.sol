@@ -8,8 +8,8 @@ import { OFT } from "@layerzerolabs/oft-evm/contracts/OFT.sol";
 contract RariOFT is OFT, RateLimiter {
     constructor(
         address _layerZeroEndpoint,
-        address _delegate
-    ) OFT("Rarible Token", "RARI", _layerZeroEndpoint, _delegate) Ownable(_delegate) {}
+        address _owner
+    ) OFT("Rarible", "RARI", _layerZeroEndpoint, _owner) Ownable(_owner) {}
 
     // Override _debit to enforce rate limits on token transfers
     function _debit(

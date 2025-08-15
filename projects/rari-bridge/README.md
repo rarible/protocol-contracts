@@ -25,3 +25,4 @@ Similar, but on mainnet (eid 30101) for adapter, Base (eid 30184) for OFT. Updat
 
 # Scan
 - Use the link for scan tokens https://layerzeroscan.com/
+- Uxe to get endpoint address https://docs.layerzero.network/v2/deployments/deployed-contracts?stages=testnet&chains=sepolia

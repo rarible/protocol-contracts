@@ -8,6 +8,6 @@ contract RariOFTAdapter is OFTAdapter {
     constructor(
         address _token,
         address _layerZeroEndpoint,
-        address _delegate
-    ) OFTAdapter(_token, _layerZeroEndpoint, _delegate) Ownable(_delegate) {}
+        address _owner
+    ) OFTAdapter(_token, _layerZeroEndpoint, _owner) Ownable(_owner) {}
 }
