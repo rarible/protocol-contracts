@@ -15,9 +15,12 @@ task("create-protocol-fee-proposal", "Creates a governance proposal to set the p
   .setAction(async (args, hre) => {
     const { buyerFeeBps, sellerFeeBps, recipient, exchangeV2, governor } = args;
 
+    const buyerFeeBpsInt = parseInt(buyerFeeBps, 10);
+    const sellerFeeBpsInt = parseInt(sellerFeeBps, 10);
+
     console.log(`Creating proposal to set protocol fee for Rarible ExchangeV2 at ${exchangeV2}`);
-    console.log(`New buyer fee: ${buyerFeeBps} bps (${(parseInt(buyerFeeBps) / 10000).toFixed(2)}%)`);
-    console.log(`New seller fee: ${sellerFeeBps} bps (${(parseInt(sellerFeeBps) / 10000).toFixed(2)}%)`);
+    console.log(`New buyer fee: ${buyerFeeBps} bps (${(buyerFeeBpsInt / 10000).toFixed(2)}%)`);
+    console.log(`New seller fee: ${sellerFeeBps} bps (${(sellerFeeBpsInt / 10000).toFixed(2)}%)`);
     console.log(`New fee recipient: ${recipient}`);
 
     try {
@@ -34,8 +37,8 @@ task("create-protocol-fee-proposal", "Creates a governance proposal to set the p
       // setAllProtocolFeeData(address recipient, uint48 buyerFee, uint48 sellerFee)
       const calldata = ExchangeV2__factory.createInterface().encodeFunctionData("setAllProtocolFeeData", [
         recipient,
-        parseInt(buyerFeeBps, 0),
-        parseInt(sellerFeeBps, 200)
+        BigNumber.from(buyerFeeBpsInt),
+        BigNumber.from(sellerFeeBpsInt)
       ]);
       // -------------------------------------------------------------
 
