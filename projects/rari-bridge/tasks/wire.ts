@@ -1,7 +1,7 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getLedgerSigner } from "@rarible/deploy-utils";
-import { OFTCore__factory, OFTCore } from "../typechain-types";
+
 import { addressToBytes32 } from "../utils";
 import { EndpointId, EndpointVersion, getNetworkForChainId, networkToEndpointId } from "@layerzerolabs/lz-definitions";
 import { getEndpointV2IdByChainId } from "../utils";
@@ -11,6 +11,7 @@ task("wire", "Set peer for RARI OFT bridge")
   .addParam("target", "Target contract address on remote chain")
   .addParam("targetChainId", "Target endpoint ID")
   .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+    const { OFTCore, OFTCore__factory } = await import("../typechain-types");
     const { ethers } = hre;
     const oft: OFTCore = OFTCore__factory.connect(taskArgs.contract, getLedgerSigner(ethers.provider, "m/44'/60'/0'/0/0")); // OFTCore ABI for setPeer
 

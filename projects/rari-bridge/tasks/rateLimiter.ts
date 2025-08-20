@@ -7,8 +7,6 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getLedgerSigner } from "@rarible/deploy-utils";
-import type { RariOFT, RariOFTAdapter } from "../typechain-types";
-import { RariOFT__factory, RariOFTAdapter__factory } from "../typechain-types";
 
 type RateLimitConfig = {
   dstEid: number | string;
@@ -21,6 +19,9 @@ task("rate:set", "Set LayerZero RateLimiter configs on an OFT/OFTAdapter")
   .addParam("configs", "JSON array of { dstEid, limit, window }")
   .setAction(async (args: { contract: string; configs: string }, hre: HardhatRuntimeEnvironment) => {
     const { ethers, network } = hre;
+
+    const { RariOFT, RariOFTAdapter } = await import("../typechain-types");
+    const { RariOFT__factory, RariOFTAdapter__factory } = await import("../typechain-types");
 
     const signer = getLedgerSigner(ethers.provider, "m/44'/60'/0'/0/0");
 
