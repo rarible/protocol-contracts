@@ -118,7 +118,10 @@ const config: HardhatUserConfig = {
         mnemonic: "test test test test test test test test test test test junk",
         count: 10,
         accountsBalance: "1000000000000000000",
-      }
+      },
+      forking: {
+        url: process.env.MAINNET_RPC_URL!,
+      },
     },
     ...loadNetworkConfigs()
   },
