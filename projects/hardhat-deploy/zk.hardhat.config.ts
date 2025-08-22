@@ -1,7 +1,7 @@
 import "@matterlabs/hardhat-zksync-solc";
 import "@matterlabs/hardhat-zksync-deploy";
-import "@matterlabs/hardhat-zksync-verify";
 import "@matterlabs/hardhat-zksync-ethers";
+import "@matterlabs/hardhat-zksync-verify";
 import "zksync-ethers";
 
 import type {
@@ -12,6 +12,8 @@ import * as os from "os";
 import * as path from "path";
 import fs from "fs";
 import "./tasks";
+
+const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS } = process.env;
 
 function getConfigPath() {
     const configPath = process.env["NETWORK_CONFIG_PATH"];
@@ -26,19 +28,28 @@ function createNetwork(name: string): HttpNetworkUserConfig {
   const configPath = path.join(getConfigPath(), name + ".json");
   if (fs.existsSync(configPath)) {
     var json = require(configPath);
+
+    // normalize v1-style /api endings for etherscan config if present
     if (json.verify && json.verify.apiUrl && json.verify.apiUrl.endsWith("/api")) {
       json.verify.apiUrl = json.verify.apiUrl.slice(0, -4);
     }
-    //if frame
+
+    // if frame (no key), minimal config
     if (!json.key) {
-      return {
+      const base: any = {
         url: json.url || "",
         chainId: json.network_id,
         timeout: 60000,
+      };
+      // For zkSync networks, attempt to pass through verifyURL from json.verify.apiUrl when available
+      if (json.zksync === true && json.verify && json.verify.apiUrl) {
+        base.verifyURL = json.verify.apiUrl;
       }
+      return base as HttpNetworkUserConfig;
     } else {
-      // if not frame
-      return {
+      // non-frame config
+      const isZk = json.zksync === true;
+      const base: any = {
         from: json.address,
         gasPrice: "auto",
         chainId: parseInt(json.network_id),
@@ -46,16 +57,27 @@ function createNetwork(name: string): HttpNetworkUserConfig {
         accounts: [json.key],
         gas: "auto",
         saveDeployments: true,
-        verify: json.verify
-          ? {
-              etherscan: {
-                apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
-                apiUrl: json.verify.apiUrl,
-              },
-            }
-          : null,
-        zksync: json.zksync === true,
-      } as HttpNetworkUserConfig;
+        zksync: isZk,
+      };
+
+      // Etherscan-style verify block (used by @nomicfoundation/hardhat-verify)
+      base.verify = json.verify
+        ? {
+            etherscan: {
+              // v1 per-network keys are deprecated; we keep structure here only
+              // so legacy flows don't break. Our task now prefers a single apiKey.
+              apiKey: "4BX5JGM9IBFRHSDBMRCS4R66TX123T9E22",
+              apiUrl: json.verify.apiUrl,
+            },
+          }
+        : null;
+
+      // zkSync verifier endpoint (used by @matterlabs/hardhat-zksync-verify)
+      if (isZk && json.verify && json.verify.apiUrl) {
+        base.verifyURL = json.verify.apiUrl;
+      }
+
+      return base as HttpNetworkUserConfig;
     }
   } else {
     // File doesn't exist in path
@@ -72,15 +94,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 
 const config: HardhatUserConfig = {
   zksolc: {
-    version: "1.4.1",
-    settings: {
-        isSystem: false, // optional.  Enables Yul instructions available only for zkSync system contracts and libraries
-        forceEvmla: false, // optional. Falls back to EVM legacy assembly if there is a bug with Yul
-        optimizer: {
-          enabled: true, // optional. True by default
-          mode: 'z' // optional. 3 by default, z to optimize bytecode size
-        },
-      }
+    version: "1.5.7",
   },
   solidity: {
     compilers: [
@@ -159,9 +173,10 @@ const config: HardhatUserConfig = {
   },
   defaultNetwork: "zksync",
   namedAccounts: {
-    deployer: 0,
-    // deployer: "ledger://0xe223825497c435BAeaf318F03d33Ec704954028A",
-    // zkcandy: "ledger://0xe223825497c435BAeaf318F03d33Ec704954028A",
+    // Fallback to the first local account if the env-vars are missing
+    deployer: HARDWARE_DERIVATION && DEPLOYER_ADDRESS
+      ? `${HARDWARE_DERIVATION}:${DEPLOYER_ADDRESS}`
+      : 0,
   },
   paths: {
     sources: "src",
@@ -217,7 +232,11 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
+    // prefer a single Etherscan v2 API key; task can override at runtime
     apiKey: "P78HUI9K9SAM5QKD6ABU91G3CPDS98MZW2"
+  },
+  sourcify: {
+    enabled: false
   }
 };
 
