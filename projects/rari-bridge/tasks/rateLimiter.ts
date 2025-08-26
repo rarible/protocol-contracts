@@ -20,8 +20,7 @@ task("rate:set", "Set LayerZero RateLimiter configs on an OFT/OFTAdapter")
   .setAction(async (args: { contract: string; configs: string }, hre: HardhatRuntimeEnvironment) => {
     const { ethers, network } = hre;
 
-    const { RariOFT, RariOFTAdapter } = await import("../typechain-types");
-    const { RariOFT__factory, RariOFTAdapter__factory } = await import("../typechain-types");
+    const {  IRateLimiter__factory } = await import("../typechain-types");
 
     const signer = getLedgerSigner(ethers.provider, "m/44'/60'/0'/0/0");
 
@@ -31,17 +30,7 @@ task("rate:set", "Set LayerZero RateLimiter configs on an OFT/OFTAdapter")
     }
 
     // Try canonical OFT first
-    let connected: RariOFT | RariOFTAdapter | null = null;
-    try {
-      connected = RariOFT__factory.connect(args.contract, signer);
-      // Probe existence by calling a view (decimals() exists on canonical OFT)
-      await (connected as RariOFT).decimals();
-    } catch {
-      // Fallback to Adapter
-      connected = RariOFTAdapter__factory.connect(args.contract, signer);
-      // Probe with non-throwing read (owner() exists via Ownable)
-      await (connected as RariOFTAdapter).owner();
-    }
+    let connected = IRateLimiter__factory.connect(args.contract, signer);
 
     // Prepare configs in the exact struct shape; any casts are to appease TS
     const cfgs = parsed.map((c) => ({
@@ -51,7 +40,7 @@ task("rate:set", "Set LayerZero RateLimiter configs on an OFT/OFTAdapter")
     })) as any[];
 
     console.log(`[${network.name}] Setting rate limits on ${args.contract}:`, cfgs);
-    const tx = await (connected as any).setRateLimits(cfgs);
+    const tx = await connected.setRateLimits(cfgs);
     console.log("tx.hash:", tx.hash);
     await tx.wait();
     console.log("✅ Rate limits set.");

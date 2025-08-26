@@ -82,3 +82,27 @@ send.tx: 0x30b7415f9f3abb7cf36c6ce294b0b4188a2d8a7e199ee6faeefb5b204a059909
 ✅ Sent.
 
 https://testnet.layerzeroscan.com/tx/0x30b7415f9f3abb7cf36c6ce294b0b4188a2d8a7e199ee6faeefb5b204a059909
+
+RariOFTAdapter deployed to: 0xFBaAE7fC0De990276Bc7EFc51741921C847f5857
+RariOFT deployed to: 0x57824A1ecB34DE2f9A32e945911067fd433000F3
+
+npx hardhat wire --network mainnet --contract 0xFBaAE7fC0De990276Bc7EFc51741921C847f5857  --target 0x57824A1ecB34DE2f9A32e945911067fd433000F3 --target-chain-id 8453
+
+npx hardhat wire --network base --contract 0x57824A1ecB34DE2f9A32e945911067fd433000F3  --target 0xFBaAE7fC0De990276Bc7EFc51741921C847f5857 --target-chain-id 1
+
+npx hardhat oft:send --network mainnet --source 0xFBaAE7fC0De990276Bc7EFc51741921C847f5857 --target-chain-id 8453 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 3
+
+--to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 3
+[mainnet] Approving 0xFBaAE7fC0De990276Bc7EFc51741921C847f5857 to spend 3000000000000000000 of 0xFca59Cd816aB1eaD66534D82bc21E7515cE441CF ...
+approve.tx: 0x6fe74a2cf329b493ba91437d22826c1431b1766eed2ae5bd4988e506993c3483
+✅ Approved.
+Quoted fee: { nativeFee: '34286067674433', lzTokenFee: '0' }
+[mainnet] Sending 3 (decimals=18) to 0xe223825497c435BAeaf318F03d33Ec704954028A (eid=30184) ...
+send.tx: 0xdcb325697040175bea40459e775ae7b6160cdea9bc1838c16642703b5c1b168d
+✅ Sent.
+
+npx hardhat oft:send --network base --source 0x57824A1ecB34DE2f9A32e945911067fd433000F3 --target-chain-id 1 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 2
+
+npx hardhat rate:set --network base 
+
+npx hardhat rate:set --network base --contract 0x57824A1ecB34DE2f9A32e945911067fd433000F3 --configs '[{"dstEid":30101,"limit":"20000000000000000000000","window":86400}]

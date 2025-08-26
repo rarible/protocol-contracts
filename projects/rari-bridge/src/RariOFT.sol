@@ -4,8 +4,9 @@ pragma solidity ^0.8.22;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { RateLimiter } from "@layerzerolabs/oapp-evm/contracts/oapp/utils/RateLimiter.sol";
 import { OFT } from "@layerzerolabs/oft-evm/contracts/OFT.sol";
+import { IRateLimiter } from "./IRateLimiter.sol";
 
-contract RariOFT is OFT, RateLimiter {
+contract RariOFT is OFT, RateLimiter, IRateLimiter {
     constructor(
         address _layerZeroEndpoint,
         address _owner
@@ -23,5 +24,13 @@ contract RariOFT is OFT, RateLimiter {
 
         // Proceed with normal OFT debit logic
         return super._debit(_from, _amountLD, _minAmountLD, _dstEid);
+    }
+
+    function setRateLimits(RateLimitConfig[] calldata _rateLimitConfigs) external onlyOwner {
+        _setRateLimits(_rateLimitConfigs);
+    }
+
+    function getRateLimit(uint32 _dstEid) external view returns (RateLimit memory) {
+        return rateLimits[_dstEid];
     }
 }

@@ -7,8 +7,8 @@ import { RariOFTAdapter__factory, CREATE3Factory__factory } from "../typechain-t
 const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { getNamedAccounts, network, ethers } = hre;
   const { deployer } = await getNamedAccounts();
-  if (network.name !== "sepolia") {
-    console.log("Skipping: Not sepolia");
+  if (network.name !== "mainnet") {
+    console.log("Skipping: Not ETH mainnet");
     return;
   }
   // Use CREATE3 for deterministic deployment
@@ -18,7 +18,7 @@ const deployRariOFTAdapter: DeployFunction = async function (hre: HardhatRuntime
   const rariToken = "0xfca59cd816ab1ead66534d82bc21e7515ce441cf"; // RARI on Sepolia test
   const endpointAddress = "0x1a44076050125825900e736c501f859c50fE728c";
   const creationBytecode = factory.getDeployTransaction(rariToken, endpointAddress, deployer).data as string;
-  const salt = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("RariOFTAdapter-v1-mainnet"));
+  const salt = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("RariOFTAdapter-with-rate-limiter-mainnet"));
   const expectedAddr = await create3.getDeployed(deployer, salt);
   const code = await ethers.provider.getCode(expectedAddr);
   if (code === "0x") {
