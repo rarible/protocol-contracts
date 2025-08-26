@@ -18,7 +18,7 @@ const deployRariOFT: DeployFunction = async function (hre: HardhatRuntimeEnviron
   const factory = await ethers.getContractFactory("RariOFT") as RariOFT__factory;
   const endpointAddress = "0x1a44076050125825900e736c501f859c50fE728c";
   const creationBytecode = factory.getDeployTransaction(endpointAddress, deployer).data as string;
-  const salt = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("RariOFT-v1"));
+  const salt = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("RariOFT-v1-mainnet"));
   const expectedAddr = await create3.getDeployed(deployer, salt);
   const code = await ethers.provider.getCode(expectedAddr);
   if (code === "0x") {
