@@ -11,7 +11,6 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getLedgerSigner } from "@rarible/deploy-utils";
 import { ethers } from "ethers";
-
 import { getEndpointV2IdByChainId } from "../utils";
 
 // Minimal ERC20 interface for decimals/approve (TypeChain may not include external OZ interfaces)

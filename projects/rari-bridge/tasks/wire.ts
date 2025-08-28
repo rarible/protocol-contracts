@@ -1,7 +1,6 @@
 import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getLedgerSigner } from "@rarible/deploy-utils";
-
 import { addressToBytes32 } from "../utils";
 import { EndpointId, EndpointVersion, getNetworkForChainId, networkToEndpointId } from "@layerzerolabs/lz-definitions";
 import { getEndpointV2IdByChainId } from "../utils";
