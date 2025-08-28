@@ -7,8 +7,8 @@ task(
   "Stake RARI into Locking (veRARI) so the signer reaches the governor's proposal threshold"
 )
   .addOptionalParam("delegate", "Delegate address (defaults to signer)")
-  .addOptionalParam("slopePeriod", "Lock slope period (defaults to Locking.minSlopePeriod)")
-  .addOptionalParam("cliff", "Lock cliff (defaults to Locking.minCliffPeriod)")
+  .addOptionalParam("slopePeriod", "Lock slope period (defaults to Locking.minSlopePeriod)", "1")
+  .addOptionalParam("cliff", "Lock cliff (defaults to Locking.minCliffPeriod)", "103")
   .addOptionalParam("maxAmount", "Maximum RARI amount to stake (defaults to exact needed)")
   .addOptionalParam("from", "Signer address (defaults to first signer)")
   .setAction(async (args, hre) => {
@@ -82,14 +82,7 @@ task(
 
     console.log(`Using slopePeriod=${slopePeriod.toString()}, cliff=${cliff.toString()}`);
 
-    // Heuristic: assume voting power is non-decreasing with amount for given periods, target 'needed'
-    // Cap by maxAmount if provided, else by wallet balance
-    // const desired = ethers.BigNumber.from(needed);
-    // const cap = args.maxAmount
-    //   ? ethers.BigNumber.from(args.maxAmount)
-    //   : balance;
-    // const stakeAmount = desired.lte(cap) ? desired : cap;
-    const stakeAmount = ethers.BigNumber.from("10000000000000000000");
+    const stakeAmount = ethers.BigNumber.from("5030000000000000000000");
 
     if (stakeAmount.isZero()) {
       throw new Error("Insufficient balance or maxAmount is 0; cannot stake to reach threshold.");
@@ -99,31 +92,33 @@ task(
     }
 
     // Ensure allowance
-    // const allowance = await token.allowance(deployer, lockingAddress);
-    // if (allowance.lt(stakeAmount)) {
-      // console.log(`Approving ${stakeAmount.toString()} ${symbol} to Locking...`);
-      // const approveTx = await token.connect(signer).approve(lockingAddress, stakeAmount);
-      // console.log(`Approve tx hash: ${approveTx.hash}`);
-      // const res = await execute(tokenAddress, { from: deployer, log: true, to: tokenAddress }, "approve", lockingAddress, stakeAmount);
-      // console.log(`Approve tx hash: ${res.transactionHash}`);
-    //}
+    const allowance = await token.allowance(signerAddress, lockingAddress);
+    if (allowance.lt(stakeAmount)) {
+      console.log(`Approving ${stakeAmount.toString()} ${symbol} to Locking...`);
+      const approveTx = await token.connect(signer).approve(lockingAddress, stakeAmount);
+      console.log(`Approve tx hash: ${approveTx.hash}`);
+    }
 
-    console.log(
-      `Locking ${stakeAmount.toString()} ${symbol} to reach proposal threshold; delegate=${delegateAddress}`
-    );
-    // const lockTx = await locking.lock(signerAddress, signerAddress, stakeAmount, slopePeriod, cliff);
-    // const lockReceipt = await lockTx.wait();
-    // console.log(`Lock tx hash: ${lockReceipt.transactionHash}`);
-
-    const updatedVotes = await locking.getVotes(signerAddress);
-    console.log(`Updated veRARI votes: ${updatedVotes.toString()}`);
-
-    if (updatedVotes.lt(threshold)) {
-      console.warn(
-        "Warning: votes still below threshold. Consider increasing amount or lock periods (slope/cliff)."
+    if(slopePeriod.eq(1) && cliff.eq(103)) {
+      console.log(
+        `Locking ${stakeAmount.toString()} ${symbol} to reach proposal threshold; delegate=${delegateAddress}`
       );
+      const lockTx = await locking.connect(signer).lock(signerAddress, signerAddress, stakeAmount, slopePeriod, cliff);
+      const lockReceipt = await lockTx.wait();
+      console.log(`Lock tx hash: ${lockReceipt.transactionHash}`);
+
+      const updatedVotes = await locking.getVotes(signerAddress);
+      console.log(`Updated veRARI votes: ${updatedVotes.toString()}`);
+
+      if (updatedVotes.lt(threshold)) {
+        console.warn(
+          "Warning: votes still below threshold. Consider increasing amount or lock periods (slope/cliff)."
+        );
+      } else {
+        console.log("Success: proposal threshold reached.");
+      }
     } else {
-      console.log("Success: proposal threshold reached.");
+      console.log("Not locking with slopePeriod=1 and cliff=103");
     }
   });
 

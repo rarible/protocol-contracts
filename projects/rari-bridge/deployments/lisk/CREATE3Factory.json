@@ -1,0 +1,120 @@
+{
+  "address": "0x4A6B3E61fE44352f8ae9728e94C560F5493e1BAF",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "salt",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "creationCode",
+          "type": "bytes"
+        }
+      ],
+      "name": "deploy",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "deployed",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "deployer",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "salt",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getDeployed",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "deployed",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xd6e8c015d5b445041cd8d21428b93cf81206587403b37b7d7d730c5babc8f1e4",
+  "receipt": {
+    "to": "0xA9d7374D191d80aCAAfD8D95b01d27ef354a91E0",
+    "from": "0xe223825497c435BAeaf318F03d33Ec704954028A",
+    "contractAddress": null,
+    "transactionIndex": 1,
+    "gasUsed": "340862",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x2c01fae38375bf242c9df89400d402f45cd1cdd12e584a31a799bac7510368a8",
+    "transactionHash": "0xd6e8c015d5b445041cd8d21428b93cf81206587403b37b7d7d730c5babc8f1e4",
+    "logs": [],
+    "blockNumber": 20707681,
+    "cumulativeGasUsed": "387030",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "f018628f9f1691ff5987d83f3d5b5278",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.23+commit.f704f362\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"salt\",\"type\":\"bytes32\"},{\"internalType\":\"bytes\",\"name\":\"creationCode\",\"type\":\"bytes\"}],\"name\":\"deploy\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"deployed\",\"type\":\"address\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"deployer\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"salt\",\"type\":\"bytes32\"}],\"name\":\"getDeployed\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"deployed\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"zefram.eth\",\"kind\":\"dev\",\"methods\":{\"deploy(bytes32,bytes)\":{\"details\":\"The provided salt is hashed together with msg.sender to generate the final salt\",\"params\":{\"creationCode\":\"The creation code of the contract to deploy\",\"salt\":\"The deployer-specific salt for determining the deployed contract's address\"},\"returns\":{\"deployed\":\"The address of the deployed contract\"}},\"getDeployed(address,bytes32)\":{\"details\":\"The provided salt is hashed together with the deployer address to generate the final salt\",\"params\":{\"deployer\":\"The deployer account that will call deploy()\",\"salt\":\"The deployer-specific salt for determining the deployed contract's address\"},\"returns\":{\"deployed\":\"The address of the contract that will be deployed\"}}},\"title\":\"Factory for deploying contracts to deterministic addresses via CREATE3\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"deploy(bytes32,bytes)\":{\"notice\":\"Deploys a contract using CREATE3\"},\"getDeployed(address,bytes32)\":{\"notice\":\"Predicts the address of a deployed contract\"}},\"notice\":\"Enables deploying contracts using CREATE3. Each deployer (msg.sender) has its own namespace for deployed addresses.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/CREATE3Factory.sol\":\"CREATE3Factory\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":20},\"remappings\":[]},\"sources\":{\"src/CREATE3Factory.sol\":{\"content\":\"// SPDX-License-Identifier: AGPL-3.0\\npragma solidity 0.8.23;\\n\\nimport {CREATE3} from \\\"./solmate/utils/CREATE3.sol\\\";\\n\\nimport {ICREATE3Factory} from \\\"./ICREATE3Factory.sol\\\";\\n\\n/// @title Factory for deploying contracts to deterministic addresses via CREATE3\\n/// @author zefram.eth\\n/// @notice Enables deploying contracts using CREATE3. Each deployer (msg.sender) has\\n/// its own namespace for deployed addresses.\\ncontract CREATE3Factory is ICREATE3Factory {\\n    /// @inheritdoc\\tICREATE3Factory\\n    function deploy(bytes32 salt, bytes memory creationCode)\\n        external\\n        payable\\n        override\\n        returns (address deployed)\\n    {\\n        // hash salt with the deployer address to give each deployer its own namespace\\n        salt = keccak256(abi.encodePacked(msg.sender, salt));\\n        return CREATE3.deploy(salt, creationCode, msg.value);\\n    }\\n\\n    /// @inheritdoc\\tICREATE3Factory\\n    function getDeployed(address deployer, bytes32 salt)\\n        external\\n        view\\n        override\\n        returns (address deployed)\\n    {\\n        // hash salt with the deployer address to give each deployer its own namespace\\n        salt = keccak256(abi.encodePacked(deployer, salt));\\n        return CREATE3.getDeployed(salt);\\n    }\\n}\",\"keccak256\":\"0x1ea65bc4ea21d00c46af8e405b243ef1d5e057828334288e219c8f7d695b941d\",\"license\":\"AGPL-3.0\"},\"src/ICREATE3Factory.sol\":{\"content\":\"// SPDX-License-Identifier: AGPL-3.0\\npragma solidity >=0.6.0;\\n\\n/// @title Factory for deploying contracts to deterministic addresses via CREATE3\\n/// @author zefram.eth\\n/// @notice Enables deploying contracts using CREATE3. Each deployer (msg.sender) has\\n/// its own namespace for deployed addresses.\\ninterface ICREATE3Factory {\\n    /// @notice Deploys a contract using CREATE3\\n    /// @dev The provided salt is hashed together with msg.sender to generate the final salt\\n    /// @param salt The deployer-specific salt for determining the deployed contract's address\\n    /// @param creationCode The creation code of the contract to deploy\\n    /// @return deployed The address of the deployed contract\\n    function deploy(bytes32 salt, bytes memory creationCode)\\n        external\\n        payable\\n        returns (address deployed);\\n\\n    /// @notice Predicts the address of a deployed contract\\n    /// @dev The provided salt is hashed together with the deployer address to generate the final salt\\n    /// @param deployer The deployer account that will call deploy()\\n    /// @param salt The deployer-specific salt for determining the deployed contract's address\\n    /// @return deployed The address of the contract that will be deployed\\n    function getDeployed(address deployer, bytes32 salt)\\n        external\\n        view\\n        returns (address deployed);\\n}\",\"keccak256\":\"0x761a0429438fcba2a9a8729567ae971c8e892ca1d0150579e6b689308a0bcdce\",\"license\":\"AGPL-3.0\"},\"src/solmate/utils/Bytes32AddressLib.sol\":{\"content\":\"// SPDX-License-Identifier: AGPL-3.0-only\\npragma solidity >=0.8.0;\\n\\n/// @notice Library for converting between addresses and bytes32 values.\\n/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/Bytes32AddressLib.sol)\\nlibrary Bytes32AddressLib {\\n    function fromLast20Bytes(bytes32 bytesValue) internal pure returns (address) {\\n        return address(uint160(uint256(bytesValue)));\\n    }\\n\\n    function fillLast12Bytes(address addressValue) internal pure returns (bytes32) {\\n        return bytes32(bytes20(addressValue));\\n    }\\n}\",\"keccak256\":\"0x51b6345eebb0befe08e78d6274aa5dab0929e43263f3c97287eab965ebe1ccc6\",\"license\":\"AGPL-3.0-only\"},\"src/solmate/utils/CREATE3.sol\":{\"content\":\"// SPDX-License-Identifier: AGPL-3.0-only\\npragma solidity >=0.8.0;\\n\\nimport {Bytes32AddressLib} from \\\"./Bytes32AddressLib.sol\\\";\\n\\n/// @notice Deploy to deterministic addresses without an initcode factor.\\n/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/CREATE3.sol)\\n/// @author Modified from 0xSequence (https://github.com/0xSequence/create3/blob/master/contracts/Create3.sol)\\nlibrary CREATE3 {\\n    using Bytes32AddressLib for bytes32;\\n\\n    //--------------------------------------------------------------------------------//\\n    // Opcode     | Opcode + Arguments    | Description      | Stack View             //\\n    //--------------------------------------------------------------------------------//\\n    // 0x36       |  0x36                 | CALLDATASIZE     | size                   //\\n    // 0x3d       |  0x3d                 | RETURNDATASIZE   | 0 size                 //\\n    // 0x3d       |  0x3d                 | RETURNDATASIZE   | 0 0 size               //\\n    // 0x37       |  0x37                 | CALLDATACOPY     |                        //\\n    // 0x36       |  0x36                 | CALLDATASIZE     | size                   //\\n    // 0x3d       |  0x3d                 | RETURNDATASIZE   | 0 size                 //\\n    // 0x34       |  0x34                 | CALLVALUE        | value 0 size           //\\n    // 0xf0       |  0xf0                 | CREATE           | newContract            //\\n    //--------------------------------------------------------------------------------//\\n    // Opcode     | Opcode + Arguments    | Description      | Stack View             //\\n    //--------------------------------------------------------------------------------//\\n    // 0x67       |  0x67XXXXXXXXXXXXXXXX | PUSH8 bytecode   | bytecode               //\\n    // 0x3d       |  0x3d                 | RETURNDATASIZE   | 0 bytecode             //\\n    // 0x52       |  0x52                 | MSTORE           |                        //\\n    // 0x60       |  0x6008               | PUSH1 08         | 8                      //\\n    // 0x60       |  0x6018               | PUSH1 18         | 24 8                   //\\n    // 0xf3       |  0xf3                 | RETURN           |                        //\\n    //--------------------------------------------------------------------------------//\\n    bytes internal constant PROXY_BYTECODE = hex\\\"67_36_3d_3d_37_36_3d_34_f0_3d_52_60_08_60_18_f3\\\";\\n\\n    bytes32 internal constant PROXY_BYTECODE_HASH = keccak256(PROXY_BYTECODE);\\n\\n    function deploy(\\n        bytes32 salt,\\n        bytes memory creationCode,\\n        uint256 value\\n    ) internal returns (address deployed) {\\n        bytes memory proxyChildBytecode = PROXY_BYTECODE;\\n\\n        address proxy;\\n        assembly {\\n            // Deploy a new contract with our pre-made bytecode via CREATE2.\\n            // We start 32 bytes into the code to avoid copying the byte length.\\n            proxy := create2(0, add(proxyChildBytecode, 32), mload(proxyChildBytecode), salt)\\n        }\\n        require(proxy != address(0), \\\"DEPLOYMENT_FAILED\\\");\\n\\n        deployed = getDeployed(salt);\\n        (bool success, ) = proxy.call{value: value}(creationCode);\\n        require(success && deployed.code.length != 0, \\\"INITIALIZATION_FAILED\\\");\\n    }\\n\\n    function getDeployed(bytes32 salt) internal view returns (address) {\\n        address proxy = keccak256(\\n            abi.encodePacked(\\n                // Prefix:\\n                bytes1(0xFF),\\n                // Creator:\\n                address(this),\\n                // Salt:\\n                salt,\\n                // Bytecode hash:\\n                PROXY_BYTECODE_HASH\\n            )\\n        ).fromLast20Bytes();\\n\\n        return\\n            keccak256(\\n                abi.encodePacked(\\n                    // 0xd6 = 0xc0 (short RLP prefix) + 0x16 (length of: 0x94 ++ proxy ++ 0x01)\\n                    // 0x94 = 0x80 + 0x14 (0x14 = the length of an address, 20 bytes, in hex)\\n                    hex\\\"d6_94\\\",\\n                    proxy,\\n                    hex\\\"01\\\" // Nonce of the proxy contract (1)\\n                )\\n            ).fromLast20Bytes();\\n    }\\n}\",\"keccak256\":\"0x315f0a8e85c30e8d59a549ac3c7b188c49732351b06357a48302ee006836149d\",\"license\":\"AGPL-3.0-only\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506104b2806100206000396000f3fe6080604052600436106100295760003560e01c806350f1c4641461002e578063cdcb760a1461006a575b600080fd5b34801561003a57600080fd5b5061004e610049366004610327565b61007d565b6040516001600160a01b03909116815260200160405180910390f35b61004e610078366004610375565b6100ba565b60008282604051602001610092929190610430565b6040516020818303038152906040528051906020012091506100b3826100f2565b9392505050565b600033836040516020016100cf929190610430565b6040516020818303038152906040528051906020012092506100b38383346101cc565b604080518082018252601081526f67363d3d37363d34f03d5260086018f360801b60209182015290516001600160f81b0319918101919091526001600160601b03193060601b166021820152603581018290527f21c35dbe1b344a2488cf3321d6ce542f8e9f305544ff09e4993a62319a497c1f60558201526000908190610191906075015b6040516020818303038152906040528051906020012090565b6040516135a560f21b60208201526001600160601b0319606083901b166022820152600160f81b60368201529091506100b390603701610178565b6000806040518060400160405280601081526020016f67363d3d37363d34f03d5260086018f360801b81525090506000858251602084016000f590506001600160a01b0381166102575760405162461bcd60e51b81526020600482015260116024820152701111541313d65351539517d19052531151607a1b60448201526064015b60405180910390fd5b610260866100f2565b92506000816001600160a01b0316858760405161027d919061044d565b60006040518083038185875af1925050503d80600081146102ba576040519150601f19603f3d011682016040523d82523d6000602084013e6102bf565b606091505b505090508080156102d957506001600160a01b0384163b15155b61031d5760405162461bcd60e51b815260206004820152601560248201527412539255125053125690551253d397d19052531151605a1b604482015260640161024e565b5050509392505050565b6000806040838503121561033a57600080fd5b82356001600160a01b038116811461035157600080fd5b946020939093013593505050565b634e487b7160e01b600052604160045260246000fd5b6000806040838503121561038857600080fd5b82359150602083013567ffffffffffffffff808211156103a757600080fd5b818501915085601f8301126103bb57600080fd5b8135818111156103cd576103cd61035f565b604051601f8201601f19908116603f011681019083821181831017156103f5576103f561035f565b8160405282815288602084870101111561040e57600080fd5b8260208601602083013760006020848301015280955050505050509250929050565b60609290921b6001600160601b0319168252601482015260340190565b6000825160005b8181101561046e5760208186018101518583015201610454565b50600092019182525091905056fea26469706673582212206694f923f0fef312eaa92d83e2a40a6dbb137c3992245102dd7be3edf23e532a64736f6c63430008170033",
+  "deployedBytecode": "0x6080604052600436106100295760003560e01c806350f1c4641461002e578063cdcb760a1461006a575b600080fd5b34801561003a57600080fd5b5061004e610049366004610327565b61007d565b6040516001600160a01b03909116815260200160405180910390f35b61004e610078366004610375565b6100ba565b60008282604051602001610092929190610430565b6040516020818303038152906040528051906020012091506100b3826100f2565b9392505050565b600033836040516020016100cf929190610430565b6040516020818303038152906040528051906020012092506100b38383346101cc565b604080518082018252601081526f67363d3d37363d34f03d5260086018f360801b60209182015290516001600160f81b0319918101919091526001600160601b03193060601b166021820152603581018290527f21c35dbe1b344a2488cf3321d6ce542f8e9f305544ff09e4993a62319a497c1f60558201526000908190610191906075015b6040516020818303038152906040528051906020012090565b6040516135a560f21b60208201526001600160601b0319606083901b166022820152600160f81b60368201529091506100b390603701610178565b6000806040518060400160405280601081526020016f67363d3d37363d34f03d5260086018f360801b81525090506000858251602084016000f590506001600160a01b0381166102575760405162461bcd60e51b81526020600482015260116024820152701111541313d65351539517d19052531151607a1b60448201526064015b60405180910390fd5b610260866100f2565b92506000816001600160a01b0316858760405161027d919061044d565b60006040518083038185875af1925050503d80600081146102ba576040519150601f19603f3d011682016040523d82523d6000602084013e6102bf565b606091505b505090508080156102d957506001600160a01b0384163b15155b61031d5760405162461bcd60e51b815260206004820152601560248201527412539255125053125690551253d397d19052531151605a1b604482015260640161024e565b5050509392505050565b6000806040838503121561033a57600080fd5b82356001600160a01b038116811461035157600080fd5b946020939093013593505050565b634e487b7160e01b600052604160045260246000fd5b6000806040838503121561038857600080fd5b82359150602083013567ffffffffffffffff808211156103a757600080fd5b818501915085601f8301126103bb57600080fd5b8135818111156103cd576103cd61035f565b604051601f8201601f19908116603f011681019083821181831017156103f5576103f561035f565b8160405282815288602084870101111561040e57600080fd5b8260208601602083013760006020848301015280955050505050509250929050565b60609290921b6001600160601b0319168252601482015260340190565b6000825160005b8181101561046e5760208186018101518583015201610454565b50600092019182525091905056fea26469706673582212206694f923f0fef312eaa92d83e2a40a6dbb137c3992245102dd7be3edf23e532a64736f6c63430008170033",
+  "devdoc": {
+    "author": "zefram.eth",
+    "kind": "dev",
+    "methods": {
+      "deploy(bytes32,bytes)": {
+        "details": "The provided salt is hashed together with msg.sender to generate the final salt",
+        "params": {
+          "creationCode": "The creation code of the contract to deploy",
+          "salt": "The deployer-specific salt for determining the deployed contract's address"
+        },
+        "returns": {
+          "deployed": "The address of the deployed contract"
+        }
+      },
+      "getDeployed(address,bytes32)": {
+        "details": "The provided salt is hashed together with the deployer address to generate the final salt",
+        "params": {
+          "deployer": "The deployer account that will call deploy()",
+          "salt": "The deployer-specific salt for determining the deployed contract's address"
+        },
+        "returns": {
+          "deployed": "The address of the contract that will be deployed"
+        }
+      }
+    },
+    "title": "Factory for deploying contracts to deterministic addresses via CREATE3",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "deploy(bytes32,bytes)": {
+        "notice": "Deploys a contract using CREATE3"
+      },
+      "getDeployed(address,bytes32)": {
+        "notice": "Predicts the address of a deployed contract"
+      }
+    },
+    "notice": "Enables deploying contracts using CREATE3. Each deployer (msg.sender) has its own namespace for deployed addresses.",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

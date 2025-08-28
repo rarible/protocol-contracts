@@ -134,7 +134,7 @@ const config: HardhatUserConfig = {
     hardhat: {
     forking: {
       url: createNetwork("mainnet").url!,
-      blockNumber: 18713700
+      
     },
     mining: {
       auto: true,

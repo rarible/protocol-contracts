@@ -11,8 +11,6 @@ import { task } from "hardhat/config";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { getLedgerSigner } from "@rarible/deploy-utils";
 import { ethers } from "ethers";
-import type { RariOFT, RariOFTAdapter } from "../typechain-types";
-import { RariOFT__factory, RariOFTAdapter__factory } from "../typechain-types";
 import { getEndpointV2IdByChainId } from "../utils";
 
 // Minimal ERC20 interface for decimals/approve (TypeChain may not include external OZ interfaces)
@@ -57,6 +55,9 @@ task("oft:send", "Bridge tokens via LayerZero V2 OFT/OFTAdapter")
   .addOptionalParam("gas", "lzReceive gas on destination (default 200000)", "200000")
   .addOptionalParam("payInLz", "Pay fee in LZ token instead of native (default false)", "false")
   .setAction(async (args, hre: HardhatRuntimeEnvironment) => {
+    const { RariOFT, RariOFTAdapter } = await import("../typechain-types");
+    const { RariOFT__factory, RariOFTAdapter__factory } = await import("../typechain-types");
+
     const { ethers: hreEthers, network } = hre;
     const signer = getLedgerSigner(hreEthers.provider, "m/44'/60'/0'/0/0");
     const sender = await signer.getAddress();
