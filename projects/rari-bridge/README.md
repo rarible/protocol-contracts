@@ -55,7 +55,7 @@ npx hardhat etherscan-verify-cli \
   --network sepolia \
   --contract src/RariOFTAdapter.sol:RariOFTAdapter \
   --api-url https://api-sepolia.etherscan.io/api \
-  --api-key E7MHB2Z34NBPNBNDW5ZXU18MV6VS4MKRF5 \
+  --api-key API_KEY \
   0xcD7f9F32393454Ac805bDC71BcfA98670E13605c \
   0xfAc63865D9cA6f1E70e9C441d4B01255519F7A54 \
   0x6C7Ab2202C98C4227C5c46f1417D81144DA716Ff \
@@ -90,12 +90,31 @@ npx hardhat wire --network mainnet --contract 0xb07F5467a257c6A13A039E3cF21D5b1f
 
 npx hardhat wire --network base --contract 0xC61f9663E05fccd84d4D6c56A373093437ECB899  --target 0xb07F5467a257c6A13A039E3cF21D5b1f225e1afD --target-chain-id 1
 
-npx hardhat oft:send --network mainnet --source 0xb07F5467a257c6A13A039E3cF21D5b1f225e1afD --target-chain-id 8453 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 3
+npx hardhat oft:send --network mainnet --source 0xb07F5467a257c6A13A039E3cF21D5b1f225e1afD --target-chain-id 8453 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 100
 
 npx hardhat oft:send --network base --source 0xC61f9663E05fccd84d4D6c56A373093437ECB899 --target-chain-id 1 --to 0xe223825497c435BAeaf318F03d33Ec704954028A --amount 1.1
 
 npx hardhat rate:set --network base 
 
-npx hardhat rate:set --network mainnet --contract 0xb07F5467a257c6A13A039E3cF21D5b1f225e1afD --configs '[{"dstEid":30184,"limit":"20000000000000000000","window":86400}]'
+npx hardhat rate:set --network mainnet --contract 0xb07F5467a257c6A13A039E3cF21D5b1f225e1afD --configs '[{"dstEid":30184,"limit":"20000000000000000000000","window":86400}]'
 
-npx hardhat rate:set --network base --contract 0xC61f9663E05fccd84d4D6c56A373093437ECB899 --configs '[{"dstEid":30101,"limit":"20000000000000000000","window":86400}]'
+npx hardhat rate:set --network base --contract 0xC61f9663E05fccd84d4D6c56A373093437ECB899 --configs '[{"dstEid":30101,"limit":"20000000000000000000000","window":86400}]'
+
+npx hardhat etherscan-verify-cli \
+  --network mainnet \
+  --contract src/RariOFTAdapter.sol:RariOFTAdapter \
+  --api-url https://api-sepolia.etherscan.io/api \
+  --api-key E7MHB2Z34NBPNBNDW5ZXU18MV6VS4MKRF5 \
+  0xb07F5467a257c6A13A039E3cF21D5b1f225e1afD \
+  0xfca59cd816ab1ead66534d82bc21e7515ce441cf \
+  0x1a44076050125825900e736c501f859c50fE728c \
+  0xe223825497c435BAeaf318F03d33Ec704954028A
+
+npx hardhat etherscan-verify-cli \
+  --network base \
+  --contract src/RariOFT.sol:RariOFT \
+  --api-url https://api.basescan.org/api \
+  --api-key E7MHB2Z34NBPNBNDW5ZXU18MV6VS4MKRF5 \
+  0xC61f9663E05fccd84d4D6c56A373093437ECB899 \
+  0x1a44076050125825900e736c501f859c50fE728c \
+  0xe223825497c435BAeaf318F03d33Ec704954028A
