@@ -114,7 +114,7 @@ npx hardhat etherscan-verify-cli \
   --network base \
   --contract src/RariOFT.sol:RariOFT \
   --api-url https://api.basescan.org/api \
-  --api-key E7MHB2Z34NBPNBNDW5ZXU18MV6VS4MKRF5 \
+  --api-key API_KEY \
   0xC61f9663E05fccd84d4D6c56A373093437ECB899 \
   0x1a44076050125825900e736c501f859c50fE728c \
   0xe223825497c435BAeaf318F03d33Ec704954028A
