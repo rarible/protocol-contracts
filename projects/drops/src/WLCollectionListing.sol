@@ -15,6 +15,20 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     
     bytes32 public constant WL_ADMIN_ROLE = keccak256("WL_ADMIN_ROLE");
 
+    // Errors
+    error InvalidOwner();
+    error InvalidTreasury();
+    error InvalidTokenAddress();
+    error PriceMustBeGreaterThanZero();
+    error InvalidCollectionAddress();
+    error InvalidChainId();
+    error WLTokenNotSetOrNativeDisabled();
+    error TreasuryNotSet();
+    error IncorrectNativeAmount();
+    error UnexpectedNativeValue();
+    error NotCreatorNorAdmin();
+    error CollectionNotWhitelisted();
+
     IWLCollectionRegistry public wlCollectionRegistry;
     IERC20 public wlToken;
     uint256 public wlPrice; // Default: 1 token with 18 decimals
@@ -38,8 +52,8 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     function initialize(address _initialOwner, address _initialTreasury) public initializer {
-        require(_initialOwner != address(0), "Invalid owner");
-        require(_initialTreasury != address(0), "Invalid treasury");
+        if (_initialOwner == address(0)) revert InvalidOwner();
+        if (_initialTreasury == address(0)) revert InvalidTreasury();
         
         __Ownable_init();
         __AccessControl_init();
@@ -57,14 +71,14 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     function setWLToken(address _wlToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_wlToken != address(0), "Invalid token address");
+        if (_wlToken == address(0)) revert InvalidTokenAddress();
         address oldToken = address(wlToken);
         wlToken = IERC20(_wlToken);
         emit WLTokenSet(oldToken, _wlToken);
     }
 
     function setWLPrice(uint256 _price) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_price > 0, "Price must be greater than 0");
+        if (_price == 0) revert PriceMustBeGreaterThanZero();
         uint256 oldPrice = wlPrice;
         wlPrice = _price;
         emit WLPriceSet(oldPrice, _price);
@@ -77,7 +91,7 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     function setNativeWLPrice(uint256 _price) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_price > 0, "Price must be greater than 0");
+        if (_price == 0) revert PriceMustBeGreaterThanZero();
         uint256 oldPrice = nativeWlPrice;
         nativeWlPrice = _price;
         emit NativeWLPriceSet(oldPrice, _price);
@@ -89,7 +103,7 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     function setTreasuryAddress(address _treasury) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_treasury != address(0), "Invalid treasury address");
+        if (_treasury == address(0)) revert InvalidTreasury();
         address oldTreasury = treasury;
         treasury = _treasury;
         emit TreasurySet(oldTreasury, _treasury);
@@ -101,19 +115,19 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @param chainId The chainId associated with the collection.
      */
     function addToWL(address collection, uint256 chainId) external payable nonReentrant {
-        require(collection != address(0) , "Invalid collection address");
-        require(address(wlToken) != address(0) || payWithNative == true, "WL token not set or pay with native is false");
-        require(treasury != address(0), "Treasury not set");
-        require(chainId != 0, "Invalid chainId");
+        if (collection == address(0)) revert InvalidCollectionAddress();
+        if (address(wlToken) == address(0) && payWithNative == false) revert WLTokenNotSetOrNativeDisabled();
+        if (treasury == address(0)) revert TreasuryNotSet();
+        if (chainId == 0) revert InvalidChainId();
         
         uint256 paymentAmount = 0;
         if (payWithNative) {
-            require(msg.value == nativeWlPrice, "Incorrect native token amount");
+            if (msg.value != nativeWlPrice) revert IncorrectNativeAmount();
             (bool success, ) = treasury.call{value: msg.value}("");
             require(success, "Transfer failed");
             paymentAmount = msg.value;
         } else {
-            require(msg.value == 0, "Do not send native tokens");
+            if (msg.value != 0) revert UnexpectedNativeValue();
             wlToken.safeTransferFrom(msg.sender, treasury, wlPrice);
             paymentAmount = wlPrice;
         }
@@ -127,10 +141,8 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
      */
     function removeFromWL(address collection, uint256 chainId) external nonReentrant  {
         address creator = wlCollectionRegistry.getCollection(collection, chainId);
-        require(
-            hasRole(WL_ADMIN_ROLE, msg.sender) || 
-            creator == msg.sender, "Collection not whitelisted"
-        );
+        if (creator == address(0)) revert CollectionNotWhitelisted();
+        if (!(hasRole(WL_ADMIN_ROLE, msg.sender) || creator == msg.sender)) revert NotCreatorNorAdmin();
 
         wlCollectionRegistry.removeFromWL(collection, chainId);
     }

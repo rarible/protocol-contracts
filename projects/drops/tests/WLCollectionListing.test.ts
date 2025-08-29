@@ -143,14 +143,14 @@ describe("WLCollectionListing", function () {
 
       await expect(
         listing.connect(user1).addToWL(collection1.address, CHAIN_ID_1, { value: nativeWlPrice.sub(1) })
-      ).to.be.revertedWith("Incorrect native token amount");
+      ).to.be.revertedWithCustomError(listing, "IncorrectNativeAmount");
     });
 
     it("should revert if wlToken not set and payWithNative is false", async () => {
       await listing.setPayWithNative(false);
       await expect(
         listing.connect(user1).addToWL(collection1.address, CHAIN_ID_1)
-      ).to.be.revertedWith("WL token not set or pay with native is false");
+      ).to.be.revertedWithCustomError(listing, "WLTokenNotSetOrNativeDisabled");
     });
 
     it("should revert when collection already whitelisted", async () => {
@@ -160,7 +160,7 @@ describe("WLCollectionListing", function () {
 
       await expect(
         listing.connect(user1).addToWL(collection1.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection already whitelisted on this chain");
+      ).to.be.revertedWithCustomError(registry, "CollectionAlreadyWhitelisted");
     });
 
     it("should revert when collection address is zero", async () => {
@@ -168,7 +168,7 @@ describe("WLCollectionListing", function () {
       await listing.setPayWithNative(false);
       await expect(
         listing.connect(user1).addToWL(ethers.constants.AddressZero, CHAIN_ID_1)
-      ).to.be.revertedWith("Invalid collection address");
+      ).to.be.revertedWithCustomError(listing, "InvalidCollectionAddress");
     });
 
     it("should revert when chainId is zero", async () => {
@@ -176,7 +176,7 @@ describe("WLCollectionListing", function () {
       await listing.setPayWithNative(false);
       await expect(
         listing.connect(user1).addToWL(collection1.address, 0)
-      ).to.be.revertedWith("Invalid chainId");
+      ).to.be.revertedWithCustomError(listing, "InvalidChainId");
     });
   });
 
@@ -205,13 +205,13 @@ describe("WLCollectionListing", function () {
     it("should revert if collection not whitelisted", async () => {
       await expect(
         listing.connect(user1).removeFromWL(collection2.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection not whitelisted");
+      ).to.be.revertedWithCustomError(listing, "CollectionNotWhitelisted");
     });
 
     it("should revert if non-creator/non-admin tries to remove", async () => {
       await expect(
         listing.connect(user2).removeFromWL(collection1.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection not whitelisted");
+      ).to.be.revertedWithCustomError(listing, "NotCreatorNorAdmin");
     });
   });
 
@@ -248,7 +248,7 @@ describe("WLCollectionListing", function () {
     it("should revert when setting zero wlPrice", async () => {
       await expect(
         listing.connect(owner).setWLPrice(0)
-      ).to.be.revertedWith("Price must be greater than 0");
+      ).to.be.revertedWithCustomError(listing, "PriceMustBeGreaterThanZero");
     });
 
     it("should allow role management by DEFAULT_ADMIN", async () => {
