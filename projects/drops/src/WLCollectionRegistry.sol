@@ -101,4 +101,7 @@ contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
         Collection memory col = collections[chainId][collection];
         return (col.creator);
     }
+
+    // ===== Storage gap for upgrade safety =====
+    uint256[50] private __gap;
 }

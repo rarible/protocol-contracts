@@ -9,8 +9,9 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IWLCollectionRegistry } from "./IWLCollectionRegistry.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable {
+contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeable, AccessControlUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
     
     bytes32 public constant WL_ADMIN_ROLE = keccak256("WL_ADMIN_ROLE");
@@ -28,6 +29,8 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     error UnexpectedNativeValue();
     error NotCreatorNorAdmin();
     error CollectionNotWhitelisted();
+    error RegistryNotSet();
+    error ZeroRegistryAddress();
 
     IWLCollectionRegistry public wlCollectionRegistry;
     IERC20 public wlToken;
@@ -48,8 +51,7 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
         _disableInitializers();
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
-    }
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function initialize(address _initialOwner, address _initialTreasury) public initializer {
         if (_initialOwner == address(0)) revert InvalidOwner();
@@ -59,6 +61,7 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
         __AccessControl_init();
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
+        __Pausable_init();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WL_ADMIN_ROLE, _initialOwner);
@@ -68,6 +71,14 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
         wlPrice = 1 ether;
         nativeWlPrice = 1 ether;
         payWithNative = true;
+    }
+
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
     }
 
     function setWLToken(address _wlToken) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -85,6 +96,7 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
     }
 
     function setWLCollectionRegistry(address _wlCollectionRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_wlCollectionRegistry == address(0)) revert ZeroRegistryAddress();
         address oldRegistry = address(wlCollectionRegistry);
         wlCollectionRegistry = IWLCollectionRegistry(_wlCollectionRegistry);
         emit WLCollectionRegistrySet(oldRegistry, _wlCollectionRegistry);
@@ -114,22 +126,20 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @param collection The collection address.
      * @param chainId The chainId associated with the collection.
      */
-    function addToWL(address collection, uint256 chainId) external payable nonReentrant {
+    function addToWL(address collection, uint256 chainId) external payable nonReentrant whenNotPaused {
         if (collection == address(0)) revert InvalidCollectionAddress();
         if (address(wlToken) == address(0) && payWithNative == false) revert WLTokenNotSetOrNativeDisabled();
         if (treasury == address(0)) revert TreasuryNotSet();
         if (chainId == 0) revert InvalidChainId();
+        if (address(wlCollectionRegistry) == address(0)) revert RegistryNotSet();
         
-        uint256 paymentAmount = 0;
         if (payWithNative) {
             if (msg.value != nativeWlPrice) revert IncorrectNativeAmount();
             (bool success, ) = treasury.call{value: msg.value}("");
             require(success, "Transfer failed");
-            paymentAmount = msg.value;
         } else {
             if (msg.value != 0) revert UnexpectedNativeValue();
             wlToken.safeTransferFrom(msg.sender, treasury, wlPrice);
-            paymentAmount = wlPrice;
         }
 
         wlCollectionRegistry.addToWL(collection, msg.sender, chainId);
@@ -139,7 +149,8 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
      * @notice Removes a collection from the whitelist.
      * Only the collection creator can call this.
      */
-    function removeFromWL(address collection, uint256 chainId) external nonReentrant  {
+    function removeFromWL(address collection, uint256 chainId) external nonReentrant whenNotPaused {
+        if (address(wlCollectionRegistry) == address(0)) revert RegistryNotSet();
         address creator = wlCollectionRegistry.getCollection(collection, chainId);
         if (creator == address(0)) revert CollectionNotWhitelisted();
         if (!(hasRole(WL_ADMIN_ROLE, msg.sender) || creator == msg.sender)) revert NotCreatorNorAdmin();
@@ -147,4 +158,6 @@ contract WLCollectionListing is Initializable, UUPSUpgradeable, OwnableUpgradeab
         wlCollectionRegistry.removeFromWL(collection, chainId);
     }
 
+    // ===== Storage gap for upgrade safety =====
+    uint256[50] private __gap;
 }
