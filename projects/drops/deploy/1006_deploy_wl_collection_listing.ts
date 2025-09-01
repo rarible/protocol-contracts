@@ -12,6 +12,7 @@ const deployLock: DeployFunction = async (
     const { getNamedAccounts } = hre;
     const {deployer,} = await getNamedAccounts();
     const WL_ADMIN_ROLE = ethers.utils.id("WL_ADMIN_ROLE");
+    const treasury = process.env.TREASURY_ADDRESS;
     console.log('deployer', deployer)
     // 1. avoid gasLimit
     // 2. gas price auto
@@ -22,7 +23,7 @@ const deployLock: DeployFunction = async (
             execute: {
                 init: {
                     methodName: "initialize",
-                    args: [deployer, deployer],
+                    args: [deployer, treasury],
                 },
             },
             proxyContract: 'UUPS',
