@@ -16,10 +16,11 @@ export async function setPlatformFeeInfo(
   signer: Signer
 ): Promise<void> {
   const contract = PlatformFee__factory.connect(contractAddress, signer);
-  const tx = await contract.setFlatPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+  // Correct BPS setter
+  const tx = await contract.setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
   console.log(`Transaction sent: ${tx.hash}`);
   await tx.wait();
-  console.log(`✅ Platform fee set for ${platformFeeRecipient} of ${platformFeeBps}`);
+  console.log(`✅ Platform fee (BPS) set for ${platformFeeRecipient} to ${platformFeeBps}`);
 }
 
 /**

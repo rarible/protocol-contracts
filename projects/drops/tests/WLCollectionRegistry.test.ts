@@ -68,13 +68,13 @@ describe("WLCollectionRegistry", function () {
     it("should revert when adding zero address collection", async () => {
       await expect(
         registry.connect(admin).addToWL(ethers.constants.AddressZero, user1.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Invalid collection address");
+      ).to.be.revertedWithCustomError(registry, "InvalidCollectionAddress");
     });
 
     it("should revert when chainId is zero", async () => {
       await expect(
         registry.connect(admin).addToWL(collection1.address, user1.address, 0)
-      ).to.be.revertedWith("Invalid chainId");
+      ).to.be.revertedWithCustomError(registry, "InvalidChainId");
     });
   });
 
@@ -86,7 +86,7 @@ describe("WLCollectionRegistry", function () {
         .withArgs(collection1.address, user1.address, CHAIN_ID_1);
 
       await expect(registry.connect(admin).addToWL(collection1.address, user1.address, CHAIN_ID_1))
-        .to.be.revertedWith("Collection already whitelisted on this chain");
+        .to.be.revertedWithCustomError(registry, "CollectionAlreadyWhitelisted");
     });
   });
 
@@ -113,7 +113,7 @@ describe("WLCollectionRegistry", function () {
     it("should revert when collection not whitelisted", async () => {
       await expect(
         registry.connect(admin).removeFromWL(collection2.address, CHAIN_ID_1)
-      ).to.be.revertedWith("Collection not whitelisted on this chain");
+      ).to.be.revertedWithCustomError(registry, "CollectionNotWhitelisted");
     });
   });
 

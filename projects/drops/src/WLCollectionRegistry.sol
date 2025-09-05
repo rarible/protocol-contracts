@@ -16,6 +16,13 @@ contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
     
     bytes32 public constant WL_ADMIN_ROLE = keccak256("WL_ADMIN_ROLE");
 
+    // Errors
+    error InvalidOwner();
+    error InvalidCollectionAddress();
+    error InvalidChainId();
+    error CollectionAlreadyWhitelisted();
+    error CollectionNotWhitelisted();
+
     struct Collection {
         address creator;
         address collection;
@@ -33,7 +40,7 @@ contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
     }
 
     function initialize(address _initialOwner) public initializer {
-        require(_initialOwner != address(0), "Invalid owner");
+        if (_initialOwner == address(0)) revert InvalidOwner();
         
         __Ownable_init();
         __AccessControl_init();
@@ -55,9 +62,9 @@ contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @param chainId The chainId associated with the collection.
      */
     function addToWL(address collection, address creator, uint256 chainId) external nonReentrant onlyRole(WL_ADMIN_ROLE) {
-        require(collection != address(0), "Invalid collection address");
-        require(collections[chainId][collection].creator == address(0), "Collection already whitelisted on this chain");
-        require(chainId != 0, "Invalid chainId");
+        if (collection == address(0)) revert InvalidCollectionAddress();
+        if (collections[chainId][collection].creator != address(0)) revert CollectionAlreadyWhitelisted();
+        if (chainId == 0) revert InvalidChainId();
         
         collections[chainId][collection] = Collection({
             creator: creator,
@@ -74,7 +81,7 @@ contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
      * @param chainId The chainId associated with the collection.
      */
     function removeFromWL(address collection, uint256 chainId) external nonReentrant onlyRole(WL_ADMIN_ROLE) {
-        require(collections[chainId][collection].creator != address(0), "Collection not whitelisted on this chain");
+        if (collections[chainId][collection].creator == address(0)) revert CollectionNotWhitelisted();
         Collection memory col = collections[chainId][collection];
         
         delete collections[chainId][collection];
@@ -94,4 +101,7 @@ contract WLCollectionRegistry is Initializable, UUPSUpgradeable, OwnableUpgradea
         Collection memory col = collections[chainId][collection];
         return (col.creator);
     }
+
+    // ===== Storage gap for upgrade safety =====
+    uint256[50] private __gap;
 }
