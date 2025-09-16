@@ -43,6 +43,8 @@ const deployLock: DeployFunction = async (
         rewardToken = "0xDe438f962c321680538A95826B14D41B8334AE43"
     } else if(network.config.chainId === 1) { // mainnet
         rewardToken = "0xfca59cd816ab1ead66534d82bc21e7515ce441cf"
+    } else if(network.config.chainId === 8453) { // base
+        rewardToken = "0xC61f9663E05fccd84d4D6c56A373093437ECB899"
     } else {
         throw new Error("Unsupported network");
     }
