@@ -34,28 +34,28 @@ const deployLock: DeployFunction = async (
         deployResult.transactionHash!
     );
 
-    console.log("deploy tx nonce", tx.nonce); // should print 0
-    console.log("transactionHash", deployResult.transactionHash)
+//     console.log("deploy tx nonce", tx.nonce); // should print 0
+//     console.log("transactionHash", deployResult.transactionHash)
 
-    let rewardToken = "0x0000000000000000000000000000000000000000"
+//     let rewardToken = "0x0000000000000000000000000000000000000000"
 
-    if(network.config.chainId === 11155111) { // sepolia
-        rewardToken = "0xDe438f962c321680538A95826B14D41B8334AE43"
-    } else if(network.config.chainId === 1) { // mainnet
-        rewardToken = "0xfca59cd816ab1ead66534d82bc21e7515ce441cf"
-    } else if(network.config.chainId === 8453) { // base
-        rewardToken = "0xC61f9663E05fccd84d4D6c56A373093437ECB899"
-    } else {
-        throw new Error("Unsupported network");
-    }
+//     if(network.config.chainId === 11155111) { // sepolia
+//         rewardToken = "0xDe438f962c321680538A95826B14D41B8334AE43"
+//     } else if(network.config.chainId === 1) { // mainnet
+//         rewardToken = "0xfca59cd816ab1ead66534d82bc21e7515ce441cf"
+//     } else if(network.config.chainId === 8453) { // base
+//         rewardToken = "0xC61f9663E05fccd84d4D6c56A373093437ECB899"
+//     } else {
+//         throw new Error("Unsupported network");
+//     }
 
-   const txSetRewardToken = await execute(
-        "RariReward",
-        { from: deployer, log: true },
-        "setRewardToken",
-        rewardToken
-      );
-    console.log("txSetRewardToken", txSetRewardToken.transactionHash)
+//    const txSetRewardToken = await execute(
+//         "RariReward",
+//         { from: deployer, log: true },
+//         "setRewardToken",
+//         rewardToken
+//       );
+//     console.log("txSetRewardToken", txSetRewardToken.transactionHash)
 };
 
 export default deployLock;
