@@ -2,13 +2,15 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { ERC721RaribleMinimal, ERC721RaribleMinimal__factory } from "@rarible/tokens/jszk";
 import { BigNumber } from 'ethers';
+import { getSigner } from '../utils/signer';
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     // need to get signer from hre deployment !
-    const { deploy, execute, getSigner } = hre.deployments;
+    const { deploy, execute } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
 
-    const signer = await getSigner(deployer);
+    const signer = await getSigner(hre);
 
     const signerAddress = await signer.getAddress()
 
@@ -21,8 +23,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     let address = "0x0ECA5f8b4CA915f143a98cB96E41f946136cced2"
 
     try {
-        const receipt = await execute(contractName, { from: deployer, log: true }, "createToken(string,string,string,string,address[],uint256)", "Mystical Cats 7",
-            "MYSTICAL7",
+        const receipt = await execute(contractName, { from: deployer, log: true, gasLimit: 1500000 }, "createToken(string,string,string,string,address[],uint256)", "Mystical Cats 7",
+            "MYST02",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
             [signerAddress],

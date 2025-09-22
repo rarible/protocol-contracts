@@ -206,7 +206,7 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
         rewardToken.safeTransfer(user, rewardAmount);
 
         emit RewardClaimed(user, epoch, pointsToClaim, rewardAmount);
-        emit Transfer(address(0), user, rewardAmount);
+        emit Transfer(address(0), user, pointsToClaim);
     }
 
     /**
