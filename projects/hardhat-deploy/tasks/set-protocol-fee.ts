@@ -19,8 +19,8 @@ task("set-protocol-fee", "Sets the protocol fee on ExchangeV2")
     let { exchange } = args;
 
     console.log(`Setting protocol fee for ExchangeV2 at ${exchange}`);
-    console.log(`New fee: ${sellerFeeBps} bps (${(parseInt(sellerFeeBps) / 10000).toFixed(2)}%)`);
-    console.log(`New fee: ${buyerFeeBps} bps (${(parseInt(buyerFeeBps) / 10000).toFixed(2)}%)`);
+    console.log(`New fee: ${sellerFeeBps} bps (${(parseInt(sellerFeeBps) / 10000).toFixed(4)}%)`);
+    console.log(`New fee: ${buyerFeeBps} bps (${(parseInt(buyerFeeBps) / 10000).toFixed(4)}%)`);
     if (recipient) console.log(`New fee recipient: ${recipient}`);
     else console.log(`Fee recipient: (no change)`);
 
