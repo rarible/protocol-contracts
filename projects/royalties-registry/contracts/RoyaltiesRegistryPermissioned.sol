@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.2 <0.8.0;
+
 pragma abicoder v2;
 
 import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
@@ -12,12 +13,16 @@ import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable {
+contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable, AccessControlUpgradeable {
+
     /// @dev deprecated
     event RoyaltiesSetForToken(address indexed token, uint indexed tokenId, LibPart.Part[] royalties);
-    /// @dev emitted when royalties set for token in 
+    /// @dev emitted when royalties set for token in
     event RoyaltiesSetForContract(address indexed token, LibPart.Part[] royalties);
+    /// @dev emitted when royalties set for a collection address
+    event RoyaltiesAllowedChanged(address indexed token, bool allowed);
 
     /// @dev struct to store royalties in royaltiesByToken
     struct RoyaltiesSet {
@@ -33,16 +38,20 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     mapping(address => uint) public royaltiesProviders;
     /// @dev stores the white list for collections with royalties
     mapping(address => bool) public royaltiesAllowed;
-
     /// @dev total amount or supported royalties types
     // 0 - royalties type is unset
     // 1 - royaltiesByToken, 2 - v2, 3 - v1,
     // 4 - external provider, 5 - EIP-2981
     // 6 - unsupported/nonexistent royalties type
+
     uint constant royaltiesTypesAmount = 6;
+    bytes32 public constant WHITELISTER_ROLE = keccak256("WHITELISTER_ROLE");
 
     function __RoyaltiesRegistry_init() external initializer {
         __Ownable_init_unchained();
+        __AccessControl_init_unchained();
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(WHITELISTER_ROLE, _msgSender());
     }
 
     /// @dev sets external provider for token contract, and royalties type = 4
@@ -117,25 +126,25 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     }
 
     /// @dev calculates royalties type for token contract
-    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) {   
+    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) {
         try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns(bool result) {
             if (result) {
                 return 2;
             }
         } catch { }
 
-        try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns(bool result) {
+            try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns(bool result) {
             if (result) {
                 return 3;
             }
         } catch { }
-        
+
         try IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES) returns(bool result) {
             if (result) {
                 return 5;
             }
         } catch { }
-        
+
         if (royaltiesProvider != address(0)) {
             return 4;
         }
@@ -151,7 +160,6 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
         if(royaltiesAllowed[token]) {
             uint royaltiesProviderData = royaltiesProviders[token];
-
             address royaltiesProvider = address(royaltiesProviderData);
             uint royaltiesType = _getRoyaltiesType(royaltiesProviderData);
 
@@ -159,7 +167,6 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
             if (royaltiesType == 0) {
                 // calculating royalties type for token
                 royaltiesType = calculateRoyaltiesType(token, royaltiesProvider);
-                
                 //saving royalties type
                 setRoyaltiesType(token, royaltiesType, royaltiesProvider);
             }
@@ -253,5 +260,11 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
         }
     }
 
-    uint256[46] private __gap;
+    function setRoyaltiesAllowed(address token, bool allowed) external {
+        require(hasRole(WHITELISTER_ROLE, _msgSender()), "not whitelister");
+        royaltiesAllowed[token] = allowed;
+        emit RoyaltiesAllowedChanged(token, allowed);
+    }
+
+    uint256[45] private __gap;
 }
