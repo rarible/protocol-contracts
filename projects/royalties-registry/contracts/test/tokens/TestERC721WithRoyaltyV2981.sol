@@ -15,4 +15,8 @@ contract TestERC721WithRoyaltyV2981 is Initializable, Royalties2981TestImpl, ERC
         __Ownable_init_unchained();
         setRoyalties(1000);
     }
+
+    function mint(address to, uint tokenId) external {
+        _mint(to, tokenId);
+    }
 }

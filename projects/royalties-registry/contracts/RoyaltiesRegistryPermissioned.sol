@@ -11,6 +11,7 @@ import "@rarible/royalties/contracts/LibRoyalties2981.sol";
 import "@rarible/royalties/contracts/RoyaltiesV1.sol";
 import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
+import "@openzeppelin/contracts-upgradeable/introspection/IERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
@@ -49,8 +50,9 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
 
     function __RoyaltiesRegistry_init(address _initialOwner) external initializer {
         require(_initialOwner != address(0), "Invalid owner");
-        __Ownable_init_unchained();
-        __AccessControl_init_unchained();
+        __Context_init();
+        __Ownable_init();
+        __AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
         _setupRole(WHITELISTER_ROLE, _initialOwner);
         transferOwnership(_initialOwner);
