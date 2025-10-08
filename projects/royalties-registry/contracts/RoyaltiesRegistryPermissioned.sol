@@ -47,11 +47,13 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     uint constant royaltiesTypesAmount = 6;
     bytes32 public constant WHITELISTER_ROLE = keccak256("WHITELISTER_ROLE");
 
-    function __RoyaltiesRegistry_init() external initializer {
+    function __RoyaltiesRegistry_init(address _initialOwner) external initializer {
+        require(_initialOwner != address(0), "Invalid owner");
         __Ownable_init_unchained();
         __AccessControl_init_unchained();
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(WHITELISTER_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
+        _setupRole(WHITELISTER_ROLE, _initialOwner);
+        transferOwnership(_initialOwner);
     }
 
     /// @dev sets external provider for token contract, and royalties type = 4

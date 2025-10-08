@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { RoyaltiesRegistryPermissioned, TestERC721WithRoyaltiesV1OwnableUpgradeable, TestERC721WithRoyaltiesV2OwnableUpgradeable, RoyaltiesProviderTest, TestERC721WithRoyaltyV2981, TestERC721RoyaltiesV2 } from "../typechain-types";
+import { RoyaltiesRegistryPermissioned, TestERC721WithRoyaltiesV1OwnableUpgradeable, TestERC721WithRoyaltiesV2OwnableUpgradeable, RoyaltiesProviderTest, TestERC721WithRoyaltyV2981, TestERC721RoyaltiesV2, RoyaltiesRegistryPermissioned__factory } from "../typechain-types";
 import { LibPart } from "../typechain-types/contracts/RoyaltiesRegistryPermissioned";
+import { upgrades } from "hardhat";
 
 describe("RoyaltiesRegistryPermissioned", function () {
   let registry: RoyaltiesRegistryPermissioned;
@@ -20,11 +21,19 @@ describe("RoyaltiesRegistryPermissioned", function () {
     { account: "0x0000000000000000000000000000000000000002", value: 500 },
   ];
 
+
   beforeEach(async function () {
     [owner, whitelister, user] = await ethers.getSigners();
-    const RoyaltiesRegistryPermissionedFactory = await ethers.getContractFactory("RoyaltiesRegistryPermissioned");
-    registry = await RoyaltiesRegistryPermissionedFactory.deploy() as RoyaltiesRegistryPermissioned;
-    await registry.connect(owner).__RoyaltiesRegistry_init();
+    const RoyaltiesRegistryPermissionedFactory = await ethers.getContractFactory("RoyaltiesRegistryPermissioned") as RoyaltiesRegistryPermissioned__factory;
+
+    registry = await upgrades.deployProxy(
+      RoyaltiesRegistryPermissionedFactory, // Contract factory
+      [owner.address], // Arguments for the initializer function
+      {
+        initializer: "initialize", // Name of the initializer function
+        kind: "uups", // Specify transparent proxy
+      }
+    ) as RoyaltiesRegistryPermissioned;
 
     await registry.connect(owner).grantRole(await registry.WHITELISTER_ROLE(), whitelister.address);
 
