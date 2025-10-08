@@ -91,7 +91,7 @@ describe("RoyaltiesRegistryPermissioned", function () {
       // Mint tokens and set royalties where applicable
       await erc721V1.connect(owner).mint(user.address, tokenId, royalties);
       await erc721V2.connect(owner).mint(user.address, tokenId, royalties);
-      await erc721V2981.connect(owner).mint(user.address, tokenId, royalties);
+      await erc721V2981.connect(owner).mint(user.address, tokenId);
       await erc721V2Legacy.connect(owner).mint(user.address, tokenId, royalties);
 
       // Set external provider
@@ -100,14 +100,14 @@ describe("RoyaltiesRegistryPermissioned", function () {
     });
 
     it("should return empty royalties if not allowed", async function () {
-      const result = await registry.getRoyalties(erc721V1.address, tokenId);
-      expect(result.data.length).to.equal(0);
+      const result = await registry.callStatic.getRoyalties(erc721V1.address, tokenId);
+      expect(result.length).to.equal(0);
     });
 
     it("should return royalties for V1 if allowed", async function () {
       await registry.connect(whitelister).setRoyaltiesAllowed(erc721V1.address, true);
-      const result = await registry.getRoyalties(erc721V1.address, tokenId);
-      expect(result.data.length).to.equal(royalties.length);
+      const result = await registry.callStatic.getRoyalties(erc721V1.address, tokenId);
+      expect(result.length).to.equal(royalties.length);
       expect(result[0].account).to.equal(royalties[0].account);
       expect(result[0].value).to.equal(royalties[0].value);
       expect(result[1].account).to.equal(royalties[1].account);
@@ -116,26 +116,26 @@ describe("RoyaltiesRegistryPermissioned", function () {
 
     it("should return royalties for V2 if allowed", async function () {
       await registry.connect(whitelister).setRoyaltiesAllowed(erc721V2.address, true);
-      const result = await registry.getRoyalties(erc721V2.address, tokenId);
-      expect(result.data.length).to.equal(royalties.length);
+      const result = await registry.callStatic.getRoyalties(erc721V2.address, tokenId);
+      expect(result.length).to.equal(royalties.length);
     });
 
     it("should return royalties for 2981 if allowed", async function () {
       await registry.connect(whitelister).setRoyaltiesAllowed(erc721V2981.address, true);
-      const result = await registry.getRoyalties(erc721V2981.address, tokenId);
-      expect(result.data.length).to.equal(1); // Default 10% royalty
+      const result = await registry.callStatic.getRoyalties(erc721V2981.address, tokenId);
+      expect(result.length).to.equal(1); // Default 10% royalty
     });
 
     it("should return royalties for external provider if allowed", async function () {
       await registry.connect(whitelister).setRoyaltiesAllowed(erc721V1.address, true);
-      const result = await registry.getRoyalties(erc721V1.address, tokenId);
-      expect(result.data.length).to.equal(royalties.length);
+      const result = await registry.callStatic.getRoyalties(erc721V1.address, tokenId);
+      expect(result.length).to.equal(royalties.length);
     });
 
     it("should return royalties for V2 Legacy if allowed", async function () {
       await registry.connect(whitelister).setRoyaltiesAllowed(erc721V2Legacy.address, true);
-      const result = await registry.getRoyalties(erc721V2Legacy.address, tokenId);
-      expect(result.data.length).to.equal(royalties.length);
+      const result = await registry.callStatic.getRoyalties(erc721V2Legacy.address, tokenId);
+      expect(result.length).to.equal(royalties.length);
     });
   });
 });
