@@ -266,5 +266,13 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
         emit RoyaltiesAllowedChanged(token, allowed);
     }
 
+    function setRoyaltiesAllowedBulk(address[] calldata tokens, bool allowed) external {
+        require(hasRole(WHITELISTER_ROLE, _msgSender()), "not whitelister");
+        for (uint i = 0; i < tokens.length; ++i) {
+            royaltiesAllowed[tokens[i]] = allowed;
+            emit RoyaltiesAllowedChanged(tokens[i], allowed);
+        }
+    }
+
     uint256[45] private __gap;
 }
