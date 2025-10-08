@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig, DEPLOY_FROM } from '../utils/utils';
+import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig, DEPLOY_FROM, ROYALTIES_REGISTRY_TYPE } from '../utils/utils';
 
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -30,7 +30,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
   if(deployer === undefined) {
     deployer = DEPLOY_FROM!;
   }
-  const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
+  const royaltiesRegistryAddress = (await hre.deployments.get(ROYALTIES_REGISTRY_TYPE)).address;
 
   // Deploy ExchangeV2
   const exchangeV2Receipt = await deploy(contractName, {
