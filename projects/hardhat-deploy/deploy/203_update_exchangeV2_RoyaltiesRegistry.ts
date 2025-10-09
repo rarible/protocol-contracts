@@ -9,6 +9,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
   const royaltiesRegistry = (await hre.deployments.get(ROYALTIES_REGISTRY_TYPE)).address;
 
+  console.log("deploer", deployer)
+
   let contractName: string = "";
   //deploying ExchangeV2 with meta support if needed
   if (!!deploy_meta) {
