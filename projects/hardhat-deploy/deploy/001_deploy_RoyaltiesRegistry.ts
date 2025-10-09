@@ -23,6 +23,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       contract: "hardhat-deploy-immutable-proxy/solc_0.8/openzeppelin/proxy/transparent/ProxyAdmin.sol:ProxyAdmin"
     });
 
+    // deploy with create3 proxy contract to have deterministic address for proxy(stop depend on constructor params)
     await deploy('RoyaltiesRegistryPermissioned', {
       from: deployer,
       proxy: {
