@@ -86,6 +86,15 @@ const config: HardhatUserConfig = {
           },
         },
       },
+      "src/DefaultProxyAdmin.sol": {
+        version: "0.8.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     },
     settings: {
       metadata: {
