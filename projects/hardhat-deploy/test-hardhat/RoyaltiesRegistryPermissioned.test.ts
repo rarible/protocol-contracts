@@ -58,17 +58,17 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 { account: user.address, value: 1000 },
             ];
             await erc721V2.connect(owner).mint(user.address, tokenId, oneRoyalty);
-            const result = await registry.getRoyalties(erc721V2.address, tokenId);
+            const result = await registry.callStatic.getRoyalties(erc721V2.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
         });
         it("2: ERC721 without royalties - not allowed: empty", async function () {
             await erc721NoRoyalties.connect(owner).mint(user.address, tokenId);
-            const result = await registry.getRoyalties(erc721NoRoyalties.address, tokenId);
+            const result = await registry.callStatic.getRoyalties(erc721NoRoyalties.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
         });
         it("3: ERC721 with EIP-2981 - not allowed: empty", async function () {
             await erc721V2981.connect(owner).mint(user.address, tokenId);
-            const result = await registry.getRoyalties(erc721V2981.address, tokenId);
+            const result = await registry.callStatic.getRoyalties(erc721V2981.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
         });
         it("4: ERC721 with Rarible royalties (two recipients) - not allowed: empty", async function () {
@@ -77,7 +77,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 { account: whitelister.address, value: 500 },
             ];
             await erc721V2.connect(owner).mint(user.address, tokenId, twoRoyalties);
-            const result = await registry.getRoyalties(erc721V2.address, tokenId);
+            const result = await registry.callStatic.getRoyalties(erc721V2.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
         });
     });
@@ -89,7 +89,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 ];
                 await erc721V2.connect(owner).mint(user.address, tokenId, oneRoyalty);
                 await registry.connect(whitelister).setRoyaltiesAllowed(erc721V2.address, true);
-                const result = await registry.getRoyalties(erc721V2.address, tokenId);
+                const result = await registry.callStatic.getRoyalties(erc721V2.address, tokenId);
                 expect(result.length).to.equal(1);
                 expect(result[0].account).to.equal(oneRoyalty[0].account);
                 expect(result[0].value).to.equal(oneRoyalty[0].value);
@@ -97,13 +97,13 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             it("2: ERC721 without royalties - allowed: empty", async function () {
                 await erc721NoRoyalties.connect(owner).mint(user.address, tokenId);
                 await registry.connect(whitelister).setRoyaltiesAllowed(erc721NoRoyalties.address, true);
-                const result = await registry.getRoyalties(erc721NoRoyalties.address, tokenId);
+                const result = await registry.callStatic.getRoyalties(erc721NoRoyalties.address, tokenId);
                 expect(result.length).to.equal(0, "Should return empty even when allowed (no royalties)");
             });
             it("3: ERC721 with EIP-2981 - allowed: one royalty", async function () {
                 await erc721V2981.connect(owner).mint(user.address, tokenId);
                 await registry.connect(whitelister).setRoyaltiesAllowed(erc721V2981.address, true);
-                const result = await registry.getRoyalties(erc721V2981.address, tokenId);
+                const result = await registry.callStatic.getRoyalties(erc721V2981.address, tokenId);
                 expect(result.length).to.equal(1);
                 expect(result[0].value).to.equal(1000); // Default in mock
             });
@@ -114,7 +114,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 ];
                 await erc721V2.connect(owner).mint(user.address, tokenId, twoRoyalties);
                 await registry.connect(whitelister).setRoyaltiesAllowed(erc721V2.address, true);
-                const result = await registry.getRoyalties(erc721V2.address, tokenId);
+                const result = await registry.callStatic.getRoyalties(erc721V2.address, tokenId);
                 expect(result.length).to.equal(2);
                 expect(result[0].account).to.equal(twoRoyalties[0].account);
                 expect(result[0].value).to.equal(twoRoyalties[0].value);
