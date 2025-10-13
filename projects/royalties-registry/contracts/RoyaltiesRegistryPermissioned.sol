@@ -71,7 +71,11 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
 
     /// @dev returns royalties type for token contract
     function getRoyaltiesType(address token) external view returns(uint) {
-        return _getRoyaltiesType(royaltiesProviders[token]);
+        if(royaltiesAllowed[token]) {
+            return _getRoyaltiesType(royaltiesProviders[token]);
+        } else {
+            return 6;
+        }
     }
 
     /// @dev returns royalties type from uint
