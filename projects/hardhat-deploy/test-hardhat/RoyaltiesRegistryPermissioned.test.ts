@@ -43,14 +43,17 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             await registry.connect(owner).grantRole(await registry.WHITELISTER_ROLE(), whitelister.address);
         }
         // Deploy mocks
+        console.log("TestERC721WithRoyaltiesV2OwnableUpgradeable");
         const TestERC721V2Factory = await ethers.getContractFactory("TestERC721WithRoyaltiesV2OwnableUpgradeable");
         erc721V2 = await TestERC721V2Factory.deploy() as TestERC721WithRoyaltiesV2OwnableUpgradeable;
         await erc721V2.connect(owner).initialize();
+        console.log("TestERC721WithRoyaltyV2981");
         const TestERC721V2981Factory = await ethers.getContractFactory("TestERC721WithRoyaltyV2981");
         erc721V2981 = await TestERC721V2981Factory.deploy() as TestERC721WithRoyaltyV2981;
         await erc721V2981.connect(owner).initialize();
+        console.log("TestERC721");
         const TestERC721Factory = await ethers.getContractFactory("TestERC721");
-        erc721NoRoyalties = await TestERC721Factory.deploy() as TestERC721;
+        erc721NoRoyalties = await TestERC721Factory.deploy("Test No Royalties", "TNR") as TestERC721;
     });
     describe("getRoyalties Scenarios - Not Allowed", function () {
         it("1: ERC721 with Rarible royalties (one recipient) - not allowed: empty", async function () {
