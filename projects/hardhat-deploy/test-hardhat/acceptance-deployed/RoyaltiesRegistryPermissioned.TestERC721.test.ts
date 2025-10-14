@@ -14,19 +14,34 @@ import { upgrades } from "hardhat";
 import { ExchangeV2, ExchangeV2__factory, TransferProxy, TransferProxy__factory, ERC20TransferProxy, ERC20TransferProxy__factory, ERC721LazyMintTransferProxy, ERC721LazyMintTransferProxy__factory, ERC1155LazyMintTransferProxy, ERC1155LazyMintTransferProxy__factory, AssetMatcherCollection, AssetMatcherCollection__factory } from "../../typechain-types";
 import { ZERO, ETH, ERC721, ERC721_LAZY, ERC1155_LAZY, ERC20, COLLECTION } from "@rarible/exchange-v2/sdk/utils";
 import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/exchange-v2/sdk/listingUtils";
+import { BigNumber, Wallet } from "ethers";
 describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let registry: RoyaltiesRegistryPermissioned;
     let transferProxy: TransferProxy;
     let exchange: ExchangeV2;
     let owner: SignerWithAddress;
-    let whitelister: SignerWithAddress;
-    let seller: SignerWithAddress;
-    let buyer: SignerWithAddress;
+    let whitelister: Wallet;
+    let seller: Wallet;
+    let buyer: Wallet;
     let erc721NoRoyalties: TestERC721;
     const tokenId = 1;
     const price = ethers.utils.parseEther("0.00001");
     beforeEach(async function () {
-        [owner, whitelister, seller, buyer] = await ethers.getSigners();
+        [owner] = await ethers.getSigners();
+        const PRIVATE_KEY1 = process.env.PRIVATE_KEY1;
+        const PRIVATE_KEY2 = process.env.PRIVATE_KEY2;
+        
+        if (!PRIVATE_KEY1 || !PRIVATE_KEY2) {
+          throw new Error("PRIVATE_KEY1 and PRIVATE_KEY2 must be set in your .env");
+        }
+    
+        // Set up seller and buyer as Wallet signers
+        seller = new Wallet(PRIVATE_KEY1, ethers.provider);
+        buyer = new Wallet(PRIVATE_KEY2, ethers.provider);
+        whitelister = new Wallet(PRIVATE_KEY1, ethers.provider);
+
+        console.log("Seller address", seller.address);
+        console.log("Buyer address", buyer.address);
         const registryAddress = (await deployments.get("RoyaltiesRegistryPermissioned")).address;
         console.log("Registry address", registryAddress);
         const transferProxyAddress = (await deployments.get("TransferProxy")).address;
@@ -42,10 +57,11 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("TestERC721");
         const TestERC721Factory = await ethers.getContractFactory("TestERC721");
         erc721NoRoyalties = await TestERC721Factory.deploy("Test No Royalties", "TNR") as TestERC721;
+        await erc721NoRoyalties.deployed();
     });
     describe("getRoyalties Scenarios - Not Allowed", function () {
         it("1: ERC721 without royalties - not allowed: empty", async function () {
-            await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId);
+            (await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId)).wait(2);
             const result = await registry.callStatic.getRoyalties(erc721NoRoyalties.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
         });
