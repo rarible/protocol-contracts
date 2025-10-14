@@ -20,6 +20,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let erc721NoRoyalties: TestERC721;
     const tokenId = 1;
     const price = ethers.utils.parseEther("0.00001");
+    const numberOfBlocksToWait = 1;
 
     // Helpers to manage nonces incrementally
     let sellerCurrentNonce: number;
@@ -76,7 +77,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         }) as TestERC721;
         const deployRes = await erc721NoRoyalties.deployed();
         console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
-        await deployRes.deployTransaction.wait(5);
+        await deployRes.deployTransaction.wait(numberOfBlocksToWait);
     });
 
     describe("getRoyalties Scenarios - Not Allowed", function () {
@@ -92,7 +93,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
-            await mintTx.wait(5);
+            await mintTx.wait(numberOfBlocksToWait);
 
             const result = await registry.callStatic.getRoyalties(erc721NoRoyalties.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
@@ -102,7 +103,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
-            await approveTx.wait(5);
+            await approveTx.wait(numberOfBlocksToWait);
         });
     });
 
@@ -119,13 +120,13 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
-            await mintTx.wait(5);
+            await mintTx.wait(numberOfBlocksToWait);
 
             const approveTx = await erc721NoRoyalties.connect(seller).approve(transferProxy.address, tokenId, {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
-            await approveTx.wait(5);
+            await approveTx.wait(numberOfBlocksToWait);
 
             // Create sell order with utility function
             const sellOrder = createSellOrder(
@@ -167,7 +168,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 }
             );
             console.log("Executing order");
-            const receipt = await tx.wait(5);
+            const receipt = await tx.wait(numberOfBlocksToWait);
             console.log("Trade executed! TX hash:", receipt.transactionHash);
         
             // Confirm NFT ownership
