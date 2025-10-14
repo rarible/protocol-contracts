@@ -169,6 +169,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             } else {
                 console.error(`❌ Error: Buyer does NOT own the token. Current owner: ${newOwner}`);
             }
+            //check balance of seller and buyer
         });
     });
 });
