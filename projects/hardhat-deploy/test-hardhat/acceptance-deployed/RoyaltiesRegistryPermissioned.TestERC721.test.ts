@@ -34,7 +34,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         return buyerCurrentNonce++;
     }
 
-    beforeEach(async function () {
+    this.beforeAll(async function () {
         [owner] = await ethers.getSigners();
         const PRIVATE_KEY1 = process.env.PRIVATE_KEY1;
         const PRIVATE_KEY2 = process.env.PRIVATE_KEY2;
@@ -62,6 +62,10 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
 
         console.log("Owner", owner.address);
         console.log("owner balance", ethers.utils.formatEther(await owner.getBalance()));
+        console.log("seller address", seller.address);
+        console.log("buyer address", buyer.address);
+        console.log("Seller balance", ethers.utils.formatEther(await seller.getBalance()));
+        console.log("Buyer balance", ethers.utils.formatEther(await buyer.getBalance()));
         console.log("TestERC721");
         const TestERC721Factory = await ethers.getContractFactory("TestERC721");
 
@@ -114,19 +118,6 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
 
             const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
-
-            // Mint and approve here since tests are independent
-            const mintTx = await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId, {
-                nonce: await getAndIncrementSellerNonce(),
-                gasPrice,
-            });
-            await mintTx.wait(numberOfBlocksToWait);
-
-            const approveTx = await erc721NoRoyalties.connect(seller).approve(transferProxy.address, tokenId, {
-                nonce: await getAndIncrementSellerNonce(),
-                gasPrice,
-            });
-            await approveTx.wait(numberOfBlocksToWait);
 
             // Create sell order with utility function
             const sellOrder = createSellOrder(
