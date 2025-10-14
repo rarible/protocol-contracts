@@ -57,13 +57,18 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("TestERC721");
         const TestERC721Factory = await ethers.getContractFactory("TestERC721");
         erc721NoRoyalties = await TestERC721Factory.deploy("Test No Royalties", "TNR") as TestERC721;
-        await erc721NoRoyalties.deployed();
+        const deployRes = await erc721NoRoyalties.deployed();
+        console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
+        await deployRes.deployTransaction.wait(5);
+        // wait for 5 more blocks 
+
     });
     describe("getRoyalties Scenarios - Not Allowed", function () {
         it("1: ERC721 without royalties - not allowed: empty", async function () {
-            (await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId)).wait(2);
+            (await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId)).wait(5);
             const result = await registry.callStatic.getRoyalties(erc721NoRoyalties.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
+            (await erc721NoRoyalties.connect(seller).approve(transferProxy.address, tokenId)).wait(5);
         });
     });
     describe("should trade without royalties", function () {
