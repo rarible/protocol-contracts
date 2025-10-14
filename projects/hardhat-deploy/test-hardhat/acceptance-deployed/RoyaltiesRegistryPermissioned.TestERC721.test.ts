@@ -1,3 +1,4 @@
+
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -21,6 +22,8 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     const tokenId = 1;
     const price = ethers.utils.parseEther("0.00001");
     const numberOfBlocksToWait = 1;
+    let protocolFeeBpsBuyerAmount = 0
+    let protocolFeeBpsSellerAmount = 0
 
     // Helpers to manage nonces incrementally
     let sellerCurrentNonce: number;
@@ -82,6 +85,9 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         const deployRes = await erc721NoRoyalties.deployed();
         console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
         await deployRes.deployTransaction.wait(numberOfBlocksToWait);
+
+        protocolFeeBpsBuyerAmount = parseInt((await exchange.protocolFee()).buyerAmount.toFixed());
+        protocolFeeBpsSellerAmount = parseInt((await exchange.protocolFee()).sellerAmount.toFixed());
     });
 
     describe("getRoyalties Scenarios - Not Allowed", function () {
@@ -118,6 +124,10 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
 
             const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
+
+            // Snapshot balances before trade
+            const sellerBalanceBefore = await seller.getBalance();
+            const buyerBalanceBefore = await buyer.getBalance();
 
             // Create sell order with utility function
             const sellOrder = createSellOrder(
@@ -164,12 +174,23 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         
             // Confirm NFT ownership
             const newOwner = await erc721NoRoyalties.ownerOf(tokenId);
-            if (newOwner.toLowerCase() === buyer.address.toLowerCase()) {
-                console.log(`✅ Success: Buyer ${buyer.address} now owns token ${tokenId.toString()}`);
-            } else {
-                console.error(`❌ Error: Buyer does NOT own the token. Current owner: ${newOwner}`);
-            }
-            //check balance of seller and buyer
+            expect(newOwner.toLowerCase()).to.equal(buyer.address.toLowerCase());
+
+            // Check balances after trade
+            const sellerBalanceAfter = await seller.getBalance();
+            const buyerBalanceAfter = await buyer.getBalance();
+
+            console.log("Seller balance after trade", ethers.utils.formatEther(sellerBalanceAfter));
+            console.log("Buyer balance after trade", ethers.utils.formatEther(buyerBalanceAfter));
+
+            // Calculate gas cost
+            const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+
+            const feeSellerAmount = price.mul(protocolFeeBpsSellerAmount).div(10000);
+            const feeBuyerAmount = price.mul(protocolFeeBpsBuyerAmount).div(10000);
+            // Assert balance changes exactly, assuming no protocol fees deducted from price
+            expect(sellerBalanceAfter).to.equal(sellerBalanceBefore.add(price).sub(feeSellerAmount), "Seller should receive exactly the price");
+            expect(buyerBalanceAfter).to.equal(buyerBalanceBefore.sub(price).sub(gasCost).add(feeBuyerAmount), "Buyer should pay exactly the price plus gas cost");
         });
     });
 });
