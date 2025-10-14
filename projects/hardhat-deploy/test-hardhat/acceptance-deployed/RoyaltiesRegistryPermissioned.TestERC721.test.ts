@@ -1,10 +1,3 @@
-/* <ai_context>
-This test verifies behavior of the permissioned royalties registry.
-It covers four specific scenarios where collections are not in the allow list,
-expecting empty royalties in each case.
-Additionally, it tests behavior when allowed for comparison.
-It also includes integration tests with ExchangeV2 to verify royalties in trades.
-</ai_context> */
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -15,6 +8,7 @@ import { ExchangeV2, ExchangeV2__factory, TransferProxy, TransferProxy__factory,
 import { ZERO, ETH, ERC721, ERC721_LAZY, ERC1155_LAZY, ERC20, COLLECTION } from "@rarible/exchange-v2/sdk/utils";
 import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/exchange-v2/sdk/listingUtils";
 import { BigNumber, Wallet } from "ethers";
+
 describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let registry: RoyaltiesRegistryPermissioned;
     let transferProxy: TransferProxy;
@@ -26,6 +20,19 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let erc721NoRoyalties: TestERC721;
     const tokenId = 1;
     const price = ethers.utils.parseEther("0.00001");
+
+    // Helpers to manage nonces incrementally
+    let sellerCurrentNonce: number;
+    let buyerCurrentNonce: number;
+
+    async function getAndIncrementSellerNonce() {
+        return sellerCurrentNonce++;
+    }
+
+    async function getAndIncrementBuyerNonce() {
+        return buyerCurrentNonce++;
+    }
+
     beforeEach(async function () {
         [owner] = await ethers.getSigners();
         const PRIVATE_KEY1 = process.env.PRIVATE_KEY1;
@@ -56,23 +63,70 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("owner balance", ethers.utils.formatEther(await owner.getBalance()));
         console.log("TestERC721");
         const TestERC721Factory = await ethers.getContractFactory("TestERC721");
-        erc721NoRoyalties = await TestERC721Factory.deploy("Test No Royalties", "TNR") as TestERC721;
+
+        // Fetch base pending nonces once
+        sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
+        buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
+
+        // Deploy with explicit nonce and gas bump (using seller/owner nonce)
+        const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
+        erc721NoRoyalties = await TestERC721Factory.deploy("Test No Royalties", "TNR", {
+            nonce: await getAndIncrementSellerNonce(),
+            gasPrice,
+        }) as TestERC721;
         const deployRes = await erc721NoRoyalties.deployed();
         console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
         await deployRes.deployTransaction.wait(5);
-        // wait for 5 more blocks 
-
     });
+
     describe("getRoyalties Scenarios - Not Allowed", function () {
         it("1: ERC721 without royalties - not allowed: empty", async function () {
-            (await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId)).wait(5);
+            // Reset nonces for this block
+            sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
+            buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
+
+            const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
+
+            // Mint with overrides (seller/owner)
+            const mintTx = await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId, {
+                nonce: await getAndIncrementSellerNonce(),
+                gasPrice,
+            });
+            await mintTx.wait(5);
+
             const result = await registry.callStatic.getRoyalties(erc721NoRoyalties.address, tokenId);
             expect(result.length).to.equal(0, "Should return empty when not allowed");
-            (await erc721NoRoyalties.connect(seller).approve(transferProxy.address, tokenId)).wait(5);
+
+            // Approve with overrides (seller)
+            const approveTx = await erc721NoRoyalties.connect(seller).approve(transferProxy.address, tokenId, {
+                nonce: await getAndIncrementSellerNonce(),
+                gasPrice,
+            });
+            await approveTx.wait(5);
         });
     });
+
     describe("should trade without royalties", function () {
         it("should trade without royalties", async function () {
+            // Reset nonces for this block
+            sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
+            buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
+
+            const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
+
+            // Mint and approve here since tests are independent
+            const mintTx = await erc721NoRoyalties.connect(owner).mint(seller.address, tokenId, {
+                nonce: await getAndIncrementSellerNonce(),
+                gasPrice,
+            });
+            await mintTx.wait(5);
+
+            const approveTx = await erc721NoRoyalties.connect(seller).approve(transferProxy.address, tokenId, {
+                nonce: await getAndIncrementSellerNonce(),
+                gasPrice,
+            });
+            await approveTx.wait(5);
+
             // Create sell order with utility function
             const sellOrder = createSellOrder(
                 erc721NoRoyalties.address,
@@ -100,13 +154,17 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             console.log("Buy signature:", buySig);
         
 
-            // Execute order (as buyer), send ETH for order value
-            const tx = await exchange.matchOrders(
+            // Execute order (as buyer), send ETH for order value, with overrides
+            const tx = await exchange.connect(buyer).matchOrders(
                 sellOrder,
                 sellSig,
                 buyOrder,
                 buySig,
-                { value: price }
+                { 
+                    value: price,
+                    nonce: await getAndIncrementBuyerNonce(),
+                    gasPrice,
+                }
             );
             console.log("Executing order");
             const receipt = await tx.wait(5);
