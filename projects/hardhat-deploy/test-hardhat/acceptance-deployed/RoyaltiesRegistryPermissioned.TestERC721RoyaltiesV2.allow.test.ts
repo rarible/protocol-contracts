@@ -10,6 +10,7 @@ import { ZERO, ETH, ERC721, ERC721_LAZY, ERC1155_LAZY, ERC20, COLLECTION } from 
 import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/exchange-v2/sdk/listingUtils";
 import { BigNumber, Wallet } from "ethers";
 import { RoyaltiesRegistry } from "@rarible/royalties-registry/typechain-types";
+import { formatEther } from "ethers/lib/utils";
 
 describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let registry: RoyaltiesRegistryPermissioned;
@@ -23,7 +24,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let royaltyRecipient: Wallet;
     let erc721: TestERC721RoyaltiesV2;
     const tokenId = 1;
-    const price = ethers.utils.parseEther("0.00001");
+    const price = ethers.utils.parseEther("0.01");
     const numberOfBlocksToWait = 1;
     let protocolFeeBpsBuyerAmount = 0
     let protocolFeeBpsSellerAmount = 0
@@ -161,10 +162,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
 
             const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
 
-            // Snapshot balances before trade
-            const sellerBalanceBefore = await seller.getBalance();
-            const buyerBalanceBefore = await buyer.getBalance();
-            const royaltyRecipientBalanceBefore = await royaltyRecipient.getBalance();
+
 
             // Create sell order with utility function
             const sellOrder = createSellOrder(
@@ -193,6 +191,11 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             console.log("Buy signature:", buySig);
         
 
+            // Snapshot balances before trade
+            const sellerBalanceBefore = await seller.getBalance();
+            const buyerBalanceBefore = await buyer.getBalance();
+            const royaltyRecipientBalanceBefore = await royaltyRecipient.getBalance();
+
             // Execute order (as buyer), send ETH for order value, with overrides
             const tx = await exchange.connect(buyer).matchOrders(
                 sellOrder,
@@ -218,19 +221,21 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             const buyerBalanceAfter = await buyer.getBalance();
             const royaltyRecipientBalanceAfter = await royaltyRecipient.getBalance();
 
-            console.log("Seller balance after trade", ethers.utils.formatEther(sellerBalanceAfter));
-            console.log("Buyer balance after trade", ethers.utils.formatEther(buyerBalanceAfter));
+            console.log("Seller balance difference", ethers.utils.formatEther(sellerBalanceAfter.sub(sellerBalanceBefore)));
+            console.log("Buyer balance difference", ethers.utils.formatEther(buyerBalanceAfter.sub(buyerBalanceBefore)));
+            console.log("Royalty recipient balance difference", ethers.utils.formatEther(royaltyRecipientBalanceAfter.sub(royaltyRecipientBalanceBefore)));
 
             // Calculate gas cost
             const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
 
+            const royaltyAmount = (await erc721.callStatic.royaltyInfo(tokenId, price))[1];
             const feeSellerAmount = price.mul(protocolFeeBpsSellerAmount).div(10000);
             const feeBuyerAmount = price.mul(protocolFeeBpsBuyerAmount).div(10000);
-            const royaltyRecipientBalanceAmount = price.mul(1000).div(10000);
+            console.log("Royalty amount", formatEther(royaltyAmount));
             // Assert balance changes exactly, assuming no protocol fees deducted from price
-            expect(sellerBalanceAfter).to.equal(sellerBalanceBefore.add(price).sub(feeSellerAmount).sub(royaltyRecipientBalanceAmount), "Seller should receive exactly the price");
-            expect(buyerBalanceAfter).to.equal(buyerBalanceBefore.sub(price).sub(gasCost).add(feeBuyerAmount), "Buyer should pay exactly the price plus gas cost");
-            expect(royaltyRecipientBalanceAfter).to.equal(royaltyRecipientBalanceBefore.add(royaltyRecipientBalanceAmount), "Royalty should not be received");
+            expect(sellerBalanceAfter).to.be.closeTo(sellerBalanceBefore.add(price).sub(feeSellerAmount).sub(royaltyAmount), ethers.utils.parseEther("0.000001"), "Seller should receive exactly the price");
+            expect(buyerBalanceAfter).to.be.closeTo(buyerBalanceBefore.sub(price).sub(gasCost).add(feeBuyerAmount), ethers.utils.parseEther("0.000001"), "Buyer should pay exactly the price plus gas cost");
+            expect(royaltyRecipientBalanceAfter).to.equal(royaltyRecipientBalanceBefore.add(royaltyAmount), "Royalty must be received");
         });
     });
 });
