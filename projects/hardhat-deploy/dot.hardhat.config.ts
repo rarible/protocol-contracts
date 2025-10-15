@@ -17,7 +17,7 @@ import {
   loadFactoryAddresses,
 } from "@rarible/deploy-utils";
 
-import "./tasks";
+// import "./tasks";
 
 const { HARDWARE_DERIVATION, DEPLOYER_ADDRESS, PRIVATE_KEY1 } = process.env;
 
