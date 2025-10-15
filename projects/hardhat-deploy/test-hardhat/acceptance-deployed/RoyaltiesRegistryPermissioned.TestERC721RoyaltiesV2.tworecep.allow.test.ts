@@ -234,17 +234,25 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             // Calculate gas cost
             const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
 
-            const royaltyAmountRecipient = (await erc721.callStatic.royaltyInfo(tokenId, price))[1].mul(500).div(1000);
-            const royaltyAmountRecipient2 = (await erc721.callStatic.royaltyInfo(tokenId, price))[1].mul(250).div(1000);
-            const feeSellerAmount = price.mul(protocolFeeBpsSellerAmount).div(10000);
-            const feeBuyerAmount = price.mul(protocolFeeBpsBuyerAmount).div(10000);
+            const royaltyInfo = await erc721.callStatic.royaltyInfo(tokenId, price);
+            console.log("checking royalty amount", JSON.stringify(royaltyInfo));
+            
+            const royaltyAmountRecipient = price.mul(500).div(10000);
+            const royaltyAmountRecipient2 = price.mul(250).div(10000);
             console.log("Royalty amount 1", formatEther(royaltyAmountRecipient));
             console.log("Royalty amount 2", formatEther(royaltyAmountRecipient2));
+            // 750000000000000
+            const feeSellerAmount = price.mul(protocolFeeBpsSellerAmount).div(10000);
+            const feeBuyerAmount = price.mul(protocolFeeBpsBuyerAmount).div(10000);
+
             // Assert balance changes exactly, assuming no protocol fees deducted from price
+            expect(royaltyRecipientBalanceAfter).to.equal(royaltyRecipientBalanceBefore.add(royaltyAmountRecipient), "Royalty must be received 1");
+            expect(royaltyRecipient2BalanceAfter).to.equal(royaltyRecipient2BalanceBefore.add(royaltyAmountRecipient2), "Royalty must be received 2");
+            console.log("checking seller balance");
             expect(sellerBalanceAfter).to.be.closeTo(sellerBalanceBefore.add(price).sub(feeSellerAmount).sub(royaltyAmountRecipient).sub(royaltyAmountRecipient2), ethers.utils.parseEther("0.000001"), "Seller should receive exactly the price");
+            console.log("checking buyer balance");
             expect(buyerBalanceAfter).to.be.closeTo(buyerBalanceBefore.sub(price).sub(gasCost).add(feeBuyerAmount), ethers.utils.parseEther("0.000001"), "Buyer should pay exactly the price plus gas cost");
-            expect(royaltyRecipientBalanceAfter).to.equal(royaltyRecipientBalanceBefore.add(royaltyAmountRecipient), "Royalty must be received");
-            expect(royaltyRecipient2BalanceAfter).to.equal(royaltyRecipient2BalanceBefore.add(royaltyAmountRecipient2), "Royalty must be received");
+  
         });
     });
 });
