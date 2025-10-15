@@ -9,9 +9,11 @@ import { ExchangeV2, ExchangeV2__factory, TransferProxy, TransferProxy__factory,
 import { ZERO, ETH, ERC721, ERC721_LAZY, ERC1155_LAZY, ERC20, COLLECTION } from "@rarible/exchange-v2/sdk/utils";
 import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/exchange-v2/sdk/listingUtils";
 import { BigNumber, Wallet } from "ethers";
+import { RoyaltiesRegistry } from "@rarible/royalties-registry/typechain-types";
 
 describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let registry: RoyaltiesRegistryPermissioned;
+    let oldRegistry: RoyaltiesRegistry;
     let transferProxy: TransferProxy;
     let exchange: ExchangeV2;
     let owner: SignerWithAddress;
@@ -61,6 +63,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         const transferProxyAddress = (await deployments.get("TransferProxy")).address;
         console.log("Transfer proxy address", transferProxyAddress);
         registry = await ethers.getContractAt("RoyaltiesRegistryPermissioned", registryAddress) as RoyaltiesRegistryPermissioned;
+        oldRegistry = await ethers.getContractAt("RoyaltiesRegistry", registryAddress) as RoyaltiesRegistry;
         transferProxy = await ethers.getContractAt("TransferProxy", transferProxyAddress) as TransferProxy;
         const exchangeAddress = (await deployments.get("ExchangeV2")).address;
         console.log("Exchange address", exchangeAddress);
@@ -89,6 +92,10 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
         await deployRes.deployTransaction.wait(numberOfBlocksToWait);
 
+        (await erc721.connect(owner).initialize({
+            nonce: await getAndIncrementSellerNonce(),
+            gasPrice,
+        })).wait(numberOfBlocksToWait);
 
         (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
             nonce: await getAndIncrementSellerNonce(),
@@ -99,7 +106,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         protocolFeeBpsSellerAmount = parseInt((await exchange.protocolFee()).sellerAmount.toFixed());
     });
 
-    describe("getRoyalties Scenarios - Not Allowed", function () {
+    describe("getRoyalties Scenarios - Allowed", function () {
         it("1: ERC721 with royalties - allowed: one royalty", async function () {
             // Reset nonces for this block
             sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
@@ -119,11 +126,27 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
-            await approveTx.wait(numberOfBlocksToWait);
+            await approveTx.wait(numberOfBlocksToWait+3);
             
             expect(await exchange.royaltiesRegistry()).to.equal(registry.address, "Exchange should have the correct royalties registry");
 
+            (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
+                nonce: await getAndIncrementSellerNonce(),
+                gasPrice,
+            })).wait(numberOfBlocksToWait);
+
             const result = await registry.callStatic.getRoyalties(erc721.address, tokenId);
+            const resultOld = await oldRegistry.callStatic.getRoyalties(erc721.address, tokenId);
+            const oldType = await oldRegistry.callStatic.getRoyaltiesType(erc721.address);
+            const type = await registry.callStatic.getRoyaltiesType(erc721.address);
+            console.log("Old type", oldType);
+            console.log("Type", type);
+            console.log("Result old", JSON.stringify(resultOld));
+            console.log("Result", JSON.stringify(result));
+            expect(oldType).to.equal(type, "Types should be the same");
+            expect(resultOld.length).to.equal(result.length, "Results should be the same");
+            expect(resultOld[0].account).to.equal(result[0].account, "Recipients should be the same");
+            expect(resultOld[0].value).to.equal(result[0].value, "Values should be the same");
             expect(result.length).to.equal(1, "Should return one royalty when allowed");
             expect(result[0].account).to.equal(royaltyRecipient.address, "Royalty recipient should be the correct address");
             expect(result[0].value).to.equal(1000, "Royalty value should be the correct value");

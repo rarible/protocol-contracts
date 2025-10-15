@@ -93,6 +93,11 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("Deployed TestERC721WithRoyaltyV2981", deployRes.deployTransaction.hash);
         await deployRes.deployTransaction.wait(numberOfBlocksToWait);
 
+        (await erc721.connect(owner).initialize({
+            nonce: await getAndIncrementSellerNonce(),
+            gasPrice,
+        })).wait(numberOfBlocksToWait);
+
         protocolFeeBpsBuyerAmount = parseInt((await exchange.protocolFee()).buyerAmount.toFixed());
         protocolFeeBpsSellerAmount = parseInt((await exchange.protocolFee()).sellerAmount.toFixed());
     });
