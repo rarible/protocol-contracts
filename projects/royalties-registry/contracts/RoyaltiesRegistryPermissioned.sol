@@ -61,6 +61,7 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     /// @dev sets external provider for token contract, and royalties type = 4
     function setProviderByToken(address token, address provider) external {
         checkOwner(token);
+        checkAllowList(token);
         setRoyaltiesType(token, 4, provider);
     }
 
@@ -97,18 +98,21 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     /// @dev clears and sets new royalties type for token contract
     function forceSetRoyaltiesType(address token, uint royaltiesType) external {
         checkOwner(token);
+        checkAllowList(token);
         setRoyaltiesType(token, royaltiesType, getProvider(token));
     }
 
     /// @dev clears royalties type for token contract
     function clearRoyaltiesType(address token) external {
         checkOwner(token);
+        checkAllowList(token);
         royaltiesProviders[token] = uint(getProvider(token));
     }
 
     /// @dev sets royalties for token contract in royaltiesByToken mapping and royalties type = 1
     function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external {
         checkOwner(token);
+        checkAllowList(token);
         //clearing royaltiesProviders value for the token
         delete royaltiesProviders[token];
         // setting royaltiesType = 1 for the token
@@ -129,7 +133,16 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     /// @dev checks if msg.sender is owner of this contract or owner of the token contract
     function checkOwner(address token) internal view {
         if ((owner() != _msgSender()) && (OwnableUpgradeable(token).owner() != _msgSender())) {
-            revert("Token owner not detected");
+            if (!hasRole(WHITELISTER_ROLE, _msgSender())) {
+                revert("Token owner not detected");
+            }
+        }
+    }
+    
+    /// @dev checks if royalties are allowed for this token
+    function checkAllowList(address token) internal view {
+        if (!royaltiesAllowed[token]) {
+            revert("Royalties not allowed for this token");
         }
     }
 
