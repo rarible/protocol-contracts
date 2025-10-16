@@ -105,11 +105,11 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             gasPrice,
         })).wait(numberOfBlocksToWait);
 
-        await registry.connect(whitelister).setRoyaltiesByToken(erc721.address, [{account: royaltyRecipient2.address, value: 800}], {
+        const tx = await (await registry.connect(whitelister).setRoyaltiesByToken(erc721.address, [{account: royaltyRecipient2.address, value: 800}], {
             nonce: await getAndIncrementSellerNonce(),
             gasPrice,
-        });
-
+        })).wait(numberOfBlocksToWait);
+        console.log("Set royalties by token tx", tx.transactionHash);
         protocolFeeBpsBuyerAmount = parseInt((await exchange.protocolFee()).buyerAmount.toFixed());
         protocolFeeBpsSellerAmount = parseInt((await exchange.protocolFee()).sellerAmount.toFixed());
     });
@@ -156,8 +156,8 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             expect(resultOld[0].account).to.equal(result[0].account, "Recipients should be the same");
             expect(resultOld[0].value).to.equal(result[0].value, "Values should be the same");
             expect(result.length).to.equal(1, "Should return one royalty when allowed");
-            expect(result[0].account).to.equal(royaltyRecipient.address, "Royalty recipient should be the correct address");
-            expect(result[0].value).to.equal(1000, "Royalty value should be the correct value");
+            expect(result[0].account).to.equal(royaltyRecipient2.address, "Royalty recipient should be the correct address");
+            expect(result[0].value).to.equal(800, "Royalty value should be the correct value");
         });
     });
 
@@ -233,11 +233,11 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             console.log("Seller balance difference", ethers.utils.formatEther(sellerBalanceAfter.sub(sellerBalanceBefore)));
             console.log("Buyer balance difference", ethers.utils.formatEther(buyerBalanceAfter.sub(buyerBalanceBefore)));
             console.log("Royalty recipient balance difference", ethers.utils.formatEther(royaltyRecipientBalanceAfter.sub(royaltyRecipientBalanceBefore)));
-
+            console.log("Royalty recipient 2 balance difference", ethers.utils.formatEther(royaltyRecipient2BalanceAfter.sub(royaltyRecipient2BalanceBefore)));
             // Calculate gas cost
             const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
 
-            const royaltyAmount = (await erc721.callStatic.royaltyInfo(tokenId, price))[1];
+            const royaltyAmount = price.mul(800).div(10000);
             const feeSellerAmount = price.mul(protocolFeeBpsSellerAmount).div(10000);
             const feeBuyerAmount = price.mul(protocolFeeBpsBuyerAmount).div(10000);
             console.log("Royalty amount", formatEther(royaltyAmount));
