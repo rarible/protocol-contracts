@@ -15,6 +15,7 @@ const deployLock: DeployFunction = async (
         args: [], // Unlock timestamp in seconds
         waitConfirmations: 1,
         nonce: 0,
+        gasPrice: "100000000000"
     });
     console.log("transactionHash", deployResult.transactionHash)
 
