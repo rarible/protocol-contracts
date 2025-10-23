@@ -52,3 +52,4 @@ task("get-claim-message-hash", "Computes the claim message hash off-chain and ve
       console.log("Verification: Hashes do NOT match. Possible reasons: mismatched chainId (network chainId may differ), incorrect contract address, or deployment mismatch.");
     }
   });
+
