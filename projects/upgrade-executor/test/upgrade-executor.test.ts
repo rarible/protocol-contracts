@@ -40,7 +40,7 @@ describe("Upgrade Executor", function () {
     const sellerAmount = 200;
     const actionProtocolFeeCalldata = await testHelper.encodeProtocolFeeCall(feeReceiver, buyerAmount, sellerAmount)
 
-    //exectute call
+    //execute call
     await upgradeExecutor.execute(setProtocolFeeAction.address, actionProtocolFeeCalldata)
 
     //check that protocol fee changed
@@ -69,7 +69,7 @@ describe("Upgrade Executor", function () {
     const newImpl = testHelper.address
     const actionUpgradeProxydata = await testHelper.encodeProxyUpgradeCall(proxyAdmin.address, transparentUpgradeableProxy.address, newImpl)
 
-    //exectute call
+    //execute call
     await upgradeExecutor.execute(proxyUpgradeAction.address, actionUpgradeProxydata)
 
     //check that impl has changed

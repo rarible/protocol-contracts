@@ -180,9 +180,7 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
         require(totalPoints > 0, "Total points must be greater than 0");
 
         // Recreate the message hash that was signed by the backend
-        // dataHash = keccak256(chainid, contract, epoch, user, points) -> toEthSignedMessageHash()
-        bytes32 dataHash = keccak256(abi.encodePacked(address(this), epoch, user, totalPoints));
-        bytes32 ethHash = MessageHashUtils.toEthSignedMessageHash(dataHash);
+        bytes32 ethHash = _claimMessageHash(user, epoch, totalPoints);
 
         // Recover signer and verify it has EPOCH_ROLE
         address signer = ECDSA.recover(ethHash, signature);
@@ -229,6 +227,10 @@ contract RariReward is Initializable, OwnableUpgradeable, AccessControlUpgradeab
      * @dev Backends can call this in tests to build the exact message to sign.
      */
     function claimMessageHash(address user, uint256 epoch, uint256 points) external view returns (bytes32) {
+        return _claimMessageHash(user, epoch, points);
+    }
+
+    function _claimMessageHash(address user, uint256 epoch, uint256 points) internal view returns (bytes32) {
         bytes32 dataHash = keccak256(abi.encodePacked(block.chainid, address(this), epoch, user, points));
         return dataHash.toEthSignedMessageHash();
     }
