@@ -9,7 +9,7 @@ import { arrayify } from 'ethers/lib/utils';
 import hre from "hardhat";
 import {utils} from "zksync-web3";
 // https://sepolia.explorer.zksync.io/tx/0xadb7f5955bb0f87fe2de2fa777a0d03ded56c3a11ffdca7e6f47883f89a5d47e#eventlog
-// taget address 0xff0e7865e797bac2fe9cf30996abcd9ddc8de84c
+// target address 0xff0e7865e797bac2fe9cf30996abcd9ddc8de84c
 
 async function main() {
   console.log("zk-get-address-collection.ts");

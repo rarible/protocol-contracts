@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig } from '../utils/utils'
+import { ERC721_LAZY, ERC1155_LAZY, COLLECTION, getConfig, ROYALTIES_REGISTRY_TYPE } from '../utils/utils'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
@@ -28,7 +28,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractName: string, transferProxy: any, erc20TransferProxy: any, erc721LazyMintTransferProxy: any, erc1155LazyMintTransferProxy: any) {
   const { deploy, execute } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
-  const royaltiesRegistryAddress = (await hre.deployments.get("RoyaltiesRegistry")).address;
+  const royaltiesRegistryAddress = (await hre.deployments.get(ROYALTIES_REGISTRY_TYPE)).address;
 
   // deploy ExchangeV2 and initialise contract
   const exchangeV2Receipt = await deploy(contractName, {

@@ -64,7 +64,8 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
       const erc721Factory = new TestERC721RoyaltiesV2__factory(seller);
       erc721Contract = await erc721Factory.deploy();
       await erc721Contract.deployed();
-      await erc721Contract.initialize();
+      const tx = await erc721Contract.initialize();
+      await tx.wait(5);
       console.log(`Deployed ERC721 to ${erc721Contract.address}`);
     } else {
       erc721Contract = (await hre.ethers.getContractAt("TestERC721RoyaltiesV2", erc721, seller)) as TestERC721RoyaltiesV2;
@@ -87,17 +88,19 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
         account: seller.address,
         value: 1000
       }
-    ])).wait();
+    ])).wait(5);
     console.log(`Minted token ${_tokenId.toString()} to seller ${seller.address}`);
 
     // Seller approves transfer for Exchange (Exchange contract uses TransferProxy)
     // For demo, approve both exchange and transferProxy if needed. Usually TransferProxy.
     // Let's approve the exchange for simplicity (adapt if you know the actual proxy).
-    await (await erc721Contract.setApprovalForAll(exchange, true)).wait();
+    console.log("Approving exchange");
+    await (await erc721Contract.setApprovalForAll(exchange, true)).wait(5);
     const transferProxy = await deployments.get("TransferProxy");
     //await (await erc721Contract.setApprovalForAll("0xa199882F70c7d3F7DCAe4abEe607C85756096fF2", true)).wait();
-    await (await erc721Contract.setApprovalForAll(transferProxy.address, true)).wait();
-    
+    console.log("Approving transfer proxy");
+    await (await erc721Contract.setApprovalForAll(transferProxy.address, true)).wait(5);
+    console.log("Approved exchange and transfer proxy");
 
     // Create sell order with utility function
     const sellOrder = createSellOrder(
@@ -114,7 +117,9 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
     const sellSig = await signOrderWithWallet(sellOrder, seller, exchange);
 
     // Create buy order (mirror test logic)
+    console.log("Creating buy order");
     const buyOrder = createBuyOrder(sellOrder, buyer.address, _price.toString());
+    console.log("Signing buy order");
     const buySig = await signOrderWithWallet(buyOrder, buyer, exchange);
 
     // Print out for clarity
@@ -125,7 +130,7 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
 
     // Attach to ExchangeV2 as buyer
     const exchangeV2 = (await hre.ethers.getContractAt("ExchangeV2", exchangeV2Address, buyer)) as ExchangeV2;
-
+    console.log("Attached to ExchangeV2 as buyer");
     // Execute order (as buyer), send ETH for order value
     const tx = await exchangeV2.matchOrders(
       sellOrder,
@@ -134,7 +139,8 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
       buySig,
       { value: _price }
     );
-    const receipt = await tx.wait();
+    console.log("Executing order");
+    const receipt = await tx.wait(5);
     console.log("Trade executed! TX hash:", receipt.transactionHash);
 
     // Confirm NFT ownership
