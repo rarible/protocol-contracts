@@ -166,9 +166,9 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             const buySig = await signOrderWithWallet(buyOrder, buyer, exchange.address);
         
             // Print out for clarity
-            console.log("Sell order:", sellOrder);
+            console.log("Sell order:", JSON.stringify(sellOrder));
             console.log("Sell signature:", sellSig);
-            console.log("Buy order:", buyOrder);
+            console.log("Buy order:", JSON.stringify(buyOrder));
             console.log("Buy signature:", buySig);
         
 
