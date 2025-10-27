@@ -6,7 +6,6 @@ Computes off-chain using ethers, prints intermediate results, and verifies by ca
 */
 import { task } from "hardhat/config";
 import { BigNumber } from "ethers";
-import { RariReward, RariReward__factory } from "../typechain-types";
 
 task("get-claim-message-hash", "Computes the claim message hash off-chain and verifies on-chain")
   .addParam("chainId", "The chain ID (e.g., 2)", undefined, undefined, true)
@@ -41,6 +40,7 @@ task("get-claim-message-hash", "Computes the claim message hash off-chain and ve
     console.log(`Off-chain claimMessageHash: ${ethSignedHash}`);
     
     // Connect to contract and call claimMessageHash for verification
+    const { RariReward__factory } = await import("../typechain-types");
     const reward = RariReward__factory.connect(contractAddress, hre.ethers.provider);
     const onChainHash = await reward.claimMessageHash(user, epoch, points);
     console.log(`\nOn-chain claimMessageHash: ${onChainHash}`);
