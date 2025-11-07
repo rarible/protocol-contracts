@@ -18,6 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     contractName = "ExchangeV2";
   }
 
+  console.log("Deploying ExchangeV2 contract")
   // deploy ExchangeV2 and initialise contract
   await deploy(contractName, {
     from: deployer,
