@@ -31,8 +31,15 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
                 bytes32 hash = LibOrder.hash(order);
                 // if maker is contract checking ERC1271 signature
                 if (order.maker.isContract()) {
+                    bool isValid = IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE;
+
+                    if (!isValid) {
+                        require (order.maker != address(0), "no maker");
+                        isValid = _hashTypedDataV4(hash).recover(signature) == order.maker;
+                    }
+
                     require(
-                        IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) == MAGICVALUE,
+                        isValid,
                         "contract order signature verification error"
                     );
                 } else {
