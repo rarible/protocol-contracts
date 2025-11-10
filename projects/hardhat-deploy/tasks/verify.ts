@@ -16,8 +16,7 @@ type VerifyArgs = {
   browserUrl?: string;
 };
 
-// npx hardhat etherscan-verify-cli --contract @rarible/exchange-v2/contracts/ExchangeMetaV2.sol:ExchangeMetaV2 
-// --api-url "https://api.etherscan.io/v2/api?chainid=8453&apikey=JT8YZTCS59UIKV8IYZBYRHF5ZHWXDTTGY5" --api-key JT8YZTCS59UIKV8IYZBYRHF5ZHWXDTTGY5 --address 0x2f91f8da6587803677ae23aef11aa853ede2a329 --network base
+// npx hardhat etherscan-verify-cli --contract @rarible/exchange-v2/contracts/ExchangeMetaV2.sol:ExchangeMetaV2 --api-url "https://api.etherscan.io/v2/api?chainid=8453&apikey=JT8YZTCS59UIKV8IYZBYRHF5ZHWXDTTGY5" --api-key JT8YZTCS59UIKV8IYZBYRHF5ZHWXDTTGY5 --address 0x2f91f8da6587803677ae23aef11aa853ede2a329 --network base
 
 task("etherscan-verify-cli", "Verifies a contract on an Etherscan-compatible explorer (CREATE3-friendly)")
   .addParam("contract", "Fully qualified contract name, e.g. src/RariOFT.sol:RariOFT")
