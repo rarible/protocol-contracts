@@ -16,3 +16,7 @@ task("get-set-allprotocol-fee-calldata-action", "Gets the calldata for the setAl
     const calldata = await getSetAllProtocolFeeCalldataAction(args.receiver, args.buyerAmount, args.sellerAmount);
     console.log(calldata);
   });
+
+  // npx hardhat get-set-allprotocol-fee-calldata --receiver 0x7e9c956e3efa81ace71905ff0daef1a71f42cbc5 --buyer-amount 25 --seller-amount 25
+  // npx hardhat get-set-allprotocol-fee-calldata --receiver 0xb6ec1d227d5486d344705663f700d90d947d7548 --buyer-amount 0 --seller-amount 200
+  // 0xb74c8e9a000000000000000000000000b6ec1d227d5486d344705663f700d90d947d7548000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c8
