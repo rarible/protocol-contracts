@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
-import { IProxyUpgradeAction__factory } from "../typechain-types";
 
 async function getProxyUpgradeActionCalldata(admin: string, target: string, newLogic: string) {
+  const { IProxyUpgradeAction__factory } = await import("../typechain-types");
     const calldata = IProxyUpgradeAction__factory.createInterface().encodeFunctionData("perform", [admin, target, newLogic]);
     return calldata;
 }
