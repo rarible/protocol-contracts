@@ -27,6 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     log: true,
     autoMine: true,
+    gasPrice: "100000000000", // 100 gwei
   });
 
 };
