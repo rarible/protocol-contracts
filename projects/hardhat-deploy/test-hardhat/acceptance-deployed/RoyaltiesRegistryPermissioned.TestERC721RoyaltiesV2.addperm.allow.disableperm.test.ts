@@ -105,17 +105,17 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             gasPrice,
         })).wait(numberOfBlocksToWait);
 
-        (await registry.connect(owner).grantRole(await registry.WHITELISTER_ROLE(), whitelister.address, {
+        const txStatus = await (await registry.connect(owner).grantRole(await registry.WHITELISTER_ROLE(), whitelister.address, {
             nonce: await getAndIncrementNonce(owner),
             gasPrice,
         })).wait(numberOfBlocksToWait);
 
-        (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
+        await (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
             nonce: await getAndIncrementNonce(whitelister),
             gasPrice,
         })).wait(numberOfBlocksToWait);
 
-        (await registry.connect(owner).renounceRole(await registry.WHITELISTER_ROLE(), whitelister.address, {
+        await (await registry.connect(owner).revokeRole(await registry.WHITELISTER_ROLE(), whitelister.address, {
             nonce: await getAndIncrementNonce(owner),
             gasPrice,
         })).wait(numberOfBlocksToWait);
