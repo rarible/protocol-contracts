@@ -98,12 +98,14 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
         await deployRes.deployTransaction.wait(numberOfBlocksToWait);
 
-        (await registry.connect(owner).grantRole(await registry.WHITELISTER_ROLE(), whitelister.address, {
+
+
+        (await erc721.connect(owner).initialize({
             nonce: await getAndIncrementNonce(owner),
             gasPrice,
         })).wait(numberOfBlocksToWait);
 
-        (await erc721.connect(owner).initialize({
+        (await registry.connect(owner).grantRole(await registry.WHITELISTER_ROLE(), whitelister.address, {
             nonce: await getAndIncrementNonce(owner),
             gasPrice,
         })).wait(numberOfBlocksToWait);
@@ -151,11 +153,6 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             await initializeNonces([owner, seller, buyer, whitelister]);
 
             const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
-
-            (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
-                nonce: await getAndIncrementNonce(whitelister),
-                gasPrice,
-            })).wait(numberOfBlocksToWait);
 
 
 
