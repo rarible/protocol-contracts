@@ -1,4 +1,3 @@
-
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -11,7 +10,6 @@ import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/e
 import { BigNumber, Wallet } from "ethers";
 import { RoyaltiesRegistry } from "@rarible/royalties-registry/typechain-types";
 import { formatEther } from "ethers/lib/utils";
-
 describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     let registry: RoyaltiesRegistryPermissioned;
     let oldRegistry: RoyaltiesRegistry;
@@ -29,19 +27,15 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
     const numberOfBlocksToWait = 1;
     let protocolFeeBpsBuyerAmount = 0
     let protocolFeeBpsSellerAmount = 0
-
     // Helpers to manage nonces incrementally
     let sellerCurrentNonce: number;
     let buyerCurrentNonce: number;
-
     async function getAndIncrementSellerNonce() {
         return sellerCurrentNonce++;
     }
-
     async function getAndIncrementBuyerNonce() {
         return buyerCurrentNonce++;
     }
-
     this.beforeAll(async function () {
         [owner] = await ethers.getSigners();
         const PRIVATE_KEY1 = process.env.PRIVATE_KEY1;
@@ -51,7 +45,7 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         if (!PRIVATE_KEY1 || !PRIVATE_KEY2 || !PRIVATE_KEY_ROYALTY || !PRIVATE_KEY_ROYALTY2) {
           throw new Error("PRIVATE_KEY1 and PRIVATE_KEY2 must be set in your .env");
         }
-    
+   
         // Set up seller and buyer as Wallet signers
         seller = new Wallet(PRIVATE_KEY1, ethers.provider);
         buyer = new Wallet(PRIVATE_KEY2, ethers.provider);
@@ -71,7 +65,6 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         const exchangeAddress = (await deployments.get("ExchangeV2")).address;
         console.log("Exchange address", exchangeAddress);
         exchange = await ethers.getContractAt("ExchangeV2", exchangeAddress) as ExchangeV2;
-
         console.log("Owner", owner.address);
         console.log("owner balance", ethers.utils.formatEther(await owner.getBalance()));
         console.log("seller address", seller.address);
@@ -80,11 +73,9 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         console.log("Buyer balance", ethers.utils.formatEther(await buyer.getBalance()));
         console.log("TestERC721");
         const TestERC721RoyaltiesV2Factory = await ethers.getContractFactory("TestERC721RoyaltiesV2");
-
         // Fetch base pending nonces once
         sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
         buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
-
         // Deploy with explicit nonce and gas bump (using seller/owner nonce)
         const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
         erc721 = await TestERC721RoyaltiesV2Factory.deploy( {
@@ -92,19 +83,16 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             gasPrice,
         }) as TestERC721RoyaltiesV2;
         const deployRes = await erc721.deployed();
-        console.log("Deployed erc721NoRoyalties", deployRes.deployTransaction.hash);
+        console.log("Deployed with royalties tx hash", deployRes.deployTransaction.hash);
         await deployRes.deployTransaction.wait(numberOfBlocksToWait);
-
         (await erc721.connect(owner).initialize({
             nonce: await getAndIncrementSellerNonce(),
             gasPrice,
         })).wait(numberOfBlocksToWait);
-
         (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
             nonce: await getAndIncrementSellerNonce(),
             gasPrice,
         })).wait(numberOfBlocksToWait);
-
         const tx = await (await registry.connect(whitelister).setRoyaltiesByToken(erc721.address, [{account: royaltyRecipient2.address, value: 800}], {
             nonce: await getAndIncrementSellerNonce(),
             gasPrice,
@@ -113,36 +101,30 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
         protocolFeeBpsBuyerAmount = parseInt((await exchange.protocolFee()).buyerAmount.toFixed());
         protocolFeeBpsSellerAmount = parseInt((await exchange.protocolFee()).sellerAmount.toFixed());
     });
-
-    describe("getRoyalties Scenarios - Allowed", function () {
-        it("1: ERC721 with royalties - allowed: one royalty", async function () {
+    describe("getRoyalties Scenarios - Allowed with override", function () {
+        it("ERC721 with royalties V2 interface overridden by registry: returns the overridden royalties", async function () {
             // Reset nonces for this block
             sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
             buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
-
             const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
-
             // Mint with overrides (seller/owner)
             const mintTx = await erc721.connect(owner).mint(seller.address, tokenId, [{account: royaltyRecipient.address, value: 1000}], {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
             await mintTx.wait(numberOfBlocksToWait);
-
             // Approve with overrides (seller)
             const approveTx = await erc721.connect(seller).approve(transferProxy.address, tokenId, {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             });
             await approveTx.wait(numberOfBlocksToWait+3);
-            
+           
             expect(await exchange.royaltiesRegistry()).to.equal(registry.address, "Exchange should have the correct royalties registry");
-
             (await registry.connect(whitelister).setRoyaltiesAllowed(erc721.address, true, {
                 nonce: await getAndIncrementSellerNonce(),
                 gasPrice,
             })).wait(numberOfBlocksToWait);
-
             const result = await registry.callStatic.getRoyalties(erc721.address, tokenId);
             const resultOld = await oldRegistry.callStatic.getRoyalties(erc721.address, tokenId);
             const oldType = await oldRegistry.callStatic.getRoyaltiesType(erc721.address);
@@ -160,17 +142,12 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             expect(result[0].value).to.equal(800, "Royalty value should be the correct value");
         });
     });
-
-    describe("should trade without royalties", function () {
-        it("should trade without royalties", async function () {
+    describe("should trade with royalties", function () {
+        it("should trade with royalties", async function () {
             // Reset nonces for this block
             sellerCurrentNonce = await ethers.provider.getTransactionCount(seller.address, 'pending');
             buyerCurrentNonce = await ethers.provider.getTransactionCount(buyer.address, 'pending');
-
             const gasPrice = (await ethers.provider.getGasPrice()).mul(2);
-
-
-
             // Create sell order with utility function
             const sellOrder = createSellOrder(
                 erc721.address,
@@ -181,36 +158,34 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
                 price.toString(),
                 ERC721
             );
-  
+ 
             // Sign the sell order with seller wallet (adapt signOrderWithWallet to accept Wallet)
             const sellSig = await signOrderWithWallet(sellOrder, seller, exchange.address);
-        
+       
             // Create buy order (mirror test logic)
             console.log("Creating buy order");
             const buyOrder = createBuyOrder(sellOrder, buyer.address, price.toString());
             console.log("Signing buy order");
             const buySig = await signOrderWithWallet(buyOrder, buyer, exchange.address);
-        
+       
             // Print out for clarity
             console.log("Sell order:", sellOrder);
             console.log("Sell signature:", sellSig);
             console.log("Buy order:", buyOrder);
             console.log("Buy signature:", buySig);
-        
-
+       
             // Snapshot balances before trade
             const sellerBalanceBefore = await seller.getBalance();
             const buyerBalanceBefore = await buyer.getBalance();
             const royaltyRecipientBalanceBefore = await royaltyRecipient.getBalance();
             const royaltyRecipient2BalanceBefore = await royaltyRecipient2.getBalance();
-
             // Execute order (as buyer), send ETH for order value, with overrides
             const tx = await exchange.connect(buyer).matchOrders(
                 sellOrder,
                 sellSig,
                 buyOrder,
                 buySig,
-                { 
+                {
                     value: price,
                     nonce: await getAndIncrementBuyerNonce(),
                     gasPrice,
@@ -219,24 +194,21 @@ describe("RoyaltiesRegistryPermissioned in hardhat-deploy", function () {
             console.log("Executing order");
             const receipt = await tx.wait(numberOfBlocksToWait);
             console.log("Trade executed! TX hash:", receipt.transactionHash);
-        
+       
             // Confirm NFT ownership
             const newOwner = await erc721.ownerOf(tokenId);
             expect(newOwner.toLowerCase()).to.equal(buyer.address.toLowerCase());
-
             // Check balances after trade
             const sellerBalanceAfter = await seller.getBalance();
             const buyerBalanceAfter = await buyer.getBalance();
             const royaltyRecipientBalanceAfter = await royaltyRecipient.getBalance();
             const royaltyRecipient2BalanceAfter = await royaltyRecipient2.getBalance();
-
             console.log("Seller balance difference", ethers.utils.formatEther(sellerBalanceAfter.sub(sellerBalanceBefore)));
             console.log("Buyer balance difference", ethers.utils.formatEther(buyerBalanceAfter.sub(buyerBalanceBefore)));
             console.log("Royalty recipient balance difference", ethers.utils.formatEther(royaltyRecipientBalanceAfter.sub(royaltyRecipientBalanceBefore)));
             console.log("Royalty recipient 2 balance difference", ethers.utils.formatEther(royaltyRecipient2BalanceAfter.sub(royaltyRecipient2BalanceBefore)));
             // Calculate gas cost
             const gasCost = receipt.gasUsed.mul(receipt.effectiveGasPrice);
-
             const royaltyAmount = price.mul(800).div(10000);
             const feeSellerAmount = price.mul(protocolFeeBpsSellerAmount).div(10000);
             const feeBuyerAmount = price.mul(protocolFeeBpsBuyerAmount).div(10000);
