@@ -19,12 +19,17 @@ library LibAsset {
     /// @notice Identifier for CryptoPunks assets.
     bytes4 public constant CRYPTO_PUNKS = bytes4(keccak256("CRYPTO_PUNKS"));
 
-    /// @dev EIP-712 type hash for `AssetType`.
-    bytes32 constant ASSET_TYPE_TYPEHASH = keccak256("AssetType(bytes4 assetClass,bytes data)");
+    // prettier-ignore
+    /// @notice EIP-712 type hash for `AssetType`.
+    bytes32 public constant ASSET_TYPE_TYPEHASH = keccak256(
+        "AssetType(bytes4 assetClass,bytes data)"
+    );
 
+    // prettier-ignore
     /// @notice EIP-712 type hash for `Asset`.
-    bytes32 constant ASSET_TYPEHASH =
-        keccak256("Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)");
+    bytes32 public constant ASSET_TYPEHASH = keccak256(
+        "Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
+    );
 
     struct AssetType {
         bytes4 assetClass;
