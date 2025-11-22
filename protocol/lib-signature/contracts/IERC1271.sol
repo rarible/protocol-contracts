@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.30;
 
+/**
+ * @title IERC1271
+ * @dev Interface for the ERC1271 standard
+ * @author iflelsedeveloper (https://github.com/iflelsedeveloper)
+ */
 interface IERC1271 {
-
     /**
      * @dev Should return whether the signature provided is valid for the provided data
      * @param _hash Hash of the data signed on the behalf of address(this)
@@ -13,5 +17,5 @@ interface IERC1271 {
      * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
      * MUST allow external calls
      */
-    function isValidSignature(bytes32 _hash, bytes calldata _signature) virtual external view returns (bytes4 magicValue);
+    function isValidSignature(bytes32 _hash, bytes calldata _signature) external view returns (bytes4 magicValue);
 }
