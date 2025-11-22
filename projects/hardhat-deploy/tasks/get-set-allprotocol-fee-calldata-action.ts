@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 
 async function getSetAllProtocolFeeCalldataAction(receiver: string, buyerAmount: number, sellerAmount: number) {
   const { SetProtocolFeeAction__factory } = await import("../typechain-types");
-  const calldata = ISetPrtocolFeeAction__factory.createInterface().encodeFunctionData("perform", [receiver, buyerAmount, sellerAmount]);
+  const calldata = SetProtocolFeeAction__factory.createInterface().encodeFunctionData("perform", [receiver, buyerAmount, sellerAmount]);
   return calldata;
 }
 

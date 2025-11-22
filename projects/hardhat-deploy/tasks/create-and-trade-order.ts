@@ -20,6 +20,7 @@ import { TestERC721RoyaltiesV2, TestERC721RoyaltiesV2__factory } from "@rarible/
 
 import { createSellOrder, createBuyOrder, signOrderWithWallet } from "@rarible/exchange-v2/sdk/listingUtils";
 import { ETH, ERC721 } from "@rarible/exchange-v2/sdk/utils";
+import { ExchangeV2 } from "@rarible/exchange-v2/typechain-types";
 
 dotenv.config();
 
@@ -29,7 +30,6 @@ task("create-and-trade-order", "Deploys collection, mints NFT, creates order, an
   .addOptionalParam("tokenid", "Token ID to mint (default random)")
   .addOptionalParam("price", "Price in ETH for the order (default 0.1)")
   .setAction(async (args, hre) => {
-    const { ExchangeV2 } = await import("../typechain-types");
     const { exchange, erc721, tokenid, price } = args;
     const { deployments, network } = hre;
     const provider = hre.ethers.provider;
