@@ -4,14 +4,15 @@ pragma solidity ^0.8.30;
 
 /**
  * @title IERC1271
- * @dev Interface for the ERC1271 standard
+ * @notice Interface for the ERC1271 standard
  * @author iflelsedeveloper (https://github.com/iflelsedeveloper)
  */
 interface IERC1271 {
     /**
-     * @dev Should return whether the signature provided is valid for the provided data
+     * @notice Should return whether the signature provided is valid for the provided data
      * @param _hash Hash of the data signed on the behalf of address(this)
      * @param _signature Signature byte array associated with _data
+     * @return magicValue The magic number for the isValidSignature function
      *
      * MUST return the bytes4 magic value 0x1626ba7e when function passes.
      * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
