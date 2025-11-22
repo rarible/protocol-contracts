@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.30;
+pragma solidity ^0.8.30;
 
 /// @title Asset type helpers
 /// @notice Provides common identifiers and hashing helpers for protocol assets.
