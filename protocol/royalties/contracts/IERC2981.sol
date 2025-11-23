@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity ^0.8.30;
 import "@rarible/lib-part/contracts/LibPart.sol";
 ///
 /// @dev Interface for the NFT Royalty Standard
@@ -23,8 +23,5 @@ interface IERC2981 {
     function royaltyInfo(
         uint256 _tokenId,
         uint256 _salePrice
-    ) external view returns (
-        address receiver,
-        uint256 royaltyAmount
-    );
+    ) external view returns (address receiver, uint256 royaltyAmount);
 }

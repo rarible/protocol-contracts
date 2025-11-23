@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity ^0.8.30;
 
 import "@rarible/lib-part/contracts/LibPart.sol";
 
 abstract contract AbstractRoyalties {
-    mapping (uint256 => LibPart.Part[]) internal royalties;
+    mapping(uint256 => LibPart.Part[]) internal royalties;
 
     function _saveRoyalties(uint256 id, LibPart.Part[] memory _royalties) internal {
         uint256 totalValue;
@@ -21,12 +21,12 @@ abstract contract AbstractRoyalties {
 
     function _updateAccount(uint256 _id, address _from, address _to) internal {
         uint length = royalties[_id].length;
-        for(uint i = 0; i < length; ++i) {
+        for (uint i = 0; i < length; ++i) {
             if (royalties[_id][i].account == _from) {
                 royalties[_id][i].account = payable(address(uint160(_to)));
             }
         }
     }
 
-    function _onRoyaltiesSet(uint256 id, LibPart.Part[] memory _royalties) virtual internal;
+    function _onRoyaltiesSet(uint256 id, LibPart.Part[] memory _royalties) internal virtual;
 }

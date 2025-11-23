@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
+pragma solidity ^0.8.30;
 
 import "@rarible/lib-part/contracts/LibPart.sol";
 
@@ -17,7 +17,7 @@ library LibRoyalties2981 {
         if (amount == 0) {
             return result;
         }
-        uint256 percent = amount * 10000 / _WEIGHT_VALUE;
+        uint256 percent = (amount * 10000) / _WEIGHT_VALUE;
         require(percent < 10000, "Royalties 2981 exceeds 100%");
         result = new LibPart.Part[](1);
         result[0].account = payable(to);
