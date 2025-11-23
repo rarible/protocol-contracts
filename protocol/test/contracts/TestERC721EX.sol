@@ -14,7 +14,7 @@ contract TestERC721EX is ERC721Upgradeable {
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
-    function mint(address to, uint256 tokenId, string memory tokenURI) external {
+    function mint(address to, uint256 tokenId, string calldata tokenURI) external {
         _mint(to, tokenId);
         _tokenURIs[tokenId] = tokenURI;
     }
@@ -51,7 +51,7 @@ contract TestERC721EX is ERC721Upgradeable {
         emit TokenURIRevealed(_index, "test");
     }
 
-    function getBatchIdAtIndex(uint256 _index) external view returns (uint256) {
+    function getBatchIdAtIndex(uint256) external pure returns (uint256) {
         return 10;
     }
 
