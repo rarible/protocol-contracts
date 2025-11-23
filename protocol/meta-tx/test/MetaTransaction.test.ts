@@ -1,8 +1,9 @@
 // <ai_context> Test suite for EIP712MetaTransaction using MetaTxTest contract. Covers meta-transaction execution, nonce management, signature verification, and support detection. Uses TypeChain types for typed contract interactions. </ai_context>
 import { expect } from "chai";
 import { network } from "hardhat";
-import { Signer } from "ethers";
-const { ethers } = await network.connect();
+const connection = await network.connect();
+const { ethers } = connection;
+import type * as ethersTypes from "ethers";
 import { type MetaTxTest, MetaTxTest__factory, type NoMetaTxTest, NoMetaTxTest__factory, type NoGetNonceTxTest, NoGetNonceTxTest__factory } from "../types/ethers-contracts";
 
 const domainType = [
@@ -10,13 +11,13 @@ const domainType = [
   { name: "version", type: "string" },
   { name: "verifyingContract", type: "address" },
   { name: "salt", type: "bytes32" },
-] as const;
+];
 
 const metaTransactionType = [
   { name: "nonce", type: "uint256" },
   { name: "from", type: "address" },
   { name: "functionSignature", type: "bytes" },
-] as const;
+];
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const publicKey = "0x726cDa2Ac26CeE89F645e55b78167203cAE5410E";
@@ -27,21 +28,21 @@ const balanceOfAbi = {
   inputs: [{ type: "address" }],
   outputs: [{ type: "uint256" }],
   stateMutability: "view",
-} as const;
+};
 
 const sumAbi = {
   name: "sumTest",
   inputs: [{ type: "uint256" }, { type: "uint256" }],
   outputs: [{ type: "uint256" }],
   stateMutability: "nonpayable",
-} as const;
+};
 
 const getNonceAbi = {
   name: "getNonce",
   inputs: [{ type: "address" }],
   outputs: [{ type: "uint256" }],
   stateMutability: "view",
-} as const;
+};
 
 const executeMetaTransactionAbi = {
   name: "executeMetaTransaction",
@@ -54,7 +55,7 @@ const executeMetaTransactionAbi = {
   ],
   outputs: [{ type: "bytes" }],
   stateMutability: "payable",
-} as const;
+};
 
 async function getTransactionData(nonce: bigint, abi: typeof sumAbi, params: any[]) {
   const iface = new ethers.Interface([`function ${abi.name}(${abi.inputs.map((i) => i.type).join(",")}) ${abi.stateMutability} returns (${abi.outputs.map((o) => o.type).join(",")})`]);
@@ -99,7 +100,7 @@ describe("EIP712MetaTransaction via MetaTxTest", function () {
   let metaTxTest: MetaTxTest;
   let noMetaTxTest: NoMetaTxTest;
   let noGetNonceTxTest: NoGetNonceTxTest;
-  let ownerSigner: Signer;
+  let ownerSigner: ethersTypes.Signer;
   let owner: string;
   let chainId: number;
 
