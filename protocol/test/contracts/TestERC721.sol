@@ -15,11 +15,11 @@ contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract,
         __Ownable_init(_msgSender());
     }
 
-    function mint(address to, uint tokenId) external {
+    function mint(address to, uint256 tokenId) external {
         _mint(to, tokenId);
     }
 
-    function mintFromContract(address to, uint tokenId) external {
+    function mintFromContract(address to, uint256 tokenId) external {
         _mint(to, tokenId);
     }
 
@@ -47,8 +47,8 @@ contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract,
         return 10;
     }
 
-    function mintWithPrice(address to, uint[] memory tokenIds, address currency, uint256 pricePerToken) external {
-        for (uint i = 0; i < tokenIds.length; i++) {
+    function mintWithPrice(address to, uint256[] memory tokenIds, address currency, uint256 pricePerToken) external {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
             _mint(to, tokenIds[i]);
         }
         IERC20(currency).transferFrom(_msgSender(), owner(), pricePerToken * tokenIds.length);

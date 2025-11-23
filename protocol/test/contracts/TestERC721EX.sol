@@ -14,7 +14,7 @@ contract TestERC721EX is ERC721Upgradeable {
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
-    function mint(address to, uint tokenId, string memory tokenURI) external {
+    function mint(address to, uint256 tokenId, string memory tokenURI) external {
         _mint(to, tokenId);
         _tokenURIs[tokenId] = tokenURI;
     }

@@ -10,7 +10,7 @@ contract TestERC1155 is ERC1155Upgradeable, PausableUpgradeable {
         __Pausable_init();
     }
 
-    function mint(address to, uint tokenId, uint amount) external {
+    function mint(address to, uint256 tokenId, uint256 amount) external {
         _mint(to, tokenId, amount, "");
     }
 
@@ -23,7 +23,7 @@ contract TestERC1155 is ERC1155Upgradeable, PausableUpgradeable {
         require(froms.length == tos.length, "wrong length 1");
         require(tos.length == ids.length, "wrong length 2");
         require(ids.length == amounts.length, "wrong length 3");
-        for (uint i = 0; i < froms.length; i++) {
+        for (uint256 i = 0; i < froms.length; i++) {
             safeTransferFrom(froms[i], tos[i], ids[i], amounts[i], "");
         }
     }
