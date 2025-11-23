@@ -17,7 +17,7 @@ contract Royalties2981TestImpl is IERC2981 {
         uint256 _tokenId,
         uint256 _salePrice
     ) external view override returns (address receiver, uint256 royaltyAmount) {
-        receiver = address(_tokenId >> 96);
+        receiver = address(uint160(_tokenId >> 96));
         royaltyAmount = (_salePrice * royaltiesBasePoint) / 10000;
     }
 
