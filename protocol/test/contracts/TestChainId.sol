@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.30;
 
 contract TestChainId {
-    function getChainID() public pure returns (uint256 id) {
-        assembly {
-            id := chainid()
-        }
+    function getChainID() public view returns (uint256 id) {
+        id = block.chainid;
     }
 }

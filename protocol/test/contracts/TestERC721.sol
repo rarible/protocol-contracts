@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
 
-pragma solidity 0.7.6;
-
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "./dependencies/ERC721Upgradeable.sol";
-import "./dependencies/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./dependencies/RenderingContract.sol";
 import "./dependencies/IERC4906.sol";
 
-
-contract TestERC721 is ERC721Upgradeable, Ownable, RenderingContract, IERC4906 {
-    constructor(string memory _name, string memory _symbol) public {
+contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract, IERC4906 {
+    string private _baseURI;
+    constructor(string memory _name, string memory _symbol) {
         __ERC721_init(_name, _symbol);
-        _setupOwner(msg.sender);
+        __Ownable_init(_msgSender());
     }
 
     function mint(address to, uint tokenId) external {
@@ -20,30 +20,38 @@ contract TestERC721 is ERC721Upgradeable, Ownable, RenderingContract, IERC4906 {
     }
 
     function mintFromContract(address to, uint tokenId) external {
-        _mintFromContract(to, tokenId);
+        _mint(to, tokenId);
     }
 
     function setBaseURI(string calldata uri) external {
+        _baseURI = uri;
+    }
 
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        return _tokenURI(tokenId);
+    }
+
+    function _tokenURI(uint256 tokenId) internal view returns (string memory) {
+        string memory base = _baseURI;
+        if (bytes(base).length == 0) {
+            return "";
+        }
+        return string(abi.encodePacked(base, Strings.toString(tokenId)));
     }
 
     function reveal(uint256 _index) external {
         emit TokenURIRevealed(_index, "test");
     }
 
-    function getBatchIdAtIndex(uint256 _index) external view returns (uint256) {
+    function getBatchIdAtIndex(uint256) external pure returns (uint256) {
         return 10;
-    }
-
-    function _canSetOwner() internal virtual view override returns (bool) {
-        return msg.sender == owner();
     }
 
     function mintWithPrice(address to, uint[] memory tokenIds, address currency, uint256 pricePerToken) external {
         for (uint i = 0; i < tokenIds.length; i++) {
             _mint(to, tokenIds[i]);
         }
-        IERC20Upgradeable(currency).transferFrom(msg.sender, owner(), pricePerToken * tokenIds.length);
+        IERC20(currency).transferFrom(_msgSender(), owner(), pricePerToken * tokenIds.length);
     }
 
     function updateMetaData(uint256 _tokenId) external {

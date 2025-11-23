@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.30;
 
 /// @title ERC-721 Metadata Update Extension
 interface IERC4906 {
