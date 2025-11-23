@@ -38,6 +38,7 @@ interface Token {
 }
 
 abstract contract StandardToken is Token {
+
     function transfer(address _to, uint256 _value) public virtual override returns (bool success) {
         //Default assumes totalSupply can't be over max (2^256 - 1).
         if (balances[msg.sender] >= _value && balances[_to] + _value >= balances[_to]) {
@@ -78,8 +79,8 @@ abstract contract StandardToken is Token {
         return allowed[_owner][_spender];
     }
 
-    mapping(address => uint256) _balances;
-    mapping(address => mapping(address => uint256)) _allowed;
+    mapping(address => uint256) public balances;
+    mapping(address => mapping(address => uint256)) public allowed;
 }
 
 abstract contract UnlimitedAllowanceToken is StandardToken {
@@ -95,7 +96,7 @@ abstract contract UnlimitedAllowanceToken is StandardToken {
         if (balances[_from] >= _value && allowance >= _value && balances[_to] + _value >= balances[_to]) {
             balances[_to] += _value;
             balances[_from] -= _value;
-            if (allowance < MAX_UINT) {
+            if (allowance < _MAX_UINT) {
                 allowed[_from][msg.sender] -= _value;
             }
             emit Transfer(_from, _to, _value);
