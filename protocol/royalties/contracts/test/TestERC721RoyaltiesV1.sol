@@ -8,10 +8,13 @@ import "../../contracts/LibRoyaltiesV1.sol";
 
 contract TestERC721RoyaltiesV1 is RoyaltiesV1Impl, ERC721Upgradeable {
     function initialize() public initializer {
-        _registerInterface(LibRoyaltiesV1._INTERFACE_ID_FEES);
+        __ERC721_init("", "");
     }
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees) external {
         _mint(to, tokenId);
         _saveRoyalties(tokenId, _fees);
+    }
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == LibRoyaltiesV1._INTERFACE_ID_FEES || super.supportsInterface(interfaceId);
     }
 }

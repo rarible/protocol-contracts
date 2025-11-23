@@ -15,7 +15,7 @@ contract TestERC1155WithRoyaltiesV2_InterfaceError is
     ERC1155Upgradeable
 {
     function mint(address to, uint tokenId, LibPart.Part[] memory _fees, uint amount) external {
-        _registerInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES);
+        __ERC1155_init("");
         _mint(to, tokenId, amount, "");
         _saveRoyalties(tokenId, _fees);
     }
@@ -25,4 +25,8 @@ contract TestERC1155WithRoyaltiesV2_InterfaceError is
     }
 
     function _onRoyaltiesSet(uint256 _id, LibPart.Part[] memory _fees) internal override {}
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES || super.supportsInterface(interfaceId);
+    }
 }
