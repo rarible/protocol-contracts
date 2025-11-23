@@ -74,12 +74,12 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
             functionSignature: functionSignature
         });
         require(verify(userAddress, metaTx, sigR, sigS, sigV), "Signer and signature do not match");
-        nonces[userAddress] = nonces[userAddress].add(1);
+        nonces[userAddress] = nonces[userAddress] + 1;
         // Append userAddress at the end to extract it from calling context
         (bool success, bytes memory returnData) = address(this).call(abi.encodePacked(functionSignature, userAddress));
 
         require(success, "Function call not successful");
-        emit MetaTransactionExecuted(userAddress, msg.sender, functionSignature);
+        emit MetaTransactionExecuted(userAddress, payable(msg.sender), functionSignature);
         return returnData;
     }
 
@@ -106,7 +106,7 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return signer == user;
     }
 
-    function _msgSender() internal view virtual override returns (address payable sender) {
+    function _msgSender() internal view virtual override returns (address sender) {
         if (msg.sender == address(this)) {
             bytes memory array = msg.data;
             uint256 index = msg.data.length;
@@ -120,11 +120,11 @@ abstract contract EIP712MetaTransaction is ContextUpgradeable {
         return sender;
     }
 
-    function getSalt() internal pure returns (bytes32) {
+    function getSalt() internal view returns (bytes32) {
         return bytes32(getChainID());
     }
 
-    function getChainID() internal pure returns (uint256 id) {
+    function getChainID() internal view returns (uint256 id) {
         assembly {
             id := chainid()
         }
