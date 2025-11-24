@@ -38,7 +38,6 @@ interface Token {
 }
 
 abstract contract StandardToken is Token {
-
     function transfer(address _to, uint256 _value) public virtual override returns (bool success) {
         //Default assumes totalSupply can't be over max (2^256 - 1).
         if (balances[msg.sender] >= _value && balances[_to] + _value >= balances[_to]) {
