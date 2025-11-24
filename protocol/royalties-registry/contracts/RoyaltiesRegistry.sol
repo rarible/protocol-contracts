@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
-pragma abicoder v2;
+pragma solidity ^0.8.30;
+
 
 import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
