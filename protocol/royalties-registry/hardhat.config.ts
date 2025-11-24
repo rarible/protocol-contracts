@@ -1,61 +1,31 @@
-import '@matterlabs/hardhat-zksync-deploy';
-import '@matterlabs/hardhat-zksync-solc';
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import "hardhat-deploy-immutable-proxy";
-import "@openzeppelin/hardhat-upgrades";
-import "@nomiclabs/hardhat-truffle5";
-import "@typechain/hardhat";
-import "./tasks";
-import * as dotenv from "dotenv";
-dotenv.config();
-import {
-  loadApiKeys,
-  loadCustomNetworks,
-  loadNetworkConfigs
-} from "@rarible/deploy-utils";
-const config: HardhatUserConfig = {
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
+import hardhatEthers from "@nomicfoundation/hardhat-ignition-ethers"
+import { defineConfig } from "hardhat/config";
+
+export default defineConfig({
+  plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers],
   solidity: {
-    compilers: [
-      {
-        version: "0.7.6",
+    profiles: {
+      default: {
+        version: "0.8.30",
         settings: {
           optimizer: {
             enabled: true,
             runs: 200,
           },
         },
-      }
-    ],
-    overrides: {
-    },
-    settings: {
-      metadata: {
-        // Not including the metadata hash
-        // https://github.com/paulrberg/hardhat-template/issues/31
-        bytecodeHash: "none",
-      },
-      // Disable the optimizer when debugging
-      // https://hardhat.org/hardhat-network/#solidity-optimizer-support
-      optimizer: {
-        enabled: true,
-        runs: 200,
       },
     },
   },
-  namedAccounts: {
-    deployer: 0,
+  networks: {
+    hardhatMainnet: {
+      type: "edr-simulated",
+      chainType: "l1",
+    },
+    hardhatOp: {
+      type: "edr-simulated",
+      chainType: "op",
+    },
   },
-  paths: {
-    sources: "contracts",
-    tests: "test-hardhat",
-
-  },
-  typechain: {
-    outDir: "typechain-types",
-    target: "ethers-v5",
-    alwaysGenerateOverloads: false,
-  },
-  networks: loadNetworkConfigs(),
-};
-export default config;
+});

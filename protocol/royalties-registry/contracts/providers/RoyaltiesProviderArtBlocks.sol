@@ -8,12 +8,13 @@ import "@rarible/lib-bp/contracts/BpLibrary.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
-    using SafeMathUpgradeable for uint;
-    using BpLibrary for uint;
+    using BpLibrary for uint256;
 
     uint96 public artblocksPercentage = 250;
 
     event ArtblocksPercentageChanged(address _who, uint96 _old, uint96 _new);
+
+    constructor(address _initialOwner) Ownable(_initialOwner) {}
 
     function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
 
@@ -49,11 +50,11 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             result[0].value = artblocksPercentage;
 
              // additional payee percentage * 100
-            uint96 additionalPart = uint96(royaltyFeeByID.mul(100).bp(additionalPayeePercentage.mul(100)));
+            uint96 additionalPart = uint96((royaltyFeeByID*100).bp(additionalPayeePercentage*100));
 
             //artist part
             result[1].account = payable(artistAddress);
-            result[1].value = uint96(royaltyFeeByID.mul(100).sub(additionalPart));
+            result[1].value = uint96((royaltyFeeByID*100)-additionalPart);
 
             result[2].account = payable(additionalPayee);
             result[2].value = additionalPart;
@@ -67,12 +68,12 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             result[0].value = artblocksPercentage;
 
             // additional payee percentage * 100
-            uint96 additionalPart = uint96(royaltyFeeByID.mul(100).bp(additionalPayeePercentage.mul(100)));
+            uint96 additionalPart = uint96((royaltyFeeByID*100).bp(additionalPayeePercentage*100));
 
             //artist part
             if (additionalPayeePercentage == 0) {
                 result[1].account = payable(artistAddress);
-                result[1].value = uint96(royaltyFeeByID.mul(100).sub(additionalPart));
+                result[1].value = uint96((royaltyFeeByID*100)-additionalPart);
             }
 
             //additional payee part

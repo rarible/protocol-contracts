@@ -40,7 +40,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     uint constant royaltiesTypesAmount = 6;
 
     function __RoyaltiesRegistry_init() external initializer {
-        __Ownable_init_unchained();
+        __Ownable_init(_msgSender());
     }
 
     /// @dev sets external provider for token contract, and royalties type = 4
@@ -51,7 +51,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
     /// @dev returns provider address for token contract from royaltiesProviders mapping
     function getProvider(address token) public view returns(address) {
-        return address(royaltiesProviders[token]);
+        return address(uint160(royaltiesProviders[token]));
     }
 
     /// @dev returns royalties type for token contract
@@ -61,7 +61,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
     /// @dev returns royalties type from uint
     function _getRoyaltiesType(uint data) internal pure returns(uint) {
-        for (uint i = 1; i <= royaltiesTypesAmount; ++i) {
+        for (uint256 i = 1; i <= royaltiesTypesAmount; ++i) {
             if (data / 2**(256-i) == 1) {
                 return i;
             }
@@ -72,7 +72,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     /// @dev sets royalties type for token contract
     function setRoyaltiesType(address token, uint royaltiesType, address royaltiesProvider) internal {
         require(royaltiesType > 0 && royaltiesType <= royaltiesTypesAmount, "wrong royaltiesType");
-        royaltiesProviders[token] = uint(royaltiesProvider) + 2**(256 - royaltiesType);
+        royaltiesProviders[token] = uint256(uint160(royaltiesProvider)) + 2**(256 - royaltiesType);
     }
 
     /// @dev clears and sets new royalties type for token contract
@@ -84,7 +84,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     /// @dev clears royalties type for token contract
     function clearRoyaltiesType(address token) external {
         checkOwner(token);
-        royaltiesProviders[token] = uint(getProvider(token));
+        royaltiesProviders[token] = uint256(uint160(getProvider(token)));
     }
 
     /// @dev sets royalties for token contract in royaltiesByToken mapping and royalties type = 1
@@ -116,19 +116,19 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
 
     /// @dev calculates royalties type for token contract
     function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) {   
-        try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns(bool result) {
+        try IERC165(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns(bool result) {
             if (result) {
                 return 2;
             }
         } catch { }
 
-        try IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns(bool result) {
+        try IERC165(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns(bool result) {
             if (result) {
                 return 3;
             }
         } catch { }
         
-        try IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES) returns(bool result) {
+        try IERC165(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES) returns(bool result) {
             if (result) {
                 return 5;
             }
@@ -149,7 +149,7 @@ contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
     function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
         uint royaltiesProviderData = royaltiesProviders[token];
 
-        address royaltiesProvider = address(royaltiesProviderData);
+        address royaltiesProvider = address(uint160(royaltiesProviderData));
         uint royaltiesType = _getRoyaltiesType(royaltiesProviderData);
 
         // case when royaltiesType is not set

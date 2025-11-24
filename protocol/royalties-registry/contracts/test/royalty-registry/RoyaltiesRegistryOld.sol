@@ -9,7 +9,7 @@ import "@rarible/royalties/contracts/LibRoyalties2981.sol";
 import "@rarible/royalties/contracts/RoyaltiesV1.sol";
 import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 //old RoyaltiesRegistry with royaltiesProviders changed to  mapping(address => uint) to test upgradeability
@@ -25,19 +25,19 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
 
     mapping(bytes32 => RoyaltiesSet) public royaltiesByTokenAndTokenId;
     mapping(address => RoyaltiesSet) public royaltiesByToken;
-    mapping(address => uint) public royaltiesProviders;
+    mapping(address => uint256) public royaltiesProviders;
 
     function __RoyaltiesRegistry_init() external initializer {
-        __Ownable_init_unchained();
+        __Ownable_init(_msgSender());
     }
 
     function setProviderByToken(address token, address provider) external {
         checkOwner(token);
-        royaltiesProviders[token] = uint(provider);
+        royaltiesProviders[token] = uint256(uint160(provider));
     }
 
     function getProvider(address token) public view returns(address) {
-        return address(royaltiesProviders[token]);
+        return address(uint160(royaltiesProviders[token]));
     }
 
     function setRoyaltiesByToken(address token, LibPart.Part[] memory royalties) external {
@@ -107,7 +107,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
     }
 
     function royaltiesFromContractNative(address token, uint tokenId) internal view returns (LibPart.Part[] memory, bool) {
-        if (IERC165Upgradeable(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
+        if (IERC165(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
             RoyaltiesV2 v2 = RoyaltiesV2(token);
             try v2.getRaribleV2Royalties(tokenId) returns (LibPart.Part[] memory result) {
                 return (result, true);
@@ -140,7 +140,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
     }
 
     function royaltiesFromContractSpecial(address token, uint tokenId) internal view returns (LibPart.Part[] memory) {
-        if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
+        if (IERC165(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
             IERC2981 v2981 = IERC2981(token);
             try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
                 return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
