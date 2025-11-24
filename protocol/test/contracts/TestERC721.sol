@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract, IERC4906 {
     constructor(string memory _name, string memory _symbol) public {
         __ERC721_init(_name, _symbol);
-        _setupOwner(msg.sender);
+        __Ownable_init(_msgSender());
     }
 
     function mint(address to, uint tokenId) external {
@@ -29,19 +29,19 @@ contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract,
         emit TokenURIRevealed(_index, "test");
     }
 
-    function getBatchIdAtIndex(uint256 _index) external view returns (uint256) {
+    function getBatchIdAtIndex(uint256) external view returns (uint256) {
         return 10;
     }
 
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return msg.sender == owner();
+    function _canSetOwner() internal view virtual returns (bool) {
+        return _msgSender() == owner();
     }
 
     function mintWithPrice(address to, uint[] memory tokenIds, address currency, uint256 pricePerToken) external {
         for (uint i = 0; i < tokenIds.length; i++) {
             _mint(to, tokenIds[i]);
         }
-        IERC20Upgradeable(currency).transferFrom(msg.sender, owner(), pricePerToken * tokenIds.length);
+        IERC20(currency).transferFrom(msg.sender, owner(), pricePerToken * tokenIds.length);
     }
 
     function updateMetaData(uint256 _tokenId) external {
