@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.2 <0.8.0;
-
-pragma abicoder v2;
+pragma solidity ^0.8.30;
 
 import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV2.sol";
@@ -11,8 +9,8 @@ import "@rarible/royalties/contracts/LibRoyalties2981.sol";
 import "@rarible/royalties/contracts/RoyaltiesV1.sol";
 import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
-import "@openzeppelin/contracts-upgradeable/introspection/IERC165Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 

@@ -10,7 +10,7 @@ import "@rarible/royalties/contracts/LibRoyalties2981.sol";
 import "@rarible/royalties/contracts/RoyaltiesV1.sol";
 import "@rarible/royalties/contracts/RoyaltiesV2.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract RoyaltiesRegistry is IRoyaltiesProvider, OwnableUpgradeable {
