@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 contract TestERC721EX is ERC721Upgradeable {
     string private _contractURI;
-    string private _baseURI;
+    string private _baseURIValue;
     mapping(uint256 => string) private _tokenURIs;
 
     constructor(string memory _name, string memory _symbol, string memory uri) initializer {
@@ -20,7 +20,11 @@ contract TestERC721EX is ERC721Upgradeable {
     }
 
     function setBaseURI(string calldata uri) external {
-        _baseURI = uri;
+        _baseURIValue = uri;
+    }
+
+    function baseURI() external view returns (string memory) {
+        return _baseURIValue;
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -29,7 +33,7 @@ contract TestERC721EX is ERC721Upgradeable {
 
     function _tokenURI(uint256 tokenId) internal view returns (string memory) {
         string memory __tokenURI = _tokenURIs[tokenId];
-        string memory base = _baseURI;
+        string memory base = _baseURIValue;
         if (bytes(base).length == 0) {
             return __tokenURI;
         }
