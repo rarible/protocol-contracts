@@ -30,3 +30,5 @@ export const DEPLOY_FROM = process.env.DEPLOY_FROM;
 export const ROYALTIES_REGISTRY_TYPE = process.env.ROYALTIES_REGISTRY_TYPE || "RoyaltiesRegistry";
 
 export const DETERMENISTIC_DEPLOYMENT_SALT: string = process.env.DETERMENISTIC_DEPLOYMENT_SALT || "0x1118";
+
+export const GAS_PRICE: string = process.env.GAS_PRICE || "1000000";

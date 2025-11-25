@@ -3,31 +3,30 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { ERC721RaribleMinimal, ERC721RaribleMinimal__factory } from "@rarible/tokens/jszk";
 import { BigNumber } from 'ethers';
 import { getSigner } from '../utils/signer';
+import { GAS_PRICE } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     // need to get signer from hre deployment !
-    const { deploy, execute } = hre.deployments;
+    const { deploy, execute, save } = hre.deployments;
     const { deployer } = await hre.getNamedAccounts();
 
-    const signer = await getSigner(hre);
-
-    const signerAddress = await signer.getAddress()
+    
 
     let contractName: string = "ERC721RaribleFactoryC2";
     const factoryAddress = (await hre.deployments.get(contractName)).address
     console.log(`using factory: ${factoryAddress}`);
 
-    console.log(`using factory 2: ${factoryAddress}, signer: ${signerAddress}`);
+    console.log(`using factory 2: ${factoryAddress}, signer: ${deployer}`);
     // Deploy new ERC721 using the factory
     let address = "0x0ECA5f8b4CA915f143a98cB96E41f946136cced2"
 
     try {
-        const receipt = await execute(contractName, { from: deployer, log: true, gasLimit: 1500000 }, "createToken(string,string,string,string,address[],uint256)", "Mystical Cats 7",
+        const receipt = await execute(contractName, { from: deployer, log: true, gasLimit: 1500000, gasPrice: GAS_PRICE }, "createToken(string,string,string,string,address[],uint256)", "Mystical Cats 7",
             "MYST02",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/",
             "https://rarible-drops.s3.filebase.com/hyper/mystical/collection.json",
-            [signerAddress],
+            [deployer],
             140
         )
         
@@ -44,36 +43,38 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
     console.log(`collection 721 address: ${address}`);
 
-    const erc721: ERC721RaribleMinimal = ERC721RaribleMinimal__factory.connect(address, signer);
+    // Save the deployment so we can use execute on it
+    const collectionDeploymentName = 'TestERC721CollectionWithItems';
+    await save(collectionDeploymentName, { abi: ERC721RaribleMinimal__factory.abi as any, address });
+
     // await erc721.addMinter(signer.address);
 
     // Single function that loops from 1..60. Adjust to your liking:
     for (let i = 1; i <= 5; i++) {
         // Construct the tokenId with the top 160 bits = signer address
         const tokenId = BigNumber
-            .from(signerAddress) // 20-byte address
+            .from(deployer) // 20-byte address
             .shl(96)              // shift left by 96 bits
             .add(i);              // i fits into the low 96 bits
 
-        let to = signerAddress;
+        let to = "0xa95a09520af0f1bbef810a47560c79affe75aa9f";
 
         try {
             console.log("mint token and transfer", tokenId)
-            const tx = await erc721.mintAndTransfer({
+            const tx = await execute(collectionDeploymentName, { from: deployer, log: true, gasPrice: GAS_PRICE }, "mintAndTransfer", {
                 tokenId: tokenId,
                 tokenURI: `https://rarible-drops.s3.filebase.com/hyper/mystical/metadata/${i}.json`,
                 creators: [{
-                    account: signerAddress,
+                    account: deployer,
                     value: BigNumber.from("10000")
                 }],
                 royalties: [{
-                    account: signerAddress,
+                    account: deployer,
                     value: BigNumber.from("100")
                 }],
                 signatures: ["0x"]
             }, to);
-            await tx.wait();
-            console.log(`Minted tokenId #${i}, tx: ${tx.hash}; tokenId: ${tokenId}`);
+            console.log(`Minted tokenId #${i}, tx: ${tx.transactionHash}; tokenId: ${tokenId}`);
         } catch (error) {
             console.log(`error: ${error}`);
         }
@@ -81,4 +82,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['test-erc721-collection-withItems', '305'];
+func.tags = ["all", "all-zk",'test-erc721-collection-withItems', '305'];

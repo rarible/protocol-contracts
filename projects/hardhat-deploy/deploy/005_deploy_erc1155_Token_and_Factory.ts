@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { getConfig } from '../utils/utils'
+import { GAS_PRICE, getConfig } from '../utils/utils'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
@@ -38,6 +38,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
     },
     log: true,
     autoMine: true,
+    gasPrice: GAS_PRICE,
   });
 
   //deploy beacon
@@ -46,6 +47,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
     args: [erc1155Receipt.implementation],
     log: true,
     autoMine: true,
+    gasPrice: GAS_PRICE,
   });
 
   //deploy factory
@@ -54,6 +56,7 @@ async function deployERC1155TokenAndFactory(hre: HardhatRuntimeEnvironment, cont
     args: [erc1155BeaconReceipt.address, transferProxyyAddress, erc1155LazyMintTransferProxyAddress],
     log: true,
     autoMine: true,
+    gasPrice: GAS_PRICE,
   });
 
 }

@@ -15,3 +15,9 @@
  RaribleExchangeWrapper | 0x52e45bc6D0E22bbd42Db1B91299cAEED367b9afe | https://camp.cloud.blockscout.com/address/0x52e45bc6D0E22bbd42Db1B91299cAEED367b9afe
  RoyaltiesRegistry | 0xD5A357fb04e2E9e5231AF6098767F794eaaC4b5a | https://camp.cloud.blockscout.com/address/0xD5A357fb04e2E9e5231AF6098767F794eaaC4b5a
  TransferProxy | 0x147d06FbDA085C0455615E554D87262B0726ad0c | https://camp.cloud.blockscout.com/address/0x147d06FbDA085C0455615E554D87262B0726ad0c
+
+## Protocol Fees and Ownerships
+| Network | ChainId | ExchangeV2 Address | Fee Receiver | Seller Fee (bps) | Buyer Fee (bps) | ProxyAdmin Owner |
+|---------|---------|--------------------|--------------|------------------|-----------------|------------------|
+| camp | 484 | `0xb968fbA0d911e474c405cf6F375582d7b5C8cEE3` | `0x053F171c0D0Cc9d76247D4d1CdDb280bf1131390` | 200 | 0 | `0xe223825497c435BAeaf318F03d33Ec704954028A`|
+

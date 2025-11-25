@@ -1,5 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { GAS_PRICE } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   //deploy and initialise 4 transfer proxies
@@ -23,6 +24,7 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
     from: deployer,
     log: true,
     autoMine: true,
+    gasPrice: GAS_PRICE,
   });
 
   const Proxy = await hre.ethers.getContractFactory(contractName);
@@ -30,7 +32,7 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
 
   await execute(
     contractName,
-    { from: deployer, log: true },
+    { from: deployer, log: true, gasPrice: GAS_PRICE },
     "__OperatorRole_init"
   );
 

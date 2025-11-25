@@ -15,3 +15,9 @@
  RaribleExchangeWrapper | 0x4421b444955b50e57fa2F73656A5bD1E23F9B9e5 | https://fraxscan.com/address/0x4421b444955b50e57fa2F73656A5bD1E23F9B9e5
  RoyaltiesRegistry | 0x4196c4056a32e800F854aB3Ea058255f324391F6 | https://fraxscan.com/address/0x4196c4056a32e800F854aB3Ea058255f324391F6
  TransferProxy | 0x892f0e3DEaC041b12b748bf9d7D1BA480d266696 | https://fraxscan.com/address/0x892f0e3DEaC041b12b748bf9d7D1BA480d266696
+
+## Protocol Fees and Ownerships
+| Network | ChainId | ExchangeV2 Address | Fee Receiver | Seller Fee (bps) | Buyer Fee (bps) | ProxyAdmin Owner |
+|---------|---------|--------------------|--------------|------------------|-----------------|------------------|
+| fraxtal | 252 | `0x2c46e116a742C159fa79e2717b50759EC979e3Be` | `0x053F171c0D0Cc9d76247D4d1CdDb280bf1131390` | 200 | 0 | `0xe223825497c435BAeaf318F03d33Ec704954028A`|
+
