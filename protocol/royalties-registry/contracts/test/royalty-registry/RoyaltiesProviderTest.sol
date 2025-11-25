@@ -2,13 +2,11 @@
 
 pragma solidity ^0.8.30;
 
-
 import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
 
 contract RoyaltiesProviderTest is IRoyaltiesProvider {
-
-    mapping (address => mapping(uint => LibPart.Part[])) internal royaltiesTest;
+    mapping(address => mapping(uint => LibPart.Part[])) internal royaltiesTest;
 
     function initializeProvider(address token, uint tokenId, LibPart.Part[] memory royalties) public {
         delete royaltiesTest[token][tokenId];
@@ -17,7 +15,7 @@ contract RoyaltiesProviderTest is IRoyaltiesProvider {
         }
     }
 
-    function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
+    function getRoyalties(address token, uint tokenId) external view override returns (LibPart.Part[] memory) {
         return royaltiesTest[token][tokenId];
     }
 }

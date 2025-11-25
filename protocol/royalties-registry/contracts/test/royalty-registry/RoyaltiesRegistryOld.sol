@@ -14,7 +14,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 //old RoyaltiesRegistry with royaltiesProviders changed to  mapping(address => uint) to test upgradeability
 contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
-
     event RoyaltiesSetForToken(address indexed token, uint indexed tokenId, LibPart.Part[] royalties);
     event RoyaltiesSetForContract(address indexed token, LibPart.Part[] royalties);
 
@@ -36,7 +35,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
         royaltiesProviders[token] = uint256(uint160(provider));
     }
 
-    function getProvider(address token) public view returns(address) {
+    function getProvider(address token) public view returns (address) {
         return address(uint160(royaltiesProviders[token]));
     }
 
@@ -66,7 +65,7 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
         }
     }
 
-    function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
+    function getRoyalties(address token, uint tokenId) external override returns (LibPart.Part[] memory) {
         RoyaltiesSet memory royaltiesSet = royaltiesByTokenAndTokenId[keccak256(abi.encode(token, tokenId))];
         if (royaltiesSet.initialized) {
             return royaltiesSet.royalties;
@@ -106,7 +105,10 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
         return royaltiesFromContractSpecial(token, tokenId);
     }
 
-    function royaltiesFromContractNative(address token, uint tokenId) internal view returns (LibPart.Part[] memory, bool) {
+    function royaltiesFromContractNative(
+        address token,
+        uint tokenId
+    ) internal view returns (LibPart.Part[] memory, bool) {
         if (IERC165(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES)) {
             RoyaltiesV2 v2 = RoyaltiesV2(token);
             try v2.getRaribleV2Royalties(tokenId) returns (LibPart.Part[] memory result) {
@@ -142,7 +144,10 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
     function royaltiesFromContractSpecial(address token, uint tokenId) internal view returns (LibPart.Part[] memory) {
         if (IERC165(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
             IERC2981 v2981 = IERC2981(token);
-            try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
+            try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (
+                address receiver,
+                uint256 royaltyAmount
+            ) {
                 return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
             } catch {
                 return new LibPart.Part[](0);
@@ -151,7 +156,10 @@ contract RoyaltiesRegistryOld is IRoyaltiesProvider, OwnableUpgradeable {
         return new LibPart.Part[](0);
     }
 
-    function providerExtractor(address token, uint tokenId) internal returns (bool result, LibPart.Part[] memory royalties) {
+    function providerExtractor(
+        address token,
+        uint tokenId
+    ) internal returns (bool result, LibPart.Part[] memory royalties) {
         result = false;
         address providerAddress = getProvider(token);
         if (providerAddress != address(0x0)) {

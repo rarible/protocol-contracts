@@ -16,14 +16,21 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
 
     constructor(address _initialOwner) Ownable(_initialOwner) {}
 
-    function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
-
+    function getRoyalties(address token, uint tokenId) external view override returns (LibPart.Part[] memory) {
         RoyaltyArtBlocks artBlocks = RoyaltyArtBlocks(token);
 
         //gettign artist and additionalPayee royalty part
-        (address artistAddress, address additionalPayee, uint256 additionalPayeePercentage, uint256 royaltyFeeByID) = artBlocks.getRoyaltyData(tokenId);
+        (
+            address artistAddress,
+            address additionalPayee,
+            uint256 additionalPayeePercentage,
+            uint256 royaltyFeeByID
+        ) = artBlocks.getRoyaltyData(tokenId);
 
-        require(additionalPayeePercentage <= 100 && royaltyFeeByID <= 100, "wrong royalties percentages from artBlocks");
+        require(
+            additionalPayeePercentage <= 100 && royaltyFeeByID <= 100,
+            "wrong royalties percentages from artBlocks"
+        );
 
         //resulting royalties
         LibPart.Part[] memory result;
@@ -41,7 +48,7 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             //if artblocksPercentage = 0 then result is empty
             return result;
 
-        //if royaltyFeeByID > 0 and  0 < additionalPayeePercentage < 100
+            //if royaltyFeeByID > 0 and  0 < additionalPayeePercentage < 100
         } else if (additionalPayeePercentage > 0 && additionalPayeePercentage < 100) {
             result = new LibPart.Part[](3);
 
@@ -49,17 +56,17 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             result[0].account = payable(owner());
             result[0].value = artblocksPercentage;
 
-             // additional payee percentage * 100
-            uint96 additionalPart = uint96((royaltyFeeByID*100).bp(additionalPayeePercentage*100));
+            // additional payee percentage * 100
+            uint96 additionalPart = uint96((royaltyFeeByID * 100).bp(additionalPayeePercentage * 100));
 
             //artist part
             result[1].account = payable(artistAddress);
-            result[1].value = uint96((royaltyFeeByID*100)-additionalPart);
+            result[1].value = uint96((royaltyFeeByID * 100) - additionalPart);
 
             result[2].account = payable(additionalPayee);
             result[2].value = additionalPart;
-            
-        //if royaltyFeeByID > 0 and additionalPayeePercentage == 0 or 100
+
+            //if royaltyFeeByID > 0 and additionalPayeePercentage == 0 or 100
         } else {
             result = new LibPart.Part[](2);
 
@@ -68,12 +75,12 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
             result[0].value = artblocksPercentage;
 
             // additional payee percentage * 100
-            uint96 additionalPart = uint96((royaltyFeeByID*100).bp(additionalPayeePercentage*100));
+            uint96 additionalPart = uint96((royaltyFeeByID * 100).bp(additionalPayeePercentage * 100));
 
             //artist part
             if (additionalPayeePercentage == 0) {
                 result[1].account = payable(artistAddress);
-                result[1].value = uint96((royaltyFeeByID*100)-additionalPart);
+                result[1].value = uint96((royaltyFeeByID * 100) - additionalPart);
             }
 
             //additional payee part
@@ -81,16 +88,15 @@ contract RoyaltiesProviderArtBlocks is IRoyaltiesProvider, Ownable {
                 result[1].account = payable(additionalPayee);
                 result[1].value = additionalPart;
             }
-        } 
+        }
 
         return result;
     }
 
     //sets new value for artblocksPercentage
-    function setArtblocksPercentage(uint96 _artblocksPercentage) onlyOwner public {
-        require(_artblocksPercentage <= 10000,"_artblocksPercentage can't be > 100%");
+    function setArtblocksPercentage(uint96 _artblocksPercentage) public onlyOwner {
+        require(_artblocksPercentage <= 10000, "_artblocksPercentage can't be > 100%");
         emit ArtblocksPercentageChanged(_msgSender(), artblocksPercentage, _artblocksPercentage);
         artblocksPercentage = _artblocksPercentage;
     }
-
 }

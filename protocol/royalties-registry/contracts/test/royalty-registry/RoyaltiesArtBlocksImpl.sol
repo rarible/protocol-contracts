@@ -14,7 +14,9 @@ contract RoyaltiesArtBlocksImpl is RoyaltyArtBlocks {
 
     mapping(uint256 => Project) projects;
 
-    function getRoyaltyData(uint256 _tokenId)
+    function getRoyaltyData(
+        uint256 _tokenId
+    )
         external
         view
         override
@@ -39,14 +41,10 @@ contract RoyaltiesArtBlocksImpl is RoyaltyArtBlocks {
         uint256 _additionalPayeePercentage
     ) public {
         projects[_projectId].additionalPayee = _additionalPayee;
-        projects[_projectId]
-        .additionalPayeePercentage = _additionalPayeePercentage;
+        projects[_projectId].additionalPayeePercentage = _additionalPayeePercentage;
     }
 
-    function updateProjectSecondaryMarketRoyaltyPercentage(
-        uint256 _projectId,
-        uint256 _secondMarketRoyalty
-    ) public {
+    function updateProjectSecondaryMarketRoyaltyPercentage(uint256 _projectId, uint256 _secondMarketRoyalty) public {
         projects[_projectId].secondMarketRoyalty = _secondMarketRoyalty;
     }
 }

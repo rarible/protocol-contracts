@@ -5,8 +5,7 @@ pragma solidity ^0.8.30;
 import "../../../contracts/providers/RoyaltyV2Legacy.sol";
 
 contract RoyaltiesV2LegacyImpl is RoyaltyV2Legacy {
-
-    mapping (uint256 => LibPart.Part[]) internal royalties;
+    mapping(uint256 => LibPart.Part[]) internal royalties;
 
     function _saveRoyalties(uint256 id, LibPart.Part[] memory _royalties) public {
         uint256 totalValue;
@@ -22,14 +21,14 @@ contract RoyaltiesV2LegacyImpl is RoyaltyV2Legacy {
 
     function _updateAccount(uint256 _id, address _from, address _to) internal {
         uint length = royalties[_id].length;
-        for(uint i = 0; i < length; ++i) {
+        for (uint i = 0; i < length; ++i) {
             if (royalties[_id][i].account == _from) {
                 royalties[_id][i].account = payable(address(uint160(_to)));
             }
         }
     }
 
-    function getRoyalties(uint256 id) override external view returns (LibPart.Part[] memory) {
+    function getRoyalties(uint256 id) external view override returns (LibPart.Part[] memory) {
         return royalties[id];
     }
 

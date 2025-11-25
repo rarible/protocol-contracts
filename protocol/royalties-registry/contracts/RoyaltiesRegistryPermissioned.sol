@@ -15,7 +15,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable, AccessControlUpgradeable {
-
     /// @dev deprecated
     event RoyaltiesSetForToken(address indexed token, uint indexed tokenId, LibPart.Part[] royalties);
     /// @dev emitted when royalties set for token in
@@ -63,13 +62,13 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     }
 
     /// @dev returns provider address for token contract from royaltiesProviders mapping
-    function getProvider(address token) public view returns(address) {
+    function getProvider(address token) public view returns (address) {
         return address(uint160(royaltiesProviders[token]));
     }
 
     /// @dev returns royalties type for token contract
-    function getRoyaltiesType(address token) external view returns(uint) {
-        if(royaltiesAllowed[token]) {
+    function getRoyaltiesType(address token) external view returns (uint) {
+        if (royaltiesAllowed[token]) {
             return _getRoyaltiesType(royaltiesProviders[token]);
         } else {
             return 6;
@@ -77,9 +76,9 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     }
 
     /// @dev returns royalties type from uint
-    function _getRoyaltiesType(uint data) internal pure returns(uint) {
+    function _getRoyaltiesType(uint data) internal pure returns (uint) {
         for (uint i = 1; i <= royaltiesTypesAmount; ++i) {
-            if (data / 2**(256-i) == 1) {
+            if (data / 2 ** (256 - i) == 1) {
                 return i;
             }
         }
@@ -89,7 +88,7 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     /// @dev sets royalties type for token contract
     function setRoyaltiesType(address token, uint royaltiesType, address royaltiesProvider) internal {
         require(royaltiesType > 0 && royaltiesType <= royaltiesTypesAmount, "wrong royaltiesType");
-        royaltiesProviders[token] = uint256(uint160(royaltiesProvider)) + 2**(256 - royaltiesType);
+        royaltiesProviders[token] = uint256(uint160(royaltiesProvider)) + 2 ** (256 - royaltiesType);
     }
 
     /// @dev clears and sets new royalties type for token contract
@@ -132,24 +131,24 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     }
 
     /// @dev calculates royalties type for token contract
-    function calculateRoyaltiesType(address token, address royaltiesProvider ) internal view returns(uint) {
-        try IERC165(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns(bool result) {
+    function calculateRoyaltiesType(address token, address royaltiesProvider) internal view returns (uint) {
+        try IERC165(token).supportsInterface(LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) returns (bool result) {
             if (result) {
                 return 2;
             }
-        } catch { }
+        } catch {}
 
-            try IERC165(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns(bool result) {
+        try IERC165(token).supportsInterface(LibRoyaltiesV1._INTERFACE_ID_FEES) returns (bool result) {
             if (result) {
                 return 3;
             }
-        } catch { }
+        } catch {}
 
-        try IERC165(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES) returns(bool result) {
+        try IERC165(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES) returns (bool result) {
             if (result) {
                 return 5;
             }
-        } catch { }
+        } catch {}
 
         if (royaltiesProvider != address(0)) {
             return 4;
@@ -163,8 +162,8 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     }
 
     /// @dev returns royalties for token contract and token id
-    function getRoyalties(address token, uint tokenId) override external returns (LibPart.Part[] memory) {
-        if(royaltiesAllowed[token]) {
+    function getRoyalties(address token, uint tokenId) external override returns (LibPart.Part[] memory) {
+        if (royaltiesAllowed[token]) {
             uint royaltiesProviderData = royaltiesProviders[token];
             address royaltiesProvider = address(uint160(royaltiesProviderData));
             uint royaltiesType = _getRoyaltiesType(royaltiesProviderData);
@@ -184,7 +183,7 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
 
             //case royaltiesType = 2, royalties rarible v2
             if (royaltiesType == 2) {
-                return getRoyaltiesRaribleV2(token,tokenId);
+                return getRoyaltiesRaribleV2(token, tokenId);
             }
 
             //case royaltiesType = 3, royalties rarible v1
@@ -250,7 +249,10 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
 
     /// @dev tries to get royalties EIP-2981 for token and tokenId
     function getRoyaltiesEIP2981(address token, uint tokenId) internal view returns (LibPart.Part[] memory) {
-        try IERC2981(token).royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (address receiver, uint256 royaltyAmount) {
+        try IERC2981(token).royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (
+            address receiver,
+            uint256 royaltyAmount
+        ) {
             return LibRoyalties2981.calculateRoyalties(receiver, royaltyAmount);
         } catch {
             return new LibPart.Part[](0);
@@ -258,7 +260,11 @@ contract RoyaltiesRegistryPermissioned is IRoyaltiesProvider, OwnableUpgradeable
     }
 
     /// @dev tries to get royalties for token and tokenId from external provider set in royaltiesProviders
-    function providerExtractor(address token, uint tokenId, address providerAddress) internal returns (LibPart.Part[] memory) {
+    function providerExtractor(
+        address token,
+        uint tokenId,
+        address providerAddress
+    ) internal returns (LibPart.Part[] memory) {
         try IRoyaltiesProvider(providerAddress).getRoyalties(token, tokenId) returns (LibPart.Part[] memory result) {
             return result;
         } catch {

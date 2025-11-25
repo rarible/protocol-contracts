@@ -6,7 +6,7 @@ import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 import "./RoyaltyV2Legacy.sol";
 
 contract RoyaltiesProviderV2Legacy is IRoyaltiesProvider {
-    function getRoyalties(address token, uint tokenId) override external view returns(LibPart.Part[] memory) {
+    function getRoyalties(address token, uint tokenId) external view override returns (LibPart.Part[] memory) {
         return RoyaltyV2Legacy(token).getRoyalties(tokenId);
     }
 }

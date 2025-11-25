@@ -5,7 +5,6 @@ pragma solidity ^0.8.30;
 import "@rarible/lib-part/contracts/LibPart.sol";
 
 abstract contract RoyaltyArtBlocksV2 {
-    
     /**
      * @notice Gets royalty Basis Points (BPS) for token ID `_tokenId`.
      * This conforms to the IManifold interface designated in the Royalty
@@ -18,13 +17,7 @@ abstract contract RoyaltyArtBlocksV2 {
      * @dev reverts if invalid _tokenId
      * @dev only returns recipients that have a non-zero BPS allocation
      */
-    function getRoyalties(uint256 _tokenId) 
-        external 
-        view
-        virtual
-        returns (
-            address payable[] memory recipients, 
-            uint256[] memory bps
-        );
-
+    function getRoyalties(
+        uint256 _tokenId
+    ) external view virtual returns (address payable[] memory recipients, uint256[] memory bps);
 }

@@ -8,7 +8,12 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
 import "@rarible/royalties/contracts/LibRoyaltiesV1.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract TestERC721WithRoyaltiesV1OwnableUpgradeable is Initializable, RoyaltiesV1Impl, ERC721Upgradeable, OwnableUpgradeable {
+contract TestERC721WithRoyaltiesV1OwnableUpgradeable is
+    Initializable,
+    RoyaltiesV1Impl,
+    ERC721Upgradeable,
+    OwnableUpgradeable
+{
     function initialize() public initializer {
         __Ownable_init(_msgSender());
     }

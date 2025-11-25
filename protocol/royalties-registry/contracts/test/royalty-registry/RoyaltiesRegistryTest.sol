@@ -6,7 +6,6 @@ import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 import "@rarible/lib-part/contracts/LibPart.sol";
 
 contract RoyaltiesRegistryTest {
-
     event getRoyaltiesTest(LibPart.Part[] royalties);
 
     function _getRoyalties(address royaltiesTest, address token, uint tokenId) external {
