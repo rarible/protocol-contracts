@@ -13,36 +13,34 @@ Hardhat task: Export protocol fee and ownership information for ExchangeV2 only.
 </ai_context>
 */
 import { task } from "hardhat/config";
-import fs from "fs";
+import * as fs from "fs";
+import { promises as fsPromises } from "fs";
 import path from "path";
 import { ethers } from "hardhat";
 import { ExchangeV2, ExchangeV2__factory } from "@rarible/exchange-v2/typechain-types";
-
 import { getProtocolFee } from "@rarible/exchange-v2/sdk/protocolFee";
 import { HttpNetworkConfig } from "hardhat/types";
-
 // Helper: Get all subdirectories in a directory
 async function getSubdirectories(source: string): Promise<string[]> {
   if (!fs.existsSync(source)) return [];
-  const entries = await fs.promises.readdir(source, { withFileTypes: true });
+  const entries = await fsPromises.readdir(source, { withFileTypes: true });
   return entries.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
 }
-
 // Helper to read chainId from .chainId file in deployment dir
 async function getChainIdFromDeployments(deploymentsDir: string): Promise<string | undefined> {
   const chainIdFile = path.join(deploymentsDir, ".chainId");
   try {
     if (fs.existsSync(chainIdFile)) {
-      const value = await fs.promises.readFile(chainIdFile, "utf-8");
+      const value = await fsPromises.readFile(chainIdFile, "utf-8");
       return value.trim();
     }
   } catch {}
   // fallback: try to read from deployment .json files
   try {
-    const files = await fs.promises.readdir(deploymentsDir);
+    const files = await fsPromises.readdir(deploymentsDir);
     for (const file of files) {
       if (!file.endsWith(".json")) continue;
-      const deployInfo = JSON.parse(await fs.promises.readFile(path.join(deploymentsDir, file), "utf-8"));
+      const deployInfo = JSON.parse(await fsPromises.readFile(path.join(deploymentsDir, file), "utf-8"));
       if (deployInfo.chainId) {
         return String(deployInfo.chainId);
       }
@@ -53,14 +51,13 @@ async function getChainIdFromDeployments(deploymentsDir: string): Promise<string
   } catch {}
   return undefined;
 }
-
 // Find ProxyAdmin address from deployment files in the same dir
 async function getProxyAdminAddress(deploymentsDir: string): Promise<string | undefined> {
   try {
-    const files = await fs.promises.readdir(deploymentsDir);
+    const files = await fsPromises.readdir(deploymentsDir);
     for (const file of files) {
       if (!file.endsWith(".json")) continue;
-      const deployInfo = JSON.parse(await fs.promises.readFile(path.join(deploymentsDir, file), "utf-8"));
+      const deployInfo = JSON.parse(await fsPromises.readFile(path.join(deploymentsDir, file), "utf-8"));
       if (
         (deployInfo.contractName === "DefaultProxyAdmin" || file.replace(/\.json$/, "") === "DefaultProxyAdmin") &&
         deployInfo.address
@@ -71,53 +68,38 @@ async function getProxyAdminAddress(deploymentsDir: string): Promise<string | un
   } catch {}
   return undefined;
 }
-
 task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner info for ExchangeV2 in Markdown (all networks)")
-  .setAction(async (_, hre) => {
+  .addOptionalParam("depdir", "Specific deployment directory (network) to export")
+  .setAction(async (taskArgs, hre) => {
+    const { depdir } = taskArgs;
     const deploymentsRoot = hre.config.paths.deployments;
     const networks = hre.config.networks
-    const depDirs = (await getSubdirectories(deploymentsRoot)).filter(network => !network.includes("hardhat") && !network.includes("testnet") && !network.includes("sepolia"));
-
+    const depDirs = depdir ? [depdir] : (await getSubdirectories(deploymentsRoot)).filter(network => !network.includes("hardhat") && !network.includes("testnet") && !network.includes("sepolia"));
     // Table headers
-    let markdown = "# Protocol Fees and Ownerships for All Networks\n\n";
+    let markdown = depdir ? "" : "# Protocol Fees and Ownerships for All Networks\n\n";
     markdown += "| Network | ChainId | ExchangeV2 Address | Fee Receiver | Seller Fee (bps) | Buyer Fee (bps) | ProxyAdmin Owner |\n";
     markdown += "|---------|---------|--------------------|--------------|------------------|-----------------|------------------|\n";
-
     for (const depDir of depDirs) {
-      if(depDir.includes("testnet") || 
-      depDir.includes("sepolia") || 
-      depDir.includes("optimism_goerli") || 
-      depDir.includes("zkcandy_old") ||
-      depDir.includes("dev") ||
-      depDir.includes("polygon_mumbai") ||
-      depDir.includes("Goerli")) 
-        continue;
       const deploymentsDir = path.join(deploymentsRoot, depDir);
       let files: string[] = [];
       let chainId = await getChainIdFromDeployments(deploymentsDir);
-
       try {
-        files = await fs.promises.readdir(deploymentsDir);
+        files = await fsPromises.readdir(deploymentsDir);
       } catch {
         continue; // skip if directory does not exist
       }
-
       for (const file of files) {
         if (!file.endsWith(".json")) continue;
-        const deployInfo = JSON.parse(await fs.promises.readFile(path.join(deploymentsDir, file), "utf-8"));
+        const deployInfo = JSON.parse(await fsPromises.readFile(path.join(deploymentsDir, file), "utf-8"));
         const contractName = deployInfo.contractName || file.replace(/\.json$/, "");
         if (contractName !== "ExchangeV2" && contractName !== "ExchangeMetaV2" ) continue;
         const address = deployInfo.address;
         let row = `| ${depDir} | ${chainId || ""} | \`${address}\``;
-
         try {
-
-
           let feeReceiver = "";
           let feeSeller = "";
           let feeBuyer = "";
           let owner = "";
-
           // ABI (TypeChain): protocolFee() returns (receiver, buyerAmount, sellerAmount)
           try {
             const network = networks[depDir] as HttpNetworkConfig;
@@ -141,13 +123,10 @@ task("export-fees-and-ownerships", "Export protocol fee and proxy admin owner in
         } catch (err) {
           row += " | _Old_ | _Old_ | _Old_ | _Old_";
         }
-
         row += "|\n";
         markdown += row;
       }
     }
-
     console.log(markdown);
   });
-
 export default {};
