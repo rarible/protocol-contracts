@@ -17,3 +17,9 @@
  ReaderProxyAdmin | 0x526D0d1f0D2DDc166B930e6aC7683b171cD88EF4 | https://mainnet.somnia.w3us.site/address/0x526D0d1f0D2DDc166B930e6aC7683b171cD88EF4
  RoyaltiesRegistry | 0x892f0e3DEaC041b12b748bf9d7D1BA480d266696 | https://mainnet.somnia.w3us.site/address/0x892f0e3DEaC041b12b748bf9d7D1BA480d266696
  TransferProxy | 0x008B1d40013f147EBfc43502a8d27043F4a86260 | https://mainnet.somnia.w3us.site/address/0x008B1d40013f147EBfc43502a8d27043F4a86260
+
+## Protocol Fees and Ownerships
+| Network | ChainId | ExchangeV2 Address | Fee Receiver | Seller Fee (bps) | Buyer Fee (bps) | ProxyAdmin Owner |
+|---------|---------|--------------------|--------------|------------------|-----------------|------------------|
+| somnia | 5031 | `0x34988c0b2Ba9095F4f13aD19070d6776c6107Cd0` | `0x053F171c0D0Cc9d76247D4d1CdDb280bf1131390` | 25 | 0 | `0xe223825497c435BAeaf318F03d33Ec704954028A`|
+
