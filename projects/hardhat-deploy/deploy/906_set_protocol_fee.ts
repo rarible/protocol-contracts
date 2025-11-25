@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { getConfig } from '../utils/utils'
+import { GAS_PRICE, getConfig } from '../utils/utils'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {  execute } = hre.deployments;
@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const buyerFeeBps = 0;
   const sellerFeeBps = 200;
 
-  const receipt = await execute(contractName, { from: deployer, log: true }, "setAllProtocolFeeData", feeReceiver, buyerFeeBps, sellerFeeBps);
+  const receipt = await execute(contractName, { from: deployer, log: true, gasPrice: GAS_PRICE }, "setAllProtocolFeeData", feeReceiver, buyerFeeBps, sellerFeeBps);
   console.log(`Protocol fee set. Tx hash: ${receipt.transactionHash}`);
 };
 

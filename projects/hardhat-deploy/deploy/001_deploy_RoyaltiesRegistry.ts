@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { DETERMENISTIC_DEPLOYMENT_SALT, ROYALTIES_REGISTRY_TYPE } from '../utils/utils';
+import { DETERMENISTIC_DEPLOYMENT_SALT, GAS_PRICE, ROYALTIES_REGISTRY_TYPE } from '../utils/utils';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -41,6 +41,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       log: true,
       autoMine: true,
       deterministicDeployment: DETERMENISTIC_DEPLOYMENT_SALT,
+      gasPrice: GAS_PRICE,
       skipIfAlreadyDeployed: true,
     });
   } else {
@@ -56,6 +57,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         proxyContract: "OpenZeppelinTransparentProxy",
       },
       log: true,
+      gasPrice: GAS_PRICE,
       autoMine: true,
     });
   }

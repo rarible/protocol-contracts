@@ -2,7 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { DropERC721Reader__factory } from "@rarible/thirdweb-query";
 import { DefaultProxyAdmin__factory } from "../typechain-types";
-import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils/utils";
+import { DETERMENISTIC_DEPLOYMENT_SALT, GAS_PRICE } from "../utils/utils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
@@ -45,8 +45,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       abi: DropERC721Reader__factory.abi as any,
       bytecode: DropERC721Reader__factory.bytecode,
     },
+    gasPrice: GAS_PRICE,
   });
 };
 
 export default func;
-func.tags = ['all', "1001", "thirdweb-query"];
+func.tags = ["1001", "thirdweb-query"];

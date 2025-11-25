@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { DEPLOY_FROM, getConfig } from '../utils/utils'
+import { DEPLOY_FROM, GAS_PRICE, getConfig } from '../utils/utils'
 
 const zeroAddress = "0x0000000000000000000000000000000000000000"
 const mainnet = {
@@ -246,7 +246,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     from: deployer,
     log: true,
     autoMine: true,
-    args: [settings.marketplaces, settings.weth, settings.transferProxies]
+    args: [settings.marketplaces, settings.weth, settings.transferProxies],
+    gasPrice: GAS_PRICE,
   });
 };
 
