@@ -50,25 +50,56 @@ async function deployTransparentProxy<T extends BaseContract>({
   const [defaultSigner] = await ethers.getSigners();
   const ownerAddress = proxyOwner ?? (await defaultSigner.getAddress());
 
-  const proxyAdmin = await new ProxyAdmin__factory(defaultSigner).deploy(ownerAddress);
-  await proxyAdmin.waitForDeployment();
-
+  // 1. Deploy implementation
   const implementation = await ethers.deployContract(contractName, implementationArgs);
   await implementation.waitForDeployment();
 
+  // 2. Encode optional initializer
   const initData =
     initFunction != null
       ? implementation.interface.encodeFunctionData(initFunction, initArgs)
       : "0x";
 
+  // 3. Deploy TransparentUpgradeableProxy
   const TransparentProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
   const proxy = await TransparentProxy.deploy(
     await implementation.getAddress(),
-    await proxyAdmin.getAddress(),
+    ownerAddress, // ✅ initialOwner for the internally created ProxyAdmin
     initData,
   );
   await proxy.waitForDeployment();
 
+  // 4. Find the ProxyAdmin address from the AdminChanged event
+  const deployTx = proxy.deploymentTransaction();
+  if (!deployTx) {
+    throw new Error("Proxy deployment transaction not found");
+  }
+
+  const receipt = await deployTx.wait();
+  const iface = TransparentProxy.interface;
+
+  let proxyAdminAddress: string | null = null;
+  for (const log of receipt?.logs ?? []) {
+    try {
+      const parsed = iface.parseLog(log);
+      if (parsed?.name === "AdminChanged") {
+        // event AdminChanged(address previousAdmin, address newAdmin)
+        proxyAdminAddress = parsed.args[1] as string;
+        break;
+      }
+    } catch {
+      // Not an AdminChanged log for this contract, ignore
+    }
+  }
+
+  if (!proxyAdminAddress) {
+    throw new Error("ProxyAdmin address not found in AdminChanged event");
+  }
+
+  // 5. Connect to the internally created ProxyAdmin
+  const proxyAdmin = ProxyAdmin__factory.connect(proxyAdminAddress, defaultSigner);
+
+  // 6. Get typed instance at proxy address
   const instance = (await ethers.getContractAt(
     contractAtName ?? contractName,
     await proxy.getAddress(),
@@ -81,6 +112,7 @@ async function deployTransparentProxy<T extends BaseContract>({
     instance,
   };
 }
+
 
 
 describe("RoyaltiesRegistry, royalties types test", function () {
@@ -344,12 +376,14 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const testRoyaltiesProvider = await ethers.deployContract("RoyaltiesProviderTest");
       await testRoyaltiesProvider.initializeProvider(token3Addr, defaultTokenId1, [[owner, 800n]]);
       await royaltiesRegistryOld.setProviderByToken(token3Addr, await testRoyaltiesProvider.getAddress());
-      const royaltiesFromToken = await royaltiesRegistryOld.getRoyalties(token2Addr, tokenId3);
-      const royaltiesFromProvider = await royaltiesRegistryOld.getRoyalties(token3Addr, defaultTokenId1);
+      const royaltiesFromToken = await royaltiesRegistryOld.getRoyalties.staticCall(token2Addr, tokenId3);
+      const royaltiesFromProvider = await royaltiesRegistryOld.getRoyalties.staticCall(token3Addr, defaultTokenId1);
       // deploy new impl
       const newImpl = await ethers.deployContract("RoyaltiesRegistry");
       // upgrade (call read-only function to satisfy OZ 5.x upgradeAndCall requirement)
-      const noopCallData = newImpl.interface.encodeFunctionData("getRoyaltiesType", [ethers.ZeroAddress]);
+      const noopCallData = newImpl.interface.encodeFunctionData("owner", []);
+      console.log("proxyAdmin owner: ", await proxyAdmin.owner());
+
       await proxyAdmin.upgradeAndCall(await proxy.getAddress(), await newImpl.getAddress(), noopCallData);
       // get as new
       const royaltiesRegistry = (await ethers.getContractAt(
