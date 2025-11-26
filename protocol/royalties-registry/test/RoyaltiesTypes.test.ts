@@ -4,7 +4,6 @@ import type { BaseContract } from "ethers";
 import { network } from "hardhat";
 const connection = await network.connect();
 const { ethers } = connection;
-
 import {
   type RoyaltiesRegistry,
   RoyaltiesRegistry__factory,
@@ -19,10 +18,7 @@ import {
   type RoyaltiesRegistryOld,
   type TestERC721,
 } from "../types/ethers-contracts/index.js";
-
 import {deployTransparentProxy} from "@rarible/test/src/index.js";
-
-
 describe("RoyaltiesRegistry, royalties types test", function () {
   let royaltiesRegistry: RoyaltiesRegistry;
   let royaltiesAddr1: string;
@@ -216,8 +212,12 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       expect(await royaltiesRegistry.getProvider(token)).to.equal(provider, "provider is set");
     });
     it("forceSetRoyaltiesType + clearRoyaltiesType", async function () {
+      const deployer = (await ethers.getSigners())[0];
       const [, __, ___, acc3] = await ethers.getSigners();
-      const token = acc3.address;
+      const dummy = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(deployer).deploy(
+      );
+      await dummy.initialize();
+      const token = await dummy.getAddress();
       //forceSetRoyaltiesType not from owner
       await expect(royaltiesRegistry.connect(acc3).forceSetRoyaltiesType(token, 1n)).to.be.revertedWith(
         "Token owner not detected",
@@ -291,7 +291,6 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       // upgrade (call read-only function to satisfy OZ 5.x upgradeAndCall requirement)
       const noopCallData = newImpl.interface.encodeFunctionData("owner", []);
       console.log("proxyAdmin owner: ", await proxyAdmin.owner());
-
       await proxyAdmin.upgradeAndCall(await proxy.getAddress(), await newImpl.getAddress(), noopCallData);
       // get as new
       const royaltiesRegistry = (await ethers.getContractAt(
