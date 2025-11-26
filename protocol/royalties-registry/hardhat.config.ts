@@ -6,6 +6,11 @@ import { defineConfig } from "hardhat/config";
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers],
   solidity: {
+    npmFilesToBuild: [
+      "@rarible/test/contracts/TestERC721.sol", 
+      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol", 
+      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
+      "@rarible/royalties/contracts/test/TestERC721RoyaltiesV2.sol"],
     profiles: {
       default: {
         version: "0.8.30",

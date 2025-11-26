@@ -215,7 +215,7 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const [, __, ___, acc3] = await ethers.getSigners();
       const token = acc3.address;
       //forceSetRoyaltiesType not from owner
-      await expect(royaltiesRegistry.connect(acc3).forceSetRoyaltiesType(token, 1n)).to.be.rejectedWith(
+      await expect(royaltiesRegistry.connect(acc3).forceSetRoyaltiesType(token, 1n)).to.be.revertedWith(
         "Token owner not detected",
       );
       //can't set royalties type to 0
@@ -243,13 +243,14 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const [ownerSigner, acc1] = await ethers.getSigners();
       const owner = await ownerSigner.getAddress();
       // deploy proxy admin
-      const proxyAdmin = await ethers.deployContract("ProxyAdmin");
+
+      const proxyAdmin = await ethers.deployContract("ProxyAdmin", [owner]);
       // deploy old impl
       const oldImpl = await ethers.deployContract("RoyaltiesRegistryOld");
       // encode init data
       const initData = oldImpl.interface.encodeFunctionData("__RoyaltiesRegistry_init");
       // deploy transparent proxy
-      const TransparentProxy = await ethers.getContractFactory("TransparentProxy");
+      const TransparentProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
       const proxy = await TransparentProxy.deploy(await oldImpl.getAddress(), await proxyAdmin.getAddress(), initData);
       // get proxy as RoyaltiesRegistryOld
       const royaltiesRegistryOld = (await ethers.getContractAt(
