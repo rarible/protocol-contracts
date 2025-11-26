@@ -1,9 +1,10 @@
 // <ai_context> Test suite for royalties types in RoyaltiesRegistry. Covers type setting, changing, and edge cases for different royalty providers and methods. Ported from Truffle to Hardhat with TypeChain. Updated for manual proxy deployment in upgrade tests using OpenZeppelin transparent proxy. </ai_context>
 import { expect } from "chai";
+import type { BaseContract, Contract } from "ethers";
 import { network } from "hardhat";
 const connection = await network.connect();
 const { ethers } = connection;
-// import { upgrades } from "hardhat";
+
 import {
   type RoyaltiesRegistry,
   RoyaltiesRegistry__factory,
@@ -17,7 +18,70 @@ import {
   TestERC721WithRoyaltyV2981__factory,
   type RoyaltiesRegistryOld,
   RoyaltiesRegistryOld__factory,
+  ProxyAdmin__factory, type ProxyAdmin,
+  type TestERC721,
 } from "../types/ethers-contracts";
+
+// import { upgrades } from "hardhat";
+type DeployTransparentProxyParams<T extends BaseContract> = {
+  contractName: string;
+  initFunction?: string;
+  initArgs?: unknown[];
+  proxyOwner?: string;
+  implementationArgs?: unknown[];
+  contractAtName?: string;
+};
+
+type DeployTransparentProxyResult<T extends BaseContract> = {
+  proxyAdmin: ProxyAdmin;
+  implementation: Contract;
+  proxy: Contract;
+  instance: T;
+};
+
+async function deployTransparentProxy<T extends BaseContract>({
+  contractName,
+  initFunction,
+  initArgs = [],
+  proxyOwner,
+  implementationArgs = [],
+  contractAtName,
+}: DeployTransparentProxyParams<T>): Promise<DeployTransparentProxyResult<T>> {
+  const [defaultSigner] = await ethers.getSigners();
+  const ownerAddress = proxyOwner ?? (await defaultSigner.getAddress());
+
+  const proxyAdmin = await new ProxyAdmin__factory(defaultSigner).deploy(ownerAddress);
+  await proxyAdmin.waitForDeployment();
+
+  const implementation = await ethers.deployContract(contractName, implementationArgs);
+  await implementation.waitForDeployment();
+
+  const initData =
+    initFunction != null
+      ? implementation.interface.encodeFunctionData(initFunction, initArgs)
+      : "0x";
+
+  const TransparentProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
+  const proxy = await TransparentProxy.deploy(
+    await implementation.getAddress(),
+    await proxyAdmin.getAddress(),
+    initData,
+  );
+  await proxy.waitForDeployment();
+
+  const instance = (await ethers.getContractAt(
+    contractAtName ?? contractName,
+    await proxy.getAddress(),
+  )) as unknown as T;
+
+  return {
+    proxyAdmin,
+    implementation,
+    proxy,
+    instance,
+  };
+}
+
 
 describe("RoyaltiesRegistry, royalties types test", function () {
   let royaltiesRegistry: RoyaltiesRegistry;
@@ -242,28 +306,34 @@ describe("RoyaltiesRegistry, royalties types test", function () {
     it("check storage after upgrade", async function () {
       const [ownerSigner, acc1] = await ethers.getSigners();
       const owner = await ownerSigner.getAddress();
-      // deploy proxy admin
-
-      const proxyAdmin = await ethers.deployContract("ProxyAdmin", [owner]);
-      // deploy old impl
-      const oldImpl = await ethers.deployContract("RoyaltiesRegistryOld");
-      // encode init data
-      const initData = oldImpl.interface.encodeFunctionData("__RoyaltiesRegistry_init");
-      // deploy transparent proxy
-      const TransparentProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
-      const proxy = await TransparentProxy.deploy(await oldImpl.getAddress(), await proxyAdmin.getAddress(), initData);
-      // get proxy as RoyaltiesRegistryOld
-      const royaltiesRegistryOld = (await ethers.getContractAt(
-        "RoyaltiesRegistryOld",
-        await proxy.getAddress(),
-      )) as any as RoyaltiesRegistryOld;
+      const { proxyAdmin, proxy, instance: royaltiesRegistryOld } =
+        await deployTransparentProxy<RoyaltiesRegistryOld>({
+          contractName: "RoyaltiesRegistryOld",
+          initFunction: "__RoyaltiesRegistry_init",
+          initArgs: [],
+          proxyOwner: owner,
+        });
       // then set data
-      const TestERC721 = await ethers.getContractFactory("TestERC721");
-      const token = await TestERC721.deploy("Test", "TST");
+      const { instance: token } = await deployTransparentProxy<TestERC721>({
+        contractName: "TestERC721",
+        initFunction: "initialize",
+        initArgs: ["Test", "TST"],
+        proxyOwner: owner,
+      });
       const tokenAddr = await token.getAddress();
-      const token2 = await TestERC721.deploy("Test", "TST");
+      const { instance: token2 } = await deployTransparentProxy<TestERC721>({
+        contractName: "TestERC721",
+        initFunction: "initialize",
+        initArgs: ["Test", "TST"],
+        proxyOwner: owner,
+      });
       const token2Addr = await token2.getAddress();
-      const token3 = await TestERC721.deploy("Test", "TST");
+      const { instance: token3 } = await deployTransparentProxy<TestERC721>({
+        contractName: "TestERC721",
+        initFunction: "initialize",
+        initArgs: ["Test", "TST"],
+        proxyOwner: owner,
+      });
       const token3Addr = await token3.getAddress();
       const tokenId3 = 11234n;
       //setRoyaltiesByTokenAndTokenId
@@ -278,8 +348,9 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const royaltiesFromProvider = await royaltiesRegistryOld.getRoyalties(token3Addr, defaultTokenId1);
       // deploy new impl
       const newImpl = await ethers.deployContract("RoyaltiesRegistry");
-      // upgrade
-      await proxyAdmin.upgrade(await proxy.getAddress(), await newImpl.getAddress());
+      // upgrade (call read-only function to satisfy OZ 5.x upgradeAndCall requirement)
+      const noopCallData = newImpl.interface.encodeFunctionData("getRoyaltiesType", [ethers.ZeroAddress]);
+      await proxyAdmin.upgradeAndCall(await proxy.getAddress(), await newImpl.getAddress(), noopCallData);
       // get as new
       const royaltiesRegistry = (await ethers.getContractAt(
         "RoyaltiesRegistry",
