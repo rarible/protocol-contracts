@@ -13,8 +13,8 @@ import {
   RoyaltiesProviderTest__factory,
   TestERC721WithRoyaltyV2981,
   TestERC721WithRoyaltyV2981__factory,
-  TestERC721RoyaltiesV2,
-  TestERC721RoyaltiesV2__factory,
+  TestERC721RoyaltyV2Legacy,
+  TestERC721RoyaltyV2Legacy__factory,
 } from "../types/ethers-contracts";
 // import { LibPart } from "../types/ethers-contracts/contracts/RoyaltiesRegistryPermissioned";
 // import { upgrades } from "hardhat";
@@ -37,7 +37,7 @@ describe("RoyaltiesRegistryPermissioned", function () {
   let erc721V1: TestERC721WithRoyaltiesV1OwnableUpgradeable;
   let erc721V2: TestERC721WithRoyaltiesV2OwnableUpgradeable;
   let erc721V2981: TestERC721WithRoyaltyV2981;
-  let erc721V2Legacy: TestERC721RoyaltiesV2;
+  let erc721V2Legacy: TestERC721RoyaltyV2Legacy;
   let royaltiesProvider: RoyaltiesProviderTest;
   const tokenId = 1n;
   const royalties = [
@@ -56,20 +56,20 @@ describe("RoyaltiesRegistryPermissioned", function () {
     const TestERC721V1Factory = new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(owner);
     erc721V1 = await TestERC721V1Factory.deploy();
     await erc721V1.waitForDeployment();
-    await erc721V1.connect(owner).initialize();
+    await erc721V1.connect(owner).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
     const TestERC721V2Factory = new TestERC721WithRoyaltiesV2OwnableUpgradeable__factory(owner);
     erc721V2 = await TestERC721V2Factory.deploy();
     await erc721V2.waitForDeployment();
-    await erc721V2.connect(owner).initialize();
+    await erc721V2.connect(owner).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
     const TestERC721V2981Factory = new TestERC721WithRoyaltyV2981__factory(owner);
     erc721V2981 = await TestERC721V2981Factory.deploy();
     await erc721V2981.waitForDeployment();
-    await erc721V2981.connect(owner).initialize();
+    await erc721V2981.connect(owner).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
     // --- Legacy/non-upgradeable mock keeps constructor args (has its own constructor) ---
-    const TestERC721V2LegacyFactory = new TestERC721RoyaltiesV2__factory(owner);
+    const TestERC721V2LegacyFactory = new TestERC721RoyaltyV2Legacy__factory(owner);
     erc721V2Legacy = await TestERC721V2LegacyFactory.deploy();
     await erc721V2Legacy.waitForDeployment();
-    await erc721V2Legacy.connect(owner).initialize();
+    await erc721V2Legacy.connect(owner).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
     const RoyaltiesProviderTestFactory = new RoyaltiesProviderTest__factory(owner);
     royaltiesProvider = await RoyaltiesProviderTestFactory.deploy();
     await royaltiesProvider.waitForDeployment();
@@ -100,7 +100,8 @@ describe("RoyaltiesRegistryPermissioned", function () {
       await erc721V1.connect(owner).mint(user.address, tokenId, royalties);
       await erc721V2.connect(owner).mint(user.address, tokenId, royalties);
       await erc721V2981.connect(owner).mint(user.address, tokenId);
-      await erc721V2Legacy.connect(owner).mint(user.address, tokenId, royalties);
+      await erc721V2Legacy.connect(owner).mint(user.address, tokenId);
+      await erc721V2Legacy.connect(owner)._saveRoyalties(tokenId, royalties);
       // Set external provider
       await royaltiesProvider.connect(owner).initializeProvider(await erc721V1.getAddress(), tokenId, royalties);
       await registry

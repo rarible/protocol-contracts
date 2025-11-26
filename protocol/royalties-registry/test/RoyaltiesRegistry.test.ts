@@ -29,7 +29,8 @@ import {
   TestERC721ArtBlocksV2__factory,
   type RoyaltiesProviderArtBlocksV2,
   RoyaltiesProviderArtBlocksV2__factory,
-} from "../types/ethers-contracts";
+} from "../types/ethers-contracts/index.js";
+import { deployTransparentProxy } from "@rarible/test/src/index.js";
 describe("RoyaltiesRegistry, test methods", function () {
   let royaltiesRegistry: RoyaltiesRegistry;
   let royaltiesRegistryTest: RoyaltiesRegistryTest;
@@ -38,8 +39,13 @@ describe("RoyaltiesRegistry, test methods", function () {
   let erc721TokenId2 = 52n;
   before(async function () {
     const [deployer] = await ethers.getSigners();
-    royaltiesRegistry = await new RoyaltiesRegistry__factory(deployer).deploy();
-    await royaltiesRegistry.__RoyaltiesRegistry_init();
+    const { instance: royaltiesRegistryInstance } = await deployTransparentProxy<RoyaltiesRegistry>(ethers, {
+      contractName: "RoyaltiesRegistry",
+      initFunction: "__RoyaltiesRegistry_init",
+      initArgs: [],
+      proxyOwner: deployer.address,
+    });
+    royaltiesRegistry = royaltiesRegistryInstance;
     royaltiesRegistryTest = await new RoyaltiesRegistryTest__factory(deployer).deploy();
     testRoyaltiesProvider = await new RoyaltiesProviderTest__factory(deployer).deploy();
   });
@@ -48,15 +54,15 @@ describe("RoyaltiesRegistry, test methods", function () {
       const [_, acc1] = await ethers.getSigners();
       const getRoyalties = await acc1.getAddress();
       const tokenId = (BigInt(getRoyalties) << 96n) | 1n;
-      const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc1).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
+      const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc1).deploy();
+      await ERC721_V2981.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set 2981 interface
+      const part = await royaltiesRegistryTest._getRoyalties(
+        await royaltiesRegistry.getAddress(),
+        await ERC721_V2981.getAddress(),
+        tokenId,
       );
-      await ERC721_V2981.initialize(); //set 2981 interface
-      const part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
       const receipt = await part.wait();
-      const event = receipt.events?.find((e) => e.event === "getRoyaltiesTest");
+      const event = receipt?.events?.find((e) => e.event === "getRoyaltiesTest");
       const royalties = event?.args?.royalties;
       expect(royalties.length).to.equal(1);
       expect(royalties[0].value).to.equal(1000n);
@@ -66,13 +72,8 @@ describe("RoyaltiesRegistry, test methods", function () {
       const [_, acc1] = await ethers.getSigners();
       const getRoyalties = await acc1.getAddress();
       const tokenId = (BigInt(getRoyalties) << 96n) | 1n;
-      const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc1).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V2981.initialize();
-
+      const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc1).deploy();
+      await ERC721_V2981.initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       // royalties 4.2%
       await ERC721_V2981.setRoyalties(420n);
       const part = await royaltiesRegistryTest._getRoyalties(royaltiesRegistry.address, ERC721_V2981.address, tokenId);
@@ -105,12 +106,8 @@ describe("RoyaltiesRegistry, test methods", function () {
       const [_, acc1] = await ethers.getSigners();
       const getRoyalties = await acc1.getAddress();
       const tokenId = (BigInt(getRoyalties) << 96n) | 1n;
-      const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc1).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V2981.initialize(); //set 2981 interface
+      const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc1).deploy();
+      await ERC721_V2981.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set 2981 interface
       const part = await royaltiesRegistry.getRoyalties.staticCall(ERC721_V2981.address, tokenId);
       expect(part[0].value).to.equal(1000n);
       expect(part[0].account).to.equal(getRoyalties);
@@ -120,23 +117,19 @@ describe("RoyaltiesRegistry, test methods", function () {
   describe("RoyaltiesRegistry methods works:", () => {
     it("simple V1 royalties", async function () {
       const [_, __, acc2, ___, ____, acc5, _____, acc7] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V1OwnUpgrd.initialize(); //set V1 interface
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy();
+      await ERC721_V1OwnUpgrd.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set V1 interface
       await ERC721_V1OwnUpgrd.mint(acc2.address, erc721TokenId1, [
         { account: acc5.address, value: 1000n },
         { account: acc7.address, value: 1200n },
       ]); //set royalties by contract
       const part = await royaltiesRegistryTest._getRoyalties(
-        royaltiesRegistry.address,
-        ERC721_V1OwnUpgrd.address,
+        await royaltiesRegistry.getAddress(),
+        await ERC721_V1OwnUpgrd.getAddress(),
         erc721TokenId1,
       );
       const receipt = await part.wait();
-      const event = receipt.events?.find((e) => e.event === "getRoyaltiesTest");
+      const event = receipt?.events?.find((e) => e.event === "getRoyaltiesTest");
       const royalties = event?.args?.royalties;
       expect(royalties[0].value).to.equal(1000n);
       expect(royalties[1].value).to.equal(1200n);
@@ -144,12 +137,8 @@ describe("RoyaltiesRegistry, test methods", function () {
     });
     it("simple V1 royalties, set empty, check empty", async function () {
       const [_, __, acc2] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V1OwnUpgrd.initialize(); //set V1 interface
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy();
+      await ERC721_V1OwnUpgrd.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set V1 interface
       await ERC721_V1OwnUpgrd.mint(acc2.address, erc721TokenId1, []); //set royalties by contract empty
       const part = await royaltiesRegistryTest._getRoyalties(
         royaltiesRegistry.address,
@@ -163,12 +152,8 @@ describe("RoyaltiesRegistry, test methods", function () {
     });
     it("simple V2 royalties", async function () {
       const [_, __, acc2, ___, ____, acc5, acc6, acc7, acc8] = await ethers.getSigners();
-      const ERC721_V2OwnUpgrd = await new TestERC721WithRoyaltiesV2OwnableUpgradeable__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V2OwnUpgrd.initialize(); //set V2 interface
+      const ERC721_V2OwnUpgrd = await new TestERC721WithRoyaltiesV2OwnableUpgradeable__factory(acc2).deploy();
+      await ERC721_V2OwnUpgrd.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set V2 interface
       await ERC721_V2OwnUpgrd.mint(acc2.address, erc721TokenId1, [
         { account: acc5.address, value: 700n },
         { account: acc6.address, value: 800n },
@@ -191,12 +176,8 @@ describe("RoyaltiesRegistry, test methods", function () {
     });
     it("simple V2 royalties, set empty, check empty", async function () {
       const [_, __, acc2] = await ethers.getSigners();
-      const ERC721_V2OwnUpgrd = await new TestERC721WithRoyaltiesV2OwnableUpgradeable__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V2OwnUpgrd.initialize(); //set V2 interface
+      const ERC721_V2OwnUpgrd = await new TestERC721WithRoyaltiesV2OwnableUpgradeable__factory(acc2).deploy();
+      await ERC721_V2OwnUpgrd.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set V2 interface
       await ERC721_V2OwnUpgrd.mint(acc2.address, erc721TokenId1, []); //set royalties by contract empty
       const part = await royaltiesRegistryTest._getRoyalties(
         royaltiesRegistry.address,
@@ -229,13 +210,9 @@ describe("RoyaltiesRegistry, test methods", function () {
     it("SetRoyaltiesByToken, initialize by OwnableUpgradaeble(ERC721_V1OwnUpgrd).owner", async function () {
       let ownerErc721 = (await ethers.getSigners())[6];
       const [_, __, acc2, acc3, acc4] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(ownerErc721).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V1OwnUpgrd.initialize(); //set V1 interface
-      await ERC721_V1OwnUpgrd.mint(acc2.address, erc721TokenId1, []);
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(ownerErc721).deploy();
+      await ERC721_V1OwnUpgrd.connect(ownerErc721).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
+      await ERC721_V1OwnUpgrd.connect(ownerErc721).mint(acc2.address, erc721TokenId1, []);
       await royaltiesRegistry.setRoyaltiesByToken(
         ERC721_V1OwnUpgrd.address,
         [
@@ -250,7 +227,7 @@ describe("RoyaltiesRegistry, test methods", function () {
         erc721TokenId1,
       );
       const receipt = await part.wait();
-      const event = receipt.events?.find((e) => e.event === "getRoyaltiesTest");
+      const event = receipt?.events?.find((e) => e.event === "getRoyaltiesTest");
       const royalties = event?.args?.royalties;
       expect(royalties[0].value).to.equal(500n);
       expect(royalties[1].value).to.equal(1000n);
@@ -259,11 +236,8 @@ describe("RoyaltiesRegistry, test methods", function () {
   describe("ExternalProviders test:", () => {
     it("using royaltiesProvider v2 legacy", async function () {
       const [_, acc1, acc2] = await ethers.getSigners();
-      const token = await new TestERC721RoyaltyV2Legacy__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
+      const token = await new TestERC721RoyaltyV2Legacy__factory(acc2).deploy();
+      await token.initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       const provider = await new RoyaltiesProviderV2Legacy__factory(acc2).deploy();
       await royaltiesRegistry.setProviderByToken(token.address, provider.address);
       const royaltiesToSet = [{ account: acc1.address, value: 1000n }];
@@ -279,7 +253,8 @@ describe("RoyaltiesRegistry, test methods", function () {
       const artistAdrr = acc2.address;
       const addPayeeAddr = acc4.address;
       //deploying contracts
-      const token = await new TestERC721ArtBlocks__factory(acc2).deploy("Rarible", "RARI", "https://ipfs.rarible.com");
+      const token = await new TestERC721ArtBlocks__factory(acc2).deploy();
+      await token.initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       const provider = await new RoyaltiesProviderArtBlocks__factory(acc5).deploy(acc5.address);
       expect(await provider.owner()).to.equal(artBlocksAddr, "owner");
       expect(await provider.artblocksPercentage()).to.equal(250n, "artblocksPercentage");
@@ -331,7 +306,8 @@ describe("RoyaltiesRegistry, test methods", function () {
       const artistAdrr = acc2.address;
       const addPayeeAddr = acc4.address;
       //deploying contracts
-      const token = await new TestERC721ArtBlocks__factory(acc2).deploy("Rarible", "RARI", "https://ipfs.rarible.com");
+      const token = await new TestERC721ArtBlocks__factory(acc2).deploy();
+      await token.initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       const provider = await new RoyaltiesProviderArtBlocks__factory(acc5).deploy(acc5.address);
       expect(await provider.owner()).to.equal(artBlocksAddr, "owner");
       expect(await provider.artblocksPercentage()).to.equal(250n, "artblocksPercentage");
@@ -383,7 +359,8 @@ describe("RoyaltiesRegistry, test methods", function () {
       const recipients1 = "0xC40FD6D2A8e06ba753F6Fd3CB562835Eff990b51";
       const bps0 = 1000n;
       const bps1 = 250n;
-      const token = await new TestERC721ArtBlocksV2__factory(acc2).deploy("ArtBlockV2", "ABV2");
+      const token = await new TestERC721ArtBlocksV2__factory(acc2).deploy();
+      await token.initialize("ArtBlockV2", "ABV2", "");
       const provider = await new RoyaltiesProviderArtBlocksV2__factory(acc2).deploy();
       //setting provider in registry
       await royaltiesRegistry.setProviderByToken(token.address, provider.address);
@@ -391,24 +368,19 @@ describe("RoyaltiesRegistry, test methods", function () {
       await token.mint(artistAdrr, tokenID);
       await token.setRoyalties(tokenID, [recipients0, recipients1], [bps0, bps1]);
       const royaltiesFromProvider = await provider.getRoyalties(token.address, tokenID);
-
-      expect(royaltiesFromProvider[0].account).to.equal(recipients0);
+      expect(royaltiesFromProvider[0].account).to.equal(recipient0);
       expect(royaltiesFromProvider[1].account).to.equal(recipient1);
       expect(royaltiesFromProvider[0].value).to.equal(bps0);
       expect(royaltiesFromProvider[1].value).to.equal(bps1);
     });
     it("SetProviderByToken, initialize by Owner", async function () {
       const [_, __, acc2, acc3, acc4] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy();
+      await ERC721_V1OwnUpgrd.initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [
         { account: acc3.address, value: 500n },
         { account: acc4.address, value: 1000n },
       ]); //initialize royalties provider
-      await ERC721_V1OwnUpgrd.initialize();
       await ERC721_V1OwnUpgrd.mint(acc2.address, erc721TokenId1, []);
       await royaltiesRegistry.setProviderByToken(ERC721_V1OwnUpgrd.address, testRoyaltiesProvider.address); //set royalties by provider
       const part = await royaltiesRegistryTest._getRoyalties(
@@ -424,12 +396,8 @@ describe("RoyaltiesRegistry, test methods", function () {
     });
     it("SetProviderByToken + ContractRoyalties, which not work, because royalties detect by provider, initialize by Owner", async function () {
       const [_, __, acc2, ___, ____, acc5, _____, acc7] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
-      await ERC721_V1OwnUpgrd.initialize(); //set V1 interface
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc2).deploy();
+      await ERC721_V1OwnUpgrd.initialize("Rarible", "RARI", "https://ipfs.rarible.com"); //set V1 interface
       await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [
         { account: acc3.address, value: 500n },
         { account: acc4.address, value: 1000n },
@@ -454,16 +422,12 @@ describe("RoyaltiesRegistry, test methods", function () {
     it("SetProviderByToken, initialize by ownableUpgradaeble(ERC721_V1OwnUpgrd).owner ", async function () {
       let ownerErc721 = (await ethers.getSigners())[6];
       const [_, __, acc2, acc3, acc4] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(ownerErc721).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(ownerErc721).deploy();
+      await ERC721_V1OwnUpgrd.connect(ownerErc721).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [
         { account: acc3.address, value: 600n },
         { account: acc4.address, value: 1100n },
       ]); //initialize royalties provider
-      await ERC721_V1OwnUpgrd.connect(ownerErc721).initialize();
       await ERC721_V1OwnUpgrd.connect(ownerErc721).mint(acc2.address, erc721TokenId1, []);
       await royaltiesRegistry
         .connect(ownerErc721)
@@ -483,16 +447,12 @@ describe("RoyaltiesRegistry, test methods", function () {
     it("SetProviderByToken, initialize by ownableUpgradaeble(ERC721_V1OwnUpgrd).owner, royalties for erc721TokenId2 should be empty", async function () {
       let ownerErc721 = (await ethers.getSigners())[6];
       const [_, __, acc2, acc3, acc4] = await ethers.getSigners();
-      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(ownerErc721).deploy(
-        "Rarible",
-        "RARI",
-        "https://ipfs.rarible.com",
-      );
+      const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(ownerErc721).deploy();
+      await ERC721_V1OwnUpgrd.connect(ownerErc721).initialize("Rarible", "RARI", "https://ipfs.rarible.com");
       await testRoyaltiesProvider.initializeProvider(ERC721_V1OwnUpgrd.address, erc721TokenId1, [
         { account: acc3.address, value: 600n },
         { account: acc4.address, value: 1100n },
       ]); //initialize royalties provider
-      await ERC721_V1OwnUpgrd.connect(ownerErc721).initialize();
       await ERC721_V1OwnUpgrd.connect(ownerErc721).mint(acc2.address, erc721TokenId2, []);
       await royaltiesRegistry
         .connect(ownerErc721)

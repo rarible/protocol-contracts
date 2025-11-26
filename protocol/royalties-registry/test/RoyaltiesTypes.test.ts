@@ -18,7 +18,7 @@ import {
   type RoyaltiesRegistryOld,
   type TestERC721,
 } from "../types/ethers-contracts/index.js";
-import {deployTransparentProxy} from "@rarible/test/src/index.js";
+import { deployTransparentProxy } from "@rarible/test/src/index.js";
 describe("RoyaltiesRegistry, royalties types test", function () {
   let royaltiesRegistry: RoyaltiesRegistry;
   let royaltiesAddr1: string;
@@ -214,8 +214,7 @@ describe("RoyaltiesRegistry, royalties types test", function () {
     it("forceSetRoyaltiesType + clearRoyaltiesType", async function () {
       const deployer = (await ethers.getSigners())[0];
       const [, __, ___, acc3] = await ethers.getSigners();
-      const dummy = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(deployer).deploy(
-      );
+      const dummy = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(deployer).deploy();
       await dummy.initialize();
       const token = await dummy.getAddress();
       //forceSetRoyaltiesType not from owner
@@ -246,13 +245,16 @@ describe("RoyaltiesRegistry, royalties types test", function () {
     it("check storage after upgrade", async function () {
       const [ownerSigner, acc1] = await ethers.getSigners();
       const owner = await ownerSigner.getAddress();
-      const { proxyAdmin, proxy, instance: royaltiesRegistryOld } =
-        await deployTransparentProxy<RoyaltiesRegistryOld>(ethers, {
-          contractName: "RoyaltiesRegistryOld",
-          initFunction: "__RoyaltiesRegistry_init",
-          initArgs: [],
-          proxyOwner: owner,
-        });
+      const {
+        proxyAdmin,
+        proxy,
+        instance: royaltiesRegistryOld,
+      } = await deployTransparentProxy<RoyaltiesRegistryOld>(ethers, {
+        contractName: "RoyaltiesRegistryOld",
+        initFunction: "__RoyaltiesRegistry_init",
+        initArgs: [],
+        proxyOwner: owner,
+      });
       // then set data
       const { instance: token } = await deployTransparentProxy<TestERC721>(ethers, {
         contractName: "TestERC721",
