@@ -17,102 +17,10 @@ import {
   type TestERC721WithRoyaltyV2981,
   TestERC721WithRoyaltyV2981__factory,
   type RoyaltiesRegistryOld,
-  RoyaltiesRegistryOld__factory,
-  ProxyAdmin__factory, type ProxyAdmin,
   type TestERC721,
 } from "../types/ethers-contracts/index.js";
 
-// import { upgrades } from "hardhat";
-type DeployTransparentProxyParams<T extends BaseContract> = {
-  contractName: string;
-  initFunction?: string;
-  initArgs?: unknown[];
-  proxyOwner?: string;
-  implementationArgs?: unknown[];
-  contractAtName?: string;
-};
-
-type DeployTransparentProxyResult<T extends BaseContract> = {
-  proxyAdmin: ProxyAdmin;
-  implementation: BaseContract;
-  proxy: BaseContract;
-  instance: T;
-};
-
-async function deployTransparentProxy<T extends BaseContract>({
-  contractName,
-  initFunction,
-  initArgs = [],
-  proxyOwner,
-  implementationArgs = [],
-  contractAtName,
-}: DeployTransparentProxyParams<T>): Promise<DeployTransparentProxyResult<T>> {
-  const [defaultSigner] = await ethers.getSigners();
-  const ownerAddress = proxyOwner ?? (await defaultSigner.getAddress());
-
-  // 1. Deploy implementation
-  const implementation = await ethers.deployContract(contractName, implementationArgs);
-  await implementation.waitForDeployment();
-
-  // 2. Encode optional initializer
-  const initData =
-    initFunction != null
-      ? implementation.interface.encodeFunctionData(initFunction, initArgs)
-      : "0x";
-
-  // 3. Deploy TransparentUpgradeableProxy
-  const TransparentProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
-  const proxy = await TransparentProxy.deploy(
-    await implementation.getAddress(),
-    ownerAddress, // ✅ initialOwner for the internally created ProxyAdmin
-    initData,
-  );
-  await proxy.waitForDeployment();
-
-  // 4. Find the ProxyAdmin address from the AdminChanged event
-  const deployTx = proxy.deploymentTransaction();
-  if (!deployTx) {
-    throw new Error("Proxy deployment transaction not found");
-  }
-
-  const receipt = await deployTx.wait();
-  const iface = TransparentProxy.interface;
-
-  let proxyAdminAddress: string | null = null;
-  for (const log of receipt?.logs ?? []) {
-    try {
-      const parsed = iface.parseLog(log);
-      if (parsed?.name === "AdminChanged") {
-        // event AdminChanged(address previousAdmin, address newAdmin)
-        proxyAdminAddress = parsed.args[1] as string;
-        break;
-      }
-    } catch {
-      // Not an AdminChanged log for this contract, ignore
-    }
-  }
-
-  if (!proxyAdminAddress) {
-    throw new Error("ProxyAdmin address not found in AdminChanged event");
-  }
-
-  // 5. Connect to the internally created ProxyAdmin
-  const proxyAdmin = ProxyAdmin__factory.connect(proxyAdminAddress, defaultSigner);
-
-  // 6. Get typed instance at proxy address
-  const instance = (await ethers.getContractAt(
-    contractAtName ?? contractName,
-    await proxy.getAddress(),
-  )) as unknown as T;
-
-  return {
-    proxyAdmin,
-    implementation,
-    proxy,
-    instance,
-  };
-}
-
+import {deployTransparentProxy} from "@rarible/test/src/index.js";
 
 
 describe("RoyaltiesRegistry, royalties types test", function () {
@@ -339,28 +247,28 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const [ownerSigner, acc1] = await ethers.getSigners();
       const owner = await ownerSigner.getAddress();
       const { proxyAdmin, proxy, instance: royaltiesRegistryOld } =
-        await deployTransparentProxy<RoyaltiesRegistryOld>({
+        await deployTransparentProxy<RoyaltiesRegistryOld>(ethers, {
           contractName: "RoyaltiesRegistryOld",
           initFunction: "__RoyaltiesRegistry_init",
           initArgs: [],
           proxyOwner: owner,
         });
       // then set data
-      const { instance: token } = await deployTransparentProxy<TestERC721>({
+      const { instance: token } = await deployTransparentProxy<TestERC721>(ethers, {
         contractName: "TestERC721",
         initFunction: "initialize",
         initArgs: ["Test", "TST"],
         proxyOwner: owner,
       });
       const tokenAddr = await token.getAddress();
-      const { instance: token2 } = await deployTransparentProxy<TestERC721>({
+      const { instance: token2 } = await deployTransparentProxy<TestERC721>(ethers, {
         contractName: "TestERC721",
         initFunction: "initialize",
         initArgs: ["Test", "TST"],
         proxyOwner: owner,
       });
       const token2Addr = await token2.getAddress();
-      const { instance: token3 } = await deployTransparentProxy<TestERC721>({
+      const { instance: token3 } = await deployTransparentProxy<TestERC721>(ethers, {
         contractName: "TestERC721",
         initFunction: "initialize",
         initArgs: ["Test", "TST"],
