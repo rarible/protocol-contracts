@@ -18,7 +18,7 @@ import {
   type RoyaltiesRegistryOld,
   type TestERC721,
 } from "../types/ethers-contracts/index.js";
-import { deployTransparentProxy } from "@rarible/test/src/index.js";
+import {deployTransparentProxy} from "@rarible/test/src/index.js";
 describe("RoyaltiesRegistry, royalties types test", function () {
   let royaltiesRegistry: RoyaltiesRegistry;
   let royaltiesAddr1: string;
@@ -62,7 +62,7 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const [, __, acc2, ____, _____, acc5, acc6, acc7] = await ethers.getSigners();
       const ERC721_V2OwnUpgrd = await new TestERC721WithRoyaltiesV2OwnableUpgradeable__factory(acc7).deploy();
       await ERC721_V2OwnUpgrd.waitForDeployment();
-      await ERC721_V2OwnUpgrd.connect(acc7).initialize();
+      await ERC721_V2OwnUpgrd.connect(acc7).initialize("Test", "TST", "https://ipfs.rarible.com");
       await ERC721_V2OwnUpgrd.connect(acc7).mint(acc2.address, defaultTokenId1, defaultRoyalties);
       await ERC721_V2OwnUpgrd.connect(acc7).mint(acc2.address, defaultTokenId2, defaultRoyalties);
       const tx1 = await royaltiesRegistry.getRoyalties(await ERC721_V2OwnUpgrd.getAddress(), defaultTokenId1);
@@ -82,7 +82,7 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const [_, __, acc2, ____, _____, acc5, acc6, acc7] = await ethers.getSigners();
       const ERC721_V1OwnUpgrd = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(acc7).deploy();
       await ERC721_V1OwnUpgrd.waitForDeployment();
-      await ERC721_V1OwnUpgrd.connect(acc7).initialize();
+      await ERC721_V1OwnUpgrd.connect(acc7).initialize("Test", "TST", "https://ipfs.rarible.com");
       await ERC721_V1OwnUpgrd.connect(acc7).mint(acc2.address, defaultTokenId1, defaultRoyalties);
       await ERC721_V1OwnUpgrd.connect(acc7).mint(acc2.address, defaultTokenId2, defaultRoyalties);
       const tx1 = await royaltiesRegistry.getRoyalties(await ERC721_V1OwnUpgrd.getAddress(), defaultTokenId1);
@@ -125,7 +125,7 @@ describe("RoyaltiesRegistry, royalties types test", function () {
       const tokenId2 = (BigInt(await acc2.getAddress()) << 96n) | 2n;
       const ERC721_V2981 = await new TestERC721WithRoyaltyV2981__factory(acc7).deploy();
       await ERC721_V2981.waitForDeployment();
-      await ERC721_V2981.connect(acc7).initialize();
+      await ERC721_V2981.connect(acc7).initialize("Test", "TST", "https://ipfs.rarible.com");
       const tx1 = await royaltiesRegistry.getRoyalties(await ERC721_V2981.getAddress(), tokenId1);
       expect(await royaltiesRegistry.getRoyaltiesType(await ERC721_V2981.getAddress())).to.equal(
         5n,
@@ -214,8 +214,9 @@ describe("RoyaltiesRegistry, royalties types test", function () {
     it("forceSetRoyaltiesType + clearRoyaltiesType", async function () {
       const deployer = (await ethers.getSigners())[0];
       const [, __, ___, acc3] = await ethers.getSigners();
-      const dummy = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(deployer).deploy();
-      await dummy.initialize();
+      const dummy = await new TestERC721WithRoyaltiesV1OwnableUpgradeable__factory(deployer).deploy(
+      );
+      await dummy.initialize("Test", "TST", "https://ipfs.rarible.com");
       const token = await dummy.getAddress();
       //forceSetRoyaltiesType not from owner
       await expect(royaltiesRegistry.connect(acc3).forceSetRoyaltiesType(token, 1n)).to.be.revertedWith(
@@ -245,16 +246,13 @@ describe("RoyaltiesRegistry, royalties types test", function () {
     it("check storage after upgrade", async function () {
       const [ownerSigner, acc1] = await ethers.getSigners();
       const owner = await ownerSigner.getAddress();
-      const {
-        proxyAdmin,
-        proxy,
-        instance: royaltiesRegistryOld,
-      } = await deployTransparentProxy<RoyaltiesRegistryOld>(ethers, {
-        contractName: "RoyaltiesRegistryOld",
-        initFunction: "__RoyaltiesRegistry_init",
-        initArgs: [],
-        proxyOwner: owner,
-      });
+      const { proxyAdmin, proxy, instance: royaltiesRegistryOld } =
+        await deployTransparentProxy<RoyaltiesRegistryOld>(ethers, {
+          contractName: "RoyaltiesRegistryOld",
+          initFunction: "__RoyaltiesRegistry_init",
+          initArgs: [],
+          proxyOwner: owner,
+        });
       // then set data
       const { instance: token } = await deployTransparentProxy<TestERC721>(ethers, {
         contractName: "TestERC721",
