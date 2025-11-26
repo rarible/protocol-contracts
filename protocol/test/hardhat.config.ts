@@ -5,7 +5,11 @@ import { defineConfig } from "hardhat/config";
 
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers],
+
   solidity: {
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol", 
+      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol"],
     profiles: {
       default: {
         version: "0.8.30",

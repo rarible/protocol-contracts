@@ -15,7 +15,7 @@ describe("erc-1155", function () {
     const [minter, ...recipients] = await ethers.getSigners();
     const ids = [1n, 2n, 3n, 4n, 5n];
     const amounts = [10n, 10n, 10n, 10n, 10n];
-    const tos = recipients.slice(0, 5).map(s => s.address);
+    const tos = recipients.slice(0, 5).map((s) => s.address);
     const froms = Array(5).fill(minter.address);
 
     for (let i = 0; i < ids.length; i++) {

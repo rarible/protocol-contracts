@@ -1,6 +1,6 @@
 // <ai_context> Test suite for royalties types in RoyaltiesRegistry. Covers type setting, changing, and edge cases for different royalty providers and methods. Ported from Truffle to Hardhat with TypeChain. Updated for manual proxy deployment in upgrade tests using OpenZeppelin transparent proxy. </ai_context>
 import { expect } from "chai";
-import type { BaseContract, Contract } from "ethers";
+import type { BaseContract } from "ethers";
 import { network } from "hardhat";
 const connection = await network.connect();
 const { ethers } = connection;
@@ -20,7 +20,7 @@ import {
   RoyaltiesRegistryOld__factory,
   ProxyAdmin__factory, type ProxyAdmin,
   type TestERC721,
-} from "../types/ethers-contracts";
+} from "../types/ethers-contracts/index.js";
 
 // import { upgrades } from "hardhat";
 type DeployTransparentProxyParams<T extends BaseContract> = {
@@ -34,8 +34,8 @@ type DeployTransparentProxyParams<T extends BaseContract> = {
 
 type DeployTransparentProxyResult<T extends BaseContract> = {
   proxyAdmin: ProxyAdmin;
-  implementation: Contract;
-  proxy: Contract;
+  implementation: BaseContract;
+  proxy: BaseContract;
   instance: T;
 };
 

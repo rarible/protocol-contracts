@@ -6,9 +6,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./dependencies/RenderingContract.sol";
 import "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-// <ai_context> Test ERC721 token with upgradeable features, royalties, and rendering. Used in royalties registry tests. Updated to use proper initialization for upgradeable contracts: constructor disables initializers, and initialize() sets name/symbol/owner. </ai_context>
-contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract, IERC4906 {
 
+contract TestERC721 is ERC721Upgradeable, OwnableUpgradeable, RenderingContract, IERC4906 {
     constructor() {
         _disableInitializers();
     }
