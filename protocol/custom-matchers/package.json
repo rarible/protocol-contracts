@@ -14,7 +14,7 @@
   },
   "keywords": [
     "ethereum",
-    "truffle"
+    "hardhat"
   ],
   "author": "0v1se",
   "license": "MIT",
@@ -23,9 +23,7 @@
   },
   "dependencies": {
     "@rarible/exchange-interfaces": "^0.9.0",
-    "@rarible/lazy-mint": "^0.9.0",
-    "ethers": "5.7.2",
-    "truffle-plugin-verify": "^0.6.5"
+    "@rarible/lazy-mint": "^0.9.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.0.3",
@@ -57,6 +55,10 @@
   },
   "gitHead": "c149f3e740650a91e0764245230dbddc8f8f423e",
   "scripts": {
-    "build": "truffle compile --all && typechain --target ethers-v5 'build/contracts/*.json' && tsc -skipLibCheck"
+    "build": "yarn prettier && yarn lint && hardhat clean && hardhat compile && yarn prettier:ts && tsc",
+    "lint": "solhint 'contracts/**/*.sol' --config ../../.solhintrc.json",
+    "lint:fix": "solhint 'contracts/**/*.sol' --fix --config ../../.solhintrc.json",
+    "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol' --config ../../.prettierrc.json",
+    "test": "npx hardhat test"
   }
 }
