@@ -7,6 +7,8 @@ import "../../contracts/erc-1155/IERC1155LazyMint.sol";
 import "../../contracts/erc-1155/LibERC1155LazyMint.sol";
 
 contract ERC1155LazyMintTest is IERC1155LazyMint, ERC1155Upgradeable {
+    function __ERC1155LazyMintTest_init() external initializer {}
+
     function mintAndTransfer(
         LibERC1155LazyMint.Mint1155Data memory data,
         address to,
