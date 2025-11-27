@@ -25,6 +25,8 @@ import {
   TestERC721ArtBlocksV2__factory,
   type RoyaltiesProviderArtBlocksV2,
   RoyaltiesProviderArtBlocksV2__factory,
+  type TestERC721,
+  TestERC721__factory,
 } from "../types/ethers-contracts";
 // import { LibPart } from "../types/ethers-contracts/contracts/RoyaltiesRegistryPermissioned";
 // import { upgrades } from "hardhat";
@@ -525,11 +527,14 @@ describe("RoyaltiesRegistryPermissioned, test methods", function () {
       );
     });
     it("test royalties type = 6, no royalties contract, even if allowed", async function () {
-      const token = user.address;
-      await royaltiesRegistry.connect(whitelister).setRoyaltiesAllowed(token, true);
-      const royalties = await royaltiesRegistry.getRoyalties.staticCall(token, erc721TokenId1);
+      const getRoyalties = await user.getAddress();
+      const tokenId = (BigInt(getRoyalties) << 96n) | 15n;
+      const TestERC721 = await new TestERC721__factory(owner).deploy();
+      await TestERC721.waitForDeployment();
+      await royaltiesRegistry.connect(whitelister).setRoyaltiesAllowed(TestERC721, true);
+      const royalties = await royaltiesRegistry.getRoyalties.staticCall(TestERC721, tokenId);
       expect(royalties.length).to.equal(0);
-      expect(await royaltiesRegistry.getRoyaltiesType(token)).to.equal(6n, "type 6 ");
+      expect(await royaltiesRegistry.getRoyaltiesType(TestERC721)).to.equal(0, "type 0 if no royalties");
     });
   });
 });
