@@ -1,4 +1,4 @@
-// <ai_context> Helper function for signing ERC1155 lazy mint data. Matches logic from old Truffle scripts/mint1155.js. </ai_context>
+// <ai_context> Helper function for signing ERC1155 lazy mint data. Matches logic from old Truffle scripts/mint1155.js and LibERC1155LazyMint's EIP712 type ordering (Mint1155(uint256 tokenId,uint256 supply,string tokenURI,Part[] creators,Part[] royalties)). </ai_context>
 
 import type * as ethersTypes from "ethers";
 
@@ -25,8 +25,8 @@ export async function sign(
     ],
     Mint1155: [
       { name: "tokenId", type: "uint256" },
-      { name: "tokenURI", type: "string" },
       { name: "supply", type: "uint256" },
+      { name: "tokenURI", type: "string" },
       { name: "creators", type: "Part[]" },
       { name: "royalties", type: "Part[]" },
     ],
@@ -34,8 +34,8 @@ export async function sign(
 
   const value = {
     tokenId,
-    tokenURI,
     supply,
+    tokenURI,
     creators,
     royalties,
   };

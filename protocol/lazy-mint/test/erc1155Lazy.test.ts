@@ -93,8 +93,11 @@ describe("ERC1155 Lazy Mint", function () {
 
     it("should fail with invalid signature", async function () {
       const data = { tokenId, tokenURI, supply, creators, royalties, signatures: [] };
+      // 0x11 -> 1-byte signature, triggers OpenZeppelin's ECDSAInvalidSignatureLength(uint256)
       const invalidSig = "0x11";
-      await expect(erc1155Test.recover(data, invalidSig)).to.be.reverted;
+      await expect(erc1155Test.recover(data, invalidSig))
+        .to.be.revertedWithCustomError(erc1155Test, "ECDSAInvalidSignatureLength")
+        .withArgs(1n);
     });
   });
 
