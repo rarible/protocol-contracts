@@ -11,7 +11,7 @@ contract OperatorRole is OwnableUpgradeable {
 
     mapping(address => bool) operators;
 
-    function __OperatorRole_init(address initialOwner) external initializer {
+    function __OperatorRole_init(address initialOwner) public initializer {
         __Context_init_unchained();
         __Ownable_init_unchained(initialOwner);
     }
