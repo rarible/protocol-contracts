@@ -3,12 +3,12 @@
 pragma solidity 0.7.6;
 
 import "@rarible/lib-signature/contracts/ERC1271.sol";
-import "@openzeppelin/contracts-upgradeable/drafts/EIP712Upgradeable.sol";
-import "@rarible/lib-signature/contracts/LibSignature.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 abstract contract ERC1271Validator is EIP712Upgradeable {
     using AddressUpgradeable for address;
-    using LibSignature for bytes32;
+    using ECDSA for bytes32;
 
     string constant SIGNATURE_ERROR = "signature verification error";
     bytes4 constant internal MAGICVALUE = 0x1626ba7e;

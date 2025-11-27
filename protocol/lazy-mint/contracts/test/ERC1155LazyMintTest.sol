@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.9 <0.8.0;
-pragma abicoder v2;
+pragma solidity ^0.8.30;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "../../contracts/erc-1155/IERC1155LazyMint.sol";
@@ -30,11 +29,7 @@ contract ERC1155LazyMintTest is IERC1155LazyMint, ERC1155Upgradeable {
         }
     }
 
-    function encode(LibERC1155LazyMint.Mint1155Data memory data)
-        external
-        view
-        returns (bytes memory)
-    {
+    function encode(LibERC1155LazyMint.Mint1155Data memory data) external view returns (bytes memory) {
         return abi.encode(address(this), data);
     }
 }
