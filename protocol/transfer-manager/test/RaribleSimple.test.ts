@@ -6,10 +6,7 @@ const connection = await network.connect();
 const { ethers } = connection;
 
 import type * as ethersTypes from "ethers";
-import {
-  type RaribleSimpleTest,
-  RaribleSimpleTest__factory,
-} from "../types/ethers-contracts";
+import { type RaribleSimpleTest, RaribleSimpleTest__factory } from "../types/ethers-contracts";
 import { AssetType } from "../src/order";
 import { id } from "../src/assets";
 

@@ -103,11 +103,7 @@ describe("TransferExecutor", function () {
     await erc20Token.connect(deployer).mintTo(fromAddress, 100n);
     await erc20Token.connect(from).approve(await erc20TransferProxy.getAddress(), 100n);
 
-    await testing.transferTest(
-      Asset(ERC20, enc(await erc20Token.getAddress()), 40n),
-      fromAddress,
-      toAddress,
-    );
+    await testing.transferTest(Asset(ERC20, enc(await erc20Token.getAddress()), 40n), fromAddress, toAddress);
 
     expect(await erc20Token.balanceOf(fromAddress)).to.equal(60n);
     expect(await erc20Token.balanceOf(toAddress)).to.equal(40n);
@@ -124,11 +120,7 @@ describe("TransferExecutor", function () {
 
     await testing
       .connect(from)
-      .transferTest(
-        Asset(ERC20, enc(await erc20ZRXToken.getAddress()), 40n),
-        fromAddress,
-        toAddress,
-      );
+      .transferTest(Asset(ERC20, enc(await erc20ZRXToken.getAddress()), 40n), fromAddress, toAddress);
 
     expect(await erc20ZRXToken.balanceOf(toAddress)).to.equal(40n);
   });
@@ -146,22 +138,14 @@ describe("TransferExecutor", function () {
     // value = 2 -> must revert (same semantics as old expectThrow)
     let reverted = false;
     try {
-      await testing.transferTest(
-        Asset(ERC721, enc(await erc721Token.getAddress(), 1n), 2n),
-        fromAddress,
-        toAddress,
-      );
+      await testing.transferTest(Asset(ERC721, enc(await erc721Token.getAddress(), 1n), 2n), fromAddress, toAddress);
     } catch {
       reverted = true;
     }
     expect(reverted).to.equal(true);
 
     // value = 1 -> ok
-    await testing.transferTest(
-      Asset(ERC721, enc(await erc721Token.getAddress(), 1n), 1n),
-      fromAddress,
-      toAddress,
-    );
+    await testing.transferTest(Asset(ERC721, enc(await erc721Token.getAddress(), 1n), 1n), fromAddress, toAddress);
 
     expect(await erc721Token.ownerOf(1n)).to.equal(toAddress);
   });
@@ -176,11 +160,7 @@ describe("TransferExecutor", function () {
     await erc1155Token.connect(deployer).mint(fromAddress, 1n, 100n);
     await erc1155Token.connect(from).setApprovalForAll(await transferProxy.getAddress(), true);
 
-    await testing.transferTest(
-      Asset(ERC1155, enc(await erc1155Token.getAddress(), 1n), 40n),
-      fromAddress,
-      toAddress,
-    );
+    await testing.transferTest(Asset(ERC1155, enc(await erc1155Token.getAddress(), 1n), 40n), fromAddress, toAddress);
 
     expect(await erc1155Token.balanceOf(fromAddress, 1n)).to.equal(60n);
     expect(await erc1155Token.balanceOf(toAddress, 1n)).to.equal(40n);

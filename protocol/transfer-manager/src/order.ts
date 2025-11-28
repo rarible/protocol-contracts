@@ -28,11 +28,7 @@ export function AssetType(assetClass: string, data: string): AssetTypeStruct {
   return { assetClass, data };
 }
 
-export function Asset(
-  assetClass: string,
-  assetData: string,
-  value: bigint | number | string,
-): AssetStruct {
+export function Asset(assetClass: string, assetData: string, value: bigint | number | string): AssetStruct {
   return {
     assetType: AssetType(assetClass, assetData),
     value: BigInt(value),
@@ -89,11 +85,7 @@ export const Types: Record<string, Array<{ name: string; type: string }>> = {
  * Sign an order with EIP-712 (Exchange V2 domain) using an Ethers v6 Signer.
  * Mirrors scripts/order.js sign() behavior.
  */
-export async function sign(
-  signer: Signer,
-  order: OrderStruct,
-  verifyingContract: string,
-): Promise<string> {
+export async function sign(signer: Signer, order: OrderStruct, verifyingContract: string): Promise<string> {
   const network = await signer.provider?.getNetwork();
   const chainId = network?.chainId;
   if (chainId == null) {

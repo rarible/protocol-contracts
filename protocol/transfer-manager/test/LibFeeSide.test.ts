@@ -5,10 +5,7 @@ import { network } from "hardhat";
 const connection = await network.connect();
 const { ethers } = connection;
 
-import {
-  type LibFeeSideTest,
-  LibFeeSideTest__factory,
-} from "../types/ethers-contracts";
+import { type LibFeeSideTest, LibFeeSideTest__factory } from "../types/ethers-contracts";
 import { ETH, ERC20, ERC721, ERC1155 } from "../src/assets";
 
 describe("LibFeeSide", function () {
