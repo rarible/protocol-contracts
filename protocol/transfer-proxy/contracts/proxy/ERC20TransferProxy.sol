@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.9 <0.8.0;
+pragma solidity ^0.8.30;
 
 import "@rarible/role-operator/contracts/OperatorRole.sol";
 import "@rarible/exchange-interfaces/contracts/IERC20TransferProxy.sol";
