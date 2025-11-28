@@ -8,6 +8,10 @@ import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
 import "@rarible/role-operator/contracts/OperatorRole.sol";
 
 contract ERC1155LazyMintTransferProxy is OperatorRole, ITransferProxy {
+    function __ERC1155LazyMintTransferProxy_init(address owner) external initializer {
+        __OperatorRole_init(owner);
+        __Ownable_init(owner);
+    }
     function transfer(LibAsset.Asset memory asset, address from, address to) external override onlyOperator {
         (address token, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(
             asset.assetType.data,

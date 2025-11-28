@@ -141,10 +141,7 @@ describe("Exchange with LazyMint proxies", function () {
 
     const wrongOperator = accounts[4];
 
-    await expect(erc721Proxy.connect(wrongOperator).transfer(asset, from, to)).to.be.revertedWithCustomError(
-      erc721Proxy,
-      "OperatorRole__NotOperator",
-    );
+    await expect(erc721Proxy.connect(wrongOperator).transfer(asset, from, to)).to.be.revertedWith('OperatorRole: caller is not the operator');
   });
 
   it("lazy mint proxyTransfer works for ERC-1155", async function () {
@@ -209,9 +206,6 @@ describe("Exchange with LazyMint proxies", function () {
 
     const wrongOperator = accounts[5];
 
-    await expect(erc1155Proxy.connect(wrongOperator).transfer(asset, from, to)).to.be.revertedWithCustomError(
-      erc1155Proxy,
-      "OperatorRole__NotOperator",
-    );
+    await expect(erc1155Proxy.connect(wrongOperator).transfer(asset, from, to)).to.be.revertedWith('OperatorRole: caller is not the operator');
   });
 });
