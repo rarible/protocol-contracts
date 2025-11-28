@@ -1,26 +1,20 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.30;
-
-import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./ERC721UpgradeableMinimal.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../LibURI.sol";
-
 /**
  * @title ERC721 Burnable Token
  * @dev ERC721 Token that can be irreversibly burned (destroyed).
  */
 abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
     using StringsUpgradeable for uint256;
-
     // Optional mapping for token URIs
     mapping (uint256 => string) private _tokenURIs;
-
     // Base URI
     string private _baseURI;
-
     /**
      * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
      *
@@ -32,7 +26,6 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
         require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
         _tokenURIs[tokenId] = _tokenURI;
     }
-
     /**
      * @dev Internal function to set the base URI for all token IDs. It is
      * automatically added as a prefix to the value returned in {tokenURI},
@@ -41,7 +34,6 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
     function _setBaseURI(string memory baseURI_) internal virtual {
         _baseURI = baseURI_;
     }
-
     /**
     * @dev Returns the base URI set via {_setBaseURI}. This will be
     * automatically added as a prefix in {tokenURI} to each token's URI, or
@@ -50,7 +42,6 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
     function baseURI() public view virtual returns (string memory) {
         return _baseURI;
     }
-
     /**
      * @dev Destroys `tokenId`.
      * The approval is cleared when the token is burned.
@@ -67,16 +58,13 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
             delete _tokenURIs[tokenId];
         }
     }
-
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-
         string memory _tokenURI = _tokenURIs[tokenId];
         string memory base = baseURI();
-
         // If there is no base URI, return the token URI.
         if (bytes(base).length == 0) {
             return _tokenURI;
@@ -88,6 +76,5 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
         // If there is a baseURI but no tokenURI, concatenate the tokenID to the baseURI.
         return string(abi.encodePacked(base, tokenId.toString()));
     }
-
     uint256[50] private __gap;
 }
