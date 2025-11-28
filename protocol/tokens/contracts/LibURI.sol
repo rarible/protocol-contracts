@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.30;
 
 library LibURI {
     /// @dev checks if _tokenURI starts with base. if true returns _tokenURI, else base + _tokenURI
