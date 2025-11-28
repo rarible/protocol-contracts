@@ -5,17 +5,12 @@ pragma solidity ^0.8.30;
 import "@rarible/exchange-interfaces/contracts/INftTransferProxy.sol";
 
 contract TransferProxyTest is INftTransferProxy {
-    function erc721safeTransferFrom(
-        IERC721Upgradeable token,
-        address from,
-        address to,
-        uint256 tokenId
-    ) external override {
+    function erc721safeTransferFrom(IERC721 token, address from, address to, uint256 tokenId) external override {
         token.safeTransferFrom(from, to, tokenId);
     }
 
     function erc1155safeTransferFrom(
-        IERC1155Upgradeable token,
+        IERC1155 token,
         address from,
         address to,
         uint256 id,

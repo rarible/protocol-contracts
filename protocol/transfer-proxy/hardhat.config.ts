@@ -9,8 +9,8 @@ export default defineConfig({
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol", 
       "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
-      "@rarible/lazy-mint/test/contracts/ERC721LazyMintTest.sol",
-      "@rarible/lazy-mint/test/contracts/ERC1155LazyMintTest.sol"],
+      "@rarible/lazy-mint/contracts/test/ERC721LazyMintTest.sol",
+      "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTest.sol"],
     profiles: {
       default: {
         version: "0.8.30",
