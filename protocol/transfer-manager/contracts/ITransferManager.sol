@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.30;
 
-import "../lib/LibDeal.sol";
+import "./lib/LibDeal.sol";
 import "./ITransferExecutor.sol";
 
 abstract contract ITransferManager is ITransferExecutor {

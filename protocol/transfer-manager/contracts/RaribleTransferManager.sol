@@ -11,7 +11,7 @@ import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 
 import "@rarible/lib-bp/contracts/BpLibrary.sol";
 
-import "./interfaces/ITransferManager.sol";
+import "./ITransferManager.sol";
 
 abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;
