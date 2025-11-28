@@ -14,8 +14,7 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
         __ERC165_init_unchained();
         __ERC1155Burnable_init_unchained();
     }
-    function __ERC1155Burnable_init_unchained() internal {
-    }
+    function __ERC1155Burnable_init_unchained() internal {}
     function burn(address account, uint256 id, uint256 value) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
@@ -30,6 +29,6 @@ abstract contract ERC1155BurnableUpgradeable is Initializable, ERC1155Upgradeabl
         );
         _burnBatch(account, ids, values);
     }
-   
+
     uint256[50] private __gap;
 }

@@ -8,7 +8,13 @@ import "./ERC1155DefaultApproval.sol";
 import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
 
-abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC1155BurnableUpgradeable, ERC1155Lazy, HasContractURI {
+abstract contract ERC1155Base is
+    OwnableUpgradeable,
+    ERC1155DefaultApproval,
+    ERC1155BurnableUpgradeable,
+    ERC1155Lazy,
+    HasContractURI
+{
     string public name;
     string public symbol;
 
@@ -16,11 +22,16 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     event BurnLazyBatch(address indexed operator, address indexed account, uint256[] ids, uint256[] amounts);
     event BaseUriChanged(string newBaseURI);
 
-    function isApprovedForAll(address _owner, address _operator) public override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) view returns (bool) {
+    function isApprovedForAll(
+        address _owner,
+        address _operator
+    ) public view override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Lazy, ERC165Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -44,7 +55,6 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         if (lazyToBurn > 0) {
             emit BurnLazy(_msgSender(), account, id, lazyToBurn);
         }
-
     }
 
     function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
@@ -57,7 +67,8 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
             if (supply != 0) {
                 //calculate Lazy amount available for burn
                 uint256 lazyBalance = supply - ERC1155Lazy._getMinted(id);
-                if (amount > lazyBalance) {//need to burn more than available
+                if (amount > lazyBalance) {
+                    //need to burn more than available
                     lazyToBurn = lazyBalance;
                 }
             }
@@ -66,7 +77,12 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         }
     }
 
-    function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
+    function _mint(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
         ERC1155Lazy._mint(account, id, amount, data);
     }
 
@@ -75,7 +91,7 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
         symbol = _symbol;
     }
 
-    function uri(uint id) external view override(ERC1155BaseURI, ERC1155Upgradeable) virtual returns (string memory) {
+    function uri(uint id) external view virtual override(ERC1155BaseURI, ERC1155Upgradeable) returns (string memory) {
         return _tokenURI(id);
     }
 

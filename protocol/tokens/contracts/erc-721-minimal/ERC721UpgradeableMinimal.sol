@@ -12,7 +12,13 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
  * {ERC721Enumerable}.
  */
-contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC721Upgradeable, IERC721MetadataUpgradeable {
+contract ERC721UpgradeableMinimal is
+    Initializable,
+    ContextUpgradeable,
+    ERC165Upgradeable,
+    IERC721Upgradeable,
+    IERC721MetadataUpgradeable
+{
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
     // Token name
@@ -97,8 +103,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-    }
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {}
     /**
      * @dev See {IERC721-approve}.
      */
@@ -135,11 +140,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
     /**
      * @dev See {IERC721-transferFrom}.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override {
+    function transferFrom(address from, address to, uint256 tokenId) public virtual override {
         //solhint-disable-next-line max-line-length
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
         _transfer(from, to, tokenId);
@@ -147,22 +148,13 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
     /**
      * @dev See {IERC721-safeTransferFrom}.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
         safeTransferFrom(from, to, tokenId, "");
     }
     /**
      * @dev See {IERC721-safeTransferFrom}.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) public virtual override {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual override {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: transfer caller is not owner nor approved");
         _safeTransfer(from, to, tokenId, _data);
     }
@@ -184,12 +176,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      *
      * Emits a {Transfer} event.
      */
-    function _safeTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) internal virtual {
+    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal virtual {
         _transfer(from, to, tokenId);
         require(_checkOnERC721Received(from, to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
@@ -233,11 +220,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) internal virtual {
+    function _safeMint(address to, uint256 tokenId, bytes memory _data) internal virtual {
         _mint(to, tokenId);
         require(
             _checkOnERC721Received(address(0), to, tokenId, _data),
@@ -294,8 +277,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
     function _setBurned(uint256 tokenId) internal {
         _burnedTokens[tokenId] = true;
     }
-    function _clearMetadata(uint256 tokenId) internal virtual {
-    }
+    function _clearMetadata(uint256 tokenId) internal virtual {}
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
      * As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
@@ -307,11 +289,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      *
      * Emits a {Transfer} event.
      */
-    function _transfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual {
+    function _transfer(address from, address to, uint256 tokenId) internal virtual {
         require(ERC721UpgradeableMinimal.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
         require(to != address(0), "ERC721: transfer to the zero address");
         _beforeTokenTransfer(from, to, tokenId);
@@ -348,7 +326,9 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         bytes memory _data
     ) private returns (bool) {
         if (to.isContract()) {
-            try IERC721ReceiverUpgradeable(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
+            try IERC721ReceiverUpgradeable(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (
+                bytes4 retval
+            ) {
                 return retval == IERC721ReceiverUpgradeable.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
@@ -377,10 +357,6 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual {}
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {}
     uint256[43] private __gap;
 }

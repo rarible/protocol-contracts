@@ -14,7 +14,7 @@ abstract contract ERC1155DefaultApproval is ERC1155Upgradeable {
         emit DefaultApproval(operator, hasApproval);
     }
 
-    function isApprovedForAll(address _owner, address _operator) public virtual override view returns (bool) {
+    function isApprovedForAll(address _owner, address _operator) public view virtual override returns (bool) {
         return defaultApprovals[_operator] || super.isApprovedForAll(_owner, _operator);
     }
     uint256[50] private __gap;

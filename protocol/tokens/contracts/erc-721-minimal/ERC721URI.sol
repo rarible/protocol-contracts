@@ -12,7 +12,7 @@ import "../LibURI.sol";
 abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
     using StringsUpgradeable for uint256;
     // Optional mapping for token URIs
-    mapping (uint256 => string) private _tokenURIs;
+    mapping(uint256 => string) private _tokenURIs;
     // Base URI
     string private _baseURI;
     /**
@@ -35,10 +35,10 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
         _baseURI = baseURI_;
     }
     /**
-    * @dev Returns the base URI set via {_setBaseURI}. This will be
-    * automatically added as a prefix in {tokenURI} to each token's URI, or
-    * to the token ID if no specific URI is set for that token ID.
-    */
+     * @dev Returns the base URI set via {_setBaseURI}. This will be
+     * automatically added as a prefix in {tokenURI} to each token's URI, or
+     * to the token ID if no specific URI is set for that token ID.
+     */
     function baseURI() public view virtual returns (string memory) {
         return _baseURI;
     }
@@ -52,7 +52,7 @@ abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
      *
      * Emits a {Transfer} event.
      */
-    function _clearMetadata(uint256 tokenId) internal override virtual {
+    function _clearMetadata(uint256 tokenId) internal virtual override {
         // Clear metadata (if any)
         if (bytes(_tokenURIs[tokenId]).length != 0) {
             delete _tokenURIs[tokenId];

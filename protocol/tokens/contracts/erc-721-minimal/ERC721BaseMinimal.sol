@@ -8,30 +8,55 @@ import "./ERC721DefaultApprovalMinimal.sol";
 import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
 
-abstract contract ERC721BaseMinimal is OwnableUpgradeable, ERC721DefaultApprovalMinimal, ERC721BurnableUpgradeableMinimal, ERC721LazyMinimal, HasContractURI {
+abstract contract ERC721BaseMinimal is
+    OwnableUpgradeable,
+    ERC721DefaultApprovalMinimal,
+    ERC721BurnableUpgradeableMinimal,
+    ERC721LazyMinimal,
+    HasContractURI
+{
     event BaseUriChanged(string newBaseURI);
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal virtual override(ERC721UpgradeableMinimal, ERC721DefaultApprovalMinimal) view returns (bool) {
+    function _isApprovedOrOwner(
+        address spender,
+        uint256 tokenId
+    ) internal view virtual override(ERC721UpgradeableMinimal, ERC721DefaultApprovalMinimal) returns (bool) {
         return ERC721DefaultApprovalMinimal._isApprovedOrOwner(spender, tokenId);
     }
 
-    function isApprovedForAll(address owner, address operator) public view virtual override(ERC721DefaultApprovalMinimal, ERC721UpgradeableMinimal, IERC721Upgradeable) returns (bool) {
+    function isApprovedForAll(
+        address owner,
+        address operator
+    )
+        public
+        view
+        virtual
+        override(ERC721DefaultApprovalMinimal, ERC721UpgradeableMinimal, IERC721Upgradeable)
+        returns (bool)
+    {
         return ERC721DefaultApprovalMinimal.isApprovedForAll(owner, operator);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, ERC721LazyMinimal) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165Upgradeable, ERC721LazyMinimal) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
-    function tokenURI(uint256 tokenId) public view virtual override(ERC721UpgradeableMinimal, ERC721LazyMinimal) returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override(ERC721UpgradeableMinimal, ERC721LazyMinimal) returns (string memory) {
         return ERC721LazyMinimal.tokenURI(tokenId);
     }
 
-    function _clearMetadata(uint256 tokenId) internal override(ERC721UpgradeableMinimal, ERC721LazyMinimal) virtual {
+    function _clearMetadata(uint256 tokenId) internal virtual override(ERC721UpgradeableMinimal, ERC721LazyMinimal) {
         return ERC721LazyMinimal._clearMetadata(tokenId);
     }
 
-    function _emitMintEvent(address to, uint tokenId) internal override(ERC721UpgradeableMinimal, ERC721LazyMinimal) virtual {
+    function _emitMintEvent(
+        address to,
+        uint tokenId
+    ) internal virtual override(ERC721UpgradeableMinimal, ERC721LazyMinimal) {
         return ERC721LazyMinimal._emitMintEvent(to, tokenId);
     }
 

@@ -5,7 +5,13 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
 import "../Mint721Validator.sol";
-abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
+abstract contract ERC721Lazy is
+    IERC721LazyMint,
+    ERC721Upgradeable,
+    Mint721Validator,
+    RoyaltiesV2Upgradeable,
+    RoyaltiesV2Impl
+{
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
     using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToAddressMap;
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
@@ -14,22 +20,20 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
     bytes4 private constant _INTERFACE_ID_ERC721_ENUMERABLE = 0x780e9d63;
     // tokenId => creators
     mapping(uint256 => LibPart.Part[]) private creators;
-    function __ERC721Lazy_init_unchained() internal initializer {
+    function __ERC721Lazy_init_unchained() internal initializer {}
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+        return
+            interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
+            interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
+            interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES ||
+            interfaceId == _INTERFACE_ID_ERC165 ||
+            interfaceId == _INTERFACE_ID_ERC721 ||
+            interfaceId == _INTERFACE_ID_ERC721_METADATA ||
+            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE;
     }
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
-        return interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
-        || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
-        || interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES
-        || interfaceId == _INTERFACE_ID_ERC165
-        || interfaceId == _INTERFACE_ID_ERC721
-        || interfaceId == _INTERFACE_ID_ERC721_METADATA
-        || interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE;
-    }
-    function transferFromOrMint(
-        LibERC721LazyMint.Mint721Data memory data,
-        address from,
-        address to
-    ) override external {
+    function transferFromOrMint(LibERC721LazyMint.Mint721Data memory data, address from, address to) external override {
         if (_exists(data.tokenId)) {
             safeTransferFrom(from, to, data.tokenId);
         } else {
@@ -37,12 +41,15 @@ abstract contract ERC721Lazy is IERC721LazyMint, ERC721Upgradeable, Mint721Valid
             mintAndTransfer(data, to);
         }
     }
-    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public override virtual {
+    function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public virtual override {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
         require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
-        require(minter == sender || isApprovedForAll(minter, sender), "ERC721: transfer caller is not owner nor approved");
+        require(
+            minter == sender || isApprovedForAll(minter, sender),
+            "ERC721: transfer caller is not owner nor approved"
+        );
         bytes32 hash = LibERC721LazyMint.hash(data);
         for (uint i = 0; i < data.creators.length; ++i) {
             address creator = data.creators[i].account;

@@ -21,20 +21,33 @@ contract ERC721RaribleFactoryC2 is Ownable {
         transferProxy = _transferProxy;
         lazyTransferProxy = _lazyTransferProxy;
     }
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {
+    function createToken(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        uint salt
+    ) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI), salt);
         ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
         token.transferOwnership(_msgSender());
         emit Create721RaribleProxy(beaconProxy);
     }
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
+    function createToken(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        address[] memory operators,
+        uint salt
+    ) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
         ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
         token.transferOwnership(_msgSender());
         emit Create721RaribleUserProxy(beaconProxy);
     }
     //deploying BeaconProxy contract with create2
-    function deployProxy(bytes memory data, uint salt) internal returns(address proxy){
+    function deployProxy(bytes memory data, uint salt) internal returns (address proxy) {
         bytes memory bytecode = getCreationBytecode(data);
         assembly {
             proxy := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
@@ -48,33 +61,64 @@ contract ERC721RaribleFactoryC2 is Ownable {
         return abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, _data));
     }
     //returns address that contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint _salt)
-        public
-        view
-        returns (address)
-    {
+    function getAddress(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        uint _salt
+    ) public view returns (address) {
         bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI));
-        bytes32 hash = keccak256(
-            abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
-        );
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
         return address(uint160(uint(hash)));
     }
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+    function getData(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI
+    ) internal view returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                ERC721RaribleMinimal(0).__ERC721Rarible_init.selector,
+                _name,
+                _symbol,
+                baseURI,
+                contractURI,
+                transferProxy,
+                lazyTransferProxy
+            );
     }
     //returns address that private contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint _salt)
-        public
-        view
-        returns (address)
-    {
+    function getAddress(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        address[] memory operators,
+        uint _salt
+    ) public view returns (address) {
         bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators));
-        bytes32 hash = keccak256(
-            abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
-        );
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
         return address(uint160(uint(hash)));
     }
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
+    function getData(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        address[] memory operators
+    ) internal view returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector,
+                _name,
+                _symbol,
+                baseURI,
+                contractURI,
+                operators,
+                transferProxy,
+                lazyTransferProxy
+            );
     }
 }

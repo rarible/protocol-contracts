@@ -14,7 +14,7 @@ abstract contract ERC721DefaultApprovalMinimal is ERC721UpgradeableMinimal {
         emit DefaultApproval(operator, hasApproval);
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) internal virtual override view returns (bool) {
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual override returns (bool) {
         return defaultApprovals[spender] || super._isApprovedOrOwner(spender, tokenId);
     }
 

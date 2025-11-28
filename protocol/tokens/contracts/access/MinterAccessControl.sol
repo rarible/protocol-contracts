@@ -4,14 +4,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 abstract contract MinterAccessControl is OwnableUpgradeable {
     mapping(address => bool) private _minters;
-   
+
     event MinterStatusChanged(address indexed minter, bool indexed status);
     function __MinterAccessControl_init() internal initializer {
         __Ownable_init_unchained();
         __MinterAccessControl_init_unchained();
     }
-    function __MinterAccessControl_init_unchained() internal initializer {
-    }
+    function __MinterAccessControl_init_unchained() internal initializer {}
     /**
      * @dev Add `minter` to the list of allowed minters.
      */

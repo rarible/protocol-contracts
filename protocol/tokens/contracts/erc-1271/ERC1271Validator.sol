@@ -7,7 +7,7 @@ abstract contract ERC1271Validator is EIP712Upgradeable {
     using AddressUpgradeable for address;
     using ECDSA for bytes32;
     string constant SIGNATURE_ERROR = "signature verification error";
-    bytes4 constant internal MAGICVALUE = 0x1626ba7e;
+    bytes4 internal constant MAGICVALUE = 0x1626ba7e;
     function validate1271(address signer, bytes32 structHash, bytes memory signature) internal view {
         bytes32 hash = _hashTypedDataV4(structHash);
         address signerFromSig;
@@ -16,10 +16,7 @@ abstract contract ERC1271Validator is EIP712Upgradeable {
         }
         if (signerFromSig != signer) {
             if (signer.isContract()) {
-                require(
-                    ERC1271(signer).isValidSignature(hash, signature) == MAGICVALUE,
-                    SIGNATURE_ERROR
-                );
+                require(ERC1271(signer).isValidSignature(hash, signature) == MAGICVALUE, SIGNATURE_ERROR);
             } else {
                 revert(SIGNATURE_ERROR);
             }

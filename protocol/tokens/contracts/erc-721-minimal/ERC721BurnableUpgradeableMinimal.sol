@@ -13,8 +13,7 @@ abstract contract ERC721BurnableUpgradeableMinimal is Initializable, ContextUpgr
         __ERC165_init_unchained();
         __ERC721Burnable_init_unchained();
     }
-    function __ERC721Burnable_init_unchained() internal initializer {
-    }
+    function __ERC721Burnable_init_unchained() internal initializer {}
     /**
      * @dev Burns `tokenId`. See {ERC721-_burn}.
      *
@@ -23,7 +22,7 @@ abstract contract ERC721BurnableUpgradeableMinimal is Initializable, ContextUpgr
      * - The caller must own `tokenId` or be an approved operator.
      */
     function burn(uint256 tokenId) public virtual {
-        if(!_exists(tokenId)) {
+        if (!_exists(tokenId)) {
             address owner = address(tokenId >> 96);
             require(owner == _msgSender(), "ERC721Burnable: caller is not owner, not burn");
             _setBurned(tokenId);

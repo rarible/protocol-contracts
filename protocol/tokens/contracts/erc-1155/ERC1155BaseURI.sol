@@ -11,21 +11,21 @@ contract ERC1155BaseURI is ERC1155Upgradeable {
     using StringsUpgradeable for uint;
 
     // Optional mapping for token URIs
-    mapping (uint256 => string) private _tokenURIs;
+    mapping(uint256 => string) private _tokenURIs;
 
     // Base URI
     string private _baseURI;
 
     /**
-    * @dev Returns the base URI set via {_setBaseURI}. This will be
-    * automatically added as a prefix in {tokenURI} to each token's URI, or
-    * to the token ID if no specific URI is set for that token ID.
-    */
+     * @dev Returns the base URI set via {_setBaseURI}. This will be
+     * automatically added as a prefix in {tokenURI} to each token's URI, or
+     * to the token ID if no specific URI is set for that token ID.
+     */
     function baseURI() public view virtual returns (string memory) {
         return _baseURI;
     }
 
-    function uri(uint id) external view override virtual returns (string memory) {
+    function uri(uint id) external view virtual override returns (string memory) {
         return _tokenURI(id);
     }
 

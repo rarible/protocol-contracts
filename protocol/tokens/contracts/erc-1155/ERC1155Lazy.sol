@@ -6,29 +6,37 @@ import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
 import "./Mint1155Validator.sol";
 import "./ERC1155BaseURI.sol";
-abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Validator, RoyaltiesV2Upgradeable, RoyaltiesV2Impl {
+abstract contract ERC1155Lazy is
+    IERC1155LazyMint,
+    ERC1155BaseURI,
+    Mint1155Validator,
+    RoyaltiesV2Upgradeable,
+    RoyaltiesV2Impl
+{
     bytes4 private constant _INTERFACE_ID_ERC165 = 0x01ffc9a7;
     bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
     bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
     mapping(uint256 => LibPart.Part[]) private creators;
     mapping(uint => uint) private supply;
     mapping(uint => uint) private minted;
-    function __ERC1155Lazy_init_unchained() internal {
-    }
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
-        return interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER
-        || interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES
-        || interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES
-        || interfaceId == _INTERFACE_ID_ERC165
-        || interfaceId == _INTERFACE_ID_ERC1155
-        || interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI;
+    function __ERC1155Lazy_init_unchained() internal {}
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+        return
+            interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
+            interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
+            interfaceId == LibRoyalties2981._INTERFACE_ID_ROYALTIES ||
+            interfaceId == _INTERFACE_ID_ERC165 ||
+            interfaceId == _INTERFACE_ID_ERC1155 ||
+            interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI;
     }
     function transferFromOrMint(
         LibERC1155LazyMint.Mint1155Data memory data,
         address from,
         address to,
         uint256 amount
-    ) override external {
+    ) external override {
         uint balance = balanceOf(from, data.tokenId);
         uint left = amount;
         if (balance != 0) {
@@ -44,7 +52,11 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             mintAndTransfer(data, to, left);
         }
     }
-    function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override virtual {
+    function mintAndTransfer(
+        LibERC1155LazyMint.Mint1155Data memory data,
+        address to,
+        uint256 _amount
+    ) public virtual override {
         address minter = address(data.tokenId >> 96);
         address sender = _msgSender();
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");
@@ -73,7 +85,12 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             emit TransferSingle(sender, address(0), to, data.tokenId, _amount);
         }
     }
-    function _mint(address account, uint256 id, uint256 amount, bytes memory data) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
+    function _mint(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
         uint newMinted = amount + minted[id];
         require(newMinted <= supply[id], "more than supply");
         minted[id] = newMinted;

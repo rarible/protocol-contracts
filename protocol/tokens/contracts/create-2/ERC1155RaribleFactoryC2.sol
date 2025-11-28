@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * The beacon should be initialized before call ERC1155RaribleFactoryC2 constructor.
  *
  */
-contract ERC1155RaribleFactoryC2 is Ownable{
+contract ERC1155RaribleFactoryC2 is Ownable {
     address public beacon;
     address transferProxy;
     address lazyTransferProxy;
@@ -21,21 +21,34 @@ contract ERC1155RaribleFactoryC2 is Ownable{
         transferProxy = _transferProxy;
         lazyTransferProxy = _lazyTransferProxy;
     }
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint salt) external {
+    function createToken(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        uint salt
+    ) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI), salt);
         ERC1155Rarible token = ERC1155Rarible(beaconProxy);
         token.transferOwnership(_msgSender());
         emit Create1155RaribleProxy(beaconProxy);
     }
-   
-    function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
+
+    function createToken(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        address[] memory operators,
+        uint salt
+    ) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
         ERC1155Rarible token = ERC1155Rarible(address(beaconProxy));
         token.transferOwnership(_msgSender());
         emit Create1155RaribleUserProxy(beaconProxy);
     }
     //deploying BeaconProxy contract with create2
-    function deployProxy(bytes memory data, uint salt) internal returns(address proxy){
+    function deployProxy(bytes memory data, uint salt) internal returns (address proxy) {
         bytes memory bytecode = getCreationBytecode(data);
         assembly {
             proxy := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
@@ -49,33 +62,64 @@ contract ERC1155RaribleFactoryC2 is Ownable{
         return abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, _data));
     }
     //returns address that contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, uint _salt)
-        public
-        view
-        returns (address)
-    {
+    function getAddress(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        uint _salt
+    ) public view returns (address) {
         bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI));
-        bytes32 hash = keccak256(
-            abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
-        );
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
         return address(uint160(uint(hash)));
     }
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155Rarible_init.selector, _name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+    function getData(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI
+    ) internal view returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                ERC1155Rarible(0).__ERC1155Rarible_init.selector,
+                _name,
+                _symbol,
+                baseURI,
+                contractURI,
+                transferProxy,
+                lazyTransferProxy
+            );
     }
     //returns address that contract with such arguments will be deployed on
-    function getAddress(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint _salt)
-        public
-        view
-        returns (address)
-    {
+    function getAddress(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        address[] memory operators,
+        uint _salt
+    ) public view returns (address) {
         bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators));
-        bytes32 hash = keccak256(
-            abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode))
-        );
+        bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
         return address(uint160(uint(hash)));
     }
-    function getData(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators) view internal returns(bytes memory){
-        return abi.encodeWithSelector(ERC1155Rarible(0).__ERC1155RaribleUser_init.selector, _name, _symbol, baseURI, contractURI, operators, transferProxy, lazyTransferProxy);
+    function getData(
+        string memory _name,
+        string memory _symbol,
+        string memory baseURI,
+        string memory contractURI,
+        address[] memory operators
+    ) internal view returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                ERC1155Rarible(0).__ERC1155RaribleUser_init.selector,
+                _name,
+                _symbol,
+                baseURI,
+                contractURI,
+                operators,
+                transferProxy,
+                lazyTransferProxy
+            );
     }
 }

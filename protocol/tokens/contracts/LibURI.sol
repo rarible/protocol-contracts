@@ -4,11 +4,7 @@ pragma solidity ^0.8.30;
 
 library LibURI {
     /// @dev checks if _tokenURI starts with base. if true returns _tokenURI, else base + _tokenURI
-    function checkPrefix(string memory base, string memory _tokenURI)
-        internal
-        pure
-        returns (string memory)
-    {
+    function checkPrefix(string memory base, string memory _tokenURI) internal pure returns (string memory) {
         bytes memory whatBytes = bytes(base);
         bytes memory whereBytes = bytes(_tokenURI);
 
