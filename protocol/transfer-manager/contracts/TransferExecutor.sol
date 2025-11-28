@@ -54,14 +54,7 @@ abstract contract TransferExecutor is Initializable, OwnableUpgradeable, ITransf
             if (from == address(this)) {
                 IERC1155(token).safeTransferFrom(address(this), to, tokenId, asset.value, "");
             } else {
-                INftTransferProxy(proxy).erc1155safeTransferFrom(
-                    IERC1155(token),
-                    from,
-                    to,
-                    tokenId,
-                    asset.value,
-                    ""
-                );
+                INftTransferProxy(proxy).erc1155safeTransferFrom(IERC1155(token), from, to, tokenId, asset.value, "");
             }
         } else if (asset.assetType.assetClass == LibAsset.ETH_ASSET_CLASS) {
             if (to != address(this)) {
