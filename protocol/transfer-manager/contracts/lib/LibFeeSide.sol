@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.30;
 
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 
 library LibFeeSide {
-
-    enum FeeSide {NONE, LEFT, RIGHT}
+    enum FeeSide {
+        NONE,
+        LEFT,
+        RIGHT
+    }
 
     function getFeeSide(bytes4 leftClass, bytes4 rightClass) internal pure returns (FeeSide) {
         if (leftClass == LibAsset.ETH_ASSET_CLASS) {

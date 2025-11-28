@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity ^0.8.30;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -93,7 +92,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,
         LibFeeSide.FeeSide feeSide
-    ) override internal returns (uint totalLeftValue, uint totalRightValue) {
+    ) internal override returns (uint totalLeftValue, uint totalRightValue) {
         totalLeftValue = left.asset.value;
         totalRightValue = right.asset.value;
 
@@ -101,7 +100,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             totalLeftValue = doTransfersWithFees(left, right, protocolFee);
             transferPayouts(right.asset.assetType, right.asset.value, right.from, left.payouts, right.proxy);
         } else if (feeSide == LibFeeSide.FeeSide.RIGHT) {
-            totalRightValue = doTransfersWithFees(right, left,protocolFee);
+            totalRightValue = doTransfersWithFees(right, left, protocolFee);
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
         } else {
             transferPayouts(left.asset.assetType, left.asset.value, left.from, right.payouts, left.proxy);
@@ -124,21 +123,58 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint buyerProtocolFee = paymentSide.protocolFeeEnabled ? _protocolFee.buyerAmount : 0;
         uint sellerProtocolFee = nftSide.protocolFeeEnabled ? _protocolFee.sellerAmount : 0;
         totalAmount = calculateTotalAmount(paymentSide.asset.value, buyerProtocolFee, paymentSide.originFees);
-        uint rest = transferProtocolFee(totalAmount, paymentSide.asset.value, paymentSide.from, buyerProtocolFee + sellerProtocolFee, _protocolFee.receiver, paymentSide.asset.assetType, paymentSide.proxy);
+        uint rest = transferProtocolFee(
+            totalAmount,
+            paymentSide.asset.value,
+            paymentSide.from,
+            buyerProtocolFee + sellerProtocolFee,
+            _protocolFee.receiver,
+            paymentSide.asset.assetType,
+            paymentSide.proxy
+        );
 
-        rest = transferRoyalties(paymentSide.asset.assetType, nftSide.asset.assetType, nftSide.payouts, rest, paymentSide.asset.value, paymentSide.from, paymentSide.proxy);
+        rest = transferRoyalties(
+            paymentSide.asset.assetType,
+            nftSide.asset.assetType,
+            nftSide.payouts,
+            rest,
+            paymentSide.asset.value,
+            paymentSide.from,
+            paymentSide.proxy
+        );
         if (
-            paymentSide.originFees.length  == 1 &&
-            nftSide.originFees.length  == 1 &&
+            paymentSide.originFees.length == 1 &&
+            nftSide.originFees.length == 1 &&
             nftSide.originFees[0].account == paymentSide.originFees[0].account
-        ) { 
-            LibPart.Part[] memory origin = new  LibPart.Part[](1);
+        ) {
+            LibPart.Part[] memory origin = new LibPart.Part[](1);
             origin[0].account = nftSide.originFees[0].account;
             origin[0].value = nftSide.originFees[0].value + paymentSide.originFees[0].value;
-            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, origin, paymentSide.from, paymentSide.proxy);
+            (rest, ) = transferFees(
+                paymentSide.asset.assetType,
+                rest,
+                paymentSide.asset.value,
+                origin,
+                paymentSide.from,
+                paymentSide.proxy
+            );
         } else {
-            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, paymentSide.originFees, paymentSide.from, paymentSide.proxy);
-            (rest,) = transferFees(paymentSide.asset.assetType, rest, paymentSide.asset.value, nftSide.originFees, paymentSide.from, paymentSide.proxy);
+            (rest, ) = transferFees(
+                paymentSide.asset.assetType,
+                rest,
+                paymentSide.asset.value,
+                paymentSide.originFees,
+                paymentSide.from,
+                paymentSide.proxy
+            );
+            (rest, ) = transferFees(
+                paymentSide.asset.assetType,
+                rest,
+                paymentSide.asset.value,
+                nftSide.originFees,
+                paymentSide.from,
+                paymentSide.proxy
+            );
         }
         transferPayouts(paymentSide.asset.assetType, rest, paymentSide.from, nftSide.payouts, paymentSide.proxy);
     }
@@ -183,11 +219,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         address proxy
     ) internal returns (uint) {
         LibPart.Part[] memory royalties = getRoyaltiesByAssetType(nftAssetType);
-        if (
-            royalties.length == 1 &&
-            payouts.length == 1 &&
-            royalties[0].account == payouts[0].account
-        ) {
+        if (royalties.length == 1 && payouts.length == 1 && royalties[0].account == payouts[0].account) {
             require(royalties[0].value <= 5000, "Royalties are too high (>50%)");
             return rest;
         }
@@ -202,14 +234,23 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         @return calculated royalties (Array of LibPart.Part)
     */
     function getRoyaltiesByAssetType(LibAsset.AssetType memory nftAssetType) internal returns (LibPart.Part[] memory) {
-        if (nftAssetType.assetClass == LibAsset.ERC1155_ASSET_CLASS || nftAssetType.assetClass == LibAsset.ERC721_ASSET_CLASS) {
+        if (
+            nftAssetType.assetClass == LibAsset.ERC1155_ASSET_CLASS ||
+            nftAssetType.assetClass == LibAsset.ERC721_ASSET_CLASS
+        ) {
             (address token, uint tokenId) = abi.decode(nftAssetType.data, (address, uint));
             return royaltiesRegistry.getRoyalties(token, tokenId);
         } else if (nftAssetType.assetClass == LibERC1155LazyMint.ERC1155_LAZY_ASSET_CLASS) {
-            (, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(nftAssetType.data, (address, LibERC1155LazyMint.Mint1155Data));
+            (, LibERC1155LazyMint.Mint1155Data memory data) = abi.decode(
+                nftAssetType.data,
+                (address, LibERC1155LazyMint.Mint1155Data)
+            );
             return data.royalties;
         } else if (nftAssetType.assetClass == LibERC721LazyMint.ERC721_LAZY_ASSET_CLASS) {
-            (, LibERC721LazyMint.Mint721Data memory data) = abi.decode(nftAssetType.data, (address, LibERC721LazyMint.Mint721Data));
+            (, LibERC721LazyMint.Mint721Data memory data) = abi.decode(
+                nftAssetType.data,
+                (address, LibERC721LazyMint.Mint721Data)
+            );
             return data.royalties;
         }
         LibPart.Part[] memory empty;
@@ -280,7 +321,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             transfer(LibAsset.Asset(assetType, rest), from, lastPayout.account, proxy);
         }
     }
-    
+
     /**
         @notice calculates total amount of fee-side asset that is going to be used in match
         @param amount fee-side order value
@@ -293,7 +334,6 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint buyerProtocolFee,
         LibPart.Part[] memory orderOriginFees
     ) internal pure returns (uint) {
-        
         uint fees = buyerProtocolFee;
         for (uint256 i = 0; i < orderOriginFees.length; ++i) {
             require(orderOriginFees[i].value <= 10000, "origin fee is too big");
