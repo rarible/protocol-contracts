@@ -15,7 +15,6 @@ import "./interfaces/ITransferManager.sol";
 
 abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager {
     using BpLibrary for uint;
-    using SafeMathUpgradeable for uint;
 
     ProtocolFeeData public protocolFee;
     IRoyaltiesProvider public royaltiesRegistry;
@@ -279,7 +278,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         totalFees = 0;
         newRest = rest;
         for (uint256 i = 0; i < fees.length; ++i) {
-            totalFees = totalFees.add(fees[i].value);
+            totalFees = totalFees + fees[i].value;
             uint feeValue;
             (newRest, feeValue) = subFeeInBp(newRest, amount, fees[i].value);
             if (feeValue > 0) {
@@ -308,14 +307,14 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
         uint rest = amount;
         for (uint256 i = 0; i < payouts.length - 1; ++i) {
             uint currentAmount = amount.bp(payouts[i].value);
-            sumBps = sumBps.add(payouts[i].value);
+            sumBps = sumBps + payouts[i].value;
             if (currentAmount > 0) {
-                rest = rest.sub(currentAmount);
+                rest = rest - currentAmount;
                 transfer(LibAsset.Asset(assetType, currentAmount), from, payouts[i].account, proxy);
             }
         }
         LibPart.Part memory lastPayout = payouts[payouts.length - 1];
-        sumBps = sumBps.add(lastPayout.value);
+        sumBps = sumBps + lastPayout.value;
         require(sumBps == 10000, "Sum payouts Bps not equal 100%");
         if (rest > 0) {
             transfer(LibAsset.Asset(assetType, rest), from, lastPayout.account, proxy);
@@ -340,7 +339,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
             fees = fees + orderOriginFees[i].value;
         }
 
-        return amount.add(amount.bp(fees));
+        return amount + amount.bp(fees);
     }
 
     function subFeeInBp(uint value, uint total, uint feeInBp) internal pure returns (uint newValue, uint realFee) {
@@ -349,7 +348,7 @@ abstract contract RaribleTransferManager is OwnableUpgradeable, ITransferManager
 
     function subFee(uint value, uint fee) internal pure returns (uint newValue, uint realFee) {
         if (value > fee) {
-            newValue = value.sub(fee);
+            newValue = value - fee;
             realFee = fee;
         } else {
             newValue = 0;

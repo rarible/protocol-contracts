@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity ^0.8.30;
 
 import "../../contracts/TransferExecutor.sol";
 
 contract TransferExecutorTest is Initializable, OwnableUpgradeable, TransferExecutor {
-    function __TransferExecutorTest_init(address _transferProxy, address _erc20TransferProxy) external initializer {
-        __Ownable_init_unchained();
+    function __TransferExecutorTest_init(address _owner, address _transferProxy, address _erc20TransferProxy) external initializer {
+        __Ownable_init(_owner);
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
     }
 
