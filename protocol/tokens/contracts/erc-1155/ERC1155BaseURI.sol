@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.30;
 
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "../LibURI.sol";
 
 import "./ERC1155Upgradeable.sol";
 
 contract ERC1155BaseURI is ERC1155Upgradeable {
-    using StringsUpgradeable for uint;
+    using Strings for uint;
 
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;

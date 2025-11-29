@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 abstract contract MinterAccessControl is OwnableUpgradeable {
     mapping(address => bool) private _minters;
 

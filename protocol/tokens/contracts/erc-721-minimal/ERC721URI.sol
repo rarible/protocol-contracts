@@ -3,14 +3,14 @@ pragma solidity ^0.8.30;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./ERC721UpgradeableMinimal.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "../LibURI.sol";
 /**
  * @title ERC721 Burnable Token
  * @dev ERC721 Token that can be irreversibly burned (destroyed).
  */
 abstract contract ERC721URI is ContextUpgradeable, ERC721UpgradeableMinimal {
-    using StringsUpgradeable for uint256;
+    using Strings for uint256;
     // Optional mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
     // Base URI

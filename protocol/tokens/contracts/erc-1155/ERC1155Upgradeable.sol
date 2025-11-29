@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155MetadataURIUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+
+// Interfaces now come from non-upgradeable package
+import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+
+// Upgradeable base contracts stay as-is
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+// Address library now from non-upgradeable package
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+
 /**
  *
  * @dev Implementation of the basic standard multi-token.
@@ -19,7 +26,7 @@ contract ERC1155Upgradeable is
     Initializable,
     ContextUpgradeable,
     ERC165Upgradeable,
-    IERC1155Upgradeable,
+    IERC1155,
     IERC1155MetadataURIUpgradeable
 {
     using AddressUpgradeable for address;
