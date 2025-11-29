@@ -340,7 +340,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         }
     }
 
-    function _isContract(address account) internal view returns (bool) {
+    function _isContract(address account) private view returns (bool) {
         return account.code.length > 0;
     }
     /**

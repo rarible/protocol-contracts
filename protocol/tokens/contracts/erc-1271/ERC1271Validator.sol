@@ -40,7 +40,7 @@ abstract contract ERC1271Validator is EIP712Upgradeable {
      *   for permissions. Here we only use it to decide whether it makes sense to
      *   attempt an ERC-1271 call.
      */
-    function _isContract(address account) internal view returns (bool) {
+    function _isContract(address account) private view returns (bool) {
         return account.code.length > 0;
     }
 

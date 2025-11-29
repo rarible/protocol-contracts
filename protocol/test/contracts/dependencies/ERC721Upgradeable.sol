@@ -483,7 +483,7 @@ contract ERC721Upgradeable is
         return (retval == _ERC721_RECEIVED);
     }
 
-    function _isContract(address account) internal view returns (bool) {
+    function _isContract(address account) private view returns (bool) {
         return account.code.length > 0;
     }
 

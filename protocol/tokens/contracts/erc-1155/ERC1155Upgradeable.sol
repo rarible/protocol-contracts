@@ -343,7 +343,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         return array;
     }
 
-    function _isContract(address account) internal view returns (bool) {
+    function _isContract(address account) private view returns (bool) {
         return account.code.length > 0;
     }
 

@@ -426,7 +426,7 @@ contract ERC721Upgradeable is
         emit Approval(ERC721Upgradeable.ownerOf(tokenId), to, tokenId); // internal owner
     }
 
-    function _isContract(address account) internal view returns (bool) {
+    function _isContract(address account) private view returns (bool) {
         return account.code.length > 0;
     }
 
