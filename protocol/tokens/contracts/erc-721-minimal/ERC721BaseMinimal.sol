@@ -27,13 +27,7 @@ abstract contract ERC721BaseMinimal is
     function isApprovedForAll(
         address owner,
         address operator
-    )
-        public
-        view
-        virtual
-        override(ERC721DefaultApprovalMinimal, ERC721UpgradeableMinimal, IERC721Upgradeable)
-        returns (bool)
-    {
+    ) public view virtual override(ERC721DefaultApprovalMinimal, ERC721UpgradeableMinimal, IERC721) returns (bool) {
         return ERC721DefaultApprovalMinimal.isApprovedForAll(owner, operator);
     }
 

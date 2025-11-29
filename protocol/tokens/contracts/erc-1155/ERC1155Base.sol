@@ -25,7 +25,7 @@ abstract contract ERC1155Base is
     function isApprovedForAll(
         address _owner,
         address _operator
-    ) public view override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155Upgradeable) returns (bool) {
+    ) public view override(ERC1155Upgradeable, ERC1155DefaultApproval, IERC1155) returns (bool) {
         return ERC1155DefaultApproval.isApprovedForAll(_owner, _operator);
     }
 

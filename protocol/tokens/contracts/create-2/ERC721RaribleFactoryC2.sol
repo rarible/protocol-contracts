@@ -47,7 +47,7 @@ contract ERC721RaribleFactoryC2 is Ownable {
         address[] memory operators,
         uint salt
     ) external {
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators, _msgSender()), salt);
         ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
         token.transferOwnership(_msgSender());
         emit Create721RaribleUserProxy(beaconProxy);
@@ -109,9 +109,12 @@ contract ERC721RaribleFactoryC2 is Ownable {
         string memory baseURI,
         string memory contractURI,
         address[] memory operators,
+        address initialOwner,
         uint _salt
     ) public view returns (address) {
-        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, operators));
+        bytes memory bytecode = getCreationBytecode(
+            getData(_name, _symbol, baseURI, contractURI, operators, initialOwner)
+        );
 
         bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
 
@@ -123,7 +126,8 @@ contract ERC721RaribleFactoryC2 is Ownable {
         string memory _symbol,
         string memory baseURI,
         string memory contractURI,
-        address[] memory operators
+        address[] memory operators,
+        address initialOwner
     ) internal view returns (bytes memory) {
         return
             abi.encodeWithSelector(
@@ -134,7 +138,8 @@ contract ERC721RaribleFactoryC2 is Ownable {
                 contractURI,
                 operators,
                 transferProxy,
-                lazyTransferProxy
+                lazyTransferProxy,
+                initialOwner
             );
     }
 }

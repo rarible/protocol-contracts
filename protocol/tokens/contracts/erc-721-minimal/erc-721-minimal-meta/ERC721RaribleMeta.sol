@@ -18,9 +18,18 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
         string memory contractURI,
         address[] memory operators,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) external {
-        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        __ERC721Rarible_init_unchained(
+            _name,
+            _symbol,
+            baseURI,
+            contractURI,
+            transferProxy,
+            lazyTransferProxy,
+            initialOwner
+        );
 
         __MetaTransaction_init_unchained("ERC721RaribleUserMeta", "1");
 
@@ -35,9 +44,18 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
         string memory baseURI,
         string memory contractURI,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) external {
-        __ERC721Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        __ERC721Rarible_init_unchained(
+            _name,
+            _symbol,
+            baseURI,
+            contractURI,
+            transferProxy,
+            lazyTransferProxy,
+            initialOwner
+        );
 
         __MetaTransaction_init_unchained("ERC721RaribleMeta", "1");
 
@@ -46,13 +64,7 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
         emit CreateERC721Rarible(_msgSender(), _name, _symbol);
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, EIP712MetaTransaction)
-        returns (address payable)
-    {
+    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address) {
         return super._msgSender();
     }
 
@@ -62,14 +74,15 @@ contract ERC721RaribleMeta is ERC721BaseMinimal, IsPrivateCollection, MinterAcce
         string memory baseURI,
         string memory contractURI,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) internal initializer {
         _setBaseURI(baseURI);
         __ERC721Lazy_init_unchained();
         __RoyaltiesV2Upgradeable_init_unchained();
         __Context_init_unchained();
         __ERC165_init_unchained();
-        __Ownable_init_unchained();
+        __Ownable_init_unchained(initialOwner);
         __ERC721Burnable_init_unchained();
         __Mint721Validator_init_unchained();
         __MinterAccessControl_init_unchained();

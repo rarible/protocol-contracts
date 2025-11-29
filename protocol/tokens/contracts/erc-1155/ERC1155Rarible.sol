@@ -19,7 +19,15 @@ contract ERC1155Rarible is ERC1155Base, IsPrivateCollection, MinterAccessControl
         address transferProxy,
         address lazyTransferProxy
     ) external virtual {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        __ERC1155Rarible_init_unchained(
+            _name,
+            _symbol,
+            baseURI,
+            contractURI,
+            transferProxy,
+            lazyTransferProxy,
+            initialOwner
+        );
 
         isPrivate = true;
         emit CreateERC1155RaribleUser(_msgSender(), _name, _symbol);
@@ -33,7 +41,15 @@ contract ERC1155Rarible is ERC1155Base, IsPrivateCollection, MinterAccessControl
         address transferProxy,
         address lazyTransferProxy
     ) external virtual {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        __ERC1155Rarible_init_unchained(
+            _name,
+            _symbol,
+            baseURI,
+            contractURI,
+            transferProxy,
+            lazyTransferProxy,
+            initialOwner
+        );
 
         isPrivate = false;
         emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
@@ -45,9 +61,10 @@ contract ERC1155Rarible is ERC1155Base, IsPrivateCollection, MinterAccessControl
         string memory baseURI,
         string memory contractURI,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) internal initializer {
-        __Ownable_init_unchained();
+        __Ownable_init_unchained(initialOwner);
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();
         __Context_init_unchained();

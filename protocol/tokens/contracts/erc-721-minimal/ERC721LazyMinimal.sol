@@ -23,7 +23,7 @@ abstract contract ERC721LazyMinimal is
     function __ERC721Lazy_init_unchained() internal initializer {}
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(IERC165Upgradeable, ERC165Upgradeable) returns (bool) {
+    ) public view virtual override(IERC165, ERC165Upgradeable) returns (bool) {
         return
             interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
             interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
@@ -42,7 +42,7 @@ abstract contract ERC721LazyMinimal is
         }
     }
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) public virtual override {
-        address minter = address(data.tokenId >> 96);
+        address minter = address(uint160(data.tokenId >> 96));
         address sender = _msgSender();
         require(minter == data.creators[0].account, "tokenId incorrect");
         require(data.creators.length == data.signatures.length);
@@ -63,7 +63,7 @@ abstract contract ERC721LazyMinimal is
         _setTokenURI(data.tokenId, data.tokenURI);
     }
     function _emitMintEvent(address to, uint tokenId) internal virtual override {
-        address minter = address(tokenId >> 96);
+        address minter = address(uint160(tokenId >> 96));
         if (minter != to) {
             emit Transfer(address(0), minter, tokenId);
             emit Transfer(minter, to, tokenId);

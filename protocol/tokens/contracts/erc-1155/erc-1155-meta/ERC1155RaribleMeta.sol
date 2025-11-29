@@ -18,9 +18,18 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         string memory contractURI,
         address[] memory operators,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) external {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        __ERC1155Rarible_init_unchained(
+            _name,
+            _symbol,
+            baseURI,
+            contractURI,
+            transferProxy,
+            lazyTransferProxy,
+            initialOwner
+        );
 
         __MetaTransaction_init_unchained("ERC1155RaribleUserMeta", "1");
 
@@ -35,9 +44,18 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         string memory baseURI,
         string memory contractURI,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) external {
-        __ERC1155Rarible_init_unchained(_name, _symbol, baseURI, contractURI, transferProxy, lazyTransferProxy);
+        __ERC1155Rarible_init_unchained(
+            _name,
+            _symbol,
+            baseURI,
+            contractURI,
+            transferProxy,
+            lazyTransferProxy,
+            initialOwner
+        );
 
         __MetaTransaction_init_unchained("ERC1155RaribleMeta", "1");
 
@@ -46,13 +64,7 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         emit CreateERC1155Rarible(_msgSender(), _name, _symbol);
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, EIP712MetaTransaction)
-        returns (address payable)
-    {
+    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address) {
         return super._msgSender();
     }
 
@@ -62,9 +74,9 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         string memory baseURI,
         string memory contractURI,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) internal initializer {
-        __Ownable_init_unchained();
         __ERC1155Lazy_init_unchained();
         __ERC165_init_unchained();
         __Context_init_unchained();
@@ -80,6 +92,7 @@ contract ERC1155RaribleMeta is ERC1155Base, IsPrivateCollection, MinterAccessCon
         //setting default approver for transferProxies
         _setDefaultApproval(transferProxy, true);
         _setDefaultApproval(lazyTransferProxy, true);
+        __Ownable_init_unchained(initialOwner);
     }
 
     function mintAndTransfer(LibERC1155LazyMint.Mint1155Data memory data, address to, uint256 _amount) public override {

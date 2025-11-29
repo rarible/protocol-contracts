@@ -22,14 +22,8 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
  *
  * _Available since v3.1._
  */
-contract ERC1155Upgradeable is
-    Initializable,
-    ContextUpgradeable,
-    ERC165Upgradeable,
-    IERC1155,
-    IERC1155MetadataURIUpgradeable
-{
-    using AddressUpgradeable for address;
+contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155, IERC1155MetadataURI {
+    using Address for address;
     // Mapping from token ID to account balances
     mapping(uint256 => mapping(address => uint256)) internal _balances;
     // Mapping from account to operator approvals
@@ -62,10 +56,13 @@ contract ERC1155Upgradeable is
     }
     function __ERC1155_init_unchained(string memory uri_) internal initializer {
         _setURI(uri_);
-        // register the supported interfaces to conform to ERC1155 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC1155);
-        // register the supported interfaces to conform to ERC1155MetadataURI via ERC165
-        _registerInterface(_INTERFACE_ID_ERC1155_METADATA_URI);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable) returns (bool) {
+        return
+            interfaceId == _INTERFACE_ID_ERC1155 ||
+            interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI ||
+            super.supportsInterface(interfaceId);
     }
     /**
      * @dev See {IERC1155MetadataURI-uri}.
@@ -306,11 +303,9 @@ contract ERC1155Upgradeable is
         uint256 amount,
         bytes memory data
     ) internal {
-        if (to.isContract()) {
-            try IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data) returns (
-                bytes4 response
-            ) {
-                if (response != IERC1155ReceiverUpgradeable(to).onERC1155Received.selector) {
+        if (_isContract(to)) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver(to).onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
@@ -328,11 +323,11 @@ contract ERC1155Upgradeable is
         uint256[] memory amounts,
         bytes memory data
     ) private {
-        if (to.isContract()) {
-            try IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+        if (_isContract(to)) {
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
                 bytes4 response
             ) {
-                if (response != IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived.selector) {
+                if (response != IERC1155Receiver(to).onERC1155BatchReceived.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
@@ -347,5 +342,10 @@ contract ERC1155Upgradeable is
         array[0] = element;
         return array;
     }
+
+    function _isContract(address account) internal view returns (bool) {
+        return account.code.length > 0;
+    }
+
     uint256[47] private __gap;
 }

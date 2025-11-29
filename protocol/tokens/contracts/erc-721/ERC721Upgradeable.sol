@@ -23,7 +23,7 @@ import {LibURI} from "../LibURI.sol";
 contract ERC721Upgradeable is
     Initializable,
     ContextUpgradeable,
-    ERC165StorageUpgradeable,
+    ERC165Upgradeable,
     IERC721,
     IERC721Metadata,
     IERC721Enumerable
@@ -109,11 +109,14 @@ contract ERC721Upgradeable is
     function __ERC721_init_unchained(string memory name_, string memory symbol_) internal initializer {
         _name = name_;
         _symbol = symbol_;
+    }
 
-        // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721);
-        _registerInterface(_INTERFACE_ID_ERC721_METADATA);
-        _registerInterface(_INTERFACE_ID_ERC721_ENUMERABLE);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable) returns (bool) {
+        return
+            interfaceId == _INTERFACE_ID_ERC721 ||
+            interfaceId == _INTERFACE_ID_ERC721_METADATA ||
+            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE ||
+            super.supportsInterface(interfaceId);
     }
 
     /**
@@ -128,7 +131,7 @@ contract ERC721Upgradeable is
      * @dev See {IERC721-ownerOf}.
      */
     function ownerOf(uint256 tokenId) public view virtual override returns (address) {
-        return _tokenOwners.get(tokenId, "ERC721: owner query for nonexistent token");
+        return _tokenOwners.get(tokenId);
     }
 
     /**
@@ -406,19 +409,12 @@ contract ERC721Upgradeable is
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        if (!to.isContract()) {
+        if (!_isContract(to)) {
             return true;
         }
 
         bytes memory returndata = to.functionCall(
-            abi.encodeWithSelector(
-                IERC721ReceiverUpgradeable(to).onERC721Received.selector,
-                _msgSender(),
-                from,
-                tokenId,
-                _data
-            ),
-            "ERC721: transfer to non ERC721Receiver implementer"
+            abi.encodeWithSelector(IERC721Receiver(to).onERC721Received.selector, _msgSender(), from, tokenId, _data)
         );
 
         bytes4 retval = abi.decode(returndata, (bytes4));
@@ -428,6 +424,10 @@ contract ERC721Upgradeable is
     function _approve(address to, uint256 tokenId) private {
         _tokenApprovals[tokenId] = to;
         emit Approval(ERC721Upgradeable.ownerOf(tokenId), to, tokenId); // internal owner
+    }
+
+    function _isContract(address account) internal view returns (bool) {
+        return account.code.length > 0;
     }
 
     /**

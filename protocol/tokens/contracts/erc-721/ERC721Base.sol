@@ -27,7 +27,7 @@ abstract contract ERC721Base is
     function isApprovedForAll(
         address owner,
         address operator
-    ) public view virtual override(ERC721DefaultApproval, ERC721Upgradeable, IERC721Upgradeable) returns (bool) {
+    ) public view virtual override(ERC721DefaultApproval, ERC721Upgradeable, IERC721) returns (bool) {
         return ERC721DefaultApproval.isApprovedForAll(owner, operator);
     }
 

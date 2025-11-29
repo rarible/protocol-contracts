@@ -12,13 +12,7 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
  * {ERC721Enumerable}.
  */
-contract ERC721UpgradeableMinimal is
-    Initializable,
-    ContextUpgradeable,
-    ERC165Upgradeable,
-    IERC721Upgradeable,
-    IERC721MetadataUpgradeable
-{
+contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
     // Token name
@@ -69,9 +63,13 @@ contract ERC721UpgradeableMinimal is
     function __ERC721_init_unchained(string memory name_, string memory symbol_) internal initializer {
         _name = name_;
         _symbol = symbol_;
-        // register the supported interfaces to conform to ERC721 via ERC165
-        _registerInterface(_INTERFACE_ID_ERC721);
-        _registerInterface(_INTERFACE_ID_ERC721_METADATA);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable) returns (bool) {
+        return
+            interfaceId == _INTERFACE_ID_ERC721 ||
+            interfaceId == _INTERFACE_ID_ERC721_METADATA ||
+            super.supportsInterface(interfaceId);
     }
     /**
      * @dev See {IERC721-balanceOf}.
@@ -325,11 +323,9 @@ contract ERC721UpgradeableMinimal is
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        if (to.isContract()) {
-            try IERC721ReceiverUpgradeable(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (
-                bytes4 retval
-            ) {
-                return retval == IERC721ReceiverUpgradeable.onERC721Received.selector;
+        if (_isContract(to)) {
+            try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
+                return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
                     revert("ERC721: transfer to non ERC721Receiver implementer");
@@ -342,6 +338,10 @@ contract ERC721UpgradeableMinimal is
         } else {
             return true;
         }
+    }
+
+    function _isContract(address account) internal view returns (bool) {
+        return account.code.length > 0;
     }
     /**
      * @dev Hook that is called before any token transfer. This includes minting
