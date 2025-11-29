@@ -60,7 +60,7 @@ abstract contract ERC1155Base is
     function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
         leftToBurn = amount;
         lazyToBurn = 0;
-        address creator = address(id >> 96);
+        address creator = address(uint160(id >> 96));
         if (creator == _msgSender()) {
             lazyToBurn = amount;
             uint supply = ERC1155Lazy._getSupply(id);

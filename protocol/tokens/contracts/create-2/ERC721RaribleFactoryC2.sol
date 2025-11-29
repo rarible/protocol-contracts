@@ -92,7 +92,7 @@ contract ERC721RaribleFactoryC2 is Ownable {
     ) internal view returns (bytes memory) {
         return
             abi.encodeWithSelector(
-                ERC721RaribleMinimal(0).__ERC721Rarible_init.selector,
+                ERC721RaribleMinimal.__ERC721Rarible_init.selector,
                 _name,
                 _symbol,
                 baseURI,
@@ -131,7 +131,7 @@ contract ERC721RaribleFactoryC2 is Ownable {
     ) internal view returns (bytes memory) {
         return
             abi.encodeWithSelector(
-                ERC721RaribleMinimal(0).__ERC721RaribleUser_init.selector,
+                ERC721RaribleMinimal.__ERC721RaribleUser_init.selector,
                 _name,
                 _symbol,
                 baseURI,

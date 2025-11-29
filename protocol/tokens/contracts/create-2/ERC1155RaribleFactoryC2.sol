@@ -81,7 +81,7 @@ contract ERC1155RaribleFactoryC2 is Ownable {
     ) internal view returns (bytes memory) {
         return
             abi.encodeWithSelector(
-                ERC1155Rarible(0).__ERC1155Rarible_init.selector,
+                ERC1155Rarible.__ERC1155Rarible_init.selector,
                 _name,
                 _symbol,
                 baseURI,
@@ -112,7 +112,7 @@ contract ERC1155RaribleFactoryC2 is Ownable {
     ) internal view returns (bytes memory) {
         return
             abi.encodeWithSelector(
-                ERC1155Rarible(0).__ERC1155RaribleUser_init.selector,
+                ERC1155Rarible.__ERC1155RaribleUser_init.selector,
                 _name,
                 _symbol,
                 baseURI,

@@ -57,7 +57,7 @@ abstract contract ERC1155Lazy is
         address to,
         uint256 _amount
     ) public virtual override {
-        address minter = address(data.tokenId >> 96);
+        address minter = address(uint160(data.tokenId >> 96));
         address sender = _msgSender();
         require(minter == sender || isApprovedForAll(minter, sender), "ERC1155: transfer caller is not approved");
         require(_amount > 0, "amount incorrect");

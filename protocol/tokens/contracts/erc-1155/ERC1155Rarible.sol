@@ -17,7 +17,8 @@ contract ERC1155Rarible is ERC1155Base, IsPrivateCollection, MinterAccessControl
         string memory contractURI,
         address[] memory operators,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) external virtual {
         __ERC1155Rarible_init_unchained(
             _name,
@@ -39,7 +40,8 @@ contract ERC1155Rarible is ERC1155Base, IsPrivateCollection, MinterAccessControl
         string memory baseURI,
         string memory contractURI,
         address transferProxy,
-        address lazyTransferProxy
+        address lazyTransferProxy,
+        address initialOwner
     ) external virtual {
         __ERC1155Rarible_init_unchained(
             _name,
