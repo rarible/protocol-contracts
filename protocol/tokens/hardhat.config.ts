@@ -13,7 +13,10 @@ export default defineConfig({
       "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTest.sol",
       "@rarible/lazy-mint/contracts/test/ERC721LazyMintTransferProxyTest.sol",
       "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTransferProxyTest.sol",
-      "@rarible/lib-signature/contracts/test/TestERC1271.sol"],
+      "@rarible/lib-signature/contracts/test/TestERC1271.sol",
+      "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
+      "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+      "@rarible/transfer-proxy/contracts/test/contracts/TransferProxyTest.sol"],
     profiles: {
       default: {
         version: "0.8.30",
