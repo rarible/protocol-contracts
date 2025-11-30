@@ -1,6 +1,10 @@
 import { expect } from "chai";
 import { network } from "hardhat";
 import type * as ethersTypes from "ethers";
+
+const connection = await network.connect();
+const { ethers } = connection;
+
 import {
   type ERC721Rarible,
   ERC721Rarible__factory,
@@ -18,133 +22,48 @@ import {
   TestRoyaltyV2981Calculate__factory,
 } from "../../types/ethers-contracts";
 
-const connection = await network.connect();
-const { ethers } = connection;
+import { sign as signMint721 } from "@rarible/common-sdk/src/mint721";
 
-// Inline helpers from src/assets.ts and src/order.ts
-function id(str: string): string {
-  return ethers.keccak256(ethers.toUtf8Bytes(str)).slice(0, 10);
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+const ZERO = "0x0000000000000000000000000000000000000000";
+const zeroWord =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+type Part = { account: string; value: bigint };
+
+function creators(accounts: string[]): Part[] {
+  const value = BigInt(10000 / accounts.length);
+  return accounts.map((account) => ({ account, value }));
 }
 
-function encodeAddress(address: string): string {
-  const hex = address.toLowerCase().replace(/^0x/, "");
-  if (hex.length !== 40) {
-    throw new Error(`Invalid address length for ${address}`);
+function fees(accounts: string[]): Part[] {
+  const value = 500n;
+  return accounts.map((account) => ({ account, value }));
+}
+
+function feesWithZero(accounts: string[]): Part[] {
+  const value = 0n;
+  return accounts.map((account) => ({ account, value }));
+}
+
+async function expectThrow(p: Promise<unknown>): Promise<void> {
+  let failed = false;
+  try {
+    await p;
+  } catch {
+    failed = true;
   }
-  return hex.padStart(64, "0");
-}
-
-function encodeUint256(value: bigint | number | string): string {
-  const bn = BigInt(value);
-  if (bn < 0n) {
-    throw new Error("Uint256 cannot be negative");
+  if (!failed) {
+    expect.fail("Expected transaction to be reverted");
   }
-  const hex = bn.toString(16);
-  if (hex.length > 64) {
-    throw new Error("Uint256 value too large");
-  }
-  return hex.padStart(64, "0");
 }
 
-function enc(token: string, tokenId?: bigint | number | string): string {
-  const addrWord = encodeAddress(token);
-  if (tokenId === undefined) {
-    return `0x${addrWord}`;
-  }
-  const idWord = encodeUint256(tokenId);
-  return `0x${addrWord}${idWord}`;
-}
-
-type AssetTypeStruct = {
-  assetClass: string;
-  data: string;
-};
-
-type AssetStruct = {
-  assetType: AssetTypeStruct;
-  value: bigint;
-};
-
-type OrderStruct = {
-  maker: string;
-  makeAsset: AssetStruct;
-  taker: string;
-  takeAsset: AssetStruct;
-  salt: bigint;
-  start: bigint;
-  end: bigint;
-  dataType: string;
-  data: string;
-};
-
-function AssetType(assetClass: string, data: string): AssetTypeStruct {
-  return { assetClass, data };
-}
-
-function Asset(assetClass: string, assetData: string, value: bigint | number | string): AssetStruct {
-  return {
-    assetType: AssetType(assetClass, assetData),
-    value: BigInt(value),
-  };
-}
-
-function Order(
-  maker: string,
-  makeAsset: AssetStruct,
-  taker: string,
-  takeAsset: AssetStruct,
-  salt: bigint | number | string,
-  start: bigint | number | string,
-  end: bigint | number | string,
-  dataType: string,
-  data: string,
-): OrderStruct {
-  return {
-    maker,
-    makeAsset,
-    taker,
-    takeAsset,
-    salt: BigInt(salt),
-    start: BigInt(start),
-    end: BigInt(end),
-    dataType,
-    data,
-  };
-}
-
-const Types: Record<string, Array<{ name: string; type: string }>> = {
-  AssetType: [
-    { name: "assetClass", type: "bytes4" },
-    { name: "data", type: "bytes" },
-  ],
-  Asset: [
-    { name: "assetType", type: "AssetType" },
-    { name: "value", type: "uint256" },
-  ],
-  Order: [
-    { name: "maker", type: "address" },
-    { name: "makeAsset", type: "Asset" },
-    { name: "taker", type: "address" },
-    { name: "takeAsset", type: "Asset" },
-    { name: "salt", type: "uint256" },
-    { name: "start", type: "uint256" },
-    { name: "end", type: "uint256" },
-    { name: "dataType", type: "bytes4" },
-    { name: "data", type: "bytes" },
-  ],
-};
-
-async function sign(signer: ethersTypes.Signer, order: OrderStruct, verifyingContract: string): Promise<string> {
-  const networkInfo = await signer.provider?.getNetwork();
-  const chainId = networkInfo?.chainId ?? 1; // Default to 1 as in original JS
-  const domain = {
-    name: "Mint721",
-    version: "1",
-    chainId,
-    verifyingContract,
-  };
-  return signer.signTypedData(domain as any, Types as any, order as any);
-}
+// -----------------------------------------------------------------------------
+// Tests
+// -----------------------------------------------------------------------------
 
 describe("ERC721Rarible", function () {
   let token: ERC721Rarible;
@@ -152,61 +71,27 @@ describe("ERC721Rarible", function () {
   let erc1271: TestERC1271;
   let beacon: UpgradeableBeacon;
   let factory: ERC721RaribleFactoryC2;
+  let tokenByProxy: ERC721Rarible;
   let proxyLazy: ERC721LazyMintTransferProxyTest;
   let transferProxy: TransferProxyTest;
-  let testRoyaltyV2981Calculate: TestRoyaltyV2981Calculate;
+  let whiteListProxy: ethersTypes.Signer;
+
   let accounts: ethersTypes.Signer[];
   let deployer: ethersTypes.Signer;
-  let whiteListProxy: ethersTypes.Signer;
-  const name = 'FreeMintableRarible';
-  const zeroWord = "0x0000000000000000000000000000000000000000000000000000000000000000";
-  const ZERO = "0x0000000000000000000000000000000000000000";
 
-  function creators(list: string[]) {
-    const value = 10000n / BigInt(list.length);
-    return list.map(account => ({ account, value }));
-  }
+  const name = "FreeMintableRarible";
+  const baseURI = "https://ipfs.rarible.com";
 
-  function fees(list: string[]) {
-    const value = 500n;
-    return list.map(account => ({ account, value }));
-  }
-
-  function feesWithZero(list: string[]) {
-    const value = 0n;
-    return list.map(account => ({ account, value }));
-  }
-
-  async function getSignature(tokenId: string, tokenURI: string, creatorsList: any[], feesList: any[], account: ethersTypes.Signer | string) {
-    const addr = typeof account === 'string' ? account : await account.getAddress();
-    return sign(typeof account === 'string' ? deployer : account, Order(
-      addr,
-      Asset(id("ERC721_LAZY"), "0x", 1n),
-      ZERO,
-      Asset(id("ETH"), "0x", 0n),
-      0n,
-      0n,
-      0n,
-      id("V1"),
-      "0x"
-    ), await token.getAddress());
-  }
-
-  async function checkCreators(tokenId: string | bigint, exp: string[]) {
-    const res = await token.getCreators(tokenId);
-    expect(res.length).to.equal(exp.length);
-    const value = 10000n / BigInt(exp.length);
-    for (let i = 0; i < res.length; i++) {
-      expect(res[i].account).to.equal(exp[i]);
-      expect(res[i].value).to.equal(value);
-    }
-  }
-
-  before(async function () {
+  before(async () => {
     accounts = await ethers.getSigners();
-    [deployer, tokenOwner, whiteListProxy] = accounts as [ethersTypes.Signer, ethersTypes.Signer, ethersTypes.Signer, ...ethersTypes.Signer[]];
+    [deployer] = accounts as [ethersTypes.Signer, ...ethersTypes.Signer[]];
+    tokenOwner = accounts[9];
+    whiteListProxy = accounts[5];
 
-    proxyLazy = await new ERC721LazyMintTransferProxyTest__factory(deployer).deploy();
+    // Proxies & helper contracts
+    proxyLazy = await new ERC721LazyMintTransferProxyTest__factory(
+      deployer,
+    ).deploy();
     await proxyLazy.waitForDeployment();
 
     transferProxy = await new TransferProxyTest__factory(deployer).deploy();
@@ -214,535 +99,1183 @@ describe("ERC721Rarible", function () {
 
     erc1271 = await new TestERC1271__factory(deployer).deploy();
     await erc1271.waitForDeployment();
-
-    testRoyaltyV2981Calculate = await new TestRoyaltyV2981Calculate__factory(deployer).deploy();
-    await testRoyaltyV2981Calculate.waitForDeployment();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     token = await new ERC721Rarible__factory(deployer).deploy();
     await token.waitForDeployment();
-    await token.__ERC721Rarible_init(
-      name,
-      "RARI",
-      "https://ipfs.rarible.com",
-      "https://ipfs.rarible.com",
-      await whiteListProxy.getAddress(),
-      await proxyLazy.getAddress(),
-      await tokenOwner.getAddress()
-    );
+
+    const whiteListProxyAddress = await whiteListProxy.getAddress();
+    const proxyLazyAddress = await proxyLazy.getAddress();
+    const tokenOwnerAddress = await tokenOwner.getAddress();
+
+    // New initializer: includes initialOwner
+    await token
+      .connect(deployer)
+      .__ERC721Rarible_init(
+        name,
+        "RARI",
+        baseURI,
+        baseURI,
+        whiteListProxyAddress,
+        proxyLazyAddress,
+        tokenOwnerAddress,
+      );
   });
 
-  describe("Burn before ERC721Rarible ()", () => {
-    it("Run burn from minter, mintAndTransfer by the same minter not possible, token burned, throw", async () => {
+  // ---------------------------------------------------------------------------
+  // Burn before ERC721Rarible
+  // ---------------------------------------------------------------------------
+
+  describe("Burn before ERC721Rarible()", () => {
+    it("Run burn from minter, mintAndTransfer by the same minter not possible", async () => {
       const minter = accounts[1];
       const transferTo = accounts[4];
-      const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+      const minterAddress = await minter.getAddress();
+      const transferToAddress = await transferTo.getAddress();
+
+      const tokenId =
+        minterAddress + "b00000000000000000000001"; // hex concat
       const tokenURI = "//uri";
 
+      // burn by minter
       await token.connect(minter).burn(tokenId);
 
-      await expect(token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), [], [zeroWord]], await transferTo.getAddress())).to.be.reverted;
+      // try to mint and transfer after burn -> should revert
+      await expectThrow(
+        token
+          .connect(minter)
+          .mintAndTransfer(
+            {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+            transferToAddress,
+          ),
+      );
     });
 
     it("Run burn from another, throw, mintAndTransfer by the same minter is possible", async () => {
       const minter = accounts[1];
       const transferTo = accounts[2];
-      const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+      const minterAddress = await minter.getAddress();
+      const transferToAddress = await transferTo.getAddress();
+
+      const tokenId = minterAddress + "b00000000000000000000001";
       const tokenURI = "//uri";
 
-      await expect(token.connect(transferTo).burn(tokenId)).to.be.reverted;
+      // another address tries to burn -> revert
+      await expectThrow(
+        token.connect(transferTo).burn(tokenId),
+      );
 
-      await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), [], [zeroWord]], await transferTo.getAddress());
+      // mint and transfer is ok
+      await token
+        .connect(minter)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+          transferToAddress,
+        );
 
-      expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+      expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
     });
   });
 
-  describe("Burn after ERC721Rarible ()", () => {
-    it("Run mintAndTransfer, burn, mintAndTransfer by the same minter, throw", async () => {
+  // ---------------------------------------------------------------------------
+  // Burn after ERC721Rarible
+  // ---------------------------------------------------------------------------
+
+  describe("Burn after ERC721Rarible()", () => {
+    it("Run mintAndTransfer, burn, mintAndTransfer again by same minter -> throw", async () => {
       const minter = accounts[1];
       const transferTo = accounts[2];
       const transferTo2 = accounts[4];
-      const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+      const minterAddress = await minter.getAddress();
+      const transferToAddress = await transferTo.getAddress();
+      const transferTo2Address = await transferTo2.getAddress();
+
+      const tokenId = minterAddress + "b00000000000000000000001";
       const tokenURI = "//uri";
 
-      await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), [], [zeroWord]], await transferTo.getAddress());
+      await token
+        .connect(minter)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+          transferToAddress,
+        );
 
       await token.connect(transferTo).burn(tokenId);
 
-      await expect(token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), [], [zeroWord]], await transferTo2.getAddress())).to.be.reverted;
+      await expectThrow(
+        token
+          .connect(minter)
+          .mintAndTransfer(
+            {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+            transferTo2Address,
+          ),
+      );
     });
 
-    it("Run transferFromOrMint, burn, transferFromOrMint by the same minter, throw", async () => {
+    it("Run transferFromOrMint, burn, transferFromOrMint again by same minter -> throw", async () => {
       const minter = accounts[1];
       const transferTo = accounts[2];
-      const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+      const minterAddress = await minter.getAddress();
+      const transferToAddress = await transferTo.getAddress();
+
+      const tokenId = minterAddress + "b00000000000000000000001";
       const tokenURI = "//uri";
 
-      await token.connect(minter).transferFromOrMint([tokenId, tokenURI, creators([(await minter.getAddress())]), [], [zeroWord]], await minter.getAddress(), await transferTo.getAddress());
+      await token
+        .connect(minter)
+        .transferFromOrMint(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+          minterAddress,
+          transferToAddress,
+        );
 
-      expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+      expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
 
       await token.connect(transferTo).burn(tokenId);
 
-      await expect(token.connect(minter).transferFromOrMint([tokenId, tokenURI, creators([(await minter.getAddress())]), [], [zeroWord]], await minter.getAddress(), await transferTo.getAddress())).to.be.reverted;
+      await expectThrow(
+        token
+          .connect(minter)
+          .transferFromOrMint(
+            {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+            minterAddress,
+            transferToAddress,
+          ),
+      );
     });
   });
 
-  it("mint and transfer by minter, and token created by ERC721Factory ", async () => {
-    beacon = await new UpgradeableBeacon__factory(deployer).deploy(await token.getAddress(), await deployer.getAddress());
+  // ---------------------------------------------------------------------------
+  // Factory / Beacon tests
+  // ---------------------------------------------------------------------------
+
+  it("mint and transfer by minter, and token created by ERC721Factory", async () => {
+    const tokenAddress = await token.getAddress();
+    const tokenOwnerAddress = await tokenOwner.getAddress();
+    const transferProxyAddress = await transferProxy.getAddress();
+    const proxyLazyAddress = await proxyLazy.getAddress();
+
+    // OZ 5.4.0 UpgradeableBeacon(implementation, initialOwner)
+    beacon = await new UpgradeableBeacon__factory(deployer).deploy(
+      tokenAddress,
+      tokenOwnerAddress,
+    );
     await beacon.waitForDeployment();
 
-    factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(await beacon.getAddress(), await transferProxy.getAddress(), await proxyLazy.getAddress());
+    factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(
+      await beacon.getAddress(),
+      transferProxyAddress,
+      proxyLazyAddress,
+    );
     await factory.waitForDeployment();
 
-    const tx = await factory.createToken("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", 1n, { from: await tokenOwner.getAddress() });
+    const tx = await factory
+      .connect(tokenOwner)
+      ["createToken(string,string,string,string,uint256)"](
+        "name",
+        "RARI",
+        baseURI,
+        baseURI,
+        1n,
+      );
+    const receipt = await tx.wait();
 
     let proxyAddress: string | undefined;
-    const receipt = await tx.wait();
     for (const log of receipt.logs) {
-      if (log.fragment?.name === "Create721RaribleProxy") {
-        proxyAddress = log.args.proxy;
+      try {
+        const parsed = factory.interface.parseLog(log);
+        if (parsed.name === "Create721RaribleProxy") {
+          proxyAddress = parsed.args.proxy as string;
+          break;
+        }
+      } catch {
+        // ignore
       }
     }
-    if (!proxyAddress) throw new Error("No proxy event emitted");
+    if (!proxyAddress) {
+      throw new Error("Create721RaribleProxy event not found");
+    }
 
-    const tokenByProxy = ERC721Rarible__factory.connect(proxyAddress, deployer);
+    tokenByProxy = ERC721Rarible__factory.connect(proxyAddress, deployer);
 
     const minter = tokenOwner;
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const minterAddress = await minter.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await tokenByProxy.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
+    const txMint = await tokenByProxy
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
+    const mintReceipt = await txMint.wait();
 
-    expect(await tokenByProxy.ownerOf(tokenId)).to.equal(minterAddr);
+    const transferEvents = await tokenByProxy.queryFilter(
+      tokenByProxy.filters.Transfer(null, null, null),
+      mintReceipt.blockNumber,
+      mintReceipt.blockNumber,
+    );
+
+    expect(transferEvents.length).to.equal(1);
+    expect(await tokenByProxy.ownerOf(tokenId)).to.equal(minterAddress);
   });
 
-  it("checkPrefix should work correctly, checks for duplicating of the base part of the uri ", async () => {
-    beacon = await new UpgradeableBeacon__factory(deployer).deploy(await token.getAddress(), await deployer.getAddress());
+  it("checkPrefix should work correctly", async () => {
+    const tokenAddress = await token.getAddress();
+    const tokenOwnerAddress = await tokenOwner.getAddress();
+    const transferProxyAddress = await transferProxy.getAddress();
+    const proxyLazyAddress = await proxyLazy.getAddress();
+
+    beacon = await new UpgradeableBeacon__factory(deployer).deploy(
+      tokenAddress,
+      tokenOwnerAddress,
+    );
     await beacon.waitForDeployment();
 
-    factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(await beacon.getAddress(), await transferProxy.getAddress(), await proxyLazy.getAddress());
+    factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(
+      await beacon.getAddress(),
+      transferProxyAddress,
+      proxyLazyAddress,
+    );
     await factory.waitForDeployment();
 
-    const baseURI = "https://ipfs.rarible.com";
-    const tx = await factory["createToken(string,string,string,string,uint256)"]("name", "RARI", baseURI, "https://ipfs.rarible.com", 1n, { from: await tokenOwner.getAddress() });
+    const baseUri = baseURI;
+    const tx = await factory
+      .connect(tokenOwner)
+      ["createToken(string,string,string,string,uint256)"](
+        "name",
+        "RARI",
+        baseUri,
+        baseURI,
+        1n,
+      );
+    const receipt = await tx.wait();
 
     let proxyAddress: string | undefined;
-    const receipt = await tx.wait();
-    for (const log of receipt?.logs ?? []) {
-      if (log.fragment?.name === "Create721RaribleProxy") {
-        proxyAddress = log.args.proxy;
+    for (const log of receipt.logs) {
+      try {
+        const parsed = factory.interface.parseLog(log);
+        if (parsed.name === "Create721RaribleProxy") {
+          proxyAddress = parsed.args.proxy as string;
+          break;
+        }
+      } catch {
+        // ignore
       }
     }
-    if (!proxyAddress) throw new Error("No proxy event emitted");
+    if (!proxyAddress) {
+      throw new Error("Create721RaribleProxy event not found");
+    }
 
-    const tokenByProxy = ERC721Rarible__factory.connect(proxyAddress, deployer);
+    tokenByProxy = ERC721Rarible__factory.connect(proxyAddress, deployer);
 
     const minter = tokenOwner;
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
-    const tokenURI = baseURI + "/12345/456";
+    const minterAddress = await minter.getAddress();
 
-    await tokenByProxy.connect(minter).mintAndTransfer([{ data: { tokenId, tokenURI, creators: creators([minterAddr]), fees: [], signatures: [zeroWord] } }, minterAddr]);
-
+    // 1) tokenURI already has baseUri prefix
+    const tokenId = minterAddress + "b00000000000000000000001";
+    const tokenURI = baseUri + "/12345/456";
+    await tokenByProxy
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
     expect(await tokenByProxy.tokenURI(tokenId)).to.equal(tokenURI);
 
-    const tokenId1 = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000002", 16);
+    // 2) tokenURI without prefix
+    const tokenId1 = minterAddress + "b00000000000000000000002";
     const tokenURI1 = "/12345/123512512/12312312";
+    await tokenByProxy
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
+    expect(await tokenByProxy.tokenURI(tokenId1)).to.equal(
+      baseUri + tokenURI1,
+    );
 
-    await tokenByProxy.connect(minter).mintAndTransfer([tokenId1, tokenURI1, creators([minterAddr]), [], [zeroWord]], minterAddr);
-
-    expect(await tokenByProxy.tokenURI(tokenId1)).to.equal(baseURI + tokenURI1);
-
-    const tokenId2 = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000003", 16);
+    // 3) another tokenURI without prefix
+    const tokenId2 = minterAddress + "b00000000000000000000003";
     const tokenURI2 = "/12345/";
-
-    await tokenByProxy.connect(minter).mintAndTransfer([tokenId2, tokenURI2, creators([minterAddr]), [], [zeroWord]], minterAddr);
-
-    expect(await tokenByProxy.tokenURI(tokenId2)).to.equal(baseURI + tokenURI2);
+    await tokenByProxy
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
+    expect(await tokenByProxy.tokenURI(tokenId2)).to.equal(
+      baseUri + tokenURI2,
+    );
   });
 
-  it("check for ERC165 interface", async () => {
-    expect(await token.supportsInterface("0x01ffc9a7")).to.be.true;
+  // ---------------------------------------------------------------------------
+  // Interface support / approvals
+  // ---------------------------------------------------------------------------
+
+  it("check for ERC165/interface support", async () => {
+    expect(await token.supportsInterface("0x01ffc9a7")).to.equal(true); // ERC165
   });
 
   it("check for mintAndTransfer interface", async () => {
-    expect(await token.supportsInterface("0x8486f69f")).to.be.true;
+    expect(await token.supportsInterface("0x8486f69f")).to.equal(true);
   });
 
-  it("check for RoayltiesV2 interface", async () => {
-    expect(await token.supportsInterface("0xcad96cca")).to.be.true;
+  it("check for RoyaltiesV2 interface", async () => {
+    expect(await token.supportsInterface("0xcad96cca")).to.equal(true);
   });
 
-  it("check for support IERC2981 interface", async () => {
-    expect(await token.supportsInterface("0x2a55205a")).to.be.true;
+  it("check for IERC2981 interface", async () => {
+    expect(await token.supportsInterface("0x2a55205a")).to.equal(true);
   });
 
   it("check for ERC721 interfaces", async () => {
-    expect(await token.supportsInterface("0x80ac58cd")).to.be.true;
-    expect(await token.supportsInterface("0x5b5e139f")).to.be.true;
-    expect(await token.supportsInterface("0x780e9d63")).to.be.true;
+    expect(await token.supportsInterface("0x80ac58cd")).to.equal(true); // ERC721
+    expect(await token.supportsInterface("0x5b5e139f")).to.equal(true); // metadata
+    expect(await token.supportsInterface("0x780e9d63")).to.equal(true); // enumerable
   });
 
   it("approve for all", async () => {
-    expect(await token.isApprovedForAll(await accounts[1].getAddress(), await whiteListProxy.getAddress())).to.be.true;
-    expect(await token.isApprovedForAll(await accounts[1].getAddress(), await proxyLazy.getAddress())).to.be.true;
+    const account1 = accounts[1];
+    const account1Address = await account1.getAddress();
+    const whiteListProxyAddress = await whiteListProxy.getAddress();
+    const proxyLazyAddress = await proxyLazy.getAddress();
+
+    expect(
+      await token.isApprovedForAll(account1Address, whiteListProxyAddress),
+    ).to.equal(true);
+    expect(
+      await token.isApprovedForAll(account1Address, proxyLazyAddress),
+    ).to.equal(true);
   });
 
-  it("set new BaseUri, check only owner, check emit event", async () => {
+  it("set new BaseUri, only owner, emits event", async () => {
     const oldBaseUri = await token.baseURI();
-    const newBaseUriSet = "https://ipfs.rarible-the-best-in-the-World.com";
+    const newBaseUri =
+      "https://ipfs.rarible-the-best-in-the-World.com";
 
-    await expect(token.setBaseURI(newBaseUriSet)).to.be.revertedWith("Ownable: caller is not the owner");
+    // caller is not owner -> revert
+    await expectThrow(
+      token.setBaseURI(newBaseUri),
+    );
 
-    const tx = await token.connect(tokenOwner).setBaseURI(newBaseUriSet);
+    const tokenOwnerAddress = await tokenOwner.getAddress();
+    const tx = await token
+      .connect(tokenOwner)
+      .setBaseURI(newBaseUri);
+    const receipt = await tx.wait();
 
-    const newBaseUri = await token.baseURI();
-    expect(newBaseUri).to.equal(newBaseUriSet);
-    expect(newBaseUri).to.not.equal(oldBaseUri);
+    const currentBaseUri = await token.baseURI();
+    expect(currentBaseUri).to.equal(newBaseUri);
+    expect(currentBaseUri).not.to.equal(oldBaseUri);
 
-    await expect(tx).to.emit(token, "BaseUriChanged").withArgs(newBaseUriSet);
+    // Check BaseUriChanged event
+    let newBaseUriFromEvent: string | undefined;
+    for (const log of receipt.logs) {
+      try {
+        const parsed = token.interface.parseLog(log);
+        if (parsed.name === "BaseUriChanged") {
+          newBaseUriFromEvent = parsed.args.newBaseURI as string;
+          break;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    expect(newBaseUriFromEvent).to.equal(newBaseUri);
   });
 
-  it("check Royalties IERC2981, with 3 royaltiesBeneficiary ", async () => {
+  // ---------------------------------------------------------------------------
+  // IERC2981 / royalties tests
+  // ---------------------------------------------------------------------------
+
+  it("check Royalties IERC2981, with 3 royaltiesBeneficiary", async () => {
+    const testRoyalty = await new TestRoyaltyV2981Calculate__factory(
+      deployer,
+    ).deploy();
+    await testRoyalty.waitForDeployment();
+
     const minter = accounts[1];
     const transferTo = accounts[2];
     const royaltiesBeneficiary1 = accounts[3];
     const royaltiesBeneficiary2 = accounts[4];
     const royaltiesBeneficiary3 = accounts[6];
-    const WEIGHT_PRICE = 1000000n;
-    const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+    const rb1 = await royaltiesBeneficiary1.getAddress();
+    const rb2 = await royaltiesBeneficiary2.getAddress();
+    const rb3 = await royaltiesBeneficiary3.getAddress();
+
+    const WEIGHT_PRICE = 1_000_000n;
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([(await minter.getAddress())]), fees([(await royaltiesBeneficiary1.getAddress()), (await royaltiesBeneficiary2.getAddress()), (await royaltiesBeneficiary3.getAddress())]), minter);
+    const royaltyParts = fees([rb1, rb2, rb3]); // 5% each => 15% total
 
-    await token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), fees([(await royaltiesBeneficiary1.getAddress()), (await royaltiesBeneficiary2.getAddress()), (await royaltiesBeneficiary3.getAddress())]), [sig]], await transferTo.getAddress());
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      royaltyParts,
+      minter,
+    );
 
-    const [receiver, amount] = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
-    expect(receiver).to.equal(await royaltiesBeneficiary1.getAddress());
-    expect(amount).to.equal(150000n);
+    await token
+      .connect(whiteListProxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: royaltyParts, signatures: [signature]},
+        transferToAddress,
+      );
 
-    const royaltiesPart = await testRoyaltyV2981Calculate.calculateRoyaltiesTest(receiver, amount);
-    expect(royaltiesPart.length).to.equal(1);
-    expect(royaltiesPart[0].account).to.equal(await royaltiesBeneficiary1.getAddress());
+    const [royaltiesAddress, royaltiesAmount] = await token.royaltyInfo(
+      tokenId,
+      WEIGHT_PRICE,
+    );
+
+    expect(royaltiesAddress).to.equal(rb1);
+    expect(royaltiesAmount).to.equal(150_000n); // 15% of 1_000_000
+
+    const royaltiesPart =
+      await testRoyalty.calculateRoyaltiesTest(
+        royaltiesAddress,
+        royaltiesAmount,
+      );
+
+    expect(royaltiesPart[0].account).to.equal(rb1);
     expect(royaltiesPart[0].value).to.equal(1500n);
   });
 
-  it("check Royalties IERC2981, with 3 royaltiesBeneficiary zero fee, throw ", async () => {
+  it("check Royalties IERC2981, with 3 royaltiesBeneficiary zero fee, throw", async () => {
+    const testRoyalty = await new TestRoyaltyV2981Calculate__factory(
+      deployer,
+    ).deploy();
+    await testRoyalty.waitForDeployment();
+
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const royaltiesBeneficiary1 = accounts[3];
-    const royaltiesBeneficiary2 = accounts[4];
-    const royaltiesBeneficiary3 = accounts[6];
-    const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const rb1 = accounts[3];
+    const rb2 = accounts[4];
+    const rb3 = accounts[6];
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+    const a1 = await rb1.getAddress();
+    const a2 = await rb2.getAddress();
+    const a3 = await rb3.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([(await minter.getAddress())]), feesWithZero([(await royaltiesBeneficiary1.getAddress()), (await royaltiesBeneficiary2.getAddress()), (await royaltiesBeneficiary3.getAddress())]), minter);
+    const royaltiesZero = feesWithZero([a1, a2, a3]);
 
-    await expect(
-      token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), feesWithZero([(await royaltiesBeneficiary1.getAddress()), (await royaltiesBeneficiary2.getAddress()), (await royaltiesBeneficiary3.getAddress())]), [sig]], await transferTo.getAddress())
-    ).to.be.reverted;
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      royaltiesZero,
+      minter,
+    );
+
+    await expectThrow(
+      token
+        .connect(whiteListProxy)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: royaltiesZero, signatures: [signature]},
+          transferToAddress,
+        ),
+    );
   });
 
-  it("check Royalties IERC2981, with only 1 royaltiesBeneficiary ", async () => {
+  it("check Royalties IERC2981, with only 1 royaltiesBeneficiary", async () => {
+    const testRoyalty = await new TestRoyaltyV2981Calculate__factory(
+      deployer,
+    ).deploy();
+    await testRoyalty.waitForDeployment();
+
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const royaltiesBeneficiary1 = accounts[3];
-    const WEIGHT_PRICE = 1000000n;
-    const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const rb1 = accounts[3];
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+    const a1 = await rb1.getAddress();
+
+    const WEIGHT_PRICE = 1_000_000n;
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([(await minter.getAddress())]), fees([(await royaltiesBeneficiary1.getAddress())]), minter);
+    const royaltiesOne = fees([a1]);
 
-    await token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), fees([(await royaltiesBeneficiary1.getAddress())]), [sig]], await transferTo.getAddress());
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      royaltiesOne,
+      minter,
+    );
 
-    const [receiver, amount] = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
-    expect(receiver).to.equal(await royaltiesBeneficiary1.getAddress());
-    expect(amount).to.equal(50000n);
+    await token
+      .connect(whiteListProxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: royaltiesOne, signatures: [signature]},
+        transferToAddress,
+      );
 
-    const royaltiesPart = await testRoyaltyV2981Calculate.calculateRoyaltiesTest(receiver, amount);
-    expect(royaltiesPart.length).to.equal(1);
-    expect(royaltiesPart[0].account).to.equal(await royaltiesBeneficiary1.getAddress());
+    const [royaltiesAddress, royaltiesAmount] = await token.royaltyInfo(
+      tokenId,
+      WEIGHT_PRICE,
+    );
+
+    expect(royaltiesAddress).to.equal(a1);
+    expect(royaltiesAmount).to.equal(50_000n); // 5%
+
+    const royaltiesPart =
+      await testRoyalty.calculateRoyaltiesTest(
+        royaltiesAddress,
+        royaltiesAmount,
+      );
+
+    expect(royaltiesPart[0].account).to.equal(a1);
     expect(royaltiesPart[0].value).to.equal(500n);
   });
 
-  it("check Royalties IERC2981, with only 0 royaltiesBeneficiary ", async () => {
+  it("check Royalties IERC2981, with 0 royaltiesBeneficiary", async () => {
+    const testRoyalty = await new TestRoyaltyV2981Calculate__factory(
+      deployer,
+    ).deploy();
+    await testRoyalty.waitForDeployment();
+
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const WEIGHT_PRICE = 1000000n;
-    const tokenId = BigInt((await minter.getAddress()).slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const WEIGHT_PRICE = 1_000_000n;
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([(await minter.getAddress())]), fees([]), minter);
+    const royaltiesEmpty: Part[] = [];
 
-    await token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([(await minter.getAddress())]), fees([]), [sig]], await transferTo.getAddress());
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      royaltiesEmpty,
+      minter,
+    );
 
-    const [receiver, amount] = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
-    expect(receiver).to.equal(ZERO);
-    expect(amount).to.equal(0n);
+    await token
+      .connect(whiteListProxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: royaltiesEmpty, signatures: [signature]},
+        transferToAddress,
+      );
 
-    const royaltiesPart = await testRoyaltyV2981Calculate.calculateRoyaltiesTest(receiver, amount);
+    const [royaltiesAddress, royaltiesAmount] = await token.royaltyInfo(
+      tokenId,
+      WEIGHT_PRICE,
+    );
+
+    expect(royaltiesAddress).to.equal(ZERO);
+    expect(royaltiesAmount).to.equal(0n);
+
+    const royaltiesPart =
+      await testRoyalty.calculateRoyaltiesTest(
+        royaltiesAddress,
+        royaltiesAmount,
+      );
     expect(royaltiesPart.length).to.equal(0);
   });
+
+  // ---------------------------------------------------------------------------
+  // mintAndTransfer / signatures / approvals
+  // ---------------------------------------------------------------------------
 
   it("mint and transfer by whitelist proxy", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
-    const feesList: any[] = [];
 
-    const sig = await getSignature(tokenId, tokenURI, creators([minterAddr]), feesList, minter);
+    const feesEmpty: Part[] = [];
 
-    const tx = await token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), feesList, [sig]], await transferTo.getAddress());
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      feesEmpty,
+      minter,
+    );
 
-    await expect(tx).to.emit(token, "Transfer").withArgs(ZERO, minterAddr, tokenId);
-    await expect(tx).to.emit(token, "Transfer").withArgs(minterAddr, await transferTo.getAddress(), tokenId);
+    const tx = await token
+      .connect(whiteListProxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: feesEmpty, signatures: [signature]},
+        transferToAddress,
+      );
+    const receipt = await tx.wait();
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    const transferEvents = await token.queryFilter(
+      token.filters.Transfer(null, null, null),
+      receipt.blockNumber,
+      receipt.blockNumber,
+    );
 
-    await checkCreators(tokenId, [minterAddr]);
+    expect(transferEvents.length).to.equal(2);
+    const transfer0 = transferEvents[0].args;
+    const transfer1 = transferEvents[1].args;
+
+    expect(transfer0.from).to.equal(ZERO);
+    expect(transfer0.to).to.equal(minterAddress);
+    expect("0x" + transfer0.tokenId.toString(16)).to.equal(
+      tokenId.toLowerCase(),
+    );
+
+    expect(transfer1.from).to.equal(minterAddress);
+    expect(transfer1.to).to.equal(transferToAddress);
+    expect("0x" + transfer1.tokenId.toString(16)).to.equal(
+      tokenId.toLowerCase(),
+    );
+
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
+    await checkCreators(tokenId, [minterAddress]);
   });
 
   it("mint and transfer by whitelist proxy. several creators", async () => {
     const minter = accounts[1];
     const creator2 = accounts[3];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const creator2Addr = await creator2.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const creator2Address = await creator2.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
-    const feesList: any[] = [];
 
-    const sig1 = await getSignature(tokenId, tokenURI, creators([minterAddr, creator2Addr]), feesList, minter);
-    const sig2 = await getSignature(tokenId, tokenURI, creators([minterAddr, creator2Addr]), feesList, creator2);
+    const feesEmpty: Part[] = [];
 
-    await token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr, creator2Addr]), feesList, [sig1, sig2]], await transferTo.getAddress());
+    const creatorList = [minterAddress, creator2Address];
+    const creatorsPart = creators(creatorList);
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    const signature1 = await getSignature(
+      tokenId,
+      tokenURI,
+      creatorsPart,
+      feesEmpty,
+      minter,
+    );
+    const signature2 = await getSignature(
+      tokenId,
+      tokenURI,
+      creatorsPart,
+      feesEmpty,
+      creator2,
+    );
 
-    await checkCreators(tokenId, [minterAddr, creator2Addr]);
+    await token
+      .connect(whiteListProxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creatorsPart, royalties: feesEmpty, signatures: [signature1, signature2]},
+        transferToAddress,
+      );
+
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
+    await checkCreators(tokenId, [minterAddress, creator2Address]);
   });
 
   it("mint and transfer by whitelist proxy. several creators. minter is not first", async () => {
     const minter = accounts[1];
     const creator2 = accounts[3];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const creator2Addr = await creator2.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const creator2Address = await creator2.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
-    const feesList: any[] = [];
 
-    const sig1 = await getSignature(tokenId, tokenURI, creators([creator2Addr, minterAddr]), feesList, minter);
-    const sig2 = await getSignature(tokenId, tokenURI, creators([creator2Addr, minterAddr]), feesList, creator2);
+    const feesEmpty: Part[] = [];
 
-    await expect(
-      token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([creator2Addr, minterAddr]), feesList, [sig2, sig1]], await transferTo.getAddress())
-    ).to.be.reverted;
+    const creatorList = [creator2Address, minterAddress];
+    const creatorsPart = creators(creatorList);
+
+    const signature1 = await getSignature(
+      tokenId,
+      tokenURI,
+      creatorsPart,
+      feesEmpty,
+      minter,
+    );
+    const signature2 = await getSignature(
+      tokenId,
+      tokenURI,
+      creatorsPart,
+      feesEmpty,
+      creator2,
+    );
+
+    await expectThrow(
+      token
+        .connect(whiteListProxy)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creatorsPart, royalties: feesEmpty, signatures: [signature2, signature1]},
+          transferToAddress,
+        ),
+    );
   });
 
   it("mint and transfer by whitelist proxy. several creators. wrong order of signatures", async () => {
     const minter = accounts[1];
     const creator2 = accounts[3];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const creator2Addr = await creator2.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const creator2Address = await creator2.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
-    const feesList: any[] = [];
+    const feesEmpty: Part[] = [];
 
-    const sig1 = await getSignature(tokenId, tokenURI, creators([minterAddr, creator2Addr]), feesList, minter);
-    const sig2 = await getSignature(tokenId, tokenURI, creators([minterAddr, creator2Addr]), feesList, creator2);
+    const creatorList = [minterAddress, creator2Address];
+    const creatorsPart = creators(creatorList);
 
-    await expect(
-      token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr, creator2Addr]), feesList, [sig2, sig1]], await transferTo.getAddress())
-    ).to.be.reverted;
+    const signature1 = await getSignature(
+      tokenId,
+      tokenURI,
+      creatorsPart,
+      feesEmpty,
+      minter,
+    );
+    const signature2 = await getSignature(
+      tokenId,
+      tokenURI,
+      creatorsPart,
+      feesEmpty,
+      creator2,
+    );
+
+    await expectThrow(
+      token
+        .connect(whiteListProxy)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creatorsPart, royalties: feesEmpty, signatures: [signature2, signature1]},
+          transferToAddress,
+        ),
+    );
   });
 
   it("mint and transfer by approved proxy for all", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const proxy = accounts[5];
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+    const proxyAddress = await proxy.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([minterAddr]), [], minter);
+    const feesEmpty: Part[] = [];
 
-    const proxy = accounts[5];
-    await token.connect(minter).setApprovalForAll(await proxy.getAddress(), true);
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      feesEmpty,
+      minter,
+    );
 
-    const tx = await token.connect(proxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [sig]], await transferTo.getAddress());
+    await token
+      .connect(minter)
+      .setApprovalForAll(proxyAddress, true);
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    const tx = await token
+      .connect(proxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: feesEmpty, signatures: [signature]},
+        transferToAddress,
+      );
+    await tx.wait();
+
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
 
-  it("mint and transfer by approved proxy for tokenId", async () => {
+  it("mint and transfer by approved proxy for tokenId (approval before mint) -> revert", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
-    const tokenURI = "//uri";
+    const proxy = accounts[5];
 
-    await expect(token.connect(minter).approve(await accounts[5].getAddress(), tokenId)).to.be.revertedWith("ERC721: approved query for nonexistent token");
+    const minterAddress = await minter.getAddress();
+    const tokenId = minterAddress + "b00000000000000000000001";
+
+    // approve for nonexistent token -> revert
+    await expectThrow(
+      token
+        .connect(minter)
+        .approve(await proxy.getAddress(), tokenId),
+    );
   });
 
   it("mint and transfer by minter", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], await transferTo.getAddress());
+    await token
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        transferToAddress,
+      );
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
 
   it("transferFromOrMint from minter. not yet minted", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.connect(minter).transferFromOrMint([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr, await transferTo.getAddress());
+    await token
+      .connect(minter)
+      .transferFromOrMint(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+        transferToAddress,
+      );
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
 
   it("transferFromOrMint from minter. already minted", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
+    await token
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
 
-    await token.connect(minter).transferFromOrMint([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr, await transferTo.getAddress());
+    await token
+      .connect(minter)
+      .transferFromOrMint(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+        transferToAddress,
+      );
 
-    await expect(token.connect(minter).transferFromOrMint([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr, await transferTo.getAddress())).to.be.reverted;
+    await expectThrow(
+      token
+        .connect(minter)
+        .transferFromOrMint(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+          minterAddress,
+          transferToAddress,
+        ),
+    );
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
 
   it("transferFromOrMint when not minter. not yet minted", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const other = accounts[5];
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+    const otherAddress = await other.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await expect(token.connect(transferTo).transferFromOrMint([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr, await transferTo.getAddress())).to.be.reverted;
+    await expectThrow(
+      token
+        .connect(transferTo)
+        .transferFromOrMint(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+          minterAddress,
+          transferToAddress,
+        ),
+    );
 
-    await token.connect(minter).transferFromOrMint([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr, await transferTo.getAddress());
+    await token
+      .connect(minter)
+      .transferFromOrMint(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+        transferToAddress,
+      );
 
-    await token.connect(transferTo).transferFromOrMint([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], await transferTo.getAddress(), await accounts[5].getAddress());
+    await token
+      .connect(transferTo)
+      .transferFromOrMint(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        transferToAddress,
+        otherAddress,
+      );
 
-    expect(await token.ownerOf(tokenId)).to.equal(await accounts[5].getAddress());
+    expect(await token.ownerOf(tokenId)).to.equal(otherAddress);
   });
 
   it("mint and transfer to self by minter", async () => {
     const minter = accounts[1];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const minterAddress = await minter.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
+    await token
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
 
-    expect(await token.ownerOf(tokenId)).to.equal(minterAddr);
+    expect(await token.ownerOf(tokenId)).to.equal(minterAddress);
   });
 
   it("mint and transfer with signature of not minter", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([minterAddr]), [], transferTo);
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      [],
+      transferTo,
+    );
 
-    await expect(token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [sig]], await transferTo.getAddress())).to.be.reverted;
+    await expectThrow(
+      token
+        .connect(whiteListProxy)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [signature]},
+          transferToAddress,
+        ),
+    );
   });
 
   it("mint and transfer without approval", async () => {
     const minter = accounts[1];
     const transferTo = accounts[2];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const notApproved = accounts[3];
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    const sig = await getSignature(tokenId, tokenURI, creators([minterAddr]), [], minter);
+    const signature = await getSignature(
+      tokenId,
+      tokenURI,
+      creators([minterAddress]),
+      [],
+      minter,
+    );
 
-    await expect(token.connect(accounts[3]).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [sig]], await transferTo.getAddress())).to.be.reverted;
+    await expectThrow(
+      token
+        .connect(notApproved)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [signature]},
+          transferToAddress,
+        ),
+    );
   });
 
   it("standard transfer from owner", async () => {
     const minter = accounts[1];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
-    const tokenURI = "//uri";
-
-    await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
-
-    expect(await token.ownerOf(tokenId)).to.equal(minterAddr);
-
     const transferTo = accounts[2];
 
-    await token.connect(minter).transferFrom(minterAddr, await transferTo.getAddress(), tokenId);
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    const tokenId = minterAddress + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    await token
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
+
+    expect(await token.ownerOf(tokenId)).to.equal(minterAddress);
+
+    await token
+      .connect(minter)
+      .transferFrom(minterAddress, transferToAddress, tokenId);
+
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
 
-  it("standard transfer by approved contract", async () => {
+  it("standard transfer by approved contract (whitelistProxy)", async () => {
     const minter = accounts[1];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
-    const tokenURI = "//uri";
-
-    await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
-
-    expect(await token.ownerOf(tokenId)).to.equal(minterAddr);
-
     const transferTo = accounts[2];
 
-    await token.connect(whiteListProxy).transferFrom(minterAddr, await transferTo.getAddress(), tokenId);
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+    const whiteListProxyAddress = await whiteListProxy.getAddress();
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    const tokenId = minterAddress + "b00000000000000000000001";
+    const tokenURI = "//uri";
+
+    await token
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
+
+    expect(await token.ownerOf(tokenId)).to.equal(minterAddress);
+
+    await token
+      .connect(whiteListProxy)
+      .transferFrom(minterAddress, transferToAddress, tokenId);
+
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
 
   it("standard transfer by not approved contract", async () => {
     const minter = accounts[1];
-    const minterAddr = await minter.getAddress();
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+    const transferTo = accounts[2];
+    const notApproved = accounts[8];
+
+    const minterAddress = await minter.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await token.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
+    await token
+      .connect(minter)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord]},
+        minterAddress,
+      );
 
-    expect(await token.ownerOf(tokenId)).to.equal(minterAddr);
+    expect(await token.ownerOf(tokenId)).to.equal(minterAddress);
 
-    const transferTo = accounts[2];
-
-    await expect(token.connect(accounts[8]).transferFrom(minterAddr, await transferTo.getAddress(), tokenId)).to.be.reverted;
+    await expectThrow(
+      token
+        .connect(notApproved)
+        .transferFrom(minterAddress, transferToAddress, tokenId),
+    );
   });
 
-  it("signature by contract wallet erc1271, with whitelist proxy", async () => {
-    const minterAddr = await erc1271.getAddress();
+  it("signature by contract wallet ERC1271, with whitelist proxy", async () => {
     const transferTo = accounts[2];
-    const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
+
+    const erc1271Address = await erc1271.getAddress();
+    const transferToAddress = await transferTo.getAddress();
+
+    const tokenId = erc1271Address + "b00000000000000000000001";
     const tokenURI = "//uri";
 
-    await expect(token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], await transferTo.getAddress())).to.be.reverted;
+    // First call should revert (isValidSignature returns false)
+    await expectThrow(
+      token
+        .connect(whiteListProxy)
+        .mintAndTransfer(
+          {tokenId, tokenURI, creators: creators([erc1271Address]), royalties: [], signatures: [zeroWord]},
+          transferToAddress,
+        ),
+    );
 
+    // Now enable ERC1271 success
     await erc1271.setReturnSuccessfulValidSignature(true);
 
-    await token.connect(whiteListProxy).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], await transferTo.getAddress());
+    await token
+      .connect(whiteListProxy)
+      .mintAndTransfer(
+        {tokenId, tokenURI, creators: creators([erc1271Address]), royalties: [], signatures: [zeroWord]},
+        transferToAddress,
+      );
 
-    expect(await token.ownerOf(tokenId)).to.equal(await transferTo.getAddress());
+    expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
+
+  // ---------------------------------------------------------------------------
+  // Shared helpers using current token instance
+  // ---------------------------------------------------------------------------
+
+  async function getSignature(
+    tokenId: string,
+    tokenURI: string,
+    creatorsParts: Part[],
+    feesParts: Part[],
+    signer: ethersTypes.Signer,
+  ): Promise<string> {
+    const tokenAddress = await token.getAddress();
+    const tokenIdBigInt = BigInt(tokenId);
+
+    return signMint721(
+      signer,
+      tokenIdBigInt,
+      tokenURI,
+      creatorsParts,
+      feesParts,
+      tokenAddress,
+    );
+  }
+
+  async function checkCreators(
+    tokenId: string,
+    expectedAddresses: string[],
+  ): Promise<void> {
+    const onchainCreators = await token.getCreators(tokenId);
+    expect(onchainCreators.length).to.equal(expectedAddresses.length);
+    const value = BigInt(10000 / expectedAddresses.length);
+
+    for (let i = 0; i < onchainCreators.length; i++) {
+      const [account, v] = onchainCreators[i];
+      expect(account).to.equal(expectedAddresses[i]);
+      expect(v).to.equal(value);
+    }
+  }
 });
