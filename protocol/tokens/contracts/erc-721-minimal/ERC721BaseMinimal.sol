@@ -5,6 +5,7 @@ import "./ERC721BurnableUpgradeableMinimal.sol";
 import "./ERC721DefaultApprovalMinimal.sol";
 import "./ERC721LazyMinimal.sol";
 import "../HasContractURI.sol";
+import "./ERC721UpgradeableMinimal.sol";
 abstract contract ERC721BaseMinimal is
     OwnableUpgradeable,
     ERC721DefaultApprovalMinimal,
@@ -27,7 +28,7 @@ abstract contract ERC721BaseMinimal is
     }
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721LazyMinimal, HasContractURI) returns (bool) {
+    ) public view virtual override(ERC721LazyMinimal, HasContractURI, ERC721UpgradeableMinimal) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
     function tokenURI(

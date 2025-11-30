@@ -4,6 +4,8 @@ import "./ERC1155Upgradeable.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-1155/IERC1155LazyMint.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 import "./Mint1155Validator.sol";
 import "./ERC1155BaseURI.sol";
 abstract contract ERC1155Lazy is
@@ -22,7 +24,7 @@ abstract contract ERC1155Lazy is
     function __ERC1155Lazy_init_unchained() internal {}
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC1155Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
+    ) public view virtual override(ERC1155Upgradeable, RoyaltiesV2Upgradeable, IERC165) returns (bool) {
         return
             interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
             interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||

@@ -5,6 +5,7 @@ import "./ERC1155BurnableUpgradeable.sol";
 import "./ERC1155DefaultApproval.sol";
 import "./ERC1155Lazy.sol";
 import "../HasContractURI.sol";
+import "./ERC1155Upgradeable.sol";
 abstract contract ERC1155Base is
     OwnableUpgradeable,
     ERC1155DefaultApproval,
@@ -25,7 +26,7 @@ abstract contract ERC1155Base is
     }
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC1155Lazy, HasContractURI) returns (bool) {
+    ) public view virtual override(ERC1155Lazy, HasContractURI, ERC1155Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
     function burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) public virtual override {

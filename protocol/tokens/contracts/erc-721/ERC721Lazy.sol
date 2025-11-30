@@ -4,7 +4,7 @@ import "./ERC721Upgradeable.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "../Mint721Validator.sol";
 abstract contract ERC721Lazy is
     IERC721LazyMint,
@@ -24,7 +24,7 @@ abstract contract ERC721Lazy is
     function __ERC721Lazy_init_unchained() internal initializer {}
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
+    ) public view virtual override(ERC721Upgradeable, RoyaltiesV2Upgradeable, IERC165) returns (bool) {
         return
             interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
             interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
