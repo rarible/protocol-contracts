@@ -328,11 +328,11 @@ describe("ERC721Rarible", function () {
     await factory.waitForDeployment();
 
     const baseURI = "https://ipfs.rarible.com";
-    const tx = await factory.createToken("name", "RARI", baseURI, "https://ipfs.rarible.com", 1n, { from: await tokenOwner.getAddress() });
+    const tx = await factory["createToken(string,string,string,string,uint256)"]("name", "RARI", baseURI, "https://ipfs.rarible.com", 1n, { from: await tokenOwner.getAddress() });
 
     let proxyAddress: string | undefined;
     const receipt = await tx.wait();
-    for (const log of receipt.logs) {
+    for (const log of receipt?.logs ?? []) {
       if (log.fragment?.name === "Create721RaribleProxy") {
         proxyAddress = log.args.proxy;
       }
@@ -346,7 +346,7 @@ describe("ERC721Rarible", function () {
     const tokenId = BigInt(minterAddr.slice(2).padStart(40, "0") + "b00000000000000000000001", 16);
     const tokenURI = baseURI + "/12345/456";
 
-    await tokenByProxy.connect(minter).mintAndTransfer([tokenId, tokenURI, creators([minterAddr]), [], [zeroWord]], minterAddr);
+    await tokenByProxy.connect(minter).mintAndTransfer([{ data: { tokenId, tokenURI, creators: creators([minterAddr]), fees: [], signatures: [zeroWord] } }, minterAddr]);
 
     expect(await tokenByProxy.tokenURI(tokenId)).to.equal(tokenURI);
 
