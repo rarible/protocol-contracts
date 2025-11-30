@@ -3,6 +3,7 @@
 pragma solidity ^0.8.30;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "./ERC721BurnableUpgradeable.sol";
 import "./ERC721DefaultApproval.sol";
 import "./ERC721Lazy.sol";
@@ -33,7 +34,7 @@ abstract contract ERC721Base is
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC165Upgradeable, ERC721Lazy) returns (bool) {
+    ) public view virtual override(ERC165Upgradeable, ERC721Lazy, ERC721Upgradeable, HasContractURI) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

@@ -33,7 +33,7 @@ abstract contract ERC721BaseMinimal is
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC165Upgradeable, ERC721LazyMinimal) returns (bool) {
+    ) public view virtual override(ERC165Upgradeable, ERC721LazyMinimal, ERC165Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

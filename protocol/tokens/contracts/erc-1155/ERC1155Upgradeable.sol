@@ -63,6 +63,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         return
             interfaceId == _INTERFACE_ID_ERC1155 ||
             interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI ||
+            interfaceId == type(IERC165).interfaceId ||
             super.supportsInterface(interfaceId);
     }
     /**

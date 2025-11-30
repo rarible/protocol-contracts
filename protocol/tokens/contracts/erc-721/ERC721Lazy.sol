@@ -4,6 +4,7 @@ import "./ERC721Upgradeable.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties-upgradeable/contracts/RoyaltiesV2Upgradeable.sol";
 import "@rarible/lazy-mint/contracts/erc-721/IERC721LazyMint.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "../Mint721Validator.sol";
 abstract contract ERC721Lazy is
     IERC721LazyMint,
@@ -23,7 +24,7 @@ abstract contract ERC721Lazy is
     function __ERC721Lazy_init_unchained() internal initializer {}
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(IERC165, ERC165Upgradeable) returns (bool) {
+    ) public view virtual override(IERC165, ERC165Upgradeable, ERC721Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
         return
             interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
             interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
@@ -31,7 +32,7 @@ abstract contract ERC721Lazy is
             interfaceId == _INTERFACE_ID_ERC165 ||
             interfaceId == _INTERFACE_ID_ERC721 ||
             interfaceId == _INTERFACE_ID_ERC721_METADATA ||
-            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE;
+            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE || super.supportsInterface(interfaceId);
     }
     function transferFromOrMint(LibERC721LazyMint.Mint721Data memory data, address from, address to) external override {
         if (_exists(data.tokenId)) {
