@@ -22,8 +22,8 @@ import {
   type TestERC1155,
   TestERC1155__factory,
 } from "../types/ethers-contracts";
-import { Asset } from "../src/order";
-import { ETH, ERC20, ERC721, ERC1155, enc } from "../src/assets";
+import { Asset } from "@rarible/common-sdk/src/order";
+import { ETH, ERC20, ERC721, ERC1155, enc } from "@rarible/common-sdk/src/assets";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 

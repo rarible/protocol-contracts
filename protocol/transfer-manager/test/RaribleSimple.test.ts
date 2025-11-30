@@ -7,8 +7,8 @@ const { ethers } = connection;
 
 import type * as ethersTypes from "ethers";
 import { type RaribleSimpleTest, RaribleSimpleTest__factory } from "../types/ethers-contracts";
-import { AssetType } from "../src/order";
-import { id } from "../src/assets";
+import { AssetType } from "@rarible/common-sdk/src/order";
+import { id } from "@rarible/common-sdk/src/assets";
 
 describe("RaribleSimpleTest", function () {
   let testing: RaribleSimpleTest;
