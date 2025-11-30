@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import {ContractChecker} from "../lib/ContractChecker.sol";
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
@@ -14,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
  */
 contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC721, IERC721Metadata {
     using Address for address;
+    using ContractChecker for address;
     using Strings for uint256;
     // Token name
     string private _name;
@@ -323,7 +325,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        if (_isContract(to)) {
+        if (to.isContract()) {
             try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (bytes4 retval) {
                 return retval == IERC721Receiver.onERC721Received.selector;
             } catch (bytes memory reason) {
@@ -340,9 +342,6 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         }
     }
 
-    function _isContract(address account) private view returns (bool) {
-        return account.code.length > 0;
-    }
     /**
      * @dev Hook that is called before any token transfer. This includes minting
      * and burning.

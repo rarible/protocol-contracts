@@ -13,7 +13,7 @@ import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-
+import {ContractChecker} from "@rarible/lib-utils/contracts/ContractChecker.sol";
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
  * @dev see https://eips.ethereum.org/EIPS/eip-721
@@ -27,6 +27,7 @@ contract ERC721Upgradeable is
     IERC721Enumerable
 {
     using Address for address;
+    using ContractChecker for address;
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
     using Strings for uint256;
@@ -473,7 +474,7 @@ contract ERC721Upgradeable is
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        if (!_isContract(to)) {
+        if (!to.isContract()) {
             return true;
         }
         bytes memory returndata = to.functionCall(
@@ -481,10 +482,6 @@ contract ERC721Upgradeable is
         );
         bytes4 retval = abi.decode(returndata, (bytes4));
         return (retval == _ERC721_RECEIVED);
-    }
-
-    function _isContract(address account) private view returns (bool) {
-        return account.code.length > 0;
     }
 
     function _approve(address to, uint256 tokenId) private {

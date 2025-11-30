@@ -13,7 +13,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Address library now from non-upgradeable package
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-
+import {ContractChecker} from "../lib/ContractChecker.sol";
 /**
  *
  * @dev Implementation of the basic standard multi-token.
@@ -24,6 +24,7 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
  */
 contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155, IERC1155MetadataURI {
     using Address for address;
+    using ContractChecker for address;
     // Mapping from token ID to account balances
     mapping(uint256 => mapping(address => uint256)) internal _balances;
     // Mapping from account to operator approvals
@@ -303,7 +304,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256 amount,
         bytes memory data
     ) internal {
-        if (_isContract(to)) {
+        if (to.isContract()) {
             try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
                 if (response != IERC1155Receiver(to).onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
@@ -323,7 +324,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256[] memory amounts,
         bytes memory data
     ) private {
-        if (_isContract(to)) {
+        if (to.isContract()) {
             try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
                 bytes4 response
             ) {
@@ -341,10 +342,6 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         uint256[] memory array = new uint256[](1);
         array[0] = element;
         return array;
-    }
-
-    function _isContract(address account) private view returns (bool) {
-        return account.code.length > 0;
     }
 
     uint256[47] private __gap;
