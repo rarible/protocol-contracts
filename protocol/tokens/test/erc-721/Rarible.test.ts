@@ -286,10 +286,10 @@ describe("ERC721Rarible", function () {
     const receipt = await tx.wait();
 
     let proxyAddress: string | undefined;
-    for (const log of receipt.logs) {
+    for (const log of receipt?.logs ?? []) {
       try {
         const parsed = factory.interface.parseLog(log);
-        if (parsed.name === "Create721RaribleProxy") {
+        if (parsed?.name === "Create721RaribleProxy") {
           proxyAddress = parsed.args.proxy as string;
           break;
         }
@@ -318,9 +318,9 @@ describe("ERC721Rarible", function () {
     const mintReceipt = await txMint.wait();
 
     const transferEvents = await tokenByProxy.queryFilter(
-      tokenByProxy.filters.Transfer(null, null, null),
-      mintReceipt.blockNumber,
-      mintReceipt.blockNumber,
+      tokenByProxy.filters.Transfer(undefined, undefined, undefined),
+      mintReceipt?.blockNumber,
+      mintReceipt?.blockNumber,
     );
 
     expect(transferEvents.length).to.equal(1);
@@ -359,10 +359,10 @@ describe("ERC721Rarible", function () {
     const receipt = await tx.wait();
 
     let proxyAddress: string | undefined;
-    for (const log of receipt.logs) {
+    for (const log of receipt?.logs ?? []) {
       try {
         const parsed = factory.interface.parseLog(log);
-        if (parsed.name === "Create721RaribleProxy") {
+        if (parsed?.name === "Create721RaribleProxy") {
           proxyAddress = parsed.args.proxy as string;
           break;
         }
@@ -479,10 +479,10 @@ describe("ERC721Rarible", function () {
 
     // Check BaseUriChanged event
     let newBaseUriFromEvent: string | undefined;
-    for (const log of receipt.logs) {
+    for (const log of receipt?.logs ?? []) {
       try {
         const parsed = token.interface.parseLog(log);
-        if (parsed.name === "BaseUriChanged") {
+        if (parsed?.name === "BaseUriChanged") {
           newBaseUriFromEvent = parsed.args.newBaseURI as string;
           break;
         }
@@ -730,9 +730,9 @@ describe("ERC721Rarible", function () {
     const receipt = await tx.wait();
 
     const transferEvents = await token.queryFilter(
-      token.filters.Transfer(null, null, null),
-      receipt.blockNumber,
-      receipt.blockNumber,
+      token.filters.Transfer(undefined, undefined, undefined),
+      receipt?.blockNumber,
+      receipt?.blockNumber,
     );
 
     expect(transferEvents.length).to.equal(2);
