@@ -23,6 +23,7 @@ import {
 } from "../../types/ethers-contracts";
 
 import { sign as signMint721 } from "@rarible/common-sdk/src/mint721";
+import { deployTransparentProxy } from "@rarible/common-sdk/src/deploy";
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -102,25 +103,13 @@ describe("ERC721Rarible", function () {
   });
 
   beforeEach(async () => {
-    token = await new ERC721Rarible__factory(deployer).deploy();
-    await token.waitForDeployment();
-
-    const whiteListProxyAddress = await whiteListProxy.getAddress();
-    const proxyLazyAddress = await proxyLazy.getAddress();
-    const tokenOwnerAddress = await tokenOwner.getAddress();
-
-    // New initializer: includes initialOwner
-    await token
-      .connect(deployer)
-      .__ERC721Rarible_init(
-        name,
-        "RARI",
-        baseURI,
-        baseURI,
-        whiteListProxyAddress,
-        proxyLazyAddress,
-        tokenOwnerAddress,
-      );
+    const { instance } = await deployTransparentProxy<ERC721Rarible>(ethers, {
+      contractName: "ERC721Rarible",
+      initFunction: "__ERC721Rarible_init",
+      initArgs: [name, "RARI", baseURI, baseURI, await whiteListProxy.getAddress(), await proxyLazy.getAddress(), await tokenOwner.getAddress()],
+      proxyOwner: await deployer.getAddress(),
+    });
+    token = instance;
   });
 
   // ---------------------------------------------------------------------------
