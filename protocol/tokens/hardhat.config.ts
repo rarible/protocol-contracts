@@ -10,7 +10,10 @@ export default defineConfig({
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol", 
       "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
       "@rarible/lazy-mint/contracts/test/ERC721LazyMintTest.sol",
-      "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTest.sol"],
+      "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTest.sol",
+      "@rarible/lazy-mint/contracts/test/ERC721LazyMintTransferProxyTest.sol",
+      "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTransferProxyTest.sol",
+      "@rarible/lib-signature/test/contracts/TestERC1271.sol"],
     profiles: {
       default: {
         version: "0.8.30",
