@@ -12,7 +12,7 @@ contract TestERC20 is ERC20Upgradeable {
         _mint(to, amount);
     }
 
-    function mint( uint256 amount) external {
+    function mint(uint256 amount) external {
         _mint(_msgSender(), amount);
     }
 

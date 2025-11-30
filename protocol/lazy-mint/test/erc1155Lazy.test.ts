@@ -12,8 +12,8 @@ import {
   type ERC1155LazyMintTransferProxyTest,
   ERC1155LazyMintTransferProxyTest__factory,
 } from "../types/ethers-contracts/index.js";
-import { deployTransparentProxy } from "@rarible/test/src/index.js";
-import { sign } from "./helpers/mint1155";
+import { deployTransparentProxy } from "@rarible/common-sdk/src/deploy";
+import { sign } from "@rarible/common-sdk/src/mint1155";
 
 describe("ERC1155 Lazy Mint", function () {
   let erc1155Test: ERC1155Test;

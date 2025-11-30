@@ -8,7 +8,7 @@ const { ethers } = connection;
 
 import type * as ethersTypes from "ethers";
 import type { AssetMatcherCollection } from "../types/ethers-contracts";
-import { AssetType } from "../src/order";
+import { AssetType } from "@rarible/common-sdk/src/order";
 import {
   enc,
   ETH,
@@ -18,7 +18,7 @@ import {
   ERC1155,
   ERC1155_LAZY,
   COLLECTION,
-} from "../src/assets";
+} from "@rarible/common-sdk/src/assets";
 
 describe("AssetMatcherCustom", function () {
   let assetMatcherCollection: AssetMatcherCollection;
@@ -46,10 +46,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC1155, encodedNFT),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC1155, encodedNFT));
 
       expect(result.assetClass).to.equal(ERC1155);
       expect(result.data).to.equal(encodedNFT);
@@ -64,10 +61,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC1155_LAZY, encodedNFT),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC1155_LAZY, encodedNFT));
 
       expect(result.assetClass).to.equal(ERC1155_LAZY);
       expect(result.data).to.equal(encodedNFT);
@@ -82,10 +76,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC721, encodedNFT),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC721, encodedNFT));
 
       expect(result.assetClass).to.equal(ERC721);
       expect(result.data).to.equal(encodedNFT);
@@ -100,10 +91,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC721_LAZY, encodedNFT),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC721_LAZY, encodedNFT));
 
       expect(result.assetClass).to.equal(ERC721_LAZY);
       expect(result.data).to.equal(encodedNFT);
@@ -119,10 +107,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC1155, encodedNFT),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC1155, encodedNFT));
 
       expect(result.assetClass).to.equal(ZERO_ASSET_CLASS);
     });
@@ -137,10 +122,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC721, encodedNFT),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC721, encodedNFT));
 
       expect(result.assetClass).to.equal(ZERO_ASSET_CLASS);
     });
@@ -154,10 +136,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ERC20, encodedERC20),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ERC20, encodedERC20));
 
       expect(result.assetClass).to.equal(ZERO_ASSET_CLASS);
     });
@@ -171,10 +150,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(COLLECTION, encodedCollection),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(COLLECTION, encodedCollection));
 
       expect(result.assetClass).to.equal(ZERO_ASSET_CLASS);
     });
@@ -188,10 +164,7 @@ describe("AssetMatcherCustom", function () {
 
       const result = await assetMatcherCollection
         .connect(operator)
-        .matchAssets(
-          AssetType(COLLECTION, encoded),
-          AssetType(ETH, encodedETH),
-        );
+        .matchAssets(AssetType(COLLECTION, encoded), AssetType(ETH, encodedETH));
 
       expect(result.assetClass).to.equal(ZERO_ASSET_CLASS);
     });

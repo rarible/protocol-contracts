@@ -12,8 +12,8 @@ import {
   type ERC721LazyMintTransferProxyTest,
   ERC721LazyMintTransferProxyTest__factory,
 } from "../types/ethers-contracts/index.js";
-import { deployTransparentProxy } from "@rarible/test/src/index.js";
-import { sign } from "./helpers/mint721";
+import { deployTransparentProxy } from "@rarible/common-sdk/src/deploy";
+import { sign } from "@rarible/common-sdk/src/mint721";
 
 describe("ERC721 Lazy Mint", function () {
   let erc721Test: ERC721Test;
@@ -60,7 +60,10 @@ describe("ERC721 Lazy Mint", function () {
       proxyOwner: await deployer.getAddress(),
     });
     transferProxy = transferProxyInstance;
-    royalties = [{ account: royaltiesAddr1, value: 1n }, { account: royaltiesAddr2, value: 100n }];
+    royalties = [
+      { account: royaltiesAddr1, value: 1n },
+      { account: royaltiesAddr2, value: 100n },
+    ];
     creators = [{ account: creator, value: 100000n }];
     await transferProxy.addOperator(await deployer.getAddress());
   });
@@ -98,7 +101,6 @@ describe("ERC721 Lazy Mint", function () {
       expect(await lazyMintTest.ownerOf(tokenId)).to.equal(other);
     });
     it("should work with transfer proxy", async function () {
-
       const data = { tokenId, tokenURI, creators: [{ account: creator, value: 100000n }], royalties, signatures: [] };
       const asset = { assetType: { assetClass: "0x73bb5bfe", data: await lazyMintTest.encode(data) }, value: 1n };
       await transferProxy.transfer(asset, creator, recipient);

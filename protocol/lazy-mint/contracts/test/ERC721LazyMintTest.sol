@@ -6,9 +6,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "../../contracts/erc-721/IERC721LazyMint.sol";
 
 contract ERC721LazyMintTest is IERC721LazyMint, ERC721Upgradeable {
-    function __ERC721LazyMintTest_init() external initializer {
-        
-    }
+    function __ERC721LazyMintTest_init() external initializer {}
     function mintAndTransfer(LibERC721LazyMint.Mint721Data memory data, address to) external override {
         _mint(to, data.tokenId);
     }
