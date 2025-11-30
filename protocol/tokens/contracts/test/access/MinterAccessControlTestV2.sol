@@ -7,8 +7,8 @@ import "../../../contracts/access/MinterAccessControl.sol";
 contract MinterAccessControlTestV2 is MinterAccessControl {
     bytes4 constant public V2 = bytes4(keccak256("V2"));
 
-    function initialize() external initializer {
-        __Ownable_init_unchained();
+    function initialize(address initialOwner) external initializer {
+        __Ownable_init_unchained(initialOwner);
         __MinterAccessControl_init_unchained();
     }
 

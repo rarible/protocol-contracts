@@ -13,7 +13,7 @@ export default defineConfig({
       "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTest.sol",
       "@rarible/lazy-mint/contracts/test/ERC721LazyMintTransferProxyTest.sol",
       "@rarible/lazy-mint/contracts/test/ERC1155LazyMintTransferProxyTest.sol",
-      "@rarible/lib-signature/test/contracts/TestERC1271.sol"],
+      "@rarible/lib-signature/contracts/test/TestERC1271.sol"],
     profiles: {
       default: {
         version: "0.8.30",

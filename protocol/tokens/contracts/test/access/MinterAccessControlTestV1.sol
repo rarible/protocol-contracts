@@ -6,8 +6,8 @@ import "../../../contracts/access/MinterAccessControl.sol";
 
 contract MinterAccessControlTestV1 is MinterAccessControl {
 
-    function initialize() external initializer {
-        __Ownable_init_unchained();
+    function initialize(address initialOwner) external initializer {
+        __Ownable_init_unchained(initialOwner);
         __MinterAccessControl_init_unchained();
     }
 
