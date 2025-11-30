@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
-
 import "../erc-1155/ERC1155Rarible.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,7 +15,7 @@ contract ERC1155RaribleFactoryC2 is Ownable {
     address lazyTransferProxy;
     event Create1155RaribleProxy(address proxy);
     event Create1155RaribleUserProxy(address proxy);
-    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy) {
+    constructor(address _beacon, address _transferProxy, address _lazyTransferProxy) Ownable(msg.sender) {
         beacon = _beacon;
         transferProxy = _transferProxy;
         lazyTransferProxy = _lazyTransferProxy;
@@ -33,7 +32,6 @@ contract ERC1155RaribleFactoryC2 is Ownable {
         token.transferOwnership(_msgSender());
         emit Create1155RaribleProxy(beaconProxy);
     }
-
     function createToken(
         string memory _name,
         string memory _symbol,

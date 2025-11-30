@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import {ContractChecker} from "../lib/ContractChecker.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
@@ -66,8 +67,7 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
         _name = name_;
         _symbol = symbol_;
     }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
         return
             interfaceId == _INTERFACE_ID_ERC721 ||
             interfaceId == _INTERFACE_ID_ERC721_METADATA ||
@@ -341,7 +341,6 @@ contract ERC721UpgradeableMinimal is Initializable, ContextUpgradeable, ERC165Up
             return true;
         }
     }
-
     /**
      * @dev Hook that is called before any token transfer. This includes minting
      * and burning.

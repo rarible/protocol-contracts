@@ -22,7 +22,7 @@ abstract contract ERC1155Lazy is
     function __ERC1155Lazy_init_unchained() internal {}
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(IERC165, ERC165Upgradeable, ERC1155Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
+    ) public view virtual override(ERC1155Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
         return
             interfaceId == LibERC1155LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
             interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
@@ -90,7 +90,7 @@ abstract contract ERC1155Lazy is
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) internal virtual override(ERC1155Upgradeable, ERC1155Lazy) {
+    ) internal virtual override(ERC1155Upgradeable) {
         uint newMinted = amount + minted[id];
         require(newMinted <= supply[id], "more than supply");
         minted[id] = newMinted;

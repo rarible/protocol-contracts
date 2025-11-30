@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
-
-// Interfaces now come from non-upgradeable package
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-
 // Upgradeable base contracts stay as-is
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
 // Address library now from non-upgradeable package
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ContractChecker} from "../lib/ContractChecker.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 /**
  *
  * @dev Implementation of the basic standard multi-token.
@@ -58,8 +55,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     function __ERC1155_init_unchained(string memory uri_) internal initializer {
         _setURI(uri_);
     }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
         return
             interfaceId == _INTERFACE_ID_ERC1155 ||
             interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI ||
@@ -103,7 +99,7 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     ) public view virtual override returns (uint256[] memory) {
         require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
         uint256[] memory batchBalances = new uint256[](accounts.length);
-        for (uint256 i = 0; i < accounts.length; ++i) {
+        for (uint i = 0; i < accounts.length; ++i) {
             batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
         return batchBalances;
@@ -344,6 +340,5 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
         array[0] = element;
         return array;
     }
-
     uint256[47] private __gap;
 }

@@ -24,7 +24,7 @@ abstract contract ERC721Lazy is
     function __ERC721Lazy_init_unchained() internal initializer {}
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(IERC165, ERC165Upgradeable, ERC721Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
+    ) public view virtual override(ERC721Upgradeable, RoyaltiesV2Upgradeable) returns (bool) {
         return
             interfaceId == LibERC721LazyMint._INTERFACE_ID_MINT_AND_TRANSFER ||
             interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES ||
