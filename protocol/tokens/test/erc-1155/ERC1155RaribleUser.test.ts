@@ -524,10 +524,13 @@ describe("ERC1155RaribleUser", function () {
       ).to.be.revertedWith("not owner or minter");
 
       // Add minter
-      await token.connect(tokenOwner).addMinter(whiteListProxy);
-      expect(await token.isMinter(whiteListProxy)).to.be.true;
-      await token.connect(tokenOwner).setApprovalForAll(whiteListProxy, true);
+      await token.connect(tokenOwner).addMinter(minterAddress);
+      expect(await token.isMinter(minter)).to.be.true;
 
+      await token.connect(minter).setApprovalForAll(whiteListProxy, true);
+      const isApproved = await token.connect(minter).isApprovedForAll(minterAddress, await whiteListProxy.getAddress());
+      expect(isApproved).to.be.true;
+      
       // Should still fail due to wrong signature when called by whiteListProxy
       await expect(
         token.connect(whiteListProxy).mintAndTransfer(
@@ -535,7 +538,7 @@ describe("ERC1155RaribleUser", function () {
             tokenId,
             tokenURI,
             supply,
-            creators: creators([await whiteListProxy.getAddress()]),
+            creators: creators([minterAddress]),
             royalties: [],
             signatures: [signature],
           },
