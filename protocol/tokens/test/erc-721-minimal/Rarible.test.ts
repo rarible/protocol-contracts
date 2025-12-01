@@ -37,9 +37,6 @@ function royalties(accounts: string[]): Part[] {
 function royaltiesZero(accounts: string[]): Part[] {
     return accounts.map((account) => ({ account, value: 0n }));
 }
-async function expectRevert(p: Promise<any>, message?: string): Promise<void> {
-    await expect(p).to.be.revertedWith(message ?? "");
-}
 // -----------------------------------------------------------------------------
 // Main Test Suite
 // -----------------------------------------------------------------------------
@@ -120,7 +117,7 @@ describe("ERC721RaribleMinimal", function () {
             const tokenId = minterAddr + "b00000000000000000000001";
             const uri = "//uri";
             await token.connect(minter).burn(tokenId);
-            await expectRevert(
+            await expect(
                 token.connect(minter).mintAndTransfer(
                     {
                         tokenId,
@@ -131,7 +128,7 @@ describe("ERC721RaribleMinimal", function () {
                     },
                     minterAddr,
                 ),
-            );
+            ).to.be.revertedWith("token already burned");
         });
         it("other burns → reverts, minter can still mint", async () => {
             const minter = accounts[1];
@@ -139,7 +136,7 @@ describe("ERC721RaribleMinimal", function () {
             const minterAddr = await minter.getAddress();
             const tokenId = minterAddr + "b00000000000000000000001";
             const uri = "//uri";
-            await expectRevert(token.connect(other).burn(tokenId));
+            await expect(token.connect(other).burn(tokenId)).to.be.revertedWith("ERC721Burnable: caller is not owner, not burn");
             await token.connect(minter).mintAndTransfer(
                 {
                     tokenId,
@@ -171,7 +168,7 @@ describe("ERC721RaribleMinimal", function () {
                 minterAddr,
             );
             await token.connect(minter).burn(tokenId);
-            await expectRevert(
+            await expect(
                 token.connect(minter).mintAndTransfer(
                     {
                         tokenId,
@@ -182,7 +179,7 @@ describe("ERC721RaribleMinimal", function () {
                     },
                     await recipient.getAddress(),
                 ),
-            );
+            ).to.be.revertedWith("token already burned");
         });
     });
     describe("Factory + Beacon", () => {
@@ -312,7 +309,7 @@ describe("ERC721RaribleMinimal", function () {
             const minterAddr = await minter.getAddress();
             const tokenId = minterAddr + "b00000000000000000000001";
             const sig = await getSignature(tokenId, "//uri", creators([minterAddr]), royaltiesZero([minterAddr]), minter);
-            await expectRevert(
+            await expect(
                 token.connect(whiteListProxy).mintAndTransfer(
                     {
                         tokenId,
@@ -323,7 +320,7 @@ describe("ERC721RaribleMinimal", function () {
                     },
                     minterAddr,
                 ),
-            );
+            ).to.be.revertedWith("Royalty value should be positive");
         });
     });
     it("mintAndTransfer via whitelist proxy", async () => {
@@ -352,12 +349,12 @@ describe("ERC721RaribleMinimal", function () {
         const to = accounts[2];
         const minterAddr = await minter.getAddress();
         const c2Addr = await creator2.getAddress();
-        const tokenId = minterAddr + "b00000000000000000000001";
-        const sig1 = await getSignature(tokenId, "//uri", creators([minterAddr, c2Addr]), [], minter);
-        const sig2 = await getSignature(tokenId, "//uri", creators([minterAddr, c2Addr]), [], creator2);
+        const tokenId = minterAddr + "b0000000000000000000000";
+        const sig1 = await getSignature(tokenId+ "1", "//uri", creators([minterAddr, c2Addr]), [], minter);
+        const sig2 = await getSignature(tokenId+ "1", "//uri", creators([minterAddr, c2Addr]), [], creator2);
         await token.connect(whiteListProxy).mintAndTransfer(
             {
-                tokenId,
+                tokenId: tokenId + "1",
                 tokenURI: "//uri",
                 creators: creators([minterAddr, c2Addr]),
                 royalties: [],
@@ -366,7 +363,7 @@ describe("ERC721RaribleMinimal", function () {
             await to.getAddress(),
         );
         // wrong order → revert
-        await expectRevert(
+        await expect(
             token.connect(whiteListProxy).mintAndTransfer(
                 {
                     tokenId: tokenId + "2",
@@ -377,12 +374,12 @@ describe("ERC721RaribleMinimal", function () {
                 },
                 await to.getAddress(),
             ),
-        );
+        ).to.be.revertedWith("signature verification error");
     });
     it("ERC1271 contract wallet works", async () => {
         await erc1271.setReturnSuccessfulValidSignature(false);
         const tokenId = (await erc1271.getAddress()) + "b00000000000000000000001";
-        await expectRevert(
+        await expect(
             token.connect(whiteListProxy).mintAndTransfer(
                 {
                     tokenId,
@@ -393,7 +390,7 @@ describe("ERC721RaribleMinimal", function () {
                 },
                 await accounts[2].getAddress(),
             ),
-        );
+        ).to.be.revertedWith("signature verification error");
         await erc1271.setReturnSuccessfulValidSignature(true);
         await token.connect(whiteListProxy).mintAndTransfer(
             {
