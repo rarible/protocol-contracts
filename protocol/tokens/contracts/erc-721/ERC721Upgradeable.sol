@@ -94,7 +94,9 @@ contract ERC721Upgradeable is
         _name = name_;
         _symbol = symbol_;
     }
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
         return
             interfaceId == _INTERFACE_ID_ERC721 ||
             interfaceId == _INTERFACE_ID_ERC721_METADATA ||

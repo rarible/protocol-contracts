@@ -55,7 +55,9 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
     function __ERC1155_init_unchained(string memory uri_) internal initializer {
         _setURI(uri_);
     }
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
         return
             interfaceId == _INTERFACE_ID_ERC1155 ||
             interfaceId == _INTERFACE_ID_ERC1155_METADATA_URI ||

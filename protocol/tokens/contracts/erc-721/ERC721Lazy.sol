@@ -32,7 +32,8 @@ abstract contract ERC721Lazy is
             interfaceId == _INTERFACE_ID_ERC165 ||
             interfaceId == _INTERFACE_ID_ERC721 ||
             interfaceId == _INTERFACE_ID_ERC721_METADATA ||
-            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE || super.supportsInterface(interfaceId);
+            interfaceId == _INTERFACE_ID_ERC721_ENUMERABLE ||
+            super.supportsInterface(interfaceId);
     }
     function transferFromOrMint(LibERC721LazyMint.Mint721Data memory data, address from, address to) external override {
         if (_exists(data.tokenId)) {
