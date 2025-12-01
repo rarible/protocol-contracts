@@ -27,9 +27,8 @@ contract ERC721RaribleFactoryC2 is Ownable {
         string memory contractURI,
         uint salt
     ) external {
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI), salt);
-        ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
-        token.transferOwnership(_msgSender());
+        address initialOwner = _msgSender();
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, initialOwner), salt);
         emit Create721RaribleProxy(beaconProxy);
     }
     function createToken(
@@ -40,9 +39,8 @@ contract ERC721RaribleFactoryC2 is Ownable {
         address[] memory operators,
         uint salt
     ) external {
-        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators, _msgSender()), salt);
-        ERC721RaribleMinimal token = ERC721RaribleMinimal(address(beaconProxy));
-        token.transferOwnership(_msgSender());
+        address initialOwner = _msgSender();
+        address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators, initialOwner), salt);
         emit Create721RaribleUserProxy(beaconProxy);
     }
     //deploying BeaconProxy contract with create2
@@ -65,9 +63,10 @@ contract ERC721RaribleFactoryC2 is Ownable {
         string memory _symbol,
         string memory baseURI,
         string memory contractURI,
+        address initialOwner,
         uint _salt
     ) public view returns (address) {
-        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI));
+        bytes memory bytecode = getCreationBytecode(getData(_name, _symbol, baseURI, contractURI, initialOwner));
         bytes32 hash = keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(bytecode)));
         return address(uint160(uint(hash)));
     }
@@ -75,7 +74,8 @@ contract ERC721RaribleFactoryC2 is Ownable {
         string memory _name,
         string memory _symbol,
         string memory baseURI,
-        string memory contractURI
+        string memory contractURI,
+        address initialOwner
     ) internal view returns (bytes memory) {
         return
             abi.encodeWithSelector(
@@ -85,7 +85,8 @@ contract ERC721RaribleFactoryC2 is Ownable {
                 baseURI,
                 contractURI,
                 transferProxy,
-                lazyTransferProxy
+                lazyTransferProxy,
+                initialOwner
             );
     }
     //returns address that private contract with such arguments will be deployed on

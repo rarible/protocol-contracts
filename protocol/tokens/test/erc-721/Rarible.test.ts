@@ -67,6 +67,7 @@ async function expectThrow(p: Promise<unknown>): Promise<void> {
 
 describe("ERC721Rarible", function () {
   let token: ERC721Rarible;
+  let tokenImplementationAddress: string;
   let tokenOwner: ethersTypes.Signer;
   let erc1271: TestERC1271;
   let beacon: UpgradeableBeacon;
@@ -100,7 +101,7 @@ describe("ERC721Rarible", function () {
   });
 
   beforeEach(async () => {
-    const { instance } = await deployTransparentProxy<ERC721Rarible>(ethers, {
+    const { instance, implementation } = await deployTransparentProxy<ERC721Rarible>(ethers, {
       contractName: "ERC721Rarible",
       initFunction: "__ERC721Rarible_init",
       initArgs: [
@@ -115,6 +116,7 @@ describe("ERC721Rarible", function () {
       proxyOwner: await deployer.getAddress(),
     });
     token = instance;
+    tokenImplementationAddress = await implementation.getAddress();
   });
 
   // ---------------------------------------------------------------------------
@@ -252,7 +254,7 @@ describe("ERC721Rarible", function () {
     const proxyLazyAddress = await proxyLazy.getAddress();
 
     // OZ 5.4.0 UpgradeableBeacon(implementation, initialOwner)
-    beacon = await new UpgradeableBeacon__factory(deployer).deploy(tokenAddress, tokenOwnerAddress);
+    beacon = await new UpgradeableBeacon__factory(deployer).deploy(tokenImplementationAddress, tokenOwnerAddress);
     await beacon.waitForDeployment();
 
     factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(
@@ -288,11 +290,14 @@ describe("ERC721Rarible", function () {
         minterAddress,
       );
     const mintReceipt = await txMint.wait();
+    // check bytecode at tokenByProxy address
+    const bytecode = await ethers.provider.getCode(tokenByProxy.getAddress());
+    console.log("bytecode", bytecode);
+    console.log("token owner address", await tokenByProxy.owner());
+    const logs = mintReceipt?.logs;
 
     const transferEvents = await tokenByProxy.queryFilter(
-      tokenByProxy.filters.Transfer(undefined, undefined, undefined),
-      mintReceipt?.blockNumber,
-      mintReceipt?.blockNumber,
+      tokenByProxy.filters.Transfer
     );
 
     expect(transferEvents.length).to.equal(1);
@@ -313,7 +318,7 @@ describe("ERC721Rarible", function () {
     const transferProxyAddress = await transferProxy.getAddress();
     const proxyLazyAddress = await proxyLazy.getAddress();
 
-    beacon = await new UpgradeableBeacon__factory(deployer).deploy(tokenAddress, tokenOwnerAddress);
+    beacon = await new UpgradeableBeacon__factory(deployer).deploy(tokenImplementationAddress, tokenOwnerAddress);
     await beacon.waitForDeployment();
 
     factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(
@@ -325,8 +330,8 @@ describe("ERC721Rarible", function () {
 
     const baseUri = baseURI;
     const tx = await factory
-      .connect(tokenOwner)
-      ["createToken(string,string,string,string,uint256)"]("name", "RARI", baseUri, baseURI, 1n);
+      .connect(tokenOwner)["createToken(string,string,string,string,uint256)"]
+      ("name", "RARI", baseUri, baseURI, 1n);
     const receipt = await tx.wait();
 
     let proxyAddress: string | undefined;
@@ -351,7 +356,7 @@ describe("ERC721Rarible", function () {
     const minterAddress = await minter.getAddress();
 
     // 1) tokenURI already has baseUri prefix
-    const tokenId = minterAddress + "b00000000000000000000001";
+    const tokenId = minterAddress + "b00000000000000000000002";
     const tokenURI = baseUri + "/12345/456";
     await tokenByProxy
       .connect(minter)
@@ -362,7 +367,7 @@ describe("ERC721Rarible", function () {
     expect(await tokenByProxy.tokenURI(tokenId)).to.equal(tokenURI);
 
     // 2) tokenURI without prefix
-    const tokenId1 = minterAddress + "b00000000000000000000002";
+    const tokenId1 = minterAddress + "b00000000000000000000003";
     const tokenURI1 = "/12345/123512512/12312312";
     await tokenByProxy
       .connect(minter)
@@ -373,7 +378,7 @@ describe("ERC721Rarible", function () {
     expect(await tokenByProxy.tokenURI(tokenId1)).to.equal(baseUri + tokenURI1);
 
     // 3) another tokenURI without prefix
-    const tokenId2 = minterAddress + "b00000000000000000000003";
+    const tokenId2 = minterAddress + "b00000000000000000000004";
     const tokenURI2 = "/12345/";
     await tokenByProxy
       .connect(minter)
