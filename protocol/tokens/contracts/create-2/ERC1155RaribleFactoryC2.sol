@@ -43,7 +43,6 @@ contract ERC1155RaribleFactoryC2 is Ownable {
     ) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators, initialOwner), salt);
         ERC1155Rarible token = ERC1155Rarible(address(beaconProxy));
-        token.transferOwnership(_msgSender());
         emit Create1155RaribleUserProxy(beaconProxy);
     }
     //deploying BeaconProxy contract with create2

@@ -639,7 +639,7 @@ describe("ERC1155RaribleUser", function () {
       let addrToken2: string | undefined;
       const tx2 = await factory
         .connect(tokenOwner)
-        ["createToken(string,string,string,string,address[],uint256)"](name, "TST", "ipfs:/", "ipfs:/", [], salt + 1n);
+        ["createToken(string,string,string,string,address[],address,uint256)"](name, "TST", "ipfs:/", "ipfs:/", [], tokenOwnerAddress, salt + 1n);
       const receipt2 = await tx2.wait();
 
       for (const log of receipt2?.logs ?? []) {
@@ -659,7 +659,7 @@ describe("ERC1155RaribleUser", function () {
       let addrToken3: string | undefined;
       const tx3 = await factory
         .connect(tokenOwner)
-        ["createToken(string,string,string,string,address[],uint256)"](name, "TSA", "ipfs:/", "ipfs:/", [], salt);
+        ["createToken(string,string,string,string,address[],address,uint256)"](name, "TSA", "ipfs:/", "ipfs:/", [], tokenOwnerAddress, salt);
       const receipt3 = await tx3.wait();
 
       for (const log of receipt3?.logs ?? []) {
