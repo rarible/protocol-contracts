@@ -33,22 +33,21 @@ describe("ERC721Factories", function () {
     const impl = await new ERC721RaribleMinimal__factory(deployer).deploy();
     await impl.waitForDeployment();
     // Deploy beacon
-    beacon = await new UpgradeableBeacon__factory(deployer).deploy(await impl.getAddress(), await tokenOwner.getAddress());
+    beacon = await new UpgradeableBeacon__factory(deployer).deploy(
+      await impl.getAddress(),
+      await tokenOwner.getAddress(),
+    );
     await beacon.waitForDeployment();
     // Deploy factory with zero proxies
-    factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(
-      await beacon.getAddress(),
-      ZERO,
-      ZERO,
-    );
+    factory = await new ERC721RaribleFactoryC2__factory(deployer).deploy(await beacon.getAddress(), ZERO, ZERO);
     await factory.waitForDeployment();
   });
-//   string memory _name,
-//   string memory _symbol,
-//   string memory baseURI,
-//   string memory contractURI,
-//   address initialOwner,
-//   uint _salt
+  //   string memory _name,
+  //   string memory _symbol,
+  //   string memory baseURI,
+  //   string memory contractURI,
+  //   address initialOwner,
+  //   uint _salt
   it("should create erc721 private from factory, getAddress works correctly", async () => {
     let proxyAddress: string | undefined;
     const addressBeforeDeploy = await factory["getAddress(string,string,string,string,address[],address,uint256)"](
@@ -62,14 +61,9 @@ describe("ERC721Factories", function () {
     );
     const tx = await factory
       .connect(tokenOwner)
-      ["createToken(string,string,string,string,address[],uint256)"](
-        "name",
-        "RARI",
-        "https://ipfs.rarible.com",
-        "https://ipfs.rarible.com",
-        [],
-        salt,
-      );
+      [
+        "createToken(string,string,string,string,address[],uint256)"
+      ]("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [], salt);
     const receipt = await tx.wait();
     // Find Create721RaribleUserProxy event
     for (const log of receipt?.logs ?? []) {
@@ -101,9 +95,7 @@ describe("ERC721Factories", function () {
     await txMint.wait();
     expect(await tokenByProxy.ownerOf(tokenId)).to.equal(await accounts[2].getAddress());
     expect(await tokenByProxy.name()).to.equal("name");
-    await tokenByProxy
-      .connect(accounts[2])
-      .transferFrom(await accounts[2].getAddress(), minterAddress, tokenId);
+    await tokenByProxy.connect(accounts[2]).transferFrom(await accounts[2].getAddress(), minterAddress, tokenId);
   });
   it("test check don`t add operators while create token create erc721 private from factory, getAddress works correctly", async () => {
     let proxyAddress: string | undefined;
@@ -111,14 +103,9 @@ describe("ERC721Factories", function () {
     const operator1Address = await operator1.getAddress();
     const tx = await factory
       .connect(tokenOwner)
-      ["createToken(string,string,string,string,address[],uint256)"](
-        "name",
-        "RARI2",
-        "https://ipfs.rarible.com",
-        "https://ipfs.rarible.com",
-        [operator1Address],
-        salt,
-      );
+      [
+        "createToken(string,string,string,string,address[],uint256)"
+      ]("name", "RARI2", "https://ipfs.rarible.com", "https://ipfs.rarible.com", [operator1Address], salt);
     const receipt = await tx.wait();
     for (const log of receipt?.logs ?? []) {
       try {
@@ -155,13 +142,9 @@ describe("ERC721Factories", function () {
     );
     const tx = await factory
       .connect(tokenOwner)
-      ["createToken(string,string,string,string,uint256)"](
-        "name",
-        "RARI",
-        "https://ipfs.rarible.com",
-        "https://ipfs.rarible.com",
-        salt,
-      );
+      [
+        "createToken(string,string,string,string,uint256)"
+      ]("name", "RARI", "https://ipfs.rarible.com", "https://ipfs.rarible.com", salt);
     const receipt = await tx.wait();
     for (const log of receipt?.logs ?? []) {
       try {
@@ -192,8 +175,6 @@ describe("ERC721Factories", function () {
     await txMint.wait();
     expect(await tokenByProxy.ownerOf(tokenId)).to.equal(await accounts[2].getAddress());
     expect(await tokenByProxy.name()).to.equal("name");
-    await tokenByProxy
-      .connect(accounts[2])
-      .transferFrom(await accounts[2].getAddress(), minterAddress, tokenId);
+    await tokenByProxy.connect(accounts[2]).transferFrom(await accounts[2].getAddress(), minterAddress, tokenId);
   });
 });

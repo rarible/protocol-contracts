@@ -296,9 +296,7 @@ describe("ERC721Rarible", function () {
     console.log("token owner address", await tokenByProxy.owner());
     const logs = mintReceipt?.logs;
 
-    const transferEvents = await tokenByProxy.queryFilter(
-      tokenByProxy.filters.Transfer
-    );
+    const transferEvents = await tokenByProxy.queryFilter(tokenByProxy.filters.Transfer);
 
     expect(transferEvents.length).to.equal(1);
 
@@ -329,8 +327,8 @@ describe("ERC721Rarible", function () {
 
     const baseUri = baseURI;
     const tx = await factory
-      .connect(tokenOwner)["createToken(string,string,string,string,uint256)"]
-      ("name", "RARI", baseUri, baseURI, 1n);
+      .connect(tokenOwner)
+      ["createToken(string,string,string,string,uint256)"]("name", "RARI", baseUri, baseURI, 1n);
     const receipt = await tx.wait();
 
     let proxyAddress: string | undefined;
@@ -371,7 +369,13 @@ describe("ERC721Rarible", function () {
     await tokenByProxy
       .connect(minter)
       .mintAndTransfer(
-        { tokenId: tokenId1, tokenURI: tokenURI1, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord] },
+        {
+          tokenId: tokenId1,
+          tokenURI: tokenURI1,
+          creators: creators([minterAddress]),
+          royalties: [],
+          signatures: [zeroWord],
+        },
         minterAddress,
       );
     expect(await tokenByProxy.tokenURI(tokenId1)).to.equal(baseUri + tokenURI1);
@@ -382,7 +386,13 @@ describe("ERC721Rarible", function () {
     await tokenByProxy
       .connect(minter)
       .mintAndTransfer(
-        { tokenId: tokenId2, tokenURI: tokenURI2, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord] },
+        {
+          tokenId: tokenId2,
+          tokenURI: tokenURI2,
+          creators: creators([minterAddress]),
+          royalties: [],
+          signatures: [zeroWord],
+        },
         minterAddress,
       );
     expect(await tokenByProxy.tokenURI(tokenId2)).to.equal(baseUri + tokenURI2);
