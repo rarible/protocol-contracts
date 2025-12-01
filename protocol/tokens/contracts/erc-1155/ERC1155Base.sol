@@ -39,6 +39,29 @@ abstract contract ERC1155Base is
         ERC1155BurnableUpgradeable.burnBatch(account, ids, leftToBurns);
         emit BurnLazyBatch(_msgSender(), account, ids, lazyToBurns);
     }
+
+    /**
+     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {_burn}.
+     *
+     * Requirements:
+     *
+     * - `ids` and `amounts` must have the same length.
+     */
+    function _burnBatch(address account, uint256[] memory ids, uint256[] memory amounts) internal virtual override {
+        require(account != address(0), "ERC1155: burn from the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        address operator = _msgSender();
+        _beforeTokenTransfer(operator, account, address(0), ids, amounts, "");
+        for (uint i = 0; i < ids.length; ++i) {
+            uint256 amount = amounts[i];
+            if (_balances[ids[i]][account] < amount) {
+                revert("ERC1155: burn amount exceeds balance");
+            }
+            _balances[ids[i]][account] -= amount;
+        }
+        emit TransferBatch(operator, account, address(0), ids, amounts);
+    }
+
     function burn(address account, uint256 id, uint256 amount) public virtual override {
         (uint256 leftToBurn, uint256 lazyToBurn) = _burnLazy(id, amount);
         if (leftToBurn > 0) {
@@ -49,6 +72,26 @@ abstract contract ERC1155Base is
             emit BurnLazy(_msgSender(), account, id, lazyToBurn);
         }
     }
+
+        /**
+     * @dev Destroys `amount` tokens of token type `id` from `account`
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     * - `account` must have at least `amount` tokens of token type `id`.
+     */
+    function _burn(address account, uint256 id, uint256 amount) internal virtual override {
+        require(account != address(0), "ERC1155: burn from the zero address");
+        address operator = _msgSender();
+        _beforeTokenTransfer(operator, account, address(0), _asSingletonArray(id), _asSingletonArray(amount), "");
+        if (_balances[id][account] < amount) {
+            revert("ERC1155: burn amount exceeds balance");
+        }
+        _balances[id][account] -= amount;
+        emit TransferSingle(operator, account, address(0), id, amount);
+    }
+    
     function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
         leftToBurn = amount;
         lazyToBurn = 0;
@@ -56,9 +99,13 @@ abstract contract ERC1155Base is
         if (creator == _msgSender()) {
             lazyToBurn = amount;
             uint supply = ERC1155Lazy._getSupply(id);
+            uint minted = ERC1155Lazy._getMinted(id);
+            if (supply < minted) {
+                revert("ERC1155: burn amount exceeds balance");
+            }
             if (supply != 0) {
                 //calculate Lazy amount available for burn
-                uint256 lazyBalance = supply - ERC1155Lazy._getMinted(id);
+                uint256 lazyBalance = supply - minted;
                 if (amount > lazyBalance) {
                     //need to burn more than available
                     lazyToBurn = lazyBalance;
