@@ -407,11 +407,11 @@ describe("ERC721RaribleUser", function () {
           transferToAddress,
         ),
     ).to.be.revertedWith("not owner or minter");
-    await token.connect(tokenOwner).addMinter(minterAddress);
-    expect(await token.isMinter(minterAddress)).to.be.true;
+    await token.connect(tokenOwner).addMinter(deployer);
+    expect(await token.isMinter(deployer)).to.be.true;
     await expect(
       token
-        .connect(minter)
+        .connect(deployer)
         .mintAndTransfer(
           {
             tokenId,
@@ -422,6 +422,6 @@ describe("ERC721RaribleUser", function () {
           },
           transferToAddress,
         ),
-    ).to.be.revertedWith("signature verification error");
+    ).to.be.revertedWith("not owner or minter");
   });
 });
