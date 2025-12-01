@@ -1625,27 +1625,30 @@ describe("ERC1155Rarible", function () {
       const salt = 3n;
       let proxyAddress: string | undefined;
 
-      const addressBeforeDeploy = await factory["getAddress(string,string,string,string,uint256)"](
+      const addressBeforeDeploy = await factory["getAddress(string,string,string,string,address,uint256)"](
         name,
         "TSA",
         "ipfs:/",
         "ipfs:/",
+        tokenOwner.getAddress(),
         salt,
       );
 
-      const addfressWithDifferentSalt = await factory["getAddress(string,string,string,string,uint256)"](
+      const addfressWithDifferentSalt = await factory["getAddress(string,string,string,string,address,uint256)"](
         name,
         "TSA",
         "ipfs:/",
         "ipfs:/",
+        tokenOwner.getAddress(),
         salt + 1n,
       );
 
-      const addressWithDifferentData = await factory["getAddress(string,string,string,string,uint256)"](
+      const addressWithDifferentData = await factory["getAddress(string,string,string,string,address,uint256)"](
         name,
         "TST",
         "ipfs:/",
         "ipfs:/",
+        tokenOwner.getAddress(),
         salt,
       );
 
@@ -1654,7 +1657,7 @@ describe("ERC1155Rarible", function () {
 
       const tx = await factory
         .connect(tokenOwner)
-        ["createToken(string,string,string,string,uint256)"](name, "TSA", "ipfs:/", "ipfs:/", salt);
+        ["createToken(string,string,string,string,address,uint256)"](name, "TSA", "ipfs:/", "ipfs:/", tokenOwner.getAddress(), salt);
       const receipt = await tx.wait();
 
       for (const log of receipt?.logs ?? []) {
@@ -1701,9 +1704,11 @@ describe("ERC1155Rarible", function () {
       const baseURI = "https://ipfs.rarible.com";
       let proxyAddress: string | undefined;
 
+      console.log("factory address", await factory.getAddress());
+
       const tx = await factory
         .connect(tokenOwner)
-        ["createToken(string,string,string,string,uint256)"]("name", "RARI", baseURI, "https://ipfs.rarible.com", 1);
+        ["createToken(string,string,string,string,address,uint256)"]("name", "RARI", baseURI, "https://ipfs.rarible.com", tokenOwner.getAddress(), 1);
       const receipt = await tx.wait();
 
       for (const log of receipt?.logs ?? []) {
