@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.30;
 
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 library LibMath {
-    using SafeMathUpgradeable for uint;
 
     /// @dev Calculates partial value given a numerator and denominator rounded down.
     ///      Reverts if rounding error is >= 0.1%
@@ -64,12 +62,8 @@ library LibMath {
         //        1000 * remainder  <  numerator * target
         // so we have a rounding error iff:
         //        1000 * remainder  >=  numerator * target
-        uint256 remainder = mulmod(
-            target,
-            numerator,
-            denominator
-        );
-        isError = remainder.mul(1000) >= numerator.mul(target);
+        uint256 remainder = (target * numerator) % denominator;
+        isError = remainder * 1000 >= numerator * target;
     }
 
     function safeGetPartialAmountCeil(
@@ -80,7 +74,7 @@ library LibMath {
         if (isRoundingErrorCeil(numerator, denominator, target)) {
             revert("rounding error");
         }
-        partialAmount = numerator.mul(target).add(denominator.sub(1)).div(denominator);
+        partialAmount = (numerator * target + denominator - 1) / denominator;
     }
 
     /// @dev Checks if rounding error >= 0.1% when rounding up.
@@ -105,13 +99,9 @@ library LibMath {
             return false;
         }
         // Compute remainder as before
-        uint256 remainder = mulmod(
-            target,
-            numerator,
-            denominator
-        );
-        remainder = denominator.sub(remainder) % denominator;
-        isError = remainder.mul(1000) >= numerator.mul(target);
+        uint256 remainder = (target * numerator) % denominator;
+        remainder = (denominator - remainder) % denominator;
+        isError = remainder * 1000 >= numerator * target;
         return isError;
     }
 }
