@@ -32,7 +32,7 @@ describe("ERC1155DefaultApproval", function () {
     await testing.connect(deployer).mint(tokenOwnerAddress, tokenId, amount);
 
     await expect(
-      testing.connect(deployer).safeTransferFrom(tokenOwnerAddress, deployerAddress, tokenId, amount, "0x")
+      testing.connect(deployer).safeTransferFrom(tokenOwnerAddress, deployerAddress, tokenId, amount, "0x"),
     ).to.be.revertedWith("ERC1155: caller is not owner nor approved");
 
     await testing.connect(tokenOwner).setDefaultApproval(deployerAddress, true);

@@ -366,35 +366,31 @@ describe("ERC721Rarible", function () {
     // 2) tokenURI without prefix
     const tokenId1 = minterAddress + "b00000000000000000000002";
     const tokenURI1 = "/12345/123512512/12312312";
-    await tokenByProxy
-      .connect(minter)
-      .mintAndTransfer(
-        {
-          tokenId: tokenId1,
-          tokenURI: tokenURI1,
-          creators: creators([minterAddress]),
-          royalties: [],
-          signatures: [zeroWord],
-        },
-        minterAddress,
-      );
+    await tokenByProxy.connect(minter).mintAndTransfer(
+      {
+        tokenId: tokenId1,
+        tokenURI: tokenURI1,
+        creators: creators([minterAddress]),
+        royalties: [],
+        signatures: [zeroWord],
+      },
+      minterAddress,
+    );
     expect(await tokenByProxy.tokenURI(tokenId1)).to.equal(baseUri + tokenURI1);
 
     // 3) another tokenURI without prefix
     const tokenId2 = minterAddress + "b00000000000000000000003";
     const tokenURI2 = "/12345/";
-    await tokenByProxy
-      .connect(minter)
-      .mintAndTransfer(
-        {
-          tokenId: tokenId2,
-          tokenURI: tokenURI2,
-          creators: creators([minterAddress]),
-          royalties: [],
-          signatures: [zeroWord],
-        },
-        minterAddress,
-      );
+    await tokenByProxy.connect(minter).mintAndTransfer(
+      {
+        tokenId: tokenId2,
+        tokenURI: tokenURI2,
+        creators: creators([minterAddress]),
+        royalties: [],
+        signatures: [zeroWord],
+      },
+      minterAddress,
+    );
     expect(await tokenByProxy.tokenURI(tokenId2)).to.equal(baseUri + tokenURI2);
   });
 

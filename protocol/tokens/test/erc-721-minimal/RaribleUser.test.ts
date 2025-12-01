@@ -45,16 +45,7 @@ describe("ERC721RaribleUser", function () {
     const { instance } = await deployTransparentProxy<ERC721RaribleMinimal>(ethers, {
       contractName: "ERC721RaribleMinimal",
       initFunction: "__ERC721RaribleUser_init",
-      initArgs: [
-        name,
-        symbol,
-        baseURI,
-        contractURI,
-        [],
-        ZERO,
-        ZERO,
-        await tokenOwner.getAddress(),
-      ],
+      initArgs: [name, symbol, baseURI, contractURI, [], ZERO, ZERO, await tokenOwner.getAddress()],
       proxyOwner: await deployer.getAddress(),
     });
     token = instance;
@@ -137,25 +128,17 @@ describe("ERC721RaribleUser", function () {
       await royaltiesBeneficiary2.getAddress(),
       await royaltiesBeneficiary3.getAddress(),
     ]);
-    const signature = await getSignature(
-      tokenId,
-      tokenURI,
-      creators([minterAddress]),
-      royalties,
-      minter,
+    const signature = await getSignature(tokenId, tokenURI, creators([minterAddress]), royalties, minter);
+    const tx = await token.connect(tokenOwner).mintAndTransfer(
+      {
+        tokenId,
+        tokenURI,
+        creators: creators([minterAddress]),
+        royalties,
+        signatures: [signature],
+      },
+      transferToAddress,
     );
-    const tx = await token
-      .connect(tokenOwner)
-      .mintAndTransfer(
-        {
-          tokenId,
-          tokenURI,
-          creators: creators([minterAddress]),
-          royalties,
-          signatures: [signature],
-        },
-        transferToAddress,
-      );
     await tx.wait();
     const [receiver, amount] = await token.royaltyInfo(tokenId, WEIGHT_PRICE);
     expect(receiver).to.equal(await royaltiesBeneficiary1.getAddress());
@@ -175,18 +158,16 @@ describe("ERC721RaribleUser", function () {
     const tokenURI = "//uri";
     const royalties: Part[] = [];
     const signature = await getSignature(tokenId, tokenURI, creators([minterAddress]), royalties, minter);
-    await token
-      .connect(tokenOwner)
-      .mintAndTransfer(
-        {
-          tokenId,
-          tokenURI,
-          creators: creators([minterAddress]),
-          royalties,
-          signatures: [signature],
-        },
-        transferToAddress,
-      );
+    await token.connect(tokenOwner).mintAndTransfer(
+      {
+        tokenId,
+        tokenURI,
+        creators: creators([minterAddress]),
+        royalties,
+        signatures: [signature],
+      },
+      transferToAddress,
+    );
     expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
     await checkCreators(tokenId, [minterAddress]);
   });
@@ -225,18 +206,16 @@ describe("ERC721RaribleUser", function () {
     const creatorsList = [minterAddress, creator2Address];
     const signature1 = await getSignature(tokenId, tokenURI, creators(creatorsList), royalties, minter);
     const signature2 = await getSignature(tokenId, tokenURI, creators(creatorsList), royalties, creator2);
-    await token
-      .connect(tokenOwner)
-      .mintAndTransfer(
-        {
-          tokenId,
-          tokenURI,
-          creators: creators(creatorsList),
-          royalties,
-          signatures: [signature1, signature2],
-        },
-        transferToAddress,
-      );
+    await token.connect(tokenOwner).mintAndTransfer(
+      {
+        tokenId,
+        tokenURI,
+        creators: creators(creatorsList),
+        royalties,
+        signatures: [signature1, signature2],
+      },
+      transferToAddress,
+    );
     expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
     await checkCreators(tokenId, [minterAddress, creator2Address]);
   });
@@ -247,18 +226,16 @@ describe("ERC721RaribleUser", function () {
     const transferToAddress = await transferTo.getAddress();
     const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
-    const tx = await token
-      .connect(minter)
-      .mintAndTransfer(
-        {
-          tokenId,
-          tokenURI,
-          creators: creators([minterAddress]),
-          royalties: [],
-          signatures: [zeroWord],
-        },
-        transferToAddress,
-      );
+    const tx = await token.connect(minter).mintAndTransfer(
+      {
+        tokenId,
+        tokenURI,
+        creators: creators([minterAddress]),
+        royalties: [],
+        signatures: [zeroWord],
+      },
+      transferToAddress,
+    );
     await tx.wait();
     expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
     const txTransfer = await token.connect(transferTo).transferFrom(transferToAddress, minterAddress, tokenId);
@@ -272,18 +249,16 @@ describe("ERC721RaribleUser", function () {
     const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
     await expect(
-      token
-        .connect(minter)
-        .mintAndTransfer(
-          {
-            tokenId,
-            tokenURI,
-            creators: creators([minterAddress]),
-            royalties: [],
-            signatures: [zeroWord],
-          },
-          transferToAddress,
-        ),
+      token.connect(minter).mintAndTransfer(
+        {
+          tokenId,
+          tokenURI,
+          creators: creators([minterAddress]),
+          royalties: [],
+          signatures: [zeroWord],
+        },
+        transferToAddress,
+      ),
     ).to.be.revertedWith("not owner or minter");
   });
   it("mint and transfer to self by minter. minter is not tokenOwner", async () => {
@@ -293,18 +268,16 @@ describe("ERC721RaribleUser", function () {
     const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
     await expect(
-      token
-        .connect(minter)
-        .mintAndTransfer(
-          {
-            tokenId,
-            tokenURI,
-            creators: creators([minterAddress]),
-            royalties: [],
-            signatures: [zeroWord],
-          },
-          minterAddress,
-        ),
+      token.connect(minter).mintAndTransfer(
+        {
+          tokenId,
+          tokenURI,
+          creators: creators([minterAddress]),
+          royalties: [],
+          signatures: [zeroWord],
+        },
+        minterAddress,
+      ),
     ).to.be.revertedWith("not owner or minter");
   });
   it("mint and transfer with minter access control", async () => {
@@ -315,25 +288,7 @@ describe("ERC721RaribleUser", function () {
     const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = "//uri";
     await expect(
-      token
-        .connect(minter)
-        .mintAndTransfer(
-          {
-            tokenId,
-            tokenURI,
-            creators: creators([minterAddress]),
-            royalties: [],
-            signatures: [zeroWord],
-          },
-          transferToAddress,
-        ),
-    ).to.be.revertedWith("not owner or minter");
-    await token.connect(tokenOwner).addMinter(minterAddress);
-    expect(await token.isMinter(minterAddress)).to.be.true;
-    expect(await token.isMinter(transferToAddress)).to.be.false;
-    await token
-      .connect(minter)
-      .mintAndTransfer(
+      token.connect(minter).mintAndTransfer(
         {
           tokenId,
           tokenURI,
@@ -342,7 +297,21 @@ describe("ERC721RaribleUser", function () {
           signatures: [zeroWord],
         },
         transferToAddress,
-      );
+      ),
+    ).to.be.revertedWith("not owner or minter");
+    await token.connect(tokenOwner).addMinter(minterAddress);
+    expect(await token.isMinter(minterAddress)).to.be.true;
+    expect(await token.isMinter(transferToAddress)).to.be.false;
+    await token.connect(minter).mintAndTransfer(
+      {
+        tokenId,
+        tokenURI,
+        creators: creators([minterAddress]),
+        royalties: [],
+        signatures: [zeroWord],
+      },
+      transferToAddress,
+    );
     expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
   it("mint and transfer with minter access control and minter signature", async () => {
@@ -355,24 +324,7 @@ describe("ERC721RaribleUser", function () {
     const royalties: Part[] = [];
     const signature = await getSignature(tokenId, tokenURI, creators([minterAddress]), royalties, minter);
     await expect(
-      token
-        .connect(minter)
-        .mintAndTransfer(
-          {
-            tokenId,
-            tokenURI,
-            creators: creators([minterAddress]),
-            royalties,
-            signatures: [signature],
-          },
-          transferToAddress,
-        ),
-    ).to.be.revertedWith("not owner or minter");
-    await token.connect(tokenOwner).addMinter(minterAddress);
-    expect(await token.isMinter(minterAddress)).to.be.true;
-    await token
-      .connect(minter)
-      .mintAndTransfer(
+      token.connect(minter).mintAndTransfer(
         {
           tokenId,
           tokenURI,
@@ -381,7 +333,20 @@ describe("ERC721RaribleUser", function () {
           signatures: [signature],
         },
         transferToAddress,
-      );
+      ),
+    ).to.be.revertedWith("not owner or minter");
+    await token.connect(tokenOwner).addMinter(minterAddress);
+    expect(await token.isMinter(minterAddress)).to.be.true;
+    await token.connect(minter).mintAndTransfer(
+      {
+        tokenId,
+        tokenURI,
+        creators: creators([minterAddress]),
+        royalties,
+        signatures: [signature],
+      },
+      transferToAddress,
+    );
     expect(await token.ownerOf(tokenId)).to.equal(transferToAddress);
   });
   it("mint and transfer with minter access control and wrong minter signature", async () => {
@@ -394,34 +359,30 @@ describe("ERC721RaribleUser", function () {
     const royalties: Part[] = [];
     const signature = await getSignature(tokenId, tokenURI, creators([minterAddress]), royalties, transferTo);
     await expect(
-      token
-        .connect(minter)
-        .mintAndTransfer(
-          {
-            tokenId,
-            tokenURI,
-            creators: creators([minterAddress]),
-            royalties,
-            signatures: [signature],
-          },
-          transferToAddress,
-        ),
+      token.connect(minter).mintAndTransfer(
+        {
+          tokenId,
+          tokenURI,
+          creators: creators([minterAddress]),
+          royalties,
+          signatures: [signature],
+        },
+        transferToAddress,
+      ),
     ).to.be.revertedWith("not owner or minter");
     await token.connect(tokenOwner).addMinter(deployer);
     expect(await token.isMinter(deployer)).to.be.true;
     await expect(
-      token
-        .connect(deployer)
-        .mintAndTransfer(
-          {
-            tokenId,
-            tokenURI,
-            creators: creators([minterAddress]),
-            royalties,
-            signatures: [signature],
-          },
-          transferToAddress,
-        ),
+      token.connect(deployer).mintAndTransfer(
+        {
+          tokenId,
+          tokenURI,
+          creators: creators([minterAddress]),
+          royalties,
+          signatures: [signature],
+        },
+        transferToAddress,
+      ),
     ).to.be.revertedWith("not owner or minter");
   });
 });

@@ -73,7 +73,7 @@ abstract contract ERC1155Base is
         }
     }
 
-        /**
+    /**
      * @dev Destroys `amount` tokens of token type `id` from `account`
      *
      * Requirements:
@@ -91,7 +91,7 @@ abstract contract ERC1155Base is
         _balances[id][account] -= amount;
         emit TransferSingle(operator, account, address(0), id, amount);
     }
-    
+
     function _burnLazy(uint256 id, uint256 amount) internal returns (uint256 leftToBurn, uint256 lazyToBurn) {
         leftToBurn = amount;
         lazyToBurn = 0;
