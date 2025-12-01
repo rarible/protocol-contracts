@@ -313,7 +313,6 @@ describe("ERC721Rarible", function () {
   });
 
   it("checkPrefix should work correctly", async () => {
-    const tokenAddress = await token.getAddress();
     const tokenOwnerAddress = await tokenOwner.getAddress();
     const transferProxyAddress = await transferProxy.getAddress();
     const proxyLazyAddress = await proxyLazy.getAddress();
@@ -356,7 +355,7 @@ describe("ERC721Rarible", function () {
     const minterAddress = await minter.getAddress();
 
     // 1) tokenURI already has baseUri prefix
-    const tokenId = minterAddress + "b00000000000000000000002";
+    const tokenId = minterAddress + "b00000000000000000000001";
     const tokenURI = baseUri + "/12345/456";
     await tokenByProxy
       .connect(minter)
@@ -367,23 +366,23 @@ describe("ERC721Rarible", function () {
     expect(await tokenByProxy.tokenURI(tokenId)).to.equal(tokenURI);
 
     // 2) tokenURI without prefix
-    const tokenId1 = minterAddress + "b00000000000000000000003";
+    const tokenId1 = minterAddress + "b00000000000000000000002";
     const tokenURI1 = "/12345/123512512/12312312";
     await tokenByProxy
       .connect(minter)
       .mintAndTransfer(
-        { tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord] },
+        { tokenId: tokenId1, tokenURI: tokenURI1, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord] },
         minterAddress,
       );
     expect(await tokenByProxy.tokenURI(tokenId1)).to.equal(baseUri + tokenURI1);
 
     // 3) another tokenURI without prefix
-    const tokenId2 = minterAddress + "b00000000000000000000004";
+    const tokenId2 = minterAddress + "b00000000000000000000003";
     const tokenURI2 = "/12345/";
     await tokenByProxy
       .connect(minter)
       .mintAndTransfer(
-        { tokenId, tokenURI, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord] },
+        { tokenId: tokenId2, tokenURI: tokenURI2, creators: creators([minterAddress]), royalties: [], signatures: [zeroWord] },
         minterAddress,
       );
     expect(await tokenByProxy.tokenURI(tokenId2)).to.equal(baseUri + tokenURI2);
