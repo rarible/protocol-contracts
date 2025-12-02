@@ -63,3 +63,4 @@ export const PAYOUT = id("PAYOUT");
 export const LOCK = id("LOCK");
 export const UNLOCK = id("UNLOCK");
 export const TO_LOCK = id("TO_LOCK");
+export const ZERO_ASSET_CLASS = "0x00000000";

@@ -14,7 +14,7 @@ import {
 } from "../types/ethers-contracts";
 import { deployTransparentProxy } from "@rarible/common-sdk/src/deploy";
 import { AssetType } from "@rarible/common-sdk/src/order";
-import { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNKS, id } from "@rarible/common-sdk/src/assets";
+import { enc, ETH, ERC20, ERC721, ERC1155, CRYPTO_PUNKS, id, ZERO_ASSET_CLASS } from "@rarible/common-sdk/src/assets";
 
 // -----------------------------------------------------------------------------
 // Main Test Suite
@@ -75,7 +75,7 @@ describe("AssetMatcher", function () {
 
     it("should extract nothing if one is not ETH", async () => {
       const result = await testing.matchAssetsTest(AssetType(ETH, "0x"), AssetType(ERC20, "0x"));
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
   });
 
@@ -110,7 +110,7 @@ describe("AssetMatcher", function () {
         AssetType(CRYPTO_PUNKS, encodedPunk2),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
 
     it("Punk Id = 3000 <-> Punk Id = 3000, but different collections don`t matches!", async () => {
@@ -126,7 +126,7 @@ describe("AssetMatcher", function () {
         AssetType(CRYPTO_PUNKS, encodedPunk2),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
   });
 
@@ -153,7 +153,7 @@ describe("AssetMatcher", function () {
         AssetType(ERC20, enc(account2Address)),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
 
     it("should extract nothing if other type is not ERC20", async () => {
@@ -161,7 +161,7 @@ describe("AssetMatcher", function () {
 
       const result = await testing.matchAssetsTest(AssetType(ERC20, enc(account1Address)), AssetType(ETH, "0x"));
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
   });
 
@@ -187,7 +187,7 @@ describe("AssetMatcher", function () {
         AssetType(ERC721, enc(account5Address, 101)),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
 
     it("should extract nothing if addresses don't match", async () => {
@@ -199,7 +199,7 @@ describe("AssetMatcher", function () {
         AssetType(ERC721, enc(account5Address, 100)),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
 
     it("should extract nothing if other type is not ERC721", async () => {
@@ -210,7 +210,7 @@ describe("AssetMatcher", function () {
         AssetType(ETH, "0x"),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
   });
 
@@ -236,7 +236,7 @@ describe("AssetMatcher", function () {
         AssetType(ERC1155, enc(account5Address, 101)),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
 
     it("should extract nothing if addresses don't match", async () => {
@@ -248,7 +248,7 @@ describe("AssetMatcher", function () {
         AssetType(ERC1155, enc(account5Address, 100)),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
 
     it("should extract nothing if other type is not erc1155", async () => {
@@ -257,7 +257,7 @@ describe("AssetMatcher", function () {
 
       const result = await testing.matchAssetsTest(AssetType(ERC1155, encoded), AssetType(ERC721, encoded));
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
   });
 
@@ -281,7 +281,7 @@ describe("AssetMatcher", function () {
         AssetType("0x00112233", "0x1111"),
       );
 
-      expect(result[0]).to.equal(0);
+      expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
   });
 });
