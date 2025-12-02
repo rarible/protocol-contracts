@@ -5,7 +5,6 @@ pragma solidity ^0.8.30;
 import "@rarible/exchange-interfaces/contracts/IAssetMatcher.sol";
 
 contract TestAssetMatcher is IAssetMatcher {
-
     function matchAssets(
         LibAsset.AssetType memory leftAssetType,
         LibAsset.AssetType memory rightAssetType
@@ -19,5 +18,4 @@ contract TestAssetMatcher is IAssetMatcher {
         }
         return LibAsset.AssetType(0, "");
     }
-
 }

@@ -12,16 +12,15 @@ import "@rarible/exchange-interfaces/contracts/IRoyaltiesProvider.sol";
 import "../../contracts/libraries/LibOrderData.sol";
 
 contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor {
-
-    function encode(LibOrderDataV1.DataV1 memory data) pure external returns (bytes memory) {
+    function encode(LibOrderDataV1.DataV1 memory data) external pure returns (bytes memory) {
         return abi.encode(data);
     }
 
-    function encodeV2(LibOrderDataV2.DataV2 memory data) pure external returns (bytes memory) {
+    function encodeV2(LibOrderDataV2.DataV2 memory data) external pure returns (bytes memory) {
         return abi.encode(data);
     }
 
-    function encodeV3(LibOrderDataV3.DataV3 memory data) pure external returns (bytes memory) {
+    function encodeV3(LibOrderDataV3.DataV3 memory data) external pure returns (bytes memory) {
         return abi.encode(data);
     }
 
@@ -38,7 +37,10 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor 
         __RaribleTransferManager_init_unchained(newProtocolFee, newCommunityWallet, newRoyaltiesProvider);
     }
 
-    function getDealSide(LibOrder.Order memory order, LibOrderData.GenericOrderData memory orderData) internal view returns (LibDeal.DealSide memory dealSide) {
+    function getDealSide(
+        LibOrder.Order memory order,
+        LibOrderData.GenericOrderData memory orderData
+    ) internal view returns (LibDeal.DealSide memory dealSide) {
         dealSide = LibDeal.DealSide(
             order.makeAsset,
             orderData.payouts,
@@ -56,10 +58,11 @@ contract RaribleTransferManagerTest is RaribleTransferManager, TransferExecutor 
         LibOrderData.GenericOrderData memory leftData = LibOrderData.parse(left);
         LibOrderData.GenericOrderData memory rightData = LibOrderData.parse(right);
 
-        return doTransfers(
-            getDealSide(left, leftData), 
-            getDealSide(right, rightData), 
-            LibFeeSide.getFeeSide(left.makeAsset.assetType.assetClass, right.makeAsset.assetType.assetClass)
-        );
+        return
+            doTransfers(
+                getDealSide(left, leftData),
+                getDealSide(right, rightData),
+                LibFeeSide.getFeeSide(left.makeAsset.assetType.assetClass, right.makeAsset.assetType.assetClass)
+            );
     }
 }
