@@ -10,12 +10,12 @@ import "./LibOrderDataV2.sol";
 import "./LibOrderDataV1.sol";
 
 library LibOrder {
-    using SafeMathUpgradeable for uint;
-
+    // solhint-disable
     bytes32 constant ORDER_TYPEHASH =
         keccak256(
             "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
         );
+    // solhint-enable
 
     bytes4 constant DEFAULT_ORDER_TYPE = 0xffffffff;
 
@@ -45,10 +45,10 @@ library LibOrder {
         bool isMakeFill
     ) internal pure returns (uint makeValue, uint takeValue) {
         if (isMakeFill) {
-            makeValue = order.makeAsset.value.sub(fill);
+            makeValue = order.makeAsset.value - fill;
             takeValue = LibMath.safeGetPartialAmountFloor(order.takeAsset.value, order.makeAsset.value, makeValue);
         } else {
-            takeValue = order.takeAsset.value.sub(fill);
+            takeValue = order.takeAsset.value - fill;
             makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
         }
     }

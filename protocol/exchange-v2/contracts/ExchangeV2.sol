@@ -11,10 +11,11 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         address _erc20TransferProxy,
         uint newProtocolFee,
         address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider
+        IRoyaltiesProvider newRoyaltiesProvider,
+        address initialOwner
     ) external initializer {
         __Context_init_unchained();
-        __Ownable_init_unchained();
+        __Ownable_init_unchained(initialOwner);
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();

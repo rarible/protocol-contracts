@@ -2,12 +2,9 @@
 
 pragma solidity ^0.8.30;
 
-import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@rarible/transfer-manager/contracts/ITransferManager.sol";
 
 abstract contract SimpleTransferManager is ITransferManager {
-    using SafeMathUpgradeable for uint;
-
     function doTransfers(
         LibDeal.DealSide memory left,
         LibDeal.DealSide memory right,

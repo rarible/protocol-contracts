@@ -23,7 +23,6 @@ export default defineConfig({
       "@rarible/royalties/contracts/test/TestERC1155RoyaltiesV1.sol",
       "@rarible/test/contracts/TestERC20.sol",
       "@rarible/transfer-proxy/contracts/test/contracts/ERC20TransferProxyTest.sol",
-      "@rarible/lazy-mint/contracts/test/ERC721LazyMintTest.sol",
       "@rarible/royalties/contracts/test/TestERC1155WithRoyaltiesV2_InterfaceError.sol",
       "@rarible/royalties/contracts/test/TestERC721WithRoyaltiesV1_InterfaceError.sol"
     ],

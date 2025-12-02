@@ -12,23 +12,18 @@ contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTra
         address _erc20TransferProxy,
         uint newProtocolFee,
         address newDefaultFeeReceiver,
-        IRoyaltiesProvider newRoyaltiesProvider
+        IRoyaltiesProvider newRoyaltiesProvider,
+        address initialOwner
     ) external initializer {
         __Context_init_unchained();
-        __Ownable_init_unchained();
+        __Ownable_init_unchained(initialOwner);
         __OrderValidator_init_unchained();
         __MetaTransaction_init_unchained("ExchangeMetaV2", "1");
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, EIP712MetaTransaction)
-        returns (address payable)
-    {
+    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address) {
         return super._msgSender();
     }
 }

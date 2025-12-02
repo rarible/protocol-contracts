@@ -17,7 +17,7 @@ library LibMath {
         if (isRoundingErrorFloor(numerator, denominator, target)) {
             revert("rounding error");
         }
-        partialAmount = numerator.mul(target).div(denominator);
+        partialAmount = (numerator * target) / denominator;
     }
 
     /// @dev Checks if rounding error >= 0.1% when rounding down.

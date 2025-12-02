@@ -9,7 +9,7 @@ import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
 
 import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
-import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
+import "@rarible/transfer-manager/contracts/ITransferManager.sol";
 import "@rarible/transfer-manager/contracts/lib/LibDeal.sol";
 
 abstract contract ExchangeV2Core is
@@ -20,7 +20,6 @@ abstract contract ExchangeV2Core is
     OrderValidator,
     ITransferManager
 {
-    using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
     uint256 private constant UINT256_MAX = type(uint256).max;
@@ -185,12 +184,12 @@ abstract contract ExchangeV2Core is
             require(takeMatch.assetClass != LibAsset.ETH_ASSET_CLASS);
             require(msg.value >= totalMakeValue, "not enough eth");
             if (msg.value > totalMakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalMakeValue));
+                address(msg.sender).transferEth(msg.value - totalMakeValue);
             }
         } else if (takeMatch.assetClass == LibAsset.ETH_ASSET_CLASS) {
             require(msg.value >= totalTakeValue, "not enough eth");
             if (msg.value > totalTakeValue) {
-                address(msg.sender).transferEth(msg.value.sub(totalTakeValue));
+                address(msg.sender).transferEth(msg.value - totalTakeValue);
             }
         }
     }
@@ -266,17 +265,17 @@ abstract contract ExchangeV2Core is
 
         if (orderLeft.salt != 0) {
             if (leftMakeFill) {
-                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.leftValue);
+                fills[leftOrderKeyHash] = leftOrderFill + newFill.leftValue;
             } else {
-                fills[leftOrderKeyHash] = leftOrderFill.add(newFill.rightValue);
+                fills[leftOrderKeyHash] = leftOrderFill + newFill.rightValue;
             }
         }
 
         if (orderRight.salt != 0) {
             if (rightMakeFill) {
-                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.rightValue);
+                fills[rightOrderKeyHash] = rightOrderFill + newFill.rightValue;
             } else {
-                fills[rightOrderKeyHash] = rightOrderFill.add(newFill.leftValue);
+                fills[rightOrderKeyHash] = rightOrderFill + newFill.leftValue;
             }
         }
 

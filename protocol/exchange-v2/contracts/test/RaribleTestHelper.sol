@@ -18,7 +18,7 @@ contract RaribleTestHelper {
     }
 
     function encodeOriginFeeIntoUint(address account, uint96 value) external pure returns (uint256) {
-        return (uint256(value) << 160) + uint256(account);
+        return (uint256(value) << 160) | uint256(uint160(account));
     }
 
     function hashKey(LibOrder.Order calldata order) external pure returns (bytes32) {

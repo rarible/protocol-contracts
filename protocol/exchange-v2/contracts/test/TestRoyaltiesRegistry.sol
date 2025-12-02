@@ -9,7 +9,7 @@ import "@rarible/royalties/contracts/impl/RoyaltiesV1Impl.sol";
 import "@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "@rarible/royalties/contracts/LibRoyalties2981.sol";
 import "@rarible/royalties/contracts/IERC2981.sol";
-import "@openzeppelin/contracts-upgradeable/introspection/IERC165Upgradeable.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract TestRoyaltiesRegistry is IRoyaltiesProvider {
     struct RoyaltiesSet {
@@ -44,7 +44,7 @@ contract TestRoyaltiesRegistry is IRoyaltiesProvider {
         royaltiesSet = royaltiesByToken[token];
         if (royaltiesSet.initialized) {
             return royaltiesSet.royalties;
-        } else if (IERC165Upgradeable(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
+        } else if (IERC165(token).supportsInterface(LibRoyalties2981._INTERFACE_ID_ROYALTIES)) {
             IERC2981 v2981 = IERC2981(token);
             try v2981.royaltyInfo(tokenId, LibRoyalties2981._WEIGHT_VALUE) returns (
                 address receiver,

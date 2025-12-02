@@ -85,9 +85,9 @@ library LibOrderData {
         @param data address and value encoded in uint (first 12 bytes )
         @return result LibPart.Part 
      */
-    function uintToLibPart(uint data) internal pure returns (LibPart.Part memory result) {
+    function uintToLibPart(uint256 data) internal pure returns (LibPart.Part memory result) {
         if (data > 0) {
-            result.account = payable(address(data));
+            result.account = payable(address(uint160(data)));
             result.value = uint96(data >> 160);
         }
     }

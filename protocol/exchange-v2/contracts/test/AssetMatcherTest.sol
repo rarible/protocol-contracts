@@ -5,8 +5,8 @@ pragma solidity ^0.8.30;
 import "../../contracts/AssetMatcher.sol";
 
 contract AssetMatcherTest is Initializable, OwnableUpgradeable, AssetMatcher {
-    function __AssetMatcherTest_init() external initializer {
-        __Ownable_init_unchained();
+    function __AssetMatcherTest_init(address initialOwner) external initializer {
+        __Ownable_init_unchained(initialOwner);
     }
 
     function matchAssetsTest(

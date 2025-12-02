@@ -7,14 +7,15 @@ import "./libraries/LibOrder.sol";
 import "@rarible/lib-signature/contracts/IERC1271.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import "@rarible/tokens/contracts/lib/ContractChecker.sol";
 
 abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
-    using AddressUpgradeable for address;
-
+    using Address for address;
+    using ContractChecker for address;
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
     function __OrderValidator_init_unchained() internal initializer {
