@@ -247,6 +247,10 @@ abstract contract ExchangeV2Core is
     ) internal returns (LibFill.FillResult memory) {
         uint leftOrderFill = getOrderFill(orderLeft.salt, leftOrderKeyHash);
         uint rightOrderFill = getOrderFill(orderRight.salt, rightOrderKeyHash);
+
+        require(leftOrderFill != UINT256_MAX, "nothing to fill");
+        require(rightOrderFill != UINT256_MAX, "nothing to fill");
+
         LibFill.FillResult memory newFill = LibFill.fillOrder(
             orderLeft,
             orderRight,

@@ -172,7 +172,7 @@ describe("ExchangeSimpleV2", function () {
         "0xffffffff",
         "0x",
       );
-      
+
       const right = Order(
         account2Address,
         Asset(ETH, "0x", 200n),
