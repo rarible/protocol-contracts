@@ -205,10 +205,7 @@ describe("AssetMatcher", function () {
     it("should extract nothing if other type is not ERC721", async () => {
       const account5Address = await accounts[5].getAddress();
 
-      const result = await testing.matchAssetsTest(
-        AssetType(ERC721, enc(account5Address, 100)),
-        AssetType(ETH, "0x"),
-      );
+      const result = await testing.matchAssetsTest(AssetType(ERC721, enc(account5Address, 100)), AssetType(ETH, "0x"));
 
       expect(result[0]).to.equal(ZERO_ASSET_CLASS);
     });
