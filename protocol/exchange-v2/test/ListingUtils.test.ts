@@ -27,20 +27,9 @@ import {
   ExchangeV2__factory,
 } from "../types/ethers-contracts";
 import { deployTransparentProxy } from "@rarible/common-sdk/src/deploy";
-import {
-  ETH,
-  ERC20,
-  ERC721,
-  ERC1155,
-  ERC721_LAZY,
-  ERC1155_LAZY,
-} from "@rarible/common-sdk/src/assets";
+import { ETH, ERC20, ERC721, ERC1155, ERC721_LAZY, ERC1155_LAZY } from "@rarible/common-sdk/src/assets";
 import { sign } from "@rarible/common-sdk/src/order";
-import {
-  createSellOrder,
-  createBuyOrder,
-  ZERO_ADDRESS,
-} from "@rarible/common-sdk/src/listing";
+import { createSellOrder, createBuyOrder, ZERO_ADDRESS } from "@rarible/common-sdk/src/listing";
 
 // -----------------------------------------------------------------------------
 // Main Test Suite
@@ -257,15 +246,7 @@ describe("listingUtils", function () {
     const transferProxyAddress = await transferProxy.getAddress();
     await token721.connect(seller).setApprovalForAll(transferProxyAddress, true);
 
-    const sellOrder = createSellOrder(
-      token721Address,
-      tokenId.toString(),
-      sellerAddress,
-      ETH,
-      "0x",
-      "1000",
-      ERC721,
-    );
+    const sellOrder = createSellOrder(token721Address, tokenId.toString(), sellerAddress, ETH, "0x", "1000", ERC721);
     const sellSig = await sign(seller, sellOrder, exchangeAddress);
 
     const buyOrder = createBuyOrder(sellOrder, buyerAddress, "1000");

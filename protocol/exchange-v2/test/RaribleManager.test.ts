@@ -39,16 +39,7 @@ import {
   ERC1155LazyMintTransferProxyTest__factory,
 } from "../types/ethers-contracts";
 import { Order, Asset, type OrderStruct } from "@rarible/common-sdk/src/order";
-import {
-  ETH,
-  ERC20,
-  ERC721,
-  ERC1155,
-  ORDER_DATA_V1,
-  ORDER_DATA_V2,
-  id,
-  enc,
-} from "@rarible/common-sdk/src/assets";
+import { ETH, ERC20, ERC721, ERC1155, ORDER_DATA_V1, ORDER_DATA_V2, id, enc } from "@rarible/common-sdk/src/assets";
 import { verifyBalanceChangeReturnTx } from "@rarible/common-sdk/src/balance";
 import { deployTransparentProxy } from "@rarible/common-sdk/src/deploy";
 
@@ -700,16 +691,16 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const erc20Address = await erc20.getAddress();
       const erc721TestAddress = await erc721Test.getAddress();
 
-      const encodedMintData = await erc721Test.encode([
-        1n,
-        "uri",
-        [[account1Address, 0n]],
-        [
-          [account5Address, 2000n],
-          [account6Address, 1000n],
+      const encodedMintData = await erc721Test.encode({
+        tokenId: 1n,
+        tokenURI: "uri",
+        creators: [{ account: account1Address, value: 0n }],
+        royalties: [
+          { account: account5Address, value: 2000n },
+          { account: account6Address, value: 1000n },
         ],
-        [],
-      ]);
+        signatures: [],
+      });
 
       const left = Order(
         account1Address,
@@ -756,17 +747,17 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const account6Address = await accounts[6].getAddress();
       const erc20Address = await erc20.getAddress();
 
-      const encodedMintData = await erc1155Test.encode([
-        1n,
-        "uri",
-        5n,
-        [[account1Address, 0n]],
-        [
-          [account5Address, 2000n],
-          [account6Address, 1000n],
+      const encodedMintData = await erc1155Test.encode({
+        tokenId: 1n,
+        tokenURI: "uri",
+        supply: 5n,
+        creators: [{ account: account1Address, value: 0n }],
+        royalties: [
+          { account: account5Address, value: 2000n },
+          { account: account6Address, value: 1000n },
         ],
-        [],
-      ]);
+        signatures: [],
+      });
 
       const left = Order(
         account1Address,
@@ -811,16 +802,16 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const account5Address = await accounts[5].getAddress();
       const account6Address = await accounts[6].getAddress();
 
-      const encodedMintData = await erc721Test.encode([
-        1n,
-        "uri",
-        [[account2Address, 0n]],
-        [
-          [account5Address, 2000n],
-          [account6Address, 1000n],
+      const encodedMintData = await erc721Test.encode({
+        tokenId: 1n,
+        tokenURI: "uri",
+        creators: [{ account: account2Address, value: 0n }],
+        royalties: [
+          { account: account5Address, value: 2000n },
+          { account: account6Address, value: 1000n },
         ],
-        [],
-      ]);
+        signatures: [],
+      });
 
       const left = Order(
         account1Address,
@@ -871,17 +862,17 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const account5Address = await accounts[5].getAddress();
       const account6Address = await accounts[6].getAddress();
 
-      const encodedMintData = await erc1155Test.encode([
-        1n,
-        "uri",
-        5n,
-        [[account2Address, 0n]],
-        [
-          [account5Address, 2000n],
-          [account6Address, 1000n],
+      const encodedMintData = await erc1155Test.encode({
+        tokenId: 1n,
+        tokenURI: "uri",
+        supply: 5n,
+        creators: [{ account: account2Address, value: 0n }],
+        royalties: [
+          { account: account5Address, value: 2000n },
+          { account: account6Address, value: 1000n },
         ],
-        [],
-      ]);
+        signatures: [],
+      });
 
       const left = Order(
         account1Address,
@@ -994,8 +985,8 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const erc721V2Address = await erc721V2.getAddress();
 
       await royaltiesRegistry.setRoyaltiesByToken(erc721V2Address, [
-        [account2Address, 1000n],
-        [account3Address, 500n],
+        { account: account2Address, value: 1000n },
+        { account: account3Address, value: 500n },
       ]);
 
       const left = Order(
@@ -1050,8 +1041,8 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const erc1155V1Address = await erc1155V1.getAddress();
 
       await royaltiesRegistry.setRoyaltiesByToken(erc1155V1Address, [
-        [account2Address, 1000n],
-        [account3Address, 500n],
+        { account: account2Address, value: 1000n },
+        { account: account3Address, value: 500n },
       ]);
 
       const left = Order(
@@ -1100,8 +1091,8 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const erc1155V2Address = await erc1155V2.getAddress();
 
       await royaltiesRegistry.setRoyaltiesByToken(erc1155V2Address, [
-        [account2Address, 1000n],
-        [account3Address, 500n],
+        { account: account2Address, value: 1000n },
+        { account: account3Address, value: 500n },
       ]);
 
       const left = Order(
@@ -1150,8 +1141,8 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const erc1155V2Address = await erc1155V2.getAddress();
 
       await royaltiesRegistry.setRoyaltiesByToken(erc1155V2Address, [
-        [account2Address, 2000n],
-        [account3Address, 3001n],
+        { account: account2Address, value: 2000n },
+        { account: account3Address, value: 3001n },
       ]);
 
       const left = Order(
@@ -1190,8 +1181,8 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
       const erc1155V2Address = await erc1155V2.getAddress();
 
       await royaltiesRegistry.setRoyaltiesByToken(erc1155V2Address, [
-        [account2Address, 1000n],
-        [account3Address, 500n],
+        { account: account2Address, value: 1000n },
+        { account: account3Address, value: 500n },
       ]);
 
       const left = Order(
@@ -1404,4 +1395,3 @@ describe("RaribleTransferManagerTest:doTransferTest()", function () {
     });
   });
 });
-
