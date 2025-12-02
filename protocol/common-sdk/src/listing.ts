@@ -106,23 +106,3 @@ export function createBuyOrder(sellOrder: OrderStruct, buyerAddress: string, pri
     data: sellOrder.data,
   };
 }
-
-/**
- * Match orders on an exchange contract
- */
-export async function matchOrderOnExchange(
-  exchange: any, // ExchangeV2 or ExchangeMetaV2 type
-  buyerWallet: Signer,
-  sellOrder: OrderStruct,
-  sellSignature: string,
-  buyOrder: OrderStruct,
-  buySignature: string,
-  price?: string,
-) {
-  const tx = await exchange.connect(buyerWallet).matchOrders(sellOrder, sellSignature, buyOrder, buySignature, {
-    gasLimit: 8_000_000n,
-    ...(price ? { value: BigInt(price) } : {}),
-  });
-  await tx.wait();
-  return tx;
-}

@@ -39,7 +39,6 @@ import { sign } from "@rarible/common-sdk/src/order";
 import {
   createSellOrder,
   createBuyOrder,
-  matchOrderOnExchange,
   ZERO_ADDRESS,
 } from "@rarible/common-sdk/src/listing";
 
@@ -231,7 +230,10 @@ describe("listingUtils", function () {
     const buyOrder = createBuyOrder(sellOrder, buyerAddress, "1000");
     const buySig = await sign(buyer, buyOrder, exchangeAddress);
 
-    await expect(matchOrderOnExchange(exchange, buyer, sellOrder, sellSig, buyOrder, buySig)).to.not.be.rejected;
+    const tx = await exchange.connect(buyer).matchOrders(sellOrder, sellSig, buyOrder, buySig, {
+      gasLimit: 8_000_000n,
+    });
+    await tx.wait();
 
     // Verify the transfer
     expect(await token721.ownerOf(tokenId)).to.equal(buyerAddress);
@@ -269,7 +271,11 @@ describe("listingUtils", function () {
     const buyOrder = createBuyOrder(sellOrder, buyerAddress, "1000");
     const buySig = await sign(buyer, buyOrder, exchangeAddress);
 
-    await matchOrderOnExchange(exchange, buyer, sellOrder, sellSig, buyOrder, buySig, "1000");
+    const tx = await exchange.connect(buyer).matchOrders(sellOrder, sellSig, buyOrder, buySig, {
+      gasLimit: 8_000_000n,
+      value: 1000n,
+    });
+    await tx.wait();
 
     // Verify the transfer
     expect(await token721.ownerOf(tokenId)).to.equal(buyerAddress);
