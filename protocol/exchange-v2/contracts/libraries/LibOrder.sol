@@ -12,9 +12,10 @@ import "./LibOrderDataV1.sol";
 library LibOrder {
     using SafeMathUpgradeable for uint;
 
-    bytes32 constant ORDER_TYPEHASH = keccak256(
-        "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
-    );
+    bytes32 constant ORDER_TYPEHASH =
+        keccak256(
+            "Order(address maker,Asset makeAsset,address taker,Asset takeAsset,uint256 salt,uint256 start,uint256 end,bytes4 dataType,bytes data)Asset(AssetType assetType,uint256 value)AssetType(bytes4 assetClass,bytes data)"
+        );
 
     bytes4 constant DEFAULT_ORDER_TYPE = 0xffffffff;
 
@@ -38,49 +39,62 @@ library LibOrder {
      * @return makeValue remaining make value of the order. if fill = 0 then it's order's make value
      * @return takeValue remaining take value of the order. if fill = 0 then it's order's take value
      */
-    function calculateRemaining(Order memory order, uint fill, bool isMakeFill) internal pure returns (uint makeValue, uint takeValue) {
+    function calculateRemaining(
+        Order memory order,
+        uint fill,
+        bool isMakeFill
+    ) internal pure returns (uint makeValue, uint takeValue) {
         if (isMakeFill) {
             makeValue = order.makeAsset.value.sub(fill);
             takeValue = LibMath.safeGetPartialAmountFloor(order.takeAsset.value, order.makeAsset.value, makeValue);
         } else {
             takeValue = order.takeAsset.value.sub(fill);
-            makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue); 
-        } 
+            makeValue = LibMath.safeGetPartialAmountFloor(order.makeAsset.value, order.takeAsset.value, takeValue);
+        }
     }
 
     function hashKey(Order memory order) internal pure returns (bytes32) {
         if (order.dataType == LibOrderDataV1.V1 || order.dataType == DEFAULT_ORDER_TYPE) {
-            return keccak256(abi.encode(
-                order.maker,
-                LibAsset.hash(order.makeAsset.assetType),
-                LibAsset.hash(order.takeAsset.assetType),
-                order.salt
-            ));
+            return
+                keccak256(
+                    abi.encode(
+                        order.maker,
+                        LibAsset.hash(order.makeAsset.assetType),
+                        LibAsset.hash(order.takeAsset.assetType),
+                        order.salt
+                    )
+                );
         } else {
             //order.data is in hash for V2, V3 and all new order
-            return keccak256(abi.encode(
-                order.maker,
-                LibAsset.hash(order.makeAsset.assetType),
-                LibAsset.hash(order.takeAsset.assetType),
-                order.salt,
-                order.data
-            ));
+            return
+                keccak256(
+                    abi.encode(
+                        order.maker,
+                        LibAsset.hash(order.makeAsset.assetType),
+                        LibAsset.hash(order.takeAsset.assetType),
+                        order.salt,
+                        order.data
+                    )
+                );
         }
     }
 
     function hash(Order memory order) internal pure returns (bytes32) {
-        return keccak256(abi.encode(
-                ORDER_TYPEHASH,
-                order.maker,
-                LibAsset.hash(order.makeAsset),
-                order.taker,
-                LibAsset.hash(order.takeAsset),
-                order.salt,
-                order.start,
-                order.end,
-                order.dataType,
-                keccak256(order.data)
-            ));
+        return
+            keccak256(
+                abi.encode(
+                    ORDER_TYPEHASH,
+                    order.maker,
+                    LibAsset.hash(order.makeAsset),
+                    order.taker,
+                    LibAsset.hash(order.takeAsset),
+                    order.salt,
+                    order.start,
+                    order.end,
+                    order.dataType,
+                    keccak256(order.data)
+                )
+            );
     }
 
     function validateOrderTime(LibOrder.Order memory order) internal view {

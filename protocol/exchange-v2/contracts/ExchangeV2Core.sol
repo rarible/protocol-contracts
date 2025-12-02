@@ -12,7 +12,14 @@ import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
 import "@rarible/transfer-manager/contracts/lib/LibDeal.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
+abstract contract ExchangeV2Core is
+    Initializable,
+    OwnableUpgradeable,
+    AssetMatcher,
+    TransferExecutor,
+    OrderValidator,
+    ITransferManager
+{
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
@@ -38,25 +45,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
  
     */
 
-    function directPurchase(
-        LibDirectTransfer.Purchase calldata direct
-    ) external payable{
+    function directPurchase(LibDirectTransfer.Purchase calldata direct) external payable {
         LibAsset.AssetType memory paymentAssetType = getPaymentAssetType(direct.paymentToken);
-                
+
         LibOrder.Order memory sellOrder = LibOrder.Order(
             direct.sellOrderMaker,
-            LibAsset.Asset(
-                LibAsset.AssetType(
-                    direct.nftAssetClass,
-                    direct.nftData
-                ),
-                direct.sellOrderNftAmount
-            ),
+            LibAsset.Asset(LibAsset.AssetType(direct.nftAssetClass, direct.nftData), direct.sellOrderNftAmount),
             address(0),
-            LibAsset.Asset(
-                paymentAssetType,
-                direct.sellOrderPaymentAmount
-            ),
+            LibAsset.Asset(paymentAssetType, direct.sellOrderPaymentAmount),
             direct.sellOrderSalt,
             direct.sellOrderStart,
             direct.sellOrderEnd,
@@ -66,18 +62,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibOrder.Order memory buyOrder = LibOrder.Order(
             address(0),
-            LibAsset.Asset(
-                paymentAssetType,
-                direct.buyOrderPaymentAmount
-            ),
+            LibAsset.Asset(paymentAssetType, direct.buyOrderPaymentAmount),
             address(0),
-            LibAsset.Asset(
-                LibAsset.AssetType(
-                    direct.nftAssetClass,
-                    direct.nftData
-                ),
-                direct.buyOrderNftAmount
-            ),
+            LibAsset.Asset(LibAsset.AssetType(direct.nftAssetClass, direct.nftData), direct.buyOrderNftAmount),
             0,
             0,
             0,
@@ -94,25 +81,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
      * @dev function, generate sellOrder and buyOrder from parameters and call validateAndMatch() for accept bid transaction
      * @param direct struct with parameters for accept bid operation
      */
-    function directAcceptBid(
-        LibDirectTransfer.AcceptBid calldata direct
-    ) external payable {
+    function directAcceptBid(LibDirectTransfer.AcceptBid calldata direct) external payable {
         LibAsset.AssetType memory paymentAssetType = getPaymentAssetType(direct.paymentToken);
 
         LibOrder.Order memory buyOrder = LibOrder.Order(
             direct.bidMaker,
-            LibAsset.Asset(
-                paymentAssetType,
-                direct.bidPaymentAmount
-            ),
+            LibAsset.Asset(paymentAssetType, direct.bidPaymentAmount),
             address(0),
-            LibAsset.Asset(
-                LibAsset.AssetType(
-                    direct.nftAssetClass,
-                    direct.nftData
-                ),
-                direct.bidNftAmount
-            ),
+            LibAsset.Asset(LibAsset.AssetType(direct.nftAssetClass, direct.nftData), direct.bidNftAmount),
             direct.bidSalt,
             direct.bidStart,
             direct.bidEnd,
@@ -122,18 +98,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
 
         LibOrder.Order memory sellOrder = LibOrder.Order(
             address(0),
-            LibAsset.Asset(
-                LibAsset.AssetType(
-                    direct.nftAssetClass,
-                    direct.nftData
-                ),
-                direct.sellOrderNftAmount
-            ),
+            LibAsset.Asset(LibAsset.AssetType(direct.nftAssetClass, direct.nftData), direct.sellOrderNftAmount),
             address(0),
-            LibAsset.Asset(
-                paymentAssetType,
-                direct.sellOrderPaymentAmount
-            ),
+            LibAsset.Asset(paymentAssetType, direct.sellOrderPaymentAmount),
             0,
             0,
             0,
@@ -157,13 +124,18 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     }
 
     /**
-      * @dev function, validate orders
-      * @param orderLeft left order
-      * @param signatureLeft order left signature
-      * @param orderRight right order
-      * @param signatureRight order right signature
-      */
-    function validateOrders(LibOrder.Order memory orderLeft, bytes memory signatureLeft, LibOrder.Order memory orderRight, bytes memory signatureRight) internal view {
+     * @dev function, validate orders
+     * @param orderLeft left order
+     * @param signatureLeft order left signature
+     * @param orderRight right order
+     * @param signatureRight order right signature
+     */
+    function validateOrders(
+        LibOrder.Order memory orderLeft,
+        bytes memory signatureLeft,
+        LibOrder.Order memory orderRight,
+        bytes memory signatureRight
+    ) internal view {
         validateFull(orderLeft, signatureLeft);
         validateFull(orderRight, signatureRight);
         if (orderLeft.taker != address(0)) {
@@ -184,26 +156,23 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function matchAndTransfer(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal {
         (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) = matchAssets(orderLeft, orderRight);
 
-        (LibOrderData.GenericOrderData memory leftOrderData, LibOrderData.GenericOrderData memory rightOrderData, LibFill.FillResult memory newFill) =
-            parseOrdersSetFillEmitMatch(orderLeft, orderRight);
+        (
+            LibOrderData.GenericOrderData memory leftOrderData,
+            LibOrderData.GenericOrderData memory rightOrderData,
+            LibFill.FillResult memory newFill
+        ) = parseOrdersSetFillEmitMatch(orderLeft, orderRight);
 
         (uint totalMakeValue, uint totalTakeValue) = doTransfers(
             LibDeal.DealSide({
-                asset: LibAsset.Asset({
-                    assetType: makeMatch,
-                    value: newFill.leftValue
-                }),
+                asset: LibAsset.Asset({assetType: makeMatch, value: newFill.leftValue}),
                 payouts: leftOrderData.payouts,
                 originFees: leftOrderData.originFees,
                 proxy: proxies[makeMatch.assetClass],
                 from: orderLeft.maker,
                 protocolFeeEnabled: leftOrderData.protocolFeeEnabled
-            }), 
+            }),
             LibDeal.DealSide({
-                asset: LibAsset.Asset( 
-                    takeMatch,
-                    newFill.rightValue
-                ),
+                asset: LibAsset.Asset(takeMatch, newFill.rightValue),
                 payouts: rightOrderData.payouts,
                 originFees: rightOrderData.originFees,
                 proxy: proxies[takeMatch.assetClass],
@@ -229,7 +198,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     function parseOrdersSetFillEmitMatch(
         LibOrder.Order memory orderLeft,
         LibOrder.Order memory orderRight
-    ) internal returns (LibOrderData.GenericOrderData memory leftOrderData, LibOrderData.GenericOrderData memory rightOrderData, LibFill.FillResult memory newFill) {
+    )
+        internal
+        returns (
+            LibOrderData.GenericOrderData memory leftOrderData,
+            LibOrderData.GenericOrderData memory rightOrderData,
+            LibFill.FillResult memory newFill
+        )
+    {
         bytes32 leftOrderKeyHash = LibOrder.hashKey(orderLeft);
         bytes32 rightOrderKeyHash = LibOrder.hashKey(orderRight);
 
@@ -272,7 +248,14 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
     ) internal returns (LibFill.FillResult memory) {
         uint leftOrderFill = getOrderFill(orderLeft.salt, leftOrderKeyHash);
         uint rightOrderFill = getOrderFill(orderRight.salt, rightOrderKeyHash);
-        LibFill.FillResult memory newFill = LibFill.fillOrder(orderLeft, orderRight, leftOrderFill, rightOrderFill, leftMakeFill, rightMakeFill);
+        LibFill.FillResult memory newFill = LibFill.fillOrder(
+            orderLeft,
+            orderRight,
+            leftOrderFill,
+            rightOrderFill,
+            leftMakeFill,
+            rightMakeFill
+        );
 
         if (orderLeft.makeAsset.value != 0 || orderRight.takeAsset.value != 0) {
             require(newFill.leftValue > 0, "nothing to fill");
@@ -310,7 +293,10 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         }
     }
 
-    function matchAssets(LibOrder.Order memory orderLeft, LibOrder.Order memory orderRight) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {
+    function matchAssets(
+        LibOrder.Order memory orderLeft,
+        LibOrder.Order memory orderRight
+    ) internal view returns (LibAsset.AssetType memory makeMatch, LibAsset.AssetType memory takeMatch) {
         makeMatch = matchAssets(orderLeft.makeAsset.assetType, orderRight.takeAsset.assetType);
         require(makeMatch.assetClass != 0, "assets don't match");
         takeMatch = matchAssets(orderLeft.takeAsset.assetType, orderRight.makeAsset.assetType);
@@ -322,9 +308,9 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         validate(order, signature);
     }
 
-    function getPaymentAssetType(address token) internal pure returns(LibAsset.AssetType memory){
+    function getPaymentAssetType(address token) internal pure returns (LibAsset.AssetType memory) {
         LibAsset.AssetType memory result;
-        if(token == address(0)) {
+        if (token == address(0)) {
             result.assetClass = LibAsset.ETH_ASSET_CLASS;
         } else {
             result.assetClass = LibAsset.ERC20_ASSET_CLASS;

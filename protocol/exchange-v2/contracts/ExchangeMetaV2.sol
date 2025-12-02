@@ -22,8 +22,13 @@ contract ExchangeMetaV2 is ExchangeV2Core, RaribleTransferManager, EIP712MetaTra
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
     }
 
-    function _msgSender() internal view virtual override(ContextUpgradeable, EIP712MetaTransaction) returns (address payable) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, EIP712MetaTransaction)
+        returns (address payable)
+    {
         return super._msgSender();
     }
-
 }

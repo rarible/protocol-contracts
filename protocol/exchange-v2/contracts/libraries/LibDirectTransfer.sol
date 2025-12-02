@@ -4,7 +4,8 @@ pragma solidity ^0.8.30;
 
 import "@rarible/lib-asset/contracts/LibAsset.sol";
 
-library LibDirectTransfer { //LibDirectTransfers
+library LibDirectTransfer {
+    //LibDirectTransfers
     /*All buy parameters need for create buyOrder and sellOrder*/
     struct Purchase {
         address sellOrderMaker; //
@@ -19,7 +20,6 @@ library LibDirectTransfer { //LibDirectTransfers
         bytes4 sellOrderDataType;
         bytes sellOrderData;
         bytes sellOrderSignature;
-
         uint256 buyOrderPaymentAmount;
         uint256 buyOrderNftAmount;
         bytes buyOrderData;
@@ -39,7 +39,6 @@ library LibDirectTransfer { //LibDirectTransfers
         bytes4 bidDataType;
         bytes bidData;
         bytes bidSignature;
-
         uint256 sellOrderPaymentAmount;
         uint256 sellOrderNftAmount;
         bytes sellOrderData;

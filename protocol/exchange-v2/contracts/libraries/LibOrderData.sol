@@ -5,15 +5,14 @@ pragma solidity ^0.8.30;
 import "./LibOrder.sol";
 
 library LibOrderData {
-
     struct GenericOrderData {
         LibPart.Part[] payouts;
         LibPart.Part[] originFees;
         bool isMakeFill;
         bool protocolFeeEnabled;
-    } 
+    }
 
-    function parse(LibOrder.Order memory order) pure internal returns (GenericOrderData memory dataOrder) {
+    function parse(LibOrder.Order memory order) internal pure returns (GenericOrderData memory dataOrder) {
         dataOrder.protocolFeeEnabled = false;
         if (order.dataType == LibOrderDataV1.V1) {
             LibOrderDataV1.DataV1 memory data = abi.decode(order.data, (LibOrderDataV1.DataV1));
@@ -30,8 +29,7 @@ library LibOrderData {
             dataOrder.originFees = data.originFees;
             dataOrder.isMakeFill = data.isMakeFill;
             dataOrder.protocolFeeEnabled = true;
-        } else if (order.dataType == 0xffffffff) {
-        } else {
+        } else if (order.dataType == 0xffffffff) {} else {
             revert("Unknown Order data type");
         }
         if (dataOrder.payouts.length == 0) {
@@ -39,17 +37,17 @@ library LibOrderData {
         }
     }
 
-    function payoutSet(address orderAddress) pure internal returns (LibPart.Part[] memory) {
+    function payoutSet(address orderAddress) internal pure returns (LibPart.Part[] memory) {
         LibPart.Part[] memory payout = new LibPart.Part[](1);
         payout[0].account = payable(orderAddress);
         payout[0].value = 10000;
         return payout;
     }
 
-    function parseOriginFeeData(uint dataFirst, uint dataSecond) internal pure returns(LibPart.Part[] memory) {
+    function parseOriginFeeData(uint dataFirst, uint dataSecond) internal pure returns (LibPart.Part[] memory) {
         LibPart.Part[] memory originFee;
 
-        if (dataFirst > 0 && dataSecond > 0){
+        if (dataFirst > 0 && dataSecond > 0) {
             originFee = new LibPart.Part[](2);
 
             originFee[0] = uintToLibPart(dataFirst);
@@ -71,7 +69,7 @@ library LibOrderData {
         return originFee;
     }
 
-    function parsePayouts(uint data) internal pure returns(LibPart.Part[] memory) {
+    function parsePayouts(uint data) internal pure returns (LibPart.Part[] memory) {
         LibPart.Part[] memory payouts;
 
         if (data > 0) {
@@ -87,11 +85,10 @@ library LibOrderData {
         @param data address and value encoded in uint (first 12 bytes )
         @return result LibPart.Part 
      */
-    function uintToLibPart(uint data) internal pure returns(LibPart.Part memory result) {
-        if (data > 0){
+    function uintToLibPart(uint data) internal pure returns (LibPart.Part memory result) {
+        if (data > 0) {
             result.account = payable(address(data));
             result.value = uint96(data >> 160);
         }
     }
-
 }

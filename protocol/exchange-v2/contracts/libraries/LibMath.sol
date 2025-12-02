@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.30;
 
-
 library LibMath {
-
     /// @dev Calculates partial value given a numerator and denominator rounded down.
     ///      Reverts if rounding error is >= 0.1%
     /// @param numerator Numerator.

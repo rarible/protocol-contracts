@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity ^0.8.30;
 
 import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";

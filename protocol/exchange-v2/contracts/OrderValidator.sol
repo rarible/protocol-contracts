@@ -14,8 +14,8 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable
 abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
     using AddressUpgradeable for address;
-    
-    bytes4 constant internal MAGICVALUE = 0x1626ba7e;
+
+    bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
     function __OrderValidator_init_unchained() internal initializer {
         __EIP712_init_unchained("Exchange", "2");
@@ -33,27 +33,26 @@ abstract contract OrderValidator is Initializable, ContextUpgradeable, EIP712Upg
                 if (order.maker.isContract()) {
                     bool isValid = false;
 
-                    try IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) returns (bytes4 signatureResult) {
+                    try IERC1271(order.maker).isValidSignature(_hashTypedDataV4(hash), signature) returns (
+                        bytes4 signatureResult
+                    ) {
                         isValid = signatureResult == MAGICVALUE;
                     } catch {
                         isValid = false;
                     }
 
                     if (!isValid) {
-                        require (order.maker != address(0), "no maker");
+                        require(order.maker != address(0), "no maker");
                         isValid = _hashTypedDataV4(hash).recover(signature) == order.maker;
                     }
 
-                    require(
-                        isValid,
-                        "contract order signature verification error"
-                    );
+                    require(isValid, "contract order signature verification error");
                 } else {
                     // if maker is not contract then checking ECDSA signature
                     if (_hashTypedDataV4(hash).recover(signature) != order.maker) {
                         revert("order signature verification error");
                     } else {
-                        require (order.maker != address(0), "no maker");
+                        require(order.maker != address(0), "no maker");
                     }
                 }
             }

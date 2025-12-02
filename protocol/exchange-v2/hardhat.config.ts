@@ -16,7 +16,17 @@ export default defineConfig({
       "@rarible/lib-signature/contracts/test/TestERC1271.sol",
       "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
       "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
-      "@rarible/transfer-proxy/contracts/test/contracts/TransferProxyTest.sol"],
+      "@rarible/transfer-proxy/contracts/test/contracts/TransferProxyTest.sol",
+      "@rarible/royalties/contracts/test/TestERC721RoyaltiesV2.sol",
+      "@rarible/royalties/contracts/test/TestERC721RoyaltiesV1.sol",
+      "@rarible/royalties/contracts/test/TestERC1155RoyaltiesV2.sol",
+      "@rarible/royalties/contracts/test/TestERC1155RoyaltiesV1.sol",
+      "@rarible/test/contracts/TestERC20.sol",
+      "@rarible/transfer-proxy/contracts/test/contracts/ERC20TransferProxyTest.sol",
+      "@rarible/lazy-mint/contracts/test/ERC721LazyMintTest.sol",
+      "@rarible/royalties/contracts/test/TestERC1155WithRoyaltiesV2_InterfaceError.sol",
+      "@rarible/royalties/contracts/test/TestERC721WithRoyaltiesV1_InterfaceError.sol"
+    ],
     profiles: {
       default: {
         version: "0.8.30",
