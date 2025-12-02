@@ -133,7 +133,7 @@ describe("ExchangeSimpleV2", function () {
 
       // Try to call getSomething before upgrade - should fail
       const wrapperBefore = ExchangeSimpleV2_1__factory.connect(proxyAddress, deployer);
-      await expect(wrapperBefore.getSomething()).to.be.revertedWith("Error: Not implemented");
+      await expect(wrapperBefore.getSomething()).to.be.revertedWithoutReason(ethers);
 
       // Deploy new implementation
       const newImpl = await new ExchangeSimpleV2_1__factory(deployer).deploy();
