@@ -1,10 +1,11 @@
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
 import hardhatEthers from "@nomicfoundation/hardhat-ignition-ethers"
+import hardhatDeploy from "hardhat-deploy";
 import { defineConfig } from "hardhat/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers],
+  plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers, hardhatDeploy],
 
   solidity: {
     npmFilesToBuild: [
