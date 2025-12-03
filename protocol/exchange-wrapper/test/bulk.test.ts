@@ -44,7 +44,10 @@ import { verifyBalanceChangeReturnTx } from "@rarible/common-sdk/src/balance";
 
 // Import test token types (simple non-upgradeable versions)
 import type { TestERC721, TestERC1155 } from "../types/ethers-contracts/@rarible/transfer-proxy/contracts/test/tokens";
-import { TestERC721__factory, TestERC1155__factory } from "../types/ethers-contracts/factories/@rarible/transfer-proxy/contracts/test/tokens";
+import {
+  TestERC721__factory,
+  TestERC1155__factory,
+} from "../types/ethers-contracts/factories/@rarible/transfer-proxy/contracts/test/tokens";
 
 // Import Exchange V2 and helpers
 import type { RaribleTestHelper } from "../types/ethers-contracts/@rarible/exchange-v2/contracts/test";
