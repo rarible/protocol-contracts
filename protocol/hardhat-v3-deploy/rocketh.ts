@@ -19,8 +19,10 @@ export const config = {
 // extensions are simply function that accept as their first argument the Environment
 // by passing them to the setup function (see below) you get to access them through the environment object with type-safety
 import * as deployExtensions from '@rocketh/deploy'; // this one provide a deploy function
-import * as readExecuteFunctions from '@rocketh/read-execute'; // this one provide read,execute functions
-const extensions = {...deployExtensions, ...readExecuteExtensions};
+import * as readExecuteExtensions from '@rocketh/read-execute'; // this one provide read,execute extensions
+import * as proxyExtensions from '@rocketh/proxy'; // this one provide extensions to declare proxy deployments
+
+const extensions = {...deployExtensions, ...readExecuteExtensions, ...proxyExtensions};
 // ------------------------------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
 import * as artifacts from './generated/artifacts.js';

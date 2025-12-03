@@ -2,11 +2,32 @@ import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mo
 import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
 import hardhatEthers from "@nomicfoundation/hardhat-ignition-ethers"
 import hardhatDeploy from "hardhat-deploy";
+import * as dotenv from "dotenv";
 import { defineConfig } from "hardhat/config";
+import { addForkConfiguration, addNetworksFromEnv } from "hardhat-deploy/helpers";
+
+dotenv.config();
+
+const networks = addForkConfiguration(
+  addNetworksFromEnv({
+    hardhatMainnet: {
+      type: "edr-simulated",
+      chainType: "l1",
+    },
+    hardhatOp: {
+      type: "edr-simulated",
+      chainType: "op",
+    },
+    sepolia: {
+      type: "http",
+      url: process.env.SEPOLIA_RPC_URL || "",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    },
+  }),
+);
 
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers, hardhatDeploy],
-
   solidity: {
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
@@ -33,14 +54,5 @@ export default defineConfig({
       },
     },
   },
-  networks: {
-    hardhatMainnet: {
-      type: "edr-simulated",
-      chainType: "l1",
-    },
-    hardhatOp: {
-      type: "edr-simulated",
-      chainType: "op",
-    },
-  },
+  networks,
 });
