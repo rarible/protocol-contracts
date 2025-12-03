@@ -11,9 +11,15 @@ export default defineConfig({
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
       "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
       "@rarible/exchange-v2/contracts/test/RaribleTestHelper.sol",
-      "@rarible/test/contracts/TestERC20.sol",
-      "@rarible/test/contracts/TestERC721.sol",
-      "@rarible/test/contracts/TestERC1155.sol"],
+      "@rarible/transfer-proxy/contracts/test/tokens/TestERC20.sol",
+      "@rarible/transfer-proxy/contracts/test/tokens/TestERC721.sol",
+      "@rarible/transfer-proxy/contracts/test/tokens/TestERC1155.sol",
+      "@rarible/transfer-proxy/contracts/test/contracts/TransferProxyTest.sol",
+      "@rarible/transfer-proxy/contracts/test/contracts/ERC20TransferProxyTest.sol",
+      "@rarible/transfer-proxy/contracts/proxy/TransferProxy.sol",
+      "@rarible/transfer-proxy/contracts/proxy/ERC20TransferProxy.sol",
+      "@rarible/exchange-v2/contracts/ExchangeV2.sol",
+      "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol"],
     profiles: {
       default: {
         version: "0.8.30",
