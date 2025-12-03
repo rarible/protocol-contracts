@@ -150,8 +150,8 @@ contract WrapperHelper {
         );
     }
 
-    function encodeOriginFeeIntoUint(address account, uint96 value) external pure returns (uint) {
-        return (uint(value) << 160) + uint(account);
+    function encodeOriginFeeIntoUint(address account, uint96 value) external pure returns (uint256) {
+        return (uint256(value) << 160) + uint256(uint160(account));
     }
 
     function getDataDirectPurchase(LibDirectTransfer.Purchase memory data) external pure returns (bytes memory result) {
@@ -263,13 +263,13 @@ contract WrapperHelper {
         return abi.encode(data);
     }
 
-    function encodeBpPlusAccount(uint bp, address account) external pure returns (uint) {
-        return (uint(bp) << 160) + uint(account);
+    function encodeBpPlusAccount(uint256 bp, address account) external pure returns (uint) {
+        return (uint256(bp) << 160) + uint256(uint160(account));
     }
 
     function decodeFees(uint data) external pure returns (uint, uint) {
-        uint first = uint(uint16(data >> 16));
-        uint second = uint(uint16(data));
+        uint256 first = uint256(uint16(data >> 16));
+        uint256 second = uint256(uint16(data));
         return (first, second);
     }
 

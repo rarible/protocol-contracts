@@ -110,8 +110,9 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
         //address _seaPort_1_5, 9
         //address _seaPort_1_6, 10
         address _weth,
-        address[] memory transferProxies
-    ) {
+        address[] memory transferProxies,
+        address owner
+    ) Ownable(owner) {
         wyvernExchange = marketplaces[0];
         exchangeV2 = marketplaces[1];
         seaPort_1_1 = marketplaces[2];
@@ -223,13 +224,13 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
             if (currency == Currencies.ETH) {
                 (success, firstFeeAmount, secondFeeAmount) = purchase(purchaseDetails[i], allowFail);
 
-                sumFirstFeesETH = sumFirstFeesETH.add(firstFeeAmount);
-                sumSecondFeesETH = sumSecondFeesETH.add(secondFeeAmount);
+                sumFirstFeesETH = sumFirstFeesETH + firstFeeAmount;
+                sumSecondFeesETH = sumSecondFeesETH + secondFeeAmount;
             } else if (currency == Currencies.WETH) {
                 (success, firstFeeAmount, secondFeeAmount) = purchaseWETH(purchaseDetails[i], allowFail);
 
-                sumFirstFeesWETH = sumFirstFeesWETH.add(firstFeeAmount);
-                sumSecondFeesWETH = sumSecondFeesWETH.add(secondFeeAmount);
+                sumFirstFeesWETH = sumFirstFeesWETH + firstFeeAmount;
+                sumSecondFeesWETH = sumSecondFeesWETH + secondFeeAmount;
             } else {
                 revert("Unknown purchase currency");
             }
@@ -364,11 +365,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
                 ILooksRare(looksRare).matchAskWithTakerBidUsingETHAndWETH{value: paymentAmount}(takerOrder, makerOrder);
             }
             if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
-                IERC721(makerOrder.collection).safeTransferFrom(
-                    address(this),
-                    _msgSender(),
-                    makerOrder.tokenId
-                );
+                IERC721(makerOrder.collection).safeTransferFrom(address(this), _msgSender(), makerOrder.tokenId);
             } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
                 IERC1155(makerOrder.collection).safeTransferFrom(
                     address(this),
@@ -420,11 +417,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
                 IBlur(blur).execute{value: paymentAmount}(sell, buy);
             }
             if (typeNft == LibAsset.ERC721_ASSET_CLASS) {
-                IERC721(sell.order.collection).safeTransferFrom(
-                    address(this),
-                    _msgSender(),
-                    sell.order.tokenId
-                );
+                IERC721(sell.order.collection).safeTransferFrom(address(this), _msgSender(), sell.order.tokenId);
             } else if (typeNft == LibAsset.ERC1155_ASSET_CLASS) {
                 IERC1155(sell.order.collection).safeTransferFrom(
                     address(this),
@@ -642,7 +635,7 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     function transferAdditionalRoyaltiesETH(uint[] memory _additionalRoyalties, uint amount) internal {
         for (uint i = 0; i < _additionalRoyalties.length; ++i) {
             if (_additionalRoyalties[i] > 0) {
-                address payable account = payable(address(_additionalRoyalties[i]));
+                address payable account = payable(address(uint160(_additionalRoyalties[i])));
                 uint basePoint = uint(_additionalRoyalties[i] >> 160);
                 uint value = amount.bp(basePoint);
                 transferFeeETH(value, account);
@@ -657,8 +650,8 @@ contract RaribleExchangeWrapper is Ownable, ERC721Holder, ERC1155Holder, IsPausa
     function transferAdditionalRoyaltiesWETH(uint[] memory _additionalRoyalties, uint amount) internal {
         for (uint i = 0; i < _additionalRoyalties.length; ++i) {
             if (_additionalRoyalties[i] > 0) {
-                address payable account = payable(address(_additionalRoyalties[i]));
-                uint basePoint = uint(_additionalRoyalties[i] >> 160);
+                address payable account = payable(address(uint160(_additionalRoyalties[i])));
+                uint256 basePoint = uint256(_additionalRoyalties[i] >> 160);
                 uint value = amount.bp(basePoint);
                 transferFeeWETH(value, account);
             }
