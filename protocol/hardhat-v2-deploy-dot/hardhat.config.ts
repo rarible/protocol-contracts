@@ -5,7 +5,17 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const config: HardhatUserConfig = {
-    solidity: "0.8.30",
+    solidity: {
+        version: "0.8.30",
+        settings: {
+            optimizer: {
+                enabled: true,
+                runs: 200,  // Lower runs = smaller code size (optimize for size)
+            },
+            viaIR: true,  // Enable IR-based compilation for better optimization
+            evmVersion: "cancun",
+        },
+    },
     sourcify: {
         enabled: true,
         // Optional: specify a different Sourcify server
