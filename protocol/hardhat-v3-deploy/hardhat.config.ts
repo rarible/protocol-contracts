@@ -50,6 +50,7 @@ export default defineConfig({
       "@rarible/exchange-v2/contracts/ExchangeV2.sol",
       "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol",
       "@rarible/royalties-registry/contracts/RoyaltiesRegistryPermissioned.sol",
+      "@rarible/custom-matchers/contracts/AssetMatcherCollection.sol",
     ],
     profiles: {
       default: {

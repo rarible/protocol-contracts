@@ -6,3 +6,10 @@ export const DEPLOY_FROM = process.env.DEPLOY_FROM;
 export const ROYALTIES_REGISTRY_TYPE = process.env.ROYALTIES_REGISTRY_TYPE || "RoyaltiesRegistry";
 
 export const DETERMENISTIC_DEPLOYMENT_SALT: string = process.env.DETERMENISTIC_DEPLOYMENT_SALT || "0x1118";
+
+export function getConfig(network: string) {
+  return {
+    deploy_meta: network === "sepolia" ? false : false,
+    deploy_non_meta: network === "sepolia" ? true : false,
+  }
+}

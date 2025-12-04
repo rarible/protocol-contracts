@@ -25,7 +25,7 @@ import * as proxyExtensions from '@ifelsedeveloper/proxy'; // this one provide e
 const extensions = {...deployExtensions, ...readExecuteExtensions, ...proxyExtensions};
 // ------------------------------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
-import * as artifacts from './generated/artifacts.js';
+import * as artifacts from './generated/artifacts/index.js';
 export {artifacts};
 // ------------------------------------------------------------------------------------------------
 // we create the rocketh function we need by passing the extensions

@@ -2,98 +2,80 @@
 import {deployScript, artifacts} from '#rocketh';
 
 export default deployScript(
-	// this allow us to define a function which takes as first argument an environment object
 	async ({deployViaProxy, namedAccounts}) => {
-		// you can get named accounts from the environment object
 		const {deployer} = namedAccounts;
 
 		console.log('deployer', deployer);
 
-		// Deploy and initialise 4 transfer proxies
-		await deployViaProxy(
-			'TransferProxy',
-			{
-				account: deployer,
-				artifact: artifacts.TransferProxy,
-				args: [],
-			},
-			{
-				owner: deployer,
-				linkedData: {
-					deployer,
-				},
-				execute: {
-					methodName: "__TransferProxy_init",
-					args: [deployer],
-				},
-				proxyContract: "SharedAdminOptimizedTransparentProxy",
-				deterministic: false,
-			},
-		);
+		// Deploy and initialise 4 transfer proxies using common helper
+		await deployTransferProxy({
+			name: 'TransferProxy',
+			artifact: artifacts.TransferProxy,
+			initMethod: '__TransferProxy_init',
+			deployViaProxy,
+			deployer,
+		});
 
-		await deployViaProxy(
-			'ERC20TransferProxy',
-			{
-				account: deployer,
-				artifact: artifacts.ERC20TransferProxy,
-				args: [],
-			},
-			{
-				owner: deployer,
-				linkedData: {
-					deployer,
-				},
-				execute: {
-					methodName: "__ERC20TransferProxy_init",
-					args: [deployer],
-				},
-				proxyContract: "SharedAdminOptimizedTransparentProxy",
-				deterministic: false,
-			},
-		);
+		await deployTransferProxy({
+			name: 'ERC20TransferProxy',
+			artifact: artifacts.ERC20TransferProxy,
+			initMethod: '__ERC20TransferProxy_init',
+			deployViaProxy,
+			deployer,
+		});
 
-		await deployViaProxy(
-			'ERC721LazyMintTransferProxy',
-			{
-				account: deployer,
-				artifact: artifacts.ERC721LazyMintTransferProxy,
-				args: [],
-			},
-			{
-				owner: deployer,
-				linkedData: {
-					deployer,
-				},
-				execute: {
-					methodName: "__ERC721LazyMintTransferProxy_init",
-					args: [deployer],
-				},
-				proxyContract: "SharedAdminOptimizedTransparentProxy",
-				deterministic: false,
-			},
-		);
+		await deployTransferProxy({
+			name: 'ERC721LazyMintTransferProxy',
+			artifact: artifacts.ERC721LazyMintTransferProxy,
+			initMethod: '__ERC721LazyMintTransferProxy_init',
+			deployViaProxy,
+			deployer,
+		});
 
-		await deployViaProxy(
-			'ERC1155LazyMintTransferProxy',
-			{
-				account: deployer,
-				artifact: artifacts.ERC1155LazyMintTransferProxy,
-				args: [],
-			},
-			{
-				owner: deployer,
-				linkedData: {
-					deployer,
-				},
-				execute: {
-					methodName: "__ERC1155LazyMintTransferProxy_init",
-					args: [deployer],
-				},
-				proxyContract: "SharedAdminOptimizedTransparentProxy",
-				deterministic: false,
-			},
-		);
+		await deployTransferProxy({
+			name: 'ERC1155LazyMintTransferProxy',
+			artifact: artifacts.ERC1155LazyMintTransferProxy,
+			initMethod: '__ERC1155LazyMintTransferProxy_init',
+			deployViaProxy,
+			deployer,
+		});
 	},
-	// finally you can pass tags and dependencies
 	{tags: ['all', 'all-no-tokens', 'all-with-sanity-check', 'deploy-transfer-proxies', '002']},
 );
+
+interface DeployTransferProxyParams {
+	name: string;
+	artifact: any;
+	initMethod: string;
+	deployViaProxy: any;
+	deployer: string;
+}
+
+async function deployTransferProxy({
+	name,
+	artifact,
+	initMethod,
+	deployViaProxy,
+	deployer,
+}: DeployTransferProxyParams) {
+	await deployViaProxy(
+		name,
+		{
+			account: deployer,
+			artifact,
+			args: [],
+		},
+		{
+			owner: deployer,
+			linkedData: {
+				deployer,
+			},
+			execute: {
+				methodName: initMethod,
+				args: [deployer],
+			},
+			proxyContract: 'SharedAdminOptimizedTransparentProxy',
+			deterministic: false,
+		},
+	);
+}

@@ -29,6 +29,7 @@ export default deployScript(
 					args: [],
 				},
 				proxyContract: "SharedAdminOptimizedTransparentProxy",
+        deterministic: false,
 			},
 		);
 	},
