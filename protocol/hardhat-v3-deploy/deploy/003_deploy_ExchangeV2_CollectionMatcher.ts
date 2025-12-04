@@ -28,7 +28,7 @@ export default deployScript(
 		const { deploy_meta, deploy_non_meta } = getConfig(network.chain.name);
 
 		// Deploy ExchangeV2 with meta support if needed
-		if (!!deploy_meta) {
+		if (deploy_meta) {
 			await deployAndSetupExchange({
 				contractName: 'ExchangeMetaV2',
 				deployViaProxy,
@@ -43,7 +43,7 @@ export default deployScript(
 			});
 		}
 
-		//if (!!deploy_non_meta) {
+		if (deploy_non_meta) {
 			await deployAndSetupExchange({
 				contractName: 'ExchangeV2',
 				deployViaProxy,
@@ -56,7 +56,7 @@ export default deployScript(
 				erc1155LazyMintTransferProxyAddress: erc1155LazyMintTransferProxyDeployment.address,
 				royaltiesRegistryAddress: royaltiesRegistryDeployment.address,
 			});
-		//}
+		}
 	},
 	{tags: ['all', 'all-no-tokens', 'all-with-sanity-check', 'deploy-exchange', '003'], dependencies: ['001', '002']},
 );

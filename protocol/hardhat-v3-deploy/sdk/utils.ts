@@ -9,7 +9,7 @@ export const DETERMENISTIC_DEPLOYMENT_SALT: string = process.env.DETERMENISTIC_D
 
 export function getConfig(network: string) {
   return {
-    deploy_meta: network === "sepolia" ? false : false,
-    deploy_non_meta: network === "sepolia" ? true : false,
+    deploy_meta: network.toLowerCase() === "sepolia" ? false : false,
+    deploy_non_meta: network.toLowerCase() === "sepolia" ? true : false,
   }
 }

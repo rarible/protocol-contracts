@@ -51,6 +51,11 @@ export default defineConfig({
       "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol",
       "@rarible/royalties-registry/contracts/RoyaltiesRegistryPermissioned.sol",
       "@rarible/custom-matchers/contracts/AssetMatcherCollection.sol",
+      "@rarible/tokens/contracts/erc-721-minimal/ERC721RaribleMinimal.sol",
+      "@rarible/tokens/contracts/erc-721-minimal/erc-721-minimal-meta/ERC721RaribleMeta.sol",
+      "@rarible/tokens/contracts/beacons/ERC721RaribleMinimalBeacon.sol",
+      "@rarible/tokens/contracts/beacons/ERC721RaribleMinimalBeaconMeta.sol",
+      "@rarible/tokens/contracts/create-2/ERC721RaribleFactoryC2.sol",
     ],
     profiles: {
       default: {
