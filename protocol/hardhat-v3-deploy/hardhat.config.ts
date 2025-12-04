@@ -4,6 +4,7 @@ import HardhatNodeTestRunner from '@nomicfoundation/hardhat-node-test-runner';
 import HardhatViem from '@nomicfoundation/hardhat-viem';
 import HardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
 import HardhatKeystore from '@nomicfoundation/hardhat-keystore';
+import HardhatVerify from '@nomicfoundation/hardhat-verify';
 
 import HardhatDeploy from 'hardhat-deploy';
 import {addForkConfiguration, addNetworksFromEnv} from 'hardhat-deploy/helpers';
@@ -31,7 +32,7 @@ const networks = addForkConfiguration(
 );
 
 export default defineConfig({
-  plugins: [HardhatNodeTestRunner, HardhatViem, HardhatNetworkHelpers, HardhatKeystore, HardhatDeploy],
+  plugins: [HardhatNodeTestRunner, HardhatViem, HardhatNetworkHelpers, HardhatKeystore, HardhatVerify, HardhatDeploy],
 	solidity: {
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
@@ -61,4 +62,7 @@ export default defineConfig({
     },
   },
   networks,
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
+  },
 });
