@@ -10,5 +10,11 @@ import "@rarible/transfer-proxy/contracts/proxy/ERC20TransferProxy.sol";
 import "@rarible/transfer-proxy/contracts/lazy-mint/erc721/ERC721LazyMintTransferProxy.sol";
 import "@rarible/transfer-proxy/contracts/lazy-mint/erc1155/ERC1155LazyMintTransferProxy.sol";
 
+// Import ExchangeV2 for deployment
+import "@rarible/exchange-v2/contracts/ExchangeV2.sol";
+
+// Import AssetMatcherCollection for deployment
+import "@rarible/custom-matchers/contracts/AssetMatcherCollection.sol";
+
 // Import OpenZeppelin's TransparentUpgradeableProxy
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
