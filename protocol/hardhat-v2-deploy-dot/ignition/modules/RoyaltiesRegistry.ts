@@ -5,7 +5,8 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
 
 const RoyaltiesRegistryModule = buildModule("RoyaltiesRegistryModule", (m) => {
     // Get the owner parameter (proxy admin owner)
-    const owner = m.getParameter("owner")
+    // Type annotation is required for address parameters
+    const owner = m.getParameter<string>("owner")
 
     // 1. Deploy the RoyaltiesRegistry implementation contract
     const royaltiesRegistryImpl = m.contract("RoyaltiesRegistry", [], {
