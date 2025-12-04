@@ -5,9 +5,9 @@ export default deployScript(
 	// this allow us to define a functiong which takes as first argument an environment object
 	async ({deployViaProxy, namedAccounts}) => {
 		// you can get named accounts from the environment object
-		const {deployer, admin} = namedAccounts;
+		const {deployer} = namedAccounts;
 
-		const prefix = 'proxy:';
+  console.log('deployer', deployer);
 		// you can use the deployViaProxy function to deploy a contract via a proxy
 		// see `import "@rocketh/proxy"` in ../rocketh.ts
 		await deployViaProxy(
@@ -15,15 +15,22 @@ export default deployScript(
 			{
 				account: deployer,
 				artifact: artifacts.RoyaltiesRegistry,
-				args: [prefix],
+				args: [],
 			},
-			{
-				owner: admin,
+      {
+				owner: deployer,
 				linkedData: {
-					prefix,
-					admin,
+					deployer,
 				},
+        execute: {
+          init: {
+            methodName: "__RoyaltiesRegistry_init",
+            args: [deployer],
+          },
+        },
+        proxyContract: "SharedAdminOptimizedTransparentProxy",
 			},
+      {deterministicDeployment: false}
 		);
 	},
 	// finally you can pass tags and dependencies

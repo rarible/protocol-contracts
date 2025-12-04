@@ -30,7 +30,7 @@ export {artifacts};
 // ------------------------------------------------------------------------------------------------
 // we create the rocketh function we need by passing the extensions
 import {setup} from 'rocketh';
-const {deployScript, loadAndExecuteDeployments} = setup<typeof extensions, typeof config.accounts, typeof config.data>(
+const {deployScript, loadAndExecuteDeployments} = setup<typeof extensions, typeof config.accounts>(
     extensions,
 );
 // ------------------------------------------------------------------------------------------------

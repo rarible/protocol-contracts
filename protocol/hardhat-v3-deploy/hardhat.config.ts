@@ -1,11 +1,15 @@
-import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
-import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
-import hardhatEthers from "@nomicfoundation/hardhat-ignition-ethers"
-import hardhatDeploy from "hardhat-deploy";
-import * as dotenv from "dotenv";
-import { defineConfig } from "hardhat/config";
-import { addForkConfiguration, addNetworksFromEnv } from "hardhat-deploy/helpers";
+import {HardhatUserConfig, configVariable} from 'hardhat/config';
 
+import HardhatNodeTestRunner from '@nomicfoundation/hardhat-node-test-runner';
+import HardhatViem from '@nomicfoundation/hardhat-viem';
+import HardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
+import HardhatKeystore from '@nomicfoundation/hardhat-keystore';
+
+import HardhatDeploy from 'hardhat-deploy';
+import {addForkConfiguration, addNetworksFromEnv} from 'hardhat-deploy/helpers';
+import { defineConfig } from "hardhat/config";
+
+import * as dotenv from "dotenv";
 dotenv.config();
 
 const networks = addForkConfiguration(
@@ -27,8 +31,8 @@ const networks = addForkConfiguration(
 );
 
 export default defineConfig({
-  plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers, hardhatDeploy],
-  solidity: {
+  plugins: [HardhatNodeTestRunner, HardhatViem, HardhatNetworkHelpers, HardhatKeystore, HardhatDeploy],
+	solidity: {
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
       "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
@@ -41,7 +45,9 @@ export default defineConfig({
       "@rarible/transfer-proxy/contracts/proxy/TransferProxy.sol",
       "@rarible/transfer-proxy/contracts/proxy/ERC20TransferProxy.sol",
       "@rarible/exchange-v2/contracts/ExchangeV2.sol",
-      "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol"],
+      "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol",
+      "@rarible/royalties-registry/contracts/RoyaltiesRegistryPermissioned.sol",
+    ],
     profiles: {
       default: {
         version: "0.8.30",
