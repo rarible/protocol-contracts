@@ -30,7 +30,7 @@ import {
 
 // Import common-sdk helpers
 import { Order, Asset, sign, type OrderStruct } from "@rarible/common-sdk/src/order";
-import { ETH, ERC721, enc } from "@rarible/common-sdk/src/assets";
+import { ETH, ERC721, enc, ORDER_DATA_V3 } from "@rarible/common-sdk/src/assets";
 
 // Get paths for deployment files
 const __filename = fileURLToPath(import.meta.url);
@@ -47,19 +47,18 @@ function getDeployment(name: string): { address: string; abi: any[] } {
 // Constants
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-// V3 data type selector
-const V3_SELL = "0x2a49eb4b";
-
 // Helper to build token ID from receiver address and offset (for 2981 royalties)
 function buildTokenId(receiver: string, offset: bigint): bigint {
   return (BigInt(receiver) << 96n) + offset;
 }
 
-// Helper to encode V3 data (minimal - no fees)
-function encodeV3Data(): string {
+// Helper to encode V3 data (matches LibOrderDataV3.DataV3 struct in Solidity)
+// DataV3 { Part[] payouts, Part[] originFees, bool isMakeFill }
+// where Part is { address account, uint96 value }
+function encodeV3Data(isMakeFill: boolean = true): string {
   return ethers.AbiCoder.defaultAbiCoder().encode(
-    ["tuple(tuple(address,uint96)[],tuple(address,uint96)[],bool,uint256)"],
-    [[[], [], true, 0n]],
+    ["tuple(tuple(address,uint96)[],tuple(address,uint96)[],bool)"],
+    [[[], [], isMakeFill]],
   );
 }
 
@@ -210,10 +209,10 @@ describe("ExchangeV2 with ERC2981 Royalties (Hardhat 3 + Ethers 6)", function ()
       const oldType = await oldRegistry.getRoyaltiesType.staticCall(await erc721.getAddress());
       const type = await registry.getRoyaltiesType.staticCall(await erc721.getAddress());
 
-      console.log("Old type:", oldType);
-      console.log("Type:", type);
-      console.log("Result old:", JSON.stringify(resultOld));
-      console.log("Result:", JSON.stringify(result));
+      console.log("Old type:", oldType.toString());
+      console.log("Type:", type.toString());
+      console.log("Result old:", JSON.stringify(resultOld, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
+      console.log("Result:", JSON.stringify(result, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
 
       expect(oldType).to.equal(type, "Types should be the same");
       expect(resultOld.length).to.equal(result.length, "Results should be the same");
@@ -258,7 +257,7 @@ describe("ExchangeV2 with ERC2981 Royalties (Hardhat 3 + Ethers 6)", function ()
         BigInt(Date.now()),
         0n,
         0n,
-        V3_SELL,
+        ORDER_DATA_V3,
         encodeV3Data(),
       );
 
@@ -276,7 +275,7 @@ describe("ExchangeV2 with ERC2981 Royalties (Hardhat 3 + Ethers 6)", function ()
         BigInt(Date.now()) + 1n,
         0n,
         0n,
-        V3_SELL,
+        ORDER_DATA_V3,
         encodeV3Data(),
       );
 
