@@ -4,6 +4,9 @@ import "@parity/hardhat-polkadot"
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// Import custom tasks
+import "./tasks/verify-ignition"
+
 const config: HardhatUserConfig = {
     solidity: {
         version: "0.8.30",
