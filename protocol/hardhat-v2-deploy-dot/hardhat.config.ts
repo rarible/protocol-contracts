@@ -41,6 +41,10 @@ const config: HardhatUserConfig = {
             url: "https://testnet-passet-hub-eth-rpc.polkadot.io",
             accounts: [process.env.PRIVATE_KEY!],
         },
+        sepolia: {
+            url: "https://ethereum-sepolia-rpc.publicnode.com",
+            accounts: [process.env.PRIVATE_KEY!],
+        },
     },
     etherscan: {
         apiKey: {
