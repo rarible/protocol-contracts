@@ -61,6 +61,7 @@ export default defineConfig({
       "@rarible/tokens/contracts/beacons/ERC1155RaribleBeacon.sol",
       "@rarible/tokens/contracts/beacons/ERC1155RaribleBeaconMeta.sol",
       "@rarible/tokens/contracts/create-2/ERC1155RaribleFactoryC2.sol",
+      "@rarible/exchange-wrapper/contracts/RaribleExchangeWrapper.sol",
     ],
     profiles: {
       default: {
