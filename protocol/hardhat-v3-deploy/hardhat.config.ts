@@ -1,5 +1,3 @@
-import {HardhatUserConfig, configVariable} from 'hardhat/config';
-
 import HardhatNodeTestRunner from '@nomicfoundation/hardhat-node-test-runner';
 import HardhatViem from '@nomicfoundation/hardhat-viem';
 import HardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
@@ -8,7 +6,8 @@ import HardhatVerify from '@nomicfoundation/hardhat-verify';
 
 import HardhatDeploy from 'hardhat-deploy';
 import {addForkConfiguration, addNetworksFromEnv} from 'hardhat-deploy/helpers';
-import { defineConfig } from "hardhat/config";
+import { configVariable, defineConfig } from "hardhat/config";
+
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -74,6 +73,12 @@ export default defineConfig({
         },
       },
     },
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable('ETHERSCAN_API_KEY'),
+    }
+    
   },
   networks,
 });
