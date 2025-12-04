@@ -16,5 +16,10 @@ import "@rarible/exchange-v2/contracts/ExchangeV2.sol";
 // Import AssetMatcherCollection for deployment
 import "@rarible/custom-matchers/contracts/AssetMatcherCollection.sol";
 
+// Import ERC721 Token, Beacon, and Factory for deployment
+import "@rarible/tokens/contracts/erc-721-minimal/ERC721RaribleMinimal.sol";
+import "@rarible/tokens/contracts/beacons/ERC721RaribleMinimalBeacon.sol";
+import "@rarible/tokens/contracts/create-2/ERC721RaribleFactoryC2.sol";
+
 // Import OpenZeppelin's TransparentUpgradeableProxy
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
