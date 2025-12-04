@@ -77,4 +77,57 @@ for f in $FILES; do
   sleep 1
 done
 
+# Add Protocol Fee Information section
+echo "" >> "$path_readme"
+echo "## Protocol Fee Configuration" >> "$path_readme"
+echo "" >> "$path_readme"
+
+# Check if ExchangeV2 deployment exists
+exchange_file="deployments/${NETWORK}/ExchangeV2.json"
+if [ -f "$exchange_file" ]; then
+  exchange_address=$(jq -r .address "$exchange_file")
+  
+  # Get RPC URL from network config
+  rpc_url=$(jq -r '.nodeUrl // .rpcUrl // .url // empty' "$path")
+  if [ -z "$rpc_url" ]; then
+    echo -e "${Red}No RPC URL found in config, using hardcoded fee values${NC}"
+    fee_receiver="unknown"
+    buyer_fee="unknown"
+    seller_fee="unknown"
+  else
+    echo "Reading protocol fee from contract at $exchange_address..."
+    # Call protocolFee() function - returns (address receiver, uint48 buyerAmount, uint48 sellerAmount)
+    fee_data=$(cast call "$exchange_address" "protocolFee()(address,uint48,uint48)" --rpc-url "$rpc_url" 2>/dev/null || echo "")
+    
+    if [ -n "$fee_data" ]; then
+      # Parse the output (cast returns newline-separated values)
+      fee_receiver=$(echo "$fee_data" | sed -n '1p')
+      buyer_fee=$(echo "$fee_data" | sed -n '2p')
+      seller_fee=$(echo "$fee_data" | sed -n '3p')
+      
+      # Calculate percentage (fee is in basis points, 100 bps = 1%)
+      buyer_pct=$(echo "scale=2; $buyer_fee / 100" | bc)
+      seller_pct=$(echo "scale=2; $seller_fee / 100" | bc)
+    else
+      echo -e "${Red}Failed to read protocol fee from contract${NC}"
+      fee_receiver="failed to read"
+      buyer_fee="failed to read"
+      seller_fee="failed to read"
+      buyer_pct="?"
+      seller_pct="?"
+    fi
+  fi
+  
+  echo "| Parameter | Value |" >> "$path_readme"
+  echo "| --- | --- |" >> "$path_readme"
+  echo "| Exchange Contract | $exchange_address |" >> "$path_readme"
+  echo "| Fee Receiver | $fee_receiver |" >> "$path_readme"
+  echo "| Buyer Fee | $buyer_fee bps ($buyer_pct%) |" >> "$path_readme"
+  echo "| Seller Fee | $seller_fee bps ($seller_pct%) |" >> "$path_readme"
+  echo "" >> "$path_readme"
+  echo "Added protocol fee information for ExchangeV2"
+else
+  echo "No ExchangeV2 deployment found, skipping protocol fee info"
+fi
+
 echo -e "${Green}Done! Contracts table for $NETWORK written to $path_readme${NC}"

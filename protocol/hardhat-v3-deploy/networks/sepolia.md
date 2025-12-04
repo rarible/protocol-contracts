@@ -15,3 +15,13 @@
  RaribleExchangeWrapper | 0xe51ea6b5513607d1fd47a8728943cf2deb7bdc59 | https://sepolia.etherscan.io/address/0xe51ea6b5513607d1fd47a8728943cf2deb7bdc59
  RoyaltiesRegistry | 0x6e8a327181ce6d83a6ce4a58fe6d07f50b0bc0af | https://sepolia.etherscan.io/address/0x6e8a327181ce6d83a6ce4a58fe6d07f50b0bc0af
  TransferProxy | 0x1d3f902a19cb77ba4c1f077707946a6f4e8eb05a | https://sepolia.etherscan.io/address/0x1d3f902a19cb77ba4c1f077707946a6f4e8eb05a
+
+## Protocol Fee Configuration
+
+| Parameter | Value |
+| --- | --- |
+| Exchange Contract | 0x4f9795a4ccee4f3e4eb4a5111a5ef298e7a5fbc6 |
+| Fee Receiver | 0x053F171c0D0Cc9d76247D4d1CdDb280bf1131390 |
+| Buyer Fee | 0 bps (0%) |
+| Seller Fee | 200 bps (2.00%) |
+
