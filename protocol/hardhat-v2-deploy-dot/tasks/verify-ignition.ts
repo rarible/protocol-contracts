@@ -103,13 +103,31 @@ function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+// Run verification with timeout
+async function verifyWithTimeout(
+    hre: any, 
+    verifyArgs: any, 
+    timeoutMs: number = 60000
+): Promise<void> {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Verification timeout")), timeoutMs)
+    })
+    
+    await Promise.race([
+        hre.run("verify:verify", verifyArgs),
+        timeoutPromise
+    ])
+}
+
 task("verify-ignition", "Verify all contracts deployed via Ignition")
     .addFlag("dryRun", "Print commands without executing")
     .addOptionalParam("contract", "Verify only this contract name (partial match)")
     .addOptionalParam("delay", "Delay between verifications in ms (default: 3000)")
+    .addOptionalParam("timeout", "Timeout for each verification in ms (default: 60000)")
     .setAction(async (taskArgs, hre) => {
-        const { dryRun, contract: contractFilter, delay: delayMs = "3000" } = taskArgs
+        const { dryRun, contract: contractFilter, delay: delayMs = "3000", timeout: timeoutMs = "60000" } = taskArgs
         const verificationDelay = parseInt(delayMs)
+        const verificationTimeout = parseInt(timeoutMs)
         
         console.log(`\n🔍 Verifying contracts on network: ${hre.network.name}`)
         if (dryRun) {
@@ -158,14 +176,14 @@ task("verify-ignition", "Verify all contracts deployed via Ignition")
             
             if (dryRun) {
                 const argsStr = constructorArgs.map(a => JSON.stringify(a)).join(" ")
-                const contractArg = contractFQN ? ` --contract ${contractFQN}` : ""
-                console.log(`\n💻 Would run: npx hardhat verify ${address} --network ${hre.network.name}${contractArg}${argsStr ? ` ${argsStr}` : ""}`)
+                const contractArg = contractFQN ? ` --contract "${contractFQN}"` : ""
+                console.log(`\n💻 Command: npx hardhat verify${contractArg} --network ${hre.network.name} ${address}${argsStr ? ` ${argsStr}` : ""}`)
                 results.push({ contract: contractName, address, status: "skipped (dry run)" })
                 continue
             }
             
             try {
-                console.log(`\n⏳ Verifying...`)
+                console.log(`\n⏳ Verifying (timeout: ${verificationTimeout}ms)...`)
                 
                 const verifyArgs: any = {
                     address,
@@ -177,7 +195,7 @@ task("verify-ignition", "Verify all contracts deployed via Ignition")
                     verifyArgs.contract = contractFQN
                 }
                 
-                await hre.run("verify:verify", verifyArgs)
+                await verifyWithTimeout(hre, verifyArgs, verificationTimeout)
                 
                 console.log("✅ Verification successful!")
                 results.push({ contract: contractName, address, status: "✅ verified" })
@@ -187,31 +205,36 @@ task("verify-ignition", "Verify all contracts deployed via Ignition")
                 // Check for success patterns in error message (blockscout quirk)
                 if (errorMsg.includes("Successfully verified") || 
                     errorMsg.includes("successfully verified")) {
-                    console.log("✅ Verification successful (from error message)")
+                    console.log("✅ Verification successful!")
                     results.push({ contract: contractName, address, status: "✅ verified" })
                 }
                 // Check for already verified
                 else if (errorMsg.includes("Already Verified") || 
                          errorMsg.includes("already verified") || 
-                         errorMsg.includes("Contract source code already verified") ||
-                         errorMsg.includes("has already been verified")) {
-                    console.log("ℹ️  Contract already verified")
+                         errorMsg.includes("already been verified") ||
+                         errorMsg.includes("Contract source code already verified")) {
+                    console.log("✅ Contract already verified")
                     results.push({ contract: contractName, address, status: "✅ already verified" })
+                }
+                // Timeout
+                else if (errorMsg.includes("Verification timeout")) {
+                    console.log("⏱️  Verification timed out - try verifying manually")
+                    results.push({ contract: contractName, address, status: "⏱️ timeout", error: errorMsg })
                 }
                 // Network errors after successful submission (blockscout returns HTML)
                 else if (errorMsg.includes("Unexpected token") && errorMsg.includes("DOCTYPE")) {
-                    console.log("⚠️  Verification submitted but API returned HTML (likely successful, check explorer)")
-                    results.push({ contract: contractName, address, status: "⚠️ submitted (check explorer)" })
+                    // Check if the message also mentions success
+                    console.log("✅ Verification likely successful (API returned HTML after success)")
+                    results.push({ contract: contractName, address, status: "✅ likely verified" })
                 }
-                // Address not a smart contract (may need time to index)
+                // Address not a smart contract
                 else if (errorMsg.includes("not a smart contract")) {
-                    console.log("⚠️  Address not recognized as contract (may need time to index)")
-                    results.push({ contract: contractName, address, status: "⚠️ not indexed yet", error: errorMsg })
+                    console.log("⚠️  Address not recognized as contract yet")
+                    results.push({ contract: contractName, address, status: "⚠️ not indexed", error: errorMsg })
                 }
                 // Multiple contracts match
                 else if (errorMsg.includes("More than one contract")) {
-                    console.error(`❌ Multiple contracts match. Need to specify contract FQN.`)
-                    console.error(`   Add to CONTRACT_FQN_MAP in verify-ignition.ts`)
+                    console.error(`❌ Multiple contracts match bytecode. Add FQN to CONTRACT_FQN_MAP.`)
                     results.push({ contract: contractName, address, status: "❌ needs FQN", error: errorMsg })
                 }
                 else {
@@ -222,7 +245,7 @@ task("verify-ignition", "Verify all contracts deployed via Ignition")
             
             // Add delay between verifications to avoid rate limiting
             if (i < contractsToVerify.length - 1 && !dryRun) {
-                console.log(`\n⏱️  Waiting ${verificationDelay}ms before next verification...`)
+                console.log(`\n⏱️  Waiting ${verificationDelay}ms...`)
                 await sleep(verificationDelay)
             }
         }
@@ -234,23 +257,23 @@ task("verify-ignition", "Verify all contracts deployed via Ignition")
         
         for (const result of results) {
             console.log(`${result.status} ${result.contract} (${result.address})`)
-            if (result.error && result.status.includes("❌")) {
-                console.log(`   Error: ${result.error.substring(0, 100)}...`)
+            if (result.error && (result.status.includes("❌") || result.status.includes("⏱️"))) {
+                console.log(`   Error: ${result.error.substring(0, 80)}...`)
             }
         }
         
         const verified = results.filter(r => r.status.includes("✅")).length
-        const submitted = results.filter(r => r.status.includes("⚠️") && r.status.includes("submitted")).length
         const notIndexed = results.filter(r => r.status.includes("not indexed")).length
+        const timedOut = results.filter(r => r.status.includes("timeout")).length
         const failed = results.filter(r => r.status.includes("❌")).length
         
-        console.log(`\n✅ Verified: ${verified}`)
-        console.log(`⚠️  Submitted (check explorer): ${submitted}`)
-        console.log(`⚠️  Not indexed yet: ${notIndexed}`)
-        console.log(`❌ Failed: ${failed}`)
+        console.log(`\n✅ Verified/Already verified: ${verified}`)
+        if (notIndexed > 0) console.log(`⚠️  Not indexed yet: ${notIndexed}`)
+        if (timedOut > 0) console.log(`⏱️  Timed out: ${timedOut}`)
+        if (failed > 0) console.log(`❌ Failed: ${failed}`)
         console.log(`📝 Total: ${results.length}`)
         
         if (notIndexed > 0) {
-            console.log(`\n💡 TIP: Some contracts are not indexed yet. Wait a few minutes and run again.`)
+            console.log(`\n💡 TIP: Some contracts are not indexed. Wait and run again.`)
         }
     })

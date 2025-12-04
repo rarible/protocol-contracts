@@ -6,6 +6,7 @@ dotenv.config();
 
 // Import custom tasks
 import "./tasks/verify-ignition"
+import "./tasks/get-constructor-args"
 
 const config: HardhatUserConfig = {
     solidity: {
