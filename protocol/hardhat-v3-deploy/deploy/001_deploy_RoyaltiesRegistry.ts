@@ -23,10 +23,8 @@ export default deployScript(
 					deployer,
 				},
         execute: {
-          init: {
-            methodName: "__RoyaltiesRegistry_init",
-            args: [deployer],
-          },
+          methodName: "__RoyaltiesRegistry_init",
+          args: [],
         },
         proxyContract: "SharedAdminOptimizedTransparentProxy",
 			},
