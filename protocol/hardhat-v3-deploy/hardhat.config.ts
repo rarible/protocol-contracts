@@ -45,6 +45,8 @@ export default defineConfig({
       "@rarible/transfer-proxy/contracts/test/contracts/ERC20TransferProxyTest.sol",
       "@rarible/transfer-proxy/contracts/proxy/TransferProxy.sol",
       "@rarible/transfer-proxy/contracts/proxy/ERC20TransferProxy.sol",
+      "@rarible/transfer-proxy/contracts/lazy-mint/erc721/ERC721LazyMintTransferProxy.sol",
+      "@rarible/transfer-proxy/contracts/lazy-mint/erc1155/ERC1155LazyMintTransferProxy.sol",
       "@rarible/exchange-v2/contracts/ExchangeV2.sol",
       "@rarible/royalties-registry/contracts/RoyaltiesRegistry.sol",
       "@rarible/royalties-registry/contracts/RoyaltiesRegistryPermissioned.sol",
@@ -62,7 +64,4 @@ export default defineConfig({
     },
   },
   networks,
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY || "",
-  },
 });

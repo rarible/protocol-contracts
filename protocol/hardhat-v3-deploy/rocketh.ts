@@ -20,7 +20,7 @@ export const config = {
 // by passing them to the setup function (see below) you get to access them through the environment object with type-safety
 import * as deployExtensions from '@rocketh/deploy'; // this one provide a deploy function
 import * as readExecuteExtensions from '@rocketh/read-execute'; // this one provide read,execute extensions
-import * as proxyExtensions from '@rocketh/proxy'; // this one provide extensions to declare proxy deployments
+import * as proxyExtensions from '@ifelsedeveloper/proxy'; // this one provide extensions to declare proxy deployments
 
 const extensions = {...deployExtensions, ...readExecuteExtensions, ...proxyExtensions};
 // ------------------------------------------------------------------------------------------------
