@@ -6,6 +6,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules"
 const TransferProxiesModule = buildModule("TransferProxiesModule", (m) => {
     // Get the owner parameter (proxy admin owner and contract owner)
     // Type annotation is required for address parameters
+    // Default value allows reuse from previous deployment
     const owner = m.getParameter<string>("owner")
 
     // ============================================
