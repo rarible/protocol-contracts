@@ -26,5 +26,8 @@ import "@rarible/tokens/contracts/erc-1155/ERC1155Rarible.sol";
 import "@rarible/tokens/contracts/beacons/ERC1155RaribleBeacon.sol";
 import "@rarible/tokens/contracts/create-2/ERC1155RaribleFactoryC2.sol";
 
+// Import RaribleExchangeWrapper for deployment
+import "@rarible/exchange-wrapper/contracts/RaribleExchangeWrapper.sol";
+
 // Import OpenZeppelin's TransparentUpgradeableProxy
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
