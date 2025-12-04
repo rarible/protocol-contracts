@@ -6,14 +6,13 @@
   },
   "type": "module",
   "scripts": {
-    "compile": "npx hardhat clean && npx hardhat compile",
-    "compile-zk": "hardhat clean --config zk.hardhat.config.ts && hardhat compile --network abstract --config zk.hardhat.config.ts --show-stack-traces",
-    "deploy-zk": "npx hardhat deploy --tags all-zk --network abstract --config zk.hardhat.config.ts --no-compile",
+    "build": "yarn prettier && yarn lint && hardhat clean && hardhat compile && yarn prettier:ts && tsc",
+    "lint": "solhint 'contracts/**/*.sol' --config ../../.solhintrc.json",
+    "lint:fix": "solhint 'contracts/**/*.sol' --fix --config ../../.solhintrc.json",
+    "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol' --config ../../.prettierrc.json",
+    "prettier:ts": "prettier --write 'test/**/*.ts' --config ../../.prettierrc.json",
     "test": "npx hardhat test",
-    "deploy": "hardhat deploy --tags all",
-    "import-truffle-deployments": "hardhat import-truffle-deployments --artifacts ../deploy/build/contracts",
-    "build": "npx hardhat clean && npx hardhat compile",
-    "verify": "npx hardhat etherscan-verify --network ${NETWORK} --api-key ${API_KEY}"
+    "verify:etherscan": "rocketh-verify -e sepolia etherscan"
   },
   "license": "MIT",
   "dependencies": {
@@ -64,6 +63,7 @@
     "@rocketh/read-execute": "^0.15.2",
     "@rocketh/proxy": "^0.15.7",
     "@typechain/ethers-v6": "^0.5.1",
+    "@rocketh/verifier": "^0.15.2",
     "dotenv": "^17.2.3",
     "viem": "^2.41.2"
   },
