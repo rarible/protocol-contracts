@@ -3,6 +3,7 @@ import HardhatViem from '@nomicfoundation/hardhat-viem';
 import HardhatNetworkHelpers from '@nomicfoundation/hardhat-network-helpers';
 import HardhatKeystore from '@nomicfoundation/hardhat-keystore';
 import HardhatVerify from '@nomicfoundation/hardhat-verify';
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 
 import HardhatDeploy from 'hardhat-deploy';
 import {addForkConfiguration, addNetworksFromEnv} from 'hardhat-deploy/helpers';
@@ -31,7 +32,7 @@ const networks = addForkConfiguration(
 );
 
 export default defineConfig({
-  plugins: [HardhatNodeTestRunner, HardhatViem, HardhatNetworkHelpers, HardhatKeystore, HardhatVerify, HardhatDeploy],
+  plugins: [HardhatNodeTestRunner, HardhatViem, HardhatNetworkHelpers, HardhatKeystore, HardhatVerify, HardhatDeploy, hardhatToolboxMochaEthersPlugin],
 	solidity: {
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
@@ -61,6 +62,7 @@ export default defineConfig({
       "@rarible/tokens/contracts/beacons/ERC1155RaribleBeaconMeta.sol",
       "@rarible/tokens/contracts/create-2/ERC1155RaribleFactoryC2.sol",
       "@rarible/exchange-wrapper/contracts/RaribleExchangeWrapper.sol",
+      "@rarible/royalties-registry/contracts/test/tokens/TestERC721WithRoyaltyV2981.sol",
     ],
     profiles: {
       default: {
