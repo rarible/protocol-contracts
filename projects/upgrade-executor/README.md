@@ -76,25 +76,25 @@ contract TimelockAdminshipTransferAndRenounceAction {
 }
 ```
 
-## Governance Examples (Tally)
+## Real Governance Examples (Tally)
 
-Governance proposals are created and executed through [Tally](https://www.tally.xyz/gov/rari-foundation).
+All governance proposals are created and executed through [Tally](https://www.tally.xyz/gov/rari-foundation). Below are real examples from the RARI Foundation DAO.
 
-### Example 1: Set Protocol Fee
+### Example 1: Set Rarible ExchangeV2 Protocol Fee
 
-**Proposal:** Change protocol fee to 1% for buyers and 1% for sellers
+**Real Proposal:** [Set Rarible ExchangeV2 Protocol Fee](https://www.tally.xyz/gov/rari-foundation/proposal/24573162031860288524847391930314236095749684778105607842870834604070608008760)
 
-**Tally Reference:** [Example proposal on Tally](https://www.tally.xyz/gov/rari-foundation/proposal/64443561092723928501818567121519051108693422626070463342810224372241233243885)
+This proposal sets the protocol fee parameters on the Rarible ExchangeV2 contract, defining the fee receiver address and the fee amounts for buyers and sellers.
 
-**Steps:**
+**How it works:**
 
-1. Deploy `SetProtocolFeeAction` with the Exchange address:
+1. A `SetProtocolFeeAction` contract is deployed with the ExchangeV2 address:
 
 ```solidity
 SetProtocolFeeAction action = new SetProtocolFeeAction(exchangeV2Address);
 ```
 
-2. Encode the action call:
+2. The action's `perform()` function is encoded with fee parameters:
 
 ```javascript
 const actionInterface = new ethers.utils.Interface([
@@ -102,13 +102,13 @@ const actionInterface = new ethers.utils.Interface([
 ]);
 
 const actionCalldata = actionInterface.encodeFunctionData("perform", [
-  "0xFeeReceiverAddress",  // Protocol fee receiver
-  100,                      // 1% buyer fee (100 basis points)
-  100                       // 1% seller fee (100 basis points)
+  "0xFeeReceiverAddress",  // Protocol fee receiver address
+  100,                      // Buyer fee in basis points (100 = 1%)
+  100                       // Seller fee in basis points (100 = 1%)
 ]);
 ```
 
-3. Create governance proposal to call UpgradeExecutor:
+3. The UpgradeExecutor's `execute()` function is called via governance:
 
 ```javascript
 const upgradeExecutorInterface = new ethers.utils.Interface([
@@ -116,35 +116,38 @@ const upgradeExecutorInterface = new ethers.utils.Interface([
 ]);
 
 const proposalCalldata = upgradeExecutorInterface.encodeFunctionData("execute", [
-  actionAddress,    // SetProtocolFeeAction address
-  actionCalldata    // Encoded perform() call
+  actionAddress,    // SetProtocolFeeAction contract address
+  actionCalldata    // Encoded perform() call from step 2
 ]);
 
-// Submit proposal on Tally with:
+// Proposal targets:
 // - Target: 0xb23BCD4F668365B1c9Ec4B4DF79915bF8c76C5b5 (UpgradeExecutor)
+// - Value: 0
 // - Calldata: proposalCalldata
 ```
 
-### Example 2: Upgrade Exchange to Support Account Abstraction
+### Example 2: Rarible ExchangeV2 Account Abstraction Support
 
-**Goal:** Upgrade the ExchangeV2 proxy to a new implementation that supports ERC-4337 account abstraction.
+**Real Proposal:** [Rarible ExchangeV2 Account Abstraction Support](https://www.tally.xyz/gov/rari-foundation/proposal/16280736551534483184234752485158684446128826941141683028488944082454101619519)
 
-**Steps:**
+This proposal upgrades the ExchangeV2 proxy to a new implementation that supports ERC-4337 account abstraction, enabling smart contract wallets to interact with the exchange.
 
-1. Deploy the new Exchange implementation with AA support:
+**How it works:**
+
+1. A new Exchange implementation with AA support is deployed:
 
 ```solidity
-// New implementation contract
-ExchangeV2WithAA newImplementation = new ExchangeV2WithAA();
+// New implementation contract with account abstraction support
+ExchangeV2 newImplementation = new ExchangeV2(); // with AA features
 ```
 
-2. Deploy `ProxyUpgradeAction`:
+2. A `ProxyUpgradeAction` contract is deployed:
 
 ```solidity
 ProxyUpgradeAction upgradeAction = new ProxyUpgradeAction();
 ```
 
-3. Encode the upgrade action:
+3. The upgrade action is encoded:
 
 ```javascript
 const actionInterface = new ethers.utils.Interface([
@@ -152,13 +155,13 @@ const actionInterface = new ethers.utils.Interface([
 ]);
 
 const actionCalldata = actionInterface.encodeFunctionData("perform", [
-  "0xProxyAdminAddress",           // ProxyAdmin contract
-  "0xExchangeV2ProxyAddress",      // ExchangeV2 proxy to upgrade
-  "0xNewImplementationAddress"     // New implementation with AA support
+  "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5",  // ProxyAdmin address
+  "0x9757F2d2b135150BBeb65308D4a91804107cd8D6",  // ExchangeV2 proxy address
+  "0xNewImplementationAddress"                     // New implementation with AA
 ]);
 ```
 
-4. Create governance proposal:
+4. The governance proposal calls UpgradeExecutor:
 
 ```javascript
 const upgradeExecutorInterface = new ethers.utils.Interface([
@@ -170,13 +173,17 @@ const proposalCalldata = upgradeExecutorInterface.encodeFunctionData("execute", 
   actionCalldata
 ]);
 
-// Submit proposal on Tally:
-// Title: "Upgrade ExchangeV2 to Support Account Abstraction (ERC-4337)"
-// Description: "This proposal upgrades the Exchange contract to support
-//               smart contract wallets and account abstraction..."
-// Target: 0xb23BCD4F668365B1c9Ec4B4DF79915bF8c76C5b5
-// Calldata: proposalCalldata
+// Proposal targets:
+// - Target: 0xb23BCD4F668365B1c9Ec4B4DF79915bF8c76C5b5 (UpgradeExecutor)
+// - Value: 0
+// - Calldata: proposalCalldata
 ```
+
+**What Account Abstraction enables:**
+- Smart contract wallets can execute trades
+- Support for ERC-4337 UserOperations
+- Gasless transactions via paymasters
+- Enhanced wallet recovery options
 
 ## Creating a Governance Proposal
 
@@ -219,3 +226,8 @@ npx hardhat transferOwnership --new-owner <address> --settings-file settings.yam
 
 - [RARI DAO on Tally](https://www.tally.xyz/gov/rari-foundation)
 - [UpgradeExecutor on Etherscan](https://etherscan.io/address/0xb23BCD4F668365B1c9Ec4B4DF79915bF8c76C5b5)
+
+### Real Proposal Examples
+
+- [Set Rarible ExchangeV2 Protocol Fee](https://www.tally.xyz/gov/rari-foundation/proposal/24573162031860288524847391930314236095749684778105607842870834604070608008760)
+- [Rarible ExchangeV2 Account Abstraction Support](https://www.tally.xyz/gov/rari-foundation/proposal/16280736551534483184234752485158684446128826941141683028488944082454101619519)
