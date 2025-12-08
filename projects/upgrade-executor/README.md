@@ -15,10 +15,10 @@ The `UpgradeExecutor` contract uses a delegatecall pattern to execute "action" c
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │   RARI DAO      │────▶│ UpgradeExecutor  │────▶│  Action Contract │
 │   (Tally)       │     │  (delegatecall)  │     │  (stateless)     │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
+└─────────────────┘     └──────────────────┘     └──────────────────┘
                                                           │
                                                           ▼
                                                  ┌─────────────────┐
