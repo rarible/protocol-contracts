@@ -19,6 +19,7 @@ contract ExchangeV2 is ExchangeV2Core, RaribleTransferManager {
         __TransferExecutor_init_unchained(_transferProxy, _erc20TransferProxy);
         __RaribleTransferManager_init_unchained(newProtocolFee, newDefaultFeeReceiver, newRoyaltiesProvider);
         __OrderValidator_init_unchained();
+        __FeeConfigManager_init_unchained();
     }
 
 }

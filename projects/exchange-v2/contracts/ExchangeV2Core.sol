@@ -8,12 +8,13 @@ import "./libraries/LibOrderData.sol";
 import "./libraries/LibDirectTransfer.sol";
 import "./OrderValidator.sol";
 import "./AssetMatcher.sol";
+import "./FeeConfigManager.sol";
 
 import "@rarible/transfer-manager/contracts/TransferExecutor.sol";
 import "@rarible/transfer-manager/contracts/interfaces/ITransferManager.sol";
 import "@rarible/transfer-manager/contracts/lib/LibDeal.sol";
 
-abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, ITransferManager {
+abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatcher, TransferExecutor, OrderValidator, FeeConfigManager, ITransferManager {
     using SafeMathUpgradeable for uint;
     using LibTransfer for address;
 
@@ -334,5 +335,5 @@ abstract contract ExchangeV2Core is Initializable, OwnableUpgradeable, AssetMatc
         return result;
     }
 
-    uint256[49] private __gap;
+    uint256[45] private __gap;
 }
