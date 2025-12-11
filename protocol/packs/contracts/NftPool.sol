@@ -13,12 +13,13 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // Types
     // -----------------------
 
+    /// @dev Pool types ordered from common to rare, so new rarer tiers can be added at the end
     enum PoolType {
-        UltraRare,
-        Legendary,
-        Epic,
+        Common,
         Rare,
-        Common
+        Epic,
+        Legendary,
+        UltraRare
     }
 
     struct NftInfo {

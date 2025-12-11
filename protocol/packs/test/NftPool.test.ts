@@ -13,13 +13,13 @@ import {
   TransparentUpgradeableProxy__factory,
 } from "../types/ethers-contracts";
 
-// Pool types enum values
+// Pool types enum values (ordered from common to rare for extensibility)
 const PoolType = {
-  UltraRare: 0,
-  Legendary: 1,
+  Common: 0,
+  Rare: 1,
   Epic: 2,
-  Rare: 3,
-  Common: 4,
+  Legendary: 3,
+  UltraRare: 4,
 };
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
