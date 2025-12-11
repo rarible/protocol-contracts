@@ -6,6 +6,7 @@ import {ERC721HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, AccessControlUpgradeable {
     // -----------------------
@@ -45,7 +46,6 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // Roles
     // -----------------------
 
-    bytes32 public constant ALLOWED_721_CONTRACTS_ROLE = keccak256("ALLOWED_721_CONTRACTS_ROLE");
     /// @dev Addresses allowed to transfer NFTs out of the pool (e.g. pack-opening contract)
     bytes32 public constant POOL_MANAGER_ROLE = keccak256("POOL_MANAGER_ROLE");
 
@@ -57,9 +57,11 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     event Withdrawn(address indexed to, address indexed collection, uint256 indexed tokenId, PoolType poolType);
     event Allowed721ContractAdded(address indexed collection);
     event Allowed721ContractRemoved(address indexed collection);
+    event RescuedNft(address indexed to, address indexed collection, uint256 indexed tokenId);
 
     error CollectionNotAllowed();
     error NotInPool();
+    error ZeroAddress();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -71,6 +73,8 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // -----------------------
 
     function initialize(address initialOwner, PoolType poolType_) external initializer {
+        if (initialOwner == address(0)) revert ZeroAddress();
+
         __ERC721Holder_init();
         __Ownable_init(initialOwner);
         __AccessControl_init();
@@ -86,14 +90,13 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // -----------------------
 
     function addAllowed721Contract(address collection) external onlyOwner {
+        if (collection == address(0)) revert ZeroAddress();
         allowed721Contracts[collection] = true;
-        _grantRole(ALLOWED_721_CONTRACTS_ROLE, collection);
         emit Allowed721ContractAdded(collection);
     }
 
     function removeAllowed721Contract(address collection) external onlyOwner {
         allowed721Contracts[collection] = false;
-        _revokeRole(ALLOWED_721_CONTRACTS_ROLE, collection);
         emit Allowed721ContractRemoved(collection);
     }
 
@@ -110,10 +113,8 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     function deposit(address collection, uint256 tokenId) external {
         if (!allowed721Contracts[collection]) revert CollectionNotAllowed();
 
-        // Pull NFT into the pool
+        // Pull NFT into the pool - onERC721Received will handle bookkeeping
         IERC721(collection).safeTransferFrom(msg.sender, address(this), tokenId);
-
-        _addToPool(collection, tokenId);
     }
 
     /// @notice Transfer an NFT out of the pool to `to`.
@@ -126,6 +127,45 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         IERC721(collection).safeTransferFrom(address(this), to, tokenId);
 
         emit Withdrawn(to, collection, tokenId, poolType);
+    }
+
+    /// @notice Rescue an NFT that was sent from a non-allowed collection
+    /// @dev Only owner can rescue, and only NFTs NOT tracked in the pool
+    function rescueNft(address collection, address to, uint256 tokenId) external onlyOwner {
+        // Can only rescue NFTs that are NOT in the pool tracking
+        require(_nftIndexPlusOne[collection][tokenId] == 0, "NftPool: NFT is tracked in pool");
+        require(IERC721(collection).ownerOf(tokenId) == address(this), "NftPool: not owned by pool");
+
+        IERC721(collection).safeTransferFrom(address(this), to, tokenId);
+
+        emit RescuedNft(to, collection, tokenId);
+    }
+
+    // -----------------------
+    // ERC721 Receiver Override
+    // -----------------------
+
+    /// @notice Handle incoming NFT transfers
+    /// @dev Only accepts NFTs from allowed collections and tracks them
+    function onERC721Received(
+        address /* operator */,
+        address /* from */,
+        uint256 tokenId,
+        bytes memory /* data */
+    ) public virtual override returns (bytes4) {
+        address collection = msg.sender;
+
+        // Only accept and track NFTs from allowed collections
+        if (allowed721Contracts[collection]) {
+            // Avoid double-adding if somehow already tracked
+            if (_nftIndexPlusOne[collection][tokenId] == 0) {
+                _addToPool(collection, tokenId);
+            }
+        }
+        // Note: We still return the selector even for non-allowed collections
+        // to prevent the transfer from reverting. Owner can rescue these later.
+
+        return this.onERC721Received.selector;
     }
 
     // -----------------------
@@ -176,14 +216,16 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         return poolType;
     }
 
+    function isNftInPool(address collection, uint256 tokenId) external view returns (bool) {
+        return _nftIndexPlusOne[collection][tokenId] != 0;
+    }
+
     // -----------------------
     // Overrides
     // -----------------------
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721HolderUpgradeable, AccessControlUpgradeable) returns (bool) {
-        return super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControlUpgradeable) returns (bool) {
+        return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
 
     uint256[45] private __gap;
