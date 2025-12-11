@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+// <ai_context>
+// RariPack is the ERC721 contract that mints RARI pack NFTs. It tracks pack
+// types, pricing and treasury, and exposes fully on-chain, dynamic metadata
+// including pack open state and the list of locked NFT contents. The metadata
+// is consumed by off-chain indexers and UIs together with PackManager and
+// NftPool.
+// </ai_context>
+
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 
 contract RariPack is
     Initializable,
@@ -14,6 +24,8 @@ contract RariPack is
     AccessControlUpgradeable,
     ReentrancyGuardUpgradeable
 {
+    using Strings for uint256;
+
     // -----------------------
     // Types
     // -----------------------
@@ -29,7 +41,8 @@ contract RariPack is
     // Roles
     // -----------------------
 
-    /// @dev Contracts that are allowed to burn packs (e.g. "open pack" contract)
+    /// @dev Contracts that are allowed to burn packs and manage contents
+    ///      (e.g. PackManager).
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     // DEFAULT_ADMIN_ROLE comes from AccessControl (0x00)
 
@@ -46,11 +59,23 @@ contract RariPack is
     /// @dev Price per pack type in wei
     mapping(PackType => uint256) private _packPrices;
 
-    /// @dev Metadata URI per pack type (e.g. IPFS JSON)
+    /// @dev Per-pack-type image or external URI used in dynamic metadata
     mapping(PackType => string) private _packURIs;
 
     /// @dev Address that receives mint proceeds
     address public treasury;
+
+    /// @dev Whether a pack has been opened (its contents locked and revealed)
+    mapping(uint256 => bool) private _packOpened;
+
+    /// @dev Per-pack locked NFT contents (collections)
+    mapping(uint256 => address[]) private _packNftCollections;
+
+    /// @dev Per-pack locked NFT contents (tokenIds)
+    mapping(uint256 => uint256[]) private _packNftTokenIds;
+
+    /// @dev Optional human-readable description per pack type
+    mapping(PackType => string) private _packDescriptions;
 
     // -----------------------
     // Events / Errors
@@ -59,11 +84,14 @@ contract RariPack is
     event PackPriceUpdated(PackType indexed packType, uint256 oldPrice, uint256 newPrice);
     event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
     event PackURIUpdated(PackType indexed packType, string oldURI, string newURI);
+    event PackDescriptionUpdated(PackType indexed packType, string oldDescription, string newDescription);
+    event PackContentsUpdated(uint256 indexed tokenId, address[] collections, uint256[] tokenIds);
 
     error TreasuryNotSet();
     error IncorrectEthSent();
     error ZeroAmount();
     error PriceNotSet();
+    error ArrayLengthMismatch();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -126,10 +154,14 @@ contract RariPack is
         require(sent, "RariPack: ETH transfer failed");
     }
 
-    /// @notice Burn a pack token. Only BURNER_ROLE (e.g. pack-opening contract) can call this.
+    /// @notice Burn a pack token and clear its metadata.
+    /// @dev Only BURNER_ROLE (e.g. PackManager) can call this.
     function burnPack(uint256 tokenId) external onlyRole(BURNER_ROLE) {
         _burn(tokenId);
         delete _tokenPackType[tokenId];
+        delete _packOpened[tokenId];
+        delete _packNftCollections[tokenId];
+        delete _packNftTokenIds[tokenId];
     }
 
     // -----------------------
@@ -159,7 +191,7 @@ contract RariPack is
     // Metadata per pack type
     // -----------------------
 
-    /// @notice Set metadata URI for a given pack type (e.g. IPFS JSON).
+    /// @notice Set image/external URI for a given pack type.
     /// Only DEFAULT_ADMIN_ROLE can call.
     function setPackURI(PackType packType, string calldata newURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
         string memory oldURI = _packURIs[packType];
@@ -167,16 +199,181 @@ contract RariPack is
         emit PackURIUpdated(packType, oldURI, newURI);
     }
 
-    /// @notice Get metadata URI for a pack type.
+    /// @notice Get image/external URI for a pack type.
     function packURI(PackType packType) external view returns (string memory) {
         return _packURIs[packType];
     }
 
-    /// @notice ERC721 tokenURI — returns URI based on the pack type of the token.
+    /// @notice Set human-readable description for a pack type.
+    function setPackDescription(PackType packType, string calldata newDescription) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        string memory oldDescription = _packDescriptions[packType];
+        _packDescriptions[packType] = newDescription;
+        emit PackDescriptionUpdated(packType, oldDescription, newDescription);
+    }
+
+    /// @notice Get human-readable description for a pack type.
+    function packDescription(PackType packType) external view returns (string memory) {
+        return _packDescriptions[packType];
+    }
+
+    /// @notice ERC721 tokenURI — returns dynamically generated JSON based on pack state.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
         PackType packType = _tokenPackType[tokenId];
-        return _packURIs[packType];
+
+        string memory packTypeStr = _packTypeToString(packType);
+        string memory idStr = tokenId.toString();
+        string memory name = string(abi.encodePacked("RARI ", packTypeStr, " Pack #", idStr));
+
+        string memory description = _packDescriptions[packType];
+        if (bytes(description).length == 0) {
+            description = string(
+                abi.encodePacked(
+                    "RARI ",
+                    packTypeStr,
+                    " Pack containing randomly selected NFTs across rarity pools."
+                )
+            );
+        }
+
+        bool opened = _packOpened[tokenId];
+
+        address[] storage collectionsStorage = _packNftCollections[tokenId];
+        uint256[] storage tokenIdsStorage = _packNftTokenIds[tokenId];
+        uint256 contentsLen = collectionsStorage.length;
+
+        string memory attrs = _buildAttributes(packTypeStr, opened, contentsLen);
+        string memory nftsJson;
+        if (opened && contentsLen > 0) {
+            nftsJson = _buildNftsJson(collectionsStorage, tokenIdsStorage);
+        }
+
+        string memory image = _packURIs[packType];
+
+        bytes memory json = abi.encodePacked(
+            '{"name":"',
+            name,
+            '","description":"',
+            description,
+            '","attributes":',
+            attrs
+        );
+
+        if (bytes(image).length != 0) {
+            json = abi.encodePacked(json, ',"image":"', image, '"');
+        }
+
+        if (opened && contentsLen > 0) {
+            json = abi.encodePacked(json, ',"nfts":', nftsJson);
+        }
+
+        json = abi.encodePacked(json, "}");
+
+        string memory encoded = Base64.encode(json);
+        return string(abi.encodePacked("data:application/json;base64,", encoded));
+    }
+
+    function _packTypeToString(PackType packType) internal pure returns (string memory) {
+        if (packType == PackType.Bronze) return "Bronze";
+        if (packType == PackType.Silver) return "Silver";
+        if (packType == PackType.Gold) return "Gold";
+        return "Platinum";
+    }
+
+    function _buildAttributes(
+        string memory packTypeStr,
+        bool opened,
+        uint256 contentsLen
+    ) internal pure returns (string memory) {
+        string memory state = opened ? "Opened" : "Unopened";
+
+        return
+            string(
+                abi.encodePacked(
+                    '[{"trait_type":"Pack Type","value":"',
+                    packTypeStr,
+                    '"},{"trait_type":"Opened","value":"',
+                    opened ? "true" : "false",
+                    '"},{"trait_type":"State","value":"',
+                    state,
+                    '"},{"trait_type":"Contents Locked","value":"',
+                    contentsLen.toString(),
+                    '"}]'
+                )
+            );
+    }
+
+    function _buildNftsJson(
+        address[] storage collections,
+        uint256[] storage tokenIds
+    ) internal view returns (string memory) {
+        uint256 len = collections.length;
+        bytes memory out = "[";
+
+        for (uint256 i = 0; i < len; i++) {
+            if (i > 0) {
+                out = abi.encodePacked(out, ",");
+            }
+            out = abi.encodePacked(
+                out,
+                '{"collection":"',
+                Strings.toHexString(uint160(collections[i]), 20),
+                '","tokenId":"',
+                tokenIds[i].toString(),
+                '"}'
+            );
+        }
+
+        out = abi.encodePacked(out, "]");
+        return string(out);
+    }
+
+    // -----------------------
+    // Pack contents (for PackManager)
+    // -----------------------
+
+    /// @notice Set the locked NFT contents for a pack.
+    /// @dev Expected to be called by PackManager after randomness is fulfilled.
+    function setPackContents(
+        uint256 tokenId,
+        address[] calldata collections,
+        uint256[] calldata tokenIds
+    ) external onlyRole(BURNER_ROLE) {
+        _requireOwned(tokenId);
+        if (collections.length != tokenIds.length) revert ArrayLengthMismatch();
+
+        delete _packNftCollections[tokenId];
+        delete _packNftTokenIds[tokenId];
+
+        for (uint256 i = 0; i < collections.length; i++) {
+            _packNftCollections[tokenId].push(collections[i]);
+            _packNftTokenIds[tokenId].push(tokenIds[i]);
+        }
+
+        _packOpened[tokenId] = true;
+
+        emit PackContentsUpdated(tokenId, collections, tokenIds);
+    }
+
+    /// @notice Get the locked NFT contents for a pack.
+    function getPackContents(
+        uint256 tokenId
+    ) external view returns (address[] memory collections, uint256[] memory tokenIds, bool opened) {
+        _requireOwned(tokenId);
+
+        opened = _packOpened[tokenId];
+
+        address[] storage storedCollections = _packNftCollections[tokenId];
+        uint256[] storage storedTokenIds = _packNftTokenIds[tokenId];
+        uint256 len = storedCollections.length;
+
+        collections = new address[](len);
+        tokenIds = new uint256[](len);
+
+        for (uint256 i = 0; i < len; i++) {
+            collections[i] = storedCollections[i];
+            tokenIds[i] = storedTokenIds[i];
+        }
     }
 
     // -----------------------

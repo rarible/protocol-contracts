@@ -1,4 +1,4 @@
-// <ai_context> Test suite for RariPack contract. Covers initialization, minting, burning, pricing, treasury management, metadata URIs, and access control. </ai_context>
+// <ai_context> Test suite for RariPack contract. Covers initialization, minting, burning, pricing, treasury management, metadata URIs, pack contents, dynamic tokenURI, and access control. </ai_context>
 import { expect } from "chai";
 import { network } from "hardhat";
 const connection = await network.connect();
@@ -268,6 +268,17 @@ describe("RariPack", function () {
       expect(await rariPack.balanceOf(user1Address)).to.equal(0);
     });
 
+    it("Should clear pack metadata when burning", async function () {
+      // Set some contents first
+      await rariPack.setPackContents(1, [user2Address], [100n]);
+
+      // Burn the pack
+      await rariPack.burnPack(1);
+
+      // Token should not exist
+      await expect(rariPack.getPackContents(1)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
+    });
+
     it("Should revert when non-BURNER_ROLE tries to burn", async function () {
       await expect(rariPack.connect(user1).burnPack(1)).to.be.revertedWithCustomError(
         rariPack,
@@ -280,6 +291,68 @@ describe("RariPack", function () {
         rariPack,
         "ERC721NonexistentToken",
       );
+    });
+  });
+
+  describe("Pack Contents", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+    });
+
+    it("Should allow BURNER_ROLE to set pack contents", async function () {
+      const collections = [user1Address, user2Address, treasuryAddress];
+      const tokenIds = [1n, 2n, 3n];
+
+      await expect(rariPack.setPackContents(1, collections, tokenIds))
+        .to.emit(rariPack, "PackContentsUpdated")
+        .withArgs(1, collections, tokenIds);
+
+      const [storedCollections, storedTokenIds, opened] = await rariPack.getPackContents(1);
+      expect(opened).to.be.true;
+      expect(storedCollections.length).to.equal(3);
+      expect(storedTokenIds.length).to.equal(3);
+      expect(storedCollections[0]).to.equal(user1Address);
+      expect(storedTokenIds[0]).to.equal(1n);
+    });
+
+    it("Should mark pack as opened after setting contents", async function () {
+      const [, , openedBefore] = await rariPack.getPackContents(1);
+      expect(openedBefore).to.be.false;
+
+      await rariPack.setPackContents(1, [user1Address], [100n]);
+
+      const [, , openedAfter] = await rariPack.getPackContents(1);
+      expect(openedAfter).to.be.true;
+    });
+
+    it("Should replace contents when called multiple times", async function () {
+      await rariPack.setPackContents(1, [user1Address], [100n]);
+      await rariPack.setPackContents(1, [user2Address, treasuryAddress], [200n, 300n]);
+
+      const [collections, tokenIds] = await rariPack.getPackContents(1);
+      expect(collections.length).to.equal(2);
+      expect(collections[0]).to.equal(user2Address);
+      expect(tokenIds[0]).to.equal(200n);
+    });
+
+    it("Should revert when non-BURNER_ROLE tries to set contents", async function () {
+      await expect(
+        rariPack.connect(user1).setPackContents(1, [user1Address], [100n]),
+      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+    });
+
+    it("Should revert when arrays have different lengths", async function () {
+      await expect(
+        rariPack.setPackContents(1, [user1Address, user2Address], [100n]),
+      ).to.be.revertedWithCustomError(rariPack, "ArrayLengthMismatch");
+    });
+
+    it("Should revert when setting contents for non-existent token", async function () {
+      await expect(
+        rariPack.setPackContents(999, [user1Address], [100n]),
+      ).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
     });
   });
 
@@ -341,31 +414,12 @@ describe("RariPack", function () {
     });
   });
 
-  describe("Pack URIs and Metadata", function () {
-    beforeEach(async function () {
-      // Mint some packs
-      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
-        value: BRONZE_PRICE,
-      });
-      await rariPack.connect(user1).mintPack(user1Address, PackType.Silver, 1, {
-        value: SILVER_PRICE,
-      });
-    });
-
+  describe("Pack URIs", function () {
     it("Should return correct pack URI for each type", async function () {
       expect(await rariPack.packURI(PackType.Bronze)).to.equal(BRONZE_URI);
       expect(await rariPack.packURI(PackType.Silver)).to.equal(SILVER_URI);
       expect(await rariPack.packURI(PackType.Gold)).to.equal(GOLD_URI);
       expect(await rariPack.packURI(PackType.Platinum)).to.equal(PLATINUM_URI);
-    });
-
-    it("Should return correct tokenURI based on pack type", async function () {
-      expect(await rariPack.tokenURI(1)).to.equal(BRONZE_URI);
-      expect(await rariPack.tokenURI(2)).to.equal(SILVER_URI);
-    });
-
-    it("Should revert tokenURI for non-existent token", async function () {
-      await expect(rariPack.tokenURI(999)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
     });
 
     it("Should allow DEFAULT_ADMIN_ROLE to update pack URI", async function () {
@@ -376,7 +430,6 @@ describe("RariPack", function () {
         .withArgs(PackType.Bronze, BRONZE_URI, newURI);
 
       expect(await rariPack.packURI(PackType.Bronze)).to.equal(newURI);
-      expect(await rariPack.tokenURI(1)).to.equal(newURI);
     });
 
     it("Should revert when non-admin tries to set pack URI", async function () {
@@ -384,6 +437,104 @@ describe("RariPack", function () {
         rariPack,
         "AccessControlUnauthorizedAccount",
       );
+    });
+  });
+
+  describe("Pack Descriptions", function () {
+    it("Should return empty description by default", async function () {
+      expect(await rariPack.packDescription(PackType.Bronze)).to.equal("");
+    });
+
+    it("Should allow DEFAULT_ADMIN_ROLE to set pack description", async function () {
+      const description = "A Bronze pack containing common NFTs";
+
+      await expect(rariPack.setPackDescription(PackType.Bronze, description))
+        .to.emit(rariPack, "PackDescriptionUpdated")
+        .withArgs(PackType.Bronze, "", description);
+
+      expect(await rariPack.packDescription(PackType.Bronze)).to.equal(description);
+    });
+
+    it("Should revert when non-admin tries to set description", async function () {
+      await expect(
+        rariPack.connect(user1).setPackDescription(PackType.Bronze, "test"),
+      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+    });
+  });
+
+  describe("Dynamic Token URI", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+    });
+
+    it("Should return base64 encoded JSON", async function () {
+      const uri = await rariPack.tokenURI(1);
+      expect(uri.startsWith("data:application/json;base64,")).to.be.true;
+    });
+
+    it("Should include correct name in metadata", async function () {
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      expect(json.name).to.equal("RARI Bronze Pack #1");
+    });
+
+    it("Should include pack type in attributes", async function () {
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      const packTypeAttr = json.attributes.find((a: any) => a.trait_type === "Pack Type");
+      expect(packTypeAttr.value).to.equal("Bronze");
+    });
+
+    it("Should show Unopened state before opening", async function () {
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      const stateAttr = json.attributes.find((a: any) => a.trait_type === "State");
+      expect(stateAttr.value).to.equal("Unopened");
+    });
+
+    it("Should show Opened state after setting contents", async function () {
+      await rariPack.setPackContents(1, [user1Address, user2Address], [100n, 200n]);
+
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      const stateAttr = json.attributes.find((a: any) => a.trait_type === "State");
+      expect(stateAttr.value).to.equal("Opened");
+    });
+
+    it("Should include nfts array when opened", async function () {
+      await rariPack.setPackContents(1, [user1Address, user2Address], [100n, 200n]);
+
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      expect(json.nfts).to.have.length(2);
+      expect(json.nfts[0].tokenId).to.equal("100");
+    });
+
+    it("Should include image from packURI", async function () {
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      expect(json.image).to.equal(BRONZE_URI);
+    });
+
+    it("Should use custom description if set", async function () {
+      const customDesc = "My custom Bronze pack description";
+      await rariPack.setPackDescription(PackType.Bronze, customDesc);
+
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      expect(json.description).to.equal(customDesc);
+    });
+
+    it("Should use default description if not set", async function () {
+      const uri = await rariPack.tokenURI(1);
+      const json = decodeTokenURI(uri);
+      expect(json.description).to.include("RARI Bronze Pack");
+    });
+
+    it("Should revert tokenURI for non-existent token", async function () {
+      await expect(rariPack.tokenURI(999)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
     });
   });
 
@@ -458,3 +609,10 @@ describe("RariPack", function () {
     });
   });
 });
+
+// Helper function to decode base64 tokenURI
+function decodeTokenURI(uri: string): any {
+  const base64 = uri.replace("data:application/json;base64,", "");
+  const json = Buffer.from(base64, "base64").toString("utf-8");
+  return JSON.parse(json);
+}

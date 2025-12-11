@@ -1,4 +1,4 @@
-// <ai_context> Test suite for PackManager contract. Uses single NftPool with price-range based pool levels. </ai_context>
+// <ai_context> Test suite for PackManager contract. Uses single NftPool with price-range based pool levels. 2-step pack opening flow: open (lock contents) then claim (NFT or instant cash). </ai_context>
 import { expect } from "chai";
 import { network } from "hardhat";
 const connection = await network.connect();
@@ -253,7 +253,7 @@ describe("PackManager", function () {
     });
   });
 
-  describe("Pack Opening", function () {
+  describe("Pack Opening (Step 1)", function () {
     beforeEach(async function () {
       await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
         value: BRONZE_PRICE,
@@ -266,13 +266,14 @@ describe("PackManager", function () {
 
       await expect(tx)
         .to.emit(packManager, "PackOpenRequested")
-        .withArgs(1, user1Address, packTokenId, PackType.Bronze, 0);
+        .withArgs(1, user1Address, packTokenId, PackType.Bronze);
     });
 
-    it("Should burn the pack when opening", async function () {
+    it("Should NOT burn the pack when opening (pack is kept for claiming)", async function () {
       await packManager.connect(user1).openPack(1);
 
-      await expect(rariPack.ownerOf(1)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
+      // Pack should still exist
+      expect(await rariPack.ownerOf(1)).to.equal(user1Address);
     });
 
     it("Should revert when non-owner tries to open pack", async function () {
@@ -286,6 +287,39 @@ describe("PackManager", function () {
       expect(pending.length).to.equal(1);
       expect(pending[0]).to.equal(1);
     });
+
+    it("Should revert when pack is already opened", async function () {
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      // Try to open again
+      await expect(packManager.connect(user1).openPack(1)).to.be.revertedWithCustomError(
+        packManager,
+        "PackAlreadyOpened",
+      );
+    });
+
+    it("Should revert when VRF request is in progress for pack", async function () {
+      await packManager.connect(user1).openPack(1);
+
+      // Try to open again before VRF callback
+      await expect(packManager.connect(user1).openPack(1)).to.be.revertedWithCustomError(
+        packManager,
+        "PackOpeningInProgressError",
+      );
+    });
+
+    it("Should track packOpeningInProgress correctly", async function () {
+      expect(await packManager.packOpeningInProgress(1)).to.be.false;
+
+      await packManager.connect(user1).openPack(1);
+
+      expect(await packManager.packOpeningInProgress(1)).to.be.true;
+
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      expect(await packManager.packOpeningInProgress(1)).to.be.false;
+    });
   });
 
   describe("VRF Fulfillment", function () {
@@ -295,7 +329,7 @@ describe("PackManager", function () {
       });
     });
 
-    it("Should fulfill random words and distribute rewards", async function () {
+    it("Should fulfill random words and lock contents in pack", async function () {
       await packManager.connect(user1).openPack(1);
 
       // High values should select Common level
@@ -304,6 +338,28 @@ describe("PackManager", function () {
       await expect(mockVrf.fulfillRandomWords(1, randomWords))
         .to.emit(packManager, "PackOpened")
         .withArgs(1, user1Address, 1, (rewards: any) => rewards.length === 3);
+    });
+
+    it("Should lock NFT contents into RariPack", async function () {
+      await packManager.connect(user1).openPack(1);
+
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const [collections, tokenIds, opened] = await rariPack.getPackContents(1);
+      expect(opened).to.be.true;
+      expect(collections.length).to.equal(3);
+      expect(tokenIds.length).to.equal(3);
+    });
+
+    it("Should transfer NFTs to PackManager (held for claiming)", async function () {
+      const commonSizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Common);
+
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      // NFTs should be removed from pool
+      const commonSizeAfter = await nftPool.getPoolLevelSize(PoolLevel.Common);
+      expect(commonSizeAfter).to.equal(commonSizeBefore - 3n);
     });
 
     it("Should correctly mark request as fulfilled", async function () {
@@ -322,6 +378,138 @@ describe("PackManager", function () {
         packManager,
         "OnlyVrfCoordinator",
       );
+    });
+  });
+
+  describe("NFT Claiming (Step 2 - claimNft)", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+    });
+
+    it("Should transfer NFTs to user when claiming", async function () {
+      const [collections, tokenIds] = await rariPack.getPackContents(1);
+
+      await packManager.connect(user1).claimNft(1);
+
+      // Verify each NFT is now owned by user1
+      for (let i = 0; i < collections.length; i++) {
+        const nft = TestERC721__factory.connect(collections[i], owner);
+        expect(await nft.ownerOf(tokenIds[i])).to.equal(user1Address);
+      }
+    });
+
+    it("Should burn the pack after claiming NFTs", async function () {
+      await packManager.connect(user1).claimNft(1);
+
+      await expect(rariPack.ownerOf(1)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
+    });
+
+    it("Should emit NftClaimed event", async function () {
+      await expect(packManager.connect(user1).claimNft(1)).to.emit(packManager, "NftClaimed");
+    });
+
+    it("Should revert when non-owner tries to claim", async function () {
+      await expect(packManager.connect(user2).claimNft(1)).to.be.revertedWithCustomError(packManager, "NotPackOwner");
+    });
+
+    it("Should revert when pack is not opened", async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+
+      await expect(packManager.connect(user1).claimNft(2)).to.be.revertedWithCustomError(packManager, "PackNotOpened");
+    });
+
+    it("Should revert when paused", async function () {
+      await packManager.pause();
+
+      await expect(packManager.connect(user1).claimNft(1)).to.be.revertedWithCustomError(packManager, "EnforcedPause");
+    });
+  });
+
+  describe("Instant Cash Claiming (Step 2 - claimReward)", function () {
+    beforeEach(async function () {
+      await packManager.setInstantCashEnabled(true);
+      await packManager.fundTreasury({ value: ethers.parseEther("100") });
+
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+    });
+
+    it("Should pay instant cash to user", async function () {
+      const user1BalanceBefore = await ethers.provider.getBalance(user1Address);
+
+      const tx = await packManager.connect(user1).claimReward(1);
+      const receipt = await tx.wait();
+      const gasUsed = receipt!.gasUsed * receipt!.gasPrice;
+
+      const user1BalanceAfter = await ethers.provider.getBalance(user1Address);
+
+      // 80% of 0.3 ETH * 3 NFTs = 0.72 ETH
+      const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n * 3n) / 10000n;
+
+      expect(user1BalanceAfter + gasUsed - user1BalanceBefore).to.equal(expectedPayout);
+    });
+
+    it("Should re-deposit NFTs back to pool", async function () {
+      const commonSizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Common);
+
+      await packManager.connect(user1).claimReward(1);
+
+      // NFTs should be back in pool (same count as before VRF fulfillment + 3 returned)
+      const commonSizeAfter = await nftPool.getPoolLevelSize(PoolLevel.Common);
+      expect(commonSizeAfter).to.equal(commonSizeBefore + 3n);
+    });
+
+    it("Should burn the pack after claiming reward", async function () {
+      await packManager.connect(user1).claimReward(1);
+
+      await expect(rariPack.ownerOf(1)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
+    });
+
+    it("Should emit InstantCashClaimed event", async function () {
+      const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n * 3n) / 10000n;
+
+      await expect(packManager.connect(user1).claimReward(1))
+        .to.emit(packManager, "InstantCashClaimed")
+        .withArgs(user1Address, 1, expectedPayout, (collections: any) => collections.length === 3, (tokenIds: any) => tokenIds.length === 3);
+    });
+
+    it("Should revert when instant cash is not enabled", async function () {
+      await packManager.setInstantCashEnabled(false);
+
+      await expect(packManager.connect(user1).claimReward(1)).to.be.revertedWithCustomError(
+        packManager,
+        "InstantCashNotEnabled",
+      );
+    });
+
+    it("Should revert when treasury balance insufficient", async function () {
+      await packManager.withdrawTreasury(ownerAddress, ethers.parseEther("100"));
+
+      await expect(packManager.connect(user1).claimReward(1)).to.be.revertedWithCustomError(
+        packManager,
+        "InsufficientTreasuryBalance",
+      );
+    });
+
+    it("Should revert when non-owner tries to claim", async function () {
+      await expect(packManager.connect(user2).claimReward(1)).to.be.revertedWithCustomError(packManager, "NotPackOwner");
+    });
+
+    it("Should revert when pack is not opened", async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+
+      await expect(packManager.connect(user1).claimReward(2)).to.be.revertedWithCustomError(packManager, "PackNotOpened");
     });
   });
 
@@ -438,6 +626,10 @@ describe("PackManager", function () {
 
       await packManager.connect(user1).openPack(1);
       await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const [collections, , opened] = await rariPack.getPackContents(1);
+      expect(opened).to.be.true;
+      expect(collections.length).to.equal(3);
     });
 
     it("Should open Gold pack correctly", async function () {
@@ -447,6 +639,10 @@ describe("PackManager", function () {
 
       await packManager.connect(user1).openPack(1);
       await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const [collections, , opened] = await rariPack.getPackContents(1);
+      expect(opened).to.be.true;
+      expect(collections.length).to.equal(3);
     });
 
     it("Should open Platinum pack correctly", async function () {
@@ -456,6 +652,10 @@ describe("PackManager", function () {
 
       await packManager.connect(user1).openPack(1);
       await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const [collections, , opened] = await rariPack.getPackContents(1);
+      expect(opened).to.be.true;
+      expect(collections.length).to.equal(3);
     });
   });
 
@@ -499,166 +699,59 @@ describe("PackManager", function () {
     });
   });
 
-  describe("Instant Cash Claims", function () {
-    describe("Configuration", function () {
-      it("Should allow owner to enable instant cash", async function () {
-        await expect(packManager.setInstantCashEnabled(true))
-          .to.emit(packManager, "InstantCashEnabledUpdated")
-          .withArgs(true);
+  describe("Instant Cash Configuration", function () {
+    it("Should allow owner to enable instant cash", async function () {
+      await expect(packManager.setInstantCashEnabled(true))
+        .to.emit(packManager, "InstantCashEnabledUpdated")
+        .withArgs(true);
 
-        expect(await packManager.instantCashEnabled()).to.be.true;
-      });
-
-      it("Should allow owner to set payout treasury", async function () {
-        await expect(packManager.setPayoutTreasury(treasuryAddress))
-          .to.emit(packManager, "PayoutTreasuryUpdated")
-          .withArgs(ZERO_ADDRESS, treasuryAddress);
-      });
+      expect(await packManager.instantCashEnabled()).to.be.true;
     });
 
-    describe("Treasury Management", function () {
-      it("Should allow anyone to fund treasury", async function () {
-        const fundAmount = ethers.parseEther("10");
+    it("Should allow owner to set payout treasury", async function () {
+      await expect(packManager.setPayoutTreasury(treasuryAddress))
+        .to.emit(packManager, "PayoutTreasuryUpdated")
+        .withArgs(ZERO_ADDRESS, treasuryAddress);
+    });
+  });
 
-        await expect(packManager.connect(user1).fundTreasury({ value: fundAmount }))
-          .to.emit(packManager, "TreasuryFunded")
-          .withArgs(user1Address, fundAmount);
+  describe("Treasury Management", function () {
+    it("Should allow anyone to fund treasury", async function () {
+      const fundAmount = ethers.parseEther("10");
 
-        expect(await packManager.treasuryBalance()).to.equal(fundAmount);
-      });
+      await expect(packManager.connect(user1).fundTreasury({ value: fundAmount }))
+        .to.emit(packManager, "TreasuryFunded")
+        .withArgs(user1Address, fundAmount);
 
-      it("Should allow owner to withdraw treasury", async function () {
-        await packManager.fundTreasury({ value: ethers.parseEther("10") });
-
-        const withdrawAmount = ethers.parseEther("5");
-        await expect(packManager.withdrawTreasury(treasuryAddress, withdrawAmount))
-          .to.emit(packManager, "TreasuryWithdrawn")
-          .withArgs(treasuryAddress, withdrawAmount);
-      });
-
-      it("Should revert when withdrawing more than balance", async function () {
-        await expect(
-          packManager.withdrawTreasury(treasuryAddress, ethers.parseEther("1000")),
-        ).to.be.revertedWithCustomError(packManager, "InsufficientTreasuryBalance");
-      });
+      expect(await packManager.treasuryBalance()).to.equal(fundAmount);
     });
 
-    describe("Instant Cash Pack Opening", function () {
-      beforeEach(async function () {
-        await packManager.setInstantCashEnabled(true);
-        await packManager.fundTreasury({ value: ethers.parseEther("100") });
+    it("Should allow owner to withdraw treasury", async function () {
+      await packManager.fundTreasury({ value: ethers.parseEther("10") });
 
-        await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
-          value: BRONZE_PRICE,
-        });
-      });
-
-      it("Should allow opening pack with instant cash claim", async function () {
-        const tx = await packManager.connect(user1).openPackInstantCash(1);
-
-        await expect(tx).to.emit(packManager, "PackOpenRequested").withArgs(1, user1Address, 1, PackType.Bronze, 1);
-      });
-
-      it("Should distribute instant cash on VRF fulfillment", async function () {
-        await packManager.connect(user1).openPackInstantCash(1);
-
-        const user1BalanceBefore = await ethers.provider.getBalance(user1Address);
-
-        // High values = Common level = 0.3 ETH floor price
-        // 80% of 0.3 ETH * 3 NFTs = 0.72 ETH
-        await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
-
-        const user1BalanceAfter = await ethers.provider.getBalance(user1Address);
-        const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n * 3n) / 10000n;
-
-        expect(user1BalanceAfter - user1BalanceBefore).to.equal(expectedPayout);
-      });
-
-      it("Should emit InstantCashClaimed event", async function () {
-        await packManager.connect(user1).openPackInstantCash(1);
-
-        const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n * 3n) / 10000n;
-
-        await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]))
-          .to.emit(packManager, "InstantCashClaimed")
-          .withArgs(1, user1Address, 1, expectedPayout, (rewards: any) => rewards.length === 3);
-      });
-
-      it("Should keep NFTs in pool (not transferred) on instant cash claim", async function () {
-        const commonSizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Common);
-
-        await packManager.connect(user1).openPackInstantCash(1);
-        await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
-
-        const commonSizeAfter = await nftPool.getPoolLevelSize(PoolLevel.Common);
-        expect(commonSizeAfter).to.equal(commonSizeBefore);
-      });
-
-      it("Should revert instant cash when not enabled", async function () {
-        await packManager.setInstantCashEnabled(false);
-
-        await expect(packManager.connect(user1).openPackInstantCash(1)).to.be.revertedWithCustomError(
-          packManager,
-          "InstantCashNotEnabled",
-        );
-      });
-
-      it("Should revert instant cash when treasury balance insufficient", async function () {
-        await packManager.withdrawTreasury(ownerAddress, ethers.parseEther("100"));
-
-        await packManager.connect(user1).openPackInstantCash(1);
-
-        await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n])).to.be.revertedWith(
-          "MockVRF: callback failed",
-        );
-      });
+      const withdrawAmount = ethers.parseEther("5");
+      await expect(packManager.withdrawTreasury(treasuryAddress, withdrawAmount))
+        .to.emit(packManager, "TreasuryWithdrawn")
+        .withArgs(treasuryAddress, withdrawAmount);
     });
 
-    describe("Regular NFT Opening Still Works", function () {
-      beforeEach(async function () {
-        await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
-          value: BRONZE_PRICE,
-        });
-      });
-
-      it("Should still allow regular NFT claims via openPack", async function () {
-        const commonSizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Common);
-
-        await packManager.connect(user1).openPack(1);
-        await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
-
-        const commonSizeAfter = await nftPool.getPoolLevelSize(PoolLevel.Common);
-        expect(commonSizeAfter).to.equal(commonSizeBefore - 3n);
-      });
-
-      it("Should emit PackOpened event for NFT claims", async function () {
-        await packManager.connect(user1).openPack(1);
-
-        await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n])).to.emit(
-          packManager,
-          "PackOpened",
-        );
-      });
+    it("Should revert when withdrawing more than balance", async function () {
+      await expect(
+        packManager.withdrawTreasury(treasuryAddress, ethers.parseEther("1000")),
+      ).to.be.revertedWithCustomError(packManager, "InsufficientTreasuryBalance");
     });
 
-    describe("View Functions", function () {
-      it("Should calculate instant cash payout correctly", async function () {
-        await nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
+    it("Should receive ETH via receive function", async function () {
+      const fundAmount = ethers.parseEther("5");
 
-        const payout = await packManager.getInstantCashPayout(await testNft.getAddress());
-        const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n) / 10000n;
+      await expect(
+        owner.sendTransaction({
+          to: await packManager.getAddress(),
+          value: fundAmount,
+        }),
+      ).to.emit(packManager, "TreasuryFunded");
 
-        expect(payout).to.equal(expectedPayout);
-      });
-
-      it("Should return 0 payout for unset floor price", async function () {
-        const payout = await packManager.getInstantCashPayout(user1Address);
-        expect(payout).to.equal(0);
-      });
-
-      it("Should return instant cash percentage constant", async function () {
-        expect(await packManager.getInstantCashPercentage()).to.equal(8000);
-      });
+      expect(await packManager.treasuryBalance()).to.equal(fundAmount);
     });
   });
 
@@ -669,6 +762,24 @@ describe("PackManager", function () {
 
     it("Should return REWARDS_PER_PACK constant", async function () {
       expect(await packManager.REWARDS_PER_PACK()).to.equal(3);
+    });
+
+    it("Should calculate instant cash payout correctly", async function () {
+      await nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
+
+      const payout = await packManager.getInstantCashPayout(await testNft.getAddress());
+      const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n) / 10000n;
+
+      expect(payout).to.equal(expectedPayout);
+    });
+
+    it("Should return 0 payout for unset floor price", async function () {
+      const payout = await packManager.getInstantCashPayout(user1Address);
+      expect(payout).to.equal(0);
+    });
+
+    it("Should return instant cash percentage constant", async function () {
+      expect(await packManager.getInstantCashPercentage()).to.equal(8000);
     });
   });
 });

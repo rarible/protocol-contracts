@@ -1,10 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+// <ai_context>
+// PackManager coordinates opening of RARI pack NFTs using Chainlink VRF. It
+// selects NFTs from NftPool into specific packs, locks them as pack contents,
+// and then lets users either claim those NFTs or claim an instant-cash reward.
+// In the instant-cash path, NFTs are returned to NftPool so the pool can
+// continue to exist and be reused for future packs. It is designed to work
+// together with RariPack and NftPool.
+// </ai_context>
+
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {ERC721HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import {RariPack} from "./RariPack.sol";
@@ -14,24 +24,17 @@ import {NftPool} from "./NftPool.sol";
 /// @notice Opens RariPack NFTs and distributes rewards from NftPool using Chainlink VRF
 /// @dev Uses Chainlink VRF v2.5 for verifiable randomness when selecting NFTs
 /// @dev Selection: first select pool level by probability, then select NFT from that level with equal probability
-/// @dev Supports instant cash claim (80% of floor price) or NFT claim
-contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {
+/// @dev Supports a 2-step flow: open pack (lock contents) and then claim either NFTs or instant cash
+contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable, ERC721HolderUpgradeable {
     // -----------------------
     // Types
     // -----------------------
-
-    /// @dev Claim type for pack rewards
-    enum ClaimType {
-        NFT, // Receive the actual NFT tokens
-        InstantCash // Receive 80% of floor price in ETH
-    }
 
     /// @dev Request state for pending VRF callbacks
     struct OpenRequest {
         address requester;
         uint256 packTokenId;
         RariPack.PackType packType;
-        ClaimType claimType;
         bool fulfilled;
     }
 
@@ -97,11 +100,14 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     /// @dev Pack type => probability thresholds
     mapping(RariPack.PackType => PackProbabilities) private _packProbabilities;
 
-    /// @dev Treasury address for instant cash payouts
+    /// @dev Treasury address for instant cash payouts (ETH)
     address public payoutTreasury;
 
     /// @dev Whether instant cash claims are enabled
     bool public instantCashEnabled;
+
+    /// @dev Pack tokenId => whether a VRF open request is currently in progress
+    mapping(uint256 => bool) public packOpeningInProgress;
 
     // -----------------------
     // Events
@@ -111,8 +117,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         uint256 indexed requestId,
         address indexed requester,
         uint256 indexed packTokenId,
-        RariPack.PackType packType,
-        ClaimType claimType
+        RariPack.PackType packType
     );
 
     event PackOpened(
@@ -123,11 +128,18 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     );
 
     event InstantCashClaimed(
-        uint256 indexed requestId,
         address indexed requester,
         uint256 indexed packTokenId,
         uint256 totalPayout,
-        RewardNft[3] rewards
+        address[] collections,
+        uint256[] tokenIds
+    );
+
+    event NftClaimed(
+        address indexed requester,
+        uint256 indexed packTokenId,
+        address[] collections,
+        uint256[] tokenIds
     );
 
     event NftPoolSet(address indexed poolAddress);
@@ -169,6 +181,10 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     error InsufficientTreasuryBalance();
     error PayoutTreasuryNotSet();
     error TransferFailed();
+    error PackAlreadyOpened();
+    error PackOpeningInProgressError();
+    error PackNotOpened();
+    error PackEmpty();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -189,6 +205,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         __Ownable_init(initialOwner);
         __ReentrancyGuard_init();
         __Pausable_init();
+        __ERC721Holder_init();
 
         rariPack = RariPack(rariPack_);
         emit RariPackSet(rariPack_);
@@ -321,7 +338,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         emit PackProbabilitiesUpdated(packType, probs.ultraRare, probs.legendary, probs.epic, probs.rare);
     }
 
-    /// @notice Set the payout treasury address
+    /// @notice Set the payout treasury address (for ETH management)
     function setPayoutTreasury(address treasury_) external onlyOwner {
         address oldTreasury = payoutTreasury;
         payoutTreasury = treasury_;
@@ -334,12 +351,12 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         emit InstantCashEnabledUpdated(enabled);
     }
 
-    /// @notice Pause pack opening
+    /// @notice Pause pack opening and claiming
     function pause() external onlyOwner {
         _pause();
     }
 
-    /// @notice Unpause pack opening
+    /// @notice Unpause pack opening and claiming
     function unpause() external onlyOwner {
         _unpause();
     }
@@ -378,30 +395,26 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     // Core: Open Pack
     // -----------------------
 
-    /// @notice Request to open a pack and receive NFTs
+    /// @notice Request to open a pack and lock NFTs into it
+    /// @dev After VRF fulfillment, NFTs are transferred from NftPool to this
+    ///      contract and contents are stored in RariPack. The pack is not
+    ///      burned during opening.
     function openPack(uint256 packTokenId) external nonReentrant whenNotPaused returns (uint256 requestId) {
-        return _openPack(packTokenId, ClaimType.NFT);
-    }
-
-    /// @notice Request to open a pack and receive instant cash (80% of floor price)
-    function openPackInstantCash(uint256 packTokenId) external nonReentrant whenNotPaused returns (uint256 requestId) {
-        if (!instantCashEnabled) revert InstantCashNotEnabled();
-        return _openPack(packTokenId, ClaimType.InstantCash);
-    }
-
-    /// @dev Internal pack opening logic
-    function _openPack(uint256 packTokenId, ClaimType claimType) internal returns (uint256 requestId) {
         // Verify caller owns the pack
         if (rariPack.ownerOf(packTokenId) != msg.sender) revert NotPackOwner();
 
-        // Get pack type before burning
+        // Ensure pack not already opened
+        (, , bool opened) = rariPack.getPackContents(packTokenId);
+        if (opened) revert PackAlreadyOpened();
+
+        // Ensure we are not already waiting for VRF for this pack
+        if (packOpeningInProgress[packTokenId]) revert PackOpeningInProgressError();
+
+        // Get pack type
         RariPack.PackType packType = rariPack.packTypeOf(packTokenId);
 
         // Verify pool is set and has NFTs at required levels
         _verifyPoolLevelsAvailable(packType);
-
-        // Burn the pack
-        rariPack.burnPack(packTokenId);
 
         // Request randomness from VRF
         requestId = _requestRandomness();
@@ -411,13 +424,14 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
             requester: msg.sender,
             packTokenId: packTokenId,
             packType: packType,
-            claimType: claimType,
             fulfilled: false
         });
 
+        packOpeningInProgress[packTokenId] = true;
+
         _userPendingRequests[msg.sender].push(requestId);
 
-        emit PackOpenRequested(requestId, msg.sender, packTokenId, packType, claimType);
+        emit PackOpenRequested(requestId, msg.sender, packTokenId, packType);
     }
 
     /// @notice Callback function for VRF Coordinator
@@ -453,48 +467,22 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         if (request.fulfilled) revert RequestAlreadyFulfilled();
 
         request.fulfilled = true;
+        packOpeningInProgress[request.packTokenId] = false;
 
-        if (request.claimType == ClaimType.InstantCash) {
-            _processInstantCashClaim(requestId, request, randomWords);
-        } else {
-            _processNftClaim(requestId, request, randomWords);
-        }
+        _processOpen(requestId, request, randomWords);
 
         _removePendingRequest(request.requester, requestId);
     }
 
-    /// @dev Process NFT claim - select and transfer NFTs to user
-    function _processNftClaim(uint256 requestId, OpenRequest storage request, uint256[] calldata randomWords) internal {
-        RewardNft[3] memory rewards;
-
-        for (uint256 i = 0; i < REWARDS_PER_PACK; i++) {
-            uint256 randomValue = randomWords[i];
-
-            // Determine pool level based on probability
-            NftPool.PoolLevel level = _selectPoolLevel(request.packType, randomValue);
-
-            // Select and transfer random NFT from that level
-            (address collection, uint256 tokenId) = nftPool.selectAndTransferFromLevel(
-                level,
-                randomValue >> 16, // Use different bits for NFT selection
-                request.requester
-            );
-
-            rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
-        }
-
-        emit PackOpened(requestId, request.requester, request.packTokenId, rewards);
-    }
-
-    /// @dev Process instant cash claim - calculate payout and send ETH
-    /// @dev NFTs are NOT transferred, they stay in pool
-    function _processInstantCashClaim(
+    /// @dev Process opening of a pack - select and lock NFTs into the pack
+    function _processOpen(
         uint256 requestId,
         OpenRequest storage request,
         uint256[] calldata randomWords
     ) internal {
         RewardNft[3] memory rewards;
-        uint256 totalPayout = 0;
+        address[] memory collections = new address[](REWARDS_PER_PACK);
+        uint256[] memory tokenIds = new uint256[](REWARDS_PER_PACK);
 
         for (uint256 i = 0; i < REWARDS_PER_PACK; i++) {
             uint256 randomValue = randomWords[i];
@@ -502,18 +490,63 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
             // Determine pool level based on probability
             NftPool.PoolLevel level = _selectPoolLevel(request.packType, randomValue);
 
-            // Select random NFT from that level (but don't transfer)
-            uint256 levelSize = nftPool.getPoolLevelSize(level);
-            if (levelSize == 0) revert LevelEmpty(level);
-
-            uint256 nftIndex = (randomValue >> 16) % levelSize;
-            (address collection, uint256 tokenId) = nftPool.getPoolLevelNftAt(level, nftIndex);
+            // Select and transfer random NFT from that level to this contract
+            (address collection, uint256 tokenId) = nftPool.selectAndTransferFromLevel(
+                level,
+                randomValue >> 16, // Use different bits for NFT selection
+                address(this)
+            );
 
             rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
+            collections[i] = collection;
+            tokenIds[i] = tokenId;
+        }
 
-            // Calculate payout based on floor price
-            uint256 floorPrice = nftPool.getCollectionFloorPrice(collection);
-            if (floorPrice == 0) revert FloorPriceNotSet(collection);
+        // Lock contents into the pack (for metadata and later claims)
+        rariPack.setPackContents(request.packTokenId, collections, tokenIds);
+
+        emit PackOpened(requestId, request.requester, request.packTokenId, rewards);
+    }
+
+    // -----------------------
+    // Claims
+    // -----------------------
+
+    /// @notice Claim the NFTs locked in an opened pack and burn the pack.
+    function claimNft(uint256 packTokenId) external nonReentrant whenNotPaused {
+        if (rariPack.ownerOf(packTokenId) != msg.sender) revert NotPackOwner();
+
+        (address[] memory collections, uint256[] memory tokenIds, bool opened) = rariPack.getPackContents(packTokenId);
+        if (!opened) revert PackNotOpened();
+        if (collections.length == 0) revert PackEmpty();
+
+        for (uint256 i = 0; i < collections.length; i++) {
+            IERC721(collections[i]).safeTransferFrom(address(this), msg.sender, tokenIds[i]);
+        }
+
+        rariPack.burnPack(packTokenId);
+
+        emit NftClaimed(msg.sender, packTokenId, collections, tokenIds);
+    }
+
+    /// @notice Claim instant cash reward for an opened pack and burn the pack.
+    /// @dev Locked NFTs are re-deposited back into NftPool so the pool can
+    ///      continue to serve future packs, while the caller receives ETH.
+    function claimReward(uint256 packTokenId) external nonReentrant whenNotPaused {
+        if (!instantCashEnabled) revert InstantCashNotEnabled();
+
+        if (rariPack.ownerOf(packTokenId) != msg.sender) revert NotPackOwner();
+
+        (address[] memory collections, uint256[] memory tokenIds, bool opened) = rariPack.getPackContents(packTokenId);
+        if (!opened) revert PackNotOpened();
+        if (collections.length == 0) revert PackEmpty();
+
+        uint256 totalPayout = 0;
+
+        // Calculate payout based on collection floor prices
+        for (uint256 i = 0; i < collections.length; i++) {
+            uint256 floorPrice = nftPool.getCollectionFloorPrice(collections[i]);
+            if (floorPrice == 0) revert FloorPriceNotSet(collections[i]);
 
             uint256 payout = (floorPrice * INSTANT_CASH_PERCENTAGE) / PROBABILITY_PRECISION;
             totalPayout += payout;
@@ -521,10 +554,20 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
         if (address(this).balance < totalPayout) revert InsufficientTreasuryBalance();
 
-        (bool sent, ) = request.requester.call{value: totalPayout}("");
+        // Re-deposit NFTs back into the pool (approve first)
+        for (uint256 i = 0; i < collections.length; i++) {
+            IERC721(collections[i]).approve(address(nftPool), tokenIds[i]);
+            nftPool.deposit(collections[i], tokenIds[i]);
+        }
+
+        // Burn pack
+        rariPack.burnPack(packTokenId);
+
+        // Send ETH payout to claimer
+        (bool sent, ) = msg.sender.call{value: totalPayout}("");
         if (!sent) revert TransferFailed();
 
-        emit InstantCashClaimed(requestId, request.requester, request.packTokenId, totalPayout, rewards);
+        emit InstantCashClaimed(msg.sender, packTokenId, totalPayout, collections, tokenIds);
     }
 
     // -----------------------
