@@ -774,5 +774,255 @@ describe("PackManager", function () {
       expect(await packManager.REWARDS_PER_PACK()).to.equal(3);
     });
   });
+
+  describe("Dynamic Probabilities", function () {
+    describe("Default Probabilities", function () {
+      it("Should initialize with correct default Platinum probabilities", async function () {
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
+          PackType.Platinum
+        );
+        expect(ultraRare).to.equal(50); // 0.5%
+        expect(legendary).to.equal(200); // 2% cumulative
+        expect(epic).to.equal(450); // 4.5% cumulative
+        expect(rare).to.equal(800); // 8% cumulative
+      });
+
+      it("Should initialize with correct default Gold probabilities", async function () {
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
+          PackType.Gold
+        );
+        expect(ultraRare).to.equal(0); // Not available
+        expect(legendary).to.equal(100); // 1%
+        expect(epic).to.equal(250); // 2.5% cumulative
+        expect(rare).to.equal(500); // 5% cumulative
+      });
+
+      it("Should initialize with correct default Silver probabilities", async function () {
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
+          PackType.Silver
+        );
+        expect(ultraRare).to.equal(0); // Not available
+        expect(legendary).to.equal(50); // 0.5%
+        expect(epic).to.equal(150); // 1.5% cumulative
+        expect(rare).to.equal(300); // 3% cumulative
+      });
+
+      it("Should initialize with correct default Bronze probabilities", async function () {
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
+          PackType.Bronze
+        );
+        expect(ultraRare).to.equal(0); // Not available
+        expect(legendary).to.equal(25); // 0.25%
+        expect(epic).to.equal(125); // 1.25% cumulative
+        expect(rare).to.equal(275); // 2.75% cumulative
+      });
+
+      it("Should return correct percentage breakdown for Platinum", async function () {
+        const [ultraRare, legendary, epic, rare, common] =
+          await packManager.getPackProbabilitiesPercent(PackType.Platinum);
+        expect(ultraRare).to.equal(50); // 0.5%
+        expect(legendary).to.equal(150); // 1.5%
+        expect(epic).to.equal(250); // 2.5%
+        expect(rare).to.equal(350); // 3.5%
+        expect(common).to.equal(9200); // 92%
+      });
+
+      it("Should return correct percentage breakdown for Bronze", async function () {
+        const [ultraRare, legendary, epic, rare, common] =
+          await packManager.getPackProbabilitiesPercent(PackType.Bronze);
+        expect(ultraRare).to.equal(0); // 0%
+        expect(legendary).to.equal(25); // 0.25%
+        expect(epic).to.equal(100); // 1%
+        expect(rare).to.equal(150); // 1.5%
+        expect(common).to.equal(9725); // 97.25%
+      });
+    });
+
+    describe("Setting Probabilities", function () {
+      it("Should allow owner to set pack probabilities", async function () {
+        await expect(packManager.setPackProbabilities(PackType.Bronze, 0, 100, 300, 600))
+          .to.emit(packManager, "PackProbabilitiesUpdated")
+          .withArgs(PackType.Bronze, 0, 100, 300, 600);
+
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
+          PackType.Bronze
+        );
+        expect(ultraRare).to.equal(0);
+        expect(legendary).to.equal(100);
+        expect(epic).to.equal(300);
+        expect(rare).to.equal(600);
+      });
+
+      it("Should allow setting UltraRare probability for non-Platinum packs", async function () {
+        // Even though UltraRare is set, it won't be used for Bronze packs
+        await packManager.setPackProbabilities(PackType.Bronze, 50, 100, 300, 600);
+
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
+          PackType.Bronze
+        );
+        expect(ultraRare).to.equal(50);
+        expect(legendary).to.equal(100);
+      });
+
+      it("Should revert when thresholds are not in ascending order", async function () {
+        // legendary < ultraRare (invalid)
+        await expect(
+          packManager.setPackProbabilities(PackType.Bronze, 100, 50, 300, 600)
+        ).to.be.revertedWithCustomError(packManager, "InvalidProbabilities");
+
+        // epic < legendary (invalid)
+        await expect(
+          packManager.setPackProbabilities(PackType.Bronze, 0, 300, 200, 600)
+        ).to.be.revertedWithCustomError(packManager, "InvalidProbabilities");
+
+        // rare < epic (invalid)
+        await expect(
+          packManager.setPackProbabilities(PackType.Bronze, 0, 100, 600, 400)
+        ).to.be.revertedWithCustomError(packManager, "InvalidProbabilities");
+
+        // rare > 10000 (invalid)
+        await expect(
+          packManager.setPackProbabilities(PackType.Bronze, 0, 100, 300, 10001)
+        ).to.be.revertedWithCustomError(packManager, "InvalidProbabilities");
+      });
+
+      it("Should revert when non-owner tries to set probabilities", async function () {
+        await expect(
+          packManager.connect(user1).setPackProbabilities(PackType.Bronze, 0, 100, 300, 600)
+        ).to.be.revertedWithCustomError(packManager, "OwnableUnauthorizedAccount");
+      });
+
+      it("Should allow owner to batch set all probabilities", async function () {
+        const platinumProbs = { ultraRare: 100, legendary: 300, epic: 600, rare: 1000 };
+        const goldProbs = { ultraRare: 0, legendary: 200, epic: 400, rare: 800 };
+        const silverProbs = { ultraRare: 0, legendary: 100, epic: 300, rare: 600 };
+        const bronzeProbs = { ultraRare: 0, legendary: 50, epic: 200, rare: 500 };
+
+        await packManager.setAllPackProbabilities(
+          platinumProbs,
+          goldProbs,
+          silverProbs,
+          bronzeProbs
+        );
+
+        // Verify Platinum
+        const [pUltra, pLeg, pEpic, pRare] = await packManager.getPackProbabilities(
+          PackType.Platinum
+        );
+        expect(pUltra).to.equal(100);
+        expect(pLeg).to.equal(300);
+        expect(pEpic).to.equal(600);
+        expect(pRare).to.equal(1000);
+
+        // Verify Bronze
+        const [bUltra, bLeg, bEpic, bRare] = await packManager.getPackProbabilities(
+          PackType.Bronze
+        );
+        expect(bUltra).to.equal(0);
+        expect(bLeg).to.equal(50);
+        expect(bEpic).to.equal(200);
+        expect(bRare).to.equal(500);
+      });
+
+      it("Should revert batch set when any pack has invalid probabilities", async function () {
+        const validProbs = { ultraRare: 0, legendary: 100, epic: 300, rare: 600 };
+        const invalidProbs = { ultraRare: 0, legendary: 500, epic: 300, rare: 600 }; // epic < legendary
+
+        await expect(
+          packManager.setAllPackProbabilities(validProbs, invalidProbs, validProbs, validProbs)
+        ).to.be.revertedWithCustomError(packManager, "InvalidProbabilities");
+      });
+
+      it("Should revert when non-owner tries to batch set probabilities", async function () {
+        const probs = { ultraRare: 0, legendary: 100, epic: 300, rare: 600 };
+        await expect(
+          packManager.connect(user1).setAllPackProbabilities(probs, probs, probs, probs)
+        ).to.be.revertedWithCustomError(packManager, "OwnableUnauthorizedAccount");
+      });
+    });
+
+    describe("Updated Probabilities Affect Pack Opening", function () {
+      it("Should use updated probabilities when opening packs", async function () {
+        // Set Bronze to have 100% Legendary (legendary threshold = 10000)
+        await packManager.setPackProbabilities(PackType.Bronze, 0, 10000, 10000, 10000);
+
+        // Mint Bronze pack
+        await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+          value: BRONZE_PRICE,
+        });
+
+        await packManager.connect(user1).openPack(1);
+
+        // Any random value should now select Legendary
+        const randomWords = [9999n, 5000n, 1n];
+        await mockVrf.fulfillRandomWords(1, randomWords);
+
+        // User should have received 3 NFTs from Legendary pool
+        expect(await testNft.balanceOf(user1Address)).to.equal(3);
+      });
+
+      it("Should select correct pools based on new thresholds", async function () {
+        // Set Platinum to have higher UltraRare chance (50% = 5000)
+        await packManager.setPackProbabilities(PackType.Platinum, 5000, 6000, 7000, 8000);
+
+        // Mint Platinum pack
+        await rariPack.connect(user1).mintPack(user1Address, PackType.Platinum, 1, {
+          value: PLATINUM_PRICE,
+        });
+
+        await packManager.connect(user1).openPack(1);
+
+        // Values 0-4999 should select UltraRare (50% chance)
+        const randomWords = [1000n, 2000n, 3000n]; // All should be UltraRare
+
+        await mockVrf.fulfillRandomWords(1, randomWords);
+
+        expect(await testNft.balanceOf(user1Address)).to.equal(3);
+      });
+
+      it("Should allow disabling UltraRare for Platinum by setting threshold to 0", async function () {
+        // Set Platinum UltraRare to 0 (disabled)
+        await packManager.setPackProbabilities(PackType.Platinum, 0, 200, 450, 800);
+
+        const [ultraRare, legendary] = await packManager.getPackProbabilities(PackType.Platinum);
+        expect(ultraRare).to.equal(0);
+        expect(legendary).to.equal(200);
+
+        // With ultraRare = 0, rolls 0-199 will go to Legendary instead
+      });
+
+      it("Should allow 100% chance for a single pool type", async function () {
+        // Set Bronze to have 100% Common (all thresholds at 0)
+        await packManager.setPackProbabilities(PackType.Bronze, 0, 0, 0, 0);
+
+        const [, , , , common] = await packManager.getPackProbabilitiesPercent(PackType.Bronze);
+        expect(common).to.equal(10000); // 100%
+      });
+    });
+
+    describe("Edge Cases", function () {
+      it("Should allow equal consecutive thresholds (0% for that pool)", async function () {
+        // Set Bronze: no UltraRare, no Legendary, 10% Epic, 20% Rare, 70% Common
+        await packManager.setPackProbabilities(PackType.Bronze, 0, 0, 1000, 3000);
+
+        const [ultraRare, legendary, epic, rare, common] =
+          await packManager.getPackProbabilitiesPercent(PackType.Bronze);
+        expect(ultraRare).to.equal(0);
+        expect(legendary).to.equal(0);
+        expect(epic).to.equal(1000); // 10%
+        expect(rare).to.equal(2000); // 20%
+        expect(common).to.equal(7000); // 70%
+      });
+
+      it("Should handle maximum valid threshold (10000)", async function () {
+        // All at 10000 means only Common is possible... wait no, that means everything goes to UltraRare
+        // Let's test rare = 10000 which means 0% Common
+        await packManager.setPackProbabilities(PackType.Bronze, 0, 2500, 5000, 10000);
+
+        const [, , , , common] = await packManager.getPackProbabilitiesPercent(PackType.Bronze);
+        expect(common).to.equal(0);
+      });
+    });
+  });
 });
 

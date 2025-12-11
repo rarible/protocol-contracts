@@ -33,6 +33,19 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         NftPool.PoolType poolType;
     }
 
+    /// @dev Probability thresholds for each pack type (cumulative, out of 10000)
+    /// @param ultraRare Threshold for UltraRare (only used for Platinum)
+    /// @param legendary Threshold for Legendary (cumulative)
+    /// @param epic Threshold for Epic (cumulative)
+    /// @param rare Threshold for Rare (cumulative)
+    /// @dev Values above rare threshold result in Common
+    struct PackProbabilities {
+        uint16 ultraRare;
+        uint16 legendary;
+        uint16 epic;
+        uint16 rare;
+    }
+
     // -----------------------
     // Constants
     // -----------------------
@@ -41,36 +54,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     uint256 public constant REWARDS_PER_PACK = 3;
 
     /// @dev Probability precision (10000 = 100.00%)
-    uint256 private constant PROBABILITY_PRECISION = 10000;
-
-    // Platinum probabilities (cumulative thresholds out of 10000)
-    // UltraRare: 0.5% = 50, Legendary: 1.5% = 150, Epic: 2.5% = 250, Rare: 3.5% = 350, Common: rest
-    uint256 private constant PLATINUM_ULTRARARE = 50; // 0 - 49
-    uint256 private constant PLATINUM_LEGENDARY = 200; // 50 - 199 (50 + 150)
-    uint256 private constant PLATINUM_EPIC = 450; // 200 - 449 (200 + 250)
-    uint256 private constant PLATINUM_RARE = 800; // 450 - 799 (450 + 350)
-    // Common: 800 - 9999
-
-    // Gold probabilities (cumulative thresholds out of 10000) - no UltraRare
-    // Legendary: 1% = 100, Epic: 1.5% = 150, Rare: 2.5% = 250, Common: rest
-    uint256 private constant GOLD_LEGENDARY = 100; // 0 - 99
-    uint256 private constant GOLD_EPIC = 250; // 100 - 249 (100 + 150)
-    uint256 private constant GOLD_RARE = 500; // 250 - 499 (250 + 250)
-    // Common: 500 - 9999
-
-    // Silver probabilities (cumulative thresholds out of 10000) - no UltraRare
-    // Legendary: 0.5% = 50, Epic: 1% = 100, Rare: 1.5% = 150, Common: rest
-    uint256 private constant SILVER_LEGENDARY = 50; // 0 - 49
-    uint256 private constant SILVER_EPIC = 150; // 50 - 149 (50 + 100)
-    uint256 private constant SILVER_RARE = 300; // 150 - 299 (150 + 150)
-    // Common: 300 - 9999
-
-    // Bronze probabilities (cumulative thresholds out of 10000) - no UltraRare
-    // Legendary: 0.25% = 25, Epic: 1% = 100, Rare: 1.5% = 150, Common: rest
-    uint256 private constant BRONZE_LEGENDARY = 25; // 0 - 24
-    uint256 private constant BRONZE_EPIC = 125; // 25 - 124 (25 + 100)
-    uint256 private constant BRONZE_RARE = 275; // 125 - 274 (125 + 150)
-    // Common: 275 - 9999
+    uint256 public constant PROBABILITY_PRECISION = 10000;
 
     // -----------------------
     // Storage
@@ -103,6 +87,9 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     /// @dev User address => array of pending request IDs
     mapping(address => uint256[]) private _userPendingRequests;
 
+    /// @dev Pack type => probability thresholds
+    mapping(RariPack.PackType => PackProbabilities) private _packProbabilities;
+
     // -----------------------
     // Events
     // -----------------------
@@ -130,6 +117,13 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         uint32 callbackGasLimit,
         uint16 requestConfirmations
     );
+    event PackProbabilitiesUpdated(
+        RariPack.PackType indexed packType,
+        uint16 ultraRare,
+        uint16 legendary,
+        uint16 epic,
+        uint16 rare
+    );
 
     // -----------------------
     // Errors
@@ -143,6 +137,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     error RequestNotFound();
     error RequestAlreadyFulfilled();
     error OnlyVrfCoordinator();
+    error InvalidProbabilities();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -166,6 +161,44 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
         rariPack = RariPack(rariPack_);
         emit RariPackSet(rariPack_);
+
+        // Set default probabilities
+        _setDefaultProbabilities();
+    }
+
+    /// @dev Set default probability thresholds matching the original spec
+    function _setDefaultProbabilities() internal {
+        // Platinum: UltraRare 0.5%, Legendary 1.5%, Epic 2.5%, Rare 3.5%, Common 92%
+        _packProbabilities[RariPack.PackType.Platinum] = PackProbabilities({
+            ultraRare: 50, // 0.5%
+            legendary: 200, // 0.5% + 1.5% = 2%
+            epic: 450, // 2% + 2.5% = 4.5%
+            rare: 800 // 4.5% + 3.5% = 8%
+        });
+
+        // Gold: Legendary 1%, Epic 1.5%, Rare 2.5%, Common 95%
+        _packProbabilities[RariPack.PackType.Gold] = PackProbabilities({
+            ultraRare: 0, // Not available
+            legendary: 100, // 1%
+            epic: 250, // 1% + 1.5% = 2.5%
+            rare: 500 // 2.5% + 2.5% = 5%
+        });
+
+        // Silver: Legendary 0.5%, Epic 1%, Rare 1.5%, Common 97%
+        _packProbabilities[RariPack.PackType.Silver] = PackProbabilities({
+            ultraRare: 0, // Not available
+            legendary: 50, // 0.5%
+            epic: 150, // 0.5% + 1% = 1.5%
+            rare: 300 // 1.5% + 1.5% = 3%
+        });
+
+        // Bronze: Legendary 0.25%, Epic 1%, Rare 1.5%, Common 97.25%
+        _packProbabilities[RariPack.PackType.Bronze] = PackProbabilities({
+            ultraRare: 0, // Not available
+            legendary: 25, // 0.25%
+            epic: 125, // 0.25% + 1% = 1.25%
+            rare: 275 // 1.25% + 1.5% = 2.75%
+        });
     }
 
     // -----------------------
@@ -201,6 +234,71 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         vrfCallbackGasLimit = callbackGasLimit_;
         vrfRequestConfirmations = requestConfirmations_;
         emit VrfConfigUpdated(coordinator_, subscriptionId_, keyHash_, callbackGasLimit_, requestConfirmations_);
+    }
+
+    /// @notice Set probability thresholds for a pack type
+    /// @param packType The pack type to configure
+    /// @param ultraRare Cumulative threshold for UltraRare (only meaningful for Platinum)
+    /// @param legendary Cumulative threshold for Legendary
+    /// @param epic Cumulative threshold for Epic
+    /// @param rare Cumulative threshold for Rare
+    /// @dev All values are out of 10000 (100.00%). Must be in ascending order.
+    /// @dev Example: ultraRare=50, legendary=200, epic=450, rare=800 means:
+    ///      UltraRare: 0-49 (0.5%), Legendary: 50-199 (1.5%), Epic: 200-449 (2.5%), 
+    ///      Rare: 450-799 (3.5%), Common: 800-9999 (92%)
+    function setPackProbabilities(
+        RariPack.PackType packType,
+        uint16 ultraRare,
+        uint16 legendary,
+        uint16 epic,
+        uint16 rare
+    ) external onlyOwner {
+        // Validate thresholds are in ascending order and within bounds
+        if (ultraRare > legendary || legendary > epic || epic > rare || rare > PROBABILITY_PRECISION) {
+            revert InvalidProbabilities();
+        }
+
+        _packProbabilities[packType] = PackProbabilities({
+            ultraRare: ultraRare,
+            legendary: legendary,
+            epic: epic,
+            rare: rare
+        });
+
+        emit PackProbabilitiesUpdated(packType, ultraRare, legendary, epic, rare);
+    }
+
+    /// @notice Batch set probabilities for all pack types
+    /// @param platinumProbs Probabilities for Platinum packs
+    /// @param goldProbs Probabilities for Gold packs
+    /// @param silverProbs Probabilities for Silver packs
+    /// @param bronzeProbs Probabilities for Bronze packs
+    function setAllPackProbabilities(
+        PackProbabilities calldata platinumProbs,
+        PackProbabilities calldata goldProbs,
+        PackProbabilities calldata silverProbs,
+        PackProbabilities calldata bronzeProbs
+    ) external onlyOwner {
+        _validateAndSetProbabilities(RariPack.PackType.Platinum, platinumProbs);
+        _validateAndSetProbabilities(RariPack.PackType.Gold, goldProbs);
+        _validateAndSetProbabilities(RariPack.PackType.Silver, silverProbs);
+        _validateAndSetProbabilities(RariPack.PackType.Bronze, bronzeProbs);
+    }
+
+    /// @dev Validate and set probabilities for a single pack type
+    function _validateAndSetProbabilities(RariPack.PackType packType, PackProbabilities calldata probs) internal {
+        if (
+            probs.ultraRare > probs.legendary ||
+            probs.legendary > probs.epic ||
+            probs.epic > probs.rare ||
+            probs.rare > PROBABILITY_PRECISION
+        ) {
+            revert InvalidProbabilities();
+        }
+
+        _packProbabilities[packType] = probs;
+
+        emit PackProbabilitiesUpdated(packType, probs.ultraRare, probs.legendary, probs.epic, probs.rare);
     }
 
     /// @notice Pause pack opening
@@ -326,32 +424,19 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     function _selectPoolType(
         RariPack.PackType packType,
         uint256 randomValue
-    ) internal pure returns (NftPool.PoolType) {
+    ) internal view returns (NftPool.PoolType) {
         uint256 roll = randomValue % PROBABILITY_PRECISION;
+        PackProbabilities storage probs = _packProbabilities[packType];
 
-        if (packType == RariPack.PackType.Platinum) {
-            if (roll < PLATINUM_ULTRARARE) return NftPool.PoolType.UltraRare;
-            if (roll < PLATINUM_LEGENDARY) return NftPool.PoolType.Legendary;
-            if (roll < PLATINUM_EPIC) return NftPool.PoolType.Epic;
-            if (roll < PLATINUM_RARE) return NftPool.PoolType.Rare;
-            return NftPool.PoolType.Common;
-        } else if (packType == RariPack.PackType.Gold) {
-            if (roll < GOLD_LEGENDARY) return NftPool.PoolType.Legendary;
-            if (roll < GOLD_EPIC) return NftPool.PoolType.Epic;
-            if (roll < GOLD_RARE) return NftPool.PoolType.Rare;
-            return NftPool.PoolType.Common;
-        } else if (packType == RariPack.PackType.Silver) {
-            if (roll < SILVER_LEGENDARY) return NftPool.PoolType.Legendary;
-            if (roll < SILVER_EPIC) return NftPool.PoolType.Epic;
-            if (roll < SILVER_RARE) return NftPool.PoolType.Rare;
-            return NftPool.PoolType.Common;
-        } else {
-            // Bronze
-            if (roll < BRONZE_LEGENDARY) return NftPool.PoolType.Legendary;
-            if (roll < BRONZE_EPIC) return NftPool.PoolType.Epic;
-            if (roll < BRONZE_RARE) return NftPool.PoolType.Rare;
-            return NftPool.PoolType.Common;
+        // For Platinum, check UltraRare first
+        if (packType == RariPack.PackType.Platinum && roll < probs.ultraRare) {
+            return NftPool.PoolType.UltraRare;
         }
+
+        if (roll < probs.legendary) return NftPool.PoolType.Legendary;
+        if (roll < probs.epic) return NftPool.PoolType.Epic;
+        if (roll < probs.rare) return NftPool.PoolType.Rare;
+        return NftPool.PoolType.Common;
     }
 
     /// @dev Verify that all possible pools for a pack type have NFTs available
@@ -362,8 +447,9 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         _verifyPoolHasNfts(NftPool.PoolType.Epic);
         _verifyPoolHasNfts(NftPool.PoolType.Legendary);
 
-        // Only Platinum packs can get UltraRare
-        if (packType == RariPack.PackType.Platinum) {
+        // Only Platinum packs can get UltraRare (if probability > 0)
+        PackProbabilities storage probs = _packProbabilities[packType];
+        if (packType == RariPack.PackType.Platinum && probs.ultraRare > 0) {
             _verifyPoolHasNfts(NftPool.PoolType.UltraRare);
         }
     }
@@ -396,6 +482,48 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         return _userPendingRequests[user];
     }
 
+    /// @notice Get probability thresholds for a pack type
+    /// @param packType The pack type to query
+    /// @return ultraRare Cumulative threshold for UltraRare
+    /// @return legendary Cumulative threshold for Legendary
+    /// @return epic Cumulative threshold for Epic
+    /// @return rare Cumulative threshold for Rare
+    function getPackProbabilities(
+        RariPack.PackType packType
+    ) external view returns (uint16 ultraRare, uint16 legendary, uint16 epic, uint16 rare) {
+        PackProbabilities storage probs = _packProbabilities[packType];
+        return (probs.ultraRare, probs.legendary, probs.epic, probs.rare);
+    }
+
+    /// @notice Get individual pool probabilities as percentages (in basis points, 100 = 1%)
+    /// @param packType The pack type to query
+    /// @return ultraRarePercent UltraRare probability (basis points)
+    /// @return legendaryPercent Legendary probability (basis points)
+    /// @return epicPercent Epic probability (basis points)
+    /// @return rarePercent Rare probability (basis points)
+    /// @return commonPercent Common probability (basis points)
+    function getPackProbabilitiesPercent(
+        RariPack.PackType packType
+    )
+        external
+        view
+        returns (
+            uint16 ultraRarePercent,
+            uint16 legendaryPercent,
+            uint16 epicPercent,
+            uint16 rarePercent,
+            uint16 commonPercent
+        )
+    {
+        PackProbabilities storage probs = _packProbabilities[packType];
+
+        ultraRarePercent = probs.ultraRare;
+        legendaryPercent = probs.legendary - probs.ultraRare;
+        epicPercent = probs.epic - probs.legendary;
+        rarePercent = probs.rare - probs.epic;
+        commonPercent = uint16(PROBABILITY_PRECISION) - probs.rare;
+    }
+
     /// @notice Check if all required pools are configured and have NFTs for a pack type
     function canOpenPack(RariPack.PackType packType) external view returns (bool) {
         // Check Common, Rare, Epic, Legendary pools
@@ -411,8 +539,9 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         if (address(pools[NftPool.PoolType.Legendary]) == address(0)) return false;
         if (pools[NftPool.PoolType.Legendary].poolSize() == 0) return false;
 
-        // Platinum also needs UltraRare
-        if (packType == RariPack.PackType.Platinum) {
+        // Platinum also needs UltraRare if probability > 0
+        PackProbabilities storage probs = _packProbabilities[packType];
+        if (packType == RariPack.PackType.Platinum && probs.ultraRare > 0) {
             if (address(pools[NftPool.PoolType.UltraRare]) == address(0)) return false;
             if (pools[NftPool.PoolType.UltraRare].poolSize() == 0) return false;
         }
@@ -429,5 +558,5 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     // Storage Gap
     // -----------------------
 
-    uint256[40] private __gap;
+    uint256[39] private __gap;
 }
