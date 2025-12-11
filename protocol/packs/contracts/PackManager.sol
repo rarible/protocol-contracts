@@ -11,8 +11,9 @@ import {RariPack} from "./RariPack.sol";
 import {NftPool} from "./NftPool.sol";
 
 /// @title PackManager
-/// @notice Opens RariPack NFTs and distributes rewards from NftPools using Chainlink VRF
-/// @dev Uses Chainlink VRF v2.5 for verifiable randomness when selecting NFTs from pools
+/// @notice Opens RariPack NFTs and distributes rewards from NftPool using Chainlink VRF
+/// @dev Uses Chainlink VRF v2.5 for verifiable randomness when selecting NFTs
+/// @dev Selection: first select pool level by probability, then select NFT from that level with equal probability
 /// @dev Supports instant cash claim (80% of floor price) or NFT claim
 contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {
     // -----------------------
@@ -38,15 +39,10 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     struct RewardNft {
         address collection;
         uint256 tokenId;
-        NftPool.PoolType poolType;
+        NftPool.PoolLevel poolLevel;
     }
 
     /// @dev Probability thresholds for each pack type (cumulative, out of 10000)
-    /// @param ultraRare Threshold for UltraRare (only used for Platinum)
-    /// @param legendary Threshold for Legendary (cumulative)
-    /// @param epic Threshold for Epic (cumulative)
-    /// @param rare Threshold for Rare (cumulative)
-    /// @dev Values above rare threshold result in Common
     struct PackProbabilities {
         uint16 ultraRare;
         uint16 legendary;
@@ -74,8 +70,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     /// @dev RariPack contract reference
     RariPack public rariPack;
 
-    /// @dev Pool type => NftPool contract address
-    mapping(NftPool.PoolType => NftPool) public pools;
+    /// @dev Single NftPool contract holding all NFTs
+    NftPool public nftPool;
 
     /// @dev VRF Coordinator address
     address public vrfCoordinator;
@@ -134,7 +130,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         RewardNft[3] rewards
     );
 
-    event PoolSet(NftPool.PoolType indexed poolType, address indexed poolAddress);
+    event NftPoolSet(address indexed poolAddress);
     event RariPackSet(address indexed rariPackAddress);
     event VrfConfigUpdated(
         address indexed coordinator,
@@ -161,8 +157,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
     error ZeroAddress();
     error NotPackOwner();
-    error PoolNotSet(NftPool.PoolType poolType);
-    error PoolEmpty(NftPool.PoolType poolType);
+    error PoolNotSet();
+    error LevelEmpty(NftPool.PoolLevel level);
     error InvalidVrfCoordinator();
     error RequestNotFound();
     error RequestAlreadyFulfilled();
@@ -210,33 +206,33 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         // Platinum: UltraRare 0.1%, Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91%
         _packProbabilities[RariPack.PackType.Platinum] = PackProbabilities({
             ultraRare: 10, // 0.1%
-            legendary: 50, // 0.1% + 0.4% = 0.5% cumulative
-            epic: 200, // 0.5% + 1.5% = 2% cumulative
-            rare: 900 // 2% + 7% = 9% cumulative, Common = 91%
+            legendary: 50, // 0.5% cumulative
+            epic: 200, // 2% cumulative
+            rare: 900 // 9% cumulative, Common = 91%
         });
 
         // Gold: Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         _packProbabilities[RariPack.PackType.Gold] = PackProbabilities({
             ultraRare: 0, // Not available
             legendary: 40, // 0.4%
-            epic: 190, // 0.4% + 1.5% = 1.9% cumulative
-            rare: 890 // 1.9% + 7% = 8.9% cumulative, Common = 91.1%
+            epic: 190, // 1.9% cumulative
+            rare: 890 // 8.9% cumulative, Common = 91.1%
         });
 
         // Silver: Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         _packProbabilities[RariPack.PackType.Silver] = PackProbabilities({
-            ultraRare: 0, // Not available
-            legendary: 40, // 0.4%
-            epic: 190, // 0.4% + 1.5% = 1.9% cumulative
-            rare: 890 // 1.9% + 7% = 8.9% cumulative, Common = 91.1%
+            ultraRare: 0,
+            legendary: 40,
+            epic: 190,
+            rare: 890
         });
 
         // Bronze: Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         _packProbabilities[RariPack.PackType.Bronze] = PackProbabilities({
-            ultraRare: 0, // Not available
-            legendary: 40, // 0.4%
-            epic: 190, // 0.4% + 1.5% = 1.9% cumulative
-            rare: 890 // 1.9% + 7% = 8.9% cumulative, Common = 91.1%
+            ultraRare: 0,
+            legendary: 40,
+            epic: 190,
+            rare: 890
         });
     }
 
@@ -251,11 +247,11 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         emit RariPackSet(rariPack_);
     }
 
-    /// @notice Set a pool for a specific pool type
-    function setPool(NftPool.PoolType poolType, address pool_) external onlyOwner {
+    /// @notice Set the NFT pool contract
+    function setNftPool(address pool_) external onlyOwner {
         if (pool_ == address(0)) revert ZeroAddress();
-        pools[poolType] = NftPool(pool_);
-        emit PoolSet(poolType, pool_);
+        nftPool = NftPool(pool_);
+        emit NftPoolSet(pool_);
     }
 
     /// @notice Configure Chainlink VRF parameters
@@ -310,7 +306,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         _validateAndSetProbabilities(RariPack.PackType.Bronze, bronzeProbs);
     }
 
-    /// @dev Validate and set probabilities for a single pack type
     function _validateAndSetProbabilities(RariPack.PackType packType, PackProbabilities calldata probs) internal {
         if (
             probs.ultraRare > probs.legendary ||
@@ -327,7 +322,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     /// @notice Set the payout treasury address
-    /// @param treasury_ Address that holds ETH for instant cash payouts
     function setPayoutTreasury(address treasury_) external onlyOwner {
         address oldTreasury = payoutTreasury;
         payoutTreasury = treasury_;
@@ -335,7 +329,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     /// @notice Enable or disable instant cash claims
-    /// @param enabled Whether instant cash claims are enabled
     function setInstantCashEnabled(bool enabled) external onlyOwner {
         instantCashEnabled = enabled;
         emit InstantCashEnabledUpdated(enabled);
@@ -356,14 +349,11 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     // -----------------------
 
     /// @notice Fund the contract for instant cash payouts
-    /// @dev Anyone can fund the treasury
     function fundTreasury() external payable {
         emit TreasuryFunded(msg.sender, msg.value);
     }
 
     /// @notice Withdraw funds from the contract
-    /// @param to Address to send funds to
-    /// @param amount Amount to withdraw
     function withdrawTreasury(address to, uint256 amount) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
         if (amount > address(this).balance) revert InsufficientTreasuryBalance();
@@ -389,15 +379,11 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     // -----------------------
 
     /// @notice Request to open a pack and receive NFTs
-    /// @param packTokenId The token ID of the pack to open
-    /// @return requestId The VRF request ID
     function openPack(uint256 packTokenId) external nonReentrant whenNotPaused returns (uint256 requestId) {
         return _openPack(packTokenId, ClaimType.NFT);
     }
 
     /// @notice Request to open a pack and receive instant cash (80% of floor price)
-    /// @param packTokenId The token ID of the pack to open
-    /// @return requestId The VRF request ID
     function openPackInstantCash(uint256 packTokenId) external nonReentrant whenNotPaused returns (uint256 requestId) {
         if (!instantCashEnabled) revert InstantCashNotEnabled();
         return _openPack(packTokenId, ClaimType.InstantCash);
@@ -411,8 +397,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         // Get pack type before burning
         RariPack.PackType packType = rariPack.packTypeOf(packTokenId);
 
-        // Verify all required pools have NFTs available
-        _verifyPoolsAvailable(packType);
+        // Verify pool is set and has NFTs at required levels
+        _verifyPoolLevelsAvailable(packType);
 
         // Burn the pack
         rariPack.burnPack(packTokenId);
@@ -435,7 +421,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     /// @notice Callback function for VRF Coordinator
-    /// @dev Only callable by the VRF Coordinator
     function rawFulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) external {
         if (msg.sender != vrfCoordinator) revert OnlyVrfCoordinator();
         _fulfillRandomWords(requestId, randomWords);
@@ -445,7 +430,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     // Internal: VRF
     // -----------------------
 
-    /// @dev Request random words from VRF Coordinator
     function _requestRandomness() internal returns (uint256 requestId) {
         if (vrfCoordinator == address(0)) revert InvalidVrfCoordinator();
 
@@ -463,7 +447,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         requestId = abi.decode(returnData, (uint256));
     }
 
-    /// @dev Process VRF callback and distribute rewards
     function _fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal {
         OpenRequest storage request = openRequests[requestId];
         if (request.requester == address(0)) revert RequestNotFound();
@@ -471,19 +454,16 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
         request.fulfilled = true;
 
-        // Process based on claim type
         if (request.claimType == ClaimType.InstantCash) {
             _processInstantCashClaim(requestId, request, randomWords);
         } else {
             _processNftClaim(requestId, request, randomWords);
         }
 
-        // Remove from pending requests
         _removePendingRequest(request.requester, requestId);
     }
 
-    /// @dev Process NFT claim - select and transfer NFTs to user immediately
-    /// @dev Transfer happens during selection to avoid selecting same NFT twice
+    /// @dev Process NFT claim - select and transfer NFTs to user
     function _processNftClaim(
         uint256 requestId,
         OpenRequest storage request,
@@ -494,29 +474,24 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         for (uint256 i = 0; i < REWARDS_PER_PACK; i++) {
             uint256 randomValue = randomWords[i];
 
-            // Determine pool type based on probability
-            NftPool.PoolType poolType = _selectPoolType(request.packType, randomValue);
+            // Determine pool level based on probability
+            NftPool.PoolLevel level = _selectPoolLevel(request.packType, randomValue);
 
-            // Get pool and select random NFT
-            NftPool pool = pools[poolType];
+            // Select and transfer random NFT from that level
+            (address collection, uint256 tokenId) = nftPool.selectAndTransferFromLevel(
+                level,
+                randomValue >> 16, // Use different bits for NFT selection
+                request.requester
+            );
 
-            // Select random NFT from pool (use current pool size which decreases as NFTs are transferred)
-            uint256 poolSize = pool.poolSize();
-            uint256 nftIndex = randomValue % poolSize;
-
-            (address collection, uint256 tokenId) = pool.poolNftAt(nftIndex);
-
-            // Transfer NFT to requester immediately (this removes it from pool)
-            pool.transferNft(collection, request.requester, tokenId);
-
-            rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolType: poolType});
+            rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
         }
 
         emit PackOpened(requestId, request.requester, request.packTokenId, rewards);
     }
 
     /// @dev Process instant cash claim - calculate payout and send ETH
-    /// @dev NFTs are NOT transferred, they stay in pools for future claims
+    /// @dev NFTs are NOT transferred, they stay in pool
     function _processInstantCashClaim(
         uint256 requestId,
         OpenRequest storage request,
@@ -525,89 +500,76 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         RewardNft[3] memory rewards;
         uint256 totalPayout = 0;
 
-        // Select NFTs and calculate payout (but don't transfer NFTs)
         for (uint256 i = 0; i < REWARDS_PER_PACK; i++) {
             uint256 randomValue = randomWords[i];
 
-            // Determine pool type based on probability
-            NftPool.PoolType poolType = _selectPoolType(request.packType, randomValue);
+            // Determine pool level based on probability
+            NftPool.PoolLevel level = _selectPoolLevel(request.packType, randomValue);
 
-            // Get pool and select random NFT
-            NftPool pool = pools[poolType];
+            // Select random NFT from that level (but don't transfer)
+            uint256 levelSize = nftPool.getPoolLevelSize(level);
+            if (levelSize == 0) revert LevelEmpty(level);
 
-            // Select random NFT from pool
-            uint256 poolSize = pool.poolSize();
-            uint256 nftIndex = randomValue % poolSize;
+            uint256 nftIndex = (randomValue >> 16) % levelSize;
+            (address collection, uint256 tokenId) = nftPool.getPoolLevelNftAt(level, nftIndex);
 
-            (address collection, uint256 tokenId) = pool.poolNftAt(nftIndex);
+            rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
 
-            rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolType: poolType});
-
-            // Calculate payout based on floor price from the pool
-            uint256 floorPrice = pool.getCollectionFloorPrice(collection);
+            // Calculate payout based on floor price
+            uint256 floorPrice = nftPool.getCollectionFloorPrice(collection);
             if (floorPrice == 0) revert FloorPriceNotSet(collection);
 
-            // 80% of floor price
             uint256 payout = (floorPrice * INSTANT_CASH_PERCENTAGE) / PROBABILITY_PRECISION;
             totalPayout += payout;
         }
 
-        // Verify sufficient balance
         if (address(this).balance < totalPayout) revert InsufficientTreasuryBalance();
 
-        // Send ETH to user
         (bool sent, ) = request.requester.call{value: totalPayout}("");
         if (!sent) revert TransferFailed();
-
-        // NFTs stay in the pools (not transferred)
 
         emit InstantCashClaimed(requestId, request.requester, request.packTokenId, totalPayout, rewards);
     }
 
     // -----------------------
-    // Internal: Pool Selection
+    // Internal: Pool Level Selection
     // -----------------------
 
-    /// @dev Select pool type based on pack type and random value
-    function _selectPoolType(
+    /// @dev Select pool level based on pack type and random value
+    function _selectPoolLevel(
         RariPack.PackType packType,
         uint256 randomValue
-    ) internal view returns (NftPool.PoolType) {
+    ) internal view returns (NftPool.PoolLevel) {
         uint256 roll = randomValue % PROBABILITY_PRECISION;
         PackProbabilities storage probs = _packProbabilities[packType];
 
         // For Platinum, check UltraRare first
         if (packType == RariPack.PackType.Platinum && roll < probs.ultraRare) {
-            return NftPool.PoolType.UltraRare;
+            return NftPool.PoolLevel.UltraRare;
         }
 
-        if (roll < probs.legendary) return NftPool.PoolType.Legendary;
-        if (roll < probs.epic) return NftPool.PoolType.Epic;
-        if (roll < probs.rare) return NftPool.PoolType.Rare;
-        return NftPool.PoolType.Common;
+        if (roll < probs.legendary) return NftPool.PoolLevel.Legendary;
+        if (roll < probs.epic) return NftPool.PoolLevel.Epic;
+        if (roll < probs.rare) return NftPool.PoolLevel.Rare;
+        return NftPool.PoolLevel.Common;
     }
 
-    /// @dev Verify that all possible pools for a pack type have NFTs available
-    function _verifyPoolsAvailable(RariPack.PackType packType) internal view {
-        _verifyPoolHasNfts(NftPool.PoolType.Common);
-        _verifyPoolHasNfts(NftPool.PoolType.Rare);
-        _verifyPoolHasNfts(NftPool.PoolType.Epic);
-        _verifyPoolHasNfts(NftPool.PoolType.Legendary);
+    /// @dev Verify that pool levels needed for pack type have NFTs
+    function _verifyPoolLevelsAvailable(RariPack.PackType packType) internal view {
+        if (address(nftPool) == address(0)) revert PoolNotSet();
+
+        // Check required levels have NFTs
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Common) == 0) revert LevelEmpty(NftPool.PoolLevel.Common);
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Rare) == 0) revert LevelEmpty(NftPool.PoolLevel.Rare);
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Epic) == 0) revert LevelEmpty(NftPool.PoolLevel.Epic);
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Legendary) == 0) revert LevelEmpty(NftPool.PoolLevel.Legendary);
 
         PackProbabilities storage probs = _packProbabilities[packType];
         if (packType == RariPack.PackType.Platinum && probs.ultraRare > 0) {
-            _verifyPoolHasNfts(NftPool.PoolType.UltraRare);
+            if (nftPool.getPoolLevelSize(NftPool.PoolLevel.UltraRare) == 0) revert LevelEmpty(NftPool.PoolLevel.UltraRare);
         }
     }
 
-    /// @dev Verify a specific pool is set and has NFTs
-    function _verifyPoolHasNfts(NftPool.PoolType poolType) internal view {
-        NftPool pool = pools[poolType];
-        if (address(pool) == address(0)) revert PoolNotSet(poolType);
-        if (pool.poolSize() == 0) revert PoolEmpty(poolType);
-    }
-
-    /// @dev Remove a request from user's pending requests array
     function _removePendingRequest(address user, uint256 requestId) internal {
         uint256[] storage pending = _userPendingRequests[user];
         for (uint256 i = 0; i < pending.length; i++) {
@@ -636,7 +598,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         return (probs.ultraRare, probs.legendary, probs.epic, probs.rare);
     }
 
-    /// @notice Get individual pool probabilities as percentages (in basis points, 100 = 1%)
+    /// @notice Get individual pool probabilities as percentages (in basis points)
     function getPackProbabilitiesPercent(
         RariPack.PackType packType
     )
@@ -659,45 +621,32 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         commonPercent = uint16(PROBABILITY_PRECISION) - probs.rare;
     }
 
-    /// @notice Check if all required pools are configured and have NFTs for a pack type
+    /// @notice Check if pack can be opened (pool configured and levels have NFTs)
     function canOpenPack(RariPack.PackType packType) external view returns (bool) {
-        if (address(pools[NftPool.PoolType.Common]) == address(0)) return false;
-        if (pools[NftPool.PoolType.Common].poolSize() == 0) return false;
+        if (address(nftPool) == address(0)) return false;
 
-        if (address(pools[NftPool.PoolType.Rare]) == address(0)) return false;
-        if (pools[NftPool.PoolType.Rare].poolSize() == 0) return false;
-
-        if (address(pools[NftPool.PoolType.Epic]) == address(0)) return false;
-        if (pools[NftPool.PoolType.Epic].poolSize() == 0) return false;
-
-        if (address(pools[NftPool.PoolType.Legendary]) == address(0)) return false;
-        if (pools[NftPool.PoolType.Legendary].poolSize() == 0) return false;
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Common) == 0) return false;
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Rare) == 0) return false;
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Epic) == 0) return false;
+        if (nftPool.getPoolLevelSize(NftPool.PoolLevel.Legendary) == 0) return false;
 
         PackProbabilities storage probs = _packProbabilities[packType];
         if (packType == RariPack.PackType.Platinum && probs.ultraRare > 0) {
-            if (address(pools[NftPool.PoolType.UltraRare]) == address(0)) return false;
-            if (pools[NftPool.PoolType.UltraRare].poolSize() == 0) return false;
+            if (nftPool.getPoolLevelSize(NftPool.PoolLevel.UltraRare) == 0) return false;
         }
 
         return true;
     }
 
-    /// @notice Get pool address for a pool type
-    function getPool(NftPool.PoolType poolType) external view returns (address) {
-        return address(pools[poolType]);
+    /// @notice Get the NFT pool address
+    function getNftPool() external view returns (address) {
+        return address(nftPool);
     }
 
-    /// @notice Calculate potential instant cash payout for a collection in a specific pool
-    /// @param poolType The pool type to check floor price from
-    /// @param collection NFT collection address
-    /// @return payout 80% of floor price in wei
-    function getInstantCashPayout(
-        NftPool.PoolType poolType,
-        address collection
-    ) external view returns (uint256 payout) {
-        NftPool pool = pools[poolType];
-        if (address(pool) == address(0)) return 0;
-        uint256 floorPrice = pool.getCollectionFloorPrice(collection);
+    /// @notice Calculate potential instant cash payout for a collection
+    function getInstantCashPayout(address collection) external view returns (uint256 payout) {
+        if (address(nftPool) == address(0)) return 0;
+        uint256 floorPrice = nftPool.getCollectionFloorPrice(collection);
         if (floorPrice == 0) return 0;
         payout = (floorPrice * INSTANT_CASH_PERCENTAGE) / PROBABILITY_PRECISION;
     }
@@ -713,3 +662,4 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
     uint256[35] private __gap;
 }
+
