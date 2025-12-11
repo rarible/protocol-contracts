@@ -145,7 +145,7 @@ describe("PackManager", function () {
     const nftPoolImpl = await NftPoolFactory.deploy();
     await nftPoolImpl.waitForDeployment();
 
-    const nftPoolInitData = nftPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress]);
+    const nftPoolInitData = nftPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
 
     const nftPoolProxy = await ProxyFactory.deploy(await nftPoolImpl.getAddress(), ownerAddress, nftPoolInitData);
     await nftPoolProxy.waitForDeployment();
