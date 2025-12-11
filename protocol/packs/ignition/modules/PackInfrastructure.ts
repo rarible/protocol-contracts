@@ -43,20 +43,11 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
     id: "RariPackImplementation",
   });
 
-  const rariPackInitData = m.encodeFunctionCall(rariPackImpl, "initialize", [
-    owner,
-    treasury,
-    packName,
-    packSymbol,
-  ]);
+  const rariPackInitData = m.encodeFunctionCall(rariPackImpl, "initialize", [owner, treasury, packName, packSymbol]);
 
-  const rariPackProxy = m.contract(
-    "TransparentUpgradeableProxy",
-    [rariPackImpl, owner, rariPackInitData],
-    {
-      id: "RariPackProxy",
-    }
-  );
+  const rariPackProxy = m.contract("TransparentUpgradeableProxy", [rariPackImpl, owner, rariPackInitData], {
+    id: "RariPackProxy",
+  });
 
   // ============================================
   // 2. Deploy NftPool Implementation (shared)
@@ -70,59 +61,34 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
   // ============================================
 
   // Common Pool
-  const commonPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Common,
-  ]);
-  const commonPool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, commonPoolInitData],
-    { id: "CommonPoolProxy" }
-  );
+  const commonPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Common]);
+  const commonPool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, commonPoolInitData], {
+    id: "CommonPoolProxy",
+  });
 
   // Rare Pool
-  const rarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Rare,
-  ]);
-  const rarePool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, rarePoolInitData],
-    { id: "RarePoolProxy" }
-  );
+  const rarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Rare]);
+  const rarePool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, rarePoolInitData], {
+    id: "RarePoolProxy",
+  });
 
   // Epic Pool
-  const epicPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Epic,
-  ]);
-  const epicPool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, epicPoolInitData],
-    { id: "EpicPoolProxy" }
-  );
+  const epicPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Epic]);
+  const epicPool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, epicPoolInitData], {
+    id: "EpicPoolProxy",
+  });
 
   // Legendary Pool
-  const legendaryPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Legendary,
-  ]);
-  const legendaryPool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, legendaryPoolInitData],
-    { id: "LegendaryPoolProxy" }
-  );
+  const legendaryPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Legendary]);
+  const legendaryPool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, legendaryPoolInitData], {
+    id: "LegendaryPoolProxy",
+  });
 
   // UltraRare Pool
-  const ultraRarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.UltraRare,
-  ]);
-  const ultraRarePool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, ultraRarePoolInitData],
-    { id: "UltraRarePoolProxy" }
-  );
+  const ultraRarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.UltraRare]);
+  const ultraRarePool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, ultraRarePoolInitData], {
+    id: "UltraRarePoolProxy",
+  });
 
   // ============================================
   // 4. Deploy PackManager
@@ -131,19 +97,12 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
     id: "PackManagerImplementation",
   });
 
-  const packManagerInitData = m.encodeFunctionCall(packManagerImpl, "initialize", [
-    owner,
-    rariPackProxy,
-  ]);
+  const packManagerInitData = m.encodeFunctionCall(packManagerImpl, "initialize", [owner, rariPackProxy]);
 
-  const packManagerProxy = m.contract(
-    "TransparentUpgradeableProxy",
-    [packManagerImpl, owner, packManagerInitData],
-    {
-      id: "PackManagerProxy",
-      after: [rariPackProxy],
-    }
-  );
+  const packManagerProxy = m.contract("TransparentUpgradeableProxy", [packManagerImpl, owner, packManagerInitData], {
+    id: "PackManagerProxy",
+    after: [rariPackProxy],
+  });
 
   return {
     // Implementations
@@ -162,4 +121,3 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
 });
 
 export default PackInfrastructureModule;
-

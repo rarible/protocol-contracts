@@ -12,12 +12,7 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 /// @notice Single pool holding all NFTs, organized by pool levels based on price ranges.
 /// @dev Collections are assigned to a pool level by floor price.
 ///      NFTs are tracked per collection; pools maintain aggregate counts (no per-NFT migration on floor change).
-contract NftPool is
-    Initializable,
-    ERC721HolderUpgradeable,
-    OwnableUpgradeable,
-    AccessControlUpgradeable
-{
+contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, AccessControlUpgradeable {
     // -----------------------
     // Types
     // -----------------------
@@ -31,20 +26,29 @@ contract NftPool is
         UltraRare
     }
 
+    /// @dev Number of defined pool levels (update if enum is extended)
+    uint256 private constant _POOL_LEVEL_COUNT = uint256(PoolLevel.UltraRare) + 1;
+
     /// @dev Pool price range configuration + collections + aggregate NFT count
     struct PoolInfo {
-        uint256 lowPrice;      // Minimum floor price (inclusive)
-        uint256 highPrice;     // Maximum floor price (exclusive, except UltraRare which usually has no upper bound)
+        uint256 lowPrice; // Minimum floor price (inclusive)
+        uint256 highPrice; // Maximum floor price (exclusive)
         address[] collections; // Collections currently assigned to this pool
-        uint256 totalNfts;     // Total NFTs (across all collections) in this pool
+        uint256 totalNfts; // Total NFTs (across all collections) in this pool
+    }
+
+    /// @dev Lightweight config struct for pool ranges (no collections/total)
+    struct PoolRange {
+        uint256 lowPrice;
+        uint256 highPrice;
     }
 
     /// @dev Per-collection configuration and pool membership
     /// @notice "Allowed" is derived from poolIndexPlusOne != 0
     struct CollectionInfo {
-        uint256 floorPrice;        // Current floor price in wei
-        PoolLevel poolLevel;       // Logical pool level for this collection
-        uint256 poolIndexPlusOne;  // 1-based index in PoolInfo.collections, 0 = not assigned / not allowed
+        uint256 floorPrice; // Current floor price in wei
+        PoolLevel poolLevel; // Logical pool level for this collection
+        uint256 poolIndexPlusOne; // 1-based index in PoolInfo.collections, 0 = not assigned / not allowed
     }
 
     // -----------------------
@@ -106,7 +110,11 @@ contract NftPool is
     // Init
     // -----------------------
 
-    function initialize(address initialOwner) external initializer {
+    /// @notice Initialize pool with owner and optional custom pool ranges
+    /// @param initialOwner Owner / admin address
+    /// @param ranges Optional array of pool ranges, length must equal number of pool levels.
+    ///               If empty, default ETH ranges are used.
+    function initialize(address initialOwner, PoolRange[] calldata ranges) external initializer {
         if (initialOwner == address(0)) revert ZeroAddress();
 
         __ERC721Holder_init();
@@ -116,26 +124,39 @@ contract NftPool is
         _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
         _grantRole(POOL_MANAGER_ROLE, initialOwner);
 
-        // Set default price ranges (in wei)
-        // Common:    0 - 0.5 ETH
-        // Rare:    0.5 - 2 ETH
-        // Epic:      2 - 10 ETH
-        // Legendary: 10 - 50 ETH
-        // UltraRare: 50+ ETH (no practical upper bound)
-        _poolInfo[PoolLevel.Common].lowPrice = 0;
-        _poolInfo[PoolLevel.Common].highPrice = 0.5 ether;
+        if (ranges.length == 0) {
+            // Default price ranges (in wei)
+            // Common:    0 - 0.5 ETH
+            // Rare:    0.5 - 2 ETH
+            // Epic:      2 - 10 ETH
+            // Legendary: 10 - 50 ETH
+            // UltraRare: 50+ ETH (no practical upper bound)
+            _poolInfo[PoolLevel.Common].lowPrice = 0;
+            _poolInfo[PoolLevel.Common].highPrice = 0.5 ether;
 
-        _poolInfo[PoolLevel.Rare].lowPrice = 0.5 ether;
-        _poolInfo[PoolLevel.Rare].highPrice = 2 ether;
+            _poolInfo[PoolLevel.Rare].lowPrice = 0.5 ether;
+            _poolInfo[PoolLevel.Rare].highPrice = 2 ether;
 
-        _poolInfo[PoolLevel.Epic].lowPrice = 2 ether;
-        _poolInfo[PoolLevel.Epic].highPrice = 10 ether;
+            _poolInfo[PoolLevel.Epic].lowPrice = 2 ether;
+            _poolInfo[PoolLevel.Epic].highPrice = 10 ether;
 
-        _poolInfo[PoolLevel.Legendary].lowPrice = 10 ether;
-        _poolInfo[PoolLevel.Legendary].highPrice = 50 ether;
+            _poolInfo[PoolLevel.Legendary].lowPrice = 10 ether;
+            _poolInfo[PoolLevel.Legendary].highPrice = 50 ether;
 
-        _poolInfo[PoolLevel.UltraRare].lowPrice = 50 ether;
-        _poolInfo[PoolLevel.UltraRare].highPrice = type(uint256).max;
+            _poolInfo[PoolLevel.UltraRare].lowPrice = 50 ether;
+            _poolInfo[PoolLevel.UltraRare].highPrice = type(uint256).max;
+        } else {
+            if (ranges.length != _POOL_LEVEL_COUNT) revert ArrayLengthMismatch();
+            for (uint256 i = 0; i < ranges.length; i++) {
+                PoolRange calldata cfg = ranges[i];
+                if (cfg.lowPrice >= cfg.highPrice) revert InvalidPriceRange();
+                PoolLevel level = PoolLevel(i);
+                PoolInfo storage p = _poolInfo[level];
+                p.lowPrice = cfg.lowPrice;
+                p.highPrice = cfg.highPrice;
+                emit PoolInfoUpdated(level, cfg.lowPrice, cfg.highPrice);
+            }
+        }
     }
 
     // -----------------------
@@ -156,45 +177,22 @@ contract NftPool is
         emit PoolInfoUpdated(level, lowPrice, highPrice);
     }
 
-    /// @notice Batch set all pool price ranges
-    function setAllPoolInfo(
-        uint256 commonLow,
-        uint256 commonHigh,
-        uint256 rareLow,
-        uint256 rareHigh,
-        uint256 epicLow,
-        uint256 epicHigh,
-        uint256 legendaryLow,
-        uint256 legendaryHigh,
-        uint256 ultraRareLow,
-        uint256 ultraRareHigh
-    ) external onlyOwner {
-        if (commonLow >= commonHigh) revert InvalidPriceRange();
-        if (rareLow >= rareHigh) revert InvalidPriceRange();
-        if (epicLow >= epicHigh) revert InvalidPriceRange();
-        if (legendaryLow >= legendaryHigh) revert InvalidPriceRange();
-        if (ultraRareLow >= ultraRareHigh) revert InvalidPriceRange();
+    /// @notice Batch set all pool price ranges via array
+    /// @dev ranges.length must equal number of pool levels
+    function setAllPoolInfo(PoolRange[] calldata ranges) external onlyOwner {
+        if (ranges.length != _POOL_LEVEL_COUNT) revert ArrayLengthMismatch();
 
-        _poolInfo[PoolLevel.Common].lowPrice = commonLow;
-        _poolInfo[PoolLevel.Common].highPrice = commonHigh;
+        for (uint256 i = 0; i < ranges.length; i++) {
+            PoolRange calldata cfg = ranges[i];
+            if (cfg.lowPrice >= cfg.highPrice) revert InvalidPriceRange();
 
-        _poolInfo[PoolLevel.Rare].lowPrice = rareLow;
-        _poolInfo[PoolLevel.Rare].highPrice = rareHigh;
+            PoolLevel level = PoolLevel(i);
+            PoolInfo storage info = _poolInfo[level];
+            info.lowPrice = cfg.lowPrice;
+            info.highPrice = cfg.highPrice;
 
-        _poolInfo[PoolLevel.Epic].lowPrice = epicLow;
-        _poolInfo[PoolLevel.Epic].highPrice = epicHigh;
-
-        _poolInfo[PoolLevel.Legendary].lowPrice = legendaryLow;
-        _poolInfo[PoolLevel.Legendary].highPrice = legendaryHigh;
-
-        _poolInfo[PoolLevel.UltraRare].lowPrice = ultraRareLow;
-        _poolInfo[PoolLevel.UltraRare].highPrice = ultraRareHigh;
-
-        emit PoolInfoUpdated(PoolLevel.Common, commonLow, commonHigh);
-        emit PoolInfoUpdated(PoolLevel.Rare, rareLow, rareHigh);
-        emit PoolInfoUpdated(PoolLevel.Epic, epicLow, epicHigh);
-        emit PoolInfoUpdated(PoolLevel.Legendary, legendaryLow, legendaryHigh);
-        emit PoolInfoUpdated(PoolLevel.UltraRare, ultraRareLow, ultraRareHigh);
+            emit PoolInfoUpdated(level, cfg.lowPrice, cfg.highPrice);
+        }
     }
 
     // -----------------------
@@ -237,11 +235,7 @@ contract NftPool is
     }
 
     /// @dev Core function to configure collection, used by all public setters
-    function _setCollectionConfig(
-        address collection,
-        bool allowed,
-        uint256 newFloorPrice
-    ) internal {
+    function _setCollectionConfig(address collection, bool allowed, uint256 newFloorPrice) internal {
         if (allowed && newFloorPrice == 0) revert FloorPriceNotSet();
 
         CollectionInfo storage info = _collectionInfo[collection];
@@ -307,11 +301,7 @@ contract NftPool is
     /// @param collection NFT collection address
     /// @param allowed Whether deposits are accepted (true => collection is included in a pool)
     /// @param floorPrice Current floor price in wei
-    function configureCollection(
-        address collection,
-        bool allowed,
-        uint256 floorPrice
-    ) external onlyOwner {
+    function configureCollection(address collection, bool allowed, uint256 floorPrice) external onlyOwner {
         if (collection == address(0)) revert ZeroAddress();
         _setCollectionConfig(collection, allowed, floorPrice);
     }
@@ -332,16 +322,15 @@ contract NftPool is
         }
     }
 
-    /// @notice Update floor price for a collection
-    /// @dev Pool level and aggregate NFT counts are adjusted without per-NFT migration
+    /// @notice Update floor price for a collection and mark it as allowed
+    /// @dev Pool level and aggregate NFT counts are adjusted without per-NFT migration.
+    ///      Calling this will always mark the collection as allowed.
     function setCollectionFloorPrice(address collection, uint256 newPrice) external onlyOwner {
         if (collection == address(0)) revert ZeroAddress();
-        CollectionInfo storage info = _collectionInfo[collection];
-        bool allowed = info.poolIndexPlusOne != 0;
-        _setCollectionConfig(collection, allowed, newPrice);
+        _setCollectionConfig(collection, true, newPrice);
     }
 
-    /// @notice Batch update floor prices for multiple collections
+    /// @notice Batch update floor prices and mark all collections as allowed
     function setCollectionFloorPrices(
         address[] calldata collections,
         uint256[] calldata floorPrices
@@ -350,19 +339,8 @@ contract NftPool is
 
         for (uint256 i = 0; i < collections.length; i++) {
             if (collections[i] == address(0)) revert ZeroAddress();
-            CollectionInfo storage info = _collectionInfo[collections[i]];
-            bool allowed = info.poolIndexPlusOne != 0;
-            _setCollectionConfig(collections[i], allowed, floorPrices[i]);
+            _setCollectionConfig(collections[i], true, floorPrices[i]);
         }
-    }
-
-    /// @notice Update allowed status for a collection
-    /// @dev "Allowed" is derived from pool membership: if allowed, collection is assigned to a pool
-    function setCollectionAllowed(address collection, bool allowed) external onlyOwner {
-        if (collection == address(0)) revert ZeroAddress();
-        CollectionInfo storage info = _collectionInfo[collection];
-        uint256 floorPrice = info.floorPrice;
-        _setCollectionConfig(collection, allowed, floorPrice);
     }
 
     // -----------------------
@@ -426,11 +404,7 @@ contract NftPool is
     }
 
     /// @notice Transfer an NFT out of the pool
-    function transferNft(
-        address collection,
-        address to,
-        uint256 tokenId
-    ) external onlyRole(POOL_MANAGER_ROLE) {
+    function transferNft(address collection, address to, uint256 tokenId) external onlyRole(POOL_MANAGER_ROLE) {
         CollectionInfo storage info = _collectionInfo[collection];
         PoolLevel level = info.poolLevel;
 
@@ -442,15 +416,8 @@ contract NftPool is
     }
 
     /// @notice Rescue an NFT that was sent incorrectly and is not tracked
-    function rescueNft(
-        address collection,
-        address to,
-        uint256 tokenId
-    ) external onlyOwner {
-        require(
-            _collectionTokenIndexPlusOne[collection][tokenId] == 0,
-            "NftPool: NFT is tracked"
-        );
+    function rescueNft(address collection, address to, uint256 tokenId) external onlyOwner {
+        require(_collectionTokenIndexPlusOne[collection][tokenId] == 0, "NftPool: NFT is tracked");
         require(IERC721(collection).ownerOf(tokenId) == address(this), "NftPool: not owned");
 
         IERC721(collection).safeTransferFrom(address(this), to, tokenId);
@@ -484,32 +451,18 @@ contract NftPool is
     // -----------------------
 
     /// @dev Determine pool level based on floor price using configured ranges
+    /// @notice Iterates over all levels; if overlapping ranges exist,
+    ///         the highest index level that matches wins.
     function _getPoolLevelForPrice(uint256 price) internal view returns (PoolLevel) {
-        // UltraRare
-        PoolInfo storage ultra = _poolInfo[PoolLevel.UltraRare];
-        if (price >= ultra.lowPrice && price < ultra.highPrice) {
-            return PoolLevel.UltraRare;
+        // walk from highest index to lowest
+        for (uint256 i = _POOL_LEVEL_COUNT; i > 0; i--) {
+            PoolLevel level = PoolLevel(i - 1);
+            PoolInfo storage p = _poolInfo[level];
+            if (price >= p.lowPrice && price < p.highPrice) {
+                return level;
+            }
         }
-
-        // Legendary
-        PoolInfo storage legendary = _poolInfo[PoolLevel.Legendary];
-        if (price >= legendary.lowPrice && price < legendary.highPrice) {
-            return PoolLevel.Legendary;
-        }
-
-        // Epic
-        PoolInfo storage epic = _poolInfo[PoolLevel.Epic];
-        if (price >= epic.lowPrice && price < epic.highPrice) {
-            return PoolLevel.Epic;
-        }
-
-        // Rare
-        PoolInfo storage rare = _poolInfo[PoolLevel.Rare];
-        if (price >= rare.lowPrice && price < rare.highPrice) {
-            return PoolLevel.Rare;
-        }
-
-        // Default / fallback
+        // Fallback if misconfigured: Common
         return PoolLevel.Common;
     }
 
@@ -528,28 +481,8 @@ contract NftPool is
         PoolLevel level,
         uint256 index
     ) external view returns (address collection, uint256 tokenId) {
-        PoolInfo storage pool = _poolInfo[level];
-        if (index >= pool.totalNfts) revert IndexOutOfBounds();
-
-        uint256 remaining = index;
-        address[] storage collections = pool.collections;
-        uint256 len = collections.length;
-
-        for (uint256 i = 0; i < len; i++) {
-            address coll = collections[i];
-            uint256 count = _collectionTokens[coll].length;
-            if (count == 0) continue;
-
-            if (remaining < count) {
-                collection = coll;
-                tokenId = _collectionTokens[coll][remaining];
-                return (collection, tokenId);
-            }
-
-            remaining -= count;
-        }
-
-        revert NotInPool(); // Should not happen if accounting is correct
+        if (index >= _poolInfo[level].totalNfts) revert IndexOutOfBounds();
+        return _selectNftAtIndex(level, index);
     }
 
     /// @notice Select and transfer a random NFT from a pool level
@@ -559,38 +492,34 @@ contract NftPool is
         uint256 randomValue,
         address to
     ) external onlyRole(POOL_MANAGER_ROLE) returns (address collection, uint256 tokenId) {
-        PoolInfo storage pool = _poolInfo[level];
-        uint256 total = pool.totalNfts;
+        uint256 total = _poolInfo[level].totalNfts;
         if (total == 0) revert LevelEmpty(level);
 
-        uint256 randomIndex = randomValue % total;
-        uint256 remaining = randomIndex;
+        (collection, tokenId) = _selectNftAtIndex(level, randomValue % total);
 
-        address[] storage collections = pool.collections;
-        uint256 len = collections.length;
+        _removeCollectionToken(collection, tokenId, level);
+        IERC721(collection).safeTransferFrom(address(this), to, tokenId);
+        emit Withdrawn(to, collection, tokenId, level);
+    }
 
-        for (uint256 i = 0; i < len; i++) {
+    /// @dev Find NFT at global index within a pool level
+    function _selectNftAtIndex(
+        PoolLevel level,
+        uint256 globalIndex
+    ) internal view returns (address collection, uint256 tokenId) {
+        address[] storage collections = _poolInfo[level].collections;
+        uint256 remaining = globalIndex;
+
+        for (uint256 i = 0; i < collections.length; i++) {
             address coll = collections[i];
             uint256 count = _collectionTokens[coll].length;
-            if (count == 0) continue;
 
-            if (remaining < count) {
-                uint256 localIndex = remaining;
-                uint256[] storage tokens = _collectionTokens[coll];
-                tokenId = tokens[localIndex];
-                collection = coll;
-
-                _removeCollectionToken(coll, tokenId, level);
-                IERC721(coll).safeTransferFrom(address(this), to, tokenId);
-
-                emit Withdrawn(to, coll, tokenId, level);
-                return (collection, tokenId);
+            if (count > 0 && remaining < count) {
+                return (coll, _collectionTokens[coll][remaining]);
             }
-
             remaining -= count;
         }
 
-        // If we get here, accounting is inconsistent
         revert LevelEmpty(level);
     }
 
@@ -600,15 +529,13 @@ contract NftPool is
 
     /// @notice Get total NFTs across all pools
     function totalPoolSize() external view returns (uint256 total) {
-        for (uint256 i = 0; i <= uint256(PoolLevel.UltraRare); i++) {
+        for (uint256 i = 0; i < _POOL_LEVEL_COUNT; i++) {
             total += _poolInfo[PoolLevel(i)].totalNfts;
         }
     }
 
     /// @notice Get pool price range configuration
-    function getPoolInfo(
-        PoolLevel level
-    ) external view returns (uint256 lowPrice, uint256 highPrice) {
+    function getPoolInfo(PoolLevel level) external view returns (uint256 lowPrice, uint256 highPrice) {
         PoolInfo storage info = _poolInfo[level];
         return (info.lowPrice, info.highPrice);
     }
@@ -661,12 +588,8 @@ contract NftPool is
     // Overrides
     // -----------------------
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(AccessControlUpgradeable) returns (bool) {
-        return
-            interfaceId == type(IERC721Receiver).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControlUpgradeable) returns (bool) {
+        return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
 
     // -----------------------

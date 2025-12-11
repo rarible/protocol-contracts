@@ -16,21 +16,12 @@ const RariPackModule = buildModule("RariPackModule", (m) => {
   });
 
   // Encode initialization call
-  const initData = m.encodeFunctionCall(rariPackImpl, "initialize", [
-    owner,
-    treasury,
-    name,
-    symbol,
-  ]);
+  const initData = m.encodeFunctionCall(rariPackImpl, "initialize", [owner, treasury, name, symbol]);
 
   // Deploy TransparentUpgradeableProxy
-  const rariPackProxy = m.contract(
-    "TransparentUpgradeableProxy",
-    [rariPackImpl, owner, initData],
-    {
-      id: "RariPackProxy",
-    }
-  );
+  const rariPackProxy = m.contract("TransparentUpgradeableProxy", [rariPackImpl, owner, initData], {
+    id: "RariPackProxy",
+  });
 
   return {
     rariPackImpl,
@@ -39,4 +30,3 @@ const RariPackModule = buildModule("RariPackModule", (m) => {
 });
 
 export default RariPackModule;
-

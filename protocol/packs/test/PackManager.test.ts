@@ -80,14 +80,14 @@ describe("PackManager", function () {
     symbol: string,
     level: number,
     count: number,
-    startId: number
+    startId: number,
   ) {
     const TestNftFactory = new TestERC721__factory(owner);
     const nft = await TestNftFactory.deploy(name, symbol);
     await nft.waitForDeployment();
 
-    // Set floor price - collection is automatically allowed when floor price > 0
-    await nftPool.setCollectionFloorPrice(await nft.getAddress(), FLOOR_PRICES[level]);
+    // Configure collection with allowed=true and floor price
+    await nftPool.configureCollection(await nft.getAddress(), true, FLOOR_PRICES[level]);
 
     // Mint and deposit
     for (let i = 0; i < count; i++) {
@@ -130,11 +130,7 @@ describe("PackManager", function () {
       "RPACK",
     ]);
 
-    const rariPackProxy = await ProxyFactory.deploy(
-      await rariPackImpl.getAddress(),
-      ownerAddress,
-      rariPackInitData
-    );
+    const rariPackProxy = await ProxyFactory.deploy(await rariPackImpl.getAddress(), ownerAddress, rariPackInitData);
     await rariPackProxy.waitForDeployment();
     rariPack = RariPack__factory.connect(await rariPackProxy.getAddress(), owner);
 
@@ -151,11 +147,7 @@ describe("PackManager", function () {
 
     const nftPoolInitData = nftPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress]);
 
-    const nftPoolProxy = await ProxyFactory.deploy(
-      await nftPoolImpl.getAddress(),
-      ownerAddress,
-      nftPoolInitData
-    );
+    const nftPoolProxy = await ProxyFactory.deploy(await nftPoolImpl.getAddress(), ownerAddress, nftPoolInitData);
     await nftPoolProxy.waitForDeployment();
     nftPool = NftPool__factory.connect(await nftPoolProxy.getAddress(), owner);
 
@@ -172,7 +164,7 @@ describe("PackManager", function () {
     const packManagerProxy = await ProxyFactory.deploy(
       await packManagerImpl.getAddress(),
       ownerAddress,
-      packManagerInitData
+      packManagerInitData,
     );
     await packManagerProxy.waitForDeployment();
     packManager = PackManager__factory.connect(await packManagerProxy.getAddress(), owner);
@@ -191,7 +183,7 @@ describe("PackManager", function () {
       VRF_SUBSCRIPTION_ID,
       VRF_KEY_HASH,
       VRF_CALLBACK_GAS_LIMIT,
-      VRF_REQUEST_CONFIRMATIONS
+      VRF_REQUEST_CONFIRMATIONS,
     );
 
     // Set NftPool
@@ -220,14 +212,12 @@ describe("PackManager", function () {
       await impl.waitForDeployment();
 
       const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
-      const initData = impl.interface.encodeFunctionData("initialize", [
-        ZERO_ADDRESS,
-        await rariPack.getAddress(),
-      ]);
+      const initData = impl.interface.encodeFunctionData("initialize", [ZERO_ADDRESS, await rariPack.getAddress()]);
 
-      await expect(
-        ProxyFactory.deploy(await impl.getAddress(), ownerAddress, initData)
-      ).to.be.revertedWithCustomError(impl, "ZeroAddress");
+      await expect(ProxyFactory.deploy(await impl.getAddress(), ownerAddress, initData)).to.be.revertedWithCustomError(
+        impl,
+        "ZeroAddress",
+      );
     });
   });
 
@@ -243,24 +233,23 @@ describe("PackManager", function () {
     });
 
     it("Should revert setting NftPool to zero address", async function () {
-      await expect(packManager.setNftPool(ZERO_ADDRESS)).to.be.revertedWithCustomError(
-        packManager,
-        "ZeroAddress"
-      );
+      await expect(packManager.setNftPool(ZERO_ADDRESS)).to.be.revertedWithCustomError(packManager, "ZeroAddress");
     });
 
     it("Should allow owner to configure VRF", async function () {
-      await expect(
-        packManager.setVrfConfig(user1Address, 2n, VRF_KEY_HASH, 600000, 5)
-      ).to.emit(packManager, "VrfConfigUpdated");
+      await expect(packManager.setVrfConfig(user1Address, 2n, VRF_KEY_HASH, 600000, 5)).to.emit(
+        packManager,
+        "VrfConfigUpdated",
+      );
 
       expect(await packManager.vrfCoordinator()).to.equal(user1Address);
     });
 
     it("Should revert when non-owner tries to configure", async function () {
-      await expect(
-        packManager.connect(user1).setNftPool(user1Address)
-      ).to.be.revertedWithCustomError(packManager, "OwnableUnauthorizedAccount");
+      await expect(packManager.connect(user1).setNftPool(user1Address)).to.be.revertedWithCustomError(
+        packManager,
+        "OwnableUnauthorizedAccount",
+      );
     });
   });
 
@@ -283,17 +272,11 @@ describe("PackManager", function () {
     it("Should burn the pack when opening", async function () {
       await packManager.connect(user1).openPack(1);
 
-      await expect(rariPack.ownerOf(1)).to.be.revertedWithCustomError(
-        rariPack,
-        "ERC721NonexistentToken"
-      );
+      await expect(rariPack.ownerOf(1)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
     });
 
     it("Should revert when non-owner tries to open pack", async function () {
-      await expect(packManager.connect(user2).openPack(1)).to.be.revertedWithCustomError(
-        packManager,
-        "NotPackOwner"
-      );
+      await expect(packManager.connect(user2).openPack(1)).to.be.revertedWithCustomError(packManager, "NotPackOwner");
     });
 
     it("Should track pending request for user", async function () {
@@ -335,9 +318,10 @@ describe("PackManager", function () {
     it("Should revert when non-VRF coordinator calls rawFulfillRandomWords", async function () {
       await packManager.connect(user1).openPack(1);
 
-      await expect(
-        packManager.rawFulfillRandomWords(1, [1n, 2n, 3n])
-      ).to.be.revertedWithCustomError(packManager, "OnlyVrfCoordinator");
+      await expect(packManager.rawFulfillRandomWords(1, [1n, 2n, 3n])).to.be.revertedWithCustomError(
+        packManager,
+        "OnlyVrfCoordinator",
+      );
     });
   });
 
@@ -380,10 +364,7 @@ describe("PackManager", function () {
       await impl.waitForDeployment();
 
       const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
-      const initData = impl.interface.encodeFunctionData("initialize", [
-        ownerAddress,
-        await rariPack.getAddress(),
-      ]);
+      const initData = impl.interface.encodeFunctionData("initialize", [ownerAddress, await rariPack.getAddress()]);
 
       const proxy = await ProxyFactory.deploy(await impl.getAddress(), ownerAddress, initData);
       const newPackManager = PackManager__factory.connect(await proxy.getAddress(), owner);
@@ -397,10 +378,7 @@ describe("PackManager", function () {
       await impl.waitForDeployment();
 
       const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
-      const initData = impl.interface.encodeFunctionData("initialize", [
-        ownerAddress,
-        await rariPack.getAddress(),
-      ]);
+      const initData = impl.interface.encodeFunctionData("initialize", [ownerAddress, await rariPack.getAddress()]);
 
       const proxy = await ProxyFactory.deploy(await impl.getAddress(), ownerAddress, initData);
       const newPackManager = PackManager__factory.connect(await proxy.getAddress(), owner);
@@ -410,7 +388,7 @@ describe("PackManager", function () {
         VRF_SUBSCRIPTION_ID,
         VRF_KEY_HASH,
         VRF_CALLBACK_GAS_LIMIT,
-        VRF_REQUEST_CONFIRMATIONS
+        VRF_REQUEST_CONFIRMATIONS,
       );
 
       const BURNER_ROLE = await rariPack.BURNER_ROLE();
@@ -422,7 +400,7 @@ describe("PackManager", function () {
 
       await expect(newPackManager.connect(user1).openPack(1)).to.be.revertedWithCustomError(
         newPackManager,
-        "PoolNotSet"
+        "PoolNotSet",
       );
     });
   });
@@ -448,10 +426,7 @@ describe("PackManager", function () {
     it("Should revert pack opening when paused", async function () {
       await packManager.pause();
 
-      await expect(packManager.connect(user1).openPack(1)).to.be.revertedWithCustomError(
-        packManager,
-        "EnforcedPause"
-      );
+      await expect(packManager.connect(user1).openPack(1)).to.be.revertedWithCustomError(packManager, "EnforcedPause");
     });
   });
 
@@ -487,9 +462,7 @@ describe("PackManager", function () {
   describe("Dynamic Probabilities", function () {
     describe("Default Probabilities", function () {
       it("Should initialize with correct default Platinum probabilities", async function () {
-        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
-          PackType.Platinum
-        );
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(PackType.Platinum);
         expect(ultraRare).to.equal(10);
         expect(legendary).to.equal(50);
         expect(epic).to.equal(200);
@@ -497,9 +470,7 @@ describe("PackManager", function () {
       });
 
       it("Should initialize with correct default Bronze probabilities", async function () {
-        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
-          PackType.Bronze
-        );
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(PackType.Bronze);
         expect(ultraRare).to.equal(0);
         expect(legendary).to.equal(40);
         expect(epic).to.equal(190);
@@ -516,13 +487,13 @@ describe("PackManager", function () {
 
       it("Should revert when thresholds are not in ascending order", async function () {
         await expect(
-          packManager.setPackProbabilities(PackType.Bronze, 100, 50, 300, 600)
+          packManager.setPackProbabilities(PackType.Bronze, 100, 50, 300, 600),
         ).to.be.revertedWithCustomError(packManager, "InvalidProbabilities");
       });
 
       it("Should revert when non-owner tries to set probabilities", async function () {
         await expect(
-          packManager.connect(user1).setPackProbabilities(PackType.Bronze, 0, 100, 300, 600)
+          packManager.connect(user1).setPackProbabilities(PackType.Bronze, 0, 100, 300, 600),
         ).to.be.revertedWithCustomError(packManager, "OwnableUnauthorizedAccount");
       });
     });
@@ -567,7 +538,7 @@ describe("PackManager", function () {
 
       it("Should revert when withdrawing more than balance", async function () {
         await expect(
-          packManager.withdrawTreasury(treasuryAddress, ethers.parseEther("1000"))
+          packManager.withdrawTreasury(treasuryAddress, ethers.parseEther("1000")),
         ).to.be.revertedWithCustomError(packManager, "InsufficientTreasuryBalance");
       });
     });
@@ -585,9 +556,7 @@ describe("PackManager", function () {
       it("Should allow opening pack with instant cash claim", async function () {
         const tx = await packManager.connect(user1).openPackInstantCash(1);
 
-        await expect(tx)
-          .to.emit(packManager, "PackOpenRequested")
-          .withArgs(1, user1Address, 1, PackType.Bronze, 1);
+        await expect(tx).to.emit(packManager, "PackOpenRequested").withArgs(1, user1Address, 1, PackType.Bronze, 1);
       });
 
       it("Should distribute instant cash on VRF fulfillment", async function () {
@@ -628,9 +597,10 @@ describe("PackManager", function () {
       it("Should revert instant cash when not enabled", async function () {
         await packManager.setInstantCashEnabled(false);
 
-        await expect(
-          packManager.connect(user1).openPackInstantCash(1)
-        ).to.be.revertedWithCustomError(packManager, "InstantCashNotEnabled");
+        await expect(packManager.connect(user1).openPackInstantCash(1)).to.be.revertedWithCustomError(
+          packManager,
+          "InstantCashNotEnabled",
+        );
       });
 
       it("Should revert instant cash when treasury balance insufficient", async function () {
@@ -638,9 +608,9 @@ describe("PackManager", function () {
 
         await packManager.connect(user1).openPackInstantCash(1);
 
-        await expect(
-          mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n])
-        ).to.be.revertedWith("MockVRF: callback failed");
+        await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n])).to.be.revertedWith(
+          "MockVRF: callback failed",
+        );
       });
     });
 
@@ -664,18 +634,16 @@ describe("PackManager", function () {
       it("Should emit PackOpened event for NFT claims", async function () {
         await packManager.connect(user1).openPack(1);
 
-        await expect(
-          mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n])
-        ).to.emit(packManager, "PackOpened");
+        await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n])).to.emit(
+          packManager,
+          "PackOpened",
+        );
       });
     });
 
     describe("View Functions", function () {
       it("Should calculate instant cash payout correctly", async function () {
-        await nftPool.setCollectionFloorPrice(
-          await testNft.getAddress(),
-          FLOOR_PRICES[PoolLevel.Common]
-        );
+        await nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
 
         const payout = await packManager.getInstantCashPayout(await testNft.getAddress());
         const expectedPayout = (FLOOR_PRICES[PoolLevel.Common] * 8000n) / 10000n;

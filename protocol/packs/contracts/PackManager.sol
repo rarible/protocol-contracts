@@ -464,11 +464,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     /// @dev Process NFT claim - select and transfer NFTs to user
-    function _processNftClaim(
-        uint256 requestId,
-        OpenRequest storage request,
-        uint256[] calldata randomWords
-    ) internal {
+    function _processNftClaim(uint256 requestId, OpenRequest storage request, uint256[] calldata randomWords) internal {
         RewardNft[3] memory rewards;
 
         for (uint256 i = 0; i < REWARDS_PER_PACK; i++) {
@@ -566,7 +562,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
         PackProbabilities storage probs = _packProbabilities[packType];
         if (packType == RariPack.PackType.Platinum && probs.ultraRare > 0) {
-            if (nftPool.getPoolLevelSize(NftPool.PoolLevel.UltraRare) == 0) revert LevelEmpty(NftPool.PoolLevel.UltraRare);
+            if (nftPool.getPoolLevelSize(NftPool.PoolLevel.UltraRare) == 0)
+                revert LevelEmpty(NftPool.PoolLevel.UltraRare);
         }
     }
 
@@ -662,4 +659,3 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
     uint256[35] private __gap;
 }
-

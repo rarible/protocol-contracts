@@ -98,40 +98,25 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
   // ============================================
   // 2. Grant POOL_MANAGER_ROLE to PackManager on all pools
   // ============================================
-  const grantPoolManagerCommon = m.call(
-    commonPoolArtifact,
-    "grantRole",
-    [POOL_MANAGER_ROLE, packManagerProxy],
-    { id: "GrantPoolManagerCommon" }
-  );
+  const grantPoolManagerCommon = m.call(commonPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
+    id: "GrantPoolManagerCommon",
+  });
 
-  const grantPoolManagerRare = m.call(
-    rarePoolArtifact,
-    "grantRole",
-    [POOL_MANAGER_ROLE, packManagerProxy],
-    { id: "GrantPoolManagerRare" }
-  );
+  const grantPoolManagerRare = m.call(rarePoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
+    id: "GrantPoolManagerRare",
+  });
 
-  const grantPoolManagerEpic = m.call(
-    epicPoolArtifact,
-    "grantRole",
-    [POOL_MANAGER_ROLE, packManagerProxy],
-    { id: "GrantPoolManagerEpic" }
-  );
+  const grantPoolManagerEpic = m.call(epicPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
+    id: "GrantPoolManagerEpic",
+  });
 
-  const grantPoolManagerLegendary = m.call(
-    legendaryPoolArtifact,
-    "grantRole",
-    [POOL_MANAGER_ROLE, packManagerProxy],
-    { id: "GrantPoolManagerLegendary" }
-  );
+  const grantPoolManagerLegendary = m.call(legendaryPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
+    id: "GrantPoolManagerLegendary",
+  });
 
-  const grantPoolManagerUltraRare = m.call(
-    ultraRarePoolArtifact,
-    "grantRole",
-    [POOL_MANAGER_ROLE, packManagerProxy],
-    { id: "GrantPoolManagerUltraRare" }
-  );
+  const grantPoolManagerUltraRare = m.call(ultraRarePoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
+    id: "GrantPoolManagerUltraRare",
+  });
 
   // ============================================
   // 3. Set pools in PackManager
@@ -151,25 +136,15 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     after: [grantPoolManagerEpic],
   });
 
-  const setLegendaryPool = m.call(
-    packManagerArtifact,
-    "setPool",
-    [PoolType.Legendary, legendaryPool],
-    {
-      id: "SetLegendaryPool",
-      after: [grantPoolManagerLegendary],
-    }
-  );
+  const setLegendaryPool = m.call(packManagerArtifact, "setPool", [PoolType.Legendary, legendaryPool], {
+    id: "SetLegendaryPool",
+    after: [grantPoolManagerLegendary],
+  });
 
-  const setUltraRarePool = m.call(
-    packManagerArtifact,
-    "setPool",
-    [PoolType.UltraRare, ultraRarePool],
-    {
-      id: "SetUltraRarePool",
-      after: [grantPoolManagerUltraRare],
-    }
-  );
+  const setUltraRarePool = m.call(packManagerArtifact, "setPool", [PoolType.UltraRare, ultraRarePool], {
+    id: "SetUltraRarePool",
+    after: [grantPoolManagerUltraRare],
+  });
 
   // ============================================
   // 4. Configure VRF on PackManager
@@ -180,7 +155,7 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     [vrfCoordinator, vrfSubscriptionId, vrfKeyHash, vrfCallbackGasLimit, vrfRequestConfirmations],
     {
       id: "SetVrfConfig",
-    }
+    },
   );
 
   // ============================================
@@ -198,14 +173,9 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     id: "SetGoldPrice",
   });
 
-  const setPlatinumPrice = m.call(
-    rariPackArtifact,
-    "setPackPrice",
-    [PackType.Platinum, platinumPrice],
-    {
-      id: "SetPlatinumPrice",
-    }
-  );
+  const setPlatinumPrice = m.call(rariPackArtifact, "setPackPrice", [PackType.Platinum, platinumPrice], {
+    id: "SetPlatinumPrice",
+  });
 
   // ============================================
   // 6. Set pack URIs on RariPack (if provided)
@@ -251,4 +221,3 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
 });
 
 export default SetupPackInfrastructureModule;
-

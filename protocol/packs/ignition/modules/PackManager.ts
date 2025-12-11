@@ -14,19 +14,12 @@ const PackManagerModule = buildModule("PackManagerModule", (m) => {
   });
 
   // Encode initialization call
-  const initData = m.encodeFunctionCall(packManagerImpl, "initialize", [
-    owner,
-    rariPackProxy,
-  ]);
+  const initData = m.encodeFunctionCall(packManagerImpl, "initialize", [owner, rariPackProxy]);
 
   // Deploy TransparentUpgradeableProxy
-  const packManagerProxy = m.contract(
-    "TransparentUpgradeableProxy",
-    [packManagerImpl, owner, initData],
-    {
-      id: "PackManagerProxy",
-    }
-  );
+  const packManagerProxy = m.contract("TransparentUpgradeableProxy", [packManagerImpl, owner, initData], {
+    id: "PackManagerProxy",
+  });
 
   return {
     packManagerImpl,
@@ -35,4 +28,3 @@ const PackManagerModule = buildModule("PackManagerModule", (m) => {
 });
 
 export default PackManagerModule;
-

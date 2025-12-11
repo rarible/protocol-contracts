@@ -10,4 +10,3 @@ contract TestERC721 is ERC721 {
         _mint(to, tokenId);
     }
 }
-

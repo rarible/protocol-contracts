@@ -26,82 +26,47 @@ const NftPoolsModule = buildModule("NftPoolsModule", (m) => {
   // ============================================
   // Deploy Common Pool
   // ============================================
-  const commonPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Common,
-  ]);
+  const commonPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Common]);
 
-  const commonPool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, commonPoolInitData],
-    {
-      id: "CommonPoolProxy",
-    }
-  );
+  const commonPool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, commonPoolInitData], {
+    id: "CommonPoolProxy",
+  });
 
   // ============================================
   // Deploy Rare Pool
   // ============================================
-  const rarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Rare,
-  ]);
+  const rarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Rare]);
 
-  const rarePool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, rarePoolInitData],
-    {
-      id: "RarePoolProxy",
-    }
-  );
+  const rarePool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, rarePoolInitData], {
+    id: "RarePoolProxy",
+  });
 
   // ============================================
   // Deploy Epic Pool
   // ============================================
-  const epicPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Epic,
-  ]);
+  const epicPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Epic]);
 
-  const epicPool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, epicPoolInitData],
-    {
-      id: "EpicPoolProxy",
-    }
-  );
+  const epicPool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, epicPoolInitData], {
+    id: "EpicPoolProxy",
+  });
 
   // ============================================
   // Deploy Legendary Pool
   // ============================================
-  const legendaryPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.Legendary,
-  ]);
+  const legendaryPoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.Legendary]);
 
-  const legendaryPool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, legendaryPoolInitData],
-    {
-      id: "LegendaryPoolProxy",
-    }
-  );
+  const legendaryPool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, legendaryPoolInitData], {
+    id: "LegendaryPoolProxy",
+  });
 
   // ============================================
   // Deploy UltraRare Pool
   // ============================================
-  const ultraRarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [
-    owner,
-    PoolType.UltraRare,
-  ]);
+  const ultraRarePoolInitData = m.encodeFunctionCall(nftPoolImpl, "initialize", [owner, PoolType.UltraRare]);
 
-  const ultraRarePool = m.contract(
-    "TransparentUpgradeableProxy",
-    [nftPoolImpl, owner, ultraRarePoolInitData],
-    {
-      id: "UltraRarePoolProxy",
-    }
-  );
+  const ultraRarePool = m.contract("TransparentUpgradeableProxy", [nftPoolImpl, owner, ultraRarePoolInitData], {
+    id: "UltraRarePoolProxy",
+  });
 
   return {
     nftPoolImpl,
@@ -114,4 +79,3 @@ const NftPoolsModule = buildModule("NftPoolsModule", (m) => {
 });
 
 export default NftPoolsModule;
-

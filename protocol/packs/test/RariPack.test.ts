@@ -76,7 +76,7 @@ describe("RariPack", function () {
     const proxy = await ProxyFactory.deploy(
       await rariPackImpl.getAddress(),
       ownerAddress, // proxy admin
-      initData
+      initData,
     );
     await proxy.waitForDeployment();
 
@@ -123,9 +123,10 @@ describe("RariPack", function () {
     });
 
     it("Should not allow reinitialization", async function () {
-      await expect(
-        rariPack.initialize(user1Address, user1Address, "New Name", "NEW")
-      ).to.be.revertedWithCustomError(rariPack, "InvalidInitialization");
+      await expect(rariPack.initialize(user1Address, user1Address, "New Name", "NEW")).to.be.revertedWithCustomError(
+        rariPack,
+        "InvalidInitialization",
+      );
     });
   });
 
@@ -188,7 +189,7 @@ describe("RariPack", function () {
       await expect(
         rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 0, {
           value: 0,
-        })
+        }),
       ).to.be.revertedWithCustomError(rariPack, "ZeroAmount");
     });
 
@@ -206,11 +207,7 @@ describe("RariPack", function () {
         "NPACK",
       ]);
 
-      const proxy = await ProxyFactory.deploy(
-        await newPackImpl.getAddress(),
-        ownerAddress,
-        initData
-      );
+      const proxy = await ProxyFactory.deploy(await newPackImpl.getAddress(), ownerAddress, initData);
       await proxy.waitForDeployment();
 
       const newPack = RariPack__factory.connect(await proxy.getAddress(), owner);
@@ -218,7 +215,7 @@ describe("RariPack", function () {
       await expect(
         newPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
           value: BRONZE_PRICE,
-        })
+        }),
       ).to.be.revertedWithCustomError(newPack, "PriceNotSet");
     });
 
@@ -226,13 +223,13 @@ describe("RariPack", function () {
       await expect(
         rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
           value: BRONZE_PRICE - 1n,
-        })
+        }),
       ).to.be.revertedWithCustomError(rariPack, "IncorrectEthSent");
 
       await expect(
         rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
           value: BRONZE_PRICE + 1n,
-        })
+        }),
       ).to.be.revertedWithCustomError(rariPack, "IncorrectEthSent");
     });
 
@@ -242,7 +239,7 @@ describe("RariPack", function () {
       await expect(
         rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
           value: BRONZE_PRICE,
-        })
+        }),
       ).to.be.revertedWithCustomError(rariPack, "TreasuryNotSet");
     });
   });
@@ -274,14 +271,14 @@ describe("RariPack", function () {
     it("Should revert when non-BURNER_ROLE tries to burn", async function () {
       await expect(rariPack.connect(user1).burnPack(1)).to.be.revertedWithCustomError(
         rariPack,
-        "AccessControlUnauthorizedAccount"
+        "AccessControlUnauthorizedAccount",
       );
     });
 
     it("Should revert when burning non-existent token", async function () {
       await expect(rariPack.connect(owner).burnPack(999)).to.be.revertedWithCustomError(
         rariPack,
-        "ERC721NonexistentToken"
+        "ERC721NonexistentToken",
       );
     });
   });
@@ -302,9 +299,7 @@ describe("RariPack", function () {
     });
 
     it("Should revert for invalid pack type ID", async function () {
-      await expect(rariPack.packPriceById(4)).to.be.revertedWith(
-        "RariPack: invalid pack type id"
-      );
+      await expect(rariPack.packPriceById(4)).to.be.revertedWith("RariPack: invalid pack type id");
     });
 
     it("Should allow DEFAULT_ADMIN_ROLE to set pack price", async function () {
@@ -319,7 +314,7 @@ describe("RariPack", function () {
 
     it("Should revert when non-admin tries to set pack price", async function () {
       await expect(
-        rariPack.connect(user1).setPackPrice(PackType.Bronze, ethers.parseEther("0.02"))
+        rariPack.connect(user1).setPackPrice(PackType.Bronze, ethers.parseEther("0.02")),
       ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
     });
   });
@@ -334,9 +329,10 @@ describe("RariPack", function () {
     });
 
     it("Should revert when non-admin tries to change treasury", async function () {
-      await expect(
-        rariPack.connect(user1).setTreasury(user1Address)
-      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+      await expect(rariPack.connect(user1).setTreasury(user1Address)).to.be.revertedWithCustomError(
+        rariPack,
+        "AccessControlUnauthorizedAccount",
+      );
     });
 
     it("Should allow setting treasury to zero address", async function () {
@@ -369,10 +365,7 @@ describe("RariPack", function () {
     });
 
     it("Should revert tokenURI for non-existent token", async function () {
-      await expect(rariPack.tokenURI(999)).to.be.revertedWithCustomError(
-        rariPack,
-        "ERC721NonexistentToken"
-      );
+      await expect(rariPack.tokenURI(999)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
     });
 
     it("Should allow DEFAULT_ADMIN_ROLE to update pack URI", async function () {
@@ -387,9 +380,10 @@ describe("RariPack", function () {
     });
 
     it("Should revert when non-admin tries to set pack URI", async function () {
-      await expect(
-        rariPack.connect(user1).setPackURI(PackType.Bronze, "new-uri")
-      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+      await expect(rariPack.connect(user1).setPackURI(PackType.Bronze, "new-uri")).to.be.revertedWithCustomError(
+        rariPack,
+        "AccessControlUnauthorizedAccount",
+      );
     });
   });
 
@@ -409,10 +403,7 @@ describe("RariPack", function () {
     });
 
     it("Should revert for non-existent token", async function () {
-      await expect(rariPack.packTypeOf(999)).to.be.revertedWithCustomError(
-        rariPack,
-        "ERC721NonexistentToken"
-      );
+      await expect(rariPack.packTypeOf(999)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
     });
   });
 
@@ -429,9 +420,10 @@ describe("RariPack", function () {
     });
 
     it("Should not allow non-admin to grant roles", async function () {
-      await expect(
-        rariPack.connect(user1).grantRole(BURNER_ROLE, user2Address)
-      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+      await expect(rariPack.connect(user1).grantRole(BURNER_ROLE, user2Address)).to.be.revertedWithCustomError(
+        rariPack,
+        "AccessControlUnauthorizedAccount",
+      );
     });
   });
 
@@ -466,4 +458,3 @@ describe("RariPack", function () {
     });
   });
 });
-

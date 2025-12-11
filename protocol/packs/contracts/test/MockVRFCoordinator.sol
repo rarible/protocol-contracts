@@ -82,4 +82,3 @@ contract MockVRFCoordinator {
         return _nextRequestId;
     }
 }
-
