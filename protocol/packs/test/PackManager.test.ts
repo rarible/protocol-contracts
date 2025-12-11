@@ -415,31 +415,22 @@ describe("PackManager", function () {
 
   describe("Probability Distribution", function () {
     // Helper to calculate pool type from random value for a pack type
+    // New drop rates: UltraRare 0.1%, Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91%
     function expectedPoolType(packType: number, randomValue: bigint): number {
       const roll = Number(randomValue % 10000n);
 
       if (packType === PackType.Platinum) {
-        if (roll < 50) return PoolType.UltraRare;
-        if (roll < 200) return PoolType.Legendary;
-        if (roll < 450) return PoolType.Epic;
-        if (roll < 800) return PoolType.Rare;
-        return PoolType.Common;
-      } else if (packType === PackType.Gold) {
-        if (roll < 100) return PoolType.Legendary;
-        if (roll < 250) return PoolType.Epic;
-        if (roll < 500) return PoolType.Rare;
-        return PoolType.Common;
-      } else if (packType === PackType.Silver) {
-        if (roll < 50) return PoolType.Legendary;
-        if (roll < 150) return PoolType.Epic;
-        if (roll < 300) return PoolType.Rare;
-        return PoolType.Common;
+        if (roll < 10) return PoolType.UltraRare; // 0.1%
+        if (roll < 50) return PoolType.Legendary; // 0.4%
+        if (roll < 200) return PoolType.Epic; // 1.5%
+        if (roll < 900) return PoolType.Rare; // 7%
+        return PoolType.Common; // 91%
       } else {
-        // Bronze
-        if (roll < 25) return PoolType.Legendary;
-        if (roll < 125) return PoolType.Epic;
-        if (roll < 275) return PoolType.Rare;
-        return PoolType.Common;
+        // Bronze, Silver, Gold - no UltraRare
+        if (roll < 40) return PoolType.Legendary; // 0.4%
+        if (roll < 190) return PoolType.Epic; // 1.5%
+        if (roll < 890) return PoolType.Rare; // 7%
+        return PoolType.Common; // 91.1%
       }
     }
 
@@ -451,8 +442,8 @@ describe("PackManager", function () {
 
       await packManager.connect(user1).openPack(1);
 
-      // Random values that give rolls 0-49 (UltraRare for Platinum)
-      const randomWords = [10n, 20n, 30n]; // All will select UltraRare
+      // Random values that give rolls 0-9 (UltraRare for Platinum, 0.1%)
+      const randomWords = [1n, 5n, 9n]; // All will select UltraRare
 
       await mockVrf.fulfillRandomWords(1, randomWords);
 
@@ -469,8 +460,8 @@ describe("PackManager", function () {
       await packManager.connect(user1).openPack(1);
 
       // Even with very low rolls, Bronze can't get UltraRare
-      // Roll 0-24 = Legendary, 25-124 = Epic, 125-274 = Rare, 275+ = Common
-      const randomWords = [5n, 50n, 200n]; // Legendary, Epic, Rare respectively
+      // Roll 0-39 = Legendary, 40-189 = Epic, 190-889 = Rare, 890+ = Common
+      const randomWords = [5n, 100n, 500n]; // Legendary, Epic, Rare respectively
 
       await mockVrf.fulfillRandomWords(1, randomWords);
 
@@ -485,7 +476,7 @@ describe("PackManager", function () {
 
       await packManager.connect(user1).openPack(1);
 
-      // Very high rolls should always select Common
+      // Very high rolls should always select Common (>= 890 for Bronze)
       const randomWords = [9999n, 8888n, 7777n];
 
       await mockVrf.fulfillRandomWords(1, randomWords);
@@ -778,63 +769,69 @@ describe("PackManager", function () {
   describe("Dynamic Probabilities", function () {
     describe("Default Probabilities", function () {
       it("Should initialize with correct default Platinum probabilities", async function () {
+        // UltraRare 0.1%, Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91%
         const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
           PackType.Platinum
         );
-        expect(ultraRare).to.equal(50); // 0.5%
-        expect(legendary).to.equal(200); // 2% cumulative
-        expect(epic).to.equal(450); // 4.5% cumulative
-        expect(rare).to.equal(800); // 8% cumulative
+        expect(ultraRare).to.equal(10); // 0.1%
+        expect(legendary).to.equal(50); // 0.5% cumulative
+        expect(epic).to.equal(200); // 2% cumulative
+        expect(rare).to.equal(900); // 9% cumulative
       });
 
       it("Should initialize with correct default Gold probabilities", async function () {
+        // Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
           PackType.Gold
         );
         expect(ultraRare).to.equal(0); // Not available
-        expect(legendary).to.equal(100); // 1%
-        expect(epic).to.equal(250); // 2.5% cumulative
-        expect(rare).to.equal(500); // 5% cumulative
+        expect(legendary).to.equal(40); // 0.4%
+        expect(epic).to.equal(190); // 1.9% cumulative
+        expect(rare).to.equal(890); // 8.9% cumulative
       });
 
       it("Should initialize with correct default Silver probabilities", async function () {
+        // Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
           PackType.Silver
         );
         expect(ultraRare).to.equal(0); // Not available
-        expect(legendary).to.equal(50); // 0.5%
-        expect(epic).to.equal(150); // 1.5% cumulative
-        expect(rare).to.equal(300); // 3% cumulative
+        expect(legendary).to.equal(40); // 0.4%
+        expect(epic).to.equal(190); // 1.9% cumulative
+        expect(rare).to.equal(890); // 8.9% cumulative
       });
 
       it("Should initialize with correct default Bronze probabilities", async function () {
+        // Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(
           PackType.Bronze
         );
         expect(ultraRare).to.equal(0); // Not available
-        expect(legendary).to.equal(25); // 0.25%
-        expect(epic).to.equal(125); // 1.25% cumulative
-        expect(rare).to.equal(275); // 2.75% cumulative
+        expect(legendary).to.equal(40); // 0.4%
+        expect(epic).to.equal(190); // 1.9% cumulative
+        expect(rare).to.equal(890); // 8.9% cumulative
       });
 
       it("Should return correct percentage breakdown for Platinum", async function () {
+        // UltraRare 0.1%, Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91%
         const [ultraRare, legendary, epic, rare, common] =
           await packManager.getPackProbabilitiesPercent(PackType.Platinum);
-        expect(ultraRare).to.equal(50); // 0.5%
-        expect(legendary).to.equal(150); // 1.5%
-        expect(epic).to.equal(250); // 2.5%
-        expect(rare).to.equal(350); // 3.5%
-        expect(common).to.equal(9200); // 92%
+        expect(ultraRare).to.equal(10); // 0.1%
+        expect(legendary).to.equal(40); // 0.4%
+        expect(epic).to.equal(150); // 1.5%
+        expect(rare).to.equal(700); // 7%
+        expect(common).to.equal(9100); // 91%
       });
 
       it("Should return correct percentage breakdown for Bronze", async function () {
+        // Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
         const [ultraRare, legendary, epic, rare, common] =
           await packManager.getPackProbabilitiesPercent(PackType.Bronze);
         expect(ultraRare).to.equal(0); // 0%
-        expect(legendary).to.equal(25); // 0.25%
-        expect(epic).to.equal(100); // 1%
-        expect(rare).to.equal(150); // 1.5%
-        expect(common).to.equal(9725); // 97.25%
+        expect(legendary).to.equal(40); // 0.4%
+        expect(epic).to.equal(150); // 1.5%
+        expect(rare).to.equal(700); // 7%
+        expect(common).to.equal(9110); // 91.1%
       });
     });
 
