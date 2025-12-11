@@ -1027,31 +1027,25 @@ describe("PackManager", function () {
     // Floor prices for testing
     const FLOOR_PRICE = ethers.parseEther("1"); // 1 ETH floor price
 
+    // Helper to set floor price on all pools
+    async function setFloorPriceOnAllPools(collection: string, price: bigint) {
+      for (const poolType of Object.values(PoolType)) {
+        if (typeof poolType === "number" && pools[poolType]) {
+          await pools[poolType].setCollectionFloorPrice(collection, price);
+        }
+      }
+    }
+
     describe("Configuration", function () {
-      it("Should allow owner to set collection floor price", async function () {
+      it("Should allow pool owner to set collection floor price", async function () {
         const testNftAddress = await testNft.getAddress();
-        
-        await expect(packManager.setCollectionFloorPrice(testNftAddress, FLOOR_PRICE))
-          .to.emit(packManager, "CollectionFloorPriceUpdated")
+        const commonPool = pools[PoolType.Common];
+
+        await expect(commonPool.setCollectionFloorPrice(testNftAddress, FLOOR_PRICE))
+          .to.emit(commonPool, "CollectionFloorPriceUpdated")
           .withArgs(testNftAddress, 0, FLOOR_PRICE);
 
-        expect(await packManager.collectionFloorPrice(testNftAddress)).to.equal(FLOOR_PRICE);
-      });
-
-      it("Should allow owner to batch set floor prices", async function () {
-        const testNftAddress = await testNft.getAddress();
-        const collections = [testNftAddress];
-        const prices = [FLOOR_PRICE];
-
-        await packManager.setCollectionFloorPrices(collections, prices);
-
-        expect(await packManager.collectionFloorPrice(testNftAddress)).to.equal(FLOOR_PRICE);
-      });
-
-      it("Should revert when setting floor price for zero address", async function () {
-        await expect(
-          packManager.setCollectionFloorPrice(ZERO_ADDRESS, FLOOR_PRICE)
-        ).to.be.revertedWithCustomError(packManager, "ZeroAddress");
+        expect(await commonPool.getCollectionFloorPrice(testNftAddress)).to.equal(FLOOR_PRICE);
       });
 
       it("Should allow owner to enable instant cash", async function () {
@@ -1073,10 +1067,6 @@ describe("PackManager", function () {
       it("Should revert when non-owner tries to configure instant cash", async function () {
         await expect(
           packManager.connect(user1).setInstantCashEnabled(true)
-        ).to.be.revertedWithCustomError(packManager, "OwnableUnauthorizedAccount");
-
-        await expect(
-          packManager.connect(user1).setCollectionFloorPrice(await testNft.getAddress(), FLOOR_PRICE)
         ).to.be.revertedWithCustomError(packManager, "OwnableUnauthorizedAccount");
       });
     });
@@ -1133,9 +1123,9 @@ describe("PackManager", function () {
 
     describe("Instant Cash Pack Opening", function () {
       beforeEach(async function () {
-        // Setup: enable instant cash, set floor price, fund treasury
+        // Setup: enable instant cash, set floor price on all pools, fund treasury
         await packManager.setInstantCashEnabled(true);
-        await packManager.setCollectionFloorPrice(await testNft.getAddress(), FLOOR_PRICE);
+        await setFloorPriceOnAllPools(await testNft.getAddress(), FLOOR_PRICE);
         await packManager.fundTreasury({ value: ethers.parseEther("100") });
 
         // Mint a pack to user1
@@ -1225,7 +1215,9 @@ describe("PackManager", function () {
         // This will fail when VRF fulfills because floor price is 0
         // The random word needs to select the NFT without floor price
         // For simplicity, let's just verify the floor price getter returns 0
-        expect(await packManager.collectionFloorPrice(await newTestNft.getAddress())).to.equal(0);
+        expect(
+          await pools[PoolType.Common].getCollectionFloorPrice(await newTestNft.getAddress())
+        ).to.equal(0);
       });
 
       it("Should revert instant cash when treasury balance insufficient", async function () {
@@ -1269,16 +1261,42 @@ describe("PackManager", function () {
 
     describe("View Functions", function () {
       it("Should calculate instant cash payout correctly", async function () {
-        await packManager.setCollectionFloorPrice(await testNft.getAddress(), FLOOR_PRICE);
+        await pools[PoolType.Common].setCollectionFloorPrice(await testNft.getAddress(), FLOOR_PRICE);
 
-        const payout = await packManager.getInstantCashPayout(await testNft.getAddress());
+        const payout = await packManager.getInstantCashPayout(
+          PoolType.Common,
+          await testNft.getAddress()
+        );
         const expectedPayout = (FLOOR_PRICE * 8000n) / 10000n; // 80%
 
         expect(payout).to.equal(expectedPayout);
       });
 
       it("Should return 0 payout for unset floor price", async function () {
-        const payout = await packManager.getInstantCashPayout(user1Address);
+        const payout = await packManager.getInstantCashPayout(PoolType.Common, user1Address);
+        expect(payout).to.equal(0);
+      });
+
+      it("Should return 0 payout for unset pool", async function () {
+        // Deploy new PackManager without pools
+        const PackManagerFactory = new PackManager__factory(owner);
+        const impl = await PackManagerFactory.deploy();
+        await impl.waitForDeployment();
+
+        const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
+        const initData = impl.interface.encodeFunctionData("initialize", [
+          ownerAddress,
+          await rariPack.getAddress(),
+        ]);
+
+        const proxy = await ProxyFactory.deploy(await impl.getAddress(), ownerAddress, initData);
+        await proxy.waitForDeployment();
+        const newPackManager = PackManager__factory.connect(await proxy.getAddress(), owner);
+
+        const payout = await newPackManager.getInstantCashPayout(
+          PoolType.Common,
+          await testNft.getAddress()
+        );
         expect(payout).to.equal(0);
       });
 

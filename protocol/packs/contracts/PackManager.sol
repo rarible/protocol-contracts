@@ -101,9 +101,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     /// @dev Pack type => probability thresholds
     mapping(RariPack.PackType => PackProbabilities) private _packProbabilities;
 
-    /// @dev NFT collection => floor price in wei
-    mapping(address => uint256) public collectionFloorPrice;
-
     /// @dev Treasury address for instant cash payouts
     address public payoutTreasury;
 
@@ -153,7 +150,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         uint16 epic,
         uint16 rare
     );
-    event CollectionFloorPriceUpdated(address indexed collection, uint256 oldPrice, uint256 newPrice);
     event PayoutTreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
     event InstantCashEnabledUpdated(bool enabled);
     event TreasuryFunded(address indexed funder, uint256 amount);
@@ -328,32 +324,6 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         _packProbabilities[packType] = probs;
 
         emit PackProbabilitiesUpdated(packType, probs.ultraRare, probs.legendary, probs.epic, probs.rare);
-    }
-
-    /// @notice Set floor price for an NFT collection
-    /// @param collection NFT collection address
-    /// @param floorPrice Floor price in wei
-    function setCollectionFloorPrice(address collection, uint256 floorPrice) external onlyOwner {
-        if (collection == address(0)) revert ZeroAddress();
-        uint256 oldPrice = collectionFloorPrice[collection];
-        collectionFloorPrice[collection] = floorPrice;
-        emit CollectionFloorPriceUpdated(collection, oldPrice, floorPrice);
-    }
-
-    /// @notice Batch set floor prices for multiple collections
-    /// @param collections Array of NFT collection addresses
-    /// @param floorPrices Array of floor prices in wei
-    function setCollectionFloorPrices(
-        address[] calldata collections,
-        uint256[] calldata floorPrices
-    ) external onlyOwner {
-        require(collections.length == floorPrices.length, "PackManager: length mismatch");
-        for (uint256 i = 0; i < collections.length; i++) {
-            if (collections[i] == address(0)) revert ZeroAddress();
-            uint256 oldPrice = collectionFloorPrice[collections[i]];
-            collectionFloorPrice[collections[i]] = floorPrices[i];
-            emit CollectionFloorPriceUpdated(collections[i], oldPrice, floorPrices[i]);
-        }
     }
 
     /// @notice Set the payout treasury address
@@ -573,8 +543,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
             rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolType: poolType});
 
-            // Calculate payout based on floor price
-            uint256 floorPrice = collectionFloorPrice[collection];
+            // Calculate payout based on floor price from the pool
+            uint256 floorPrice = pool.getCollectionFloorPrice(collection);
             if (floorPrice == 0) revert FloorPriceNotSet(collection);
 
             // 80% of floor price
@@ -717,11 +687,17 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         return address(pools[poolType]);
     }
 
-    /// @notice Calculate potential instant cash payout for a collection
+    /// @notice Calculate potential instant cash payout for a collection in a specific pool
+    /// @param poolType The pool type to check floor price from
     /// @param collection NFT collection address
     /// @return payout 80% of floor price in wei
-    function getInstantCashPayout(address collection) external view returns (uint256 payout) {
-        uint256 floorPrice = collectionFloorPrice[collection];
+    function getInstantCashPayout(
+        NftPool.PoolType poolType,
+        address collection
+    ) external view returns (uint256 payout) {
+        NftPool pool = pools[poolType];
+        if (address(pool) == address(0)) return 0;
+        uint256 floorPrice = pool.getCollectionFloorPrice(collection);
         if (floorPrice == 0) return 0;
         payout = (floorPrice * INSTANT_CASH_PERCENTAGE) / PROBABILITY_PRECISION;
     }

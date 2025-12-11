@@ -127,6 +127,95 @@ describe("NftPool", function () {
     });
   });
 
+  describe("Floor Prices", function () {
+    const FLOOR_PRICE = ethers.parseEther("1"); // 1 ETH
+
+    it("Should allow owner to set collection floor price", async function () {
+      const testNftAddress = await testNft.getAddress();
+
+      await expect(nftPool.setCollectionFloorPrice(testNftAddress, FLOOR_PRICE))
+        .to.emit(nftPool, "CollectionFloorPriceUpdated")
+        .withArgs(testNftAddress, 0, FLOOR_PRICE);
+
+      expect(await nftPool.getCollectionFloorPrice(testNftAddress)).to.equal(FLOOR_PRICE);
+    });
+
+    it("Should allow owner to update collection floor price", async function () {
+      const testNftAddress = await testNft.getAddress();
+      const newFloorPrice = ethers.parseEther("2");
+
+      await nftPool.setCollectionFloorPrice(testNftAddress, FLOOR_PRICE);
+      await expect(nftPool.setCollectionFloorPrice(testNftAddress, newFloorPrice))
+        .to.emit(nftPool, "CollectionFloorPriceUpdated")
+        .withArgs(testNftAddress, FLOOR_PRICE, newFloorPrice);
+
+      expect(await nftPool.getCollectionFloorPrice(testNftAddress)).to.equal(newFloorPrice);
+    });
+
+    it("Should allow owner to batch set floor prices", async function () {
+      const testNftAddress = await testNft.getAddress();
+      const testNft2Address = await testNft2.getAddress();
+      const price1 = ethers.parseEther("1");
+      const price2 = ethers.parseEther("2");
+
+      await nftPool.setCollectionFloorPrices([testNftAddress, testNft2Address], [price1, price2]);
+
+      expect(await nftPool.getCollectionFloorPrice(testNftAddress)).to.equal(price1);
+      expect(await nftPool.getCollectionFloorPrice(testNft2Address)).to.equal(price2);
+    });
+
+    it("Should emit events for batch floor price updates", async function () {
+      const testNftAddress = await testNft.getAddress();
+      const testNft2Address = await testNft2.getAddress();
+
+      await expect(
+        nftPool.setCollectionFloorPrices(
+          [testNftAddress, testNft2Address],
+          [FLOOR_PRICE, FLOOR_PRICE]
+        )
+      )
+        .to.emit(nftPool, "CollectionFloorPriceUpdated")
+        .withArgs(testNftAddress, 0, FLOOR_PRICE)
+        .and.to.emit(nftPool, "CollectionFloorPriceUpdated")
+        .withArgs(testNft2Address, 0, FLOOR_PRICE);
+    });
+
+    it("Should revert when setting floor price for zero address", async function () {
+      await expect(
+        nftPool.setCollectionFloorPrice(ZERO_ADDRESS, FLOOR_PRICE)
+      ).to.be.revertedWithCustomError(nftPool, "ZeroAddress");
+    });
+
+    it("Should revert batch set with mismatched array lengths", async function () {
+      await expect(
+        nftPool.setCollectionFloorPrices([await testNft.getAddress()], [FLOOR_PRICE, FLOOR_PRICE])
+      ).to.be.revertedWithCustomError(nftPool, "ArrayLengthMismatch");
+    });
+
+    it("Should revert batch set with zero address in array", async function () {
+      await expect(
+        nftPool.setCollectionFloorPrices([ZERO_ADDRESS], [FLOOR_PRICE])
+      ).to.be.revertedWithCustomError(nftPool, "ZeroAddress");
+    });
+
+    it("Should only allow owner to set floor price", async function () {
+      await expect(
+        nftPool.connect(user1).setCollectionFloorPrice(await testNft.getAddress(), FLOOR_PRICE)
+      ).to.be.revertedWithCustomError(nftPool, "OwnableUnauthorizedAccount");
+    });
+
+    it("Should only allow owner to batch set floor prices", async function () {
+      await expect(
+        nftPool.connect(user1).setCollectionFloorPrices([await testNft.getAddress()], [FLOOR_PRICE])
+      ).to.be.revertedWithCustomError(nftPool, "OwnableUnauthorizedAccount");
+    });
+
+    it("Should return 0 for unset collection floor price", async function () {
+      const unknownAddress = "0x1234567890123456789012345678901234567890";
+      expect(await nftPool.getCollectionFloorPrice(unknownAddress)).to.equal(0);
+    });
+  });
+
   describe("Allowed Collections", function () {
     it("Should add allowed collection", async function () {
       expect(await nftPool.isAllowed721Contract(await testNft.getAddress())).to.be.true;

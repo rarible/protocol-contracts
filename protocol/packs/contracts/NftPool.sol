@@ -37,6 +37,9 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     /// @dev Allowed ERC721 collections
     mapping(address => bool) private allowed721Contracts;
 
+    /// @dev Collection floor prices in wei
+    mapping(address => uint256) private _collectionFloorPrice;
+
     /// @dev NFTs stored in this pool
     NftInfo[] private _poolNfts;
 
@@ -59,10 +62,12 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     event Allowed721ContractAdded(address indexed collection);
     event Allowed721ContractRemoved(address indexed collection);
     event RescuedNft(address indexed to, address indexed collection, uint256 indexed tokenId);
+    event CollectionFloorPriceUpdated(address indexed collection, uint256 oldPrice, uint256 newPrice);
 
     error CollectionNotAllowed();
     error NotInPool();
     error ZeroAddress();
+    error ArrayLengthMismatch();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -103,6 +108,43 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
 
     function isAllowed721Contract(address collection) external view returns (bool) {
         return allowed721Contracts[collection];
+    }
+
+    // -----------------------
+    // Admin: Floor Prices
+    // -----------------------
+
+    /// @notice Set floor price for a collection
+    /// @param collection NFT collection address
+    /// @param floorPrice Floor price in wei
+    function setCollectionFloorPrice(address collection, uint256 floorPrice) external onlyOwner {
+        if (collection == address(0)) revert ZeroAddress();
+        uint256 oldPrice = _collectionFloorPrice[collection];
+        _collectionFloorPrice[collection] = floorPrice;
+        emit CollectionFloorPriceUpdated(collection, oldPrice, floorPrice);
+    }
+
+    /// @notice Batch set floor prices for multiple collections
+    /// @param collections Array of NFT collection addresses
+    /// @param floorPrices Array of floor prices in wei
+    function setCollectionFloorPrices(
+        address[] calldata collections,
+        uint256[] calldata floorPrices
+    ) external onlyOwner {
+        if (collections.length != floorPrices.length) revert ArrayLengthMismatch();
+        for (uint256 i = 0; i < collections.length; i++) {
+            if (collections[i] == address(0)) revert ZeroAddress();
+            uint256 oldPrice = _collectionFloorPrice[collections[i]];
+            _collectionFloorPrice[collections[i]] = floorPrices[i];
+            emit CollectionFloorPriceUpdated(collections[i], oldPrice, floorPrices[i]);
+        }
+    }
+
+    /// @notice Get floor price for a collection
+    /// @param collection NFT collection address
+    /// @return floorPrice Floor price in wei (0 if not set)
+    function getCollectionFloorPrice(address collection) external view returns (uint256) {
+        return _collectionFloorPrice[collection];
     }
 
     // -----------------------
@@ -229,5 +271,5 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    uint256[45] private __gap;
+    uint256[44] private __gap;
 }
