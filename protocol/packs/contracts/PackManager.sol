@@ -3,9 +3,10 @@ pragma solidity ^0.8.30;
 
 // <ai_context>
 // PackManager coordinates opening of RARI pack NFTs using Chainlink VRF. It
-// selects NFTs from NftPool into specific packs, locks them as pack contents,
-// and then lets users either claim those NFTs or claim an instant-cash reward.
-// In the instant-cash path, NFTs are returned to NftPool so the pool can
+// selects NFTs from NftPool into specific packs, locks them as pack contents
+// while keeping actual ownership inside NftPool, and then lets users either
+// claim those NFTs or claim an instant-cash reward. In the instant-cash path,
+// NFTs are simply re-added back into NftPool accounting so the pool can
 // continue to exist and be reused for future packs. It is designed to work
 // together with RariPack and NftPool.
 // </ai_context>
@@ -396,9 +397,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     // -----------------------
 
     /// @notice Request to open a pack and lock NFTs into it
-    /// @dev After VRF fulfillment, NFTs are transferred from NftPool to this
-    ///      contract and contents are stored in RariPack. The pack is not
-    ///      burned during opening.
+    /// @dev After VRF fulfillment, NFTs are locked inside NftPool and contents are stored in RariPack.
+    ///      The pack is not burned during opening.
     function openPack(uint256 packTokenId) external nonReentrant whenNotPaused returns (uint256 requestId) {
         // Verify caller owns the pack
         if (rariPack.ownerOf(packTokenId) != msg.sender) revert NotPackOwner();
@@ -490,11 +490,10 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
             // Determine pool level based on probability
             NftPool.PoolLevel level = _selectPoolLevel(request.packType, randomValue);
 
-            // Select and transfer random NFT from that level to this contract
-            (address collection, uint256 tokenId) = nftPool.selectAndTransferFromLevel(
+            // Select and lock random NFT from that level in the pool (no transfer out)
+            (address collection, uint256 tokenId) = nftPool.selectAndLockFromLevel(
                 level,
-                randomValue >> 16, // Use different bits for NFT selection
-                address(this)
+                randomValue >> 16 // Use different bits for NFT selection
             );
 
             rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
@@ -521,7 +520,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         if (collections.length == 0) revert PackEmpty();
 
         for (uint256 i = 0; i < collections.length; i++) {
-            IERC721(collections[i]).safeTransferFrom(address(this), msg.sender, tokenIds[i]);
+            nftPool.transferLockedNft(collections[i], msg.sender, tokenIds[i]);
         }
 
         rariPack.burnPack(packTokenId);
@@ -530,8 +529,8 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     /// @notice Claim instant cash reward for an opened pack and burn the pack.
-    /// @dev Locked NFTs are re-deposited back into NftPool so the pool can
-    ///      continue to serve future packs, while the caller receives ETH.
+    /// @dev Locked NFTs remain owned by NftPool and are re-added to pool accounting
+    ///      so the pool can continue to serve future packs, while the caller receives ETH.
     function claimReward(uint256 packTokenId) external nonReentrant whenNotPaused {
         if (!instantCashEnabled) revert InstantCashNotEnabled();
 
@@ -554,10 +553,9 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
         if (address(this).balance < totalPayout) revert InsufficientTreasuryBalance();
 
-        // Re-deposit NFTs back into the pool (approve first)
+        // Re-add NFTs back into the pool accounting (they never left the pool contract)
         for (uint256 i = 0; i < collections.length; i++) {
-            IERC721(collections[i]).approve(address(nftPool), tokenIds[i]);
-            nftPool.deposit(collections[i], tokenIds[i]);
+            nftPool.addLockedNft(collections[i], tokenIds[i]);
         }
 
         // Burn pack
@@ -605,8 +603,9 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
 
         PackProbabilities storage probs = _packProbabilities[packType];
         if (packType == RariPack.PackType.Platinum && probs.ultraRare > 0) {
-            if (nftPool.getPoolLevelSize(NftPool.PoolLevel.UltraRare) == 0)
+            if (nftPool.getPoolLevelSize(NftPool.PoolLevel.UltraRare) == 0) {
                 revert LevelEmpty(NftPool.PoolLevel.UltraRare);
+            }
         }
     }
 

@@ -100,6 +100,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     error FloorPriceNotSet();
     error InvalidPriceRange();
     error IndexOutOfBounds();
+    error AlreadyTracked();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -127,7 +128,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         if (ranges.length == 0) {
             // Default price ranges (in wei)
             // Common:    0 - 0.5 ETH
-            // Rare:    0.5 - 2 ETH
+            // Rare:      0.5 - 2 ETH
             // Epic:      2 - 10 ETH
             // Legendary: 10 - 50 ETH
             // UltraRare: 50+ ETH (no practical upper bound)
@@ -349,9 +350,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
 
     function _addCollectionToken(address collection, uint256 tokenId, PoolLevel level) internal {
         // protect from duplicates
-        if (_collectionTokenIndexPlusOne[collection][tokenId] != 0) {
-            return;
-        }
+        if (_collectionTokenIndexPlusOne[collection][tokenId] != 0) revert AlreadyTracked();
 
         uint256[] storage tokens = _collectionTokens[collection];
         tokens.push(tokenId);
@@ -508,6 +507,21 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         emit Withdrawn(to, collection, tokenId, level);
     }
 
+    /// @notice Select and lock a random NFT from a pool level without transferring it out.
+    /// @dev Used by PackManager so NFTs stay owned by NftPool and are just removed from accounting.
+    function selectAndLockFromLevel(
+        PoolLevel level,
+        uint256 randomValue
+    ) external onlyRole(POOL_MANAGER_ROLE) returns (address collection, uint256 tokenId) {
+        uint256 total = _poolInfo[level].totalNfts;
+        if (total == 0) revert LevelEmpty(level);
+
+        (collection, tokenId) = _selectNftAtIndex(level, randomValue % total);
+
+        // Remove from accounting so it cannot be selected again while locked in a pack
+        _removeCollectionToken(collection, tokenId, level);
+    }
+
     /// @dev Find NFT at global index within a pool level
     function _selectNftAtIndex(
         PoolLevel level,
@@ -527,6 +541,34 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         }
 
         revert LevelEmpty(level);
+    }
+
+    // -----------------------
+    // Locking helpers (for PackManager)
+    // -----------------------
+
+    /// @notice Re-add a previously locked NFT back into the pool accounting.
+    /// @dev NFT must still be owned by the pool and not currently tracked.
+    function addLockedNft(address collection, uint256 tokenId) external onlyRole(POOL_MANAGER_ROLE) {
+        CollectionInfo storage info = _collectionInfo[collection];
+        if (info.poolIndexPlusOne == 0) revert CollectionNotAllowed();
+        if (IERC721(collection).ownerOf(tokenId) != address(this)) revert NotInPool();
+        if (_collectionTokenIndexPlusOne[collection][tokenId] != 0) revert AlreadyTracked();
+
+        _addCollectionToken(collection, tokenId, info.poolLevel);
+    }
+
+    /// @notice Transfer a locked NFT (no longer tracked in accounting) to a recipient.
+    /// @dev Used by PackManager in the NFT-claim path. Does not change pool totals because
+    ///      the NFT was removed from accounting when it was locked.
+    function transferLockedNft(address collection, address to, uint256 tokenId) external onlyRole(POOL_MANAGER_ROLE) {
+        if (_collectionTokenIndexPlusOne[collection][tokenId] != 0) revert AlreadyTracked();
+        if (IERC721(collection).ownerOf(tokenId) != address(this)) revert NotInPool();
+
+        PoolLevel level = _collectionInfo[collection].poolLevel;
+
+        IERC721(collection).safeTransferFrom(address(this), to, tokenId);
+        emit Withdrawn(to, collection, tokenId, level);
     }
 
     // -----------------------
@@ -594,7 +636,9 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // Overrides
     // -----------------------
 
-    function supportsInterface(bytes4 interfaceId) public view override(AccessControlUpgradeable) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(AccessControlUpgradeable) returns (bool) {
         return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
 
