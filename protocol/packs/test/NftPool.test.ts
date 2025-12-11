@@ -336,10 +336,10 @@ describe("NftPool", function () {
       ).to.be.revertedWithCustomError(nftPool, "ArrayLengthMismatch");
     });
 
-    it("Should only allow owner to configure collections", async function () {
+    it("Should only allow POOL_MANAGER_ROLE to configure collections", async function () {
       await expect(
         nftPool.connect(user1).configureCollection(await testNft.getAddress(), true, FLOOR_PRICE),
-      ).to.be.revertedWithCustomError(nftPool, "OwnableUnauthorizedAccount");
+      ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
     });
   });
 

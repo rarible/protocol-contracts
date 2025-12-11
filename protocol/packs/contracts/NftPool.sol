@@ -301,7 +301,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     /// @param collection NFT collection address
     /// @param allowed Whether deposits are accepted (true => collection is included in a pool)
     /// @param floorPrice Current floor price in wei
-    function configureCollection(address collection, bool allowed, uint256 floorPrice) external onlyOwner {
+    function configureCollection(address collection, bool allowed, uint256 floorPrice) external onlyRole(POOL_MANAGER_ROLE) {
         if (collection == address(0)) revert ZeroAddress();
         _setCollectionConfig(collection, allowed, floorPrice);
     }
@@ -311,7 +311,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         address[] calldata collections,
         bool[] calldata allowedList,
         uint256[] calldata floorPrices
-    ) external onlyOwner {
+    ) external onlyRole(POOL_MANAGER_ROLE) {
         if (collections.length != allowedList.length || collections.length != floorPrices.length) {
             revert ArrayLengthMismatch();
         }
@@ -325,7 +325,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     /// @notice Update floor price for a collection and mark it as allowed
     /// @dev Pool level and aggregate NFT counts are adjusted without per-NFT migration.
     ///      Calling this will always mark the collection as allowed.
-    function setCollectionFloorPrice(address collection, uint256 newPrice) external onlyOwner {
+    function setCollectionFloorPrice(address collection, uint256 newPrice) external onlyRole(POOL_MANAGER_ROLE) {
         if (collection == address(0)) revert ZeroAddress();
         _setCollectionConfig(collection, true, newPrice);
     }
@@ -334,7 +334,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     function setCollectionFloorPrices(
         address[] calldata collections,
         uint256[] calldata floorPrices
-    ) external onlyOwner {
+    ) external onlyRole(POOL_MANAGER_ROLE) {
         if (collections.length != floorPrices.length) revert ArrayLengthMismatch();
 
         for (uint256 i = 0; i < collections.length; i++) {
@@ -393,14 +393,20 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // -----------------------
 
     /// @notice Deposit an NFT into the pool
-    /// @dev NFT is assigned to pool level based on collection's current floor price
+    /// @dev Uses safeTransferFrom; we also add to internal bookkeeping here
+    ///      in case some collections don't properly call onERC721Received.
     function deposit(address collection, uint256 tokenId) external {
         CollectionInfo storage info = _collectionInfo[collection];
         if (info.poolIndexPlusOne == 0) revert CollectionNotAllowed();
         if (info.floorPrice == 0) revert FloorPriceNotSet();
 
         IERC721(collection).safeTransferFrom(msg.sender, address(this), tokenId);
-        // _addCollectionToken is called in onERC721Received
+
+        // If for some reason onERC721Received was not called or didn't track,
+        // ensure the NFT is accounted here.
+        if (_collectionTokenIndexPlusOne[collection][tokenId] == 0) {
+            _addCollectionToken(collection, tokenId, info.poolLevel);
+        }
     }
 
     /// @notice Transfer an NFT out of the pool
