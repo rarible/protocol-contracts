@@ -1,4 +1,4 @@
-// <ai_context> Test suite for PackManager contract. Uses single NftPool with price-range based pool levels. 2-step pack opening flow: open (lock contents) then claim (NFT or instant cash). </ai_context>
+// <ai_context> Test suite for PackManager contract. Uses single NftPool with price-range based pool levels. 2-step pack opening flow: open (lock contents in pool) then claim (NFT or instant cash). </ai_context>
 import { expect } from "chai";
 import { network } from "hardhat";
 const connection = await network.connect();
@@ -351,15 +351,22 @@ describe("PackManager", function () {
       expect(tokenIds.length).to.equal(3);
     });
 
-    it("Should transfer NFTs to PackManager (held for claiming)", async function () {
+    it("Should lock NFTs in NftPool (removed from accounting but still owned by pool)", async function () {
       const commonSizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Common);
 
       await packManager.connect(user1).openPack(1);
       await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
 
-      // NFTs should be removed from pool
+      // NFTs should be removed from pool accounting
       const commonSizeAfter = await nftPool.getPoolLevelSize(PoolLevel.Common);
       expect(commonSizeAfter).to.equal(commonSizeBefore - 3n);
+
+      // But NFTs are still owned by NftPool
+      const [collections, tokenIds] = await rariPack.getPackContents(1);
+      for (let i = 0; i < collections.length; i++) {
+        const nft = TestERC721__factory.connect(collections[i], owner);
+        expect(await nft.ownerOf(tokenIds[i])).to.equal(await nftPool.getAddress());
+      }
     });
 
     it("Should correctly mark request as fulfilled", async function () {
@@ -458,14 +465,26 @@ describe("PackManager", function () {
       expect(user1BalanceAfter + gasUsed - user1BalanceBefore).to.equal(expectedPayout);
     });
 
-    it("Should re-deposit NFTs back to pool", async function () {
+    it("Should re-add NFTs back to pool accounting", async function () {
       const commonSizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Common);
 
       await packManager.connect(user1).claimReward(1);
 
-      // NFTs should be back in pool (same count as before VRF fulfillment + 3 returned)
+      // NFTs should be back in pool accounting (3 were locked, now they're re-added)
       const commonSizeAfter = await nftPool.getPoolLevelSize(PoolLevel.Common);
       expect(commonSizeAfter).to.equal(commonSizeBefore + 3n);
+    });
+
+    it("Should keep NFTs owned by NftPool after instant cash claim", async function () {
+      const [collections, tokenIds] = await rariPack.getPackContents(1);
+
+      await packManager.connect(user1).claimReward(1);
+
+      // NFTs should still be owned by NftPool
+      for (let i = 0; i < collections.length; i++) {
+        const nft = TestERC721__factory.connect(collections[i], owner);
+        expect(await nft.ownerOf(tokenIds[i])).to.equal(await nftPool.getAddress());
+      }
     });
 
     it("Should burn the pack after claiming reward", async function () {

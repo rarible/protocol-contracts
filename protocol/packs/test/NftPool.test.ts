@@ -864,4 +864,257 @@ describe("NftPool", function () {
       expect(await nftPool.supportsInterface("0x7965db0b")).to.be.true;
     });
   });
+
+  describe("Select and Lock from Level", function () {
+    beforeEach(async function () {
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+
+      for (let i = 1; i <= 5; i++) {
+        await testNft.mint(user1Address, i);
+        await testNft.connect(user1).approve(await nftPool.getAddress(), i);
+        await nftPool.connect(user1).deposit(await testNft.getAddress(), i);
+      }
+    });
+
+    it("Should select and lock NFT without transferring", async function () {
+      const sizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Epic);
+
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+
+      // NFT should be removed from pool accounting
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(sizeBefore - 1n);
+
+      // But NFT should still be owned by the pool
+      expect(await testNft.ownerOf(1)).to.equal(await nftPool.getAddress());
+    });
+
+    it("Should remove NFT from tracking when locked", async function () {
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+
+      // NFT should no longer be tracked in pool accounting
+      expect(await nftPool.isNftInPool(await testNft.getAddress(), 1)).to.be.false;
+    });
+
+    it("Should return correct collection and tokenId", async function () {
+      const [collection, tokenId] = await nftPool.selectAndLockFromLevel.staticCall(PoolLevel.Epic, 0n);
+
+      expect(collection).to.equal(await testNft.getAddress());
+      expect(tokenId).to.equal(1n);
+    });
+
+    it("Should lock different NFT based on random value", async function () {
+      // With 5 NFTs, random % 5 gives different indices
+      const [, tokenId0] = await nftPool.selectAndLockFromLevel.staticCall(PoolLevel.Epic, 0n);
+      const [, tokenId2] = await nftPool.selectAndLockFromLevel.staticCall(PoolLevel.Epic, 2n);
+
+      expect(tokenId0).to.equal(1n);
+      expect(tokenId2).to.equal(3n);
+    });
+
+    it("Should revert when level is empty", async function () {
+      await expect(nftPool.selectAndLockFromLevel(PoolLevel.UltraRare, 0n)).to.be.revertedWithCustomError(
+        nftPool,
+        "LevelEmpty",
+      );
+    });
+
+    it("Should only allow POOL_MANAGER_ROLE", async function () {
+      await expect(
+        nftPool.connect(user1).selectAndLockFromLevel(PoolLevel.Epic, 0n),
+      ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
+    });
+  });
+
+  describe("Add Locked NFT back to Pool", function () {
+    beforeEach(async function () {
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+
+      await testNft.mint(user1Address, 1);
+      await testNft.connect(user1).approve(await nftPool.getAddress(), 1);
+      await nftPool.connect(user1).deposit(await testNft.getAddress(), 1);
+
+      // Lock the NFT (remove from accounting)
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+    });
+
+    it("Should re-add locked NFT back to pool accounting", async function () {
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(0);
+      expect(await nftPool.isNftInPool(await testNft.getAddress(), 1)).to.be.false;
+
+      await nftPool.addLockedNft(await testNft.getAddress(), 1);
+
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(1);
+      expect(await nftPool.isNftInPool(await testNft.getAddress(), 1)).to.be.true;
+    });
+
+    it("Should emit Deposited event when re-adding", async function () {
+      await expect(nftPool.addLockedNft(await testNft.getAddress(), 1))
+        .to.emit(nftPool, "Deposited")
+        .withArgs(await testNft.getAddress(), 1, PoolLevel.Epic);
+    });
+
+    it("Should revert when collection not allowed", async function () {
+      // Disallow the collection
+      await nftPool.configureCollection(await testNft.getAddress(), false, ethers.parseEther("5"));
+
+      await expect(nftPool.addLockedNft(await testNft.getAddress(), 1)).to.be.revertedWithCustomError(
+        nftPool,
+        "CollectionNotAllowed",
+      );
+    });
+
+    it("Should revert when NFT not owned by pool", async function () {
+      // Transfer NFT out first (using rescue or another method)
+      // First we need to put it back in tracking, then transfer
+      await nftPool.addLockedNft(await testNft.getAddress(), 1);
+      await nftPool.transferNft(await testNft.getAddress(), user2Address, 1);
+
+      // Now try to add it as locked (it's not owned by pool anymore)
+      await expect(nftPool.addLockedNft(await testNft.getAddress(), 1)).to.be.revertedWithCustomError(
+        nftPool,
+        "NotInPool",
+      );
+    });
+
+    it("Should revert when NFT already tracked", async function () {
+      // Add it back first
+      await nftPool.addLockedNft(await testNft.getAddress(), 1);
+
+      // Try to add again
+      await expect(nftPool.addLockedNft(await testNft.getAddress(), 1)).to.be.revertedWithCustomError(
+        nftPool,
+        "AlreadyTracked",
+      );
+    });
+
+    it("Should only allow POOL_MANAGER_ROLE", async function () {
+      await expect(
+        nftPool.connect(user1).addLockedNft(await testNft.getAddress(), 1),
+      ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
+    });
+  });
+
+  describe("Transfer Locked NFT", function () {
+    beforeEach(async function () {
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+
+      await testNft.mint(user1Address, 1);
+      await testNft.mint(user1Address, 2);
+      await testNft.connect(user1).approve(await nftPool.getAddress(), 1);
+      await testNft.connect(user1).approve(await nftPool.getAddress(), 2);
+      await nftPool.connect(user1).deposit(await testNft.getAddress(), 1);
+      await nftPool.connect(user1).deposit(await testNft.getAddress(), 2);
+
+      // Lock NFT 1 (remove from accounting)
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+    });
+
+    it("Should transfer locked NFT to recipient", async function () {
+      await nftPool.transferLockedNft(await testNft.getAddress(), user2Address, 1);
+
+      expect(await testNft.ownerOf(1)).to.equal(user2Address);
+    });
+
+    it("Should emit Withdrawn event", async function () {
+      await expect(nftPool.transferLockedNft(await testNft.getAddress(), user2Address, 1))
+        .to.emit(nftPool, "Withdrawn")
+        .withArgs(user2Address, await testNft.getAddress(), 1, PoolLevel.Epic);
+    });
+
+    it("Should NOT affect pool level size (already removed from accounting)", async function () {
+      const sizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Epic);
+
+      await nftPool.transferLockedNft(await testNft.getAddress(), user2Address, 1);
+
+      // Size should remain the same (NFT was already removed from accounting when locked)
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(sizeBefore);
+    });
+
+    it("Should revert when NFT is still tracked (not locked)", async function () {
+      // NFT 2 is still tracked (not locked)
+      await expect(
+        nftPool.transferLockedNft(await testNft.getAddress(), user2Address, 2),
+      ).to.be.revertedWithCustomError(nftPool, "AlreadyTracked");
+    });
+
+    it("Should revert when NFT not owned by pool", async function () {
+      // Transfer locked NFT out first
+      await nftPool.transferLockedNft(await testNft.getAddress(), user2Address, 1);
+
+      // Try to transfer again (not owned anymore)
+      await expect(
+        nftPool.transferLockedNft(await testNft.getAddress(), ownerAddress, 1),
+      ).to.be.revertedWithCustomError(nftPool, "NotInPool");
+    });
+
+    it("Should only allow POOL_MANAGER_ROLE", async function () {
+      await expect(
+        nftPool.connect(user1).transferLockedNft(await testNft.getAddress(), user2Address, 1),
+      ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
+    });
+  });
+
+  describe("Locking Flow Integration", function () {
+    beforeEach(async function () {
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+
+      for (let i = 1; i <= 3; i++) {
+        await testNft.mint(user1Address, i);
+        await testNft.connect(user1).approve(await nftPool.getAddress(), i);
+        await nftPool.connect(user1).deposit(await testNft.getAddress(), i);
+      }
+    });
+
+    it("Should support lock -> transfer flow (NFT claim path)", async function () {
+      // Initial state
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(3);
+
+      // Lock NFT
+      const [collection, tokenId] = await nftPool.selectAndLockFromLevel.staticCall(PoolLevel.Epic, 0n);
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+
+      // NFT is locked (removed from accounting but still owned by pool)
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(2);
+      expect(await nftPool.isNftInPool(collection, tokenId)).to.be.false;
+      expect(await testNft.ownerOf(tokenId)).to.equal(await nftPool.getAddress());
+
+      // Transfer locked NFT to user (claim NFT)
+      await nftPool.transferLockedNft(collection, user2Address, tokenId);
+
+      // Final state
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(2);
+      expect(await testNft.ownerOf(tokenId)).to.equal(user2Address);
+    });
+
+    it("Should support lock -> re-add flow (instant cash claim path)", async function () {
+      // Initial state
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(3);
+
+      // Lock NFT
+      const [collection, tokenId] = await nftPool.selectAndLockFromLevel.staticCall(PoolLevel.Epic, 0n);
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+
+      // NFT is locked
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(2);
+      expect(await nftPool.isNftInPool(collection, tokenId)).to.be.false;
+
+      // Re-add locked NFT back to pool (instant cash - NFT stays in pool)
+      await nftPool.addLockedNft(collection, tokenId);
+
+      // Final state - NFT is back in pool accounting
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(3);
+      expect(await nftPool.isNftInPool(collection, tokenId)).to.be.true;
+      expect(await testNft.ownerOf(tokenId)).to.equal(await nftPool.getAddress());
+    });
+
+    it("Should prevent double-locking same NFT", async function () {
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+
+      // Try to lock again - the NFT is no longer in pool accounting
+      // so selectAndLockFromLevel will select a different NFT
+      const sizeBefore = await nftPool.getPoolLevelSize(PoolLevel.Epic);
+      await nftPool.selectAndLockFromLevel(PoolLevel.Epic, 0n);
+      expect(await nftPool.getPoolLevelSize(PoolLevel.Epic)).to.equal(sizeBefore - 1n);
+    });
+  });
 });
