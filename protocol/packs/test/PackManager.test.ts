@@ -682,18 +682,53 @@ describe("PackManager", function () {
     describe("Default Probabilities", function () {
       it("Should initialize with correct default Platinum probabilities", async function () {
         const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(PackType.Platinum);
-        expect(ultraRare).to.equal(10);
-        expect(legendary).to.equal(50);
-        expect(epic).to.equal(200);
-        expect(rare).to.equal(900);
+        expect(ultraRare).to.equal(50); // 0.5%
+        expect(legendary).to.equal(250); // 2% cumulative
+        expect(epic).to.equal(950); // 7% cumulative
+        expect(rare).to.equal(2950); // 20% cumulative
+      });
+
+      it("Should initialize with correct default Gold probabilities", async function () {
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(PackType.Gold);
+        expect(ultraRare).to.equal(0);
+        expect(legendary).to.equal(100); // 1%
+        expect(epic).to.equal(600); // 5% cumulative
+        expect(rare).to.equal(2100); // 15% cumulative
+      });
+
+      it("Should initialize with correct default Silver probabilities", async function () {
+        const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(PackType.Silver);
+        expect(ultraRare).to.equal(0);
+        expect(legendary).to.equal(50); // 0.5%
+        expect(epic).to.equal(350); // 3% cumulative
+        expect(rare).to.equal(1350); // 10% cumulative
       });
 
       it("Should initialize with correct default Bronze probabilities", async function () {
         const [ultraRare, legendary, epic, rare] = await packManager.getPackProbabilities(PackType.Bronze);
         expect(ultraRare).to.equal(0);
-        expect(legendary).to.equal(40);
-        expect(epic).to.equal(190);
-        expect(rare).to.equal(890);
+        expect(legendary).to.equal(20); // 0.2%
+        expect(epic).to.equal(120); // 1% cumulative
+        expect(rare).to.equal(620); // 5% cumulative
+      });
+
+      it("Should have progressively better odds for higher tier packs", async function () {
+        const [, bronzeLegendary, bronzeEpic, bronzeRare] = await packManager.getPackProbabilities(PackType.Bronze);
+        const [, silverLegendary, silverEpic, silverRare] = await packManager.getPackProbabilities(PackType.Silver);
+        const [, goldLegendary, goldEpic, goldRare] = await packManager.getPackProbabilities(PackType.Gold);
+        const [platinumUltraRare, platinumLegendary, platinumEpic, platinumRare] = await packManager.getPackProbabilities(PackType.Platinum);
+
+        // Higher tier = higher cumulative thresholds = better odds for rare items
+        expect(silverLegendary).to.be.greaterThan(bronzeLegendary);
+        expect(goldLegendary).to.be.greaterThan(silverLegendary);
+        expect(platinumLegendary).to.be.greaterThan(goldLegendary);
+
+        expect(silverRare).to.be.greaterThan(bronzeRare);
+        expect(goldRare).to.be.greaterThan(silverRare);
+        expect(platinumRare).to.be.greaterThan(goldRare);
+
+        // Only Platinum has UltraRare
+        expect(platinumUltraRare).to.be.greaterThan(0);
       });
     });
 

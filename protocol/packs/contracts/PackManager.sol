@@ -218,39 +218,43 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         instantCashEnabled = false;
     }
 
-    /// @dev Set default probability thresholds
-    /// Drop rates: UltraRare 0.1%, Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91%
+    /// @dev Set default probability thresholds (cumulative, out of 10000)
+    /// Higher tier packs have better odds for rare items
     function _setDefaultProbabilities() internal {
-        // Platinum: UltraRare 0.1%, Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91%
+        // Platinum (best odds + exclusive UltraRare access):
+        // UltraRare 0.5%, Legendary 2%, Epic 7%, Rare 20%, Common 70.5%
         _packProbabilities[RariPack.PackType.Platinum] = PackProbabilities({
-            ultraRare: 10, // 0.1%
-            legendary: 50, // 0.5% cumulative
-            epic: 200, // 2% cumulative
-            rare: 900 // 9% cumulative, Common = 91%
+            ultraRare: 50, // 0.5%
+            legendary: 250, // 2% (cumulative 2.5%)
+            epic: 950, // 7% (cumulative 9.5%)
+            rare: 2950 // 20% (cumulative 29.5%), Common = 70.5%
         });
 
-        // Gold: Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
+        // Gold (great odds, no UltraRare):
+        // Legendary 1%, Epic 5%, Rare 15%, Common 79%
         _packProbabilities[RariPack.PackType.Gold] = PackProbabilities({
             ultraRare: 0, // Not available
-            legendary: 40, // 0.4%
-            epic: 190, // 1.9% cumulative
-            rare: 890 // 8.9% cumulative, Common = 91.1%
+            legendary: 100, // 1%
+            epic: 600, // 5% (cumulative 6%)
+            rare: 2100 // 15% (cumulative 21%), Common = 79%
         });
 
-        // Silver: Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
+        // Silver (good odds):
+        // Legendary 0.5%, Epic 3%, Rare 10%, Common 86.5%
         _packProbabilities[RariPack.PackType.Silver] = PackProbabilities({
-            ultraRare: 0,
-            legendary: 40,
-            epic: 190,
-            rare: 890
+            ultraRare: 0, // Not available
+            legendary: 50, // 0.5%
+            epic: 350, // 3% (cumulative 3.5%)
+            rare: 1350 // 10% (cumulative 13.5%), Common = 86.5%
         });
 
-        // Bronze: Legendary 0.4%, Epic 1.5%, Rare 7%, Common 91.1%
+        // Bronze (entry level):
+        // Legendary 0.2%, Epic 1%, Rare 5%, Common 93.8%
         _packProbabilities[RariPack.PackType.Bronze] = PackProbabilities({
-            ultraRare: 0,
-            legendary: 40,
-            epic: 190,
-            rare: 890
+            ultraRare: 0, // Not available
+            legendary: 20, // 0.2%
+            epic: 120, // 1% (cumulative 1.2%)
+            rare: 620 // 5% (cumulative 6.2%), Common = 93.8%
         });
     }
 

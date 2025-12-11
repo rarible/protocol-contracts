@@ -225,14 +225,18 @@ Selection uses a two-stage random process:
 1. **Pool Level Selection**: Based on pack type probabilities
 2. **NFT Selection**: Equal probability within the selected pool level
 
-### Default Probabilities (Cumulative Thresholds)
+### Default Probabilities
+
+Higher tier packs have progressively better odds for rare items:
 
 | Pack Type | UltraRare | Legendary | Epic | Rare | Common |
 |-----------|-----------|-----------|------|------|--------|
-| Platinum | 0.1% | 0.5% | 2% | 9% | 91% |
-| Gold | — | 0.4% | 1.9% | 8.9% | 91.1% |
-| Silver | — | 0.4% | 1.9% | 8.9% | 91.1% |
-| Bronze | — | 0.4% | 1.9% | 8.9% | 91.1% |
+| **Platinum** | 0.5% | 2% | 7% | 20% | 70.5% |
+| **Gold** | — | 1% | 5% | 15% | 79% |
+| **Silver** | — | 0.5% | 3% | 10% | 86.5% |
+| **Bronze** | — | 0.2% | 1% | 5% | 93.8% |
+
+> **Note**: Only Platinum packs have access to UltraRare pool items.
 
 ## Instant Cash Feature
 
