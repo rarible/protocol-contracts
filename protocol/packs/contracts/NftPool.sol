@@ -230,7 +230,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
         info.poolLevel = newLevel;
         emit CollectionConfigured(collection, allowed, newFloorPrice);
         if (oldPrice != newFloorPrice) {
-            emit CollectionFloorPriceUpdated(collection, oldPrice, newPrice);
+            emit CollectionFloorPriceUpdated(collection, oldPrice, newFloorPrice);
         }
         if (wasAllowed != allowed) {
             emit CollectionAllowedUpdated(collection, allowed);
