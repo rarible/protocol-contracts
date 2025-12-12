@@ -5,15 +5,6 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import { ethers } from "ethers";
 
-// Pool types (ordered from common to rare for extensibility)
-const PoolType = {
-  Common: 0,
-  Rare: 1,
-  Epic: 2,
-  Legendary: 3,
-  UltraRare: 4,
-};
-
 // Pack types
 const PackType = {
   Bronze: 0,
@@ -32,11 +23,7 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
   // ============================================
   const rariPackProxy = m.getParameter<string>("rariPackProxy");
   const packManagerProxy = m.getParameter<string>("packManagerProxy");
-  const commonPool = m.getParameter<string>("commonPool");
-  const rarePool = m.getParameter<string>("rarePool");
-  const epicPool = m.getParameter<string>("epicPool");
-  const legendaryPool = m.getParameter<string>("legendaryPool");
-  const ultraRarePool = m.getParameter<string>("ultraRarePool");
+  const nftPoolProxy = m.getParameter<string>("nftPoolProxy");
 
   // VRF Configuration
   const vrfCoordinator = m.getParameter<string>("vrfCoordinator");
@@ -57,6 +44,15 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
   const goldUri = m.getParameter<string>("goldUri", "");
   const platinumUri = m.getParameter<string>("platinumUri", "");
 
+  // Pack Descriptions
+  const bronzeDescription = m.getParameter<string>("bronzeDescription", "");
+  const silverDescription = m.getParameter<string>("silverDescription", "");
+  const goldDescription = m.getParameter<string>("goldDescription", "");
+  const platinumDescription = m.getParameter<string>("platinumDescription", "");
+
+  // Instant Cash Configuration
+  const enableInstantCash = m.getParameter<boolean>("enableInstantCash", false);
+
   // ============================================
   // Get Contract Artifacts for Call Encoding
   // ============================================
@@ -68,24 +64,8 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     id: "PackManagerInstance",
   });
 
-  const commonPoolArtifact = m.contractAt("NftPool", commonPool, {
-    id: "CommonPoolInstance",
-  });
-
-  const rarePoolArtifact = m.contractAt("NftPool", rarePool, {
-    id: "RarePoolInstance",
-  });
-
-  const epicPoolArtifact = m.contractAt("NftPool", epicPool, {
-    id: "EpicPoolInstance",
-  });
-
-  const legendaryPoolArtifact = m.contractAt("NftPool", legendaryPool, {
-    id: "LegendaryPoolInstance",
-  });
-
-  const ultraRarePoolArtifact = m.contractAt("NftPool", ultraRarePool, {
-    id: "UltraRarePoolInstance",
+  const nftPoolArtifact = m.contractAt("NftPool", nftPoolProxy, {
+    id: "NftPoolInstance",
   });
 
   // ============================================
@@ -96,54 +76,18 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
   });
 
   // ============================================
-  // 2. Grant POOL_MANAGER_ROLE to PackManager on all pools
+  // 2. Grant POOL_MANAGER_ROLE to PackManager on NftPool
   // ============================================
-  const grantPoolManagerCommon = m.call(commonPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
-    id: "GrantPoolManagerCommon",
-  });
-
-  const grantPoolManagerRare = m.call(rarePoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
-    id: "GrantPoolManagerRare",
-  });
-
-  const grantPoolManagerEpic = m.call(epicPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
-    id: "GrantPoolManagerEpic",
-  });
-
-  const grantPoolManagerLegendary = m.call(legendaryPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
-    id: "GrantPoolManagerLegendary",
-  });
-
-  const grantPoolManagerUltraRare = m.call(ultraRarePoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
-    id: "GrantPoolManagerUltraRare",
+  const grantPoolManagerRole = m.call(nftPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
+    id: "GrantPoolManagerRoleToPackManager",
   });
 
   // ============================================
-  // 3. Set pools in PackManager
+  // 3. Set NftPool in PackManager
   // ============================================
-  const setCommonPool = m.call(packManagerArtifact, "setPool", [PoolType.Common, commonPool], {
-    id: "SetCommonPool",
-    after: [grantPoolManagerCommon],
-  });
-
-  const setRarePool = m.call(packManagerArtifact, "setPool", [PoolType.Rare, rarePool], {
-    id: "SetRarePool",
-    after: [grantPoolManagerRare],
-  });
-
-  const setEpicPool = m.call(packManagerArtifact, "setPool", [PoolType.Epic, epicPool], {
-    id: "SetEpicPool",
-    after: [grantPoolManagerEpic],
-  });
-
-  const setLegendaryPool = m.call(packManagerArtifact, "setPool", [PoolType.Legendary, legendaryPool], {
-    id: "SetLegendaryPool",
-    after: [grantPoolManagerLegendary],
-  });
-
-  const setUltraRarePool = m.call(packManagerArtifact, "setPool", [PoolType.UltraRare, ultraRarePool], {
-    id: "SetUltraRarePool",
-    after: [grantPoolManagerUltraRare],
+  const setNftPool = m.call(packManagerArtifact, "setNftPool", [nftPoolProxy], {
+    id: "SetNftPool",
+    after: [grantPoolManagerRole],
   });
 
   // ============================================
@@ -196,19 +140,46 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     id: "SetPlatinumUri",
   });
 
+  // ============================================
+  // 7. Set pack descriptions on RariPack (if provided)
+  // ============================================
+  const setBronzeDescription = m.call(rariPackArtifact, "setPackDescription", [PackType.Bronze, bronzeDescription], {
+    id: "SetBronzeDescription",
+  });
+
+  const setSilverDescription = m.call(rariPackArtifact, "setPackDescription", [PackType.Silver, silverDescription], {
+    id: "SetSilverDescription",
+  });
+
+  const setGoldDescription = m.call(rariPackArtifact, "setPackDescription", [PackType.Gold, goldDescription], {
+    id: "SetGoldDescription",
+  });
+
+  const setPlatinumDescription = m.call(
+    rariPackArtifact,
+    "setPackDescription",
+    [PackType.Platinum, platinumDescription],
+    {
+      id: "SetPlatinumDescription",
+    },
+  );
+
+  // ============================================
+  // 8. Enable instant cash (optional)
+  // ============================================
+  const setInstantCashEnabled = m.call(packManagerArtifact, "setInstantCashEnabled", [enableInstantCash], {
+    id: "SetInstantCashEnabled",
+  });
+
   return {
+    // Role grants
     grantBurnerRole,
-    grantPoolManagerCommon,
-    grantPoolManagerRare,
-    grantPoolManagerEpic,
-    grantPoolManagerLegendary,
-    grantPoolManagerUltraRare,
-    setCommonPool,
-    setRarePool,
-    setEpicPool,
-    setLegendaryPool,
-    setUltraRarePool,
+    grantPoolManagerRole,
+    // PackManager config
+    setNftPool,
     setVrfConfig,
+    setInstantCashEnabled,
+    // RariPack config
     setBronzePrice,
     setSilverPrice,
     setGoldPrice,
@@ -217,6 +188,10 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     setSilverUri,
     setGoldUri,
     setPlatinumUri,
+    setBronzeDescription,
+    setSilverDescription,
+    setGoldDescription,
+    setPlatinumDescription,
   };
 });
 
