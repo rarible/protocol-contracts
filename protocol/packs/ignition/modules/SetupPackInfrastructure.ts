@@ -172,26 +172,10 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
   });
 
   return {
-    // Role grants
-    grantBurnerRole,
-    grantPoolManagerRole,
-    // PackManager config
-    setNftPool,
-    setVrfConfig,
-    setInstantCashEnabled,
-    // RariPack config
-    setBronzePrice,
-    setSilverPrice,
-    setGoldPrice,
-    setPlatinumPrice,
-    setBronzeUri,
-    setSilverUri,
-    setGoldUri,
-    setPlatinumUri,
-    setBronzeDescription,
-    setSilverDescription,
-    setGoldDescription,
-    setPlatinumDescription,
+    // Return contract instances for reference
+    rariPackArtifact,
+    packManagerArtifact,
+    nftPoolArtifact,
   };
 });
 

@@ -12,7 +12,7 @@ import { ethers } from "ethers";
 // Legendary: 10 - 50 ETH
 // UltraRare: 50+ ETH
 const DEFAULT_POOL_RANGES = [
-  { lowPrice: 0n, highPrice: ethers.parseEther("0.5") },
+  { lowPrice: BigInt(0), highPrice: ethers.parseEther("0.5") },
   { lowPrice: ethers.parseEther("0.5"), highPrice: ethers.parseEther("2") },
   { lowPrice: ethers.parseEther("2"), highPrice: ethers.parseEther("10") },
   { lowPrice: ethers.parseEther("10"), highPrice: ethers.parseEther("50") },
