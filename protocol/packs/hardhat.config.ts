@@ -1,7 +1,16 @@
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
 import hardhatEthers from "@nomicfoundation/hardhat-ignition-ethers"
+import * as dotenv from "dotenv";
 import { defineConfig } from "hardhat/config";
+
+dotenv.config();
+
+const sepoliaRpcUrl =
+  process.env.SEPOLIA_RPC_URL ??
+  process.env.ALCHEMY_SEPOLIA_RPC_URL ??
+  "https://ethereum-sepolia-rpc.publicnode.com";
+const deployerKey = process.env.DEPLOYER_PRIVATE_KEY ?? "";
 
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatEthers],
@@ -30,6 +39,11 @@ export default defineConfig({
     hardhatOp: {
       type: "edr-simulated",
       chainType: "op",
+    },
+    sepolia: {
+      url: sepoliaRpcUrl,
+      type: "http",
+      accounts: deployerKey ? [deployerKey] : [],
     },
   },
 });
