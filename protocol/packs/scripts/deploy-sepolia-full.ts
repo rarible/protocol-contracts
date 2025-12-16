@@ -17,6 +17,7 @@
 /// - SKIP_SETUP (optional)               : "true" to skip SetupPackInfrastructure ignition deploy
 /// - SKIP_COLLECTIONS (optional)         : "true" to skip deploying/seeding collections
 /// - FORCE_RESEED_COLLECTIONS (optional) : "true" to ignore seeded_collections.json and reseed
+/// - RESET_DEPLOYMENT (optional)         : "true" to wipe ignition state and redeploy (fixes nonce issues)
 
 import { network } from "hardhat";
 import { execSync } from "node:child_process";
@@ -133,6 +134,7 @@ async function main() {
   const skipSetup = boolEnv("SKIP_SETUP", false);
   const skipCollections = boolEnv("SKIP_COLLECTIONS", false);
   const forceReseed = boolEnv("FORCE_RESEED_COLLECTIONS", false);
+  const resetDeployment = boolEnv("RESET_DEPLOYMENT", false);
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -173,11 +175,12 @@ async function main() {
       }
     })();
 
-    if (!alreadyDeployed) {
+    if (!alreadyDeployed || resetDeployment) {
       writeJsonFile(infraParamsPath, infraParams);
       console.log(`Wrote infra parameters to ${infraParamsPath}`);
 
-      const infraCmd = `npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network sepolia --parameters ${infraParamsPath}`;
+      const resetFlag = resetDeployment ? " --reset" : "";
+      const infraCmd = `npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network sepolia --parameters ${infraParamsPath}${resetFlag}`;
       console.log(`\nDeploying PackInfrastructure...\nRunning: ${infraCmd}\n`);
       execSync(infraCmd, {
         cwd: projectRoot,
@@ -238,7 +241,8 @@ async function main() {
     writeJsonFile(setupParamsPath, setupParams);
     console.log(`\nWrote setup parameters to ${setupParamsPath}`);
 
-    const setupCmd = `npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network sepolia --parameters ${setupParamsPath}`;
+    const resetFlag = resetDeployment ? " --reset" : "";
+    const setupCmd = `npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network sepolia --parameters ${setupParamsPath}${resetFlag}`;
     console.log(`\nRunning setup...\nRunning: ${setupCmd}\n`);
 
     execSync(setupCmd, {

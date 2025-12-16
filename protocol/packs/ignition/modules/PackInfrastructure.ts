@@ -20,7 +20,7 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
   const customPoolRanges = m.getParameter("customPoolRanges", []);
 
   // ============================================
-  // 1. Deploy RariPack
+  // 1. Deploy RariPack (first in sequence)
   // ============================================
   const rariPackImpl = m.contract("RariPack", [], {
     id: "RariPackImplementation",
@@ -33,10 +33,11 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
   });
 
   // ============================================
-  // 2. Deploy NftPool (single pool for all levels)
+  // 2. Deploy NftPool (after RariPack to ensure sequential deployment)
   // ============================================
   const nftPoolImpl = m.contract("NftPool", [], {
     id: "NftPoolImplementation",
+    after: [rariPackProxy], // Sequential: wait for RariPack proxy
   });
 
   // initialize(address initialOwner, PoolRange[] calldata ranges)
@@ -49,17 +50,17 @@ const PackInfrastructureModule = buildModule("PackInfrastructureModule", (m) => 
   });
 
   // ============================================
-  // 3. Deploy PackManager
+  // 3. Deploy PackManager (after NftPool to ensure sequential deployment)
   // ============================================
   const packManagerImpl = m.contract("PackManager", [], {
     id: "PackManagerImplementation",
+    after: [nftPoolProxy], // Sequential: wait for NftPool proxy
   });
 
   const packManagerInitData = m.encodeFunctionCall(packManagerImpl, "initialize", [owner, rariPackProxy]);
 
   const packManagerProxy = m.contract("TransparentUpgradeableProxy", [packManagerImpl, owner, packManagerInitData], {
     id: "PackManagerProxy",
-    after: [rariPackProxy],
   });
 
   return {
