@@ -1,10 +1,12 @@
-import hre from "hardhat";
-import { ethers } from "ethers";
-import PackInfrastructureModule from "../ignition/modules/PackInfrastructure";
-import SetupPackInfrastructureModule from "../ignition/modules/SetupPackInfrastructure";
+import { execSync } from "child_process";
+import { network } from "hardhat";
+import * as fs from "fs";
+import * as path from "path";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 /**
- * Deploys the full pack stack to Sepolia using Ignition, then wires it up.
+ * Deploys the full pack stack to Sepolia using Ignition CLI, then wires it up.
  * Reads configuration from environment variables so secrets stay out of git:
  * - PACK_OWNER (optional)          : owner/admin; defaults to requestor address
  * - PACK_TREASURY (optional)       : treasury; defaults to owner
@@ -16,15 +18,9 @@ import SetupPackInfrastructureModule from "../ignition/modules/SetupPackInfrastr
  * - ENABLE_INSTANT_CASH (optional) : "true" to enable instant cash path
  */
 async function main() {
-  const hreAny = hre as any;
-  const networkName: string =
-    hreAny.network?.name ??
-    hreAny.hardhatArguments?.network ??
-    process.env.HARDHAT_NETWORK ??
-    "unknown";
+  const { ethers, networkName } = await network.connect();
 
   if (networkName !== "sepolia") {
-    // Hard guard to avoid accidental mainnet deploys.
     throw new Error(`Use --network sepolia (current: ${networkName})`);
   }
 
@@ -41,10 +37,10 @@ async function main() {
 
   const enableInstantCash = (process.env.ENABLE_INSTANT_CASH ?? "false").toLowerCase() === "true";
 
-  const bronzePrice = ethers.parseEther(process.env.PACK_PRICE_BRONZE ?? "0.01");
-  const silverPrice = ethers.parseEther(process.env.PACK_PRICE_SILVER ?? "0.05");
-  const goldPrice = ethers.parseEther(process.env.PACK_PRICE_GOLD ?? "0.1");
-  const platinumPrice = ethers.parseEther(process.env.PACK_PRICE_PLATINUM ?? "0.5");
+  const bronzePrice = ethers.parseEther(process.env.PACK_PRICE_BRONZE ?? "0.01").toString();
+  const silverPrice = ethers.parseEther(process.env.PACK_PRICE_SILVER ?? "0.05").toString();
+  const goldPrice = ethers.parseEther(process.env.PACK_PRICE_GOLD ?? "0.1").toString();
+  const platinumPrice = ethers.parseEther(process.env.PACK_PRICE_PLATINUM ?? "0.5").toString();
 
   const bronzeUri = process.env.PACK_URI_BRONZE ?? "ipfs://sepolia-pack-bronze";
   const silverUri = process.env.PACK_URI_SILVER ?? "ipfs://sepolia-pack-silver";
@@ -61,64 +57,122 @@ async function main() {
     process.env.PACK_DESC_PLATINUM ??
     "Platinum pack with the best odds and access to the ultra-rare pool.";
 
-  console.log("Deploying pack infrastructure to Sepolia...");
-  console.log(`Owner:    ${owner}`);
-  console.log(`Treasury: ${treasury}`);
+  // Paths
+  const scriptsDir = __dirname;
+  const projectRoot = path.resolve(scriptsDir, "..");
+  const paramsDir = path.join(projectRoot, "ignition", "parameters");
+  const infraParamsPath = path.join(paramsDir, "packInfrastructure.sepolia.json");
+  const setupParamsPath = path.join(paramsDir, "setupPackInfrastructure.sepolia.json");
 
-  const infra = await hreAny.ignition.deploy(PackInfrastructureModule, {
-    parameters: {
-      PackInfrastructureModule: {
-        owner,
-        treasury,
-        packName: "Rari Pack",
-        packSymbol: "RPACK",
-        useCustomPoolRanges: false,
-        customPoolRanges: [],
-      },
+  // Write infrastructure parameters
+  const infraParams = {
+    PackInfrastructureModule: {
+      owner,
+      treasury,
+      packName: "Rari Pack",
+      packSymbol: "RPACK",
+      useCustomPoolRanges: false,
+      customPoolRanges: [],
     },
+  };
+
+  fs.writeFileSync(infraParamsPath, JSON.stringify(infraParams, null, 2));
+  console.log(`Wrote parameters to ${infraParamsPath}`);
+
+  console.log("\nDeploying pack infrastructure to Sepolia...");
+  console.log(`Owner:    ${owner}`);
+  console.log(`Treasury: ${treasury}\n`);
+
+  // Deploy infrastructure module via CLI
+  const infraCmd = `npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network sepolia --parameters ${infraParamsPath}`;
+  console.log(`Running: ${infraCmd}\n`);
+
+  const infraOutput = execSync(infraCmd, {
+    cwd: projectRoot,
+    encoding: "utf-8",
+    stdio: ["inherit", "pipe", "inherit"],
   });
 
-  const rariPackProxy = infra.rariPackProxy.address;
-  const packManagerProxy = infra.packManagerProxy.address;
-  const nftPoolProxy = infra.nftPoolProxy.address;
+  console.log(infraOutput);
 
-  console.log("Infrastructure deployed:");
+  // Parse deployed addresses from ignition deployments
+  const deploymentsDir = path.join(projectRoot, "ignition", "deployments", "chain-11155111");
+  const deployedAddressesPath = path.join(deploymentsDir, "deployed_addresses.json");
+
+  if (!fs.existsSync(deployedAddressesPath)) {
+    throw new Error(`Deployed addresses not found at ${deployedAddressesPath}`);
+  }
+
+  const deployedAddresses = JSON.parse(fs.readFileSync(deployedAddressesPath, "utf-8"));
+
+  // Find the proxy addresses from the deployment
+  const rariPackProxy =
+    deployedAddresses["PackInfrastructureModule#RariPackProxy"] ??
+    deployedAddresses["PackInfrastructureModule#rariPackProxy"];
+  const packManagerProxy =
+    deployedAddresses["PackInfrastructureModule#PackManagerProxy"] ??
+    deployedAddresses["PackInfrastructureModule#packManagerProxy"];
+  const nftPoolProxy =
+    deployedAddresses["PackInfrastructureModule#NftPoolProxy"] ??
+    deployedAddresses["PackInfrastructureModule#nftPoolProxy"];
+
+  if (!rariPackProxy || !packManagerProxy || !nftPoolProxy) {
+    console.log("Available deployed addresses:", JSON.stringify(deployedAddresses, null, 2));
+    throw new Error("Could not find all proxy addresses in deployed_addresses.json");
+  }
+
+  console.log("\nInfrastructure deployed:");
   console.log(`- RariPack proxy:     ${rariPackProxy}`);
   console.log(`- PackManager proxy:  ${packManagerProxy}`);
   console.log(`- NftPool proxy:      ${nftPoolProxy}`);
 
-  console.log("Running setup module...");
-  await hreAny.ignition.deploy(SetupPackInfrastructureModule, {
-    parameters: {
-      SetupPackInfrastructureModule: {
-        rariPackProxy,
-        packManagerProxy,
-        nftPoolProxy,
-        vrfCoordinator,
-        vrfSubscriptionId: BigInt(vrfSubscriptionId),
-        vrfKeyHash,
-        bronzePrice,
-        silverPrice,
-        goldPrice,
-        platinumPrice,
-        bronzeUri,
-        silverUri,
-        goldUri,
-        platinumUri,
-        bronzeDescription,
-        silverDescription,
-        goldDescription,
-        platinumDescription,
-        enableInstantCash,
-      },
+  // Write setup parameters
+  const setupParams = {
+    SetupPackInfrastructureModule: {
+      rariPackProxy,
+      packManagerProxy,
+      nftPoolProxy,
+      vrfCoordinator,
+      vrfSubscriptionId,
+      vrfKeyHash,
+      vrfCallbackGasLimit: 500000,
+      vrfRequestConfirmations: 3,
+      bronzePrice,
+      silverPrice,
+      goldPrice,
+      platinumPrice,
+      bronzeUri,
+      silverUri,
+      goldUri,
+      platinumUri,
+      bronzeDescription,
+      silverDescription,
+      goldDescription,
+      platinumDescription,
+      enableInstantCash,
     },
+  };
+
+  fs.writeFileSync(setupParamsPath, JSON.stringify(setupParams, null, 2));
+  console.log(`\nWrote parameters to ${setupParamsPath}`);
+
+  console.log("\nRunning setup module...");
+
+  // Deploy setup module via CLI
+  const setupCmd = `npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network sepolia --parameters ${setupParamsPath}`;
+  console.log(`Running: ${setupCmd}\n`);
+
+  const setupOutput = execSync(setupCmd, {
+    cwd: projectRoot,
+    encoding: "utf-8",
+    stdio: ["inherit", "pipe", "inherit"],
   });
 
-  console.log("Setup complete. Contracts are fully configured.");
+  console.log(setupOutput);
+  console.log("\nSetup complete. Contracts are fully configured.");
 }
 
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
-
