@@ -179,12 +179,11 @@ async function main() {
 
       const infraCmd = `npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network sepolia --parameters ${infraParamsPath}`;
       console.log(`\nDeploying PackInfrastructure...\nRunning: ${infraCmd}\n`);
-      const infraOutput = execSync(infraCmd, {
+      execSync(infraCmd, {
         cwd: projectRoot,
-        encoding: "utf-8",
-        stdio: ["inherit", "pipe", "inherit"],
+        stdio: "inherit",
+        env: { ...process.env, CI: "true" },
       });
-      console.log(infraOutput);
     } else {
       console.log(`\nPackInfrastructure already deployed (found proxies in ${deployedAddressesPath}). Skipping infra deploy.\n`);
     }
@@ -242,13 +241,12 @@ async function main() {
     const setupCmd = `npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network sepolia --parameters ${setupParamsPath}`;
     console.log(`\nRunning setup...\nRunning: ${setupCmd}\n`);
 
-    const setupOutput = execSync(setupCmd, {
+    execSync(setupCmd, {
       cwd: projectRoot,
-      encoding: "utf-8",
-      stdio: ["inherit", "pipe", "inherit"],
+      stdio: "inherit",
+      env: { ...process.env, CI: "true" },
     });
 
-    console.log(setupOutput);
     console.log("\nSetup complete.");
   } else {
     console.log("\nSKIP_SETUP=true: skipping SetupPackInfrastructure ignition deploy.\n");

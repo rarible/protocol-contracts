@@ -87,13 +87,11 @@ async function main() {
   const infraCmd = `npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network sepolia --parameters ${infraParamsPath}`;
   console.log(`Running: ${infraCmd}\n`);
 
-  const infraOutput = execSync(infraCmd, {
+  execSync(infraCmd, {
     cwd: projectRoot,
-    encoding: "utf-8",
-    stdio: ["inherit", "pipe", "inherit"],
+    stdio: "inherit",
+    env: { ...process.env, CI: "true" },
   });
-
-  console.log(infraOutput);
 
   // Parse deployed addresses from ignition deployments
   const deploymentsDir = path.join(projectRoot, "ignition", "deployments", "chain-11155111");
@@ -162,13 +160,12 @@ async function main() {
   const setupCmd = `npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network sepolia --parameters ${setupParamsPath}`;
   console.log(`Running: ${setupCmd}\n`);
 
-  const setupOutput = execSync(setupCmd, {
+  execSync(setupCmd, {
     cwd: projectRoot,
-    encoding: "utf-8",
-    stdio: ["inherit", "pipe", "inherit"],
+    stdio: "inherit",
+    env: { ...process.env, CI: "true" },
   });
 
-  console.log(setupOutput);
   console.log("\nSetup complete. Contracts are fully configured.");
 }
 
