@@ -143,7 +143,13 @@ describe("PackManager probability distribution (current deploy)", function () {
   }
   async function seedCollectionsAndDeposit(): Promise<void> {
     // Create collections per level, configure with floor price, mint & deposit many NFTs
-    for (const level of [PoolLevel.Common, PoolLevel.Rare, PoolLevel.Epic, PoolLevel.Legendary, PoolLevel.UltraRare] as const) {
+    for (const level of [
+      PoolLevel.Common,
+      PoolLevel.Rare,
+      PoolLevel.Epic,
+      PoolLevel.Legendary,
+      PoolLevel.UltraRare,
+    ] as const) {
       const numCollections = COLLECTIONS_PER_LEVEL[level];
       const perCollection = TOKENS_PER_COLLECTION[level];
       for (let c = 0; c < numCollections; c++) {
@@ -193,7 +199,10 @@ describe("PackManager probability distribution (current deploy)", function () {
       [PoolLevel.Common]: Number(commonBp),
     };
   }
-  async function runMonteCarlo(packType: PackTypeId, opens: number): Promise<{
+  async function runMonteCarlo(
+    packType: PackTypeId,
+    opens: number,
+  ): Promise<{
     observed: LevelCounts;
     draws: number;
     expectedBp: Record<PoolLevelId, number>;
@@ -282,11 +291,8 @@ describe("PackManager probability distribution (current deploy)", function () {
       "Rari Pack",
       "RPACK",
     ]);
-    rariPack = await deployProxy<RariPack>(
-      rariPackImpl,
-      ownerAddress,
-      rariPackInitData,
-      (proxyAddr) => RariPack__factory.connect(proxyAddr, owner),
+    rariPack = await deployProxy<RariPack>(rariPackImpl, ownerAddress, rariPackInitData, (proxyAddr) =>
+      RariPack__factory.connect(proxyAddr, owner),
     );
     // Set pack prices
     await rariPack.setPackPrice(PackType.Bronze, BRONZE_PRICE);
@@ -298,22 +304,19 @@ describe("PackManager probability distribution (current deploy)", function () {
     const nftPoolImpl = await NftPoolFactory.deploy();
     await nftPoolImpl.waitForDeployment();
     const nftPoolInitData = nftPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
-    nftPool = await deployProxy<NftPool>(
-      nftPoolImpl,
-      ownerAddress,
-      nftPoolInitData,
-      (proxyAddr) => NftPool__factory.connect(proxyAddr, owner),
+    nftPool = await deployProxy<NftPool>(nftPoolImpl, ownerAddress, nftPoolInitData, (proxyAddr) =>
+      NftPool__factory.connect(proxyAddr, owner),
     );
     // Deploy PackManager impl + proxy
     const PackManagerFactory = new PackManager__factory(owner);
     const packManagerImpl = await PackManagerFactory.deploy();
     await packManagerImpl.waitForDeployment();
-    const packManagerInitData = packManagerImpl.interface.encodeFunctionData("initialize", [ownerAddress, await rariPack.getAddress()]);
-    packManager = await deployProxy<PackManager>(
-      packManagerImpl,
+    const packManagerInitData = packManagerImpl.interface.encodeFunctionData("initialize", [
       ownerAddress,
-      packManagerInitData,
-      (proxyAddr) => PackManager__factory.connect(proxyAddr, owner),
+      await rariPack.getAddress(),
+    ]);
+    packManager = await deployProxy<PackManager>(packManagerImpl, ownerAddress, packManagerInitData, (proxyAddr) =>
+      PackManager__factory.connect(proxyAddr, owner),
     );
     // Grant BURNER_ROLE to PackManager
     const BURNER_ROLE = await rariPack.BURNER_ROLE();
@@ -363,7 +366,13 @@ describe("PackManager probability distribution (current deploy)", function () {
     for (const pt of [PackType.Bronze, PackType.Silver, PackType.Gold, PackType.Platinum] as const) {
       const opens = opensPerPackType[pt];
       const { observed, draws, expectedBp } = await runMonteCarlo(pt, opens);
-      for (const lvl of [PoolLevel.UltraRare, PoolLevel.Legendary, PoolLevel.Epic, PoolLevel.Rare, PoolLevel.Common] as const) {
+      for (const lvl of [
+        PoolLevel.UltraRare,
+        PoolLevel.Legendary,
+        PoolLevel.Epic,
+        PoolLevel.Rare,
+        PoolLevel.Common,
+      ] as const) {
         const expectedPct = bpToPercent(expectedBp[lvl]);
         const observedPct = (observed[lvl] / draws) * 100;
         const delta = observedPct - expectedPct;
@@ -380,7 +389,10 @@ describe("PackManager probability distribution (current deploy)", function () {
           expect(observed[lvl]).to.equal(0);
         } else {
           const tol = toleranceByLevel[lvl];
-          expect(Math.abs(delta), `${packTypeName(pt)} ${levelName(lvl)} delta=${delta.toFixed(2)}pp`).to.be.lessThanOrEqual(tol);
+          expect(
+            Math.abs(delta),
+            `${packTypeName(pt)} ${levelName(lvl)} delta=${delta.toFixed(2)}pp`,
+          ).to.be.lessThanOrEqual(tol);
         }
       }
     }

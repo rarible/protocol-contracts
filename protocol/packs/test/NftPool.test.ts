@@ -111,7 +111,10 @@ describe("NftPool", function () {
     });
 
     it("Should not allow reinitialization", async function () {
-      await expect(nftPool.initialize(user1Address, [])).to.be.revertedWithCustomError(nftPool, "InvalidInitialization");
+      await expect(nftPool.initialize(user1Address, [])).to.be.revertedWithCustomError(
+        nftPool,
+        "InvalidInitialization",
+      );
     });
 
     it("Should initialize with custom pool ranges", async function () {
@@ -919,9 +922,10 @@ describe("NftPool", function () {
     });
 
     it("Should only allow POOL_MANAGER_ROLE", async function () {
-      await expect(
-        nftPool.connect(user1).selectAndLockFromLevel(PoolLevel.Epic, 0n),
-      ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
+      await expect(nftPool.connect(user1).selectAndLockFromLevel(PoolLevel.Epic, 0n)).to.be.revertedWithCustomError(
+        nftPool,
+        "AccessControlUnauthorizedAccount",
+      );
     });
   });
 
@@ -988,9 +992,10 @@ describe("NftPool", function () {
     });
 
     it("Should only allow POOL_MANAGER_ROLE", async function () {
-      await expect(
-        nftPool.connect(user1).addLockedNft(await testNft.getAddress(), 1),
-      ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
+      await expect(nftPool.connect(user1).addLockedNft(await testNft.getAddress(), 1)).to.be.revertedWithCustomError(
+        nftPool,
+        "AccessControlUnauthorizedAccount",
+      );
     });
   });
 

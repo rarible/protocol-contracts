@@ -243,7 +243,11 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     /// @param collection NFT collection address
     /// @param allowed Whether deposits are accepted (true => collection is included in a pool)
     /// @param floorPrice Current floor price in wei
-    function configureCollection(address collection, bool allowed, uint256 floorPrice) external onlyRole(POOL_MANAGER_ROLE) {
+    function configureCollection(
+        address collection,
+        bool allowed,
+        uint256 floorPrice
+    ) external onlyRole(POOL_MANAGER_ROLE) {
         if (collection == address(0)) revert ZeroAddress();
         _setCollectionConfig(collection, allowed, floorPrice);
     }
@@ -514,9 +518,7 @@ contract NftPool is Initializable, ERC721HolderUpgradeable, OwnableUpgradeable, 
     // -----------------------
     // Overrides
     // -----------------------
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(AccessControlUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControlUpgradeable) returns (bool) {
         return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
     // -----------------------

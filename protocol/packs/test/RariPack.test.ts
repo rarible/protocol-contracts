@@ -338,21 +338,24 @@ describe("RariPack", function () {
     });
 
     it("Should revert when non-BURNER_ROLE tries to set contents", async function () {
-      await expect(
-        rariPack.connect(user1).setPackContents(1, [user1Address], [100n]),
-      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+      await expect(rariPack.connect(user1).setPackContents(1, [user1Address], [100n])).to.be.revertedWithCustomError(
+        rariPack,
+        "AccessControlUnauthorizedAccount",
+      );
     });
 
     it("Should revert when arrays have different lengths", async function () {
-      await expect(
-        rariPack.setPackContents(1, [user1Address, user2Address], [100n]),
-      ).to.be.revertedWithCustomError(rariPack, "ArrayLengthMismatch");
+      await expect(rariPack.setPackContents(1, [user1Address, user2Address], [100n])).to.be.revertedWithCustomError(
+        rariPack,
+        "ArrayLengthMismatch",
+      );
     });
 
     it("Should revert when setting contents for non-existent token", async function () {
-      await expect(
-        rariPack.setPackContents(999, [user1Address], [100n]),
-      ).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
+      await expect(rariPack.setPackContents(999, [user1Address], [100n])).to.be.revertedWithCustomError(
+        rariPack,
+        "ERC721NonexistentToken",
+      );
     });
   });
 
@@ -456,9 +459,10 @@ describe("RariPack", function () {
     });
 
     it("Should revert when non-admin tries to set description", async function () {
-      await expect(
-        rariPack.connect(user1).setPackDescription(PackType.Bronze, "test"),
-      ).to.be.revertedWithCustomError(rariPack, "AccessControlUnauthorizedAccount");
+      await expect(rariPack.connect(user1).setPackDescription(PackType.Bronze, "test")).to.be.revertedWithCustomError(
+        rariPack,
+        "AccessControlUnauthorizedAccount",
+      );
     });
   });
 

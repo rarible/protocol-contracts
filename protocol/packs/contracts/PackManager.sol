@@ -26,7 +26,13 @@ import {NftPool} from "./NftPool.sol";
 /// @dev Uses Chainlink VRF v2.5 for verifiable randomness when selecting NFTs
 /// @dev Selection: first select pool level by probability, then select NFT from that level with equal probability
 /// @dev Supports a 2-step flow: open pack (lock contents) and then claim either NFTs or instant cash
-contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable, ERC721HolderUpgradeable {
+contract PackManager is
+    Initializable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    PausableUpgradeable,
+    ERC721HolderUpgradeable
+{
     // -----------------------
     // Types
     // -----------------------
@@ -81,7 +87,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     address public vrfCoordinator;
 
     /// @dev VRF subscription ID
-    uint256 public vrfSubscriptionId;
+    uint64 public vrfSubscriptionId;
 
     /// @dev VRF key hash (gas lane)
     bytes32 public vrfKeyHash;
@@ -136,12 +142,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
         uint256[] tokenIds
     );
 
-    event NftClaimed(
-        address indexed requester,
-        uint256 indexed packTokenId,
-        address[] collections,
-        uint256[] tokenIds
-    );
+    event NftClaimed(address indexed requester, uint256 indexed packTokenId, address[] collections, uint256[] tokenIds);
 
     event NftPoolSet(address indexed poolAddress);
     event RariPackSet(address indexed rariPackAddress);
@@ -279,7 +280,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     /// @notice Configure Chainlink VRF parameters
     function setVrfConfig(
         address coordinator_,
-        uint256 subscriptionId_,
+        uint64 subscriptionId_,
         bytes32 keyHash_,
         uint32 callbackGasLimit_,
         uint16 requestConfirmations_
@@ -445,14 +446,14 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     // -----------------------
-    // Internal: VRF
+    // Internal: VRF (Chainlink VRF V2 uses uint64 for subId)
     // -----------------------
 
     function _requestRandomness() internal returns (uint256 requestId) {
         if (vrfCoordinator == address(0)) revert InvalidVrfCoordinator();
 
         bytes memory data = abi.encodeWithSignature(
-            "requestRandomWords(bytes32,uint256,uint16,uint32,uint32)",
+            "requestRandomWords(bytes32,uint64,uint16,uint32,uint32)",
             vrfKeyHash,
             vrfSubscriptionId,
             vrfRequestConfirmations,
@@ -479,11 +480,7 @@ contract PackManager is Initializable, OwnableUpgradeable, ReentrancyGuardUpgrad
     }
 
     /// @dev Process opening of a pack - select and lock NFTs into the pack
-    function _processOpen(
-        uint256 requestId,
-        OpenRequest storage request,
-        uint256[] calldata randomWords
-    ) internal {
+    function _processOpen(uint256 requestId, OpenRequest storage request, uint256[] calldata randomWords) internal {
         RewardNft[3] memory rewards;
         address[] memory collections = new address[](REWARDS_PER_PACK);
         uint256[] memory tokenIds = new uint256[](REWARDS_PER_PACK);

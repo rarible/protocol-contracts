@@ -498,7 +498,13 @@ describe("PackManager", function () {
 
       await expect(packManager.connect(user1).claimReward(1))
         .to.emit(packManager, "InstantCashClaimed")
-        .withArgs(user1Address, 1, expectedPayout, (collections: any) => collections.length === 3, (tokenIds: any) => tokenIds.length === 3);
+        .withArgs(
+          user1Address,
+          1,
+          expectedPayout,
+          (collections: any) => collections.length === 3,
+          (tokenIds: any) => tokenIds.length === 3,
+        );
     });
 
     it("Should revert when instant cash is not enabled", async function () {
@@ -520,7 +526,10 @@ describe("PackManager", function () {
     });
 
     it("Should revert when non-owner tries to claim", async function () {
-      await expect(packManager.connect(user2).claimReward(1)).to.be.revertedWithCustomError(packManager, "NotPackOwner");
+      await expect(packManager.connect(user2).claimReward(1)).to.be.revertedWithCustomError(
+        packManager,
+        "NotPackOwner",
+      );
     });
 
     it("Should revert when pack is not opened", async function () {
@@ -528,7 +537,10 @@ describe("PackManager", function () {
         value: BRONZE_PRICE,
       });
 
-      await expect(packManager.connect(user1).claimReward(2)).to.be.revertedWithCustomError(packManager, "PackNotOpened");
+      await expect(packManager.connect(user1).claimReward(2)).to.be.revertedWithCustomError(
+        packManager,
+        "PackNotOpened",
+      );
     });
   });
 
@@ -716,7 +728,8 @@ describe("PackManager", function () {
         const [, bronzeLegendary, bronzeEpic, bronzeRare] = await packManager.getPackProbabilities(PackType.Bronze);
         const [, silverLegendary, silverEpic, silverRare] = await packManager.getPackProbabilities(PackType.Silver);
         const [, goldLegendary, goldEpic, goldRare] = await packManager.getPackProbabilities(PackType.Gold);
-        const [platinumUltraRare, platinumLegendary, platinumEpic, platinumRare] = await packManager.getPackProbabilities(PackType.Platinum);
+        const [platinumUltraRare, platinumLegendary, platinumEpic, platinumRare] =
+          await packManager.getPackProbabilities(PackType.Platinum);
 
         // Higher tier = higher cumulative thresholds = better odds for rare items
         expect(silverLegendary).to.be.greaterThan(bronzeLegendary);

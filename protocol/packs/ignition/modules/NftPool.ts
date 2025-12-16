@@ -51,4 +51,3 @@ const NftPoolModule = buildModule("NftPoolModule", (m) => {
 });
 
 export default NftPoolModule;
-

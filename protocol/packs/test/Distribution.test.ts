@@ -237,7 +237,10 @@ describe("Distribution / Monte-Carlo (PackManager + NftPool)", function () {
     const priceFor85RtpWei = ceilDiv(expectedCashPerPackWei * 10000n, 8500n);
     return { expectedBp, expectedFloorPerPackWei, expectedCashPerPackWei, rtpCashBp, priceFor85RtpWei };
   }
-  async function runMonteCarlo(packType: PackTypeId, opens: number): Promise<{
+  async function runMonteCarlo(
+    packType: PackTypeId,
+    opens: number,
+  ): Promise<{
     observed: LevelCounts;
     draws: number;
     expectedBp: Record<PoolLevelId, number>;

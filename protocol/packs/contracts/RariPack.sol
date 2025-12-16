@@ -205,7 +205,10 @@ contract RariPack is
     }
 
     /// @notice Set human-readable description for a pack type.
-    function setPackDescription(PackType packType, string calldata newDescription) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPackDescription(
+        PackType packType,
+        string calldata newDescription
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         string memory oldDescription = _packDescriptions[packType];
         _packDescriptions[packType] = newDescription;
         emit PackDescriptionUpdated(packType, oldDescription, newDescription);
@@ -228,11 +231,7 @@ contract RariPack is
         string memory description = _packDescriptions[packType];
         if (bytes(description).length == 0) {
             description = string(
-                abi.encodePacked(
-                    "RARI ",
-                    packTypeStr,
-                    " Pack containing randomly selected NFTs across rarity pools."
-                )
+                abi.encodePacked("RARI ", packTypeStr, " Pack containing randomly selected NFTs across rarity pools.")
             );
         }
 
