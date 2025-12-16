@@ -1,8 +1,9 @@
 import hardhatIgnitionEthers from "@nomicfoundation/hardhat-ignition-ethers";
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
+import hardhatVerify from "@nomicfoundation/hardhat-verify";
 import * as dotenv from "dotenv";
-import { defineConfig } from "hardhat/config";
+import { defineConfig, configVariable } from "hardhat/config";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ const sepoliaRpcUrl =
 const deployerKey = process.env.DEPLOYER_PRIVATE_KEY ?? "";
 
 export default defineConfig({
-  plugins: [hardhatIgnitionEthers, hardhatToolboxMochaEthersPlugin, hardhatTypechain],
+  plugins: [hardhatIgnitionEthers, hardhatToolboxMochaEthersPlugin, hardhatTypechain, hardhatVerify],
   solidity: {
     npmFilesToBuild: [
       "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol", 
@@ -43,6 +44,11 @@ export default defineConfig({
       url: sepoliaRpcUrl,
       type: "http",
       accounts: deployerKey ? [deployerKey] : [],
+    },
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("ETHERSCAN_API_KEY"),
     },
   },
 });
