@@ -69,90 +69,93 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
   });
 
   // ============================================
-  // 1. Grant BURNER_ROLE to PackManager on RariPack
+  // Sequential execution: each step waits for the previous one
   // ============================================
+
+  // 1. Grant BURNER_ROLE to PackManager on RariPack
   const grantBurnerRole = m.call(rariPackArtifact, "grantRole", [BURNER_ROLE, packManagerProxy], {
     id: "GrantBurnerRoleToPackManager",
   });
 
-  // ============================================
   // 2. Grant POOL_MANAGER_ROLE to PackManager on NftPool
-  // ============================================
   const grantPoolManagerRole = m.call(nftPoolArtifact, "grantRole", [POOL_MANAGER_ROLE, packManagerProxy], {
     id: "GrantPoolManagerRoleToPackManager",
+    after: [grantBurnerRole],
   });
 
-  // ============================================
   // 3. Set NftPool in PackManager
-  // ============================================
   const setNftPool = m.call(packManagerArtifact, "setNftPool", [nftPoolProxy], {
     id: "SetNftPool",
     after: [grantPoolManagerRole],
   });
 
-  // ============================================
   // 4. Configure VRF on PackManager
-  // ============================================
   const setVrfConfig = m.call(
     packManagerArtifact,
     "setVrfConfig",
     [vrfCoordinator, vrfSubscriptionId, vrfKeyHash, vrfCallbackGasLimit, vrfRequestConfirmations],
     {
       id: "SetVrfConfig",
+      after: [setNftPool],
     },
   );
 
-  // ============================================
-  // 5. Set pack prices on RariPack
-  // ============================================
+  // 5. Set pack prices on RariPack (sequential)
   const setBronzePrice = m.call(rariPackArtifact, "setPackPrice", [PackType.Bronze, bronzePrice], {
     id: "SetBronzePrice",
+    after: [setVrfConfig],
   });
 
   const setSilverPrice = m.call(rariPackArtifact, "setPackPrice", [PackType.Silver, silverPrice], {
     id: "SetSilverPrice",
+    after: [setBronzePrice],
   });
 
   const setGoldPrice = m.call(rariPackArtifact, "setPackPrice", [PackType.Gold, goldPrice], {
     id: "SetGoldPrice",
+    after: [setSilverPrice],
   });
 
   const setPlatinumPrice = m.call(rariPackArtifact, "setPackPrice", [PackType.Platinum, platinumPrice], {
     id: "SetPlatinumPrice",
+    after: [setGoldPrice],
   });
 
-  // ============================================
-  // 6. Set pack URIs on RariPack (if provided)
-  // ============================================
+  // 6. Set pack URIs on RariPack (sequential)
   const setBronzeUri = m.call(rariPackArtifact, "setPackURI", [PackType.Bronze, bronzeUri], {
     id: "SetBronzeUri",
+    after: [setPlatinumPrice],
   });
 
   const setSilverUri = m.call(rariPackArtifact, "setPackURI", [PackType.Silver, silverUri], {
     id: "SetSilverUri",
+    after: [setBronzeUri],
   });
 
   const setGoldUri = m.call(rariPackArtifact, "setPackURI", [PackType.Gold, goldUri], {
     id: "SetGoldUri",
+    after: [setSilverUri],
   });
 
   const setPlatinumUri = m.call(rariPackArtifact, "setPackURI", [PackType.Platinum, platinumUri], {
     id: "SetPlatinumUri",
+    after: [setGoldUri],
   });
 
-  // ============================================
-  // 7. Set pack descriptions on RariPack (if provided)
-  // ============================================
+  // 7. Set pack descriptions on RariPack (sequential)
   const setBronzeDescription = m.call(rariPackArtifact, "setPackDescription", [PackType.Bronze, bronzeDescription], {
     id: "SetBronzeDescription",
+    after: [setPlatinumUri],
   });
 
   const setSilverDescription = m.call(rariPackArtifact, "setPackDescription", [PackType.Silver, silverDescription], {
     id: "SetSilverDescription",
+    after: [setBronzeDescription],
   });
 
   const setGoldDescription = m.call(rariPackArtifact, "setPackDescription", [PackType.Gold, goldDescription], {
     id: "SetGoldDescription",
+    after: [setSilverDescription],
   });
 
   const setPlatinumDescription = m.call(
@@ -161,14 +164,14 @@ const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule
     [PackType.Platinum, platinumDescription],
     {
       id: "SetPlatinumDescription",
+      after: [setGoldDescription],
     },
   );
 
-  // ============================================
-  // 8. Enable instant cash (optional)
-  // ============================================
+  // 8. Enable instant cash (last step)
   const setInstantCashEnabled = m.call(packManagerArtifact, "setInstantCashEnabled", [enableInstantCash], {
     id: "SetInstantCashEnabled",
+    after: [setPlatinumDescription],
   });
 
   return {
