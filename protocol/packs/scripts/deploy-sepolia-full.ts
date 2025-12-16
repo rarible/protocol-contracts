@@ -295,11 +295,14 @@ async function main() {
   };
 
   const collectionSpecs = [
-    { key: "Common", name: "Sepolia Mock Common", symbol: "SMC", floorWei: ethersLib.parseEther("0.1"), count: counts.common },
-    { key: "Rare", name: "Sepolia Mock Rare", symbol: "SMR", floorWei: ethersLib.parseEther("1"), count: counts.rare },
-    { key: "Epic", name: "Sepolia Mock Epic", symbol: "SME", floorWei: ethersLib.parseEther("3"), count: counts.epic },
-    { key: "Legendary", name: "Sepolia Mock Legendary", symbol: "SML", floorWei: ethersLib.parseEther("20"), count: counts.legendary },
-    { key: "UltraRare", name: "Sepolia Mock UltraRare", symbol: "SMU", floorWei: ethersLib.parseEther("60"), count: counts.ultrarare },
+    // Floor prices must match NftPool default ranges:
+    // Common: 0-0.05325 ETH, Rare: 0.05325-0.213 ETH, Epic: 0.213-1.065 ETH,
+    // Legendary: 1.065-5.325 ETH, UltraRare: 5.325+ ETH
+    { key: "Common", name: "Sepolia Mock Common", symbol: "SMC", floorWei: ethersLib.parseEther("0.01"), count: counts.common },
+    { key: "Rare", name: "Sepolia Mock Rare", symbol: "SMR", floorWei: ethersLib.parseEther("0.1"), count: counts.rare },
+    { key: "Epic", name: "Sepolia Mock Epic", symbol: "SME", floorWei: ethersLib.parseEther("0.5"), count: counts.epic },
+    { key: "Legendary", name: "Sepolia Mock Legendary", symbol: "SML", floorWei: ethersLib.parseEther("2"), count: counts.legendary },
+    { key: "UltraRare", name: "Sepolia Mock UltraRare", symbol: "SMU", floorWei: ethersLib.parseEther("10"), count: counts.ultrarare },
   ].filter((s) => s.count > 0);
 
   console.log(`\nDeploying and seeding ${collectionSpecs.length} collections into NftPool...`);
