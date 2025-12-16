@@ -66,13 +66,15 @@ describe("PackManager", function () {
   const GOLD_PRICE = ethers.parseEther("0.1");
   const PLATINUM_PRICE = ethers.parseEther("0.5");
 
-  // Floor prices for each pool level (matching default price ranges)
+  // Floor prices for each pool level (matching actual contract default ranges)
+  // Common: 0 - 0.05325 ETH, Rare: 0.05325 - 0.213 ETH, Epic: 0.213 - 1.065 ETH
+  // Legendary: 1.065 - 5.325 ETH, UltraRare: 5.325+ ETH
   const FLOOR_PRICES = {
-    [PoolLevel.Common]: ethers.parseEther("0.3"), // 0 - 0.5 ETH
-    [PoolLevel.Rare]: ethers.parseEther("1"), // 0.5 - 2 ETH
-    [PoolLevel.Epic]: ethers.parseEther("5"), // 2 - 10 ETH
-    [PoolLevel.Legendary]: ethers.parseEther("25"), // 10 - 50 ETH
-    [PoolLevel.UltraRare]: ethers.parseEther("100"), // 50+ ETH
+    [PoolLevel.Common]: ethers.parseEther("0.01"), // Common: 0 - 0.05325 ETH
+    [PoolLevel.Rare]: ethers.parseEther("0.1"), // Rare: 0.05325 - 0.213 ETH
+    [PoolLevel.Epic]: ethers.parseEther("0.5"), // Epic: 0.213 - 1.065 ETH
+    [PoolLevel.Legendary]: ethers.parseEther("2"), // Legendary: 1.065 - 5.325 ETH
+    [PoolLevel.UltraRare]: ethers.parseEther("10"), // UltraRare: 5.325+ ETH
   };
 
   async function deployAndDepositNftsForLevel(

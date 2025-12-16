@@ -85,16 +85,19 @@ describe("NftPool", function () {
     });
 
     it("Should set default price ranges", async function () {
+      // Default ranges from contract:
+      // Common: 0 - 0.05325 ETH, Rare: 0.05325 - 0.213 ETH, Epic: 0.213 - 1.065 ETH
+      // Legendary: 1.065 - 5.325 ETH, UltraRare: 5.325+ ETH
       const [commonLow, commonHigh] = await nftPool.getPoolInfo(PoolLevel.Common);
       expect(commonLow).to.equal(0);
-      expect(commonHigh).to.equal(ethers.parseEther("0.5"));
+      expect(commonHigh).to.equal(ethers.parseEther("0.05325"));
 
       const [rareLow, rareHigh] = await nftPool.getPoolInfo(PoolLevel.Rare);
-      expect(rareLow).to.equal(ethers.parseEther("0.5"));
-      expect(rareHigh).to.equal(ethers.parseEther("2"));
+      expect(rareLow).to.equal(ethers.parseEther("0.05325"));
+      expect(rareHigh).to.equal(ethers.parseEther("0.213"));
 
       const [ultraRareLow] = await nftPool.getPoolInfo(PoolLevel.UltraRare);
-      expect(ultraRareLow).to.equal(ethers.parseEther("50"));
+      expect(ultraRareLow).to.equal(ethers.parseEther("5.325"));
     });
 
     it("Should revert initialization with zero address owner", async function () {
@@ -255,21 +258,22 @@ describe("NftPool", function () {
   });
 
   describe("Collection Configuration", function () {
-    const FLOOR_PRICE = ethers.parseEther("0.3");
+    // Use floor price that falls into Common pool (0 - 0.05325 ETH)
+    const FLOOR_PRICE_COMMON = ethers.parseEther("0.01");
 
     it("Should configure a collection with allowed=true and floor price", async function () {
-      await expect(nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICE))
+      await expect(nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICE_COMMON))
         .to.emit(nftPool, "CollectionConfigured")
-        .withArgs(await testNft.getAddress(), true, FLOOR_PRICE);
+        .withArgs(await testNft.getAddress(), true, FLOOR_PRICE_COMMON);
 
       const [allowed, floorPrice, poolLevel] = await nftPool.getCollectionInfo(await testNft.getAddress());
       expect(allowed).to.be.true;
-      expect(floorPrice).to.equal(FLOOR_PRICE);
+      expect(floorPrice).to.equal(FLOOR_PRICE_COMMON);
       expect(poolLevel).to.equal(PoolLevel.Common);
     });
 
     it("Should add collection to pool.collections array when allowed", async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICE);
+      await nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICE_COMMON);
 
       const collections = await nftPool.getPoolCollections(PoolLevel.Common);
       expect(collections).to.include(await testNft.getAddress());
@@ -277,8 +281,8 @@ describe("NftPool", function () {
     });
 
     it("Should batch configure collections", async function () {
-      const price1 = ethers.parseEther("0.3");
-      const price2 = ethers.parseEther("15");
+      const price1 = ethers.parseEther("0.01");
+      const price2 = ethers.parseEther("2");
 
       await nftPool.configureCollections(
         [await testNft.getAddress(), await testNft2.getAddress()],
@@ -293,24 +297,28 @@ describe("NftPool", function () {
     });
 
     it("Should determine pool level automatically from floor price", async function () {
-      // Common: 0 - 0.5 ETH
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.3"));
+      // Actual contract pool ranges:
+      // Common: 0 - 0.05325 ETH, Rare: 0.05325 - 0.213 ETH, Epic: 0.213 - 1.065 ETH
+      // Legendary: 1.065 - 5.325 ETH, UltraRare: 5.325+ ETH
+
+      // Common: 0 - 0.05325 ETH
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.01"));
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.Common);
 
-      // Rare: 0.5 - 2 ETH
-      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("1"));
+      // Rare: 0.05325 - 0.213 ETH
+      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("0.1"));
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.Rare);
 
-      // Epic: 2 - 10 ETH
-      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("5"));
+      // Epic: 0.213 - 1.065 ETH
+      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("0.5"));
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.Epic);
 
-      // Legendary: 10 - 50 ETH
-      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("25"));
+      // Legendary: 1.065 - 5.325 ETH
+      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("2"));
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.Legendary);
 
-      // UltraRare: 50+ ETH
-      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("100"));
+      // UltraRare: 5.325+ ETH
+      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("10"));
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.UltraRare);
     });
 
@@ -327,7 +335,7 @@ describe("NftPool", function () {
     });
 
     it("Should revert with zero address", async function () {
-      await expect(nftPool.configureCollection(ZERO_ADDRESS, true, FLOOR_PRICE)).to.be.revertedWithCustomError(
+      await expect(nftPool.configureCollection(ZERO_ADDRESS, true, FLOOR_PRICE_COMMON)).to.be.revertedWithCustomError(
         nftPool,
         "ZeroAddress",
       );
@@ -335,19 +343,20 @@ describe("NftPool", function () {
 
     it("Should revert batch configure with mismatched arrays", async function () {
       await expect(
-        nftPool.configureCollections([await testNft.getAddress()], [true, true], [FLOOR_PRICE]),
+        nftPool.configureCollections([await testNft.getAddress()], [true, true], [FLOOR_PRICE_COMMON]),
       ).to.be.revertedWithCustomError(nftPool, "ArrayLengthMismatch");
     });
 
     it("Should only allow POOL_MANAGER_ROLE to configure collections", async function () {
       await expect(
-        nftPool.connect(user1).configureCollection(await testNft.getAddress(), true, FLOOR_PRICE),
+        nftPool.connect(user1).configureCollection(await testNft.getAddress(), true, FLOOR_PRICE_COMMON),
       ).to.be.revertedWithCustomError(nftPool, "AccessControlUnauthorizedAccount");
     });
   });
 
   describe("Collection Allowed Status", function () {
-    const FLOOR_PRICE = ethers.parseEther("0.3");
+    // Use floor price that falls into Common pool (0 - 0.05325 ETH)
+    const FLOOR_PRICE = ethers.parseEther("0.01");
 
     beforeEach(async function () {
       await nftPool.configureCollection(await testNft.getAddress(), true, FLOOR_PRICE);
@@ -386,7 +395,8 @@ describe("NftPool", function () {
   });
 
   describe("Floor Price Updates", function () {
-    const INITIAL_PRICE = ethers.parseEther("0.3");
+    // Use floor price that falls into Common pool (0 - 0.05325 ETH)
+    const INITIAL_PRICE = ethers.parseEther("0.01");
 
     beforeEach(async function () {
       await nftPool.configureCollection(await testNft.getAddress(), true, INITIAL_PRICE);
@@ -398,8 +408,8 @@ describe("NftPool", function () {
       let collections = await nftPool.getPoolCollections(PoolLevel.Common);
       expect(collections).to.include(await testNft.getAddress());
 
-      // Update to Legendary price
-      const newPrice = ethers.parseEther("15");
+      // Update to Legendary price (1.065 - 5.325 ETH range)
+      const newPrice = ethers.parseEther("2");
       await nftPool.setCollectionFloorPrice(await testNft.getAddress(), newPrice);
 
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.Legendary);
@@ -413,7 +423,7 @@ describe("NftPool", function () {
     });
 
     it("Should emit CollectionFloorPriceUpdated event", async function () {
-      const newPrice = ethers.parseEther("15");
+      const newPrice = ethers.parseEther("2");
       await expect(nftPool.setCollectionFloorPrice(await testNft.getAddress(), newPrice))
         .to.emit(nftPool, "CollectionFloorPriceUpdated")
         .withArgs(await testNft.getAddress(), INITIAL_PRICE, newPrice);
@@ -422,9 +432,10 @@ describe("NftPool", function () {
     it("Should batch update floor prices", async function () {
       await nftPool.configureCollection(await testNft2.getAddress(), true, INITIAL_PRICE);
 
+      // Epic: 0.213 - 1.065 ETH, Legendary: 1.065 - 5.325 ETH
       await nftPool.setCollectionFloorPrices(
         [await testNft.getAddress(), await testNft2.getAddress()],
-        [ethers.parseEther("5"), ethers.parseEther("25")],
+        [ethers.parseEther("0.5"), ethers.parseEther("2")],
       );
 
       expect(await nftPool.getCollectionPoolLevel(await testNft.getAddress())).to.equal(PoolLevel.Epic);
@@ -435,7 +446,7 @@ describe("NftPool", function () {
   describe("Depositing NFTs", function () {
     beforeEach(async function () {
       // Configure testNft with Common-level floor price
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.3"));
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.01"));
 
       await testNft.mint(user1Address, 1);
       await testNft.mint(user1Address, 2);
@@ -460,8 +471,8 @@ describe("NftPool", function () {
     });
 
     it("Should deposit to different levels based on floor price", async function () {
-      // Configure testNft2 with Legendary-level floor price
-      await nftPool.configureCollection(await testNft2.getAddress(), true, ethers.parseEther("15"));
+      // Configure testNft2 with Legendary-level floor price (1.065 - 5.325 ETH range)
+      await nftPool.configureCollection(await testNft2.getAddress(), true, ethers.parseEther("2"));
 
       await testNft2.mint(user1Address, 100);
       await testNft2.connect(user1).approve(await nftPool.getAddress(), 100);
@@ -497,7 +508,7 @@ describe("NftPool", function () {
 
     it("Should revert when collection is disallowed", async function () {
       // Disallow collection using configureCollection
-      await nftPool.configureCollection(await testNft.getAddress(), false, ethers.parseEther("0.3"));
+      await nftPool.configureCollection(await testNft.getAddress(), false, ethers.parseEther("0.01"));
 
       await testNft.connect(user1).approve(await nftPool.getAddress(), 1);
 
@@ -519,7 +530,7 @@ describe("NftPool", function () {
 
   describe("Floor Price Changes with Deposited NFTs", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.3"));
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.01"));
 
       await testNft.mint(user1Address, 1);
       await testNft.mint(user1Address, 2);
@@ -532,7 +543,7 @@ describe("NftPool", function () {
       expect(await nftPool.getPoolLevelSize(PoolLevel.Legendary)).to.equal(0);
 
       // Change floor price to Legendary level
-      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("15"));
+      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("2"));
 
       // NFT count should move from Common to Legendary
       expect(await nftPool.getPoolLevelSize(PoolLevel.Common)).to.equal(0);
@@ -540,7 +551,7 @@ describe("NftPool", function () {
     });
 
     it("Should deposit new NFTs at new pool level after floor price change", async function () {
-      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("15"));
+      await nftPool.setCollectionFloorPrice(await testNft.getAddress(), ethers.parseEther("2"));
 
       await testNft.connect(user1).approve(await nftPool.getAddress(), 2);
       await nftPool.connect(user1).deposit(await testNft.getAddress(), 2);
@@ -575,7 +586,8 @@ describe("NftPool", function () {
 
   describe("Withdrawing NFTs", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("1"));
+      // Use Rare-level floor price (0.05325 - 0.213 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.1"));
 
       await testNft.mint(user1Address, 1);
       await testNft.mint(user1Address, 2);
@@ -615,7 +627,8 @@ describe("NftPool", function () {
 
   describe("Select and Transfer from Level", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+      // Use Epic-level floor price (0.213 - 1.065 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.5"));
 
       for (let i = 1; i <= 5; i++) {
         await testNft.mint(user1Address, i);
@@ -662,9 +675,9 @@ describe("NftPool", function () {
 
   describe("Multiple Collections in Same Pool Level", function () {
     beforeEach(async function () {
-      // Both collections at Common level
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.3"));
-      await nftPool.configureCollection(await testNft2.getAddress(), true, ethers.parseEther("0.4"));
+      // Both collections at Common level (0 - 0.05325 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.01"));
+      await nftPool.configureCollection(await testNft2.getAddress(), true, ethers.parseEther("0.02"));
 
       // Deposit NFTs from both collections
       await testNft.mint(user1Address, 1);
@@ -748,7 +761,7 @@ describe("NftPool", function () {
     });
 
     it("Should revert when rescuing tracked NFT", async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("1"));
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.01"));
       await testNft.mint(user1Address, 1);
       await testNft.connect(user1).approve(await nftPool.getAddress(), 1);
       await nftPool.connect(user1).deposit(await testNft.getAddress(), 1);
@@ -767,8 +780,8 @@ describe("NftPool", function () {
 
   describe("View Functions", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.3"));
-      await nftPool.configureCollection(await testNft2.getAddress(), true, ethers.parseEther("15"));
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.01"));
+      await nftPool.configureCollection(await testNft2.getAddress(), true, ethers.parseEther("2"));
 
       await testNft.mint(user1Address, 1);
       await testNft.mint(user1Address, 2);
@@ -793,13 +806,13 @@ describe("NftPool", function () {
     });
 
     it("Should return correct floor price", async function () {
-      expect(await nftPool.getCollectionFloorPrice(await testNft.getAddress())).to.equal(ethers.parseEther("0.3"));
+      expect(await nftPool.getCollectionFloorPrice(await testNft.getAddress())).to.equal(ethers.parseEther("0.01"));
     });
 
     it("Should return correct collection info", async function () {
       const [allowed, floorPrice, poolLevel] = await nftPool.getCollectionInfo(await testNft.getAddress());
       expect(allowed).to.be.true;
-      expect(floorPrice).to.equal(ethers.parseEther("0.3"));
+      expect(floorPrice).to.equal(ethers.parseEther("0.01"));
       expect(poolLevel).to.equal(PoolLevel.Common);
     });
 
@@ -870,7 +883,8 @@ describe("NftPool", function () {
 
   describe("Select and Lock from Level", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+      // Use Epic-level floor price (0.213 - 1.065 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.5"));
 
       for (let i = 1; i <= 5; i++) {
         await testNft.mint(user1Address, i);
@@ -931,7 +945,8 @@ describe("NftPool", function () {
 
   describe("Add Locked NFT back to Pool", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+      // Use Epic-level floor price (0.213 - 1.065 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.5"));
 
       await testNft.mint(user1Address, 1);
       await testNft.connect(user1).approve(await nftPool.getAddress(), 1);
@@ -959,7 +974,7 @@ describe("NftPool", function () {
 
     it("Should revert when collection not allowed", async function () {
       // Disallow the collection
-      await nftPool.configureCollection(await testNft.getAddress(), false, ethers.parseEther("5"));
+      await nftPool.configureCollection(await testNft.getAddress(), false, ethers.parseEther("0.5"));
 
       await expect(nftPool.addLockedNft(await testNft.getAddress(), 1)).to.be.revertedWithCustomError(
         nftPool,
@@ -1001,7 +1016,8 @@ describe("NftPool", function () {
 
   describe("Transfer Locked NFT", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+      // Use Epic-level floor price (0.213 - 1.065 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.5"));
 
       await testNft.mint(user1Address, 1);
       await testNft.mint(user1Address, 2);
@@ -1061,7 +1077,8 @@ describe("NftPool", function () {
 
   describe("Locking Flow Integration", function () {
     beforeEach(async function () {
-      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("5"));
+      // Use Epic-level floor price (0.213 - 1.065 ETH range)
+      await nftPool.configureCollection(await testNft.getAddress(), true, ethers.parseEther("0.5"));
 
       for (let i = 1; i <= 3; i++) {
         await testNft.mint(user1Address, i);
