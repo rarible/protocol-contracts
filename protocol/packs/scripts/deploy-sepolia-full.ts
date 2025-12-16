@@ -30,7 +30,8 @@ type JsonObject = Record<string, unknown>;
 type DeployedAddresses = Record<string, string>;
 
 const SEPOLIA_CHAIN_ID_DECIMAL = "11155111";
-const SEPOLIA_COORDINATOR_DEFAULT = "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625";
+// VRF V2.5 Coordinator on Sepolia
+const SEPOLIA_COORDINATOR_DEFAULT = "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B";
 
 function mustGetEnv(name: string): string {
   const v = process.env[name];

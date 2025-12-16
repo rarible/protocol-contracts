@@ -12,7 +12,7 @@ contract MockVRFCoordinator {
     event RandomWordsRequested(
         uint256 indexed requestId,
         bytes32 keyHash,
-        uint64 subId,
+        uint256 subId,
         uint16 minimumRequestConfirmations,
         uint32 callbackGasLimit,
         uint32 numWords,
@@ -21,10 +21,10 @@ contract MockVRFCoordinator {
 
     event RandomWordsFulfilled(uint256 indexed requestId, uint256[] randomWords, address indexed callback);
 
-    /// @notice Mock requestRandomWords function matching VRF V2 signature (uint64 subId)
+    /// @notice Mock requestRandomWords function matching VRF V2.5 signature (uint256 subId)
     function requestRandomWords(
         bytes32 keyHash,
-        uint64 subId,
+        uint256 subId,
         uint16 minimumRequestConfirmations,
         uint32 callbackGasLimit,
         uint32 numWords

@@ -86,8 +86,8 @@ contract PackManager is
     /// @dev VRF Coordinator address
     address public vrfCoordinator;
 
-    /// @dev VRF subscription ID
-    uint64 public vrfSubscriptionId;
+    /// @dev VRF subscription ID (uint256 for VRF V2.5)
+    uint256 public vrfSubscriptionId;
 
     /// @dev VRF key hash (gas lane)
     bytes32 public vrfKeyHash;
@@ -280,7 +280,7 @@ contract PackManager is
     /// @notice Configure Chainlink VRF parameters
     function setVrfConfig(
         address coordinator_,
-        uint64 subscriptionId_,
+        uint256 subscriptionId_,
         bytes32 keyHash_,
         uint32 callbackGasLimit_,
         uint16 requestConfirmations_
@@ -453,7 +453,7 @@ contract PackManager is
         if (vrfCoordinator == address(0)) revert InvalidVrfCoordinator();
 
         bytes memory data = abi.encodeWithSignature(
-            "requestRandomWords(bytes32,uint64,uint16,uint32,uint32)",
+            "requestRandomWords(bytes32,uint256,uint16,uint32,uint32)",
             vrfKeyHash,
             vrfSubscriptionId,
             vrfRequestConfirmations,

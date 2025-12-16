@@ -27,7 +27,8 @@ async function main() {
   const owner = process.env.PACK_OWNER ?? "0xfb571F9da71D1aC33E069571bf5c67faDCFf18e4";
   const treasury = process.env.PACK_TREASURY ?? owner;
 
-  const vrfCoordinator = process.env.VRF_COORDINATOR ?? "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625";
+  // VRF V2.5 Coordinator on Sepolia
+  const vrfCoordinator = process.env.VRF_COORDINATOR ?? "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B";
   const vrfSubscriptionId = process.env.VRF_SUBSCRIPTION_ID;
   const vrfKeyHash = process.env.VRF_KEY_HASH;
 
