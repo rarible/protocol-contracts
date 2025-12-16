@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
+/// @dev VRF V2.5 RandomWordsRequest struct - must match PackManager's definition
+struct VRFV2PlusRandomWordsRequest {
+    bytes32 keyHash;
+    uint256 subId;
+    uint16 requestConfirmations;
+    uint32 callbackGasLimit;
+    uint32 numWords;
+    bytes extraArgs;
+}
+
 /// @title MockVRFCoordinator
-/// @notice Mock Chainlink VRF Coordinator for testing PackManager
+/// @notice Mock Chainlink VRF V2.5 Coordinator for testing PackManager
 contract MockVRFCoordinator {
     uint256 private _nextRequestId = 1;
 
@@ -21,24 +31,20 @@ contract MockVRFCoordinator {
 
     event RandomWordsFulfilled(uint256 indexed requestId, uint256[] randomWords, address indexed callback);
 
-    /// @notice Mock requestRandomWords function matching VRF V2.5 signature (uint256 subId)
+    /// @notice Mock requestRandomWords function matching VRF V2.5 signature (struct parameter)
     function requestRandomWords(
-        bytes32 keyHash,
-        uint256 subId,
-        uint16 minimumRequestConfirmations,
-        uint32 callbackGasLimit,
-        uint32 numWords
+        VRFV2PlusRandomWordsRequest calldata req
     ) external returns (uint256 requestId) {
         requestId = _nextRequestId++;
         requestCallbacks[requestId] = msg.sender;
 
         emit RandomWordsRequested(
             requestId,
-            keyHash,
-            subId,
-            minimumRequestConfirmations,
-            callbackGasLimit,
-            numWords,
+            req.keyHash,
+            req.subId,
+            req.requestConfirmations,
+            req.callbackGasLimit,
+            req.numWords,
             msg.sender
         );
     }

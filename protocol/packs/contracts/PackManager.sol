@@ -21,6 +21,21 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {RariPack} from "./RariPack.sol";
 import {NftPool} from "./NftPool.sol";
 
+/// @dev VRF V2.5 RandomWordsRequest struct
+struct VRFV2PlusRandomWordsRequest {
+    bytes32 keyHash;
+    uint256 subId;
+    uint16 requestConfirmations;
+    uint32 callbackGasLimit;
+    uint32 numWords;
+    bytes extraArgs;
+}
+
+/// @dev Interface for VRF V2.5 Coordinator
+interface IVRFCoordinatorV2_5 {
+    function requestRandomWords(VRFV2PlusRandomWordsRequest calldata req) external returns (uint256 requestId);
+}
+
 /// @title PackManager
 /// @notice Opens RariPack NFTs and distributes rewards from NftPool using Chainlink VRF
 /// @dev Uses Chainlink VRF v2.5 for verifiable randomness when selecting NFTs
@@ -446,24 +461,30 @@ contract PackManager is
     }
 
     // -----------------------
-    // Internal: VRF (Chainlink VRF V2 uses uint64 for subId)
+    // Internal: VRF (Chainlink VRF V2.5)
     // -----------------------
+
+    /// @dev VRF V2.5 ExtraArgsV1 tag = bytes4(keccak256("VRF ExtraArgsV1"))
+    bytes4 private constant EXTRA_ARGS_V1_TAG = 0x92fd1338;
 
     function _requestRandomness() internal returns (uint256 requestId) {
         if (vrfCoordinator == address(0)) revert InvalidVrfCoordinator();
 
-        bytes memory data = abi.encodeWithSignature(
-            "requestRandomWords(bytes32,uint256,uint16,uint32,uint32)",
-            vrfKeyHash,
-            vrfSubscriptionId,
-            vrfRequestConfirmations,
-            vrfCallbackGasLimit,
-            uint32(REWARDS_PER_PACK)
-        );
+        // Build extraArgs for V2.5 (pay with LINK, not native)
+        bytes memory extraArgs = abi.encodeWithSelector(EXTRA_ARGS_V1_TAG, false);
 
-        (bool success, bytes memory returnData) = vrfCoordinator.call(data);
-        require(success, "PackManager: VRF request failed");
-        requestId = abi.decode(returnData, (uint256));
+        // Build the V2.5 request struct
+        VRFV2PlusRandomWordsRequest memory req = VRFV2PlusRandomWordsRequest({
+            keyHash: vrfKeyHash,
+            subId: vrfSubscriptionId,
+            requestConfirmations: vrfRequestConfirmations,
+            callbackGasLimit: vrfCallbackGasLimit,
+            numWords: uint32(REWARDS_PER_PACK),
+            extraArgs: extraArgs
+        });
+
+        // Call VRF V2.5 Coordinator
+        requestId = IVRFCoordinatorV2_5(vrfCoordinator).requestRandomWords(req);
     }
 
     function _fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal {
