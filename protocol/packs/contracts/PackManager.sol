@@ -18,23 +18,11 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Pau
 import {ERC721HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {IVRFCoordinatorV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol";
+
 import {RariPack} from "./RariPack.sol";
 import {NftPool} from "./NftPool.sol";
-
-/// @dev VRF V2.5 RandomWordsRequest struct
-struct VRFV2PlusRandomWordsRequest {
-    bytes32 keyHash;
-    uint256 subId;
-    uint16 requestConfirmations;
-    uint32 callbackGasLimit;
-    uint32 numWords;
-    bytes extraArgs;
-}
-
-/// @dev Interface for VRF V2.5 Coordinator
-interface IVRFCoordinatorV2_5 {
-    function requestRandomWords(VRFV2PlusRandomWordsRequest calldata req) external returns (uint256 requestId);
-}
 
 /// @title PackManager
 /// @notice Opens RariPack NFTs and distributes rewards from NftPool using Chainlink VRF
@@ -131,6 +119,9 @@ contract PackManager is
     /// @dev Pack tokenId => whether a VRF open request is currently in progress
     mapping(uint256 => bool) public packOpeningInProgress;
 
+    /// @dev Whether to pay for VRF with LINK token (true) or native ETH (false, default)
+    bool public vrfPayWithLink;
+
     // -----------------------
     // Events
     // -----------------------
@@ -168,6 +159,7 @@ contract PackManager is
         uint32 callbackGasLimit,
         uint16 requestConfirmations
     );
+    event VrfPayWithLinkUpdated(bool payWithLink);
     event PackProbabilitiesUpdated(
         RariPack.PackType indexed packType,
         uint16 ultraRare,
@@ -307,6 +299,13 @@ contract PackManager is
         vrfCallbackGasLimit = callbackGasLimit_;
         vrfRequestConfirmations = requestConfirmations_;
         emit VrfConfigUpdated(coordinator_, subscriptionId_, keyHash_, callbackGasLimit_, requestConfirmations_);
+    }
+
+    /// @notice Set whether to pay for VRF with LINK token or native ETH
+    /// @param payWithLink_ true = pay with LINK, false = pay with native ETH (default)
+    function setVrfPayWithLink(bool payWithLink_) external onlyOwner {
+        vrfPayWithLink = payWithLink_;
+        emit VrfPayWithLinkUpdated(payWithLink_);
     }
 
     /// @notice Set probability thresholds for a pack type
@@ -464,17 +463,18 @@ contract PackManager is
     // Internal: VRF (Chainlink VRF V2.5)
     // -----------------------
 
-    /// @dev VRF V2.5 ExtraArgsV1 tag = bytes4(keccak256("VRF ExtraArgsV1"))
-    bytes4 private constant EXTRA_ARGS_V1_TAG = 0x92fd1338;
-
     function _requestRandomness() internal returns (uint256 requestId) {
         if (vrfCoordinator == address(0)) revert InvalidVrfCoordinator();
 
-        // Build extraArgs for V2.5 (pay with LINK, not native)
-        bytes memory extraArgs = abi.encodeWithSelector(EXTRA_ARGS_V1_TAG, false);
+        // Build extraArgs for V2.5 using official Chainlink library
+        // vrfPayWithLink: false = native ETH (default), true = LINK
+        // nativePayment param: true = pay with native, false = pay with LINK
+        bytes memory extraArgs = VRFV2PlusClient._argsToBytes(
+            VRFV2PlusClient.ExtraArgsV1({nativePayment: !vrfPayWithLink})
+        );
 
-        // Build the V2.5 request struct
-        VRFV2PlusRandomWordsRequest memory req = VRFV2PlusRandomWordsRequest({
+        // Build the V2.5 request struct using official Chainlink library
+        VRFV2PlusClient.RandomWordsRequest memory req = VRFV2PlusClient.RandomWordsRequest({
             keyHash: vrfKeyHash,
             subId: vrfSubscriptionId,
             requestConfirmations: vrfRequestConfirmations,
@@ -484,7 +484,7 @@ contract PackManager is
         });
 
         // Call VRF V2.5 Coordinator
-        requestId = IVRFCoordinatorV2_5(vrfCoordinator).requestRandomWords(req);
+        requestId = IVRFCoordinatorV2Plus(vrfCoordinator).requestRandomWords(req);
     }
 
     function _fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal {
@@ -721,5 +721,5 @@ contract PackManager is
     // Storage Gap
     // -----------------------
 
-    uint256[35] private __gap;
+    uint256[34] private __gap;
 }

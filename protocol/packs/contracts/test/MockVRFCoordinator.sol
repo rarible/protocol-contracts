@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-/// @dev VRF V2.5 RandomWordsRequest struct - must match PackManager's definition
-struct VRFV2PlusRandomWordsRequest {
-    bytes32 keyHash;
-    uint256 subId;
-    uint16 requestConfirmations;
-    uint32 callbackGasLimit;
-    uint32 numWords;
-    bytes extraArgs;
-}
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
 /// @title MockVRFCoordinator
 /// @notice Mock Chainlink VRF V2.5 Coordinator for testing PackManager
@@ -33,7 +25,7 @@ contract MockVRFCoordinator {
 
     /// @notice Mock requestRandomWords function matching VRF V2.5 signature (struct parameter)
     function requestRandomWords(
-        VRFV2PlusRandomWordsRequest calldata req
+        VRFV2PlusClient.RandomWordsRequest calldata req
     ) external returns (uint256 requestId) {
         requestId = _nextRequestId++;
         requestCallbacks[requestId] = msg.sender;
