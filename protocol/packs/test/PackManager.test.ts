@@ -1060,8 +1060,8 @@ describe("PackManager", function () {
   });
 
   describe("Pack Open Failure and Rollback", function () {
-    it("Should emit PackOpenFailed when level is empty", async function () {
-      // Create a fresh pool with only 2 NFTs in Common level
+    async function setupLimitedPoolWithAllLevels(commonCount: number) {
+      // Create a fresh pool
       const NftPoolFactory = new NftPool__factory(owner);
       const newPoolImpl = await NftPoolFactory.deploy();
       const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
@@ -1073,17 +1073,57 @@ describe("PackManager", function () {
       const POOL_MANAGER_ROLE = await limitedPool.POOL_MANAGER_ROLE();
       await limitedPool.grantRole(POOL_MANAGER_ROLE, await packManager.getAddress());
 
-      // Only add 2 Common NFTs (need 3 for a pack)
       const TestNftFactory = new TestERC721__factory(owner);
-      const limitedNft = await TestNftFactory.deploy("Limited NFT", "LNFT");
-      await limitedNft.waitForDeployment();
-      await limitedPool.configureCollection(await limitedNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
 
-      for (let i = 0; i < 2; i++) {
-        await limitedNft.mint(ownerAddress, i + 1);
-        await limitedNft.approve(await limitedPool.getAddress(), i + 1);
-        await limitedPool.deposit(await limitedNft.getAddress(), i + 1);
+      // Add NFTs for ALL levels (required by _verifyPoolLevelsAvailable)
+      // Common - limited count
+      const commonNft = await TestNftFactory.deploy("Common NFT", "CNFT");
+      await commonNft.waitForDeployment();
+      await limitedPool.configureCollection(await commonNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
+      for (let i = 0; i < commonCount; i++) {
+        await commonNft.mint(ownerAddress, i + 1);
+        await commonNft.approve(await limitedPool.getAddress(), i + 1);
+        await limitedPool.deposit(await commonNft.getAddress(), i + 1);
       }
+
+      // Rare - add 1 NFT
+      const rareNft = await TestNftFactory.deploy("Rare NFT", "RNFT");
+      await rareNft.waitForDeployment();
+      await limitedPool.configureCollection(await rareNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Rare]);
+      await rareNft.mint(ownerAddress, 1);
+      await rareNft.approve(await limitedPool.getAddress(), 1);
+      await limitedPool.deposit(await rareNft.getAddress(), 1);
+
+      // Epic - add 1 NFT
+      const epicNft = await TestNftFactory.deploy("Epic NFT", "ENFT");
+      await epicNft.waitForDeployment();
+      await limitedPool.configureCollection(await epicNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Epic]);
+      await epicNft.mint(ownerAddress, 1);
+      await epicNft.approve(await limitedPool.getAddress(), 1);
+      await limitedPool.deposit(await epicNft.getAddress(), 1);
+
+      // Legendary - add 1 NFT
+      const legendaryNft = await TestNftFactory.deploy("Legendary NFT", "LNFT");
+      await legendaryNft.waitForDeployment();
+      await limitedPool.configureCollection(await legendaryNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Legendary]);
+      await legendaryNft.mint(ownerAddress, 1);
+      await legendaryNft.approve(await limitedPool.getAddress(), 1);
+      await limitedPool.deposit(await legendaryNft.getAddress(), 1);
+
+      // UltraRare - add 1 NFT
+      const ultraRareNft = await TestNftFactory.deploy("UltraRare NFT", "URNFT");
+      await ultraRareNft.waitForDeployment();
+      await limitedPool.configureCollection(await ultraRareNft.getAddress(), true, FLOOR_PRICES[PoolLevel.UltraRare]);
+      await ultraRareNft.mint(ownerAddress, 1);
+      await ultraRareNft.approve(await limitedPool.getAddress(), 1);
+      await limitedPool.deposit(await ultraRareNft.getAddress(), 1);
+
+      return { limitedPool, commonNft };
+    }
+
+    it("Should emit PackOpenFailed when level is empty", async function () {
+      // Create pool with only 2 Common NFTs (need 3 for a pack)
+      const { limitedPool } = await setupLimitedPoolWithAllLevels(2);
 
       // Point PackManager to limited pool
       await packManager.setNftPool(await limitedPool.getAddress());
@@ -1094,7 +1134,7 @@ describe("PackManager", function () {
       });
       await packManager.connect(user1).openPack(1);
 
-      // Fulfill VRF - should fail on 3rd NFT selection (only 2 available)
+      // Fulfill VRF - should fail on 3rd NFT selection (only 2 Common available)
       await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]))
         .to.emit(packManager, "PackOpenFailed")
         .withArgs(1, user1Address, 1, 1); // LevelSelectionFailed = 1
@@ -1105,27 +1145,8 @@ describe("PackManager", function () {
     });
 
     it("Should rollback locked NFTs on failure", async function () {
-      // Create a fresh pool with only 2 NFTs
-      const NftPoolFactory = new NftPool__factory(owner);
-      const newPoolImpl = await NftPoolFactory.deploy();
-      const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
-      const newPoolInitData = newPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
-      const newPoolProxy = await ProxyFactory.deploy(await newPoolImpl.getAddress(), ownerAddress, newPoolInitData);
-      const limitedPool = NftPool__factory.connect(await newPoolProxy.getAddress(), owner);
-
-      const POOL_MANAGER_ROLE = await limitedPool.POOL_MANAGER_ROLE();
-      await limitedPool.grantRole(POOL_MANAGER_ROLE, await packManager.getAddress());
-
-      const TestNftFactory = new TestERC721__factory(owner);
-      const limitedNft = await TestNftFactory.deploy("Limited NFT", "LNFT");
-      await limitedNft.waitForDeployment();
-      await limitedPool.configureCollection(await limitedNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
-
-      for (let i = 0; i < 2; i++) {
-        await limitedNft.mint(ownerAddress, i + 1);
-        await limitedNft.approve(await limitedPool.getAddress(), i + 1);
-        await limitedPool.deposit(await limitedNft.getAddress(), i + 1);
-      }
+      // Create pool with only 2 Common NFTs
+      const { limitedPool } = await setupLimitedPoolWithAllLevels(2);
 
       await packManager.setNftPool(await limitedPool.getAddress());
 
@@ -1146,27 +1167,8 @@ describe("PackManager", function () {
     });
 
     it("Should allow pack to be opened again after failure", async function () {
-      // Setup limited pool with only 2 NFTs
-      const NftPoolFactory = new NftPool__factory(owner);
-      const newPoolImpl = await NftPoolFactory.deploy();
-      const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
-      const newPoolInitData = newPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
-      const newPoolProxy = await ProxyFactory.deploy(await newPoolImpl.getAddress(), ownerAddress, newPoolInitData);
-      const limitedPool = NftPool__factory.connect(await newPoolProxy.getAddress(), owner);
-
-      const POOL_MANAGER_ROLE = await limitedPool.POOL_MANAGER_ROLE();
-      await limitedPool.grantRole(POOL_MANAGER_ROLE, await packManager.getAddress());
-
-      const TestNftFactory = new TestERC721__factory(owner);
-      const limitedNft = await TestNftFactory.deploy("Limited NFT", "LNFT");
-      await limitedNft.waitForDeployment();
-      await limitedPool.configureCollection(await limitedNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
-
-      for (let i = 0; i < 2; i++) {
-        await limitedNft.mint(ownerAddress, i + 1);
-        await limitedNft.approve(await limitedPool.getAddress(), i + 1);
-        await limitedPool.deposit(await limitedNft.getAddress(), i + 1);
-      }
+      // Create pool with only 2 Common NFTs
+      const { limitedPool, commonNft } = await setupLimitedPoolWithAllLevels(2);
 
       await packManager.setNftPool(await limitedPool.getAddress());
 
@@ -1177,9 +1179,9 @@ describe("PackManager", function () {
       await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
 
       // Pack open failed, now add another NFT and try again
-      await limitedNft.mint(ownerAddress, 3);
-      await limitedNft.approve(await limitedPool.getAddress(), 3);
-      await limitedPool.deposit(await limitedNft.getAddress(), 3);
+      await commonNft.mint(ownerAddress, 100);
+      await commonNft.approve(await limitedPool.getAddress(), 100);
+      await limitedPool.deposit(await commonNft.getAddress(), 100);
 
       // Should be able to open again
       await expect(packManager.connect(user1).openPack(1)).to.emit(packManager, "PackOpenRequested");
@@ -1218,10 +1220,10 @@ describe("PackManager", function () {
       // Retry
       await packManager.connect(user1).openPack(1);
       const newRequestId = await packManager.getActiveRequestIdForPack(1);
-      expect(newRequestId).to.equal(3); // New request ID
+      expect(newRequestId).to.equal(2); // New request ID (second VRF request)
 
       // This time VRF works
-      await mockVrf.fulfillRandomWords(3, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+      await mockVrf.fulfillRandomWords(2, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
 
       const [collections, , opened] = await rariPack.getPackContents(1);
       expect(opened).to.be.true;
