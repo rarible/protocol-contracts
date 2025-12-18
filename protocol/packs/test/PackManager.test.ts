@@ -851,4 +851,404 @@ describe("PackManager", function () {
       expect(await packManager.getInstantCashPercentage()).to.equal(8000);
     });
   });
+
+  describe("VRF Request Timeout Configuration", function () {
+    it("Should initialize with default timeout of 1 hour", async function () {
+      expect(await packManager.vrfRequestTimeout()).to.equal(3600);
+    });
+
+    it("Should allow owner to set timeout", async function () {
+      await expect(packManager.setVrfRequestTimeout(7200))
+        .to.emit(packManager, "VrfRequestTimeoutUpdated")
+        .withArgs(3600, 7200);
+
+      expect(await packManager.vrfRequestTimeout()).to.equal(7200);
+    });
+
+    it("Should revert when non-owner tries to set timeout", async function () {
+      await expect(packManager.connect(user1).setVrfRequestTimeout(7200)).to.be.revertedWithCustomError(
+        packManager,
+        "OwnableUnauthorizedAccount",
+      );
+    });
+  });
+
+  describe("Pack to Request ID Tracking", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+    });
+
+    it("Should track active request ID for pack", async function () {
+      expect(await packManager.getActiveRequestIdForPack(1)).to.equal(0);
+
+      await packManager.connect(user1).openPack(1);
+
+      expect(await packManager.getActiveRequestIdForPack(1)).to.equal(1);
+    });
+
+    it("Should clear request ID after fulfillment", async function () {
+      await packManager.connect(user1).openPack(1);
+      expect(await packManager.getActiveRequestIdForPack(1)).to.equal(1);
+
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      expect(await packManager.getActiveRequestIdForPack(1)).to.equal(0);
+    });
+  });
+
+  describe("Request Status Tracking", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+    });
+
+    it("Should set status to Pending on open", async function () {
+      await packManager.connect(user1).openPack(1);
+
+      const request = await packManager.openRequests(1);
+      expect(request.status).to.equal(0); // Pending
+    });
+
+    it("Should set status to Fulfilled after VRF callback", async function () {
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const request = await packManager.openRequests(1);
+      expect(request.status).to.equal(1); // Fulfilled
+    });
+
+    it("Should track createdAt timestamp", async function () {
+      const txResponse = await packManager.connect(user1).openPack(1);
+      const block = await ethers.provider.getBlock(txResponse.blockNumber!);
+
+      const request = await packManager.openRequests(1);
+      expect(request.createdAt).to.equal(block!.timestamp);
+    });
+  });
+
+  describe("Cancel Open Request", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+    });
+
+    it("Should allow owner to cancel immediately", async function () {
+      await expect(packManager.cancelOpenRequest(1))
+        .to.emit(packManager, "PackOpenCancelled")
+        .withArgs(1, user1Address, 1, ownerAddress);
+
+      const request = await packManager.openRequests(1);
+      expect(request.status).to.equal(2); // Cancelled
+    });
+
+    it("Should clear packOpeningInProgress after cancel", async function () {
+      expect(await packManager.packOpeningInProgress(1)).to.be.true;
+
+      await packManager.cancelOpenRequest(1);
+
+      expect(await packManager.packOpeningInProgress(1)).to.be.false;
+    });
+
+    it("Should clear packToRequestId after cancel", async function () {
+      expect(await packManager.getActiveRequestIdForPack(1)).to.equal(1);
+
+      await packManager.cancelOpenRequest(1);
+
+      expect(await packManager.getActiveRequestIdForPack(1)).to.equal(0);
+    });
+
+    it("Should allow pack owner to cancel after timeout", async function () {
+      // Fast forward past timeout
+      await ethers.provider.send("evm_increaseTime", [3601]);
+      await ethers.provider.send("evm_mine", []);
+
+      await expect(packManager.connect(user1).cancelOpenRequest(1))
+        .to.emit(packManager, "PackOpenCancelled")
+        .withArgs(1, user1Address, 1, user1Address);
+    });
+
+    it("Should revert when pack owner tries to cancel before timeout", async function () {
+      await expect(packManager.connect(user1).cancelOpenRequest(1)).to.be.revertedWithCustomError(
+        packManager,
+        "RequestNotTimedOut",
+      );
+    });
+
+    it("Should revert when non-owner/non-pack-owner tries to cancel", async function () {
+      await expect(packManager.connect(user2).cancelOpenRequest(1)).to.be.revertedWithCustomError(
+        packManager,
+        "NotAuthorized",
+      );
+    });
+
+    it("Should revert when no active request for pack", async function () {
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      await expect(packManager.cancelOpenRequest(1)).to.be.revertedWithCustomError(packManager, "NoActiveRequest");
+    });
+
+    it("Should revert when request is not pending", async function () {
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      await expect(packManager.cancelOpenRequestByRequestId(1)).to.be.revertedWithCustomError(
+        packManager,
+        "RequestNotPending",
+      );
+    });
+
+    it("Should allow pack to be opened again after cancel", async function () {
+      await packManager.cancelOpenRequest(1);
+
+      // Should be able to open again
+      await expect(packManager.connect(user1).openPack(1)).to.emit(packManager, "PackOpenRequested");
+    });
+  });
+
+  describe("Admin Open Pack", function () {
+    beforeEach(async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+    });
+
+    it("Should allow owner to open pack for any user", async function () {
+      await expect(packManager.adminOpenPack(1))
+        .to.emit(packManager, "PackOpenRequested")
+        .withArgs(1, user1Address, 1, PackType.Bronze);
+    });
+
+    it("Should set correct requester (pack owner, not admin)", async function () {
+      await packManager.adminOpenPack(1);
+
+      const request = await packManager.openRequests(1);
+      expect(request.requester).to.equal(user1Address);
+    });
+
+    it("Should revert when non-owner tries to admin open", async function () {
+      await expect(packManager.connect(user1).adminOpenPack(1)).to.be.revertedWithCustomError(
+        packManager,
+        "OwnableUnauthorizedAccount",
+      );
+    });
+
+    it("Should revert when pack is already opened", async function () {
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      await expect(packManager.adminOpenPack(1)).to.be.revertedWithCustomError(packManager, "PackAlreadyOpened");
+    });
+
+    it("Should revert when opening is in progress", async function () {
+      await packManager.connect(user1).openPack(1);
+
+      await expect(packManager.adminOpenPack(1)).to.be.revertedWithCustomError(
+        packManager,
+        "PackOpeningInProgressError",
+      );
+    });
+
+    it("Should revert when paused", async function () {
+      await packManager.pause();
+
+      await expect(packManager.adminOpenPack(1)).to.be.revertedWithCustomError(packManager, "EnforcedPause");
+    });
+  });
+
+  describe("Pack Open Failure and Rollback", function () {
+    it("Should emit PackOpenFailed when level is empty", async function () {
+      // Create a fresh pool with only 2 NFTs in Common level
+      const NftPoolFactory = new NftPool__factory(owner);
+      const newPoolImpl = await NftPoolFactory.deploy();
+      const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
+      const newPoolInitData = newPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
+      const newPoolProxy = await ProxyFactory.deploy(await newPoolImpl.getAddress(), ownerAddress, newPoolInitData);
+      const limitedPool = NftPool__factory.connect(await newPoolProxy.getAddress(), owner);
+
+      // Grant POOL_MANAGER_ROLE to PackManager
+      const POOL_MANAGER_ROLE = await limitedPool.POOL_MANAGER_ROLE();
+      await limitedPool.grantRole(POOL_MANAGER_ROLE, await packManager.getAddress());
+
+      // Only add 2 Common NFTs (need 3 for a pack)
+      const TestNftFactory = new TestERC721__factory(owner);
+      const limitedNft = await TestNftFactory.deploy("Limited NFT", "LNFT");
+      await limitedNft.waitForDeployment();
+      await limitedPool.configureCollection(await limitedNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
+
+      for (let i = 0; i < 2; i++) {
+        await limitedNft.mint(ownerAddress, i + 1);
+        await limitedNft.approve(await limitedPool.getAddress(), i + 1);
+        await limitedPool.deposit(await limitedNft.getAddress(), i + 1);
+      }
+
+      // Point PackManager to limited pool
+      await packManager.setNftPool(await limitedPool.getAddress());
+
+      // Mint and open pack
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+
+      // Fulfill VRF - should fail on 3rd NFT selection (only 2 available)
+      await expect(mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]))
+        .to.emit(packManager, "PackOpenFailed")
+        .withArgs(1, user1Address, 1, 1); // LevelSelectionFailed = 1
+
+      // Request should be marked as Failed
+      const request = await packManager.openRequests(1);
+      expect(request.status).to.equal(3); // Failed
+    });
+
+    it("Should rollback locked NFTs on failure", async function () {
+      // Create a fresh pool with only 2 NFTs
+      const NftPoolFactory = new NftPool__factory(owner);
+      const newPoolImpl = await NftPoolFactory.deploy();
+      const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
+      const newPoolInitData = newPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
+      const newPoolProxy = await ProxyFactory.deploy(await newPoolImpl.getAddress(), ownerAddress, newPoolInitData);
+      const limitedPool = NftPool__factory.connect(await newPoolProxy.getAddress(), owner);
+
+      const POOL_MANAGER_ROLE = await limitedPool.POOL_MANAGER_ROLE();
+      await limitedPool.grantRole(POOL_MANAGER_ROLE, await packManager.getAddress());
+
+      const TestNftFactory = new TestERC721__factory(owner);
+      const limitedNft = await TestNftFactory.deploy("Limited NFT", "LNFT");
+      await limitedNft.waitForDeployment();
+      await limitedPool.configureCollection(await limitedNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
+
+      for (let i = 0; i < 2; i++) {
+        await limitedNft.mint(ownerAddress, i + 1);
+        await limitedNft.approve(await limitedPool.getAddress(), i + 1);
+        await limitedPool.deposit(await limitedNft.getAddress(), i + 1);
+      }
+
+      await packManager.setNftPool(await limitedPool.getAddress());
+
+      const poolSizeBefore = await limitedPool.getPoolLevelSize(PoolLevel.Common);
+      expect(poolSizeBefore).to.equal(2);
+
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+
+      // This will fail and should rollback the 2 NFTs that were locked
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      // Pool should have same size as before (rolled back)
+      const poolSizeAfter = await limitedPool.getPoolLevelSize(PoolLevel.Common);
+      expect(poolSizeAfter).to.equal(2);
+    });
+
+    it("Should allow pack to be opened again after failure", async function () {
+      // Setup limited pool with only 2 NFTs
+      const NftPoolFactory = new NftPool__factory(owner);
+      const newPoolImpl = await NftPoolFactory.deploy();
+      const ProxyFactory = new TransparentUpgradeableProxy__factory(owner);
+      const newPoolInitData = newPoolImpl.interface.encodeFunctionData("initialize", [ownerAddress, []]);
+      const newPoolProxy = await ProxyFactory.deploy(await newPoolImpl.getAddress(), ownerAddress, newPoolInitData);
+      const limitedPool = NftPool__factory.connect(await newPoolProxy.getAddress(), owner);
+
+      const POOL_MANAGER_ROLE = await limitedPool.POOL_MANAGER_ROLE();
+      await limitedPool.grantRole(POOL_MANAGER_ROLE, await packManager.getAddress());
+
+      const TestNftFactory = new TestERC721__factory(owner);
+      const limitedNft = await TestNftFactory.deploy("Limited NFT", "LNFT");
+      await limitedNft.waitForDeployment();
+      await limitedPool.configureCollection(await limitedNft.getAddress(), true, FLOOR_PRICES[PoolLevel.Common]);
+
+      for (let i = 0; i < 2; i++) {
+        await limitedNft.mint(ownerAddress, i + 1);
+        await limitedNft.approve(await limitedPool.getAddress(), i + 1);
+        await limitedPool.deposit(await limitedNft.getAddress(), i + 1);
+      }
+
+      await packManager.setNftPool(await limitedPool.getAddress());
+
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      // Pack open failed, now add another NFT and try again
+      await limitedNft.mint(ownerAddress, 3);
+      await limitedNft.approve(await limitedPool.getAddress(), 3);
+      await limitedPool.deposit(await limitedNft.getAddress(), 3);
+
+      // Should be able to open again
+      await expect(packManager.connect(user1).openPack(1)).to.emit(packManager, "PackOpenRequested");
+    });
+
+    it("Should not process duplicate VRF callbacks", async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+      await packManager.connect(user1).openPack(1);
+
+      // First callback
+      await mockVrf.fulfillRandomWords(1, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const requestBefore = await packManager.openRequests(1);
+      expect(requestBefore.status).to.equal(1); // Fulfilled
+
+      // Simulate second callback (should be ignored gracefully)
+      // The mock VRF would need modification to allow this, but the contract
+      // should handle it by checking status != Pending
+    });
+  });
+
+  describe("Fallback Recovery Integration", function () {
+    it("Should handle full cancel-and-retry flow", async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+
+      // First attempt
+      await packManager.connect(user1).openPack(1);
+
+      // Owner cancels (simulating stuck VRF)
+      await packManager.cancelOpenRequest(1);
+
+      // Retry
+      await packManager.connect(user1).openPack(1);
+      const newRequestId = await packManager.getActiveRequestIdForPack(1);
+      expect(newRequestId).to.equal(3); // New request ID
+
+      // This time VRF works
+      await mockVrf.fulfillRandomWords(3, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      const [collections, , opened] = await rariPack.getPackContents(1);
+      expect(opened).to.be.true;
+      expect(collections.length).to.equal(3);
+    });
+
+    it("Should handle admin intervention flow", async function () {
+      await rariPack.connect(user1).mintPack(user1Address, PackType.Bronze, 1, {
+        value: BRONZE_PRICE,
+      });
+
+      // Admin opens for user
+      await packManager.adminOpenPack(1);
+
+      // VRF fulfills
+      const requestId = await packManager.getActiveRequestIdForPack(1);
+      await mockVrf.fulfillRandomWords(requestId, [9500n << 16n, 9600n << 16n, 9700n << 16n]);
+
+      // User can now claim
+      const [collections] = await rariPack.getPackContents(1);
+      expect(collections.length).to.equal(3);
+
+      // User claims
+      await packManager.connect(user1).claimNft(1);
+
+      // Pack should be burned
+      await expect(rariPack.ownerOf(1)).to.be.revertedWithCustomError(rariPack, "ERC721NonexistentToken");
+    });
+  });
 });

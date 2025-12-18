@@ -9,6 +9,14 @@ pragma solidity ^0.8.30;
 // NFTs are simply re-added back into NftPool accounting so the pool can
 // continue to exist and be reused for future packs. It is designed to work
 // together with RariPack and NftPool.
+//
+// Fallback / recovery:
+// - If VRF fulfillment cannot complete (e.g., pool level becomes empty), the
+//   request is marked Failed, any partially locked NFTs are rolled back to pool
+//   accounting, and the pack is unlocked so it can be opened again.
+// - If VRF callback never arrives, pack owners can cancel after a timeout,
+//   and the contract owner can cancel immediately.
+// - Contract owner can also manually request a new VRF open for a pack.
 // </ai_context>
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -40,12 +48,27 @@ contract PackManager is
     // Types
     // -----------------------
 
+    enum RequestStatus {
+        Pending,
+        Fulfilled,
+        Cancelled,
+        Failed
+    }
+
+    enum OpenFailReason {
+        Unknown,
+        LevelSelectionFailed,
+        SetPackContentsFailed
+    }
+
     /// @dev Request state for pending VRF callbacks
     struct OpenRequest {
         address requester;
         uint256 packTokenId;
         RariPack.PackType packType;
         bool fulfilled;
+        uint64 createdAt;
+        RequestStatus status;
     }
 
     /// @dev Reward NFT info for events
@@ -122,6 +145,12 @@ contract PackManager is
     /// @dev Whether to pay for VRF with LINK token (true) or native ETH (false, default)
     bool public vrfPayWithLink;
 
+    /// @dev Pack tokenId => currently active open requestId (0 if none)
+    mapping(uint256 => uint256) public packToRequestId;
+
+    /// @dev Timeout (seconds) after which a pack owner can cancel a pending VRF request
+    uint64 public vrfRequestTimeout;
+
     // -----------------------
     // Events
     // -----------------------
@@ -139,6 +168,24 @@ contract PackManager is
         uint256 indexed packTokenId,
         RewardNft[3] rewards
     );
+
+    event PackOpenFailed(
+        uint256 indexed requestId,
+        address indexed requester,
+        uint256 indexed packTokenId,
+        OpenFailReason reason
+    );
+
+    event PackOpenCancelled(
+        uint256 indexed requestId,
+        address indexed requester,
+        uint256 indexed packTokenId,
+        address cancelledBy
+    );
+
+    event LockedNftRollbackFailed(address indexed collection, uint256 indexed tokenId);
+
+    event VrfRequestTimeoutUpdated(uint64 oldTimeout, uint64 newTimeout);
 
     event InstantCashClaimed(
         address indexed requester,
@@ -194,6 +241,10 @@ contract PackManager is
     error PackOpeningInProgressError();
     error PackNotOpened();
     error PackEmpty();
+    error NotAuthorized();
+    error RequestNotPending();
+    error RequestNotTimedOut();
+    error NoActiveRequest();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -224,6 +275,10 @@ contract PackManager is
 
         // Instant cash disabled by default
         instantCashEnabled = false;
+
+        // Default cancel timeout for missing VRF callback
+        vrfRequestTimeout = 1 hours;
+        emit VrfRequestTimeoutUpdated(0, vrfRequestTimeout);
     }
 
     /// @dev Set default probability thresholds (cumulative, out of 10000)
@@ -371,6 +426,13 @@ contract PackManager is
         emit InstantCashEnabledUpdated(enabled);
     }
 
+    /// @notice Set timeout after which pack owners can cancel stuck VRF requests
+    function setVrfRequestTimeout(uint64 timeoutSeconds) external onlyOwner {
+        uint64 oldTimeout = vrfRequestTimeout;
+        vrfRequestTimeout = timeoutSeconds;
+        emit VrfRequestTimeoutUpdated(oldTimeout, timeoutSeconds);
+    }
+
     /// @notice Pause pack opening and claiming
     function pause() external onlyOwner {
         _pause();
@@ -443,14 +505,82 @@ contract PackManager is
             requester: msg.sender,
             packTokenId: packTokenId,
             packType: packType,
-            fulfilled: false
+            fulfilled: false,
+            createdAt: uint64(block.timestamp),
+            status: RequestStatus.Pending
         });
 
         packOpeningInProgress[packTokenId] = true;
+        packToRequestId[packTokenId] = requestId;
 
         _userPendingRequests[msg.sender].push(requestId);
 
         emit PackOpenRequested(requestId, msg.sender, packTokenId, packType);
+    }
+
+    /// @notice Admin-only: manually start VRF open request for a pack
+    function adminOpenPack(uint256 packTokenId) external onlyOwner whenNotPaused returns (uint256 requestId) {
+        address currentOwner = rariPack.ownerOf(packTokenId);
+
+        (, , bool opened) = rariPack.getPackContents(packTokenId);
+        if (opened) revert PackAlreadyOpened();
+
+        if (packOpeningInProgress[packTokenId]) revert PackOpeningInProgressError();
+
+        RariPack.PackType packType = rariPack.packTypeOf(packTokenId);
+
+        _verifyPoolLevelsAvailable(packType);
+
+        requestId = _requestRandomness();
+
+        openRequests[requestId] = OpenRequest({
+            requester: currentOwner,
+            packTokenId: packTokenId,
+            packType: packType,
+            fulfilled: false,
+            createdAt: uint64(block.timestamp),
+            status: RequestStatus.Pending
+        });
+
+        packOpeningInProgress[packTokenId] = true;
+        packToRequestId[packTokenId] = requestId;
+
+        _userPendingRequests[currentOwner].push(requestId);
+
+        emit PackOpenRequested(requestId, currentOwner, packTokenId, packType);
+    }
+
+    /// @notice Cancel a stuck open request by packTokenId (requires packToRequestId to be set)
+    function cancelOpenRequest(uint256 packTokenId) external {
+        uint256 requestId = packToRequestId[packTokenId];
+        if (requestId == 0) revert NoActiveRequest();
+        _cancelOpenRequestById(requestId);
+    }
+
+    /// @notice Cancel a stuck open request by requestId (works for old requests too)
+    function cancelOpenRequestByRequestId(uint256 requestId) external {
+        _cancelOpenRequestById(requestId);
+    }
+
+    function _cancelOpenRequestById(uint256 requestId) internal {
+        OpenRequest storage request = openRequests[requestId];
+        if (request.requester == address(0)) revert RequestNotFound();
+        if (request.status != RequestStatus.Pending) revert RequestNotPending();
+
+        uint256 packTokenId = request.packTokenId;
+        address packOwner = rariPack.ownerOf(packTokenId);
+
+        if (msg.sender != owner() && msg.sender != packOwner) revert NotAuthorized();
+
+        if (msg.sender != owner()) {
+            if (block.timestamp < uint256(request.createdAt) + uint256(vrfRequestTimeout)) revert RequestNotTimedOut();
+        }
+
+        request.status = RequestStatus.Cancelled;
+
+        _finalizeOpenRequest(requestId, request);
+
+        emit PackOpenCancelled(requestId, request.requester, packTokenId, msg.sender);
     }
 
     /// @notice Callback function for VRF Coordinator
@@ -490,43 +620,80 @@ contract PackManager is
     function _fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal {
         OpenRequest storage request = openRequests[requestId];
         if (request.requester == address(0)) revert RequestNotFound();
-        if (request.fulfilled) revert RequestAlreadyFulfilled();
 
-        request.fulfilled = true;
-        packOpeningInProgress[request.packTokenId] = false;
+        if (request.status != RequestStatus.Pending) {
+            return;
+        }
 
-        _processOpen(requestId, request, randomWords);
+        (bool ok, RewardNft[3] memory rewards, OpenFailReason reason) = _processOpenSafe(request, randomWords);
+
+        if (ok) {
+            request.fulfilled = true;
+            request.status = RequestStatus.Fulfilled;
+            emit PackOpened(requestId, request.requester, request.packTokenId, rewards);
+        } else {
+            request.fulfilled = false;
+            request.status = RequestStatus.Failed;
+            emit PackOpenFailed(requestId, request.requester, request.packTokenId, reason);
+        }
+
+        _finalizeOpenRequest(requestId, request);
+    }
+
+    function _finalizeOpenRequest(uint256 requestId, OpenRequest storage request) internal {
+        uint256 packTokenId = request.packTokenId;
+
+        packOpeningInProgress[packTokenId] = false;
+
+        if (packToRequestId[packTokenId] == requestId) {
+            packToRequestId[packTokenId] = 0;
+        }
 
         _removePendingRequest(request.requester, requestId);
     }
 
-    /// @dev Process opening of a pack - select and lock NFTs into the pack
-    function _processOpen(uint256 requestId, OpenRequest storage request, uint256[] calldata randomWords) internal {
-        RewardNft[3] memory rewards;
+    /// @dev Process opening of a pack - select and lock NFTs into the pack (safe, non-sticky)
+    function _processOpenSafe(
+        OpenRequest storage request,
+        uint256[] calldata randomWords
+    ) internal returns (bool ok, RewardNft[3] memory rewards, OpenFailReason reason) {
         address[] memory collections = new address[](REWARDS_PER_PACK);
         uint256[] memory tokenIds = new uint256[](REWARDS_PER_PACK);
 
         for (uint256 i = 0; i < REWARDS_PER_PACK; i++) {
             uint256 randomValue = randomWords[i];
 
-            // Determine pool level based on probability
             NftPool.PoolLevel level = _selectPoolLevel(request.packType, randomValue);
 
-            // Select and lock random NFT from that level in the pool (no transfer out)
-            (address collection, uint256 tokenId) = nftPool.selectAndLockFromLevel(
-                level,
-                randomValue >> 16 // Use different bits for NFT selection
-            );
-
-            rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
-            collections[i] = collection;
-            tokenIds[i] = tokenId;
+            try nftPool.selectAndLockFromLevel(level, randomValue >> 16) returns (address collection, uint256 tokenId) {
+                rewards[i] = RewardNft({collection: collection, tokenId: tokenId, poolLevel: level});
+                collections[i] = collection;
+                tokenIds[i] = tokenId;
+            } catch {
+                _rollbackLockedNfts(collections, tokenIds, i);
+                return (false, rewards, OpenFailReason.LevelSelectionFailed);
+            }
         }
 
-        // Lock contents into the pack (for metadata and later claims)
-        rariPack.setPackContents(request.packTokenId, collections, tokenIds);
+        try rariPack.setPackContents(request.packTokenId, collections, tokenIds) {
+            return (true, rewards, OpenFailReason.Unknown);
+        } catch {
+            _rollbackLockedNfts(collections, tokenIds, REWARDS_PER_PACK);
+            return (false, rewards, OpenFailReason.SetPackContentsFailed);
+        }
+    }
 
-        emit PackOpened(requestId, request.requester, request.packTokenId, rewards);
+    function _rollbackLockedNfts(address[] memory collections, uint256[] memory tokenIds, uint256 count) internal {
+        for (uint256 i = 0; i < count; i++) {
+            address collection = collections[i];
+            uint256 tokenId = tokenIds[i];
+            if (collection == address(0)) {
+                continue;
+            }
+            try nftPool.addLockedNft(collection, tokenId) {} catch {
+                emit LockedNftRollbackFailed(collection, tokenId);
+            }
+        }
     }
 
     // -----------------------
@@ -717,9 +884,14 @@ contract PackManager is
         return INSTANT_CASH_PERCENTAGE;
     }
 
+    /// @notice Get active requestId for a pack (0 if none)
+    function getActiveRequestIdForPack(uint256 packTokenId) external view returns (uint256) {
+        return packToRequestId[packTokenId];
+    }
+
     // -----------------------
     // Storage Gap
     // -----------------------
 
-    uint256[34] private __gap;
+    uint256[32] private __gap;
 }

@@ -24,9 +24,7 @@ contract MockVRFCoordinator {
     event RandomWordsFulfilled(uint256 indexed requestId, uint256[] randomWords, address indexed callback);
 
     /// @notice Mock requestRandomWords function matching VRF V2.5 signature (struct parameter)
-    function requestRandomWords(
-        VRFV2PlusClient.RandomWordsRequest calldata req
-    ) external returns (uint256 requestId) {
+    function requestRandomWords(VRFV2PlusClient.RandomWordsRequest calldata req) external returns (uint256 requestId) {
         requestId = _nextRequestId++;
         requestCallbacks[requestId] = msg.sender;
 
