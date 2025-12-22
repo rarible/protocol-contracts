@@ -12,6 +12,10 @@ const sepoliaRpcUrl =
   process.env.SEPOLIA_RPC_URL ??
   process.env.ALCHEMY_SEPOLIA_RPC_URL ??
   "https://ethereum-sepolia-rpc.publicnode.com";
+const baseRpcUrl =
+  process.env.BASE_RPC_URL ??
+  process.env.ALCHEMY_BASE_RPC_URL ??
+  "https://mainnet.base.org";
 const deployerKey = process.env.DEPLOYER_PRIVATE_KEY ?? "";
 
 export default defineConfig({
@@ -44,6 +48,12 @@ export default defineConfig({
     sepolia: {
       url: sepoliaRpcUrl,
       type: "http",
+      accounts: deployerKey ? [deployerKey] : [],
+    },
+    base: {
+      url: baseRpcUrl,
+      type: "http",
+      chainId: 8453,
       accounts: deployerKey ? [deployerKey] : [],
     },
   },
