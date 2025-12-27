@@ -106,10 +106,38 @@ Then run the setup module to configure relationships.
 | File | Module | Description |
 |------|--------|-------------|
 | `packInfrastructure.json` | PackInfrastructureModule | Full infrastructure deployment |
+| `packInfrastructure.base.json` | PackInfrastructureModule | Base mainnet template (chain-8453) |
 | `setupPackInfrastructure.json` | SetupPackInfrastructureModule | Configuration after deployment |
+| `setupPackInfrastructure.base.json` | SetupPackInfrastructureModule | Base mainnet template (chain-8453) |
 | `rariPack.json` | RariPackModule | Individual RariPack deployment |
 | `nftPool.json` | NftPoolModule | Individual NftPool deployment |
 | `packManager.json` | PackManagerModule | Individual PackManager deployment |
+
+## Base Mainnet (chainId 8453)
+
+Ignition “settings” for Base are just:
+- Run Ignition with `--network base` (from `hardhat.config.ts`)
+- Deployments will be written to `ignition/deployments/chain-8453/`
+- Parameter files can be:
+  - `ignition/parameters/packInfrastructure.base.json`
+  - `ignition/parameters/setupPackInfrastructure.base.json`
+
+### Deploy via scripts (recommended)
+
+```bash
+# from protocol/packs
+yarn deploy:base
+```
+
+### Deploy via Ignition CLI directly
+
+```bash
+# from protocol/packs
+npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network base --parameters ignition/parameters/packInfrastructure.base.json
+
+# then edit setupPackInfrastructure.base.json with the deployed proxy addresses + Base VRF details
+npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network base --parameters ignition/parameters/setupPackInfrastructure.base.json
+```
 
 ## Pool Levels & Price Ranges
 
