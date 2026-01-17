@@ -27,8 +27,9 @@ const NETWORK_CONFIG: Record<
     chainId: "8453",
     owner: "0xa95a09520af0f1bbef810a47560c79affe75aa9f",
     vrfCoordinator: "0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634",
-    vrfKeyHash: "0xdc2f87677b01473c763cb0aee938ed3341512f6057324a584e5944e786144d70",
+    vrfKeyHash: "0x00b81b5a830cb0a4009fbd8904de511e28631e62ce5ad231373d3cdad373ccab",
     vrfSubIdEnvVar: "BASE_VRF_SUBSCRIPTION_ID",
+    vrfSubscriptionId: "80015873168992726859849382095434323321462670158563823161174109925990052043078",
     packMetadataBase: "https://rarible-drops.s3.filebase.com/Base/pack",
   },
   sepolia: {
