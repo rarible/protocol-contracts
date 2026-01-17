@@ -133,8 +133,10 @@ contract PackManager is
     /// @dev Pack type => probability thresholds
     mapping(RariPack.PackType => PackProbabilities) private _packProbabilities;
 
-    /// @dev Treasury address for instant cash payouts (ETH)
+    /// @dev Treasury address for excess ETH forwarding
     address public payoutTreasury;
+
+
 
     /// @dev Whether instant cash claims are enabled
     bool public instantCashEnabled;
@@ -150,6 +152,9 @@ contract PackManager is
 
     /// @dev Timeout (seconds) after which a pack owner can cancel a pending VRF request
     uint64 public vrfRequestTimeout;
+
+    /// @dev ETH balance threshold - excess above this is forwarded to payoutTreasury
+    uint256 public treasuryThreshold;
 
     // -----------------------
     // Events
@@ -215,9 +220,11 @@ contract PackManager is
         uint16 rare
     );
     event PayoutTreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+    event TreasuryThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
     event InstantCashEnabledUpdated(bool enabled);
     event TreasuryFunded(address indexed funder, uint256 amount);
     event TreasuryWithdrawn(address indexed to, uint256 amount);
+    event ExcessForwardedToTreasury(address indexed treasury, uint256 amount);
 
     // -----------------------
     // Errors
@@ -413,11 +420,19 @@ contract PackManager is
         emit PackProbabilitiesUpdated(packType, probs.ultraRare, probs.legendary, probs.epic, probs.rare);
     }
 
-    /// @notice Set the payout treasury address (for ETH management)
+    /// @notice Set the payout treasury address (for excess ETH forwarding)
     function setPayoutTreasury(address treasury_) external onlyOwner {
         address oldTreasury = payoutTreasury;
         payoutTreasury = treasury_;
         emit PayoutTreasuryUpdated(oldTreasury, treasury_);
+    }
+
+    /// @notice Set the ETH balance threshold - excess above this is forwarded to payoutTreasury
+    /// @param threshold_ The threshold in wei (e.g., 5 ether = 5e18)
+    function setTreasuryThreshold(uint256 threshold_) external onlyOwner {
+        uint256 oldThreshold = treasuryThreshold;
+        treasuryThreshold = threshold_;
+        emit TreasuryThresholdUpdated(oldThreshold, threshold_);
     }
 
     /// @notice Enable or disable instant cash claims
@@ -450,6 +465,7 @@ contract PackManager is
     /// @notice Fund the contract for instant cash payouts
     function fundTreasury() external payable {
         emit TreasuryFunded(msg.sender, msg.value);
+        _forwardExcessToTreasury();
     }
 
     /// @notice Withdraw funds from the contract
@@ -471,6 +487,22 @@ contract PackManager is
     /// @notice Allow contract to receive ETH
     receive() external payable {
         emit TreasuryFunded(msg.sender, msg.value);
+        _forwardExcessToTreasury();
+    }
+
+    /// @dev Forward excess ETH above threshold to payoutTreasury
+    function _forwardExcessToTreasury() internal {
+        if (payoutTreasury == address(0) || treasuryThreshold == 0) return;
+        
+        uint256 balance = address(this).balance;
+        if (balance <= treasuryThreshold) return;
+        
+        uint256 excess = balance - treasuryThreshold;
+        (bool sent, ) = payoutTreasury.call{value: excess}("");
+        if (sent) {
+            emit ExcessForwardedToTreasury(payoutTreasury, excess);
+        }
+        // If transfer fails, keep the ETH in the contract (no revert to avoid blocking receives)
     }
 
     // -----------------------
@@ -893,5 +925,5 @@ contract PackManager is
     // Storage Gap
     // -----------------------
 
-    uint256[32] private __gap;
+    uint256[31] private __gap;
 }

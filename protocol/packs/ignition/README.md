@@ -64,13 +64,10 @@ The pack system consists of three main contracts:
    npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network <NETWORK> --parameters ignition/parameters/packInfrastructure.json
    ```
 
-3. **Update setup parameters** in `parameters/setupPackInfrastructure.json` with deployed addresses:
+3. **Update setup parameters** in `parameters/setupPackInfrastructure.json` with VRF config:
    ```json
    {
      "SetupPackInfrastructureModule": {
-       "rariPackProxy": "<DEPLOYED_RARIPACK_PROXY>",
-       "packManagerProxy": "<DEPLOYED_PACKMANAGER_PROXY>",
-       "nftPoolProxy": "<DEPLOYED_NFTPOOL_PROXY>",
        "vrfCoordinator": "<CHAINLINK_VRF_COORDINATOR>",
        "vrfSubscriptionId": "<VRF_SUBSCRIPTION_ID>",
        "vrfKeyHash": "<VRF_KEY_HASH>",
@@ -78,6 +75,8 @@ The pack system consists of three main contracts:
      }
    }
    ```
+   
+   > **Note:** Proxy addresses are obtained automatically from the PackInfrastructure deployment via module chaining.
 
 4. **Run setup**:
    ```bash
@@ -135,7 +134,7 @@ yarn deploy:base
 # from protocol/packs
 npx hardhat ignition deploy ignition/modules/PackInfrastructure.ts --network base --parameters ignition/parameters/packInfrastructure.base.json
 
-# then edit setupPackInfrastructure.base.json with the deployed proxy addresses + Base VRF details
+# SetupPackInfrastructure chains with PackInfrastructure to get proxy addresses automatically
 npx hardhat ignition deploy ignition/modules/SetupPackInfrastructure.ts --network base --parameters ignition/parameters/setupPackInfrastructure.base.json
 ```
 

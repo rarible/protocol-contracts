@@ -276,7 +276,61 @@ Contract owner can pause/unpause:
 | `Owner` | PackManager | Configure VRF, enable instant cash, pause |
 | `Owner` | NftPool | Set pool ranges |
 
-## Deployment Checklist
+## Quick Deployment
+
+The pack system can be deployed in 4 simple steps:
+
+```bash
+cd protocol/packs
+yarn install
+
+# For Sepolia testnet
+yarn step1:sepolia   # Deploy 5 item collections (ERC721A)
+yarn step2:sepolia   # Deploy RariPack, NftPool, PackManager
+yarn step3:sepolia   # Configure collections, mint & deposit items
+yarn step4:sepolia   # Verify configuration & show status
+
+# Or run all at once
+yarn deploy:all:sepolia
+```
+
+**Prerequisites:**
+- Set `SEPOLIA_VRF_SUBSCRIPTION_ID` in `.env`
+- After step 2, add PackManager to VRF consumers at [vrf.chain.link](https://vrf.chain.link/)
+
+See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for detailed instructions.
+
+## Using the Pack System
+
+### Mint Packs
+
+```solidity
+// PackType: 0=Bronze, 1=Silver, 2=Gold, 3=Platinum
+uint256 price = rariPack.getPackPrice(0); // Get Bronze price
+rariPack.mintPack{value: price}(userAddress, 0, 1); // Mint 1 Bronze pack
+```
+
+### Open Packs
+
+```solidity
+// Triggers Chainlink VRF request
+packManager.openPack(packTokenId);
+// Wait for VRF callback (1-3 blocks)
+```
+
+### Claim Rewards
+
+```solidity
+// Option A: Get the NFTs
+packManager.claimNft(packTokenId);
+
+// Option B: Get 80% of floor prices in ETH
+packManager.claimReward(packTokenId);
+```
+
+## Deployment Checklist (Manual)
+
+If deploying manually without scripts:
 
 1. Deploy `RariPack` with treasury address
 2. Deploy `NftPool` with owner
@@ -286,7 +340,7 @@ Contract owner can pause/unpause:
 6. Configure VRF on PackManager
 7. Set NftPool address on PackManager
 8. Configure pack prices on RariPack
-9. Configure collections on NftPool
+9. Configure collections on NftPool (set floor prices)
 10. Deposit NFTs to NftPool
 11. (Optional) Enable instant cash and fund treasury
 

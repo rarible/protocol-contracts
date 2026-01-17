@@ -1,9 +1,10 @@
 // Hardhat Ignition module for setting up Pack Infrastructure relationships
-// Run this after deploying PackInfrastructure module
+// This module chains with PackInfrastructure to get deployed addresses automatically
 // Learn more at https://hardhat.org/ignition
 
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import { ethers } from "ethers";
+import PackInfrastructureModule from "./PackInfrastructure";
 
 // Pack types
 const PackType = {
@@ -19,11 +20,9 @@ const POOL_MANAGER_ROLE = ethers.keccak256(ethers.toUtf8Bytes("POOL_MANAGER_ROLE
 
 const SetupPackInfrastructureModule = buildModule("SetupPackInfrastructureModule", (m) => {
   // ============================================
-  // Parameters - Deployed Addresses
+  // Get deployed addresses from PackInfrastructure module
   // ============================================
-  const rariPackProxy = m.getParameter<string>("rariPackProxy");
-  const packManagerProxy = m.getParameter<string>("packManagerProxy");
-  const nftPoolProxy = m.getParameter<string>("nftPoolProxy");
+  const { rariPackProxy, packManagerProxy, nftPoolProxy } = m.useModule(PackInfrastructureModule);
 
   // VRF Configuration
   const vrfCoordinator = m.getParameter<string>("vrfCoordinator");
