@@ -11,6 +11,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Network configuration
+// Network-specific VRF configuration
+// IMPORTANT: These values are hardcoded per-network to avoid env var confusion
+// Env vars (e.g., BASE_VRF_SUBSCRIPTION_ID) can override if needed
 const NETWORK_CONFIG: Record<
   string,
   {
@@ -19,13 +22,14 @@ const NETWORK_CONFIG: Record<
     vrfCoordinator: string;
     vrfKeyHash: string;
     vrfSubIdEnvVar: string;
-    vrfSubscriptionId?: string;
+    vrfSubscriptionId: string;
     packMetadataBase: string;
   }
 > = {
   base: {
     chainId: "8453",
     owner: "0xa95a09520af0f1bbef810a47560c79affe75aa9f",
+    // Base Mainnet Chainlink VRF v2.5
     vrfCoordinator: "0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634",
     vrfKeyHash: "0x00b81b5a830cb0a4009fbd8904de511e28631e62ce5ad231373d3cdad373ccab",
     vrfSubIdEnvVar: "BASE_VRF_SUBSCRIPTION_ID",
@@ -35,6 +39,7 @@ const NETWORK_CONFIG: Record<
   sepolia: {
     chainId: "11155111",
     owner: "0xa95a09520af0f1bbef810a47560c79affe75aa9f",
+    // Sepolia Testnet Chainlink VRF v2.5
     vrfCoordinator: "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B",
     vrfKeyHash: "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae",
     vrfSubIdEnvVar: "SEPOLIA_VRF_SUBSCRIPTION_ID",
@@ -70,10 +75,11 @@ async function main() {
   const owner = process.env.PACK_OWNER ?? config.owner;
   const treasury = process.env.PACK_TREASURY ?? owner;
 
-  // VRF Configuration
-  const vrfCoordinator = process.env.VRF_COORDINATOR ?? config.vrfCoordinator;
-  const vrfSubscriptionId = process.env[config.vrfSubIdEnvVar] ?? process.env.VRF_SUBSCRIPTION_ID ?? config.vrfSubscriptionId;
-  const vrfKeyHash = process.env.VRF_KEY_HASH ?? config.vrfKeyHash;
+  // VRF Configuration - prefer hardcoded config for safety, env vars only for override
+  // Network-specific env vars (e.g., BASE_VRF_*) override config, generic VRF_* is last resort
+  const vrfCoordinator = process.env[`${networkName.toUpperCase()}_VRF_COORDINATOR`] ?? config.vrfCoordinator;
+  const vrfKeyHash = process.env[`${networkName.toUpperCase()}_VRF_KEY_HASH`] ?? config.vrfKeyHash;
+  const vrfSubscriptionId = process.env[config.vrfSubIdEnvVar] ?? config.vrfSubscriptionId ?? process.env.VRF_SUBSCRIPTION_ID;
 
   if (!vrfSubscriptionId) {
     throw new Error(`Set ${config.vrfSubIdEnvVar} or VRF_SUBSCRIPTION_ID in .env, or add vrfSubscriptionId to config`);
