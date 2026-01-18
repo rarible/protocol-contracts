@@ -85,11 +85,11 @@ async function main() {
     throw new Error(`Set ${config.vrfSubIdEnvVar} or VRF_SUBSCRIPTION_ID in .env, or add vrfSubscriptionId to config`);
   }
 
-  // Pack metadata URIs
-  const bronzeUri = process.env.PACK_URI_BRONZE ?? `${config.packMetadataBase}/bronze.json`;
-  const silverUri = process.env.PACK_URI_SILVER ?? `${config.packMetadataBase}/silver.json`;
-  const goldUri = process.env.PACK_URI_GOLD ?? `${config.packMetadataBase}/gold.json`;
-  const platinumUri = process.env.PACK_URI_PLATINUM ?? `${config.packMetadataBase}/platinum.json`;
+  // Pack image URIs (used as "image" field in tokenURI - should be .png, not .json)
+  const bronzeUri = process.env.PACK_IMAGE_BRONZE ?? `${config.packMetadataBase}/bronze.png`;
+  const silverUri = process.env.PACK_IMAGE_SILVER ?? `${config.packMetadataBase}/silver.png`;
+  const goldUri = process.env.PACK_IMAGE_GOLD ?? `${config.packMetadataBase}/gold.png`;
+  const platinumUri = process.env.PACK_IMAGE_PLATINUM ?? `${config.packMetadataBase}/platinum.png`;
 
   // Custom pool ranges for TEST MODE (1-5 cents at ETH=$3300)
   const customPoolRanges = [

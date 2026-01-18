@@ -265,6 +265,149 @@ console.log(`Available for instant cash: ${ethers.formatEther(balance)} ETH`);
 
 ---
 
+## 📋 Real Transaction Examples
+
+User address: [`0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f`](https://basescan.org/address/0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f)
+
+### Example 1: Mint Pack (Buy a Pack)
+
+**Contract:** RariPack (`0x8706480381A0c240Ae1038092350e35b32179124`)  
+**Function:** `mint(uint8 packType, address to, uint256 amount)`
+
+```javascript
+// Buy 1 Bronze pack
+const rariPack = new ethers.Contract(
+  "0x8706480381A0c240Ae1038092350e35b32179124",
+  ["function mint(uint8 packType, address to, uint256 amount) external payable",
+   "function packPrice(uint8 packType) external view returns (uint256)"],
+  signer
+);
+
+const price = await rariPack.packPrice(0); // Bronze = 0
+const tx = await rariPack.mint(0, userAddress, 1, { value: price });
+await tx.wait();
+console.log("Mint tx:", tx.hash);
+```
+
+**Basescan Link Pattern:**  
+`https://basescan.org/tx/{TX_HASH}`
+
+---
+
+### Example 2: Open Pack
+
+**Contract:** PackManager (`0x0048d385d644975d790A4775DF3c3E19b5746EF4`)  
+**Function:** `openPack(uint256 packTokenId)`
+
+```javascript
+const packManager = new ethers.Contract(
+  "0x0048d385d644975d790A4775DF3c3E19b5746EF4",
+  ["function openPack(uint256 packTokenId) external"],
+  signer
+);
+
+// Open pack #2
+const tx = await packManager.openPack(2);
+await tx.wait();
+console.log("Open pack tx:", tx.hash);
+
+// Wait for VRF callback (~30s - 2min)
+// The PackOpened event will be emitted in a separate tx from Chainlink VRF
+```
+
+**Events to Monitor:**
+- `PackOpenRequested` - Emitted when user initiates opening
+- `PackOpened` - Emitted when VRF callback completes (separate tx from Chainlink)
+
+**Basescan Event Logs:**  
+`https://basescan.org/address/0x0048d385d644975d790A4775DF3c3E19b5746EF4#events`
+
+---
+
+### Example 3: Claim NFTs
+
+**Contract:** PackManager (`0x0048d385d644975d790A4775DF3c3E19b5746EF4`)  
+**Function:** `claimNfts(uint256 packTokenId)`
+
+```javascript
+const packManager = new ethers.Contract(
+  "0x0048d385d644975d790A4775DF3c3E19b5746EF4",
+  ["function claimNfts(uint256 packTokenId) external"],
+  signer
+);
+
+// Claim NFTs from opened pack #2
+const tx = await packManager.claimNfts(2);
+await tx.wait();
+console.log("Claim NFTs tx:", tx.hash);
+
+// NFTs are now in your wallet
+// Pack token is burned
+```
+
+**Events:**
+- `NftsClaimed(claimer, packTokenId, rewards)`
+
+---
+
+### Example 4: Claim Instant Cash (ETH)
+
+**Contract:** PackManager (`0x0048d385d644975d790A4775DF3c3E19b5746EF4`)  
+**Function:** `claimInstantCash(uint256 packTokenId)`
+
+```javascript
+const packManager = new ethers.Contract(
+  "0x0048d385d644975d790A4775DF3c3E19b5746EF4",
+  ["function claimInstantCash(uint256 packTokenId) external",
+   "function calculateInstantCashPayout(uint256 packTokenId) external view returns (uint256)"],
+  signer
+);
+
+// Check payout amount first
+const payout = await packManager.calculateInstantCashPayout(2);
+console.log("Payout:", ethers.formatEther(payout), "ETH");
+
+// Claim instant cash
+const tx = await packManager.claimInstantCash(2);
+await tx.wait();
+console.log("Claim cash tx:", tx.hash);
+
+// ETH sent to your wallet
+// NFTs return to pool
+// Pack token is burned
+```
+
+**Events:**
+- `InstantCashClaimed(claimer, packTokenId, payout)`
+
+---
+
+## 🔎 How to Find Your Transactions on Basescan
+
+1. **View all transactions for an address:**
+   ```
+   https://basescan.org/address/{YOUR_ADDRESS}
+   ```
+
+2. **View contract events (to see pack opens, claims, etc.):**
+   ```
+   https://basescan.org/address/0x0048d385d644975d790A4775DF3c3E19b5746EF4#events
+   ```
+
+3. **Filter by method:**
+   - Look for `mint` calls on RariPack for pack purchases
+   - Look for `openPack` calls on PackManager for pack openings
+   - Look for `claimNfts` or `claimInstantCash` for reward claims
+
+4. **Common Event Signatures:**
+   - `Transfer(address,address,uint256)` - ERC721 transfers
+   - `PackOpenRequested(uint256,address,uint256,uint8)` - Pack open initiated
+   - `PackOpened(uint256,address,uint256,(address,uint256)[])` - Pack opened with rewards
+   - `NftsClaimed(address,uint256,(address,uint256)[])` - NFTs claimed
+   - `InstantCashClaimed(address,uint256,uint256)` - Cash claimed
+
+---
+
 ## 🌐 Links
 
 - **Base Explorer**: https://basescan.org
@@ -272,3 +415,4 @@ console.log(`Available for instant cash: ${ethers.formatEther(balance)} ETH`);
 - **RariPack Contract**: https://basescan.org/address/0x8706480381A0c240Ae1038092350e35b32179124
 - **PackManager Contract**: https://basescan.org/address/0x0048d385d644975d790A4775DF3c3E19b5746EF4
 - **NftPool Contract**: https://basescan.org/address/0x4Ad4aDbD51e3EBEE4636907f522c4A340fb258AC
+- **Example User Address**: https://basescan.org/address/0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f
