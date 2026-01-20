@@ -1,0 +1,42 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "src/NativeSplitPayments.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/**\n * @title NativeSplitPayments\n * @notice Minimal EVM smart-contract that allows any user to atomically split \n *         a native currency payment (ETH/MATIC/etc) to multiple recipients in a single transaction.\n * @dev Provides:\n *      - `pay2`: specialized method for exactly 2 recipients\n *      - `payMany`: generic method for 1..6 recipients\n *      \n *      The contract is stateless, permissionless, and does not hold funds.\n */\ncontract NativeSplitPayments {\n    // ========= Events =========\n\n    /**\n     * @notice Emitted for each successful payout.\n     * @param payer The address that initiated the payment.\n     * @param to The recipient address.\n     * @param amount The amount transferred to the recipient.\n     */\n    event Payment(address indexed payer, address indexed to, uint256 amount);\n\n    // ========= Custom Errors =========\n\n    /// @notice Thrown when msg.value == 0.\n    error InvalidValue();\n\n    /// @notice Thrown when any payout amount is 0.\n    error InvalidAmount();\n\n    /// @notice Thrown when recipients.length != amounts.length.\n    error LengthMismatch();\n\n    /// @notice Thrown when payMany length is 0 or > 6.\n    error InvalidLength();\n\n    /// @notice Thrown when any recipient is address(0).\n    error ZeroAddress();\n\n    /// @notice Thrown when any recipient is address(this).\n    error SelfAddress();\n\n    /// @notice Thrown when sum of amounts does not equal msg.value.\n    error InvalidTotal();\n\n    /// @notice Thrown when a native transfer via call fails.\n    /// @param to The address that failed to receive.\n    /// @param amount The amount that was attempted to transfer.\n    error TransferFailed(address to, uint256 amount);\n\n    // ========= Deposit Prevention =========\n\n    /**\n     * @notice Rejects any direct ETH deposits.\n     */\n    receive() external payable {\n        revert InvalidValue();\n    }\n\n    /**\n     * @notice Rejects any calls to unknown selectors with value.\n     */\n    fallback() external payable {\n        revert InvalidValue();\n    }\n\n    // ========= Public Functions =========\n\n    /**\n     * @notice Splits msg.value into 2 exact payouts.\n     * @param to1 First recipient address.\n     * @param a1 Amount to send to first recipient.\n     * @param to2 Second recipient address.\n     * @param a2 Amount to send to second recipient.\n     */\n    function pay2(\n        address to1,\n        uint256 a1,\n        address to2,\n        uint256 a2\n    ) external payable {\n        // Validate msg.value\n        if (msg.value == 0) {\n            revert InvalidValue();\n        }\n\n        // Validate amounts\n        if (a1 == 0 || a2 == 0) {\n            revert InvalidAmount();\n        }\n\n        // Validate addresses\n        _validateAddress(to1);\n        _validateAddress(to2);\n\n        // Validate total matches msg.value\n        if (a1 + a2 != msg.value) {\n            revert InvalidTotal();\n        }\n\n        // Execute transfers\n        _transfer(to1, a1);\n        _transfer(to2, a2);\n\n        // Emit events\n        emit Payment(msg.sender, to1, a1);\n        emit Payment(msg.sender, to2, a2);\n    }\n\n    /**\n     * @notice Splits msg.value into N exact payouts (N = 1..6).\n     * @param recipients Array of recipient addresses.\n     * @param amounts Array of amounts corresponding to each recipient.\n     */\n    function payMany(\n        address[] calldata recipients,\n        uint256[] calldata amounts\n    ) external payable {\n        uint256 length = recipients.length;\n\n        // Validate msg.value\n        if (msg.value == 0) {\n            revert InvalidValue();\n        }\n\n        // Validate array lengths match\n        if (length != amounts.length) {\n            revert LengthMismatch();\n        }\n\n        // Validate array length is 1..6\n        if (length == 0 || length > 6) {\n            revert InvalidLength();\n        }\n\n        // Validate amounts, addresses, and calculate total\n        uint256 total = 0;\n        for (uint256 i = 0; i < length; ) {\n            if (amounts[i] == 0) {\n                revert InvalidAmount();\n            }\n            _validateAddress(recipients[i]);\n            total += amounts[i];\n            unchecked {\n                ++i;\n            }\n        }\n\n        // Validate total matches msg.value\n        if (total != msg.value) {\n            revert InvalidTotal();\n        }\n\n        // Execute transfers and emit events\n        for (uint256 i = 0; i < length; ) {\n            _transfer(recipients[i], amounts[i]);\n            emit Payment(msg.sender, recipients[i], amounts[i]);\n            unchecked {\n                ++i;\n            }\n        }\n    }\n\n    // ========= Internal Functions =========\n\n    /**\n     * @dev Validates that the address is not zero and not this contract.\n     * @param to The address to validate.\n     */\n    function _validateAddress(address to) internal view {\n        if (to == address(0)) {\n            revert ZeroAddress();\n        }\n        if (to == address(this)) {\n            revert SelfAddress();\n        }\n    }\n\n    /**\n     * @dev Transfers native currency using low-level call.\n     * @param to The recipient address.\n     * @param amount The amount to transfer.\n     */\n    function _transfer(address to, uint256 amount) internal {\n        (bool ok, ) = to.call{value: amount}(\"\");\n        if (!ok) {\n            revert TransferFailed(to, amount);\n        }\n    }\n}\n"
+    },
+    "src/test/AcceptingReceiver.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/**\n * @title AcceptingReceiver\n * @notice Test contract that accepts native currency.\n * @dev Used to test successful transfers to contracts in NativeSplitPayments.\n */\ncontract AcceptingReceiver {\n    /**\n     * @notice Accepts ETH transfers.\n     */\n    receive() external payable {}\n}\n"
+    },
+    "src/test/RevertingReceiver.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/**\n * @title RevertingReceiver\n * @notice Test contract that always reverts when receiving native currency.\n * @dev Used to test TransferFailed error handling in NativeSplitPayments.\n */\ncontract RevertingReceiver {\n    /**\n     * @notice Always reverts when receiving ETH.\n     */\n    receive() external payable {\n        revert(\"RevertingReceiver: rejected\");\n    }\n\n    /**\n     * @notice Always reverts on any call with value.\n     */\n    fallback() external payable {\n        revert(\"RevertingReceiver: rejected\");\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "london",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
