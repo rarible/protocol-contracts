@@ -45,3 +45,21 @@ npx hardhat deploy-oe --network localhost \
     --extra-data 0x \
     --clone-factory 0x5906f8b99B12642Fd031d713FCa2ccf780254854 \
     --implementation 0x24D5f66ACD8B82D35D7f654377bE5BB6C62C6E01
+
+
+    
+
+npx hardhat deploy-oe --network base \
+    --default-admin 0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f \
+    --name "Open Edition ERC721C" \
+    --symbol "OpenEditionERC721C" \
+    --contract-uri "ipfs://QmdHaufjUDJgbZzZ4eFCjtJQyeQpuNwoEvqLm5rq159vC8/6" \
+    --sale-recipient 0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f \
+    --royalty-recipient 0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f \
+    --royalty-bps 500 \
+    --platform-fee-bps 200 \
+    --platform-fee-recipient 0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f \
+    --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
+    --extra-data 0x \
+    --clone-factory 0x25548Ba29a0071F30E4bDCd98Ea72F79341b07a1 \
+    --implementation 0x148c38dC5547E320Ac4A36cd3Bf32aB01CB141B9
