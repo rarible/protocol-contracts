@@ -351,6 +351,7 @@ yarn process-collections:sepolia
 1. Reads collection data from `collections.yaml`
 2. Configures each collection in NftPool with floor price
 3. Optionally deposits NFTs to the pool
+4. Safely resumes if interrupted by reading on-chain state (skips already configured collections and already-deposited NFTs)
 
 ### Environment Variables
 
@@ -359,6 +360,7 @@ yarn process-collections:sepolia
 | `COLLECTIONS_CONFIG` | Path to collections YAML | Required |
 | `INFRA_CONFIG` | Path to infrastructure YAML | Required |
 | `DEPOSIT_NFTS` | Deposit NFTs to pool | false |
+| `LOG_EVERY` | Log deposit progress every N tokens | 10 |
 
 ### Output
 

@@ -172,7 +172,11 @@ async function main() {
       priceWei: bigint;
       tokenCount: number;
       configured: boolean;
+      configSkipped: boolean;
       deposited: number;
+      alreadyInPool: number;
+      notOwned: number;
+      failed: number;
       poolLevel?: number;
     }> = [];
 
@@ -193,25 +197,40 @@ async function main() {
         priceWei,
         tokenCount: collection.tokenIds?.length ?? 0,
         configured: false,
+        configSkipped: false,
         deposited: 0,
+        alreadyInPool: 0,
+        notOwned: 0,
+        failed: 0,
         poolLevel: undefined as number | undefined,
       };
 
       try {
-        // Configure collection with floor price
-        console.log(`    Configuring collection...`);
-        const tx = await nftPool.setCollectionFloorPrice(collection.address, priceWei, { nonce: nonce++ });
-        await tx.wait();
-        result.configured = true;
+        // Configure collection with floor price (skip if already configured)
+        const existingInfo = await nftPool.getCollectionInfo(collection.address);
+        const alreadyConfigured = existingInfo.allowed && existingInfo.floorPrice === priceWei;
+        if (alreadyConfigured) {
+          result.configured = true;
+          result.configSkipped = true;
+          result.poolLevel = Number(existingInfo.poolLevel);
+          console.log(`    ✓ Already configured - Pool Level: ${POOL_LEVEL_NAMES[result.poolLevel]} (${result.poolLevel})`);
+        } else {
+          console.log(`    Configuring collection...`);
+          const tx = await nftPool.setCollectionFloorPrice(collection.address, priceWei, { nonce: nonce++ });
+          await tx.wait();
+          result.configured = true;
 
-        // Get the assigned pool level
-        const collectionInfo = await nftPool.getCollectionInfo(collection.address);
-        result.poolLevel = Number(collectionInfo.poolLevel);
-        console.log(`    ✓ Configured - Pool Level: ${POOL_LEVEL_NAMES[result.poolLevel]} (${result.poolLevel})`);
+          // Get the assigned pool level
+          const collectionInfo = await nftPool.getCollectionInfo(collection.address);
+          result.poolLevel = Number(collectionInfo.poolLevel);
+          console.log(`    ✓ Configured - Pool Level: ${POOL_LEVEL_NAMES[result.poolLevel]} (${result.poolLevel})`);
+        }
 
         // Optionally deposit NFTs
         if (depositNfts && collection.tokenIds && collection.tokenIds.length > 0) {
-          console.log(`    Depositing ${collection.tokenIds.length} NFTs...`);
+          const totalTokens = collection.tokenIds.length;
+          const logEvery = Math.max(1, Number(process.env.LOG_EVERY ?? "10"));
+          console.log(`    Depositing ${totalTokens} NFTs...`);
 
           // Minimal ERC721 ABI for deposit operations
           const ERC721_ABI = [
@@ -223,32 +242,77 @@ async function main() {
           ];
           const ERC721 = new ethers.Contract(collection.address, ERC721_ABI, signer);
 
+          let processed = 0;
+          let approvedForAll = await ERC721.isApprovedForAll(signer.address, nftPoolAddress);
+
           for (const tokenId of collection.tokenIds) {
+            processed++;
             try {
+              // Check if already tracked in pool
+              const inPool = await nftPool.isNftInPool(collection.address, tokenId);
+              if (inPool) {
+                result.alreadyInPool++;
+                if (processed % logEvery === 0 || processed === totalTokens) {
+                  console.log(
+                    `    Progress: ${processed}/${totalTokens} (deposited ${result.deposited}, in-pool ${result.alreadyInPool}, not-owned ${result.notOwned}, failed ${result.failed})`
+                  );
+                }
+                continue;
+              }
+
               // Check ownership
               const owner = await ERC721.ownerOf(tokenId);
+              if (owner.toLowerCase() === nftPoolAddress.toLowerCase()) {
+                result.alreadyInPool++;
+                if (processed % logEvery === 0 || processed === totalTokens) {
+                  console.log(
+                    `    Progress: ${processed}/${totalTokens} (deposited ${result.deposited}, in-pool ${result.alreadyInPool}, not-owned ${result.notOwned}, failed ${result.failed})`
+                  );
+                }
+                continue;
+              }
               if (owner.toLowerCase() !== signer.address.toLowerCase()) {
+                result.notOwned++;
+                if (processed % logEvery === 0 || processed === totalTokens) {
+                  console.log(
+                    `    Progress: ${processed}/${totalTokens} (deposited ${result.deposited}, in-pool ${result.alreadyInPool}, not-owned ${result.notOwned}, failed ${result.failed})`
+                  );
+                }
                 continue;
               }
 
               // Check/set approval
-              const approved = await ERC721.getApproved(tokenId);
-              const isApprovedForAll = await ERC721.isApprovedForAll(signer.address, nftPoolAddress);
-
-              if (approved.toLowerCase() !== nftPoolAddress.toLowerCase() && !isApprovedForAll) {
-                const approveTx = await ERC721.approve(nftPoolAddress, tokenId, { nonce: nonce++ });
-                await approveTx.wait();
+              if (!approvedForAll) {
+                const approved = await ERC721.getApproved(tokenId);
+                if (approved.toLowerCase() !== nftPoolAddress.toLowerCase()) {
+                  const approveTx = await ERC721.approve(nftPoolAddress, tokenId, { nonce: nonce++ });
+                  await approveTx.wait();
+                }
+                approvedForAll = await ERC721.isApprovedForAll(signer.address, nftPoolAddress);
               }
 
               // Deposit to pool
               const depositTx = await nftPool.deposit(collection.address, tokenId, { nonce: nonce++ });
               await depositTx.wait();
               result.deposited++;
+              if (processed % logEvery === 0 || processed === totalTokens) {
+                console.log(
+                  `    Progress: ${processed}/${totalTokens} (deposited ${result.deposited}, in-pool ${result.alreadyInPool}, not-owned ${result.notOwned}, failed ${result.failed})`
+                );
+              }
             } catch {
               // Skip failed deposits
+              result.failed++;
+              if (processed % logEvery === 0 || processed === totalTokens) {
+                console.log(
+                  `    Progress: ${processed}/${totalTokens} (deposited ${result.deposited}, in-pool ${result.alreadyInPool}, not-owned ${result.notOwned}, failed ${result.failed})`
+                );
+              }
             }
           }
-          console.log(`    Deposited: ${result.deposited}/${collection.tokenIds.length} NFTs`);
+          console.log(
+            `    Deposited: ${result.deposited}/${totalTokens} NFTs (in-pool: ${result.alreadyInPool}, not-owned: ${result.notOwned}, failed: ${result.failed})`
+          );
         }
       } catch (err: any) {
         console.log(`    ✗ Failed: ${err.message}`);
@@ -282,10 +346,16 @@ async function main() {
 
     const configured = results.filter((r) => r.configured).length;
     const totalDeposited = results.reduce((sum, r) => sum + r.deposited, 0);
+    const totalAlreadyInPool = results.reduce((sum, r) => sum + r.alreadyInPool, 0);
+    const totalNotOwned = results.reduce((sum, r) => sum + r.notOwned, 0);
+    const totalFailed = results.reduce((sum, r) => sum + r.failed, 0);
 
     console.log(`Configured: ${configured}/${results.length} collections`);
     if (depositNfts) {
       console.log(`Deposited:  ${totalDeposited} NFTs total`);
+      console.log(`In-pool:    ${totalAlreadyInPool} NFTs already deposited`);
+      console.log(`Not owned:  ${totalNotOwned} NFTs (skipped)`);
+      console.log(`Failed:     ${totalFailed} NFTs`);
     }
 
     // Save results
