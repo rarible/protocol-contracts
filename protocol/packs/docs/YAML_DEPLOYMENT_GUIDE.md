@@ -16,6 +16,17 @@ The new deployment workflow uses YAML files for configuration, making deployment
 │                         DEPLOYMENT WORKFLOW                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
+│  0a. DEPLOY RARIPACK (if not deployed)                                      │
+│      ┌─────────────────────┐                                                │
+│      │ raripack.yaml       │ ──────► deploy-raripack ──► raripack.yaml      │
+│      │ (owner, prices)     │         (deployed addresses)                   │
+│      └─────────────────────┘                                                │
+│                                                                             │
+│  0b. SET UP VRF SUBSCRIPTION                                                │
+│      ┌─────────────────────┐                                                │
+│      │ vrf.chain.link      │ ──────► subscription ID + fund with LINK       │
+│      └─────────────────────┘                                                │
+│                                                                             │
 │  1. DEPLOY COLLECTIONS                                                      │
 │     ┌─────────────────────┐                                                 │
 │     │ deploy-collections  │ ──────► collections.yaml                        │
@@ -28,7 +39,11 @@ The new deployment workflow uses YAML files for configuration, making deployment
 │     └──────────────────────────┘     ▼                                      │
 │                                 infrastructure.yaml (deployed addresses)    │
 │                                                                             │
-│  3. CONFIGURE COLLECTIONS                                                   │
+│  3. POST-DEPLOYMENT SETUP                                                   │
+│     - Add PackManager to VRF subscription at vrf.chain.link                 │
+│     - Grant BURNER_ROLE to PackManager on RariPack                          │
+│                                                                             │
+│  4. CONFIGURE COLLECTIONS                                                   │
 │     ┌──────────────────────────┐                                            │
 │     │ collections.yaml         │ ──► process-collections                    │
 │     │ + infrastructure.yaml    │     │                                      │
@@ -43,8 +58,201 @@ The new deployment workflow uses YAML files for configuration, making deployment
 1. **Node.js 18+** and **Yarn**
 2. **RPC URL** configured in `.env` or `hardhat.config.ts`
 3. **Deployer private key** with ETH for gas
-4. **Chainlink VRF subscription** funded with LINK ([vrf.chain.link](https://vrf.chain.link/))
-5. **Existing RariPack contract** (pack NFT contract)
+4. **LINK tokens** for VRF subscription funding
+
+---
+
+## Step 0a: Deploy NftPack (RariPack)
+
+Before deploying the infrastructure, you need to deploy the RariPack contract which is the ERC721 pack NFT.
+
+### Configuration File
+
+Create or edit `config/raripack.sepolia.yaml`:
+
+```yaml
+# Network identification
+network: sepolia
+chainId: "11155111"
+
+# Contract settings
+owner: "0xYOUR_OWNER_ADDRESS"
+treasury: "0xYOUR_TREASURY_ADDRESS"
+name: "Rari Pack"
+symbol: "RPACK"
+
+# Pack prices in ETH
+prices:
+  bronze: 0.01
+  silver: 0.05
+  gold: 0.1
+  platinum: 0.5
+
+# Pack metadata URIs (IPFS or HTTPS)
+uris:
+  bronze: "ipfs://QmBronzePackImage"
+  silver: "ipfs://QmSilverPackImage"
+  gold: "ipfs://QmGoldPackImage"
+  platinum: "ipfs://QmPlatinumPackImage"
+
+# Pack descriptions (optional)
+descriptions:
+  bronze: "Bronze pack for entry-level pulls from the common pool."
+  silver: "Silver pack with better chances into the rare pool."
+  gold: "Gold pack offering improved odds across rare and epic pools."
+  platinum: "Platinum pack with the best odds and access to the ultra-rare pool."
+```
+
+### Command
+
+```bash
+cd protocol/packs
+
+# Deploy RariPack using YAML config
+RARIPACK_CONFIG=config/raripack.sepolia.yaml yarn deploy:raripack:sepolia
+```
+
+### What it does
+
+1. **Deploys RariPack** (implementation + TransparentUpgradeableProxy)
+   - Initialized with owner, treasury, name, and symbol
+2. **Configures pack prices** for all 4 pack types
+3. **Sets pack URIs** for metadata images
+4. **Sets pack descriptions** (if provided)
+5. **Outputs deployment info** to `deployments/<network>/<date>/raripack.yaml`
+
+### Configuration Reference
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `network` | Yes | Network name (sepolia, base, etc.) |
+| `chainId` | Yes | Chain ID as string |
+| `owner` | Yes | Address that receives DEFAULT_ADMIN_ROLE and BURNER_ROLE |
+| `treasury` | Yes | Address that receives ETH from pack sales |
+| `name` | No | ERC721 token name (default: "Rari Pack") |
+| `symbol` | No | ERC721 token symbol (default: "RPACK") |
+| `prices` | Yes | Pack prices in ETH for bronze, silver, gold, platinum |
+| `uris` | No | IPFS or HTTPS URIs for pack images |
+| `descriptions` | No | Human-readable descriptions per pack type |
+
+### Output
+
+```
+deployments/<network>/<date>/raripack.yaml
+```
+
+**Example output `raripack.yaml`:**
+
+```yaml
+network: sepolia
+chainId: "11155111"
+deployedAt: "2026-01-27T12:00:00.000Z"
+
+contracts:
+  rariPack: "0x6A811146A81183393533602DD9fB98E2F66A8d10"
+
+implementations:
+  rariPack: "0x1234567890123456789012345678901234567890"
+
+configuration:
+  owner: "0xa95a09520af0f1bbef810a47560c79affe75aa9f"
+  treasury: "0xa95a09520af0f1bbef810a47560c79affe75aa9f"
+  prices:
+    bronze: "0.01"
+    silver: "0.05"
+    gold: "0.1"
+    platinum: "0.5"
+```
+
+Use the `rariPack` address from this output in your `infrastructure.yaml` file.
+
+---
+
+## Step 0b: Set Up Chainlink VRF
+
+The pack system uses Chainlink VRF v2.5 for provably fair randomness when opening packs.
+
+### 1. Create VRF Subscription
+
+1. Go to [vrf.chain.link](https://vrf.chain.link/)
+2. Connect your wallet (must be the subscription owner)
+3. Click **"Create Subscription"**
+4. Confirm the transaction
+5. **Copy your Subscription ID** - you'll need this for the infrastructure YAML
+
+### 2. Fund the Subscription with LINK
+
+VRF requests consume LINK tokens. Fund your subscription:
+
+1. On the VRF dashboard, select your subscription
+2. Click **"Fund Subscription"**
+3. Enter the amount of LINK to deposit:
+   - **Testnet (Sepolia)**: 5-10 LINK for testing
+   - **Mainnet**: Start with 10-50 LINK depending on expected volume
+4. Confirm the transaction
+
+**Get testnet LINK:**
+- Sepolia: [faucets.chain.link](https://faucets.chain.link/sepolia)
+
+### 3. Note VRF Configuration Values
+
+After creating the subscription, gather these values for your infrastructure YAML:
+
+| Setting | How to Find |
+|---------|-------------|
+| `subscriptionId` | Shown on your subscription page (large number) |
+| `coordinator` | Network-specific address (see table below) |
+| `keyHash` | Choose based on gas lane preference (see table below) |
+
+### VRF Coordinator Addresses
+
+| Network | Coordinator Address |
+|---------|---------------------|
+| Sepolia | `0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B` |
+| Base Mainnet | `0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634` |
+| Ethereum Mainnet | `0xD7f86b4b8Cae7D942340FF628F82735b7a20893a` |
+
+### VRF Key Hashes (Gas Lanes)
+
+**Sepolia:**
+| Gas Lane | Key Hash |
+|----------|----------|
+| 100 gwei | `0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae` |
+
+**Base Mainnet:**
+| Gas Lane | Key Hash |
+|----------|----------|
+| 500 gwei | `0x00b81b5a830cb0a4009fbd8904de511e28631e62ce5ad231373d3cdad373ccab` |
+| 350 gwei | `0x42007c7c0c2ca7e77c8b79ae8b05da2bc42321e6dde59f8fd99c7aca6cc1c2c7` |
+| 30 gwei | `0xe55cb0e8e37ffa0d23e9e52e0e5b0c1c2ca99a1ec82ce2b4a26b2bf05b64caf8` |
+
+### 4. Update Infrastructure YAML
+
+Add VRF configuration to your `infrastructure.yaml`:
+
+```yaml
+packManager:
+  vrf:
+    coordinator: "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B"
+    subscriptionId: "YOUR_SUBSCRIPTION_ID_HERE"
+    keyHash: "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae"
+    callbackGasLimit: 500000
+    requestConfirmations: 3
+```
+
+### 5. Add PackManager as VRF Consumer (After Deployment)
+
+**Important:** After deploying PackManager, you must add it as a consumer:
+
+1. Go to [vrf.chain.link](https://vrf.chain.link/)
+2. Select your subscription
+3. Click **"Add Consumer"**
+4. Enter the **PackManager proxy address**
+5. Confirm the transaction
+
+Without this step, VRF requests will fail with "consumer not registered".
+
+---
 
 ## Quick Start
 
@@ -52,13 +260,21 @@ The new deployment workflow uses YAML files for configuration, making deployment
 cd protocol/packs
 yarn install
 
+# 0a. Deploy RariPack (if not already deployed)
+RARIPACK_CONFIG=config/raripack.sepolia.yaml yarn deploy:raripack:sepolia
+
+# 0b. Set up VRF subscription at vrf.chain.link (manual step)
+
 # 1. Deploy test collections (outputs collections.yaml)
 yarn deploy-collections:sepolia
 
 # 2. Deploy NftPool and PackManager (uses infrastructure.yaml config)
 INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
 
-# 3. Configure collections in NftPool
+# 3. Add PackManager to VRF subscription at vrf.chain.link
+# 4. Grant BURNER_ROLE to PackManager on RariPack
+
+# 5. Configure collections in NftPool
 INFRA_CONFIG=config/infrastructure.sepolia.yaml \
 COLLECTIONS_CONFIG=deployments/sepolia/YYYY-MM-DD/collections.yaml \
 yarn process-collections:sepolia
@@ -390,16 +606,30 @@ Deposited: 108 NFTs total
 ```bash
 cd protocol/packs
 
+# Step 0a: Deploy RariPack (if not already deployed)
+# Edit config/raripack.sepolia.yaml with owner, treasury, prices, URIs
+RARIPACK_CONFIG=config/raripack.sepolia.yaml yarn deploy:raripack:sepolia
+# Output: deployments/sepolia/2026-01-27/raripack.yaml
+# Copy the rariPack address to infrastructure.sepolia.yaml
+
+# Step 0b: Set up VRF subscription
+# 1. Go to vrf.chain.link and create subscription
+# 2. Fund with 5-10 LINK from faucets.chain.link/sepolia
+# 3. Copy subscription ID to infrastructure.sepolia.yaml
+
 # Step 1: Deploy collections
 yarn deploy-collections:sepolia
 # Output: deployments/sepolia/2026-01-27/collections.yaml
 
-# Step 2: Deploy infrastructure
+# Step 2: Deploy infrastructure (update rariPack address in YAML first!)
 INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
 # Output: deployments/sepolia/2026-01-27/infrastructure.yaml
 
 # Step 3: Add PackManager to VRF subscription at vrf.chain.link
-# Step 4: Grant BURNER_ROLE to PackManager on RariPack
+# Step 4: Grant BURNER_ROLE to PackManager on RariPack:
+#   cast send $RARI_PACK "grantRole(bytes32,address)" \
+#     $(cast keccak "BURNER_ROLE") $PACK_MANAGER \
+#     --private-key $PRIVATE_KEY --rpc-url $RPC_URL
 
 # Step 5: Configure collections and deposit NFTs
 INFRA_CONFIG=config/infrastructure.sepolia.yaml \
@@ -413,6 +643,13 @@ yarn process-collections:sepolia
 ```bash
 cd protocol/packs
 
+# Step 0a: Deploy RariPack (if not already deployed)
+RARIPACK_CONFIG=config/raripack.base.yaml yarn deploy:raripack:base
+# Output: deployments/base/2026-01-27/raripack.yaml
+
+# Step 0b: Set up VRF subscription at vrf.chain.link
+# Fund with 10-50 LINK depending on expected volume
+
 # Step 1: Deploy collections (smaller amounts for mainnet)
 MINT_COMMON=10 MINT_RARE=8 MINT_EPIC=5 MINT_LEGENDARY=3 MINT_ULTRA_RARE=2 \
 yarn deploy-collections:base
@@ -420,7 +657,9 @@ yarn deploy-collections:base
 # Step 2: Deploy infrastructure
 INFRA_CONFIG=config/infrastructure.base.yaml yarn deploy:nft-infra:base
 
-# Step 3: Post-deployment setup (VRF + BURNER_ROLE)
+# Step 3: Post-deployment setup
+# - Add PackManager to VRF subscription
+# - Grant BURNER_ROLE to PackManager on RariPack
 
 # Step 4: Configure collections
 INFRA_CONFIG=config/infrastructure.base.yaml \
@@ -436,12 +675,15 @@ yarn process-collections:base
 ```
 protocol/packs/
 ├── config/
-│   ├── infrastructure.base.yaml       # Base mainnet config
-│   ├── infrastructure.sepolia.yaml    # Sepolia testnet config
+│   ├── raripack.base.yaml             # RariPack config for Base
+│   ├── raripack.sepolia.yaml          # RariPack config for Sepolia
+│   ├── infrastructure.base.yaml       # Infrastructure config for Base
+│   ├── infrastructure.sepolia.yaml    # Infrastructure config for Sepolia
 │   └── collections.example.yaml       # Example collections format
 ├── deployments/
 │   ├── base/
 │   │   └── YYYY-MM-DD/
+│   │       ├── raripack.yaml          # Deployed RariPack
 │   │       ├── collections.yaml       # Deployed collections
 │   │       ├── infrastructure.yaml    # Deployed infrastructure
 │   │       └── nft-infrastructure.json
@@ -449,6 +691,7 @@ protocol/packs/
 │       └── YYYY-MM-DD/
 │           └── ...
 ├── scripts/
+│   ├── deploy-raripack.ts             # Deploy RariPack (YAML-based)
 │   ├── deploy-collections.ts          # Deploy & mint collections
 │   ├── deploy-nft-infrastructure.ts   # Deploy NftPool & PackManager
 │   └── 5-process-collections.ts       # Configure collections in NftPool
@@ -462,6 +705,8 @@ protocol/packs/
 
 | Command | Description |
 |---------|-------------|
+| `RARIPACK_CONFIG=<yaml> yarn deploy:raripack:sepolia` | Deploy RariPack on Sepolia |
+| `RARIPACK_CONFIG=<yaml> yarn deploy:raripack:base` | Deploy RariPack on Base |
 | `yarn deploy-collections:sepolia` | Deploy collections on Sepolia |
 | `yarn deploy-collections:base` | Deploy collections on Base |
 | `INFRA_CONFIG=<yaml> yarn deploy:nft-infra:sepolia` | Deploy NftPool/PackManager on Sepolia |

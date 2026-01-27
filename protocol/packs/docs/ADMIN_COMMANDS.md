@@ -2,13 +2,11 @@
 
 Practical commands for setting up and managing the pack infrastructure.
 
-> **See also:**
-> - [YAML_DEPLOYMENT_GUIDE.md](./YAML_DEPLOYMENT_GUIDE.md) - YAML-based deployment workflow
-> - [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Step-by-step deployment guide
+> **Deployment Guide:** See [YAML_DEPLOYMENT_GUIDE.md](./YAML_DEPLOYMENT_GUIDE.md) for the complete YAML-based deployment workflow.
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 ```bash
 cd /Users/vfadeev/Work/protocol-contracts/protocol/packs
@@ -22,42 +20,40 @@ export PRIVATE_KEY=your_private_key
 
 ---
 
-## 🚀 Initial Infrastructure Setup
+## Deployment Commands (YAML-Based)
 
-### Step 1: Deploy Item Collections
+### Deploy RariPack
 
 ```bash
-npx hardhat run scripts/1-deploy-items.ts --network $NETWORK
+RARIPACK_CONFIG=config/raripack.sepolia.yaml yarn deploy:raripack:sepolia
+RARIPACK_CONFIG=config/raripack.base.yaml yarn deploy:raripack:base
 ```
 
-This creates 5 NFT collections (Common, Rare, Epic, Legendary, UltraRare).
-
-### Step 2: Deploy Core Infrastructure
+### Deploy Collections
 
 ```bash
-npx hardhat run scripts/2-deploy-infrastructure.ts --network $NETWORK
+yarn deploy-collections:sepolia
+yarn deploy-collections:base
 ```
 
-This deploys:
-- RariPack (ERC721 pack tokens)
-- NftPool (NFT storage)
-- PackManager (VRF + logic)
-
-### Step 3: Mint & Deposit Items
+### Deploy NftPool & PackManager
 
 ```bash
-npx hardhat run scripts/3-mint-items.ts --network $NETWORK
+INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
+INFRA_CONFIG=config/infrastructure.base.yaml yarn deploy:nft-infra:base
 ```
 
-### Step 4: Verify Setup
+### Configure Collections in NftPool
 
 ```bash
-npx hardhat run scripts/4-setup-levels.ts --network $NETWORK
+INFRA_CONFIG=config/infrastructure.sepolia.yaml \
+COLLECTIONS_CONFIG=deployments/sepolia/YYYY-MM-DD/collections.yaml \
+yarn process-collections:sepolia
 ```
 
 ---
 
-## 📦 Add a New Collection
+## Add a New Collection
 
 ### Option A: Using Hardhat Console
 
@@ -72,14 +68,15 @@ Then in console:
 const [signer] = await ethers.getSigners();
 
 // Load addresses (adjust path for your network)
-const infra = require("./ignition/deployments/chain-8453/infrastructure.json");
+const infra = require("./deployments/sepolia/2026-01-27/infrastructure.yaml");
+// Or load from ignition
+const infra = require("./ignition/deployments/chain-11155111/infrastructure.json");
 
 // Get contract instances
 const NftPool = await ethers.getContractFactory("NftPool");
-const nftPool = NftPool.attach(infra.nftPool).connect(signer);
+const nftPool = NftPool.attach(infra.nftPool || infra.contracts.nftPool).connect(signer);
 
 // 2. Configure collection with floor price
-// This automatically assigns it to the correct pool level based on price
 const collectionAddress = "0xYOUR_COLLECTION_ADDRESS";
 const floorPrice = ethers.parseEther("0.01"); // 0.01 ETH
 
@@ -94,97 +91,57 @@ console.log("Floor Price:", ethers.formatEther(price), "ETH");
 console.log("Pool Level:", level); // 0=Common, 1=Rare, 2=Epic, 3=Legendary, 4=UltraRare
 ```
 
-### Option B: Using a Script
+### Option B: Add to collections.yaml and re-run
 
-Create `scripts/add-collection.ts`:
+Add the collection to your `collections.yaml` file and run:
 
-```typescript
-import { network } from "hardhat";
-import * as fs from "node:fs";
-import * as path from "node:path";
-
-// Configuration - EDIT THESE
-const COLLECTION_ADDRESS = "0xYOUR_COLLECTION_ADDRESS";
-const FLOOR_PRICE_ETH = "0.01"; // Floor price in ETH
-
-async function main() {
-  const { ethers, networkName } = await network.connect() as any;
-  const [signer] = await ethers.getSigners();
-  
-  // Load infrastructure
-  const chainId = networkName === "base" ? 8453 : 11155111;
-  const infraPath = path.join(__dirname, "..", "ignition", "deployments", `chain-${chainId}`, "infrastructure.json");
-  const infra = JSON.parse(fs.readFileSync(infraPath, "utf-8"));
-  
-  const NftPool = await ethers.getContractFactory("NftPool");
-  const nftPool = NftPool.attach(infra.nftPool).connect(signer);
-  
-  console.log(`\n📦 Adding collection: ${COLLECTION_ADDRESS}`);
-  console.log(`   Floor price: ${FLOOR_PRICE_ETH} ETH`);
-  
-  const tx = await nftPool.setCollectionFloorPrice(
-    COLLECTION_ADDRESS,
-    ethers.parseEther(FLOOR_PRICE_ETH)
-  );
-  await tx.wait();
-  
-  // Verify
-  const [allowed, price, level] = await nftPool.getCollectionInfo(COLLECTION_ADDRESS);
-  const levelNames = ["Common", "Rare", "Epic", "Legendary", "UltraRare"];
-  
-  console.log(`\n✅ Collection configured!`);
-  console.log(`   Allowed: ${allowed}`);
-  console.log(`   Floor Price: ${ethers.formatEther(price)} ETH`);
-  console.log(`   Pool Level: ${levelNames[level]} (${level})`);
-  console.log(`   Tx: ${tx.hash}`);
-}
-
-main().catch(console.error);
-```
-
-Run:
 ```bash
-npx hardhat run scripts/add-collection.ts --network $NETWORK
+INFRA_CONFIG=config/infrastructure.sepolia.yaml \
+COLLECTIONS_CONFIG=deployments/sepolia/2026-01-27/collections.yaml \
+yarn process-collections:sepolia
 ```
 
 ---
 
-## 🎯 Set Pool Level Price Ranges
+## Set Pool Level Price Ranges
 
-Pool levels are determined by floor price ranges:
+Pool levels are determined by floor price ranges configured in `infrastructure.yaml`:
 
-| Level | Name | Default Range |
-|-------|------|---------------|
-| 0 | Common | 0.001 - 0.01 ETH |
-| 1 | Rare | 0.01 - 0.05 ETH |
-| 2 | Epic | 0.05 - 0.2 ETH |
-| 3 | Legendary | 0.2 - 1 ETH |
-| 4 | UltraRare | 1 - 10 ETH |
+```yaml
+poolRanges:
+  - level: Common
+    lowPriceEth: 0
+    highPriceEth: 0.05325
 
-### Update Pool Level Ranges
+  - level: Rare
+    lowPriceEth: 0.05325
+    highPriceEth: 0.213
+    
+  # ... etc
+```
+
+### Update Pool Level Ranges via Console
 
 ```javascript
-// In hardhat console
 const NftPool = await ethers.getContractFactory("NftPool");
-const nftPool = NftPool.attach("0x4Ad4aDbD51e3EBEE4636907f522c4A340fb258AC").connect(signer);
+const nftPool = NftPool.attach("0xNFT_POOL_ADDRESS").connect(signer);
 
-// Set individual level
-// setPoolInfo(level, lowPrice, highPrice)
+// Set individual level: setPoolInfo(level, lowPrice, highPrice)
 await nftPool.setPoolInfo(0, ethers.parseEther("0.001"), ethers.parseEther("0.01"));
 
 // Set all levels at once
 await nftPool.setAllPoolInfo([
-  [ethers.parseEther("0.001"), ethers.parseEther("0.01")],   // Common
-  [ethers.parseEther("0.01"), ethers.parseEther("0.05")],    // Rare
-  [ethers.parseEther("0.05"), ethers.parseEther("0.2")],     // Epic
-  [ethers.parseEther("0.2"), ethers.parseEther("1")],        // Legendary
-  [ethers.parseEther("1"), ethers.parseEther("10")]          // UltraRare
+  [ethers.parseEther("0"), ethers.parseEther("0.05325")],      // Common
+  [ethers.parseEther("0.05325"), ethers.parseEther("0.213")],  // Rare
+  [ethers.parseEther("0.213"), ethers.parseEther("1.065")],    // Epic
+  [ethers.parseEther("1.065"), ethers.parseEther("5.325")],    // Legendary
+  [ethers.parseEther("5.325"), ethers.MaxUint256]              // UltraRare
 ]);
 ```
 
 ---
 
-## 🎁 Deposit NFTs to Pool
+## Deposit NFTs to Pool
 
 ### Single NFT
 
@@ -201,7 +158,7 @@ await collection.approve(nftPool.target, tokenId);
 await nftPool.deposit("0xCOLLECTION_ADDRESS", tokenId);
 ```
 
-### Batch Deposit (Approve All First)
+### Batch Deposit
 
 ```javascript
 // Approve all
@@ -220,50 +177,73 @@ for (let tokenId = 1; tokenId <= 100; tokenId++) {
 
 ---
 
-## 💰 Set Pack Prices
+## Set Pack Prices
+
+Pack prices are configured in `raripack.yaml`:
+
+```yaml
+prices:
+  bronze: 0.01
+  silver: 0.05
+  gold: 0.1
+  platinum: 0.5
+```
+
+### Update via Console
 
 ```javascript
 const RariPack = await ethers.getContractFactory("RariPack");
-const rariPack = RariPack.attach("0x8706480381A0c240Ae1038092350e35b32179124").connect(signer);
+const rariPack = RariPack.attach("0xRARI_PACK_ADDRESS").connect(signer);
 
 // PackType: 0=Bronze, 1=Silver, 2=Gold, 3=Platinum
-await rariPack.setPackPrice(0, ethers.parseEther("0.001"));  // Bronze
-await rariPack.setPackPrice(1, ethers.parseEther("0.005"));  // Silver
-await rariPack.setPackPrice(2, ethers.parseEther("0.01"));   // Gold
-await rariPack.setPackPrice(3, ethers.parseEther("0.05"));   // Platinum
+await rariPack.setPackPrice(0, ethers.parseEther("0.01"));  // Bronze
+await rariPack.setPackPrice(1, ethers.parseEther("0.05"));  // Silver
+await rariPack.setPackPrice(2, ethers.parseEther("0.1"));   // Gold
+await rariPack.setPackPrice(3, ethers.parseEther("0.5"));   // Platinum
 ```
 
 ---
 
-## 🎲 Set Pack Probabilities
+## Set Pack Probabilities
 
-Probabilities are cumulative thresholds out of 10000:
+Probabilities are cumulative thresholds out of 10000, configured in `infrastructure.yaml`:
+
+```yaml
+packManager:
+  probabilities:
+    bronze:
+      ultraRare: 0
+      legendary: 20
+      epic: 120
+      rare: 620
+    # ... etc
+```
+
+### Update via Console
 
 ```javascript
 const PackManager = await ethers.getContractFactory("PackManager");
-const packManager = PackManager.attach("0x0048d385d644975d790A4775DF3c3E19b5746EF4").connect(signer);
+const packManager = PackManager.attach("0xPACK_MANAGER_ADDRESS").connect(signer);
 
 // setPackProbabilities(packType, ultraRare, legendary, epic, rare)
 // Values are CUMULATIVE thresholds
-// Example: ultraRare=100 means 1% ultra-rare, legendary=300 means 2% legendary, etc.
 
-// Bronze: mostly common (99%), tiny chance of rare
-await packManager.setPackProbabilities(0, 1, 5, 20, 100);
-// Means: 0.01% ultra-rare, 0.04% legendary, 0.15% epic, 0.8% rare, 99% common
+// Bronze: mostly common
+await packManager.setPackProbabilities(0, 0, 20, 120, 620);
 
 // Silver: better odds
-await packManager.setPackProbabilities(1, 20, 100, 500, 2000);
+await packManager.setPackProbabilities(1, 0, 50, 350, 1350);
 
 // Gold: even better
-await packManager.setPackProbabilities(2, 100, 500, 1500, 4000);
+await packManager.setPackProbabilities(2, 0, 100, 600, 2100);
 
-// Platinum: best odds
-await packManager.setPackProbabilities(3, 500, 1500, 3500, 6000);
+// Platinum: best odds (includes ultra-rare)
+await packManager.setPackProbabilities(3, 50, 250, 950, 2950);
 ```
 
 ---
 
-## 🔐 Grant Roles
+## Grant Roles
 
 ### Grant POOL_MANAGER_ROLE to PackManager
 
@@ -281,32 +261,53 @@ const BURNER_ROLE = await rariPack.BURNER_ROLE();
 await rariPack.grantRole(BURNER_ROLE, infra.packManager);
 ```
 
+### Using cast (CLI)
+
+```bash
+# Grant BURNER_ROLE
+cast send $RARI_PACK "grantRole(bytes32,address)" \
+  $(cast keccak "BURNER_ROLE") $PACK_MANAGER \
+  --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+
+# Grant POOL_MANAGER_ROLE
+cast send $NFT_POOL "grantRole(bytes32,address)" \
+  $(cast keccak "POOL_MANAGER_ROLE") $PACK_MANAGER \
+  --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+```
+
 ---
 
-## ⚙️ Configure VRF (Chainlink)
+## Configure VRF (Chainlink)
 
-### Base Mainnet
+VRF settings are configured in `infrastructure.yaml`:
+
+```yaml
+packManager:
+  vrf:
+    coordinator: "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B"
+    subscriptionId: "YOUR_SUBSCRIPTION_ID"
+    keyHash: "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae"
+    callbackGasLimit: 500000
+    requestConfirmations: 3
+```
+
+### Update via Console
 
 ```javascript
+// Sepolia
 await packManager.setVrfConfig(
-  "0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634",  // Coordinator
-  "0x00b81b5a830cb0a4009fbd8904de511e28631e62ce5ad231373d3cdad373ccab",  // Key Hash
-  "80015873168992726859849382095434323321462670158563823161174109925990052043078",  // Subscription ID
+  "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B",  // Coordinator
+  "YOUR_SUBSCRIPTION_ID",                          // Subscription ID
+  "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae",  // Key Hash
   500000,   // Callback gas limit
   3         // Confirmations
 );
 
-// Use native ETH for VRF payment
-await packManager.setVrfPayWithLink(false);
-```
-
-### Sepolia Testnet
-
-```javascript
+// Base Mainnet
 await packManager.setVrfConfig(
-  "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B",  // Coordinator
-  "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae",  // Key Hash
-  "31234815417281375020060825130305937433281857209550563487914138707724720747173",  // Subscription ID
+  "0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634",
+  "YOUR_SUBSCRIPTION_ID",
+  "0x00b81b5a830cb0a4009fbd8904de511e28631e62ce5ad231373d3cdad373ccab",
   500000,
   3
 );
@@ -314,7 +315,7 @@ await packManager.setVrfConfig(
 
 ---
 
-## 💵 Configure Treasury
+## Configure Treasury
 
 ```javascript
 // Set RariPack treasury (where pack sales go)
@@ -332,7 +333,7 @@ await packManager.setInstantCashEnabled(true);
 
 ---
 
-## 🖼️ Set Metadata URIs
+## Set Metadata URIs
 
 ### Pack Images
 
@@ -344,32 +345,9 @@ await rariPack.setPackURI(2, `${baseUrl}/gold.png`);
 await rariPack.setPackURI(3, `${baseUrl}/platinum.png`);
 ```
 
-### Collection Base URIs
-
-```javascript
-const ItemCollection = await ethers.getContractFactory("ItemCollection");
-
-const collections = {
-  common: "0xBa8EA2878F8Fc53066b050DeC69104d86d043A5E",
-  rare: "0xF87e3783ab9515Ba19cec68C54473366a47721b3",
-  epic: "0x944fF59F65eeb328887E4aa2d97fE478b16a3108",
-  legendary: "0x75C8b8fe9a2caAFc964c6CBa3BF40688F696E964",
-  ultraRare: "0x7207Fd76ACCabb5f4176d6d47466421271ded8fa"
-};
-
-const baseUrl = "https://rarible-drops.s3.filebase.com/Base/pack/item";
-
-for (const [name, address] of Object.entries(collections)) {
-  const collection = ItemCollection.attach(address).connect(signer);
-  const uri = name === "ultraRare" ? `${baseUrl}/ultra-rare/` : `${baseUrl}/${name}/`;
-  await collection.setBaseURI(uri);
-  console.log(`Set ${name} URI: ${uri}`);
-}
-```
-
 ---
 
-## 📊 Check Current State
+## Check Current State
 
 ### Pool Levels
 
@@ -412,7 +390,7 @@ console.log("PackManager has BURNER_ROLE:", await rariPack.hasRole(BURNER_ROLE, 
 
 ---
 
-## 🆘 Emergency Commands
+## Emergency Commands
 
 ### Pause System
 
@@ -441,7 +419,7 @@ await nftPool.rescueNft(collectionAddress, recipientAddress, tokenId);
 
 ---
 
-## 📁 Contract Addresses
+## Contract Addresses
 
 ### Base Mainnet (Chain ID: 8453)
 
@@ -450,12 +428,20 @@ await nftPool.rescueNft(collectionAddress, recipientAddress, tokenId);
 | RariPack | `0x8706480381A0c240Ae1038092350e35b32179124` |
 | PackManager | `0x0048d385d644975d790A4775DF3c3E19b5746EF4` |
 | NftPool | `0x4Ad4aDbD51e3EBEE4636907f522c4A340fb258AC` |
-| Common | `0xBa8EA2878F8Fc53066b050DeC69104d86d043A5E` |
-| Rare | `0xF87e3783ab9515Ba19cec68C54473366a47721b3` |
-| Epic | `0x944fF59F65eeb328887E4aa2d97fE478b16a3108` |
-| Legendary | `0x75C8b8fe9a2caAFc964c6CBa3BF40688F696E964` |
-| UltraRare | `0x7207Fd76ACCabb5f4176d6d47466421271ded8fa` |
 
 ### Sepolia Testnet (Chain ID: 11155111)
 
-Check `ignition/deployments/chain-11155111/infrastructure.json`
+| Contract | Address |
+|----------|---------|
+| RariPack | `0x6A811146A81183393533602DD9fB98E2F66A8d10` |
+| NftPool | `0xf1F50d5A9a629Bf663d7c90a83070A36b367C3a1` |
+| PackManager | `0x2AB951b1A381938F9671FD77f2cf1e0A418C96C7` |
+
+---
+
+## Useful Links
+
+- [Chainlink VRF Dashboard](https://vrf.chain.link/)
+- [Base Block Explorer](https://basescan.org/)
+- [Sepolia Block Explorer](https://sepolia.etherscan.io/)
+- [Chainlink VRF Docs](https://docs.chain.link/vrf/v2-5/supported-networks)
