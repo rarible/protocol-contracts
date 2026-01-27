@@ -694,7 +694,7 @@ protocol/packs/
 │   ├── deploy-raripack.ts             # Deploy RariPack (YAML-based)
 │   ├── deploy-collections.ts          # Deploy & mint collections
 │   ├── deploy-nft-infrastructure.ts   # Deploy NftPool & PackManager
-│   └── 5-process-collections.ts       # Configure collections in NftPool
+│   └── process-collections.ts         # Configure collections in NftPool
 └── docs/
     └── YAML_DEPLOYMENT_GUIDE.md       # This file
 ```
