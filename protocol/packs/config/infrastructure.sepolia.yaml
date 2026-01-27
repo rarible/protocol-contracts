@@ -1,0 +1,75 @@
+# NFT Pack System - Infrastructure Configuration (Sepolia Testnet)
+# =================================================================
+# Settings for deploying NftPool and PackManager on Sepolia
+#
+# Usage:
+#   INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
+
+network: sepolia
+chainId: "11155111"
+
+# Owner address for all contracts
+owner: "0xa95a09520af0f1bbef810a47560c79affe75aa9f"
+
+# Existing RariPack contract address
+rariPack: "0x6A811146A81183393533602DD9fB98E2F66A8d10"
+
+# Pool price ranges (5 levels)
+# Collections are assigned to a pool level based on their floor price
+poolRanges:
+  - level: Common
+    lowPriceEth: 0
+    highPriceEth: 0.05325
+
+  - level: Rare
+    lowPriceEth: 0.05325
+    highPriceEth: 0.213
+
+  - level: Epic
+    lowPriceEth: 0.213
+    highPriceEth: 1.065
+
+  - level: Legendary
+    lowPriceEth: 1.065
+    highPriceEth: 5.325
+
+  - level: UltraRare
+    lowPriceEth: 5.325
+    highPriceEth: infinity
+
+# PackManager settings
+packManager:
+  instantCashEnabled: false
+  treasuryThresholdEth: 5.0
+  payoutTreasury: "0xa95a09520af0f1bbef810a47560c79affe75aa9f"
+
+  # Chainlink VRF v2.5 - Sepolia Testnet
+  vrf:
+    coordinator: "0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B"
+    subscriptionId: "31234815417281375020060825130305937433281857209550563487914138707724720747173"
+    keyHash: "0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae"
+    callbackGasLimit: 500000
+    requestConfirmations: 3
+
+  # Pack probability thresholds (cumulative, out of 10000)
+  probabilities:
+    bronze:
+      ultraRare: 0
+      legendary: 20
+      epic: 120
+      rare: 620
+    silver:
+      ultraRare: 0
+      legendary: 50
+      epic: 350
+      rare: 1350
+    gold:
+      ultraRare: 0
+      legendary: 100
+      epic: 600
+      rare: 2100
+    platinum:
+      ultraRare: 50
+      legendary: 250
+      epic: 950
+      rare: 2950

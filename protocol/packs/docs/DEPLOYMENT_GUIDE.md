@@ -2,9 +2,16 @@
 
 Complete guide to deploy the Pack NFT system on **Base** or **Sepolia** networks.
 
-## Overview
+> **📘 NEW: YAML-Based Deployment**
+> 
+> For the recommended YAML-based deployment workflow, see [YAML_DEPLOYMENT_GUIDE.md](./YAML_DEPLOYMENT_GUIDE.md).
+> This provides better configuration management with version-controlled YAML files.
 
-The deployment consists of 4 sequential steps:
+---
+
+## Overview (Legacy Step-Based Approach)
+
+The legacy deployment consists of 4 sequential steps:
 
 | Step | Script | Description |
 |------|--------|-------------|
@@ -432,10 +439,23 @@ protocol/packs/
 │   ├── deployments/                # Deployed addresses per chain
 │   ├── modules/                    # Ignition modules (reference)
 │   └── parameters/                 # Network-specific parameters
+├── config/
+│   ├── infrastructure.base.yaml    # Base mainnet config
+│   └── infrastructure.sepolia.yaml # Sepolia config
+├── deployments/                    # YAML deployment outputs
 ├── metadata/
 │   └── base/
 │       ├── pack/                   # Pack metadata (bronze, silver, gold)
 │       └── item/                   # Item metadata (common, rare, etc.)
 └── docs/
-    └── DEPLOYMENT_GUIDE.md         # This file
+    ├── DEPLOYMENT_GUIDE.md         # This file (legacy)
+    └── YAML_DEPLOYMENT_GUIDE.md    # New YAML-based guide
 ```
+
+---
+
+## See Also
+
+- **[YAML_DEPLOYMENT_GUIDE.md](./YAML_DEPLOYMENT_GUIDE.md)** - Recommended YAML-based deployment workflow
+- **[ADMIN_COMMANDS.md](./ADMIN_COMMANDS.md)** - Admin operations reference
+- **[DEPLOY_BASE.md](./DEPLOY_BASE.md)** - Base-specific deployment notes

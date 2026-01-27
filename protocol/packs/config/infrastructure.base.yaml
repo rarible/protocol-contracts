@@ -1,0 +1,75 @@
+# NFT Pack System - Infrastructure Configuration (Base Mainnet)
+# ==============================================================
+# Settings for deploying NftPool and PackManager on Base
+#
+# Usage:
+#   INFRA_CONFIG=config/infrastructure.base.yaml yarn deploy:nft-infra:base
+
+network: base
+chainId: "8453"
+
+# Owner address for all contracts
+owner: "0xa95a09520af0f1bbef810a47560c79affe75aa9f"
+
+# Existing RariPack contract address
+rariPack: "0x8706480381A0c240Ae1038092350e35b32179124"
+
+# Pool price ranges (5 levels)
+# Collections are assigned to a pool level based on their floor price
+poolRanges:
+  - level: Common
+    lowPriceEth: 0
+    highPriceEth: 0.05325
+
+  - level: Rare
+    lowPriceEth: 0.05325
+    highPriceEth: 0.213
+
+  - level: Epic
+    lowPriceEth: 0.213
+    highPriceEth: 1.065
+
+  - level: Legendary
+    lowPriceEth: 1.065
+    highPriceEth: 5.325
+
+  - level: UltraRare
+    lowPriceEth: 5.325
+    highPriceEth: infinity
+
+# PackManager settings
+packManager:
+  instantCashEnabled: false
+  treasuryThresholdEth: 5.0
+  payoutTreasury: "0xa95a09520af0f1bbef810a47560c79affe75aa9f"
+
+  # Chainlink VRF v2.5 - Base Mainnet
+  vrf:
+    coordinator: "0xd5D517aBE5cF79B7e95eC98dB0f0277788aFF634"
+    subscriptionId: "80015873168992726859849382095434323321462670158563823161174109925990052043078"
+    keyHash: "0x00b81b5a830cb0a4009fbd8904de511e28631e62ce5ad231373d3cdad373ccab"
+    callbackGasLimit: 500000
+    requestConfirmations: 3
+
+  # Pack probability thresholds (cumulative, out of 10000)
+  probabilities:
+    bronze:
+      ultraRare: 0
+      legendary: 20
+      epic: 120
+      rare: 620
+    silver:
+      ultraRare: 0
+      legendary: 50
+      epic: 350
+      rare: 1350
+    gold:
+      ultraRare: 0
+      legendary: 100
+      epic: 600
+      rare: 2100
+    platinum:
+      ultraRare: 50
+      legendary: 250
+      epic: 950
+      rare: 2950

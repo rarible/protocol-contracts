@@ -10,7 +10,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
  */
 const ItemCollectionsModule = buildModule("ItemCollectionsModule", (m) => {
   const owner = m.getParameter("owner");
-  
+
   // Base URIs for each collection (points to metadata JSON)
   const commonUri = m.getParameter("commonUri");
   const rareUri = m.getParameter("rareUri");
@@ -19,40 +19,25 @@ const ItemCollectionsModule = buildModule("ItemCollectionsModule", (m) => {
   const ultraRareUri = m.getParameter("ultraRareUri");
 
   // Deploy 5 collections
-  const commonCollection = m.contract("ItemCollection", [
-    "Common Pool Item",
-    "COMMON",
-    commonUri,
-    owner,
-  ], { id: "CommonCollection" });
+  const commonCollection = m.contract("ItemCollection", ["Common Pool Item", "COMMON", commonUri, owner], {
+    id: "CommonCollection",
+  });
 
-  const rareCollection = m.contract("ItemCollection", [
-    "Rare Pool Item",
-    "RARE",
-    rareUri,
-    owner,
-  ], { id: "RareCollection" });
+  const rareCollection = m.contract("ItemCollection", ["Rare Pool Item", "RARE", rareUri, owner], {
+    id: "RareCollection",
+  });
 
-  const epicCollection = m.contract("ItemCollection", [
-    "Epic Pool Item",
-    "EPIC",
-    epicUri,
-    owner,
-  ], { id: "EpicCollection" });
+  const epicCollection = m.contract("ItemCollection", ["Epic Pool Item", "EPIC", epicUri, owner], {
+    id: "EpicCollection",
+  });
 
-  const legendaryCollection = m.contract("ItemCollection", [
-    "Legendary Pool Item",
-    "LEGEND",
-    legendaryUri,
-    owner,
-  ], { id: "LegendaryCollection" });
+  const legendaryCollection = m.contract("ItemCollection", ["Legendary Pool Item", "LEGEND", legendaryUri, owner], {
+    id: "LegendaryCollection",
+  });
 
-  const ultraRareCollection = m.contract("ItemCollection", [
-    "Ultra Rare Pool Item",
-    "ULTRARARE",
-    ultraRareUri,
-    owner,
-  ], { id: "UltraRareCollection" });
+  const ultraRareCollection = m.contract("ItemCollection", ["Ultra Rare Pool Item", "ULTRARARE", ultraRareUri, owner], {
+    id: "UltraRareCollection",
+  });
 
   return {
     commonCollection,

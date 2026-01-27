@@ -2,6 +2,10 @@
 
 Practical commands for setting up and managing the pack infrastructure.
 
+> **See also:**
+> - [YAML_DEPLOYMENT_GUIDE.md](./YAML_DEPLOYMENT_GUIDE.md) - YAML-based deployment workflow
+> - [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Step-by-step deployment guide
+
 ---
 
 ## 📋 Prerequisites
