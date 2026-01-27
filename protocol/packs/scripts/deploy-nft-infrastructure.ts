@@ -69,11 +69,19 @@ interface PackManagerConfig {
   };
 }
 
+interface RariPackConfig {
+  address?: string;
+  deploy?: boolean;
+  treasury?: string;
+  name?: string;
+  symbol?: string;
+}
+
 interface InfrastructureConfig {
   network?: string;
   chainId?: string;
   owner: string;
-  rariPack: string;
+  rariPack: string | RariPackConfig;
   poolRanges: PoolRange[];
   packManager: PackManagerConfig;
 }
@@ -132,9 +140,6 @@ async function main() {
   if (!infraConfig.owner) {
     throw new Error("Missing 'owner' in YAML config");
   }
-  if (!infraConfig.rariPack || infraConfig.rariPack === "0x0000000000000000000000000000000000000000") {
-    throw new Error("Missing or invalid 'rariPack' address in YAML config");
-  }
   if (!infraConfig.poolRanges || infraConfig.poolRanges.length !== 5) {
     throw new Error("Missing or invalid 'poolRanges' in YAML config (need exactly 5 levels)");
   }
@@ -143,7 +148,22 @@ async function main() {
   }
 
   const owner = infraConfig.owner;
-  const rariPackAddress = infraConfig.rariPack;
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const rawRariPack = infraConfig.rariPack;
+  if (!rawRariPack) {
+    throw new Error("Missing 'rariPack' in YAML config");
+  }
+
+  const rariPackConfig: RariPackConfig = typeof rawRariPack === "string" ? { address: rawRariPack } : rawRariPack;
+  let rariPackAddress = rariPackConfig.address;
+  const deployRariPack = rariPackConfig.deploy === true || !rariPackAddress || rariPackAddress === zeroAddress;
+  if (!deployRariPack && rariPackAddress === zeroAddress) {
+    throw new Error("Invalid 'rariPack' address in YAML config");
+  }
+
+  const rariPackTreasury = rariPackConfig.treasury ?? owner;
+  const rariPackName = rariPackConfig.name ?? "Rari Pack";
+  const rariPackSymbol = rariPackConfig.symbol ?? "RPACK";
   const vrfConfig = infraConfig.packManager.vrf;
 
   // Parse pool ranges
@@ -175,7 +195,11 @@ async function main() {
   console.log(`Signer:           ${signer.address}`);
   console.log(`Config file:      ${yamlPath}`);
   console.log(`Owner:            ${owner}`);
-  console.log(`RariPack:         ${rariPackAddress}`);
+  console.log(`RariPack:         ${deployRariPack ? "deploy" : rariPackAddress}`);
+  if (deployRariPack) {
+    console.log(`  Treasury:       ${rariPackTreasury}`);
+    console.log(`  Name/Symbol:    ${rariPackName} / ${rariPackSymbol}`);
+  }
   console.log(`Output Directory: ${deploymentDir}`);
 
   console.log(`\nVRF Config:`);
@@ -200,12 +224,48 @@ async function main() {
   console.log(`\nStarting nonce: ${nonce}\n`);
 
   // Get contract factories
+  const RariPack = await ethers.getContractFactory("RariPack");
   const NftPool = await ethers.getContractFactory("NftPool");
   const PackManager = await ethers.getContractFactory("PackManager");
   const TransparentProxy = await ethers.getContractFactory("TransparentUpgradeableProxy");
 
   // ============================================
-  // 1. Deploy NftPool
+  // 1. Deploy (or attach) RariPack
+  // ============================================
+  let rariPackImplAddr: string | undefined;
+  if (deployRariPack) {
+    console.log("--- Deploying RariPack ---\n");
+
+    console.log("Deploying RariPack implementation...");
+    const rariPackImpl = await RariPack.deploy({ nonce: nonce++ });
+    console.log(`  Tx: ${rariPackImpl.deploymentTransaction()?.hash}`);
+    await rariPackImpl.waitForDeployment();
+    rariPackImplAddr = await rariPackImpl.getAddress();
+    console.log(`  ✓ Implementation: ${rariPackImplAddr}\n`);
+
+    console.log("Deploying RariPack proxy...");
+    const rariPackInitData = RariPack.interface.encodeFunctionData("initialize", [
+      owner,
+      rariPackTreasury,
+      rariPackName,
+      rariPackSymbol,
+    ]);
+    const rariPackProxy = await TransparentProxy.deploy(rariPackImplAddr, owner, rariPackInitData, { nonce: nonce++ });
+    console.log(`  Tx: ${rariPackProxy.deploymentTransaction()?.hash}`);
+    await rariPackProxy.waitForDeployment();
+    rariPackAddress = await rariPackProxy.getAddress();
+    console.log(`  ✓ Proxy: ${rariPackAddress}\n`);
+  } else {
+    console.log("--- Using Existing RariPack ---\n");
+    console.log(`RariPack: ${rariPackAddress}\n`);
+  }
+
+  if (!rariPackAddress) {
+    throw new Error("RariPack address is not set after deployment/attachment");
+  }
+
+  // ============================================
+  // 2. Deploy NftPool
   // ============================================
   console.log("--- Deploying NftPool ---\n");
 
@@ -225,7 +285,7 @@ async function main() {
   console.log(`  ✓ Proxy: ${nftPoolProxyAddr}\n`);
 
   // ============================================
-  // 2. Deploy PackManager
+  // 3. Deploy PackManager
   // ============================================
   console.log("--- Deploying PackManager ---\n");
 
@@ -247,17 +307,28 @@ async function main() {
   console.log(`  ✓ Proxy: ${packManagerProxyAddr}\n`);
 
   // ============================================
-  // 3. Configure contracts
+  // 4. Configure contracts
   // ============================================
   console.log("--- Configuring Contracts ---\n");
 
   // Get contract instances at proxy addresses
+  const rariPack = RariPack.attach(rariPackAddress);
   const nftPool = NftPool.attach(nftPoolProxyAddr) as typeof nftPoolImpl;
   const packManager = PackManager.attach(packManagerProxyAddr) as typeof packManagerImpl;
 
   // Get role hashes
   const POOL_MANAGER_ROLE = await nftPool.POOL_MANAGER_ROLE();
   console.log(`POOL_MANAGER_ROLE: ${POOL_MANAGER_ROLE}\n`);
+
+  // Grant BURNER_ROLE to PackManager on RariPack when RariPack was deployed here
+  if (deployRariPack) {
+    const BURNER_ROLE = await rariPack.BURNER_ROLE();
+    console.log(`BURNER_ROLE: ${BURNER_ROLE}\n`);
+    console.log("Granting BURNER_ROLE to PackManager on RariPack...");
+    let tx = await rariPack.grantRole(BURNER_ROLE, packManagerProxyAddr, { nonce: nonce++ });
+    await tx.wait();
+    console.log(`  ✓ Done (tx: ${tx.hash})\n`);
+  }
 
   // Grant POOL_MANAGER_ROLE to PackManager on NftPool
   console.log("Granting POOL_MANAGER_ROLE to PackManager on NftPool...");
@@ -400,6 +471,7 @@ async function main() {
     implementations: {
       nftPool: nftPoolImplAddr,
       packManager: packManagerImplAddr,
+      ...(rariPackImplAddr ? { rariPack: rariPackImplAddr } : {}),
     },
   };
 
@@ -425,6 +497,7 @@ ${yaml.dump(outputYamlData, { lineWidth: 120, noRefs: true, sortKeys: false })}`
     implementations: {
       nftPool: nftPoolImplAddr,
       packManager: packManagerImplAddr,
+      ...(rariPackImplAddr ? { rariPack: rariPackImplAddr } : {}),
     },
     deployedAt: timestamp,
     deploymentDir,
@@ -461,13 +534,15 @@ ${yaml.dump(outputYamlData, { lineWidth: 120, noRefs: true, sortKeys: false })}`
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log("║  ⚠️  IMPORTANT: Additional Setup Required                  ║");
   console.log("╚════════════════════════════════════════════════════════════╝");
+  const burnerStep = deployRariPack
+    ? "2. BURNER_ROLE already granted to PackManager (RariPack deployed here)."
+    : `2. Grant BURNER_ROLE to PackManager on RariPack:\n   rariPack.grantRole(BURNER_ROLE, \"${packManagerProxyAddr}\")`;
   console.log(`
 1. Add PackManager to VRF Subscription:
    Go to https://vrf.chain.link/ and add this consumer:
    ${packManagerProxyAddr}
 
-2. Grant BURNER_ROLE to PackManager on RariPack:
-   rariPack.grantRole(BURNER_ROLE, "${packManagerProxyAddr}")
+${burnerStep}
 `);
 
   console.log(`✅ Deployment complete!\n`);
