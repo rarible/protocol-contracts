@@ -262,14 +262,17 @@ yarn install
 
 # 0a. Deploy RariPack (if not already deployed)
 RARIPACK_CONFIG=config/raripack.sepolia.yaml yarn deploy:raripack:sepolia
+# Output: deployments/sepolia/YYYY-MM-DD/raripack.yaml
 
 # 0b. Set up VRF subscription at vrf.chain.link (manual step)
 
 # 1. Deploy test collections (outputs collections.yaml)
 yarn deploy-collections:sepolia
+# Output: deployments/sepolia/YYYY-MM-DD/collections.yaml
 
-# 2. Deploy NftPool and PackManager (uses infrastructure.yaml config)
+# 2. Deploy NftPool and PackManager (auto-discovers RariPack from step 0a)
 INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
+# Output: deployments/sepolia/YYYY-MM-DD/infrastructure.yaml
 
 # 3. Add PackManager to VRF subscription at vrf.chain.link
 # 4. Grant BURNER_ROLE to PackManager on RariPack
@@ -489,15 +492,32 @@ For Platinum packs:
 INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
 ```
 
+### RariPack Auto-Discovery
+
+The script **automatically discovers** the RariPack address from Step 0a:
+
+1. Checks for `raripack.yaml` in today's deployment folder (`deployments/<network>/YYYY-MM-DD/`)
+2. Falls back to `rariPack` address in the infrastructure config
+3. If neither found and `rariPack.deploy: true`, deploys a new RariPack
+
+You can also explicitly specify the path:
+
+```bash
+RARIPACK_DEPLOY=deployments/sepolia/2026-01-27/raripack.yaml \
+INFRA_CONFIG=config/infrastructure.sepolia.yaml \
+yarn deploy:nft-infra:sepolia
+```
+
 ### What it does
 
-1. **Deploys NftPool** (implementation + proxy)
+1. **Discovers RariPack** from previous deployment (or deploys new if needed)
+2. **Deploys NftPool** (implementation + proxy)
    - Initialized with pool price ranges from YAML
-2. **Deploys PackManager** (implementation + proxy)
+3. **Deploys PackManager** (implementation + proxy)
    - Initialized with RariPack address
-3. **Configures roles**
+4. **Configures roles**
    - Grants `POOL_MANAGER_ROLE` to PackManager on NftPool
-4. **Configures PackManager**
+5. **Configures PackManager**
    - Sets VRF configuration
    - Sets pack probabilities
    - Configures instant cash settings

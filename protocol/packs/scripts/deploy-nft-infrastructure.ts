@@ -149,21 +149,6 @@ async function main() {
 
   const owner = infraConfig.owner;
   const zeroAddress = "0x0000000000000000000000000000000000000000";
-  const rawRariPack = infraConfig.rariPack;
-  if (!rawRariPack) {
-    throw new Error("Missing 'rariPack' in YAML config");
-  }
-
-  const rariPackConfig: RariPackConfig = typeof rawRariPack === "string" ? { address: rawRariPack } : rawRariPack;
-  let rariPackAddress = rariPackConfig.address;
-  const deployRariPack = rariPackConfig.deploy === true || !rariPackAddress || rariPackAddress === zeroAddress;
-  if (!deployRariPack && rariPackAddress === zeroAddress) {
-    throw new Error("Invalid 'rariPack' address in YAML config");
-  }
-
-  const rariPackTreasury = rariPackConfig.treasury ?? owner;
-  const rariPackName = rariPackConfig.name ?? "Rari Pack";
-  const rariPackSymbol = rariPackConfig.symbol ?? "RPACK";
   const vrfConfig = infraConfig.packManager.vrf;
 
   // Parse pool ranges
@@ -187,6 +172,64 @@ async function main() {
     fs.mkdirSync(deploymentDir, { recursive: true });
   }
 
+  // ============================================
+  // Auto-discover RariPack from previous step
+  // ============================================
+  // Priority:
+  // 1. RARIPACK_DEPLOY env var (path to raripack.yaml from deploy-raripack.ts)
+  // 2. raripack.yaml in today's deployment folder
+  // 3. rariPack address in infrastructure config
+  // 4. Deploy new RariPack if deploy: true or address missing
+  
+  let rariPackFromDeployment: string | undefined;
+  let rariPackSource = "config";
+  
+  // Check RARIPACK_DEPLOY env var first
+  const rariPackDeployPath = process.env.RARIPACK_DEPLOY;
+  if (rariPackDeployPath) {
+    const fullPath = path.isAbsolute(rariPackDeployPath) ? rariPackDeployPath : path.resolve(process.cwd(), rariPackDeployPath);
+    if (fs.existsSync(fullPath)) {
+      const rariPackYaml = yaml.load(fs.readFileSync(fullPath, "utf-8")) as any;
+      if (rariPackYaml?.contracts?.rariPack) {
+        rariPackFromDeployment = rariPackYaml.contracts.rariPack;
+        rariPackSource = `RARIPACK_DEPLOY (${fullPath})`;
+      }
+    }
+  }
+  
+  // Check for raripack.yaml in today's deployment folder
+  if (!rariPackFromDeployment) {
+    const rariPackYamlPath = path.join(deploymentDir, "raripack.yaml");
+    if (fs.existsSync(rariPackYamlPath)) {
+      const rariPackYaml = yaml.load(fs.readFileSync(rariPackYamlPath, "utf-8")) as any;
+      if (rariPackYaml?.contracts?.rariPack) {
+        rariPackFromDeployment = rariPackYaml.contracts.rariPack;
+        rariPackSource = `auto-discovered (${rariPackYamlPath})`;
+      }
+    }
+  }
+
+  const rawRariPack = infraConfig.rariPack;
+  const rariPackConfig: RariPackConfig = typeof rawRariPack === "string" 
+    ? { address: rawRariPack } 
+    : (rawRariPack ?? {});
+  
+  // Use discovered address if available, otherwise fall back to config
+  let rariPackAddress = rariPackFromDeployment ?? rariPackConfig.address;
+  const deployRariPack = rariPackConfig.deploy === true || !rariPackAddress || rariPackAddress === zeroAddress;
+  
+  if (!deployRariPack && (!rariPackAddress || rariPackAddress === zeroAddress)) {
+    throw new Error("No RariPack address found. Either:\n" +
+      "  1. Run deploy:raripack first, or\n" +
+      "  2. Set RARIPACK_DEPLOY env var pointing to raripack.yaml, or\n" +
+      "  3. Add rariPack address to infrastructure config, or\n" +
+      "  4. Set rariPack.deploy: true in config to deploy a new one");
+  }
+
+  const rariPackTreasury = rariPackConfig.treasury ?? owner;
+  const rariPackName = rariPackConfig.name ?? "Rari Pack";
+  const rariPackSymbol = rariPackConfig.symbol ?? "RPACK";
+
   console.log("\n╔════════════════════════════════════════════════════════════╗");
   console.log(`║     DEPLOY NFT INFRASTRUCTURE (${networkName.toUpperCase().padEnd(7)})                  ║`);
   console.log("╚════════════════════════════════════════════════════════════╝\n");
@@ -195,7 +238,10 @@ async function main() {
   console.log(`Signer:           ${signer.address}`);
   console.log(`Config file:      ${yamlPath}`);
   console.log(`Owner:            ${owner}`);
-  console.log(`RariPack:         ${deployRariPack ? "deploy" : rariPackAddress}`);
+  console.log(`RariPack:         ${deployRariPack ? "will deploy new" : rariPackAddress}`);
+  if (!deployRariPack) {
+    console.log(`  Source:         ${rariPackSource}`);
+  }
   if (deployRariPack) {
     console.log(`  Treasury:       ${rariPackTreasury}`);
     console.log(`  Name/Symbol:    ${rariPackName} / ${rariPackSymbol}`);
