@@ -653,7 +653,7 @@ INFRA_CONFIG=config/infrastructure.sepolia.yaml yarn deploy:nft-infra:sepolia
 
 # Step 5: Configure collections and deposit NFTs
 INFRA_CONFIG=config/infrastructure.sepolia.yaml \
-COLLECTIONS_CONFIG=deployments/sepolia/2026-01-27/collections.yaml \
+COLLECTIONS_CONFIG=deployments/sepolia/2026-01-28/collections.yaml \
 DEPOSIT_NFTS=true \
 yarn process-collections:sepolia
 ```
