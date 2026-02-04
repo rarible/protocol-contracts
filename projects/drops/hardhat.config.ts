@@ -24,9 +24,10 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 20,
+            runs: 200,
             
           },
+          viaIR: true,
           evmVersion: "london",
         },
       },
@@ -43,9 +44,10 @@ const config: HardhatUserConfig = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        runs: 20,
+        runs: 200,
         evmVersion: "london",
       },
+      viaIR: true,
     },
   },
   namedAccounts: {

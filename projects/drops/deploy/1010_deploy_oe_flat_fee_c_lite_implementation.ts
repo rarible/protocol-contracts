@@ -3,7 +3,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { DETERMENISTIC_DEPLOYMENT_SALT } from "../utils/utils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  console.log('\n=== Starting OpenEditionERC721FlatFeeC Deployment ===');
+  console.log('\n=== Starting OpenEditionERC721FlatFeeCLite Deployment ===');
   console.log(`Network: ${hre.network.name}`);
   console.log(`Chain ID: ${hre.network.config.chainId}`);
 
@@ -15,8 +15,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log(`- Deterministic Deployment: ${DETERMENISTIC_DEPLOYMENT_SALT ? 'Enabled' : 'Disabled'}`);
   console.log(`- Skip If Already Deployed: ${process.env.SKIP_IF_ALREADY_DEPLOYED ? 'Yes' : 'No'}`);
 
-  console.log('\nDeploying OpenEditionERC721FlatFeeC contract...');
-  const deployResult = await deploy('OpenEditionERC721FlatFeeC', {
+  console.log('\nDeploying OpenEditionERC721FlatFeeCLite contract...');
+  const deployResult = await deploy('OpenEditionERC721FlatFeeCLite', {
     from: deployer,
     log: true,
     autoMine: true,
@@ -33,4 +33,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ["all", "1010", "oe-collection-c"];
+func.tags = ["all", "1010", "oe-collection-c-lite"];
