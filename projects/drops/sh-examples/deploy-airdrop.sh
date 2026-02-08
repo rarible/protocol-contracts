@@ -9,10 +9,10 @@ npx hardhat deploy-airdrop --network polygon_mainnet \
 
 # megaeth
 
-npx hardhat deploy-airdrop --network megaeth_testnet \
-    --default-admin 0x98556b192f8304001986e0bb94e61e51049a600c \
+npx hardhat deploy-airdrop --network megaeth \
+    --default-admin 0xA95a09520AF0f1BBEf810a47560C79Affe75AA9f \
     --contract-uri "ipfs://QmdHaufjUDJgbZzZ4eFCjtJQyeQpuNwoEvqLm5rq159vC8/5" \
-    --salt 0x0000000000000000000000000000000000000000000000000000000000000001 \
+    --salt 0x0000000000000000000000000000000000000000000000000000000000001234 \
     --extra-data 0x \
-    --clone-factory 0x9A611f52a1b8007B1A20935ba619352C694fAE8F \
-    --implementation 0x0000000000000000000000000000000000000000
+    --clone-factory 0x72B38294ef7BB2Fb219a89c09026dEBCaD8A656E \
+    --implementation 0x8c8e1D5409743EBC14AfF9913806670B5284E044

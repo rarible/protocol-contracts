@@ -1,6 +1,6 @@
 import { Signer, BytesLike } from "ethers";
 import { RaribleCloneFactory } from "../typechain-types";
-import { Airdrop__factory } from "@rarible/external-contracts/js/factories/Airdrop__factory";
+import { Airdrop__factory } from "../typechain-types";
 import { getCloneFactory } from "./clone-factory";
 
 /*
