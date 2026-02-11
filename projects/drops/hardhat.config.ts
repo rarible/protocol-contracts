@@ -24,8 +24,8 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
+            //runs: 20, -- clone factory
             runs: 1,
-            
           },
           viaIR: true,
           evmVersion: "london",
