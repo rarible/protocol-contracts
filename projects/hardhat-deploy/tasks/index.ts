@@ -1,5 +1,7 @@
 import './import-truffle-deployment'
 import './transfer-ownership'
+import './transfer-ownership-and-zero-fees'
+import './check-ownership-status'
 import './txStatus'
 import './create-and-trade-order'
 import './set-protocol-fee'

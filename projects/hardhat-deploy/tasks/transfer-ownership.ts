@@ -3,6 +3,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeploymentsExtension } from "hardhat-deploy/types";
 import "@nomiclabs/hardhat-ethers";
 import { getContractsWithProxy, transferOwnership } from "../sdk/transfer-ownership";
+import { LedgerSigner } from "@anders-t/ethers-ledger";
 /**
  * This task iterates through ALL deployed contracts for the network specified via --network parameter.
  * 
@@ -36,10 +37,10 @@ task(
       const { deployments, network } = hre as HardhatRuntimeEnvironment & {
         deployments: DeploymentsExtension;
       };
-
-      const signer = (await hre.ethers.getSigners())[0];
+      const provider = hre.ethers.provider;
+      const signer = new LedgerSigner(provider, "m/44'/60'/0'/0/0");
       console.log(`Using network: ${network.name}`);
-      console.log(`Using signer: ${signer.address}`);
+      console.log(`Using signer: ${await signer.getAddress()}`);
       console.log(`Transferring ownership to: ${newOwner}`);
 
       let contractsWithProxy: string[] = await getContractsWithProxy(deployments);
