@@ -88,7 +88,7 @@ export function createNetwork(name: string): HttpNetworkUserConfig {
         verify: json.verify
           ? {
               etherscan: {
-                apiKey: "xyz",
+                apiKey: json.verify.apiKey || "xyz",
                 apiUrl: json.verify.apiUrl,
               },
             }
