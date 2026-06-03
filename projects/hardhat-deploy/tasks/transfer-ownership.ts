@@ -38,7 +38,11 @@ task(
         deployments: DeploymentsExtension;
       };
       const provider = hre.ethers.provider;
-      const signer = new LedgerSigner(provider, "m/44'/60'/0'/0/0");
+      const { HARDWARE_DERIVATION } = process.env;
+      const { deployer } = await hre.getNamedAccounts();
+      const signer = HARDWARE_DERIVATION
+        ? new LedgerSigner(provider, "m/44'/60'/0'/0/0")
+        : await hre.ethers.getSigner(deployer);
       console.log(`Using network: ${network.name}`);
       console.log(`Using signer: ${await signer.getAddress()}`);
       console.log(`Transferring ownership to: ${newOwner}`);
