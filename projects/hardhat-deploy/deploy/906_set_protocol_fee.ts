@@ -15,7 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (!!deploy_non_meta) {
     contractName = "ExchangeV2";
   }
-  const feeReceiver = "0x053F171c0D0Cc9d76247D4d1CdDb280bf1131390";
+  const feeReceiver = "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7";
   const buyerFeeBps = 0;
   const sellerFeeBps = 200;
 
