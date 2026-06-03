@@ -25,16 +25,25 @@ async function deployAndInitProxy(hre: HardhatRuntimeEnvironment, contractName: 
     log: true,
     autoMine: true,
     gasPrice: GAS_PRICE,
+    skipIfAlreadyDeployed: true,
   });
 
   const Proxy = await hre.ethers.getContractFactory(contractName);
   const proxy = Proxy.attach(transferProxyReceipt.address);
 
-  await execute(
-    contractName,
-    { from: deployer, log: true, gasPrice: GAS_PRICE },
-    "__OperatorRole_init"
-  );
+  try {
+    await execute(
+      contractName,
+      { from: deployer, log: true, gasPrice: GAS_PRICE },
+      "__OperatorRole_init"
+    );
+  } catch (e: any) {
+    if (e.message?.includes('already initialized') || e.message?.includes('Initializable')) {
+      console.log(`${contractName} already initialized, skipping`);
+    } else {
+      throw e;
+    }
+  }
 
   return proxy;
 }

@@ -82,4 +82,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ["all", "all-zk",'test-erc721-collection-withItems', '305'];
+func.tags = ["all-zk",'test-erc721-collection-withItems', '305'];
+func.skip = async (hre: HardhatRuntimeEnvironment) => !(hre.network.config as any).zksync;

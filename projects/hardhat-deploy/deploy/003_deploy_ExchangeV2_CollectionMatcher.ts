@@ -44,7 +44,7 @@ async function deployAndSetupExchange(hre: HardhatRuntimeEnvironment, contractNa
     },
     log: true,
     autoMine: true,
-    gasPrice: "1000000",
+    gasPrice: GAS_PRICE,
   });
 
   const ExchangeV2 = await hre.ethers.getContractFactory(contractName);
