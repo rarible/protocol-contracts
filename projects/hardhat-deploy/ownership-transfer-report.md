@@ -1,14 +1,14 @@
 # Ownership & Fee Transfer Status Report
 
-Generated: 2026-04-12 (on-chain data, latest)
+Generated: 2026-06-17 (on-chain data, latest)
 
 ## Summary
 
-- **Total networks:** 31
-- **Ownership DONE:** 10
-- **Ownership PENDING:** 20
-- **Errors (could not check):** 1
-- **Fees still NON-ZERO:** 16
+- **Total networks:** 32
+- **Ownership DONE:** 11
+- **Ownership PENDING:** 21
+- **Errors (could not check):** 0
+- **Fees still NON-ZERO:** 17
 
 ---
 
@@ -17,6 +17,7 @@ Generated: 2026-04-12 (on-chain data, latest)
 | Network | ChainId | Exchange | Current Owner | Target Owner | Ownership | Seller Fee | Buyer Fee | Fee Status | Error |
 |---------|---------|----------|---------------|--------------|-----------|------------|-----------|------------|-------|
 | telos | 40 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x10B070b01284a1405faa3a633697547d3db2b38d` | **PENDING** | 200 | 0 | NON-ZERO | - |
+| bsc | 56 | ExchangeV2 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | **DONE** | 0 | 0 | ZERO | - |
 | polygon_mainnet | 137 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x735092f168faedeEba11edaA765455ecff3C53B9` | **PENDING** | 200 | 0 | NON-ZERO | - |
 | monad | 143 | ExchangeMetaV2 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | **DONE** | 0 | 0 | ZERO | - |
 | fraxtal | 252 | ExchangeMetaV2 | `0x0e8b44Ac9675518Ec436a66c6654C9Df03b4c2f4` | `0x0e8b44Ac9675518Ec436a66c6654C9Df03b4c2f4` | **DONE** | 0 | 0 | ZERO | - |
@@ -26,16 +27,16 @@ Generated: 2026-04-12 (on-chain data, latest)
 | shape | 360 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x2dF7343e2bDeA99ecf9863915876bc841b8E76bB` | **PENDING** | 200 | 0 | NON-ZERO | - |
 | camp | 484 | ExchangeMetaV2 | `0xD39c38cc73dA45773D48f1cE330dF61769f0BAA6` | `0xD39c38cc73dA45773D48f1cE330dF61769f0BAA6` | **DONE** | 0 | 0 | ZERO | - |
 | match | 698 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x4471FC5378aAf93fE271f2402A087FBeB1c66532` | **PENDING** | 200 | 0 | NON-ZERO | - |
-| hyper_evm | 999 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | **PENDING** | - | - | - | - |
+| hyper_evm | 999 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b10` | **PENDING** | 25 | 0 | NON-ZERO | - |
 | moonbeam | 1284 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x2dF7343e2bDeA99ecf9863915876bc841b8E76bB` | **PENDING** | 200 | 0 | NON-ZERO | - |
-| sei | 1329 | ExchangeMetaV2 | `-` | `0xA9F422E8A794b631Ab0B6d03f17c5eA288623bBC` | **ERROR** | - | - | - | Transaction reverted without a reason string |
+| sei | 1329 | ExchangeMetaV2 | `0xEF1ad27165B8A72cd07C8a51c111381677ED4d7A` | `0xA9F422E8A794b631Ab0B6d03f17c5eA288623bBC` | **PENDING** | 0 | 0 | ZERO | - |
 | injective | 1776 | ExchangeMetaV2 | `0xeaD5aA8630e03C95c6D7c83c1FD1EA2C6749E4D7` | `0xeaD5aA8630e03C95c6D7c83c1FD1EA2C6749E4D7` | **DONE** | 0 | 0 | ZERO | - |
 | lightlink | 1890 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x1943756057cBb3A858CC7cF4A25A7A35BdCa4eDb` | **PENDING** | 200 | 0 | NON-ZERO | - |
 | abstract | 2741 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0xdD650Ffc2A089324e8d36B5a6Dd859c96A8564Df` | **PENDING** | 200 | 0 | NON-ZERO | - |
 | megaeth | 4326 | ExchangeMetaV2 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | **DONE** | 0 | 0 | ZERO | - |
 | mantle_mainnet | 5000 | ExchangeV2 | `0x20b9049c69DeA7e5d46De82cE0b33A9D5a8a0893` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | **PENDING** | - | - | OLD CONTRACT | - |
 | somnia | 5031 | ExchangeMetaV2 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | **DONE** | 0 | 0 | ZERO | - |
-| arenaz | 7897 | ExchangeMetaV2 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | **DONE** | 0 | 0 | ZERO | - |
+| arenaz | 7897 | ExchangeMetaV2 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | **DONE** (chain shut down 2026-05-31) | 0 | 0 | ZERO | - |
 | base | 8453 | ExchangeMetaV2 | `0x256eFfCeA2ab308D31e318728D2615545171d85B` | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b8` | **PENDING** | 200 | 0 | NON-ZERO | - |
 | zilliqa | 32769 | ExchangeMetaV2 | `0xe223825497c435BAeaf318F03d33Ec704954028A` | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | **PENDING** | 200 | 0 | NON-ZERO | - |
 | apechain | 33139 | ExchangeMetaV2 | `0xD39c38cc73dA45773D48f1cE330dF61769f0BAA6` | `0xD39c38cc73dA45773D48f1cE330dF61769f0BAA6` | **DONE** | 0 | 0 | ZERO | - |
@@ -50,10 +51,11 @@ Generated: 2026-04-12 (on-chain data, latest)
 
 ---
 
-## Completed networks — 10
+## Completed networks — 11
 
 | Network | ChainId | Owner | Fee Status |
 |---------|---------|-------|------------|
+| bsc | 56 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | ZERO |
 | monad | 143 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | ZERO |
 | fraxtal | 252 | `0x0e8b44Ac9675518Ec436a66c6654C9Df03b4c2f4` | ZERO |
 | zkcandy | 320 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | ZERO |
@@ -61,11 +63,11 @@ Generated: 2026-04-12 (on-chain data, latest)
 | injective | 1776 | `0xeaD5aA8630e03C95c6D7c83c1FD1EA2C6749E4D7` | ZERO |
 | megaeth | 4326 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | ZERO |
 | somnia | 5031 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | ZERO |
-| arenaz | 7897 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | ZERO |
+| arenaz | 7897 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | ZERO (chain shut down 2026-05-31) |
 | apechain | 33139 | `0xD39c38cc73dA45773D48f1cE330dF61769f0BAA6` | ZERO |
 | electroneum | 52014 | `0x04a2684A46934504a62BdF9947AF166F01bf14F8` | ZERO |
 
-## Networks owned by `0x256eFfCeA2ab308D31e318728D2615545171d85B` — 17 networks, requires their key
+## Networks owned by `0x256eFfCeA2ab308D31e318728D2615545171d85B` — 18 networks, requires their key
 
 | Network | ChainId | Target Owner | Seller Fee | Fee Status |
 |---------|---------|--------------|------------|------------|
@@ -75,7 +77,7 @@ Generated: 2026-04-12 (on-chain data, latest)
 | zksync | 324 | `0x86ddc6cB0e94158AFD6DA3ae53a6Ec6182434AEB` | 200 | NON-ZERO |
 | shape | 360 | `0x2dF7343e2bDeA99ecf9863915876bc841b8E76bB` | 200 | NON-ZERO |
 | match | 698 | `0x4471FC5378aAf93fE271f2402A087FBeB1c66532` | 200 | NON-ZERO |
-| hyper_evm | 999 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | - | - |
+| hyper_evm | 999 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b10` | 25 | NON-ZERO |
 | moonbeam | 1284 | `0x2dF7343e2bDeA99ecf9863915876bc841b8E76bB` | 200 | NON-ZERO |
 | lightlink | 1890 | `0x1943756057cBb3A858CC7cF4A25A7A35BdCa4eDb` | 200 | NON-ZERO |
 | abstract | 2741 | `0xdD650Ffc2A089324e8d36B5a6Dd859c96A8564Df` | 200 | NON-ZERO |
@@ -100,11 +102,11 @@ Generated: 2026-04-12 (on-chain data, latest)
 |---------|---------|--------------|------------|
 | mantle_mainnet | 5000 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7` | OLD CONTRACT |
 
-## Networks with errors — 1
+## Networks owned by `0xEF1ad27165B8A72cd07C8a51c111381677ED4d7A` (unknown) — 1 network
 
-| Network | ChainId | Error |
-|---------|---------|-------|
-| sei | 1329 | Transaction reverted without a reason string |
+| Network | ChainId | Target Owner | Fee Status |
+|---------|---------|--------------|------------|
+| sei | 1329 | `0xA9F422E8A794b631Ab0B6d03f17c5eA288623bBC` | ZERO |
 
 ---
 
