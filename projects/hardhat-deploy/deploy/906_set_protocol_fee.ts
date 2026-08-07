@@ -7,7 +7,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {  execute } = hre.deployments;
   const { deployer } = await hre.getNamedAccounts();
 
-  const { deploy_meta, deploy_non_meta } = getConfig(hre.network.name);
+  const { deploy_meta, deploy_non_meta, fee_receiver } = getConfig(hre.network.name);
   let contractName: string = "";
   if (!!deploy_meta) {
     contractName = "ExchangeMetaV2";
@@ -15,7 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (!!deploy_non_meta) {
     contractName = "ExchangeV2";
   }
-  const feeReceiver = "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7";
+  const feeReceiver = fee_receiver || "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7";
   const buyerFeeBps = 0;
   const sellerFeeBps = 200;
 
