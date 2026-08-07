@@ -73,7 +73,8 @@ async function getGasOverrides(provider: ethers.providers.Provider, chainId: num
 
 const NEW_OWNER_BY_CHAIN_ID: Record<number, string> = {
   56:         "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7",  // BSC mainnet
-  4663:       "0x6031ecbd7D65e805A72f506D0fb841088E49fAe7",  // Robinhood Chain - stays on the deployer, hand over later
+  // Robinhood Chain (4663) is deliberately absent: it launches with a 2% seller fee on the
+  // deployer, so this task must refuse to run there rather than zero it.
   4326:       "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7",  // MegaETH  - done
   8453:       "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7",  // Base - err
   1380012617: "0xf37867d72445332915083D76777daF3639Bde26E",  // RARI Chain - owner found
