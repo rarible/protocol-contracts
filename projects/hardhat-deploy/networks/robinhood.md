@@ -18,5 +18,5 @@
 ## Protocol Fees and Ownerships
 | Network | ChainId | ExchangeV2 Address | Fee Receiver | Seller Fee (bps) | Buyer Fee (bps) | ProxyAdmin Owner |
 |---------|---------|--------------------|--------------|------------------|-----------------|------------------|
-| robinhood | 4663 | `0x5322be7A90AAa2F028d7f03A780C10F716CCB247` | `0x6031ecbd7D65e805A72f506D0fb841088E49fAe7` | 200 | 0 | `0x6031ecbd7D65e805A72f506D0fb841088E49fAe7`|
+| robinhood | 4663 | `0x5322be7A90AAa2F028d7f03A780C10F716CCB247` | `0x74Fbc141095A34a7daEc2001600D64968Dbd46B4` | 200 | 0 | `0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7`|
 

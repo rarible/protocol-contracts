@@ -15,7 +15,7 @@ import { ethers } from "ethers";
 
 const NEW_OWNER_BY_CHAIN_ID: Record<number, { network: string; newOwner: string }> = {
   56:         { network: "bsc",              newOwner: "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7" },
-  4663:       { network: "robinhood",        newOwner: "0x6031ecbd7D65e805A72f506D0fb841088E49fAe7" },
+  4663:       { network: "robinhood",        newOwner: "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7" },
   4326:       { network: "megaeth",          newOwner: "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7" },
   8453:       { network: "base",             newOwner: "0x735092F168FaeDeeBA11eDAa765455ecFf3C53b7" },
   1380012617: { network: "rari",             newOwner: "0xf37867d72445332915083D76777daF3639Bde26E" },
