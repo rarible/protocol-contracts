@@ -191,6 +191,25 @@ const electroneum = {
   transferProxies: [],
 };
 
+const robinhood = {
+  marketplaces: [
+    zeroAddress, // wyvernExchange
+    "", //rarible exchangeV2 palceholder
+    zeroAddress, // seaPort_1_1
+    zeroAddress, // x2y2
+    zeroAddress, // looksRare
+    zeroAddress, // sudoSwap
+    zeroAddress, // seaport_1_4
+    zeroAddress, // looksRareV2
+    zeroAddress, // blur
+    zeroAddress, // seaport_1_5
+    "0x0000000000000068F116a894984e2DB1123eB395", // seaport_1_6
+  ],
+
+  weth: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+  transferProxies: [],
+};
+
 let settings: any = {
   "default": def,
   "mainnet": mainnet,
@@ -202,7 +221,8 @@ let settings: any = {
   "polygon_staging": polygon_staging,
   "polygon_mumbai": polygon_mumbai,
   "polygon_mainnet": polygon_mainnet,
-  "electroneum": electroneum
+  "electroneum": electroneum,
+  "robinhood": robinhood
 };
 
 function getWrapperSettings(network: string) {
@@ -254,4 +274,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ['all', 'all-zk', 'wrapper', 'all-no-tokens', 'all-zk-no-tokens', "905"];
 // Skip the marketplace aggregator on these chains: their marketplaces/WETH are not configured there.
-func.skip = async (hre: HardhatRuntimeEnvironment) => ["bsc", "robinhood", "fluent_testnet", "fluent"].includes(hre.network.name);
+func.skip = async (hre: HardhatRuntimeEnvironment) => ["bsc", "fluent_testnet", "fluent"].includes(hre.network.name);
