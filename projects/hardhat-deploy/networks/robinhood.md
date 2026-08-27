@@ -12,6 +12,7 @@
  ERC721RaribleMinimal | 0x69df845dEa3a156b19861fF590f94aa7Ce0C3681 | https://robinhoodchain.blockscout.com/address/0x69df845dEa3a156b19861fF590f94aa7Ce0C3681
  ERC721RaribleMinimalBeacon | 0xF3651A08f04cCDf9b3A8bbD472911f2a42B428B9 | https://robinhoodchain.blockscout.com/address/0xF3651A08f04cCDf9b3A8bbD472911f2a42B428B9
  ExchangeV2 | 0x5322be7A90AAa2F028d7f03A780C10F716CCB247 | https://robinhoodchain.blockscout.com/address/0x5322be7A90AAa2F028d7f03A780C10F716CCB247
+ RaribleExchangeWrapper | 0x4121675a069B8De388e49216Ec045D3A64cF836c | https://robinhoodchain.blockscout.com/address/0x4121675a069B8De388e49216Ec045D3A64cF836c
  RoyaltiesRegistry | 0x4Dc1647Cd1f94661e5455E260dea1459aE6c3dF6 | https://robinhoodchain.blockscout.com/address/0x4Dc1647Cd1f94661e5455E260dea1459aE6c3dF6
  TransferProxy | 0xcFde5dba228968A84c853552f1db5a228442b542 | https://robinhoodchain.blockscout.com/address/0xcFde5dba228968A84c853552f1db5a228442b542
 
