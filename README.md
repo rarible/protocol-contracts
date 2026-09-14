@@ -18,14 +18,30 @@ Also, you can find Rarible Smart Contracts deployed instances across Mainnet, Te
 ## Quick Start
 
 ```shell
-yarn
-yarn bootstrap
+nvm use      # uses .nvmrc (v20.18.3)
+yarn         # install + link all workspaces
+yarn build   # REQUIRED - see below
 ```
 
-If error, check node version for `yarn` expected node version ">=14.18.2", for check and set necessary version use, for example:
+**Node version:** use the version in `.nvmrc` (v20.18.3). Newer versions (22/24) break the
+toolchain (hardhat 2.x, lerna 8, patch-package) during install.
+
+**`yarn bootstrap` no longer works** and is not needed. Lerna removed the `bootstrap` command
+in v7; the root `package.json` script still references it and will fail. This repo uses yarn
+workspaces, which already link every cross-package dependency during `yarn install`.
+
+**`yarn build` is required before any deploy.** `projects/hardhat-deploy/hardhat.config.ts`
+imports `./tasks`, and those tasks import generated typechain types from `@rarible/exchange-v2`.
+Without the build, *every* hardhat command fails with `MODULE_NOT_FOUND` before it can even
+read a network config.
+
+`yarn build` currently fails at the end with `truffle: command not found` - several build
+scripts invoke `truffle`, but it is not declared as a dependency anywhere. This only affects
+truffle artifact generation; the typechain types needed for deployment are produced before
+that step. To build just what a deploy needs:
+
 ```shell
-node -v
-nvm use 18.13.0
+yarn build:exchange-v2
 ```
 
 ## Deployment
@@ -120,20 +136,107 @@ cd projects/hardhat-deploy && npx hardhat --network <network_name> sourcify
 cd projects/drops && npx hardhat --network <network_name> sourcify
 ```
 
-### Environment Setup
+### Network configuration
 
-Before deployment, ensure you have the required environment variables:
+Networks are **not** defined in this repo and are **not** read from `.env`. Every hardhat config
+calls `loadNetworkConfigs()` (`projects/deploy-utils/src/utils.ts`), which reads every `*.json`
+file in `$NETWORK_CONFIG_PATH` (default: `~/.ethereum/`). **The filename is the hardhat network
+name** - `~/.ethereum/my_chain.json` becomes `--network my_chain`.
 
-```bash
-# Copy example environment file
-cp example.env .env
+Setting `PRIVATE_KEY` in `.env` has no effect on deployments; the deployer key is the `key`
+field below. Likewise the verification API key comes from `verify.apiKey`, not `ETHERSCAN_API_KEY`.
 
-# Required variables:
-PRIVATE_KEY=your_deployer_private_key
-ETHERSCAN_API_KEY=your_etherscan_api_key
-POLYGONSCAN_API_KEY=your_polygonscan_api_key
-# ... other API keys for different networks
+```jsonc
+{
+  "url":        "https://rpc.example.io",
+  "network_id": "12345",          // string; becomes hardhat chainId
+  "chainId":    12345,            // number; required for explorer verification
+  "address":    "0xDeployer...",
+  "key":        "0xPRIVATE_KEY",  // MUST be 0x-prefixed or hardhat rejects it
+                                  // omit `key` entirely to use Frame instead
+  "gas":        12000000,         // per-tx gas limit; the 5000000 default is too low
+                                  // for ExchangeV2 on some chains
+  "gasPrice":   "auto",
+  "timeout":    120000,
+  "factory":    "0x...",          // optional; ImmutableCreate2Factory address.
+                                  // enables deterministic addresses across chains
+  "verify": {
+    "apiKey":      "xyz",         // use a real key; "xyz" hits strict rate limits
+    "apiUrl":      "https://explorer.example.io/api",
+    "explorerUrl": "https://explorer.example.io"
+  }
+}
 ```
+
+`chainId`, `verify.apiUrl` and `verify.explorerUrl` must **all** be present or the chain is
+silently dropped from the explorer-verification config.
+
+Keep the file readable only by you: `chmod 600 ~/.ethereum/<network>.json`.
+
+### Environment variables
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `GAS_PRICE` | **Yes, in practice** | `1000000` (0.001 gwei) | Passed explicitly by every deploy script. The default is far below most chains' base fee and all transactions will be rejected. Set it in wei. |
+| `TREASURY_ADDRESS` | **Yes, for `drops`** | none | Required by `drops` script `1006`; passed to `WLCollectionListing.initialize()`. Unset it and the deploy aborts with `invalid address or ENS name`. |
+| `NETWORK_CONFIG_PATH` | No | `~/.ethereum` | Directory holding the network JSON files. |
+| `DETERMENISTIC_DEPLOYMENT_SALT` | No | `0x1118` | Changing it changes every deterministic address. |
+| `ROYALTIES_REGISTRY_TYPE` | No | `RoyaltiesRegistry` | Set to `RoyaltiesRegistryPermissioned` for the permissioned variant. |
+| `HARDWARE_DERIVATION` + `DEPLOYER_ADDRESS` | No | none | Set both to sign with a Ledger instead of a private key. |
+
+### Deploying to a new chain
+
+1. Create `~/.ethereum/<network>.json` (above) and
+   `projects/hardhat-deploy/utils/config/<network>.json`:
+   ```json
+   { "deploy_meta": false, "deploy_non_meta": true, "fee_receiver": "0x..." }
+   ```
+   `getConfig()` throws if this second file is missing.
+
+2. Fund the deployer. **The deployer must be at nonce 0**: `deploy-proxy` script
+   `00-deploy-immutable-create2-factory.ts` hardcodes `nonce: 0`, so the factory deployment
+   must be that address's very first transaction on the chain. Send anything else first and
+   the factory lands at a non-canonical address, diverging every deterministic address from
+   your other chains.
+
+3. Deploy the factory, then record its address as `factory` in the network JSON:
+   ```shell
+   cd projects/deploy-proxy
+   npx hardhat deploy --tags ImmutableCreate2Factory --network <network>
+   ```
+
+4. If the chain has no Seaport/WETH deployment, add the network to `func.skip` in
+   `projects/hardhat-deploy/deploy/905_deploy_exchangeWrapper.ts`, otherwise add a `settings`
+   entry with its marketplace and WETH addresses.
+
+5. Deploy core, then drops:
+   ```shell
+   export GAS_PRICE=<chain base fee in wei, with headroom>
+   export TREASURY_ADDRESS=0x...
+   cd projects/hardhat-deploy && npx hardhat deploy --tags all --network <network>
+   cd ../drops              && npx hardhat deploy --tags all --network <network>
+   ```
+
+6. Verify, then regenerate the address table (requires `jq`):
+   ```shell
+   cd projects/hardhat-deploy
+   npx hardhat --network <network> etherscan-verify
+   NETWORK=<network> ./export-address-to-readme.bash
+   ```
+
+7. Commit `deployments/<network>/` and `networks/<network>.md`.
+
+**On mainnet, transfer ownership afterwards.** A fresh deploy leaves the ProxyAdmin and
+contract ownership with the deployer EOA - see the `transfer-ownership` task and `owners.md`.
+
+#### Recovering an interrupted deploy
+
+`hardhat-deploy` writes `<Name>_Implementation.json` and `<Name>_Proxy.json` before the
+combined `<Name>.json`. If a run dies in between, the next run sees no `<Name>.json`, assumes
+the proxy still needs initializing, and re-sends `upgradeAndCall` - which reverts with
+`Initializable: contract is already initialized` even though the contract deployed fine.
+Confirm the on-chain state (implementation slot, `owner()`), then either reconstruct the
+combined artifact or redeploy that contract with `--reset`.
 
 ## Testing
 
