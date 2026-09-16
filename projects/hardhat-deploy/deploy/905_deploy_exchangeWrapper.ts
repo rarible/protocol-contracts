@@ -274,4 +274,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 export default func;
 func.tags = ['all', 'all-zk', 'wrapper', 'all-no-tokens', 'all-zk-no-tokens', "905"];
 // Skip the marketplace aggregator on these chains: their marketplaces/WETH are not configured there.
-func.skip = async (hre: HardhatRuntimeEnvironment) => ["bsc", "fluent_testnet", "fluent", "arc_testnet"].includes(hre.network.name);
+func.skip = async (hre: HardhatRuntimeEnvironment) => ["bsc", "fluent_testnet", "fluent", "arc_testnet", "arc"].includes(hre.network.name);
