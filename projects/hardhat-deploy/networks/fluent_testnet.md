@@ -18,5 +18,5 @@
 ## Protocol Fees and Ownerships
 | Network | ChainId | ExchangeV2 Address | Fee Receiver | Seller Fee (bps) | Buyer Fee (bps) | ProxyAdmin Owner |
 |---------|---------|--------------------|--------------|------------------|-----------------|------------------|
-| fluent_testnet | 20994 | `0x5322be7A90AAa2F028d7f03A780C10F716CCB247` | `0x6031ecbd7D65e805A72f506D0fb841088E49fAe7` | 200 | 0 | `0x6031ecbd7D65e805A72f506D0fb841088E49fAe7`|
+| fluent_testnet | 20994 | `0x5322be7A90AAa2F028d7f03A780C10F716CCB247` | `0x1C92DffBCe76670F69007F22A54e31ff3Ab45d5E` | 300 | 0 | `0x6031ecbd7D65e805A72f506D0fb841088E49fAe7`|
 
